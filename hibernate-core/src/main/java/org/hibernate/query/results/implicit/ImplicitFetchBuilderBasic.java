@@ -17,6 +17,7 @@ import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -55,15 +56,16 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 		final String column = fetchable.getSelectionExpression();
 		final String table = fetchable.getContainingTableExpression();
 
-		final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
-		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
-
 		final Expression expression = creationStateImpl.resolveSqlExpression(
 				createColumnReferenceKey( parentTableGroup.getTableReference( fetchPath, table ), column ),
-				processingState -> new SqlSelectionImpl( valuesArrayPosition, fetchable )
+				processingState -> {
+					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
+					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
+					return new SqlSelectionImpl( valuesArrayPosition, fetchable );
+				}
 		);
 
-		creationStateImpl.resolveSqlSelection(
+		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				expression,
 				fetchable.getJavaTypeDescriptor(),
 				domainResultCreationState.getSqlAstCreationState()
@@ -81,7 +83,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 		}
 
 		return new BasicFetch<>(
-				valuesArrayPosition,
+				sqlSelection.getValuesArrayPosition(),
 				parent,
 				fetchPath,
 				fetchable,

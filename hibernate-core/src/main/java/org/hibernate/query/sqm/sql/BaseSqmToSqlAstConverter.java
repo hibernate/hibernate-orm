@@ -210,6 +210,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
@@ -333,7 +334,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final QueryParameterBindings domainParameterBindings;
 	private final Map<SqmParameter,MappingModelExpressable> sqmParameterMappingModelTypes = new LinkedHashMap<>();
 	private final Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
-	private final List<DomainResult> domainResults;
+	private final List<DomainResult<?>> domainResults;
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
@@ -589,7 +590,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootPath,
 					sqmStatement.getRoot().getAlias(),
 					LockMode.WRITE,
-					() -> predicate -> additionalRestrictions = predicate,
+					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
 			);
@@ -615,7 +616,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
 					getLoadQueryInfluencers(),
-					(Joinable) entityDescriptor
+					(Joinable) entityDescriptor,
+					rootTableGroup,
+					// todo (6.0): this is temporary until we implement proper alias support
+					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.UPDATE )
 			);
 			if ( filterPredicate != null ) {
 				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
@@ -844,7 +848,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootPath,
 					statement.getRoot().getAlias(),
 					LockMode.WRITE,
-					() -> predicate -> additionalRestrictions = predicate,
+					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
 			);
@@ -856,7 +860,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
 					getLoadQueryInfluencers(),
-					(Joinable) entityDescriptor
+					(Joinable) entityDescriptor,
+					rootTableGroup,
+					// todo (6.0): this is temporary until we implement proper alias support
+					AbstractSqlAstTranslator.rendersTableReferenceAlias( Clause.DELETE )
 			);
 			if ( filterPredicate != null ) {
 				additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, filterPredicate );
@@ -924,7 +931,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
 					LockMode.WRITE,
-					() -> predicate -> additionalRestrictions = predicate,
+					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
 			);
@@ -1023,7 +1030,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
 					LockMode.WRITE,
-					() -> predicate -> additionalRestrictions = predicate,
+					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
 			);

@@ -96,44 +96,6 @@ public class LoaderSelectBuilder {
 	private static final Logger log = Logger.getLogger( LoaderSelectBuilder.class );
 
 	/**
-	 * Create an SQL AST select-statement based on matching one-or-more keys
-	 *
-	 * @param loadable The root Loadable
-	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
-	 * @param restrictedPart Part to base the where-clause restriction on
-	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
-	 * @param numberOfKeysToLoad How many keys should be accounted for in the where-clause restriction?
-	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
-	 * @param lockOptions Pessimistic lock options to apply
-	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
-	 * @param sessionFactory The SessionFactory
-	 */
-	public static SelectStatement createSelect(
-			Loadable loadable,
-			List<? extends ModelPart> partsToSelect,
-			ModelPart restrictedPart,
-			DomainResult<?> cachedDomainResult,
-			int numberOfKeysToLoad,
-			LoadQueryInfluencers loadQueryInfluencers,
-			LockOptions lockOptions,
-			Consumer<JdbcParameter> jdbcParameterConsumer,
-			SessionFactoryImplementor sessionFactory) {
-		final LoaderSelectBuilder process = new LoaderSelectBuilder(
-				sessionFactory,
-				loadable,
-				partsToSelect,
-				restrictedPart,
-				cachedDomainResult,
-				numberOfKeysToLoad,
-				loadQueryInfluencers,
-				lockOptions,
-				jdbcParameterConsumer
-		);
-
-		return process.generateSelect();
-	}
-
-	/**
 	 * Create an SQL AST select-statement for a select by unique key based on matching one-or-more keys
 	 *
 	 * @param loadable The root Loadable
@@ -167,6 +129,44 @@ public class LoaderSelectBuilder {
 				lockOptions,
 				determineGraphTraversalState( loadQueryInfluencers ),
 				true,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect();
+	}
+
+	/**
+	 * Create an SQL AST select-statement based on matching one-or-more keys
+	 *
+	 * @param loadable The root Loadable
+	 * @param partsToSelect Parts of the Loadable to select.  Null/empty indicates to select the Loadable itself
+	 * @param restrictedPart Part to base the where-clause restriction on
+	 * @param cachedDomainResult DomainResult to be used.  Null indicates to generate the DomainResult
+	 * @param numberOfKeysToLoad How many keys should be accounted for in the where-clause restriction?
+	 * @param loadQueryInfluencers Any influencers (entity graph, fetch profile) to account for
+	 * @param lockOptions Pessimistic lock options to apply
+	 * @param jdbcParameterConsumer Consumer for all JdbcParameter references created
+	 * @param sessionFactory The SessionFactory
+	 */
+	public static SelectStatement createSelect(
+			Loadable loadable,
+			List<? extends ModelPart> partsToSelect,
+			ModelPart restrictedPart,
+			DomainResult<?> cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				partsToSelect,
+				restrictedPart,
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
 				jdbcParameterConsumer
 		);
 
@@ -444,6 +444,9 @@ public class LoaderSelectBuilder {
 			applyFiltering( rootQuerySpec, rootTableGroup, pluralAttributeMapping );
 			applyOrdering( rootTableGroup, pluralAttributeMapping );
 		}
+		else if ( loadable instanceof Joinable ) {
+			applyFiltering( rootQuerySpec, rootTableGroup, (Joinable) loadable );
+		}
 
 		if ( orderByFragments != null ) {
 			orderByFragments.forEach(
@@ -455,7 +458,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 
-		return new SelectStatement( rootQuerySpec, (List) domainResults );
+		return new SelectStatement( rootQuerySpec, domainResults );
 	}
 
 	private void applyRestriction(
@@ -572,6 +575,20 @@ public class LoaderSelectBuilder {
 				assert tableGroup.getTableReferenceJoins().size() == 1;
 				tableGroup.getTableReferenceJoins().get( 0 ).applyPredicate( manyToManyFilterPredicate );
 			}
+		}
+	}
+
+	private void applyFiltering(
+			QuerySpec querySpec,
+			TableGroup tableGroup,
+			Joinable joinable) {
+		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
+				loadQueryInfluencers,
+				joinable,
+				tableGroup
+		);
+		if ( filterPredicate != null ) {
+			querySpec.applyPredicate( filterPredicate );
 		}
 	}
 

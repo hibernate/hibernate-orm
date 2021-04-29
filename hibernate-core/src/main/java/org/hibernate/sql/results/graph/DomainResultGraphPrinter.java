@@ -26,11 +26,11 @@ public class DomainResultGraphPrinter {
 	private static final boolean DEBUG_ENABLED = log.isDebugEnabled();
 	private static final boolean TRACE_ENABLED = log.isTraceEnabled();
 
-	public static void logDomainResultGraph(List<DomainResult> domainResults) {
+	public static void logDomainResultGraph(List<DomainResult<?>> domainResults) {
 		logDomainResultGraph( "DomainResult Graph", domainResults );
 	}
 
-	public static void logDomainResultGraph(String header, List<DomainResult> domainResults) {
+	public static void logDomainResultGraph(String header, List<DomainResult<?>> domainResults) {
 		if ( ! DEBUG_ENABLED ) {
 			return;
 		}
@@ -46,7 +46,7 @@ public class DomainResultGraphPrinter {
 		buffer = new StringBuilder( header + ":" + System.lineSeparator() );
 	}
 
-	private void visitDomainResults(List<DomainResult> domainResults) {
+	private void visitDomainResults(List<DomainResult<?>> domainResults) {
 		for ( int i = 0; i < domainResults.size(); i++ ) {
 			final DomainResult<?> domainResult = domainResults.get( i );
 			// DomainResults should always be the base for a branch

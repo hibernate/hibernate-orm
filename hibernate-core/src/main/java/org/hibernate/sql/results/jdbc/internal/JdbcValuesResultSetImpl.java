@@ -49,7 +49,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		this.executionContext = executionContext;
 
 		this.sqlSelections = valuesMapping.getSqlSelections().toArray( new SqlSelection[0] );
-		this.currentRowJdbcValues = new Object[ sqlSelections.length ];
+		this.currentRowJdbcValues = new Object[ valuesMapping.getRowSize() ];
 	}
 
 	private static QueryCachePutManager resolveQueryCachePutManager(

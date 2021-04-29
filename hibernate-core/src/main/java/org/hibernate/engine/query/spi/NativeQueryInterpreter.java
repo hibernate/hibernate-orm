@@ -9,6 +9,7 @@ package org.hibernate.engine.query.spi;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
 import org.hibernate.query.sql.spi.NativeNonSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeNonSelectQueryPlan;
@@ -45,7 +46,7 @@ public interface NativeQueryInterpreter extends Service {
 				queryDefinition.getSqlString(),
 				queryDefinition.getAffectedTableNames(),
 				queryDefinition.getQueryParameterList(),
-				queryDefinition.getJdbcValuesMappingProducer(),
+				(ResultSetMapping) queryDefinition.getJdbcValuesMappingProducer(),
 				queryDefinition.getRowTransformer(),
 				sessionFactory
 		);

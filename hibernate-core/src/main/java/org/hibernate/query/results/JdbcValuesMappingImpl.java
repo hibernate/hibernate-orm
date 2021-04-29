@@ -6,50 +6,30 @@
  */
 package org.hibernate.query.results;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
+import org.hibernate.sql.results.jdbc.internal.StandardJdbcValuesMapping;
 
 /**
  * Implementation of JdbcValuesMapping for native / procedure queries
  *
  * @author Steve Ebersole
  */
-public class JdbcValuesMappingImpl implements JdbcValuesMapping {
-	private final List<SqlSelection> sqlSelections;
-	private final List<DomainResult<?>> domainResults;
+public class JdbcValuesMappingImpl extends StandardJdbcValuesMapping {
+
+	private final int rowSize;
 
 	public JdbcValuesMappingImpl(
 			List<SqlSelection> sqlSelections,
-			List<DomainResult<?>> domainResults) {
-		this.sqlSelections = sqlSelections;
-		this.domainResults = domainResults;
+			List<DomainResult<?>> domainResults, int rowSize) {
+		super( sqlSelections, domainResults );
+		this.rowSize = rowSize;
 	}
 
 	@Override
-	public List<SqlSelection> getSqlSelections() {
-		return sqlSelections;
-	}
-
-	@Override
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	public List<DomainResult> getDomainResults() {
-		return (List) domainResults;
-	}
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	public List<DomainResultAssembler> resolveAssemblers(AssemblerCreationState creationState) {
-		final List<DomainResultAssembler> assemblers = new ArrayList<>( domainResults.size() );
-		domainResults.forEach(
-				domainResult -> assemblers.add( domainResult.createResultAssembler( creationState ) )
-		);
-		return assemblers;
+	public int getRowSize() {
+		return rowSize;
 	}
 }

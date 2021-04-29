@@ -13,6 +13,7 @@ import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -20,6 +21,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
@@ -38,8 +40,12 @@ import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderEntity;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderPlural;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
+import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.BasicType;
@@ -213,7 +219,7 @@ public class Builders {
 			String tableAlias,
 			String entityName,
 			SessionFactoryImplementor sessionFactory) {
-		return entityCalculated( tableAlias, entityName, null,sessionFactory );
+		return entityCalculated( tableAlias, entityName, null, sessionFactory );
 	}
 
 	/**
@@ -235,7 +241,7 @@ public class Builders {
 	}
 
 	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		throw new NotYetImplementedFor6Exception( );
+		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, null );
 	}
 
 	public static ResultBuilder implicitEntityResultBuilder(
@@ -269,6 +275,28 @@ public class Builders {
 
 		if ( fetchable instanceof PluralAttributeMapping ) {
 			return new ImplicitFetchBuilderPlural( fetchPath, (PluralAttributeMapping) fetchable, creationState );
+		}
+
+		if ( fetchable instanceof EntityCollectionPart ) {
+			final EntityCollectionPart entityCollectionPart = (EntityCollectionPart) fetchable;
+			return (parent, fetchablePath, jdbcResultsMetadata, legacyFetchResolver, domainResultCreationState) -> {
+				final FromClauseAccess fromClauseAccess = domainResultCreationState.getSqlAstCreationState()
+						.getFromClauseAccess();
+				final TableGroup collectionTableGroup = fromClauseAccess.findTableGroup( parent.getNavigablePath() );
+				fromClauseAccess.registerTableGroup(
+						fetchablePath,
+						new EntityCollectionPartTableGroup( fetchablePath, collectionTableGroup, entityCollectionPart )
+				);
+				return parent.generateFetchableFetch(
+						entityCollectionPart,
+						fetchablePath,
+						FetchTiming.IMMEDIATE,
+						true,
+						LockMode.NONE,
+						null,
+						domainResultCreationState
+				);
+			};
 		}
 
 		throw new UnsupportedOperationException();

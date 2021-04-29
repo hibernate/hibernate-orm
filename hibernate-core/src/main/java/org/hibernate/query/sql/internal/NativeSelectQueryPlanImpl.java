@@ -18,6 +18,7 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -53,12 +54,14 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 			String sql,
 			Set<String> affectedTableNames,
 			List<QueryParameterImplementor<?>> parameterList,
-			JdbcValuesMappingProducer resultSetMapping,
+			ResultSetMapping resultSetMapping,
 			RowTransformer<R> rowTransformer,
 			SessionFactoryImplementor sessionFactory) {
-		this.sql = sql;
+		final ResultSetMappingProcessor processor = new ResultSetMappingProcessor( resultSetMapping, sessionFactory );
+		final SQLQueryParser parser = new SQLQueryParser( sql, processor.process(), sessionFactory );
+		this.sql = parser.process();
 		this.parameterList = parameterList;
-		this.resultSetMapping = resultSetMapping;
+		this.resultSetMapping = processor.generateResultMapping( parser.queryHasAliases() );
 		this.rowTransformer = rowTransformer != null
 				? rowTransformer
 				: RowTransformerPassThruImpl.instance();

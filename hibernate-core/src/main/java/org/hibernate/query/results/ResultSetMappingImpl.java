@@ -67,6 +67,19 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 	}
 
 	@Override
+	public void visitLegacyFetchBuilders(Consumer<DynamicFetchBuilderLegacy> resultBuilderConsumer) {
+		if ( legacyFetchBuilders == null ) {
+			return;
+		}
+
+		for ( Map.Entry<String, Map<String, DynamicFetchBuilderLegacy>> entry : legacyFetchBuilders.entrySet() ) {
+			for ( DynamicFetchBuilderLegacy fetchBuilder : entry.getValue().values() ) {
+				resultBuilderConsumer.accept( fetchBuilder );
+			}
+		}
+	}
+
+	@Override
 	public void addResultBuilder(ResultBuilder resultBuilder) {
 		if ( resultBuilders == null ) {
 			resultBuilders = new ArrayList<>();
@@ -120,15 +133,16 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			SessionFactoryImplementor sessionFactory) {
 
 		final int numberOfResults;
+		final int rowSize = jdbcResultsMetadata.getColumnCount();
 
 		if ( resultBuilders == null ) {
-			numberOfResults = jdbcResultsMetadata.getColumnCount();
+			numberOfResults = rowSize;
 		}
 		else {
 			numberOfResults = resultBuilders.size();
 		}
 
-		final List<SqlSelection> sqlSelections = new ArrayList<>( jdbcResultsMetadata.getColumnCount() );
+		final List<SqlSelection> sqlSelections = new ArrayList<>( rowSize );
 		final List<DomainResult<?>> domainResults = new ArrayList<>( numberOfResults );
 
 		final DomainResultCreationStateImpl creationState = new DomainResultCreationStateImpl(
@@ -169,7 +183,7 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 			domainResults.add( domainResult );
 		}
 
-		return new JdbcValuesMappingImpl( sqlSelections, domainResults );
+		return new JdbcValuesMappingImpl( sqlSelections, domainResults, rowSize );
 	}
 
 	private DomainResult<?> makeImplicitDomainResult(

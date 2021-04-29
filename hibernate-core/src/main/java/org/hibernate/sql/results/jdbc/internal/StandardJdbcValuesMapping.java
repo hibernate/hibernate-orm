@@ -20,11 +20,11 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
  */
 public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 	private final List<SqlSelection> sqlSelections;
-	private final List<DomainResult> domainResults;
+	private final List<DomainResult<?>> domainResults;
 
 	public StandardJdbcValuesMapping(
 			List<SqlSelection> sqlSelections,
-			List<DomainResult> domainResults) {
+			List<DomainResult<?>> domainResults) {
 		this.sqlSelections = sqlSelections;
 		this.domainResults = domainResults;
 	}
@@ -35,17 +35,22 @@ public class StandardJdbcValuesMapping implements JdbcValuesMapping {
 	}
 
 	@Override
-	public List<DomainResult> getDomainResults() {
+	public List<DomainResult<?>> getDomainResults() {
 		return domainResults;
 	}
 
 	@Override
-	public List<DomainResultAssembler> resolveAssemblers(AssemblerCreationState creationState) {
-		final List<DomainResultAssembler> assemblers = CollectionHelper.arrayList( domainResults.size() );
+	public int getRowSize() {
+		return sqlSelections.size();
+	}
+
+	@Override
+	public List<DomainResultAssembler<?>> resolveAssemblers(AssemblerCreationState creationState) {
+		final List<DomainResultAssembler<?>> assemblers = CollectionHelper.arrayList( domainResults.size() );
 
 		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < domainResults.size(); i++ ) {
-			final DomainResultAssembler resultAssembler = domainResults.get( i ).createResultAssembler( creationState );
+			final DomainResultAssembler<?> resultAssembler = domainResults.get( i ).createResultAssembler( creationState );
 
 			assemblers.add( resultAssembler );
 		}

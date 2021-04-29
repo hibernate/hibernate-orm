@@ -29,7 +29,9 @@ public interface JdbcValuesMapping {
 	 */
 	List<SqlSelection> getSqlSelections();
 
-	List<DomainResult> getDomainResults();
+	int getRowSize();
 
-	List<DomainResultAssembler> resolveAssemblers(AssemblerCreationState creationState);
+	List<DomainResult<?>> getDomainResults();
+
+	List<DomainResultAssembler<?>> resolveAssemblers(AssemblerCreationState creationState);
 }

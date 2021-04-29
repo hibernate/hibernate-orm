@@ -11,8 +11,10 @@ import java.util.function.BiFunction;
 
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -23,7 +25,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
  *
  * @author Steve Ebersole
  */
-public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
+public class DynamicResultBuilderAttribute implements DynamicResultBuilder, NativeQuery.ReturnProperty {
 	private final BasicAttributeMapping attributeMapping;
 	private final String columnAlias;
 	private final String entityName;
@@ -54,28 +56,37 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder {
 	}
 
 	@Override
+	public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
-		final int valuesArrayPosition = resultSetPosition - 1;
-
 		// todo (6.0) : TableGroups + `attributeMapping#buldResult`
 
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
-		sqlExpressionResolver.resolveSqlSelection(
+		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				sqlExpressionResolver.resolveSqlExpression(
 						columnAlias,
-						state -> new SqlSelectionImpl( valuesArrayPosition, attributeMapping )
+						state -> {
+							final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
+							final int valuesArrayPosition = resultSetPosition - 1;
+							return new SqlSelectionImpl( valuesArrayPosition, attributeMapping );
+						}
 				),
 				attributeMapping.getJavaTypeDescriptor(),
-				domainResultCreationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+				domainResultCreationState.getSqlAstCreationState()
+						.getCreationContext()
+						.getSessionFactory()
+						.getTypeConfiguration()
 		);
 
 		return new BasicResult<>(
-				valuesArrayPosition,
+				sqlSelection.getValuesArrayPosition(),
 				columnAlias,
 				attributeMapping.getJavaTypeDescriptor(),
 				attributeMapping.getValueConverter()

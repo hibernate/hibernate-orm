@@ -26,7 +26,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.transform.ResultTransformer;
@@ -382,6 +382,15 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * result sets.
 	 */
 	interface RootReturn extends ReturnableResultNode {
+
+		String getTableAlias();
+
+		String getDiscriminatorAlias();
+
+		EntityMappingType getEntityMapping();
+
+		NavigablePath getNavigablePath();
+
 		/**
 		 * Set the lock mode for this return.
 		 *
@@ -391,10 +400,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		 */
 		RootReturn setLockMode(LockMode lockMode);
 
-		default RootReturn addIdColumnAliases(String... aliases){
-			throw new NotYetImplementedFor6Exception( getClass() );
-
-		}
+		RootReturn addIdColumnAliases(String... aliases);
 
 		/**
 		 * Name the column alias that identifies the entity's discriminator.
@@ -430,6 +436,13 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * from result sets.
 	 */
 	interface FetchReturn extends ResultNode {
+
+		String getTableAlias();
+
+		String getOwnerAlias();
+
+		String getFetchableName();
+
 		/**
 		 * Set the lock mode for this return.
 		 *

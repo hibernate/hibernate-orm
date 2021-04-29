@@ -43,8 +43,7 @@ public class ResultsHelper {
 		final Map<NavigablePath,Initializer> initializerMap = new LinkedHashMap<>();
 		final List<Initializer> initializers = new ArrayList<>();
 
-		//noinspection rawtypes
-		final List<DomainResultAssembler> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
+		final List<DomainResultAssembler<?>> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
 				new AssemblerCreationState() {
 
 					@Override
@@ -83,8 +82,9 @@ public class ResultsHelper {
 				}
 		);
 
+		//noinspection rawtypes
 		return new StandardRowReader<>(
-				assemblers,
+				(List) assemblers,
 				initializers,
 				rowTransformer,
 				callback

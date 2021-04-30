@@ -105,4 +105,18 @@ public interface JpaCompliance {
 	 * this enabled, Hibernate will throw a compliance error when a non-attribute-reference is used.
 	 */
 	boolean isJpaOrderByMappingComplianceEnabled();
+
+	/**
+	 * JPA says that the id passed to {@link javax.persistence.EntityManager#getReference} and
+	 * {@link javax.persistence.EntityManager#find} should be the exact expected type, allowing
+	 * no type coercion.
+	 *
+	 * Historically, Hibernate behaved the same way.  Since 6.0 however, Hibernate has the ability to
+	 * coerce the passed type to the expected type.
+	 *
+	 * This setting controls whether such a coercion should be allowed.
+	 *
+	 * @since 6.0
+	 */
+	boolean isLoadByIdComplianceEnabled();
 }

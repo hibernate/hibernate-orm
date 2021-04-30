@@ -160,7 +160,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final String name;
 	private final String uuid;
 
-	private transient volatile boolean isClosed;
+	private transient volatile Status status = Status.OPEN;
 
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 
@@ -535,7 +535,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	protected void validateNotClosed() {
-		if ( isClosed ) {
+		if ( Status.CLOSED == status ) {
 			throw new IllegalStateException( "EntityManagerFactory is closed" );
 		}
 	}
@@ -625,7 +625,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
-		assert !isClosed;
+		assert Status.CLOSED != status;
 
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
@@ -694,7 +694,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public boolean isOpen() {
-		return !isClosed;
+		return Status.CLOSED != status;
 	}
 
 	@Override
@@ -789,9 +789,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * collector release the memory.
 	 * @throws HibernateException
 	 */
+	@Override
 	public void close() throws HibernateException {
 		synchronized (this) {
-			if ( isClosed ) {
+			if ( Status.OPEN != status ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
@@ -800,39 +801,47 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				return;
 			}
 
-			isClosed = true;
+			status = Status.CLOSING;
 		}
 
-		LOG.closing();
-		observer.sessionFactoryClosing( this );
+		try {
+			LOG.closing();
+			observer.sessionFactoryClosing( this );
 
-		settings.getMultiTableBulkIdStrategy().release( serviceRegistry.getService( JdbcServices.class ), buildLocalConnectionAccess() );
+			settings.getMultiTableBulkIdStrategy().release(
+					serviceRegistry.getService( JdbcServices.class ),
+					buildLocalConnectionAccess()
+			);
 
-		// NOTE : the null checks below handle cases where close is called from
-		//		a failed attempt to create the SessionFactory
+			// NOTE : the null checks below handle cases where close is called from
+			//		a failed attempt to create the SessionFactory
 
-		if ( cacheAccess != null ) {
-			cacheAccess.close();
+			if ( cacheAccess != null ) {
+				cacheAccess.close();
+			}
+
+			if ( metamodel != null ) {
+				metamodel.close();
+			}
+
+			if ( queryPlanCache != null ) {
+				queryPlanCache.cleanup();
+			}
+
+			if ( delayedDropAction != null ) {
+				delayedDropAction.perform( serviceRegistry );
+			}
+
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory(
+					getUuid(),
+					name,
+					settings.isSessionFactoryNameAlsoJndiName(),
+					serviceRegistry.getService( JndiService.class )
+			);
 		}
-
-		if ( metamodel != null ) {
-			metamodel.close();
+		finally {
+			status = Status.CLOSED;
 		}
-
-		if ( queryPlanCache != null ) {
-			queryPlanCache.cleanup();
-		}
-
-		if ( delayedDropAction != null ) {
-			delayedDropAction.perform( serviceRegistry );
-		}
-
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
-				getUuid(),
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				serviceRegistry.getService( JndiService.class )
-		);
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
@@ -977,8 +986,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		getMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
+	@Override
 	public boolean isClosed() {
-		return isClosed;
+		return Status.CLOSED == status;
 	}
 
 	private transient StatisticsImplementor statistics;
@@ -1688,4 +1698,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return this.fastSessionServices;
 	}
 
+	private enum Status {
+		OPEN,
+		CLOSING,
+		CLOSED;
+	}
 }

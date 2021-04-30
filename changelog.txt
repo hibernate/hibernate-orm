@@ -3,6 +3,64 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.0.Alpha1 (April 30, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31844
+
+** Bug
+    * [HHH-14571] - Hibernate.isPropertyInitialized( someEntity, "id" ) returns false
+    * [HHH-14567] - Filters are ignored if enabled after query creation but before execution
+    * [HHH-14557] - Connection leaked on rollback with mode DELAYED_ACQUISITION_AND_RELEASE_BEFORE_TRANSACTION_COMPLETION
+    * [HHH-14549] - Collection with default field initializer will always be empty
+    * [HHH-14537] - EntityNotFoundException thrown when non-existing association with @NotFound(IGNORE) mapped has proxy in PersistenceContext
+    * [HHH-14523] - Spatial Update Z axis of a org.locationtech.jts.geom.Point on Postgis
+    * [HHH-14475] - select indices from ternary relation is broken since 5.4.13
+    * [HHH-14471] - Concurrency issue in DynamicBatchingEntityLoader
+    * [HHH-14467] - AnnotationException: A Foreign key refering <SomeEntity> from <SomeOtherEntity> has the wrong number of column. should be 0
+    * [HHH-14466] - StackOverflowError loading an entity with eager one-to-many if bidirectional and many-to-one side is the ID
+    * [HHH-14460] - NPE when setter is missing for persistent property
+    * [HHH-14449] - ResultStream closing is not properly handled 
+    * [HHH-14445] - Javassist skip EntityWithMutableAttributesTest, LoadAndUpdateEntitiesWithCollectionsTest, SimpleDynamicUpdateTest, SimpleDynamicUpdateTest
+    * [HHH-14439] - QueryException: Unrecognized parameter label when executing the same query with subselects twice with different list parameters
+    * [HHH-14424] - When enhanced as a proxy with dirty checking is enabled, on flush uninitialized entities containing collections are updated setting all fields to null 
+    * [HHH-14408] - SPI provided user types are not applied
+    * [HHH-14407] - NPE in Column.getSqlTypeCode(Mapping mapping) for column 'hib_sess_id' when using PersistentTableBulkIdStrategy  
+    * [HHH-14404] - SessionBuilder.connectionHandlingMode is ignored
+    * [HHH-14390] - StackOverflowError with @Fetch(FetchMode.SELECT) mapped for entity with an ID that is a bidirectional one-to-one eager association
+    * [HHH-14389] - Add test case that throw IllegalArgumentException using EntityManager#find by ID when ID is a one-to-one association
+    * [HHH-14386] - Persistence.createEntityManagerFactory("testPU") fails, if persistence unit has config & CurrentTenantIdentifierResolver is not null.
+    * [HHH-14384] - Fix QueryProducer.createNativeQuery documentation
+    * [HHH-14380] - Join ordering logic wrongly pushes cross joins from subqueries to parent
+    * [HHH-14364] - UpdateDetachedTest#testUpdateDetachedWithAttachedPersistentSet failing when run on OracleDB
+    * [HHH-14363] - MutableTypeEnhancementTestCase failing when run on Oracle DB
+    * [HHH-14360] - NullPointerException on AbstractEntityPersister.resolveDirtyAttributeIndexes
+    * [HHH-14355] - NPE in Envers AdditionalJaxbMappingProducerImpl when XML mapping is disabled
+    * [HHH-14351] - Broken order by type
+    * [HHH-14350] - MariaDB103Dialect requires the lock wait timeout to be expressed in seconds
+    * [HHH-14348] - Lazy collection is fetched during dirty checking with bytecode enhancement
+    * [HHH-14346] - org.hibernate.metamodel.model.domain.internal.AbstractManagedType#getPluralAttributes NPE
+    * [HHH-14343] - Nested ID classes fail with AnnotationException: Column name game_id of x.x.PlayerStat not found in JoinColumns.referencedColumnName
+    * [HHH-14335] - Cache resolution of SimpleValue#getType
+    * [HHH-14333] - Pessimistic Lock causes FOR UPDATE on outer join statements
+    * [HHH-14329] - DirtinessTracker usage for enhanced entities doesn't respect mutable types
+    * [HHH-14322] - HBM many-to-one property-ref broken since 5.3.2 due to HHH-12684
+    * [HHH-14319] - CollectionType#replaceElements may clear the original collection during merge
+    * [HHH-14317] - Avoid closing datasource in AgroalConnectionProvider if datasource is not initialized
+    * [HHH-14316] - Avoid accessing state in DriverManagerConnectionProviderImpl if null
+    * [HHH-14312] - Padded batch style entity loader ignores entity graph 
+    * [HHH-14310] - Document hibernate.query.in_clause_parameter_padding
+    * [HHH-14288] - Complex batch insert query stopped to work
+    * [HHH-14279] - Broken 'with key(...)' operator on entity-key maps
+    * [HHH-14276] - Nested ID class using derived identifiers fails with strange AnnotationException: unable to find column reference in the @MapsId mapping: `game_id`
+    * [HHH-14275] - Broken link to Infinispan User Guide in Hibernate 5.3 User Guide
+    * [HHH-14264] - Entity graph cannot be applied to child class
+    * [HHH-14260] - Dead links in user guide
+    * [HHH-14257] - An Entity A with a map collection having as index an Embeddable with a an association to the Entity A fails with a NPE
+    * [HHH-14251] - Invalid SQL for @Embedded UPDATE
+    * [HHH-14249] - MultiLineImport fails when script contains blank spaces or tabs at the end of the last sql statement
+
+
 Changes in 5.4.14.Final (April 6, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

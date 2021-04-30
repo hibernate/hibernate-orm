@@ -26,5 +26,7 @@ public interface MutableJpaCompliance extends JpaCompliance {
 
 	void setGeneratorNameScopeCompliance(boolean generatorScopeCompliance);
 
+	void setLoadByIdCompliance(boolean enabled);
+
 	JpaCompliance immutableCopy();
 }

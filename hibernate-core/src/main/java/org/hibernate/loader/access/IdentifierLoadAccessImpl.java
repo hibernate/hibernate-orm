@@ -24,6 +24,7 @@ import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
@@ -116,7 +117,10 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		final EventSource eventSource = (EventSource) session;
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
-		id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
+		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
+			id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+		}
 
 		if ( this.lockOptions != null ) {
 			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, eventSource, loadQueryInfluencers.getReadOnly() );
@@ -158,7 +162,10 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		final EventSource eventSource = (EventSource) session;
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
-		id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+		final JpaCompliance jpaCompliance = session.getFactory().getSessionFactoryOptions().getJpaCompliance();
+		if ( ! jpaCompliance.isLoadByIdComplianceEnabled() ) {
+			id = entityPersister.getIdentifierMapping().getJavaTypeDescriptor().coerce( id, this );
+		}
 
 		if ( this.lockOptions != null ) {
 			LoadEvent event = new LoadEvent( id, entityPersister.getEntityName(), lockOptions, eventSource, loadQueryInfluencers.getReadOnly() );

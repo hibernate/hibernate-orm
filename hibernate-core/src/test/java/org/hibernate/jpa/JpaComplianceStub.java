@@ -53,4 +53,9 @@ public class JpaComplianceStub implements JpaCompliance {
 	public boolean isJpaOrderByMappingComplianceEnabled() {
 		return false;
 	}
+
+	@Override
+	public boolean isLoadByIdComplianceEnabled() {
+		return false;
+	}
 }

@@ -16,6 +16,8 @@ import javax.persistence.SharedCacheMode;
 import javax.persistence.ValidationMode;
 import javax.persistence.spi.PersistenceUnitTransactionType;
 
+import org.hibernate.jpa.spi.JpaCompliance;
+
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith( FailureExpectedExtension.class )
 public @interface Jpa {
+	String persistenceUnitName() default "test-pu";
 
 	/**
 	 * Used to mimic container integration
@@ -45,8 +48,6 @@ public @interface Jpa {
 	Setting[] integrationSettings() default {};
 
 	Class<? extends NonStringValueSettingProvider>[] nonStringValueSettingProviders() default {};
-
-	String persistenceUnitName() default "test-pu";
 
 	// todo : multiple persistence units?
 
@@ -61,6 +62,51 @@ public @interface Jpa {
 	PersistenceUnitTransactionType transactionType() default PersistenceUnitTransactionType.RESOURCE_LOCAL;
 	SharedCacheMode sharedCacheMode() default SharedCacheMode.UNSPECIFIED;
 	ValidationMode validationMode() default ValidationMode.NONE;
+
+	/**
+	 * @see JpaCompliance#isJpaQueryComplianceEnabled()
+	 */
+	boolean queryComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isJpaTransactionComplianceEnabled()
+	 */
+	boolean transactionComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isJpaClosedComplianceEnabled()
+	 */
+	boolean closedComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isJpaListComplianceEnabled()
+	 */
+	boolean listMappingComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isJpaOrderByMappingComplianceEnabled()
+	 */
+	boolean orderByMappingComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isJpaProxyComplianceEnabled()
+	 */
+	boolean proxyComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isJpaCacheComplianceEnabled()
+	 */
+	boolean cacheComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isGlobalGeneratorScopeEnabled()
+	 */
+	boolean generatorScopeComplianceEnabled() default false;
+
+	/**
+	 * @see JpaCompliance#isLoadByIdComplianceEnabled()
+	 */
+	boolean loadByIdComplianceEnabled() default false;
 
 	boolean excludeUnlistedClasses() default false;
 

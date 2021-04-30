@@ -25,6 +25,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	private boolean transactionCompliance;
 	private boolean closedCompliance;
 	private boolean cachingCompliance;
+	private boolean loadByIdCompliance;
 
 	@SuppressWarnings("ConstantConditions")
 	public MutableJpaComplianceImpl(Map configurationSettings, boolean jpaByDefault) {
@@ -71,6 +72,12 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 
 		cachingCompliance = ConfigurationHelper.getBoolean(
 				AvailableSettings.JPA_CACHING_COMPLIANCE,
+				configurationSettings,
+				jpaByDefault
+		);
+
+		loadByIdCompliance = ConfigurationHelper.getBoolean(
+				AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE,
 				configurationSettings,
 				jpaByDefault
 		);
@@ -158,7 +165,15 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 		this.cachingCompliance = cachingCompliance;
 	}
 
+	@Override
+	public void setLoadByIdCompliance(boolean enabled) {
+		this.loadByIdCompliance = enabled;
+	}
 
+	@Override
+	public boolean isLoadByIdComplianceEnabled() {
+		return loadByIdCompliance;
+	}
 
 	@Override
 	public JpaCompliance immutableCopy() {
@@ -170,7 +185,8 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 				.setQueryCompliance( queryCompliance )
 				.setTransactionCompliance( transactionCompliance )
 				.setClosedCompliance( closedCompliance )
-				.setCachingCompliance( cachingCompliance );
+				.setCachingCompliance( cachingCompliance )
+				.setLoadByIdCompliance( loadByIdCompliance );
 		return builder.createJpaCompliance();
 	}
 }

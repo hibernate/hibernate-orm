@@ -48,8 +48,9 @@ import org.jboss.logging.Logger;
  * including argument injection (or see {@link SessionFactoryScopeAware})
  *
  * @author Steve Ebersole
- * @see SessionFactoryScope
+ *
  * @see DomainModelExtension
+ * @see SessionFactoryExtension
  */
 public class EntityManagerFactoryExtension
 		implements TestInstancePostProcessor, AfterAllCallback, TestExecutionExceptionHandler {
@@ -79,8 +80,7 @@ public class EntityManagerFactoryExtension
 				context.getElement().get(),
 				Jpa.class
 		);
-		final Jpa emfAnn = emfAnnWrapper.orElseThrow( () -> new RuntimeException(
-				"Could not locate @EntityManagerFactory" ) );
+		final Jpa emfAnn = emfAnnWrapper.orElseThrow( () -> new RuntimeException( "Could not locate @EntityManagerFactory" ) );
 
 		final PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( emfAnn.persistenceUnitName() );
 
@@ -88,6 +88,17 @@ public class EntityManagerFactoryExtension
 		pui.setCacheMode( emfAnn.sharedCacheMode() );
 		pui.setValidationMode( emfAnn.validationMode() );
 		pui.setExcludeUnlistedClasses( emfAnn.excludeUnlistedClasses() );
+
+		// JpaCompliance
+		pui.getProperties().put( AvailableSettings.JPA_QUERY_COMPLIANCE, emfAnn.queryComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_TRANSACTION_COMPLIANCE, emfAnn.transactionComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_LIST_COMPLIANCE, emfAnn.listMappingComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_CLOSED_COMPLIANCE, emfAnn.closedComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_PROXY_COMPLIANCE, emfAnn.proxyComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_CACHING_COMPLIANCE, emfAnn.cacheComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_ID_GENERATOR_GLOBAL_SCOPE_COMPLIANCE, emfAnn.generatorScopeComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_ORDER_BY_MAPPING_COMPLIANCE, emfAnn.orderByMappingComplianceEnabled() );
+		pui.getProperties().put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, emfAnn.loadByIdComplianceEnabled() );
 
 		final Setting[] properties = emfAnn.properties();
 		for ( int i = 0; i < properties.length; i++ ) {
@@ -301,8 +312,6 @@ public class EntityManagerFactoryExtension
 		}
 
 		protected javax.persistence.EntityManagerFactory createEntityManagerFactory() {
-
-
 			final EntityManagerFactoryBuilder emfBuilder = Bootstrap.getEntityManagerFactoryBuilder(
 					new PersistenceUnitInfoDescriptor( persistenceUnitInfo ),
 					integrationSettings

@@ -8,7 +8,6 @@ package org.hibernate.orm.test.jpa.emops;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -17,11 +16,14 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Emmanuel Bernard
  */
 
-@Jpa(annotatedClasses = {
-		Competitor.class,
-		Race.class,
-		Mail.class
-})
+@Jpa(
+		annotatedClasses = {
+				Competitor.class,
+				Race.class,
+				Mail.class
+		},
+		loadByIdComplianceEnabled = true
+)
 public class GetReferenceTest {
 	@Test
 	public void testWrongIdType(EntityManagerFactoryScope scope) {
@@ -40,6 +42,34 @@ public class GetReferenceTest {
 
 					try {
 						entityManager.getReference( Mail.class, 1 );
+						fail("Expected IllegalArgumentException");
+					}
+					catch (IllegalArgumentException e) {
+						//success
+					}
+					catch ( Exception e ) {
+						fail("Wrong exception: " + e );
+					}
+				}
+		);
+	}
+	@Test
+	public void testWrongIdTypeFind(EntityManagerFactoryScope scope) {
+		scope.inEntityManager(
+				entityManager -> {
+					try {
+						entityManager.find( Competitor.class, "30" );
+						fail("Expected IllegalArgumentException");
+					}
+					catch (IllegalArgumentException e) {
+						//success
+					}
+					catch ( Exception e ) {
+						fail("Wrong exception: " + e );
+					}
+
+					try {
+						entityManager.find( Mail.class, 1 );
 						fail("Expected IllegalArgumentException");
 					}
 					catch (IllegalArgumentException e) {

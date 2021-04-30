@@ -20,8 +20,9 @@ public class JpaComplianceImpl implements JpaCompliance {
 	private final boolean transactionCompliance;
 	private final boolean closedCompliance;
 	private final boolean cachingCompliance;
+	private final boolean loadByIdCompliance;
 
-	private JpaComplianceImpl(
+	public JpaComplianceImpl(
 			boolean listCompliance,
 			boolean orderByMappingCompliance,
 			boolean proxyCompliance,
@@ -29,7 +30,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 			boolean queryCompliance,
 			boolean transactionCompliance,
 			boolean closedCompliance,
-			boolean cachingCompliance) {
+			boolean cachingCompliance,
+			boolean loadByIdCompliance) {
 		this.queryCompliance = queryCompliance;
 		this.transactionCompliance = transactionCompliance;
 		this.listCompliance = listCompliance;
@@ -38,6 +40,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 		this.cachingCompliance = cachingCompliance;
 		this.globalGeneratorNameScopeCompliance = globalGeneratorNameScopeCompliance;
 		this.orderByMappingCompliance = orderByMappingCompliance;
+		this.loadByIdCompliance = loadByIdCompliance;
 	}
 
 	@Override
@@ -80,6 +83,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 		return orderByMappingCompliance;
 	}
 
+	@Override
+	public boolean isLoadByIdComplianceEnabled() {
+		return loadByIdCompliance;
+	}
+
 	public static class JpaComplianceBuilder {
 		private boolean queryCompliance;
 		private boolean listCompliance;
@@ -89,6 +97,7 @@ public class JpaComplianceImpl implements JpaCompliance {
 		private boolean cachingCompliance;
 		private boolean transactionCompliance;
 		private boolean closedCompliance;
+		private boolean loadByIdCompliance;
 
 		public JpaComplianceBuilder() {
 		}
@@ -133,6 +142,11 @@ public class JpaComplianceImpl implements JpaCompliance {
 			return this;
 		}
 
+		public JpaComplianceBuilder setLoadByIdCompliance(boolean loadByIdCompliance) {
+			this.loadByIdCompliance = loadByIdCompliance;
+			return this;
+		}
+
 		JpaCompliance createJpaCompliance() {
 			return new JpaComplianceImpl(
 					listCompliance,
@@ -142,7 +156,8 @@ public class JpaComplianceImpl implements JpaCompliance {
 					queryCompliance,
 					transactionCompliance,
 					closedCompliance,
-					cachingCompliance
+					cachingCompliance,
+					loadByIdCompliance
 			);
 		}
 	}

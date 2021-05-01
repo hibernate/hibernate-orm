@@ -23,7 +23,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 import org.hibernate.testing.TestForIssue;
@@ -41,7 +41,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		((MetadataBuilderImpl)metadataBuilder).contributeJavaTypeDescriptor(new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
+		((MetadataBuilderImpl)metadataBuilder).contributeJavaTypeDescriptor(new FallbackJavaTypeDescriptor( MutableState2.class ) {
 			@Override
 			public MutabilityPlan getMutabilityPlan() {
 				return ImmutableMutabilityPlan.INSTANCE;
@@ -72,7 +72,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		( (MetamodelImplementor) session.getMetamodel() ).getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.addDescriptor(
-						new JavaTypeDescriptorRegistry.FallbackJavaTypeDescriptor( MutableState2.class ) {
+						new FallbackJavaTypeDescriptor( MutableState2.class ) {
 							@Override
 							public MutabilityPlan getMutabilityPlan() {
 								return ImmutableMutabilityPlan.INSTANCE;

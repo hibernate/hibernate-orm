@@ -18,7 +18,7 @@ import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.orm.integrationtest.java.module.entity.Author;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * We need to test that the scanner works, including when there is a module-info.class

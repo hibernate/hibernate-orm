@@ -14,18 +14,19 @@ apply plugin: 'hibernate-matrix-testing'
 
 
 dependencies {
-    compile( project(':hibernate-core') )
-    compile( libraries.geolatte )
+    api project(':hibernate-core')
+    api libraries.geolatte
 
-    compile( libraries.postgresql )
+    api libraries.postgresql
 
-    testCompile(libraries.junit)
+
+//    testCompile(libraries.junit)
     testCompile(project(':hibernate-testing'))
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
     testCompile([group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.8.0'])
     testCompile(libraries.validation)
-    testCompile(libraries.jandex)
-    testCompile(libraries.classmate)
+//    testCompile(libraries.jandex)
+//    testCompile(libraries.classmate)
     testCompile(libraries.validator) {
         // for test runtime
         transitive = true
@@ -34,10 +35,10 @@ dependencies {
         transitive = false
     }
 
-    testRuntime( libraries.expression_language )
+    testRuntimeOnly libraries.expression_language
 
-    testRuntime('jaxen:jaxen:1.1')
-    testRuntime(libraries.byteBuddy)
+    testRuntimeOnly 'jaxen:jaxen:1.1'
+    testRuntimeOnly libraries.byteBuddy
 }
 
 sourceSets.test.resources {

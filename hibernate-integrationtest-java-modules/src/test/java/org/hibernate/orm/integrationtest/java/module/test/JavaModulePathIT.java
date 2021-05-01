@@ -14,7 +14,7 @@ import org.hibernate.envers.boot.internal.EnversIntegrator;
 import org.hibernate.orm.integrationtest.java.module.service.AuthorService;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
 

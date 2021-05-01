@@ -20,9 +20,7 @@ buildscript {
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
-// No first-class, built-in support for Java modules in Gradle yet,
-// so we have to use https://github.com/java9-modularity/gradle-modules-plugin
-apply plugin: "org.javamodularity.moduleplugin"
+java.modularity.inferModulePath = true
 
 // In this module, the "main" code is actually just test code that happens
 // to be built independently so as to generate a Java module.
@@ -55,9 +53,9 @@ tasks.compileJava {
 checkstyleMain.exclude '**/module-info.java'
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( project( ':hibernate-envers' ) )
-	compile( libraries.jpa )
+	api project( ':hibernate-core' )
+	api project( ':hibernate-envers' )
+	implementation libraries.jpa
 }
 
 test {

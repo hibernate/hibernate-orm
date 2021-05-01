@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.HibernateException;
@@ -145,7 +144,6 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 		}
 	}
 
-
 	public static class FallbackJavaTypeDescriptor<T> extends AbstractTypeDescriptor<T> {
 		protected FallbackJavaTypeDescriptor(final Class<T> type) {
 			super( type, createMutabilityPlan( type ) );
@@ -192,4 +190,6 @@ public class JavaTypeDescriptorRegistry implements Serializable {
 			return (T) value;
 		}
 	}
+
+
 }

@@ -12,6 +12,6 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 dependencies {
     //No need for transitive dependencies: this is all just metadata to be used as companion jar.
     compileOnly project( ':hibernate-core' )
-    compileOnly( libraries.graalvm_nativeimage )
-    testCompile( project( ':hibernate-core' ) )
+    compileOnly libraries.graalvm_nativeimage
+    testImplementation project( ':hibernate-core' )
 }

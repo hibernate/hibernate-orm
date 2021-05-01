@@ -20,45 +20,19 @@ buildscript {
 }
 
 plugins {
-	id 'me.champeau.buildscan-recipes' version '0.2.3'
+	id 'java'
+
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 	id 'nu.studer.credentials' version '2.1'
+
+	id 'idea'
+	id 'eclipse'
+
+	id 'me.champeau.buildscan-recipes' version '0.2.3'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
-	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
 	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
 
-ext {
-	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
-	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
-}
-
-File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
-
-ext {
-	ormVersionFile = versionFile
-	ormVersion = HibernateVersion.fromFile( versionFile, project )
-	// Override during releases
-	if ( project.hasProperty( 'releaseVersion' ) ) {
-		ormVersion = new HibernateVersion( project.releaseVersion, project )
-	}
-	jpaVersion = new JpaVersion('2.2')
-	jakartaJpaVersion = new JpaVersion('3.0.0')
-}
-
-// The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
-
-group = 'org.hibernate'
-version = project.ormVersion.fullName
-
-nexusPublishing {
-	repositories {
-		sonatype {
-			username = project.sonatypeOssrhUser
-			password = project.sonatypeOssrhPassword
-		}
-	}
-}
 
 allprojects {
 	repositories {
@@ -71,7 +45,9 @@ allprojects {
 			}
 		}
 	}
+
 	apply plugin: 'idea'
+	apply from: rootProject.file( 'gradle/base-information.gradle' )
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"
@@ -82,7 +58,7 @@ allprojects {
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Release Task
+// Release / Publish
 
 task release {
 	description = "The task performed when we are performing a release build.  Relies on " +
@@ -103,10 +79,62 @@ task release {
 
 task publish {
 	description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-			"the fact that subprojects will appropriately define a release task " +
-			"themselves if they have any release-related activities to perform"
+			"the fact that subprojects will appropriately define a publish task " +
+			"themselves if they have any publish-related activities to perform"
 }
 
+ext {
+	// look for command-line overrides of the username/password pairs for publishing
+	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
+		credentials.hibernatePublishUsername = project.property( 'hibernatePublishUsername' )
+	}
+	if ( project.hasProperty( 'hibernatePublishPassword' ) ) {
+		credentials.hibernatePublishPassword = project.property( 'hibernatePublishPassword' )
+	}
+
+	if ( project.hasProperty( 'hibernateSnapshotsUsername' ) ) {
+		credentials.hibernateSnapshotsUsername = project.property( 'hibernateSnapshotsUsername' )
+	}
+	if ( project.hasProperty( 'hibernateSnapshotsPassword' ) ) {
+		credentials.hibernateSnapshotsPassword = project.property( 'hibernateSnapshotsPassword' )
+	}
+}
+
+gradle.taskGraph.addTaskExecutionGraphListener(
+		new TaskExecutionGraphListener() {
+			@Override
+			void graphPopulated(TaskExecutionGraph graph) {
+				// make sure the needed username/password pair is available based on whether
+				// we are trying to perform a release or snapshot publishing (if either)
+				if ( graph.hasTask( 'publishMavenJavaPublicationToSnapshotRepository' ) ) {
+					if ( ! project.hcannVersion.isSnapshot ) {
+						throw new GradleException("Cannot publish non-snapshot version to snapshot repository");
+					}
+					if ( project.credentials.hibernateSnapshotsUsername == null ) {
+						throw new GradleException("Snapshot publishing credentials not specified");
+					}
+				}
+
+				if (graph.hasTask('publishMavenJavaPublicationToOssrhRepository')) {
+					if ( project.hcannVersion.isSnapshot ) {
+						throw new GradleException("Cannot publish snapshot version to non-snapshot repository");
+					}
+					if (project.credentials.hibernatePublishUsername == null) {
+						throw new GradleException("Publishing credentials not specified");
+					}
+				}
+			}
+		}
+)
+
+nexusPublishing {
+	repositories {
+		sonatype {
+			username = project.credentials.hibernatePublishUsername
+			password = project.credentials.hibernatePublishPassword
+		}
+	}
+}
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,7 +143,7 @@ task publish {
 task ciBuild {
 	description = "The task performed when one of the 'main' jobs are triggered on the " +
 			"CI server.  Just as above, relies on the fact that subprojects will " +
-			"appropriately define a release task themselves if they have any tasks " +
+			"appropriately define a ciBuild task themselves if they have any tasks " +
 			"which should be performed from these CI jobs"
 }
 
@@ -135,78 +163,4 @@ buildScan {
 buildScanRecipes {
 	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
 }
-
-class JpaVersion {
-	/** The *normal* name (1.0, 2.0, ..) */
-	final String name;
-
-	final String osgiName
-
-	JpaVersion(String version){
-		this.name = version
-		this.osgiName = version + ".0"
-	}
-
-	@Override
-	String toString() {
-		return name
-	}
-}
-
-class HibernateVersion {
-	final String fullName
-	final String majorVersion
-	final String family
-
-	final String osgiVersion
-
-	final boolean isSnapshot
-
-	HibernateVersion(String fullName, Project project) {
-		this.fullName = fullName
-
-		final String[] hibernateVersionComponents = fullName.split( '\\.' )
-		this.majorVersion = hibernateVersionComponents[0]
-		this.family = hibernateVersionComponents[0] + '.' + hibernateVersionComponents[1]
-
-		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
-
-		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
-	}
-
-	static HibernateVersion fromFile(File file, Project project){
-		def fullName = readVersionProperties(file)
-		return new HibernateVersion(fullName, project)
-	}
-
-	private static String readVersionProperties(File file) {
-		if ( !file.exists() ) {
-			throw new GradleException( "Version file $file.canonicalPath does not exists" )
-		}
-		Properties versionProperties = new Properties()
-		file.withInputStream {
-			stream -> versionProperties.load( stream )
-		}
-		return versionProperties.hibernateVersion
-	}
-
-	@Override
-	String toString() {
-		return this.fullName
-	}
-}
-
-//idea {
-//    project {
-//		jdkName = gradle.ext.baselineJavaVersion
-//		languageLevel = gradle.ext.baselineJavaVersion
-//
-//		vcs = 'Git'
-//    }
-//    module {
-//        name = "hibernate-orm"
-//    }
-//}
-
-
 

@@ -6,12 +6,14 @@
  */
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
-
-apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Jar
+apply plugin: 'signing'
+
+ext {
+	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
+	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
+}
 
 jar {
 	manifest {
@@ -145,26 +147,29 @@ javadoc {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing
 
+java {
+	withJavadocJar()
+	withSourcesJar()
+}
+
+
 publishing {
 	publications {
 		publishedArtifacts {
 			from components.java
-
-			artifact( sourcesJar ) {
-				// todo : do these really need to be specified twice?
-				classifier 'sources'
-			}
-
-			artifact( javadocJar ) {
-				// todo : do these really need to be specified twice?
-				classifier "javadoc"
-			}
 		}
 	}
 }
 
+
 task ciBuild( dependsOn: [test, publish] )
 
-task release( dependsOn: [test, publishToSonatype] )
-publishToSonatype.mustRunAfter test
+signing {
+	sign publishing.publications.publishedArtifacts
+}
+tasks.withType(Sign) {
+	onlyIf { ! project.ormVersion.isSnapshot }
+}
 
+task release(dependsOn: [test, publishToSonatype])
+publishToSonatype.mustRunAfter test

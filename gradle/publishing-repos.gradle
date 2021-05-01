@@ -4,29 +4,23 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-
-apply plugin: 'maven-publish'
-if ( rootProject.ormVersion.isSnapshot ) {
-	apply plugin: 'org.hibernate.build.maven-repo-auth'
-}
-
-publishing {
-	publications {
-		publishedArtifacts( MavenPublication )
-	}
-
-	repositories {
-		maven {
-			name 'jboss-snapshots-repository'
-			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-		}
-	}
-}
-
-model {
-	tasks.generatePomFileForPublishedArtifactsPublication {
-		destination = file( "${buildDir}/generated-pom.xml" )
-	}
-}
-
-task generatePomFile( dependsOn: 'generatePomFileForPublishedArtifactsPublication' )
+//
+//apply plugin: 'maven-publish'
+//apply plugin: 'signing'
+//
+//
+//publishing {
+//	if ( project.ormVersion.isSnapshot ) {
+//		repositories {
+//			maven {
+//				name 'snapshots'
+//				url 'https://oss.sonatype.org/content/repositories/snapshots/'
+//
+//				credentials {
+//					username project.credentials.hibernateSnapshotsUsername
+//					password project.credentials.hibernateSnapshotsPassword
+//				}
+//			}
+//		}
+//	}
+//}

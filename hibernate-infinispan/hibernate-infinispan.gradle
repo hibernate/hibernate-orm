@@ -10,7 +10,6 @@ description = '(deprecated - use org.infinispan:infinispan-hibernate-cache-v53 i
 apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 apply plugin: 'maven-publish'
-//apply plugin: 'org.hibernate.build.maven-repo-auth'
 
 ext {
 	relocatedGroupId  = 'org.infinispan'

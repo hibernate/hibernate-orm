@@ -124,7 +124,7 @@ public class SynchronizationTypeTest {
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 		}
-		catch (Throwable t) {
+		catch (Exception  | AssertionError e) {
 			try {
 				switch ( transactionManager.getStatus() ) {
 					case Status.STATUS_ACTIVE:
@@ -135,6 +135,7 @@ public class SynchronizationTypeTest {
 			catch (Exception exception) {
 				//ignore exception
 			}
+			throw e;
 		}
 		finally {
 			if ( entityManager != null && entityManager.isOpen() ) {

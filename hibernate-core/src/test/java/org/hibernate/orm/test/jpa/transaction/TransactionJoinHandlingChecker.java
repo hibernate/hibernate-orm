@@ -72,7 +72,7 @@ public class TransactionJoinHandlingChecker {
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 		}
-		catch (Throwable t){
+		catch (Exception | AssertionError e){
 			try {
 				switch ( transactionManager.getStatus() ) {
 					case Status.STATUS_ACTIVE:
@@ -83,7 +83,7 @@ public class TransactionJoinHandlingChecker {
 			catch (Exception exception) {
 				//ignore exception
 			}
-			throw t;
+			throw e;
 		}
 	}
 }

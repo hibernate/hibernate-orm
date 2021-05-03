@@ -87,7 +87,7 @@ public class TransactionRollbackTest {
 
 						entityManager.getTransaction().commit();
 					}
-					catch (Throwable t) {
+					catch (Exception | AssertionError e) {
 						if ( entityManager.getTransaction().isActive() ) {
 							entityManager.getTransaction().rollback();
 						}

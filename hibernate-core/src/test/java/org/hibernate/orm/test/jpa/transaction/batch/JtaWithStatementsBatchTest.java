@@ -30,12 +30,11 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**
@@ -92,7 +91,7 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 						assertStatementsListIsCleared();
 						assertAllStatementsAreClosed( testBatch.createdStatements );
 					}
-					catch (Throwable t) {
+					catch (Exception | AssertionError e) {
 						try {
 							switch ( transactionManager.getStatus() ) {
 								case Status.STATUS_ACTIVE:
@@ -100,10 +99,10 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 									transactionManager.rollback();
 							}
 						}
-						catch (Exception e) {
+						catch (Exception exception) {
 							//ignore e
 						}
-						throw new RuntimeException( t );
+						throw new RuntimeException( e );
 					}
 
 					assertFalse(
@@ -132,7 +131,8 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 								case Status.STATUS_MARKED_ROLLBACK:
 									transactionManager.rollback();
 							}
-						}catch (Exception e2){
+						}
+						catch (Exception e2) {
 							//ignore e
 						}
 					}
@@ -143,7 +143,8 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 								case Status.STATUS_MARKED_ROLLBACK:
 									transactionManager.rollback();
 							}
-						}catch (Exception e){
+						}
+						catch (Exception e) {
 							//ignore e
 						}
 					}

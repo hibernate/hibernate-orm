@@ -50,41 +50,48 @@ public class TransactionRollbackTest {
 					final Session session = entityManager.unwrap( Session.class );
 					final OperationCollectorObserver transactionObserver = new OperationCollectorObserver();
 					( (JdbcSessionOwner) session ).getTransactionCoordinator().addObserver( transactionObserver );
-					entityManager.getTransaction().begin();
+					try {
+						entityManager.getTransaction().begin();
 
-					// given two inserted records
-					entityManager.persist( new Shipment( "shipment-1", "INITIAL" ) );
-					entityManager.persist( new Shipment( "shipment-2", "INITIAL" ) );
+						// given two inserted records
+						entityManager.persist( new Shipment( "shipment-1", "INITIAL" ) );
+						entityManager.persist( new Shipment( "shipment-2", "INITIAL" ) );
 
-					entityManager.flush();
-					entityManager.clear();
+						entityManager.flush();
+						entityManager.clear();
 
-					Assertions.assertThrows(
-							Exception.class,
-							() -> {
-								// when provoking a duplicate-key exception
-								entityManager.persist( new Shipment( "shipment-1", "INITIAL" ) );
-								entityManager.getTransaction().commit();
-							},
-							"Expected exception was not raised"
-					);
+						Assertions.assertThrows(
+								Exception.class,
+								() -> {
+									// when provoking a duplicate-key exception
+									entityManager.persist( new Shipment( "shipment-1", "INITIAL" ) );
+									entityManager.getTransaction().commit();
+								},
+								"Expected exception was not raised"
+						);
 
-					assertThat( transactionObserver.getUnSuccessfulAfterCompletion(), is( 1 ) );
+						assertThat( transactionObserver.getUnSuccessfulAfterCompletion(), is( 1 ) );
 
-					entityManager.clear();
-					entityManager.getTransaction().begin();
+						entityManager.clear();
+						entityManager.getTransaction().begin();
 
-					Shipment shipment = entityManager.find( Shipment.class, "shipment-1" );
-					if ( shipment != null ) {
-						entityManager.remove( shipment );
+						Shipment shipment = entityManager.find( Shipment.class, "shipment-1" );
+						if ( shipment != null ) {
+							entityManager.remove( shipment );
+						}
+
+						shipment = entityManager.find( Shipment.class, "shipment-2" );
+						if ( shipment != null ) {
+							entityManager.remove( shipment );
+						}
+
+						entityManager.getTransaction().commit();
 					}
-
-					shipment = entityManager.find( Shipment.class, "shipment-2" );
-					if ( shipment != null ) {
-						entityManager.remove( shipment );
+					catch (Throwable t) {
+						if ( entityManager.getTransaction().isActive() ) {
+							entityManager.getTransaction().rollback();
+						}
 					}
-
-					entityManager.getTransaction().commit();
 				}
 		);
 	}

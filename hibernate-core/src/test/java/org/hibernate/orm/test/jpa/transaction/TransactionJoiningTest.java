@@ -12,6 +12,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.SynchronizationType;
 import javax.persistence.TransactionRequiredException;
 import javax.transaction.Status;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -22,13 +23,12 @@ import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoo
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
-import org.hibernate.testing.orm.junit.ExtraAssertions;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.ExtraAssertions;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -70,7 +70,10 @@ public class TransactionJoiningTest {
 		// a TransactionRequiredException to be thrown
 
 		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ), "setup problem" );
+		assertFalse(
+				JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ),
+				"setup problem"
+		);
 
 		try {
 			Assertions.assertThrows(
@@ -88,125 +91,134 @@ public class TransactionJoiningTest {
 	public void testImplicitJoining(EntityManagerFactoryScope scope) throws Exception {
 		// here the transaction is started before the EM is opened...
 
-		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		assertFalse( JtaStatusHelper.isActive( transactionManager ) );
+		try {
+			transactionManager.begin();
+			entityManager = scope.getEntityManagerFactory().createEntityManager();
+			SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
 
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
+			assertTrue( entityManager.isOpen() );
+			assertTrue( session.isOpen() );
+			entityManager.close();
+			assertFalse( entityManager.isOpen() );
+			assertFalse( session.isOpen() );
 
-		assertTrue( entityManager.isOpen() );
-		assertTrue( session.isOpen() );
-		entityManager.close();
-		assertFalse( entityManager.isOpen() );
-		assertFalse( session.isOpen() );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
-		assertFalse( entityManager.isOpen() );
-		assertFalse( session.isOpen() );
+			transactionManager.commit();
+			assertFalse( entityManager.isOpen() );
+			assertFalse( session.isOpen() );
+		}
+		finally {
+			rollbackActiveTransacionrAndCloseEntityManager( entityManager, transactionManager );
+		}
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10807")
 	public void testIsJoinedAfterMarkedForRollbackImplicit(EntityManagerFactoryScope scope) throws Exception {
-		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
-
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
-
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
-
-		assertTrue( entityManager.isOpen() );
-		assertTrue( session.isOpen() );
-		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
-
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
-		assertTrue( entityManager.isJoinedToTransaction() );
-
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		assertFalse( JtaStatusHelper.isActive( transactionManager ) );
 		try {
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			transactionManager.begin();
+			entityManager = scope.getEntityManagerFactory().createEntityManager();
+			SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
+
+			assertTrue( entityManager.isOpen() );
+			assertTrue( session.isOpen() );
+			transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
+			assertTrue( entityManager.isJoinedToTransaction() );
+
+
+			transactionManager.rollback();
 			entityManager.close();
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 		}
 		finally {
-			// ensure the entityManager is closed in case the rollback call fails
-			entityManager.close();
+			rollbackActiveTransacionrAndCloseEntityManager( entityManager, transactionManager );
 		}
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10807")
 	public void testIsJoinedAfterMarkedForRollbackExplicit(EntityManagerFactoryScope scope) throws Exception {
-
-		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager( SynchronizationType.UNSYNCHRONIZED );
-		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
-		assertTrue( entityManager.isOpen() );
-		assertTrue( session.isOpen() );
-
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		entityManager.joinTransaction();
-
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
-
-		transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
-
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
-		assertTrue( entityManager.isJoinedToTransaction() );
-
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		assertFalse( JtaStatusHelper.isActive( transactionManager ) );
 		try {
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			entityManager = scope.getEntityManagerFactory()
+					.createEntityManager( SynchronizationType.UNSYNCHRONIZED );
+			SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+			assertTrue( entityManager.isOpen() );
+			assertTrue( session.isOpen() );
+
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+
+			transactionManager.begin();
+			entityManager.joinTransaction();
+
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
+
+			transactionCoordinator.getTransactionDriverControl().markRollbackOnly();
+
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
+			assertTrue( entityManager.isJoinedToTransaction() );
+
+			transactionManager.rollback();
 
 			entityManager.close();
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 		}
 		finally {
-			// ensure the entityManager is closed in case the rollback call fails
-			entityManager.close();
+			rollbackActiveTransacionrAndCloseEntityManager( entityManager, transactionManager );
 		}
 	}
 
 	@Test
 	public void testCloseAfterCommit(EntityManagerFactoryScope scope) throws Exception {
-		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
-
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
-
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
-
-		assertTrue( entityManager.isOpen() );
-		assertTrue( session.isOpen() );
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		assertFalse( JtaStatusHelper.isActive( transactionManager ) );
 		try {
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			entityManager = scope.getEntityManagerFactory().createEntityManager();
+			SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
+
+			assertTrue( entityManager.isOpen() );
+			assertTrue( session.isOpen() );
+
+			transactionManager.commit();
 			assertTrue( entityManager.isOpen() );
 			assertTrue( session.isOpen() );
 
@@ -215,29 +227,34 @@ public class TransactionJoiningTest {
 			assertFalse( session.isOpen() );
 		}
 		finally {
-			// ensure the entityManager is closed in case the commit call fails
-			entityManager.close();
+			rollbackActiveTransacionrAndCloseEntityManager( entityManager, transactionManager );
 		}
 	}
 
 	@Test
 	public void testImplicitJoiningWithExtraSynchronization(EntityManagerFactoryScope scope) throws Exception {
-		assertFalse( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		assertFalse( JtaStatusHelper.isActive( transactionManager ) );
+		try {
+			transactionManager.begin();
+			entityManager = scope.getEntityManagerFactory().createEntityManager();
+			SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager();
-		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
+			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
+			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
 
-		ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
-		JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
+			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
+			assertTrue( transactionCoordinator.isActive() );
+			assertTrue( transactionCoordinator.isJoined() );
 
-		assertTrue( transactionCoordinator.isSynchronizationRegistered() );
-		assertTrue( transactionCoordinator.isActive() );
-		assertTrue( transactionCoordinator.isJoined() );
+			entityManager.close();
 
-		entityManager.close();
-
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.commit();
+		}
+		finally {
+			rollbackActiveTransacionrAndCloseEntityManager( entityManager, transactionManager );
+		}
 	}
 
 	/**
@@ -251,10 +268,13 @@ public class TransactionJoiningTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-7910")
 	public void testMultiThreadTransactionTimeout(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		EntityManager em = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
+			transactionManager.begin();
+
+			em = scope.getEntityManagerFactory().createEntityManager();
+
 			final SessionImpl sImpl = em.unwrap( SessionImpl.class );
 
 			final CountDownLatch latch = new CountDownLatch( 1 );
@@ -291,9 +311,28 @@ public class TransactionJoiningTest {
 			}
 			assertTrue( caught );
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			transactionManager.rollback();
 		}
 		finally {
+			rollbackActiveTransacionrAndCloseEntityManager( em, transactionManager );
+		}
+	}
+
+	private void rollbackActiveTransacionrAndCloseEntityManager(
+			EntityManager em,
+			TransactionManager transactionManager) {
+		try {
+			switch ( transactionManager.getStatus() ) {
+				case Status.STATUS_ACTIVE:
+				case Status.STATUS_MARKED_ROLLBACK:
+					transactionManager.rollback();
+			}
+		}
+		catch (Exception exception) {
+			//ignore exception
+		}
+		// ensure the entityManager is closed in case the rollback call fails
+		if ( em != null && em.isOpen() ) {
 			em.close();
 		}
 	}

@@ -516,14 +516,6 @@ public class PluralAttributeMappingImpl
 				);
 			}
 			else {
-				if ( collectionDescriptor.isLazy()  ) {
-					return createDelayedCollectionFetch(
-							fetchParent,
-							fetchablePath,
-							creationState,
-							sqlAstCreationState
-					);
-				}
 				return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
 			}
 		}

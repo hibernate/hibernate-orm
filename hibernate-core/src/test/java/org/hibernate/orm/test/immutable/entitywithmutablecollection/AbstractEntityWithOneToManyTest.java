@@ -6,6 +6,10 @@
  */
 package org.hibernate.orm.test.immutable.entitywithmutablecollection;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import javax.persistence.EntityGraph;
 import javax.persistence.PersistenceException;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -17,6 +21,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -1168,9 +1173,13 @@ public abstract class AbstractEntityWithOneToManyTest {
 
 		scope.inTransaction(
 				s -> {
-					Contract c = getContract( s );
+					EntityGraph<Contract> entityGraph = s.createEntityGraph( Contract.class);
+					Map<String, Object> properties = new HashMap();
+					properties.put("javax.persistence.fetchgraph", entityGraph);
+					Contract c = s.find( Contract.class, cOrig.getId(), properties );
 					s.createQuery( "delete from Party" ).executeUpdate();
 					s.delete( c );
+					s.flush();
 					assertPartyAndContractAreDeleted( s );
 				}
 		);
@@ -1188,7 +1197,10 @@ public abstract class AbstractEntityWithOneToManyTest {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<Contract> criteria = criteriaBuilder.createQuery( Contract.class );
 		criteria.from( Contract.class );
-		return s.createQuery( criteria ).uniqueResult();
+
+		QueryImplementor<Contract> query = s.createQuery( criteria );
+		query.setHint( "javax.persistence.fetchgraph", s.createEntityGraph( Contract.class) );
+		return query.uniqueResult();
 	}
 
 	private ContractVariation getContractVariation(SessionImplementor s) {

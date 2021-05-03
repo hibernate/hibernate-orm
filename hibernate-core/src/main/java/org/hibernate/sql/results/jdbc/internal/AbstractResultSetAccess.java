@@ -10,6 +10,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.StringHelper;
 
 /**
  * @author Steve Ebersole
@@ -59,7 +60,9 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 	@Override
 	public int resolveColumnPosition(String columnName) {
 		try {
-			return getResultSet().findColumn( columnName );
+			return getResultSet().findColumn(
+					StringHelper.unquote( columnName, persistenceContext.getJdbcServices().getDialect() )
+			);
 		}
 		catch (SQLException e) {
 			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(

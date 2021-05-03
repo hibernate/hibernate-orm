@@ -64,6 +64,7 @@ import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
+import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
@@ -480,7 +481,7 @@ public class NativeQueryImpl<R>
 		}
 	}
 
-	private NativeSelectQueryPlan<R> createQueryPlan(JdbcValuesMappingProducer jdbcValuesMappingProducer) {
+	private NativeSelectQueryPlan<R> createQueryPlan(ResultSetMapping resultSetMapping) {
 		final RowTransformer<?> rowTransformer = null;
 
 		final NativeSelectQueryDefinition queryDefinition = new NativeSelectQueryDefinition() {
@@ -500,8 +501,8 @@ public class NativeQueryImpl<R>
 			}
 
 			@Override
-			public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
-				return jdbcValuesMappingProducer;
+			public ResultSetMapping getResultSetMapping() {
+				return resultSetMapping;
 			}
 
 			@Override

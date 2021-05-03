@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
@@ -30,7 +30,7 @@ import org.junit.Test;
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-@RequiresDialect( Oracle8iDialect.class )
+@RequiresDialect( OracleDialect.class )
 public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

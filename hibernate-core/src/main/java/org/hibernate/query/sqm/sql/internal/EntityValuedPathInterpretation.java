@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -188,7 +189,13 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final TableGroup tableGroup = fromClauseAccess.resolveTableGroup(
 					navigablePath,
 					np -> {
-						final TableGroup parentTableGroup = getTableGroup();
+						final TableGroup parentTableGroup;
+						if ( getExpressionType() instanceof CollectionPart ) {
+							parentTableGroup = fromClauseAccess.findTableGroup( np.getParent().getParent() );
+						}
+						else {
+							parentTableGroup = getTableGroup();
+						}
 
 						final TableGroupJoin tableGroupJoin = associationMapping.createTableGroupJoin(
 								navigablePath,

@@ -317,9 +317,12 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				MetadataBuildingContext context) {
 			assert joinDescriptorsAccess != null;
 
-			this.entityName = hbmEntityReturn.getEntityName() != null
-					? hbmEntityReturn.getEntityName()
-					: hbmEntityReturn.getClazz();
+			if ( hbmEntityReturn.getEntityName() == null ) {
+				this.entityName = context.getMetadataCollector().getImports().get( hbmEntityReturn.getClazz() );
+			}
+			else {
+				this.entityName = hbmEntityReturn.getEntityName();
+			}
 			if ( entityName == null ) {
 				throw new MappingException(
 						"Entity <return/> mapping did not specify entity name"
@@ -340,7 +343,9 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					registrationName
 			);
 
-			this.discriminatorColumnAlias = hbmEntityReturn.getClazz();
+			this.discriminatorColumnAlias = hbmEntityReturn.getReturnDiscriminator() == null
+					? null
+					: hbmEntityReturn.getReturnDiscriminator().getColumn();
 			this.lockMode = hbmEntityReturn.getLockMode();
 			this.joinDescriptorsAccess = joinDescriptorsAccess;
 			this.registrationName = registrationName;

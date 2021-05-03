@@ -15,8 +15,8 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -195,7 +195,7 @@ public class WithClauseTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11401")
-	@SkipForDialect(value = DerbyDialect.class,comment = "Derby does not support cast from INTEGER to VARCHAR")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support cast from INTEGER to VARCHAR")
 	public void testWithClauseAsSubqueryWithKeyAndOtherJoinReference(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(s) -> {

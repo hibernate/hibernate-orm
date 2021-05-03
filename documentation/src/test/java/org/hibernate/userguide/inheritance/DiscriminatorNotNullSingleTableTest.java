@@ -45,12 +45,6 @@ public class DiscriminatorNotNullSingleTableTest extends BaseEntityManagerFuncti
 	@Test
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.unwrap( Session.class ).doWork( connection -> {
-				try(Statement statement = connection.createStatement()) {
-					statement.executeUpdate( "ALTER TABLE Account ALTER COLUMN DTYPE SET NULL" );
-				}
-			} );
-
 			//tag::entity-inheritance-single-table-discriminator-value-persist-example[]
 			DebitAccount debitAccount = new DebitAccount();
 			debitAccount.setId( 1L );

@@ -23,6 +23,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.ResultSetOutput;
@@ -39,7 +40,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect( value = PostgreSQL81Dialect.class, strictMatching = false )
+@RequiresDialect( value = PostgreSQLDialect.class, strictMatching = false )
 @FailureExpected( jiraKey = "HHH-8445", message = "Waiting on EG clarification" )
 public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
 

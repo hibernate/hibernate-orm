@@ -106,7 +106,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	// subclass discrimination works by assigning particular
 	// values to certain combinations of null primary key
 	// values in the outer join using an SQL CASE
-	private final Map subclassesByDiscriminatorValue = new HashMap();
+	private final Map<Object, String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final String[] discriminatorValues;
 	private final String[] notNullColumnNames;
 	private final int[] notNullColumnTableNumbers;
@@ -801,7 +801,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	public String getSubclassForDiscriminatorValue(Object value) {
-		return (String) subclassesByDiscriminatorValue.get( value );
+		if ( value == null ) {
+			return subclassesByDiscriminatorValue.get( NULL_DISCRIMINATOR );
+		}
+		else {
+			String result = subclassesByDiscriminatorValue.get( value );
+			if ( result == null ) {
+				result = subclassesByDiscriminatorValue.get( NOT_NULL_DISCRIMINATOR );
+			}
+			return result;
+		}
 	}
 
 	@Override

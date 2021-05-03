@@ -114,8 +114,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
-	private static final String NULL_STRING = "null";
-	private static final String NOT_NULL_STRING = "not null";
 
 	//INITIALIZATION:
 

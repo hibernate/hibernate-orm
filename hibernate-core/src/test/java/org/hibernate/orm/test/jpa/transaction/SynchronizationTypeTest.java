@@ -12,10 +12,12 @@ import javax.persistence.SynchronizationType;
 import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.transaction.Book;
 import org.hibernate.jpa.test.transaction.Book_;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
@@ -75,21 +77,23 @@ public class SynchronizationTypeTest {
 	public void testImplicitJoining(EntityManagerFactoryScope scope) throws Exception {
 		// here the transaction is started before the EM is opened.  Because the SynchronizationType is UNSYNCHRONIZED
 		// though, it should not auto join the transaction
-
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		assertFalse(
-				JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ),
+				JtaStatusHelper.isActive( transactionManager ),
 				"setup problem"
 		);
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		assertTrue(
-				JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ),
-				"setup problem"
-		);
-
-		EntityManager entityManager = scope.getEntityManagerFactory()
-				.createEntityManager( SynchronizationType.UNSYNCHRONIZED, null );
-		SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 		try {
+			transactionManager.begin();
+			assertTrue(
+					JtaStatusHelper.isActive( transactionManager ),
+					"setup problem"
+			);
+
+			entityManager = scope.getEntityManagerFactory()
+					.createEntityManager( SynchronizationType.UNSYNCHRONIZED, null );
+
+			SharedSessionContractImplementor session = entityManager.unwrap( SharedSessionContractImplementor.class );
 
 			ExtraAssertions.assertTyping( JtaTransactionCoordinatorImpl.class, session.getTransactionCoordinator() );
 			JtaTransactionCoordinatorImpl transactionCoordinator = (JtaTransactionCoordinatorImpl) session.getTransactionCoordinator();
@@ -104,7 +108,7 @@ public class SynchronizationTypeTest {
 			assertFalse( transactionCoordinator.isJoined() );
 
 			entityManager.joinTransaction();
-			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			assertTrue( JtaStatusHelper.isActive( transactionManager ) );
 			assertTrue( transactionCoordinator.isActive() );
 			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
 			assertTrue( transactionCoordinator.isActive() );
@@ -116,12 +120,24 @@ public class SynchronizationTypeTest {
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.commit();
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 		}
+		catch (Throwable t) {
+			try {
+				switch ( transactionManager.getStatus() ) {
+					case Status.STATUS_ACTIVE:
+					case Status.STATUS_MARKED_ROLLBACK:
+						transactionManager.rollback();
+				}
+			}
+			catch (Exception exception) {
+				//ignore exception
+			}
+		}
 		finally {
-			if ( entityManager.isOpen() ) {
+			if ( entityManager != null && entityManager.isOpen() ) {
 				entityManager.close();
 			}
 		}
@@ -133,23 +149,24 @@ public class SynchronizationTypeTest {
 	public void testDisallowedOperations(EntityManagerFactoryScope scope) throws Exception {
 		// test calling operations that are disallowed while a UNSYNCHRONIZED persistence context is not
 		// yet joined/enlisted
-
+		EntityManager entityManager = null;
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		assertFalse(
-				JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ),
+				JtaStatusHelper.isActive( transactionManager ),
 				"setup problem"
 		);
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		assertTrue(
-				JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ),
-				"setup problem"
-		);
-
-		EntityManager entityManager = scope.getEntityManagerFactory().createEntityManager(
-				SynchronizationType.UNSYNCHRONIZED,
-				null
-		);
-
 		try {
+			transactionManager.begin();
+			assertTrue(
+					JtaStatusHelper.isActive( transactionManager ),
+					"setup problem"
+			);
+
+			entityManager = scope.getEntityManagerFactory().createEntityManager(
+					SynchronizationType.UNSYNCHRONIZED,
+					null
+			);
+
 			// explicit flushing
 			try {
 				entityManager.flush();
@@ -202,13 +219,12 @@ public class SynchronizationTypeTest {
 			}
 			catch (TransactionRequiredException expected) {
 			}
-
 		}
 		finally {
-			if ( entityManager.isOpen() ) {
+			if ( entityManager != null && entityManager.isOpen() ) {
 				entityManager.close();
 			}
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+			transactionManager.rollback();
 		}
 	}
 }

@@ -7,6 +7,8 @@
 package org.hibernate.orm.test.jpa.transaction;
 
 import javax.persistence.EntityManager;
+import javax.transaction.Status;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class TransactionJoinHandlingChecker {
 	public static void validateExplicitJoiningHandling(EntityManager entityManager) throws Exception {
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 
 		try (SessionImpl session = entityManager.unwrap( SessionImpl.class )) {
 
@@ -41,20 +44,20 @@ public class TransactionJoinHandlingChecker {
 			assertFalse( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertFalse( transactionCoordinator.isJoined() );
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			transactionManager.begin();
+			assertTrue( JtaStatusHelper.isActive( transactionManager ) );
 			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertFalse( transactionCoordinator.isJoined() );
 			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 
 			session.getFlushMode();
-			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			assertTrue( JtaStatusHelper.isActive( transactionManager ) );
 			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertFalse( transactionCoordinator.isJoined() );
 			assertFalse( transactionCoordinator.isSynchronizationRegistered() );
 
 			entityManager.joinTransaction();
-			assertTrue( JtaStatusHelper.isActive( TestingJtaPlatformImpl.INSTANCE.getTransactionManager() ) );
+			assertTrue( JtaStatusHelper.isActive( transactionManager ) );
 			assertTrue( transactionCoordinator.isJtaTransactionCurrentlyActive() );
 			assertTrue( transactionCoordinator.isSynchronizationRegistered() );
 			assertTrue( transactionCoordinator.isJoined() );
@@ -65,9 +68,22 @@ public class TransactionJoinHandlingChecker {
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.commit();
 			assertFalse( entityManager.isOpen() );
 			assertFalse( session.isOpen() );
+		}
+		catch (Throwable t){
+			try {
+				switch ( transactionManager.getStatus() ) {
+					case Status.STATUS_ACTIVE:
+					case Status.STATUS_MARKED_ROLLBACK:
+						transactionManager.rollback();
+				}
+			}
+			catch (Exception exception) {
+				//ignore exception
+			}
+			throw t;
 		}
 	}
 }

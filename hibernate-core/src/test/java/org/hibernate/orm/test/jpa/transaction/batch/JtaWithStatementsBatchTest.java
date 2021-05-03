@@ -92,16 +92,18 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 						assertStatementsListIsCleared();
 						assertAllStatementsAreClosed( testBatch.createdStatements );
 					}
-					catch (Exception e) {
+					catch (Throwable t) {
 						try {
 							switch ( transactionManager.getStatus() ) {
 								case Status.STATUS_ACTIVE:
 								case Status.STATUS_MARKED_ROLLBACK:
 									transactionManager.rollback();
 							}
-						}catch (Exception e2){
+						}
+						catch (Exception e) {
 							//ignore e
 						}
+						throw new RuntimeException( t );
 					}
 
 					assertFalse(

@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,7 +34,6 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -65,266 +63,240 @@ public class CloseEntityManagerWithActiveTransactionTest {
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
-			em.createQuery( "delete from Muffin" ).executeUpdate();
-			em.createQuery( "delete from Box" ).executeUpdate();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			scope.inEntityManager(
+					em -> {
+						em.createQuery( "delete from Muffin" ).executeUpdate();
+						em.createQuery( "delete from Box" ).executeUpdate();
+						try {
+							transactionManager.commit();
+						}
+						catch (Exception e) {
+							throw new RuntimeException( e );
+						}
+					}
+			);
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null &&
-					transactionManager.getTransaction().getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
-			}
-		}
 	}
+
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10942")
 	public void testPersistThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
-			Box box = new Box();
-			box.setColor( "red-and-white" );
-			em.persist( box );
-			em.close();
+			transactionManager.begin();
+			scope.inEntityManager(
+					em -> {
+						Box box = new Box();
+						box.setColor( "red-and-white" );
+						em.persist( box );
+					}
+			);
 			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
-			}
-		}
-		em = scope.getEntityManagerFactory().createEntityManager();
-		try {
-			final List results = em.createQuery( "from Box" ).getResultList();
-			assertThat( results.size(), is( 1 ) );
-		}
-		finally {
-			em.close();
-		}
+		scope.inEntityManager(
+				em -> {
+					final List results = em.createQuery( "from Box" ).getResultList();
+					assertThat( results.size(), is( 1 ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11166")
 	public void testMergeThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
+			transactionManager.begin();
 			Box box = new Box();
-			box.setColor( "red-and-white" );
-			em.persist( box );
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			scope.inEntityManager(
+					em -> {
+						box.setColor( "red-and-white" );
+						em.persist( box );
+					}
+			);
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = scope.getEntityManagerFactory().createEntityManager();
+			transactionManager.commit();
 
-			Muffin muffin = new Muffin();
-			muffin.setKind( "blueberry" );
-			box.addMuffin( muffin );
+			transactionManager.begin();
+			scope.inEntityManager(
+					em -> {
+						Muffin muffin = new Muffin();
+						muffin.setKind( "blueberry" );
+						box.addMuffin( muffin );
 
-			em.merge( box );
-
-			em.close();
-
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+						em.merge( box );
+					}
+			);
+			transactionManager.commit();
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
-			}
-		}
-		em = scope.getEntityManagerFactory().createEntityManager();
-		try {
-			final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
-			assertThat( boxes.size(), is( 1 ) );
-			assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
-		}
-		finally {
-			em.close();
-		}
+
+		scope.inEntityManager(
+				em -> {
+					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					assertThat( boxes.size(), is( 1 ) );
+					assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
+				}
+		);
 	}
+
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11269")
-	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+	public void testMergeWithDeletionOrphanRemovalThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope)
+			throws Exception {
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
+			transactionManager.begin();
 			Muffin muffin = new Muffin();
 			muffin.setKind( "blueberry" );
 			SmallBox box = new SmallBox( muffin );
 			box.setColor( "red-and-white" );
-			em.persist( box );
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			scope.inEntityManager(
+					em -> em.persist( box )
+			);
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = scope.getEntityManagerFactory().createEntityManager();
+			transactionManager.commit();
 
-			box.emptyBox();
+			transactionManager.begin();
+			scope.inEntityManager(
+					em -> {
+						box.emptyBox();
 
-			em.merge( box );
-
-			em.close();
-
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+						em.merge( box );
+					}
+			);
+			transactionManager.commit();
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
-			}
-		}
-		em = scope.getEntityManagerFactory().createEntityManager();
-		try {
-			final List<SmallBox> boxes = em.createQuery( "from SmallBox" ).getResultList();
-			assertThat( boxes.size(), is( 1 ) );
-			assertTrue( boxes.get( 0 ).isEmpty() );
-		}
-		finally {
-			em.close();
-		}
+
+		scope.inEntityManager(
+				em -> {
+					final List<SmallBox> boxes = em.createQuery( "from SmallBox" ).getResultList();
+					assertThat( boxes.size(), is( 1 ) );
+					assertTrue( boxes.get( 0 ).isEmpty() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11166")
 	public void testUpdateThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
+			transactionManager.begin();
 			Box box = new Box();
-			box.setColor( "red-and-white" );
-			em.persist( box );
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			scope.inEntityManager(
+					em -> {
+						box.setColor( "red-and-white" );
+						em.persist( box );
+					}
+			);
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = scope.getEntityManagerFactory().createEntityManager();
-			box = em.find( Box.class, box.getId() );
-			Muffin muffin = new Muffin();
-			muffin.setKind( "blueberry" );
-			box.addMuffin( muffin );
+			transactionManager.commit();
 
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			scope.inEntityManager(
+					em -> {
+						Box result = em.find( Box.class, box.getId() );
+						Muffin muffin = new Muffin();
+						muffin.setKind( "blueberry" );
+						result.addMuffin( muffin );
+					}
+			);
+			transactionManager.commit();
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
-			}
-		}
-		em = scope.getEntityManagerFactory().createEntityManager();
-		try {
-			final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
-			assertThat( boxes.size(), is( 1 ) );
-			assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
-		}
-		finally {
-			em.close();
-		}
+
+		scope.inEntityManager(
+				em -> {
+					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					assertThat( boxes.size(), is( 1 ) );
+					assertThat( boxes.get( 0 ).getMuffinSet().size(), is( 1 ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11166")
 	public void testRemoveThenCloseWithAnActiveTransaction(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
+			transactionManager.begin();
 			Box box = new Box();
-			box.setColor( "red-and-white" );
-			em.persist( box );
-			Muffin muffin = new Muffin();
-			muffin.setKind( "blueberry" );
-			box.addMuffin( muffin );
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			scope.inEntityManager(
+					entityManager -> {
+						box.setColor( "red-and-white" );
+						entityManager.persist( box );
+						Muffin muffin = new Muffin();
+						muffin.setKind( "blueberry" );
+						box.addMuffin( muffin );
+					}
+			);
 
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-			em = scope.getEntityManagerFactory().createEntityManager();
-			box = em.find( Box.class, box.getId() );
-			em.remove( box );
+			transactionManager.commit();
 
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			scope.inEntityManager(
+					entityManager -> {
+						Box result = entityManager.find( Box.class, box.getId() );
+						entityManager.remove( result );
+					}
+			);
+
+			transactionManager.commit();
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
-			}
-		}
-		em = scope.getEntityManagerFactory().createEntityManager();
-		try {
-			final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
-			assertThat( boxes.size(), is( 0 ) );
-		}
-		finally {
-			em.close();
-		}
+
+		scope.inEntityManager(
+				em -> {
+					final List<Box> boxes = em.createQuery( "from Box" ).getResultList();
+					assertThat( boxes.size(), is( 0 ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11099")
 	public void testCommitReleasesLogicalConnection(EntityManagerFactoryScope scope) throws Exception {
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		EntityManager em = scope.getEntityManagerFactory().createEntityManager();
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
 		try {
-			Box box = new Box();
-			box.setColor( "red-and-white" );
-			em.persist( box );
-			final SessionImpl session = (SessionImpl) em.unwrap( Session.class );
-			final JdbcCoordinatorImpl jdbcCoordinator = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
-			em.close();
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			transactionManager.begin();
+			final JdbcCoordinatorImpl jdbcCoordinator = scope.fromEntityManager(
+					em -> {
+						Box box = new Box();
+						box.setColor( "red-and-white" );
+						em.persist( box );
+						final SessionImpl session = (SessionImpl) em.unwrap( Session.class );
+						return (JdbcCoordinatorImpl) session.getJdbcCoordinator();
+					}
+			);
+
+			transactionManager.commit();
 			assertThat(
 					"The logical connection is still open after commit",
 					jdbcCoordinator.getLogicalConnection().isOpen(),
@@ -332,17 +304,21 @@ public class CloseEntityManagerWithActiveTransactionTest {
 			);
 		}
 		catch (Exception e) {
-			final TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
-			if ( transactionManager.getTransaction() != null && transactionManager.getTransaction()
-					.getStatus() == Status.STATUS_ACTIVE ) {
-				TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
-			}
+			rollbackActiveTransaction( transactionManager );
 			throw e;
 		}
-		finally {
-			if ( em.isOpen() ) {
-				em.close();
+	}
+
+	private void rollbackActiveTransaction(TransactionManager transactionManager) {
+		try {
+			switch ( transactionManager.getStatus() ) {
+				case Status.STATUS_ACTIVE:
+				case Status.STATUS_MARKED_ROLLBACK:
+					transactionManager.rollback();
 			}
+		}
+		catch (Exception exception) {
+			//ignore exception
 		}
 	}
 

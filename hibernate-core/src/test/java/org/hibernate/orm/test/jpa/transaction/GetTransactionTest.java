@@ -30,8 +30,8 @@ public class GetTransactionTest {
 					EntityTransaction t = entityManager.getTransaction();
 					assertSame( t, entityManager.getTransaction() );
 					assertFalse( t.isActive() );
-					t.begin();
 					try {
+						t.begin();
 						assertSame( t, entityManager.getTransaction() );
 						assertTrue( t.isActive() );
 						t.commit();

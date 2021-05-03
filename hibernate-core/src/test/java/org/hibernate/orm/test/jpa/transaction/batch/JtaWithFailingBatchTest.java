@@ -38,6 +38,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
@@ -91,6 +92,7 @@ public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 
 						em.persist( comment );
 						transactionManager.commit();
+						fail("An Exception is expected");
 					}
 					catch (Exception expected) {
 						//expected

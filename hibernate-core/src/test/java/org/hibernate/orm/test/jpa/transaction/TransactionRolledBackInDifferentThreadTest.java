@@ -10,15 +10,15 @@ import javax.persistence.EntityManager;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
 import javax.transaction.SystemException;
+import javax.transaction.TransactionManager;
 
 import org.hibernate.HibernateException;
-
-import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -49,12 +49,14 @@ public class TransactionRolledBackInDifferentThreadTest {
 		 */
 
 		// main test thread
-		TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
-		final EntityManager em = scope.getEntityManagerFactory().createEntityManager();
-		em.joinTransaction();
 
+		TransactionManager transactionManager = TestingJtaPlatformImpl.INSTANCE.getTransactionManager();
+		transactionManager.begin();
+		final EntityManager em = scope.getEntityManagerFactory().createEntityManager();
 		try {
-			TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+			em.joinTransaction();
+
+			transactionManager.commit();
 
 			// will be set to the failing exception
 			final HibernateException[] transactionRolledBackInDifferentThreadException = new HibernateException[2];
@@ -63,10 +65,10 @@ public class TransactionRolledBackInDifferentThreadTest {
 			// background test thread 1
 			final Runnable run1 = () -> {
 				try {
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+					transactionManager.begin();
 					em.joinTransaction();
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().setRollbackOnly();
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+					transactionManager.setRollbackOnly();
+					transactionManager.commit();
 				}
 				catch (javax.persistence.PersistenceException e) {
 					if ( e.getCause() instanceof HibernateException &&
@@ -86,9 +88,9 @@ public class TransactionRolledBackInDifferentThreadTest {
 				}
 				finally {
 					try {
-						if ( TestingJtaPlatformImpl.INSTANCE.getTransactionManager()
+						if ( transactionManager
 								.getStatus() != Status.STATUS_NO_TRANSACTION ) {
-							TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+							transactionManager.rollback();
 						}
 					}
 					catch (SystemException ignore) {
@@ -99,13 +101,13 @@ public class TransactionRolledBackInDifferentThreadTest {
 			// test thread 2
 			final Runnable run2 = () -> {
 				try {
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().begin();
+					transactionManager.begin();
 					/*
 					 * the following call to em.joinTransaction() will throw:
 					 *   org.hibernate.HibernateException: Transaction was rolled back in a different thread!
 					 */
 					em.joinTransaction();
-					TestingJtaPlatformImpl.INSTANCE.getTransactionManager().commit();
+					transactionManager.commit();
 				}
 				catch (javax.persistence.PersistenceException e) {
 					if ( e.getCause() instanceof HibernateException &&
@@ -122,9 +124,9 @@ public class TransactionRolledBackInDifferentThreadTest {
 				}
 				finally {
 					try {
-						if ( TestingJtaPlatformImpl.INSTANCE.getTransactionManager()
+						if ( transactionManager
 								.getStatus() != Status.STATUS_NO_TRANSACTION ) {
-							TestingJtaPlatformImpl.INSTANCE.getTransactionManager().rollback();
+							transactionManager.rollback();
 						}
 					}
 					catch (SystemException ignore) {
@@ -142,8 +144,7 @@ public class TransactionRolledBackInDifferentThreadTest {
 
 			// show failure for exception caught in run2.run()
 			if ( transactionRolledBackInDifferentThreadException[0] != null
-					|| transactionRolledBackInDifferentThreadException[1] != null )
-			{
+					|| transactionRolledBackInDifferentThreadException[1] != null ) {
 				fail(
 						"failure in test thread 1 = " +
 								( transactionRolledBackInDifferentThreadException[0] != null ?
@@ -157,6 +158,16 @@ public class TransactionRolledBackInDifferentThreadTest {
 			}
 		}
 		finally {
+			try {
+				switch ( transactionManager.getStatus() ) {
+					case Status.STATUS_ACTIVE:
+					case Status.STATUS_MARKED_ROLLBACK:
+						transactionManager.rollback();
+				}
+			}
+			catch (Exception exception) {
+				//ignore exception
+			}
 			em.close();
 		}
 	}

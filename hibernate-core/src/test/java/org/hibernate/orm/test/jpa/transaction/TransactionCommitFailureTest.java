@@ -98,6 +98,9 @@ public class TransactionCommitFailureTest {
 			//expected
 		}
 		finally {
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
 			em.close();
 		}
 

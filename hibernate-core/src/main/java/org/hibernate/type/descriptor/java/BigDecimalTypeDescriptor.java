@@ -107,6 +107,10 @@ public class BigDecimalTypeDescriptor extends AbstractClassTypeDescriptor<BigDec
 			return null;
 		}
 
+		if ( value instanceof BigDecimal ) {
+			return (BigDecimal) value;
+		}
+
 		if ( value instanceof Number ) {
 			return BigDecimal.valueOf( ( (Number) value ).doubleValue() );
 		}

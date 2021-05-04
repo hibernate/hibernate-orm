@@ -16,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.spi.PersistenceUnitTransactionType;
+
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
@@ -23,6 +25,8 @@ import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
+
+import org.antlr.v4.runtime.atn.ATNConfigSet;
 
 /**
  * HHH-8364 discusses the use of <exclude-unlisted-classes> within Java SE environments.  It was intended for Java EE
@@ -52,7 +56,9 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
 		properties.put( AvailableSettings.RESOURCES_CLASSLOADER, new TestClassLoader() );
 		final List<ParsedPersistenceXmlDescriptor> parsedDescriptors = PersistenceXmlParser.locatePersistenceUnits(
 				properties );
-		
+
+		Map m = PersistenceXmlParser.parse( ConfigHelper.findAsResource( "org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" ), PersistenceUnitTransactionType.RESOURCE_LOCAL );
+
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest1", false );
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest2", true );
 		doTest( parsedDescriptors, "ExcludeUnlistedClassesTest3", false );

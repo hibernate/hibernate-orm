@@ -1,0 +1,93 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.orm.test.jpa.query;
+
+import java.util.HashSet;
+import java.util.Set;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
+import javax.persistence.Table;
+import javax.persistence.TypedQuery;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+
+import org.junit.jupiter.api.Test;
+
+/**
+ * Based on the test developed by Hans Desmet to reproduce the bug reported in HHH-9230
+ *
+ * @author Steve Ebersole
+ */
+@TestForIssue(jiraKey = "HHH-9230")
+@Jpa(annotatedClasses = {
+		QueryWithInParamListAndNamedEntityGraphTest.Person.class
+})
+public class QueryWithInParamListAndNamedEntityGraphTest {
+
+	@Test
+	public void testInClause(EntityManagerFactoryScope scope) {
+		// this test works
+		scope.inTransaction(
+				entityManager -> {
+					Set<Long> ids = new HashSet<>();
+					ids.add( 1L );
+					ids.add( 2L );
+					TypedQuery<Person> query = entityManager.createQuery( "select p from Person p where p.id  in :ids", Person.class );
+					query.setParameter( "ids", ids );
+					query.getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testEntityGraph(EntityManagerFactoryScope scope) {
+		// this test works
+		scope.inTransaction(
+				entityManager -> {
+					TypedQuery<Person> query = entityManager.createQuery( "select p from Person p", Person.class );
+					query.setHint( "javax.persistence.loadgraph", entityManager.createEntityGraph( "withBoss" ) );
+					query.getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testEntityGraphAndInClause(EntityManagerFactoryScope scope) {
+		// this test fails
+		scope.inTransaction(
+				entityManager -> {
+					Set<Long> ids = new HashSet<>();
+					ids.add( 1L );
+					ids.add( 2L );
+					TypedQuery<Person> query = entityManager.createQuery( "select p from Person p where p.id  in :ids", Person.class );
+					query.setHint( "javax.persistence.loadgraph", entityManager.createEntityGraph( "withBoss" ) );
+					query.setParameter( "ids", ids );
+					query.getResultList();
+				}
+		);
+	}
+
+	@Entity(name = "Person")
+	@Table(name = "Person")
+	@NamedEntityGraph(name = "withBoss", attributeNodes = @NamedAttributeNode("boss"))
+	public static class Person {
+		@Id
+		@GeneratedValue
+		private long id;
+		private String name;
+		@ManyToOne
+		@JoinColumn
+		private Person boss;
+	}
+}

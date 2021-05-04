@@ -114,11 +114,11 @@ public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implem
 		}
 
 		if ( value instanceof Byte ) {
-			return (byte) value;
+			return (Byte) value;
 		}
 
 		if ( value instanceof Short ) {
-			return CoercionHelper.toByte( (short) value );
+			return CoercionHelper.toByte( (Short) value );
 		}
 
 		if ( value instanceof Integer ) {

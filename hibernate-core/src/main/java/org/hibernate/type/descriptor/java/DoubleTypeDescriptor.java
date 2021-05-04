@@ -149,7 +149,7 @@ public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> im
 		}
 
 		if ( value instanceof Float ) {
-			return CoercionHelper.toDouble( (float) value );
+			return CoercionHelper.toDouble( (Float) value );
 		}
 
 		if ( value instanceof BigInteger ) {

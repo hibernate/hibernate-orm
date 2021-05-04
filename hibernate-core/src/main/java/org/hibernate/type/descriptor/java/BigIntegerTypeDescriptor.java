@@ -121,19 +121,19 @@ public class BigIntegerTypeDescriptor extends AbstractClassTypeDescriptor<BigInt
 		}
 
 		if ( value instanceof Byte ) {
-			return BigInteger.valueOf( ( (byte) value ) );
+			return BigInteger.valueOf( ( (Byte) value ) );
 		}
 
 		if ( value instanceof Short ) {
-			return BigInteger.valueOf( ( (short) value ) );
+			return BigInteger.valueOf( ( (Short) value ) );
 		}
 
 		if ( value instanceof Integer ) {
-			return BigInteger.valueOf( ( (int) value ) );
+			return BigInteger.valueOf( ( (Integer) value ) );
 		}
 
 		if ( value instanceof Long ) {
-			return BigInteger.valueOf( ( (long) value ) );
+			return BigInteger.valueOf( ( (Long) value ) );
 		}
 
 		if ( value instanceof Double ) {

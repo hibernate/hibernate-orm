@@ -320,17 +320,10 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 	}
 
 	private PropertyAccess makePropertyAccess(Property bootAttributeDescriptor) {
-		PropertyAccessStrategy strategy = null;
-
-		final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
-		final BuiltInPropertyAccessStrategies namedStrategy = BuiltInPropertyAccessStrategies.interpret(
-				propertyAccessorName );
-
-		if ( namedStrategy != null ) {
-			strategy = namedStrategy.getStrategy();
-		}
+		PropertyAccessStrategy strategy = bootAttributeDescriptor.getPropertyAccessStrategy( mappedJtd.getJavaTypeClass() );
 
 		if ( strategy == null ) {
+			final String propertyAccessorName = bootAttributeDescriptor.getPropertyAccessorName();
 			if ( StringHelper.isNotEmpty( propertyAccessorName ) ) {
 				// handle explicitly specified attribute accessor
 				strategy = strategySelector.resolveStrategy( PropertyAccessStrategy.class, propertyAccessorName );

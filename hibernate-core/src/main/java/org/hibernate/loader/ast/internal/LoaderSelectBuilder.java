@@ -731,8 +731,10 @@ public class LoaderSelectBuilder {
 							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
 									fetchableRole );
 
-							fetchTiming = FetchTiming.IMMEDIATE;
-							joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+							if ( profileFetch != null ) {
+								fetchTiming = FetchTiming.IMMEDIATE;
+								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+							}
 						}
 					}
 				}

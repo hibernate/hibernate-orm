@@ -191,7 +191,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		final Selectable column = getColumn();
-		if ( column == incomingColumn ) {
+		if ( column == incomingColumn || column.getText().equals( incomingColumn.getText() ) ) {
 			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
 			return;
 		}

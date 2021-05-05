@@ -76,6 +76,7 @@ import org.hibernate.cfg.QuerySecondPass;
 import org.hibernate.cfg.RecoverableException;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.SecondaryTableSecondPass;
+import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.dialect.Dialect;
@@ -1543,6 +1544,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	private ArrayList<IdGeneratorResolverSecondPass> idGeneratorResolverSecondPassList;
 	private ArrayList<PkDrivenByDefaultMapsIdSecondPass> pkDrivenByDefaultMapsIdSecondPassList;
+	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
 	private ArrayList<CopyIdentifierComponentSecondPass> copyIdentifierComponentSecondPasList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
 	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
@@ -1564,6 +1566,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		else if ( secondPass instanceof PkDrivenByDefaultMapsIdSecondPass ) {
 			addPkDrivenByDefaultMapsIdSecondPass( (PkDrivenByDefaultMapsIdSecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof SetBasicValueTypeSecondPass ) {
+			addSetBasicValueTypeSecondPass( (SetBasicValueTypeSecondPass) secondPass, onTopOfTheQueue );
 		}
 		else if ( secondPass instanceof CopyIdentifierComponentSecondPass ) {
 			addCopyIdentifierComponentSecondPass( (CopyIdentifierComponentSecondPass) secondPass, onTopOfTheQueue );
@@ -1608,6 +1613,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		else {
 			secondPassList.add( secondPass );
 		}
+	}
+
+	private void addSetBasicValueTypeSecondPass(SetBasicValueTypeSecondPass secondPass, boolean onTopOfTheQueue) {
+		if ( setBasicValueTypeSecondPassList == null ) {
+			setBasicValueTypeSecondPassList = new ArrayList<>();
+		}
+		addSecondPass( secondPass, setBasicValueTypeSecondPassList, onTopOfTheQueue );
 	}
 
 	private void addIdGeneratorResolverSecondPass(IdGeneratorResolverSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1675,6 +1687,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			processSecondPasses( idGeneratorResolverSecondPassList );
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
+			processSecondPasses( setBasicValueTypeSecondPassList );
 
 			processCopyIdentifierSecondPassesInOrder();
 

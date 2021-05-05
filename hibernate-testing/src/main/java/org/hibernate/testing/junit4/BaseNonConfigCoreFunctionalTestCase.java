@@ -510,7 +510,7 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void cleanupTestData() throws Exception {
 		doInHibernate(this::sessionFactory, s -> {
-			s.createQuery("delete from java.lang.Object").executeUpdate();
+			s.createQuery( "from java.lang.Object" ).getResultList().forEach( s::delete );
 		});
 	}
 

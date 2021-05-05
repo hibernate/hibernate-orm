@@ -27,7 +27,7 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
-import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 
 /**
  * Implementation of SuppliedConnectionTest.

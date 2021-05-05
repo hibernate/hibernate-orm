@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.orm.test.util.SchemaUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;

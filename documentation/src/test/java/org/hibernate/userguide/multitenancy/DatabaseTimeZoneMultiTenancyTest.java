@@ -45,7 +45,7 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

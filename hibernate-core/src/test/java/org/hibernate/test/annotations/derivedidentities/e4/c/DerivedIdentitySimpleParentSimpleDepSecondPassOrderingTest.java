@@ -17,7 +17,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.test.util.SchemaUtil.getColumnNames;
+import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
 
 /**
  * Test that when an entity with derived identity is referenced from a third entity,

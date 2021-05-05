@@ -14,7 +14,7 @@ import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.test.util.jdbc.TimeZoneConnectionProvider;
+import org.hibernate.orm.test.util.jdbc.TimeZoneConnectionProvider;
 
 /**
  * @author Vlad Mihalcea

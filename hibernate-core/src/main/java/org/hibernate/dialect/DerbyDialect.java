@@ -370,6 +370,11 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		return new String[] {"drop schema " + schemaName + " restrict"};
+	}
+
+	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		return DB2Dialect.selectNullString( sqlType );
 	}

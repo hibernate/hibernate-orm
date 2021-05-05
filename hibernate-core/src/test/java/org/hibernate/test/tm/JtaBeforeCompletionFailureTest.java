@@ -12,7 +12,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.transaction.RollbackException;
 import javax.transaction.Status;
-import javax.transaction.SystemException;
 import javax.transaction.TransactionManager;
 
 import org.hibernate.JDBCException;
@@ -23,10 +22,8 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
+import org.hibernate.orm.test.resource.transaction.jta.JtaPlatformStandardTestingImpl;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

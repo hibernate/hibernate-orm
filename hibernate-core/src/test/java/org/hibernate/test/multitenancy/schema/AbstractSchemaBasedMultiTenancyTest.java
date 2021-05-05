@@ -30,7 +30,7 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

@@ -37,7 +37,7 @@ import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.test.multitenancy.schema.Customer;
-import org.hibernate.test.util.DdlTransactionIsolatorTestingImpl;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;

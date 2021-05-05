@@ -38,7 +38,7 @@ pipeline {
 		stage('Run TCK') {
 			steps {
 				sh """ \
-					docker rm -f tck
+					docker rm -f tck || true
 					docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z -e NO_SLEEP=true -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
 					docker cp tck:/tck/persistence-tck/tmp/JTreport/ ./JTreport
 				"""
@@ -47,8 +47,8 @@ pipeline {
 					failures = sh (
 						script: """ \
 							while read line; do
-							  if [[ "$line" != "*Passed." ]]; then
-								echo "$line"
+							  if [[ "\$line" != *"Passed." ]]; then
+								echo "\$line"
 							  fi
 							done <JTreport/text/summary.txt
 						""",

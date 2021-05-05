@@ -90,11 +90,10 @@ include 'hibernate-core'
 include 'hibernate-core-jakarta'
 include 'hibernate-entitymanager'
 include 'hibernate-testing'
-// todo: enable again when we can finally use the Jakarta JARs from narayana
-//include 'hibernate-testing-jakarta'
-// todo (jakarta): remove these three when the jakarta artifacts are released
-//include 'hibernate-jboss-jta'
-//include 'hibernate-transaction-client'
+include 'hibernate-testing-jakarta'
+// todo (jakarta): remove these two when the jakarta artifacts are released
+include 'hibernate-jboss-jta'
+include 'hibernate-transaction-client'
 
 include 'hibernate-envers'
 include 'hibernate-envers-jakarta'

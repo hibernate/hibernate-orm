@@ -157,8 +157,7 @@ public class CopyIdentifierComponentSecondPass implements SecondPass {
 		SimpleValue value = new BasicValue( buildingContext, component.getTable() );
 		property.setValue( value );
 		final SimpleValue referencedValue = (SimpleValue) referencedProperty.getValue();
-		value.setTypeName( referencedValue.getTypeName() );
-		value.setTypeParameters( referencedValue.getTypeParameters() );
+		value.copyTypeFrom( referencedValue );
 		final Iterator<Selectable> columns = referencedValue.getColumnIterator();
 
 		if ( joinColumns[0].isNameDeferred() ) {

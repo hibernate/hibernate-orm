@@ -302,7 +302,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 					break;
 				}
 				case MAP_KEY: {
-					prepareMapKey( modelXProperty );
+					prepareMapKey( modelXProperty, modelPropertyTypeXClass );
 					break;
 				}
 				case COLLECTION_ELEMENT: {
@@ -329,11 +329,19 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		final String generator = collectionIdAnn.generator();
 	}
 
-	private void prepareMapKey(XProperty mapAttribute) {
-		//noinspection rawtypes
-		final Class implicitJavaType = buildingContext.getBootstrapContext()
+	private void prepareMapKey(
+			XProperty mapAttribute,
+			XClass modelPropertyTypeXClass) {
+		final XClass mapKeyClass;
+		if ( modelPropertyTypeXClass == null ) {
+			mapKeyClass = mapAttribute.getMapKey();
+		}
+		else {
+			mapKeyClass = modelPropertyTypeXClass;
+		}
+		final Class<?> implicitJavaType = buildingContext.getBootstrapContext()
 				.getReflectionManager()
-				.toClass( mapAttribute.getMapKey() );
+				.toClass( mapKeyClass );
 
 		implicitJavaTypeAccess = typeConfiguration -> implicitJavaType;
 

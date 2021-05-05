@@ -145,7 +145,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsJdbcDriverProxying implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof DB2Dialect );
+			return !( dialect instanceof DB2Dialect ) && !( dialect instanceof DerbyDialect );
 		}
 	}
 

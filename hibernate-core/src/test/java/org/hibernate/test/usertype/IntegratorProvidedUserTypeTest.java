@@ -16,7 +16,6 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
@@ -67,7 +66,7 @@ public class IntegratorProvidedUserTypeTest extends BaseCoreFunctionalTestCase {
 		protected Enumeration<URL> findResources(String name) throws IOException {
 			if (name.equals( "META-INF/services/org.hibernate.integrator.spi.Integrator" )) {
 				final URL serviceUrl = ConfigHelper.findAsResource(
-						"org/hibernate/test/service/org.hibernate.integrator.spi.Integrator" );
+						"org/hibernate/orm/test/service/org.hibernate.integrator.spi.Integrator" );
 				return new Enumeration<URL>() {
 					boolean hasMore = true;
 

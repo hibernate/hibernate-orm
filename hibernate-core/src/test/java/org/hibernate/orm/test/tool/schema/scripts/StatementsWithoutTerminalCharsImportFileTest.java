@@ -39,7 +39,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.test.schemaupdate.CommentGenerationTest;
+import org.hibernate.orm.test.schemaupdate.CommentGenerationTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

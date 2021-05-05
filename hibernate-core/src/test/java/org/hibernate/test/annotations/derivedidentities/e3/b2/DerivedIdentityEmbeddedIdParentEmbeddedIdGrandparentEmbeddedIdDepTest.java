@@ -24,7 +24,7 @@
 package org.hibernate.test.annotations.derivedidentities.e3.b2;
 
 import org.hibernate.Session;
-import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.orm.test.util.SchemaUtil;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 

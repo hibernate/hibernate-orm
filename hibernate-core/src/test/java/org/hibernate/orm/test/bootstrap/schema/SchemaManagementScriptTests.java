@@ -31,9 +31,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class SchemaManagementScriptTests {
 	private final Dialect dialect = new H2Dialect();
 
-	private final String FIRST = "first statement";
-	private final String SECOND = "second statement";
-	private final String THIRD = "third statement";
+	private final String FIRST = "first  statement";
+	private final String SECOND = "second  statement";
+	private final String THIRD = "third  statement";
 
 	@Test
 	public void testSimpleExtraction() {

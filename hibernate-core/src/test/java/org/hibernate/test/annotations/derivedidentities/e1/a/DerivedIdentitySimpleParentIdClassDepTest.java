@@ -12,7 +12,7 @@ import org.hibernate.query.Query;
 import org.hibernate.Session;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.SchemaUtil;
+import org.hibernate.orm.test.util.SchemaUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

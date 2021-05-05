@@ -18,7 +18,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.util.PreparedStatementSpyConnectionProvider;
+import org.hibernate.orm.test.util.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

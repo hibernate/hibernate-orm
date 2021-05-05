@@ -57,7 +57,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 				"org.hibernate.orm.test.annotations.id",
 				"org.hibernate.orm.test.annotations.id.generationmappings"
 		},
-		xmlMappings = "org/hibernate/test/annotations/orm.xml"
+		xmlMappings = "org/hibernate/orm/test/annotations/orm.xml"
 
 )
 @SessionFactory

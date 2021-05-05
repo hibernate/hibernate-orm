@@ -11,7 +11,6 @@ import java.util.Map;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.QueryHint;
 import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -24,7 +23,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 

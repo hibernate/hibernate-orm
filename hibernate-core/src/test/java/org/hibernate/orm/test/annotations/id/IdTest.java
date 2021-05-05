@@ -50,7 +50,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 				"org.hibernate.orm.test.annotations",
 				"org.hibernate.orm.test.annotations.id"
 		},
-		xmlMappings = "org/hibernate/test/annotations/orm.xml"
+		xmlMappings = "org/hibernate/orm/test/annotations/orm.xml"
 )
 @SessionFactory
 public class IdTest {

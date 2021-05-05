@@ -15,27 +15,18 @@ package org.hibernate.grammars.importsql;
 }
 
 script
-	: commandBlock+ EOF
+	: (NEWLINE | SPACE | TAB)* ( commandBlock (NEWLINE | SPACE | TAB)* )+ EOF
 	;
 
 commandBlock
-	: command STMT_END
+	: command DELIMITER
 	;
 
 command
-	: commandPart*
-	;
-
-commandPart
-	: notStmtEnd
-	| quotedText
-	;
-
-notStmtEnd
-	: NOT_STMT_END+
-	;
-
-quotedText
-	: QUOTED_TEXT
+	: ( CHAR | QUOTED_TEXT ) // The first part must be a non-whitespace
+	  (
+	    ( CHAR | QUOTED_TEXT | SPACE | TAB ) // Following chars may include spaces
+	    NEWLINE* // And also newlines in betweeen
+	  )*
 	;
 

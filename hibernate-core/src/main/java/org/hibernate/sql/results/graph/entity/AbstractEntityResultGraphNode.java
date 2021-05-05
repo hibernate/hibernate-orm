@@ -93,7 +93,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 
 		final EntityDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping( entityDescriptor, entityTableGroup );
-		if ( discriminatorMapping != null ) {
+		// No need to fetch the discriminator if this type does not have subclasses
+		if ( discriminatorMapping != null && entityDescriptor.getEntityPersister().getEntityMetamodel().hasSubclasses() ) {
 			discriminatorResult = discriminatorMapping.createUnderlyingDomainResult(
 					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
 					entityTableGroup,

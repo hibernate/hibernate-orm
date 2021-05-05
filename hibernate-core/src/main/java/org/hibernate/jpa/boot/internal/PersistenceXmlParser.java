@@ -207,7 +207,7 @@ public class PersistenceXmlParser {
 				transactionType
 		);
 
-		parser.doResolve( integration );
+		parser.parsePersistenceXml( persistenceXmlUrl, integration );
 		return parser.persistenceUnits;
 	}
 

@@ -119,6 +119,14 @@ public class SchemaManagementToolCoordinator {
 				exceptionHandler
 		);
 
+		if ( scriptActionMap != null ) {
+			scriptActionMap.forEach(
+					(action, contributors) -> {
+						performScriptAction( action, metadata, tool, serviceRegistry, executionOptions );
+					}
+			);
+		}
+
 		if ( databaseActionMap != null ) {
 			databaseActionMap.forEach(
 					(action, contributors) -> {
@@ -146,14 +154,6 @@ public class SchemaManagementToolCoordinator {
 									)
 							);
 						}
-					}
-			);
-		}
-
-		if ( scriptActionMap != null ) {
-			scriptActionMap.forEach(
-					(action, contributors) -> {
-						performScriptAction( action, metadata, tool, serviceRegistry, executionOptions );
 					}
 			);
 		}

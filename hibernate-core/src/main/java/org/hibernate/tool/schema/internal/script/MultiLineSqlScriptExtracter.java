@@ -96,7 +96,7 @@ public class MultiLineSqlScriptExtracter implements SqlScriptCommandExtractor {
 				int charPositionInLine,
 				String msg,
 				RecognitionException e) {
-			if ( msg.contains( "missing STMT_END" ) ) {
+			if ( msg.contains( "missing ';'" ) ) {
 				throw new SqlScriptException( "Import script Sql statements must terminate with a ';' char" );
 			}
 			super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, msg, e );

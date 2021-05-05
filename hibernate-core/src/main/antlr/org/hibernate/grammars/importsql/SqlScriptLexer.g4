@@ -15,53 +15,38 @@ LINE_COMMENT
 	;
 
 MULTILINE_COMMENT
-	:  '/*' .*? '*/' -> skip
+	:  '/*'
+	(
+		{ getInputStream().LA(2)!='/' }? '*'
+		| '\r' '\n'
+		| '\r'
+		| '\n'
+		| ~('*'|'\n'|'\r')
+	)*
+	'*/' -> skip
+	;
+
+CHAR
+	: ~( ';' | '\n' | '\r' | ' ' | '\t')
+	;
+
+SPACE
+	: ' '
+	;
+
+TAB
+	: '\t'
 	;
 
 NEWLINE
-	: ('\r'? '\n' | '\r') -> skip
+	: ('\r'? '\n' | '\r')
 	;
 
-STMT_END
-    : ';' ( '\t' | ' ' | '\r' | '\n' )*
-    ;
-
-NOT_STMT_END
-    : ~[;]
-    ;
+DELIMITER:
+	';'
+	;
 
 QUOTED_TEXT
-	: '`' .*? '`'
+	: '`' ( ~('`') )*? '`'
+	| '\'' ( ('\'''\'') | ~('\'') )*? '\''
 	;
-
-//WORD
-//	: ~[;]
-//	;
-//
-//QUOTED_TEXT
-//	: '\'' ( ESCAPE_SEQUENCE | ~('\\'|'\'') )* '\''
-//	;
-//
-//fragment
-//ESCAPE_SEQUENCE
-//	:	'\\' ('b'|'t'|'n'|'f'|'r'|'\\"'|'\''|'\\')
-//	|	UNICODE_ESCAPE
-//	|	OCTAL_ESCAPE
-//	;
-//
-//fragment
-//OCTAL_ESCAPE
-//	:	'\\' ('0'..'3') ('0'..'7') ('0'..'7')
-//	|	'\\' ('0'..'7') ('0'..'7')
-//	|	'\\' ('0'..'7')
-//	;
-//
-//fragment
-//UNICODE_ESCAPE
-//	:	'\\' 'u' HEX_DIGIT HEX_DIGIT HEX_DIGIT HEX_DIGIT
-//	;
-//
-//fragment
-//HEX_DIGIT
-//	: ('0'..'9'|'a'..'f'|'A'..'F')
-//	;

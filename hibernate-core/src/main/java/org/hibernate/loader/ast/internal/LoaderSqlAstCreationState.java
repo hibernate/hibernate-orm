@@ -55,6 +55,7 @@ public class LoaderSqlAstCreationState
 	private final LockOptions lockOptions;
 	private final FetchProcessor fetchProcessor;
 
+	private boolean resolvingCircularFetch;
 	private Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public LoaderSqlAstCreationState(
@@ -112,6 +113,16 @@ public class LoaderSqlAstCreationState
 	@Override
 	public List<Fetch> visitFetches(FetchParent fetchParent) {
 		return fetchProcessor.visitFetches( fetchParent, processingState.getInflightQueryPart().getFirstQuerySpec(), this );
+	}
+
+	@Override
+	public boolean isResolvingCircularFetch() {
+		return resolvingCircularFetch;
+	}
+
+	@Override
+	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
+		this.resolvingCircularFetch = resolvingCircularFetch;
 	}
 
 	@Override

@@ -693,15 +693,17 @@ public class LoaderSelectBuilder {
 				fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 			}
 
-			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
-					fetchablePath,
-					fetchParent,
-					creationState
-			);
+			if ( !creationState.isResolvingCircularFetch() ) {
+				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+						fetchablePath,
+						fetchParent,
+						creationState
+				);
 
-			if ( biDirectionalFetch != null ) {
-				fetches.add( biDirectionalFetch );
-				return;
+				if ( biDirectionalFetch != null ) {
+					fetches.add( biDirectionalFetch );
+					return;
+				}
 			}
 
 			final LockMode lockMode = LockMode.READ;

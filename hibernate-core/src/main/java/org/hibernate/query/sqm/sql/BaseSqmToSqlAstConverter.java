@@ -338,6 +338,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private final EntityGraphTraversalState entityGraphTraversalState;
 
 	private int fetchDepth;
+	private boolean resolvingCircularFetch;
 
 	private Map<String, FilterPredicate> collectionFilterPredicates;
 	private OrderByFragmentConsumer orderByFragmentConsumer;
@@ -537,9 +538,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Stack<Clause> getCurrentClauseStack() {
 		return currentClauseStack;
 	}
-
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Statements
 
 	@Override
@@ -4459,15 +4458,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
 			final NavigablePath fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 
-			final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
-					fetchablePath,
-					fetchParent,
-					this
-			);
+			if ( !isResolvingCircularFetch() ) {
+				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+						fetchablePath,
+						fetchParent,
+						this
+				);
 
-			if ( biDirectionalFetch != null ) {
-				fetches.add( biDirectionalFetch );
-				return;
+				if ( biDirectionalFetch != null ) {
+					fetches.add( biDirectionalFetch );
+					return;
+				}
 			}
 
 			final boolean incrementFetchDepth = fetchable.incrementFetchDepth();
@@ -4686,6 +4687,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
 			}
 		}
+	}
+
+	@Override
+	public boolean isResolvingCircularFetch() {
+		return resolvingCircularFetch;
+	}
+
+	@Override
+	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
+		this.resolvingCircularFetch = resolvingCircularFetch;
 	}
 
 	@Internal

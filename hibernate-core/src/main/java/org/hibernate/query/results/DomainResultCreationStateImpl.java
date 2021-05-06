@@ -76,6 +76,7 @@ public class DomainResultCreationStateImpl
 	private final Stack<Function<String, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
 	private final Stack<NavigablePath> relativePathStack = new StandardStack<>();
 	private boolean processingKeyFetches = false;
+	private boolean resolvingCircularFetch;
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
@@ -407,6 +408,16 @@ public class DomainResultCreationStateImpl
 		fetchableContainer.visitFetchables( fetchableConsumer, null );
 
 		return fetches;
+	}
+
+	@Override
+	public boolean isResolvingCircularFetch() {
+		return resolvingCircularFetch;
+	}
+
+	@Override
+	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
+		this.resolvingCircularFetch = resolvingCircularFetch;
 	}
 
 }

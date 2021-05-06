@@ -57,7 +57,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 		return tableGroup;
 	}
 
-	private TableGroup getTableGroup() {
+	public TableGroup getTableGroup() {
 		if ( tableGroup != null ) {
 			return tableGroup;
 		}

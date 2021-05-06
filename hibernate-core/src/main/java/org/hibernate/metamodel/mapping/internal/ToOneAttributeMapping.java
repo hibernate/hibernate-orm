@@ -299,7 +299,7 @@ public class ToOneAttributeMapping
 	}
 
 	public boolean canJoinForeignKey(EntityIdentifierMapping identifierMapping) {
-		return isKeyReferringSide && identifierMapping == getForeignKeyDescriptor().getTargetPart();
+		return isKeyReferringSide && identifierMapping == getForeignKeyDescriptor().getTargetPart() && !isNullable;
 	}
 
 	public String getReferencedPropertyName() {

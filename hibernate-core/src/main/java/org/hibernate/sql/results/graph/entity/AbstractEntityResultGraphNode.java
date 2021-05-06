@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -73,15 +74,27 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			identifierResult = null;
 			visitIdentifierMapping( identifierNavigablePath, creationState, identifierMapping, entityTableGroup );
 		}
-		else if ( referencedModelPart instanceof ToOneAttributeMapping
-				&& ( (ToOneAttributeMapping) referencedModelPart ).canJoinForeignKey( identifierMapping ) ) {
+		else if ( referencedModelPart instanceof ToOneAttributeMapping ) {
 			// If we don't do this here, LazyTableGroup#getTableReferenceInternal would have to use the target table in case {id} is encountered
-			identifierResult = ( (ToOneAttributeMapping) referencedModelPart ).getForeignKeyDescriptor().createDomainResult(
-					navigablePath,
-					creationState.getSqlAstCreationState().getFromClauseAccess().findTableGroup( navigablePath.getParent() ),
-					null,
-					creationState
-			);
+			if ( ( (ToOneAttributeMapping) referencedModelPart ).canJoinForeignKey( identifierMapping ) ) {
+				identifierResult = ( (ToOneAttributeMapping) referencedModelPart ).getForeignKeyDescriptor()
+						.createDomainResult(
+								navigablePath,
+								creationState.getSqlAstCreationState()
+										.getFromClauseAccess()
+										.findTableGroup( navigablePath.getParent() ),
+								creationState
+						);
+
+			}
+			else {
+				identifierResult = identifierMapping.createDomainResult(
+						identifierNavigablePath,
+						( (LazyTableGroup) entityTableGroup ).getTableGroup(),
+						null,
+						creationState
+				);
+			}
 		}
 		else {
 			identifierResult = identifierMapping.createDomainResult(
@@ -144,7 +157,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 					attributeMapping -> {
 						if ( attributeMapping instanceof ToOneAttributeMapping ) {
 							( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor().createDomainResult(
-									navigablePath,
+									navigablePath.getParent(),
 									entityTableGroup,
 									null,
 									creationState

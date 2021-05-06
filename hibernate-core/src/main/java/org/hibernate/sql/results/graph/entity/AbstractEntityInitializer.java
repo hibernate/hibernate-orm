@@ -129,6 +129,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 								if ( existing.getNavigablePath().equals( navigablePath )
 										&& fetchedModelPart.getNavigableRole()
 										.equals( existing.getInitializedPart().getNavigableRole() ) ) {
+									assert fetchedModelPart == existing.getInitializedPart();
 									return existing;
 								}
 							}

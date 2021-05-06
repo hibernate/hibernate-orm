@@ -11,7 +11,7 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 tasks.withType(PublishToMavenRepository) {
 	onlyIf {
-		repository == publishing.repositories.mavenLocal
+		repository.name == "MavenLocal"
 	}
 }
 

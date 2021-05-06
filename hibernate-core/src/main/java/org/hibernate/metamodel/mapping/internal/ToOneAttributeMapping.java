@@ -380,9 +380,7 @@ public class ToOneAttributeMapping
 					private Key key;
 				}
 			 */
-			if ( parentNavigablePath.getLocalName()
-					.equals( ForeignKeyDescriptor.TARGET_PART_NAME ) || parentNavigablePath.getLocalName().equals(
-					ForeignKeyDescriptor.PART_NAME ) ) {
+			if ( parentNavigablePath.getLocalName().equals( ForeignKeyDescriptor.PART_NAME ) ) {
 				// todo (6.0): maybe it's better to have a flag in creation state that marks if we are building a circular fetch domain result already to skip this?
 				return null;
 			}
@@ -474,6 +472,19 @@ public class ToOneAttributeMapping
 						.getSqlAstCreationState()
 						.getFromClauseAccess()
 						.getTableGroup( fetchParent.getNavigablePath() );
+				final DomainResult<?> foreignKeyDomainResult;
+				assert !creationState.isResolvingCircularFetch();
+				try {
+					creationState.setResolvingCircularFetch( true );
+					foreignKeyDomainResult = foreignKeyDescriptor.createDomainResult(
+							fetchablePath,
+							parentTableGroup,
+							creationState
+					);
+				}
+				finally {
+					creationState.setResolvingCircularFetch( false );
+				}
 				return new CircularFetchImpl(
 						this,
 						getEntityMappingType(),
@@ -482,7 +493,7 @@ public class ToOneAttributeMapping
 						fetchParent,
 						this,
 						fetchablePath,
-						foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, creationState )
+						foreignKeyDomainResult
 				);
 			}
 		}

@@ -77,4 +77,8 @@ public interface DomainResultCreationState {
 	 * 		along FetchStyle?
  	 */
 	List<Fetch> visitFetches(FetchParent fetchParent);
+
+	boolean isResolvingCircularFetch();
+
+	void setResolvingCircularFetch(boolean resolvingCircularFetch);
 }

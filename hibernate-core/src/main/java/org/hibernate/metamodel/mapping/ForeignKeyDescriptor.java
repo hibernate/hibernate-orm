@@ -25,7 +25,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public interface ForeignKeyDescriptor extends VirtualModelPart {
 	String PART_NAME = "{fk}";
-	String TARGET_PART_NAME = "{fk-target}";
 
 	String getKeyTable();
 

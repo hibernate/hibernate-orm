@@ -15,12 +15,15 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -239,10 +242,20 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		final NavigablePath fkNavigablePath = navigablePath.append( getPartName() );
 		final NavigablePath resultNavigablePath;
 		if ( associationKey.getTable().equals( columnContainingTable ) ) {
-			// todo (6.0): what if we append the actual model part and maybe prefix with `{element}`
-//			resultNavigablePath = navigablePath.append( modelPart.getFetchableName() );
-			// todo (6.0): note that the following is only necessary for detecting circular fetch cycles in ToOneAttributeMapping
-			resultNavigablePath = navigablePath.append( ForeignKeyDescriptor.TARGET_PART_NAME );
+			final ModelPartContainer parentModelPart = tableGroup.getModelPart();
+			if ( parentModelPart instanceof PluralAttributeMapping ) {
+				if ( ( (PluralAttributeMapping) parentModelPart ).getIndexDescriptor() == null ) {
+					resultNavigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() )
+							.append( getPartName() );
+				}
+				else {
+					resultNavigablePath = navigablePath.append( CollectionPart.Nature.INDEX.getName() )
+							.append( getPartName() );
+				}
+			}
+			else {
+				resultNavigablePath = navigablePath.append( getPartName() );
+			}
 		}
 		else {
 			resultNavigablePath = navigablePath.append( getPartName() );

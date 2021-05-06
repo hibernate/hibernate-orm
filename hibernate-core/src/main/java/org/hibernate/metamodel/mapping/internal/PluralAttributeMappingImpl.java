@@ -532,17 +532,25 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState,
 			SqlAstCreationState sqlAstCreationState) {
-		final DomainResult fkResult = getKeyDescriptor().createDomainResult(
-				fetchablePath,
-				sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
-				false,
-				creationState
-		);
+		final DomainResult<?> foreignKeyDomainResult;
+		assert !creationState.isResolvingCircularFetch();
+		try {
+			creationState.setResolvingCircularFetch( true );
+			foreignKeyDomainResult = getKeyDescriptor().createDomainResult(
+					fetchablePath,
+					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+					false,
+					creationState
+			);
+		}
+		finally {
+			creationState.setResolvingCircularFetch( false );
+		}
 		return new DelayedCollectionFetch(
 				fetchablePath,
 				this,
 				fetchParent,
-				fkResult
+				foreignKeyDomainResult
 		);
 	}
 

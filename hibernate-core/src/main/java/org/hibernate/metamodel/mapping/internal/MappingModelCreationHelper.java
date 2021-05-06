@@ -90,6 +90,7 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
+import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -969,8 +970,10 @@ public class MappingModelCreationHelper {
 				.getEntityPersister( bootValueMapping.getReferencedEntityName() );
 
 		String referencedPropertyName;
+		boolean swapDirection = false;
 		if ( bootValueMapping instanceof OneToOne ) {
 			OneToOne oneToOne = (OneToOne) bootValueMapping;
+			swapDirection = oneToOne.getForeignKeyType() == ForeignKeyDirection.TO_PARENT;
 			referencedPropertyName = oneToOne.getMappedByProperty();
 			if ( referencedPropertyName == null ) {
 				referencedPropertyName = oneToOne.getReferencedPropertyName();
@@ -1054,7 +1057,8 @@ public class MappingModelCreationHelper {
 					keySelectableMapping,
 					simpleFkTarget,
 					(owner) -> ( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess().getGetter().get( owner ),
-					bootValueMapping.isReferenceToPrimaryKey()
+					bootValueMapping.isReferenceToPrimaryKey(),
+					swapDirection
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
 		}
@@ -1062,6 +1066,7 @@ public class MappingModelCreationHelper {
 			final EmbeddedForeignKeyDescriptor embeddedForeignKeyDescriptor = buildEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTarget,
 					bootValueMapping,
+					swapDirection,
 					dialect,
 					creationProcess
 			);

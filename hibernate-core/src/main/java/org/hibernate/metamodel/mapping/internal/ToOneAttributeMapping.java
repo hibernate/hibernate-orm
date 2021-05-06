@@ -646,7 +646,7 @@ public class ToOneAttributeMapping
 		else {
 			// case 1.1
 			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, isKeyReferringSide, creationState );
-			selectByUniqueKey = true;
+			selectByUniqueKey = bidirectionalAttributeName != null;
 		}
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE ) {

@@ -64,56 +64,14 @@ public class EagerKeyManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					try {
-						/*
-						 select
-        card0_.id as id1_0_0_,
-        card0_.field_card_id as field_ca2_0_0_,
-        card0_."field_key_id" as field_ke3_0_0_,
-        cardfield1_.card_id as card_id1_1_1_,
-        cardfield1_."key_id" as key_id2_1_1_,
-        card2_.id as id1_0_2_,
-        card2_.field_card_id as field_ca2_0_2_,
-        card2_."field_key_id" as field_ke3_0_2_,
-        key3_.id as id1_2_3_
-    from
-        Card card0_
-    left outer join
-        CardField cardfield1_
-            on card0_.field_card_id=cardfield1_.card_id
-            and card0_."field_key_id"=cardfield1_."key_id"
-    left outer join
-        Card card2_
-            on cardfield1_.card_id=card2_.id
-    left outer join
-        "key" key3_
-            on cardfield1_."key_id"=key3_.id
-    where
-        card0_.id=?
-11:08:42,367 TRACE BasicBinder:64 - binding parameter [1] as [VARCHAR] - [cardId]
-11:08:42,370 TRACE BasicExtractor:60 - extracted value ([id1_0_2_] : [VARCHAR]) - [cardId]
-11:08:42,370 TRACE BasicExtractor:60 - extracted value ([id1_2_3_] : [VARCHAR]) - [keyId]
-11:08:42,370 TRACE BasicExtractor:60 - extracted value ([card_id1_1_1_] : [VARCHAR]) - [cardId]
-11:08:42,370 TRACE BasicExtractor:60 - extracted value ([key_id2_1_1_] : [VARCHAR]) - [keyId]
-11:08:42,371 TRACE BasicExtractor:60 - extracted value ([field_ca2_0_2_] : [VARCHAR]) - [cardId]
-11:08:42,372 TRACE BasicExtractor:60 - extracted value ([field_ke3_0_2_] : [VARCHAR]) - [keyId]
-11:08:42,372 DEBUG SQL:144 -
-    select
-        key0_.id as id1_2_0_
-    from
-        "key" key0_
-    where
-        key0_.id=?
-11:08:42,372 TRACE BasicBinder:64 - binding parameter [1] as [VARCHAR] - [keyId]
-
-						 */
 						Card card = session.get( Card.class, CARD_ID );
 
 						CardField cf = card.getField();
 						assertSame( card, cf.getPrimaryKey().getCard() );
 
 						statementInspector.assertExecutedCount( 2 );
-						// Since CardField and Key have no additional state, it's not necessary to join their tables
-						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
+						// Since Key have no additional state, it's not necessary to join their tables
+						statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
 						statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 0 );
 					}
 					catch (StackOverflowError soe) {

@@ -10,6 +10,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -67,7 +68,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) fetchable;
 			shouldSelect = selected && !creationState.isAssociationKeyVisited(
 					toOne.getForeignKeyDescriptor().getAssociationKey()
-			);
+			) && !ForeignKeyDescriptor.PART_NAME.equals( getNavigablePath().getLocalName() );
 		}
 		else {
 			shouldSelect = selected;

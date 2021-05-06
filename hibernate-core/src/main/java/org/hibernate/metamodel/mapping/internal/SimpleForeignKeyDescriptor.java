@@ -68,12 +68,31 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			BasicValuedModelPart targetModelPart,
 			Function<Object, Object> disassemblyValueExtractor,
 			boolean refersToPrimaryKey) {
+		this( keySelectableMapping, targetModelPart, disassemblyValueExtractor, refersToPrimaryKey, false );
+	}
+
+	public SimpleForeignKeyDescriptor(
+			SelectableMapping keySelectableMapping,
+			BasicValuedModelPart targetModelPart,
+			Function<Object, Object> disassemblyValueExtractor,
+			boolean refersToPrimaryKey,
+			boolean swapDirection) {
 		assert keySelectableMapping != null;
 		assert targetModelPart != null;
 		assert disassemblyValueExtractor != null;
 
-		this.keySide = BasicAttributeMapping.withSelectableMapping( targetModelPart, keySelectableMapping );
-		this.targetSide = targetModelPart;
+		final BasicValuedModelPart keyModelPart = BasicAttributeMapping.withSelectableMapping(
+				targetModelPart,
+				keySelectableMapping
+		);
+		if ( swapDirection ) {
+			this.keySide = targetModelPart;
+			this.targetSide = keyModelPart;
+		}
+		else {
+			this.keySide = keyModelPart;
+			this.targetSide = targetModelPart;
+		}
 		this.disassemblyValueExtractor = disassemblyValueExtractor;
 		this.refersToPrimaryKey = refersToPrimaryKey;
 	}

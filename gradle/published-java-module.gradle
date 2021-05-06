@@ -6,10 +6,14 @@
  */
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
-apply from: rootProject.file( 'gradle/publishing-repos.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
 apply plugin: 'signing'
+
+ext {
+	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
+	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
+}
 
 jar {
 	manifest {

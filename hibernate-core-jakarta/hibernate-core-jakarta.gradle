@@ -10,36 +10,44 @@ import org.apache.tools.ant.filters.ReplaceTokens
 description = 'Hibernate O/RM implementation of the Jakarta Persistence specification'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply plugin: 'antlr'
 
 configurations {
-	tests {
-		description = 'Configuration for the produced test jar'
+	jakartaeeTransformJars {
+		description = 'Dependencies for the Jakarta-EE transformation tool'
 	}
-	jakartaeeTransformJars
+
+	javassist {
+		description "Dependencies for compiling and running the Javassist tests in the `javassist` source-set"
+	}
 }
 
 dependencies {
-	compile( libraries.jakarta_jpa )
-	// This can now be made provided
-	compile( libraries.javassist )
-	// Could be made optional?
-	compile( libraries.byteBuddy )
-	compile( libraries.antlr )
-	compile( libraries.jakarta_jta )
-	compile( libraries.jandex )
-	compile( libraries.classmate )
-	compile( libraries.jakarta_activation )
+	api libraries.jakarta_jpa
+	api libraries.jakarta_jta
+	api libraries.jandex
+	api libraries.classmate
+	api libraries.dom4j
 
-	provided( libraries.jakarta_jacc )
-	provided( libraries.jakarta_validation )
-	provided( libraries.ant )
-	provided( libraries.jakarta_cdi )
+	antlr libraries.antlr
+	javassist libraries.javassist
 
-	compile( libraries.dom4j )
-	compile( libraries.commons_annotations )
+	implementation libraries.byteBuddy
+	implementation libraries.commons_annotations
+	implementation libraries.activation
+	implementation libraries.jaxb_api
+	implementation libraries.jaxb_runtime
+	implementation libraries.jakarta_activation
+	implementation libraries.jakarta_jaxb_api
+	implementation libraries.jakarta_jaxb_runtime
+	implementation libraries.commons_annotations
 
-	compile( libraries.jakarta_jaxb_api )
-	compile( libraries.jakarta_jaxb_runtime )
+	compileOnly libraries.jakarta_jacc
+	compileOnly libraries.jakarta_validation
+	compileOnly libraries.jakarta_cdi
+
+	compileOnly libraries.ant
+
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',

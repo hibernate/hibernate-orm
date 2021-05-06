@@ -11,20 +11,22 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 
 dependencies {
-    compile project( ':hibernate-core' )
-    compile( libraries.jta )
-    compile( libraries.junit )
-    compile( libraries.byteman )
-    compile( libraries.byteman_install )
-    compile( libraries.byteman_bmunit )
-    compile( libraries.xapool )
-    compile( libraries.log4j )
-    compile( libraries.jboss_tx_spi ) {
+    api project( ':hibernate-core' )
+    api libraries.jta
+    api libraries.junit
+    api( libraries.jboss_tx_spi ) {
         transitive=false;
     }
-    compile ( libraries.jboss_jta ) {
+    api( libraries.jboss_jta ) {
         transitive=false;
     }
+
+    api libraries.commons_annotations
+    api libraries.byteman
+    api libraries.byteman_install
+    api libraries.byteman_bmunit
+    api libraries.xapool
+    compileOnly libraries.log4j
 }
 
 // resources inherently exclude sources

@@ -55,9 +55,9 @@ tasks.compileJava {
 checkstyleMain.exclude '**/module-info.java'
 
 dependencies {
-	compile( project( ':hibernate-core' ) )
-	compile( project( ':hibernate-envers' ) )
-	compile( libraries.jpa )
+	api project( ':hibernate-core' )
+	api project( ':hibernate-envers' )
+	implementation libraries.jpa
 }
 
 test {

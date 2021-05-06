@@ -25,6 +25,7 @@ apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
+apply plugin: 'java-library'
 apply plugin: 'biz.aQute.bnd.builder'
 
 apply plugin: 'checkstyle'
@@ -32,8 +33,6 @@ apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
 
 ext {
-	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
-	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
 	forbiddenAPITargetJDKCompatibility = '11'
 }
 
@@ -58,53 +57,53 @@ configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
 
 
 dependencies {
-	compile libraries.logging
+	implementation libraries.logging
 
-	provided libraries.logging_annotations
+	compileOnly libraries.logging_annotations
 
 	annotationProcessor( libraries.logging_processor )
 	annotationProcessor( libraries.logging )
 	annotationProcessor( libraries.logging_annotations )
 
-	testCompile( libraries.junit )
-	testCompile( libraries.byteman )
-	testCompile( libraries.byteman_install )
-	testCompile( libraries.byteman_bmunit )
+	testImplementation( libraries.junit )
+	testImplementation( libraries.byteman )
+	testImplementation( libraries.byteman_install )
+	testImplementation( libraries.byteman_bmunit )
 
-	testRuntime( libraries.log4j )
-	testRuntime( libraries.javassist )
-	testRuntime( libraries.byteBuddy )
+	testRuntimeOnly( libraries.log4j )
+	testRuntimeOnly( libraries.javassist )
+	testRuntimeOnly( libraries.byteBuddy )
 
 	//Databases
-	testRuntime( libraries.h2 )
-	testRuntime( libraries.derby )
-	testRuntime( libraries.hsqldb )
-	testRuntime( libraries.postgresql )
-	testRuntime( libraries.mysql )
-	testRuntime( libraries.mariadb )
-	testRuntime( libraries.mssql )
-	testRuntime( libraries.informix )
-	testRuntime( libraries.hana )
-	testRuntime( libraries.cockroachdb )
+	testRuntimeOnly( libraries.h2 )
+	testRuntimeOnly( libraries.derby )
+	testRuntimeOnly( libraries.hsqldb )
+	testRuntimeOnly( libraries.postgresql )
+	testRuntimeOnly( libraries.mysql )
+	testRuntimeOnly( libraries.mariadb )
+	testRuntimeOnly( libraries.mssql )
+	testRuntimeOnly( libraries.informix )
+	testRuntimeOnly( libraries.hana )
+	testRuntimeOnly( libraries.cockroachdb )
 
 	asciidoclet 'org.asciidoctor:asciidoclet:1.+'
 
-	testRuntime( libraries.oracle )
+	testRuntimeOnly( libraries.oracle )
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
 
 	if ( db.startsWith( 'db2' ) ) {
-		testRuntime( libraries.db2 )
+		testRuntimeOnly( libraries.db2 )
 	}
 	else if ( db.startsWith( 'hana' ) ) {
-		testRuntime( libraries.hana )
+		testRuntimeOnly( libraries.hana )
 	}
 
 	// Mac-specific
 	project.ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
 	if ( project.toolsJar.exists() ) {
-		testCompile files( project.toolsJar )
+		testCompileOnly files( project.toolsJar )
 	}
 }
 
@@ -165,18 +164,14 @@ else {
 	// Configure JVM Options
 	tasks.withType( JavaCompile ).configureEach {
 		options.forkOptions.jvmArgs.addAll( getProperty( 'toolchain.compiler.jvmargs' ).toString().split( ' ' ) )
-	}
-	tasks.withType( Javadoc ).configureEach {
-		options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
-	}
-
-	// Display version of Java tools
-	tasks.withType( JavaCompile ).configureEach {
+		// Display version of Java used to compile
 		doFirst {
 			logger.lifecycle "Compiling with '${javaCompiler.get().metadata.installationPath}'"
 		}
 	}
 	tasks.withType( Javadoc ).configureEach {
+		options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+		// Display version of Java used to generate Javadoc
 		doFirst {
 			logger.lifecycle "Generating javadoc with '${javadocTool.get().metadata.installationPath}'"
 		}
@@ -185,9 +180,9 @@ else {
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
-sourceSets.main {
-	compileClasspath += configurations.provided
-}
+//sourceSets.main {
+//	compileClasspath += configurations.provided
+//}
 
 convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
 	JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile

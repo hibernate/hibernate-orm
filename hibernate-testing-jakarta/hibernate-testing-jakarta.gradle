@@ -28,14 +28,12 @@ dependencies {
 	compile( libraries.byteman_bmunit )
 	compile( libraries.xapool )
 	compile( libraries.log4j )
-// todo (jakarta): replace this when the jakarta artifacts are released
-	compile project( ':hibernate-jboss-jta' )
 	compile( libraries.jboss_tx_spi_jakarta ) {
 		transitive=false;
 	}
-//	compile ( libraries.jboss_jta_jakarta ) {
-//		transitive=false;
-//	}
+	compile ( libraries.jboss_jta_jakarta ) {
+		transitive=false;
+	}
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',

@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -77,7 +78,7 @@ public abstract class BaseSessionFactoryFunctionalTest
 		return true;
 	}
 
-	protected void applySettings(StandardServiceRegistryBuilder builer) {
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
 	}
 
 	@Override
@@ -204,6 +205,10 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	protected <T> T fromSession(Function<SessionImplementor, T> action){
 		return sessionFactoryScope.fromSession( action );
+	}
+
+	protected Dialect getDialect(){
+		return DialectContext.getDialect();
 	}
 
 }

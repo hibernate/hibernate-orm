@@ -25,8 +25,8 @@ import org.hibernate.type.Type;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.onetoone.formula.Address;
-import org.hibernate.test.onetoone.formula.Person;
+import org.hibernate.orm.test.onetoone.formula.Address;
+import org.hibernate.orm.test.onetoone.formula.Person;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

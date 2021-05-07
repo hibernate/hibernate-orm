@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.onetoone.formula;
+package org.hibernate.orm.test.onetoone.formula;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -14,22 +14,15 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.orm.test.immutable.ImmutableTest;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.DialectContext;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -61,9 +54,9 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builder) {
-		builder.applySetting(  Environment.USE_SECOND_LEVEL_CACHE, "false" );
-		builder.applySetting(  Environment.GENERATE_STATISTICS, "true" );
-		builder.applySetting(  Environment.DEFAULT_BATCH_FETCH_SIZE, "2" );
+		builder.applySetting( Environment.USE_SECOND_LEVEL_CACHE, "false" );
+		builder.applySetting( Environment.GENERATE_STATISTICS, "true" );
+		builder.applySetting( Environment.DEFAULT_BATCH_FETCH_SIZE, "2" );
 	}
 
 	@Override
@@ -75,7 +68,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override
 	public String[] getOrmXmlFiles() {
-		return new String[] { "org/hibernate/test/onetoone/formula/Person.hbm.xml" };
+		return new String[] { "org/hibernate/orm/test/onetoone/formula/Person.hbm.xml" };
 	}
 
 

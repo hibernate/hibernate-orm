@@ -13,60 +13,77 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
+import org.hibernate.boot.MetadataBuilder;
+import org.hibernate.boot.SessionFactoryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.orm.test.immutable.ImmutableTest;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsNull.notNullValue;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
+public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 	private static class TextAsMaterializedClobType extends AbstractSingleColumnStandardBasicType<String> {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
+
 		public TextAsMaterializedClobType() {
-			super(  ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
+			super( ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
 		}
+
 		public String getName() {
 			return TextType.INSTANCE.getName();
 		}
 	}
 
-	public String[] getMappings() {
-		return new String[] { "onetoone/formula/Person.hbm.xml" };
+	@Override
+	protected void applySettings(StandardServiceRegistryBuilder builder) {
+		builder.applySetting(  Environment.USE_SECOND_LEVEL_CACHE, "false" );
+		builder.applySetting(  Environment.GENERATE_STATISTICS, "true" );
+		builder.applySetting(  Environment.DEFAULT_BATCH_FETCH_SIZE, "2" );
 	}
 
-	public void configure(Configuration cfg) {
-		if ( Oracle8iDialect.class.isInstance( getDialect() ) ) {
-			cfg.registerTypeOverride( TextAsMaterializedClobType.INSTANCE );
+	@Override
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+		if ( OracleDialect.class.isInstance( getDialect() ) ) {
+			metadataBuilder.applyBasicType( TextAsMaterializedClobType.INSTANCE );
 		}
-		cfg.setProperty(Environment.USE_SECOND_LEVEL_CACHE, "false");
-		cfg.setProperty(Environment.GENERATE_STATISTICS, "true");
-		cfg.setProperty(Environment.DEFAULT_BATCH_FETCH_SIZE, "2");
 	}
+
+	@Override
+	public String[] getOrmXmlFiles() {
+		return new String[] { "org/hibernate/test/onetoone/formula/Person.hbm.xml" };
+	}
+
 
 	private Person person;
 	private Address address;
 
-	@Before
-	public void setUp(){
+	@BeforeEach
+	public void setUp() {
 		person = new Person();
 		person.setName( "Gavin King" );
 		address = new Address();
@@ -77,14 +94,15 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 		address.setStreet( "Karbarook Ave" );
 		person.setAddress( address );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( person );
-		} );
+		inTransaction(
+				session ->
+						session.persist( person )
+		);
 	}
 
-	@Override
+	@AfterEach
 	protected void cleanupTest() {
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			session.delete( person );
 		} );
 	}
@@ -92,16 +110,16 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testOneToOneFormula() {
 
-		doInHibernate( this::sessionFactory, s -> {
-			Person p = (Person) s.createQuery( "from Person" ).uniqueResult();
+		inTransaction( session -> {
+			Person p = (Person) session.createQuery( "from Person" ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 			assertNull( p.getMailingAddress() );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			Person p = (Person) s.createQuery(
+		inTransaction( session -> {
+			Person p = (Person) session.createQuery(
 					"from Person p left join fetch p.mailingAddress left join fetch p.address" ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
@@ -109,53 +127,43 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 			assertNull( p.getMailingAddress() );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			Person p = (Person) s.createQuery( "from Person p left join fetch p.address" ).uniqueResult();
+		inTransaction( session -> {
+			Person p = (Person) session.createQuery( "from Person p left join fetch p.address" ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 			assertNull( p.getMailingAddress() );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		inTransaction( session -> {
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 			Root<Person> root = criteria.from( Person.class );
 			Join<Object, Object> address = root.join( "address", JoinType.INNER );
 			criteria.where( criteriaBuilder.equal( address.get( "zip" ), "3181" ) );
-			Person p = s.createQuery( criteria ).uniqueResult();
+			Person p = session.createQuery( criteria ).uniqueResult();
 
-//			Person p = (Person) s.createCriteria( Person.class )
-//					.createCriteria( "address" )
-//					.add( Property.forName( "zip" ).eq( "3181" ) )
-//					.uniqueResult();
 			assertNotNull( p );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		inTransaction( session -> {
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 			Root<Person> root = criteria.from( Person.class );
 			root.fetch( "address", JoinType.LEFT );
-			Person p = s.createQuery( criteria ).uniqueResult();
-//			Person p = (Person) s.createCriteria( Person.class )
-//					.setFetchMode( "address", FetchMode.JOIN )
-//					.uniqueResult();
+			Person p = session.createQuery( criteria ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
 			assertNull( p.getMailingAddress() );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
+		inTransaction( session -> {
+			CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
 			Root<Person> root = criteria.from( Person.class );
 			root.fetch( "address", JoinType.LEFT );
-			Person p = s.createQuery( criteria ).uniqueResult();
-//			Person p = (Person) s.createCriteria( Person.class )
-//					.setFetchMode( "mailingAddress", FetchMode.JOIN )
-//					.uniqueResult();
+			Person p = session.createQuery( criteria ).uniqueResult();
 
 			assertNotNull( p.getAddress() );
 			assertTrue( Hibernate.isInitialized( p.getAddress() ) );
@@ -168,17 +176,19 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-5757")
 	public void testQuery() {
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			Person p = (Person) session.createQuery( "from Person p where p.address = :address" ).setParameter(
 					"address",
-					address ).uniqueResult();
+					address
+			).uniqueResult();
 			assertThat( p, notNullValue() );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			Address a = (Address) session.createQuery( "from Address a where a.person = :person" ).setParameter(
 					"person",
-					person ).uniqueResult();
+					person
+			).uniqueResult();
 			assertThat( a, notNullValue() );
 
 		} );
@@ -186,32 +196,30 @@ public class OneToOneFormulaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testOneToOneEmbeddedCompositeKey() {
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			Address a = new Address();
-			a.setType("HOME");
-			a.setPerson(person);
-			a = session.load(Address.class, a);
-			assertFalse( Hibernate.isInitialized(a) );
+			a.setType( "HOME" );
+			a.setPerson( person );
+			a = session.load( Address.class, a );
+			assertFalse( Hibernate.isInitialized( a ) );
 			a.getPerson();
 			a.getType();
-			assertFalse( Hibernate.isInitialized(a) );
-			assertEquals(a.getZip(), "3181");
+			assertFalse( Hibernate.isInitialized( a ) );
+			assertEquals( "3181", a.getZip() );
 		} );
 
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( session -> {
 			Address a = new Address();
-			a.setType("HOME");
-			a.setPerson(person);
-			Address a2 = session.get(Address.class, a);
-			assertTrue( Hibernate.isInitialized(a) );
-			assertSame(a2, a);
-			assertSame(a2.getPerson(), person); //this is a little bit desirable
-			assertEquals(a.getZip(), "3181");
+			a.setType( "HOME" );
+			a.setPerson( person );
+			Address a2 = session.get( Address.class, a );
+			assertTrue( Hibernate.isInitialized( a ) );
+			assertSame( a, a2 );
+			assertSame( person, a2.getPerson() ); //this is a little bit desirable
+			assertEquals( "3181", a.getZip() );
 		} );
-		
 
 
-		
 //		s.delete(a2);
 //		s.delete( s.get( Person.class, p.getName() ) ); //this is certainly undesirable! oh well...
 //

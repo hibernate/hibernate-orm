@@ -610,9 +610,6 @@ public class ToOneAttributeMapping
 			);
 		}
 
-		//noinspection rawtypes
-		final DomainResult keyResult;
-
 		/*
 			1. No JoinTable
 				Model:
@@ -637,15 +634,21 @@ public class ToOneAttributeMapping
 
 		 */
 
+		final boolean isKeyReferringSide;
+		if ( isFetchingForeignKey( fetchParent.getNavigablePath() ) ) {
+			isKeyReferringSide = !this.isKeyReferringSide;
+		}
+		else{
+			isKeyReferringSide = this.isKeyReferringSide;
+		}
+		final DomainResult<?> keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, isKeyReferringSide, creationState );
 		boolean selectByUniqueKey;
 		if ( isKeyReferringSide ) {
 			// case 1.2
-			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, creationState );
 			selectByUniqueKey = false;
 		}
 		else {
 			// case 1.1
-			keyResult = foreignKeyDescriptor.createDomainResult( fetchablePath, parentTableGroup, isKeyReferringSide, creationState );
 			selectByUniqueKey = bidirectionalAttributeName != null;
 		}
 
@@ -667,6 +670,16 @@ public class ToOneAttributeMapping
 				fetchablePath,
 				keyResult
 		);
+	}
+
+	private boolean isFetchingForeignKey(NavigablePath p) {
+		while ( p != null ) {
+			if ( ForeignKeyDescriptor.PART_NAME.equals( p.getLocalName() ) ) {
+				return true;
+			}
+			p = p.getParent();
+		}
+		return false;
 	}
 
 	@Override

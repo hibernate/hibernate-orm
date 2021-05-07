@@ -61,6 +61,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
+			EmbeddableValuedModelPart keyMappingType,
 			EmbeddableValuedModelPart targetMappingType,
 			String keyTable,
 			SelectableMappings keySelectableMappings,
@@ -72,11 +73,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.targetTable = targetTable;
 		this.targetSelectableMappings = targetSelectableMappings;
 		this.targetMappingType = targetMappingType;
-		this.keyMappingType = EmbeddedAttributeMapping.createInverseModelPart(
-				targetMappingType,
-				keySelectableMappings,
-				creationProcess
-		);
+		this.keyMappingType = keyMappingType;
 
 		creationProcess.registerInitializationCallback(
 				"Embedded (composite) FK descriptor " + targetMappingType.getNavigableRole(),

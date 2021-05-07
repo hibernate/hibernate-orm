@@ -1134,6 +1134,11 @@ public class MappingModelCreationHelper {
 		if ( inverse ) {
 			return new EmbeddedForeignKeyDescriptor(
 					embeddableValuedModelPart,
+					EmbeddedAttributeMapping.createInverseModelPart(
+							embeddableValuedModelPart,
+							keySelectableMappings,
+							creationProcess
+					),
 					embeddableValuedModelPart.getContainingTableExpression(),
 					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
 					keyTableExpression,
@@ -1143,6 +1148,11 @@ public class MappingModelCreationHelper {
 		}
 		else {
 			return new EmbeddedForeignKeyDescriptor(
+					EmbeddedAttributeMapping.createInverseModelPart(
+							embeddableValuedModelPart,
+							keySelectableMappings,
+							creationProcess
+					),
 					embeddableValuedModelPart,
 					keyTableExpression,
 					keySelectableMappings,

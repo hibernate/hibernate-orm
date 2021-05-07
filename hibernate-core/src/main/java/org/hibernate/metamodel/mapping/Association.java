@@ -13,4 +13,5 @@ import org.hibernate.sql.results.graph.Fetchable;
  */
 public interface Association extends Fetchable {
 	ForeignKeyDescriptor getForeignKeyDescriptor();
+	ForeignKeyDescriptor.Side getSide();
 }

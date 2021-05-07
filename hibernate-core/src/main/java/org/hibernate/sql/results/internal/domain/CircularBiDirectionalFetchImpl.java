@@ -151,6 +151,11 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
+	public ForeignKeyDescriptor.Side getSide() {
+		return ( (Association) fetchParent ).getSide();
+	}
+
+	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		fetchable.breakDownJdbcValues( domainValue, valueConsumer, session );
 	}

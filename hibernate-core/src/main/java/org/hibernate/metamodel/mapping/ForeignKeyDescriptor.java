@@ -24,6 +24,12 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  * Descriptor for foreign-keys
  */
 public interface ForeignKeyDescriptor extends VirtualModelPart {
+
+	enum Side {
+		KEY,
+		TARGET;
+	}
+
 	String PART_NAME = "{fk}";
 
 	String getKeyTable();
@@ -38,7 +44,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	 * Create a DomainResult for the referring-side of the fk
 	 */
 	DomainResult<?> createKeyDomainResult(
-			NavigablePath collectionPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState);
 
@@ -46,24 +52,19 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	 * Create a DomainResult for the target-side of the fk
 	 */
 	DomainResult<?> createTargetDomainResult(
-			NavigablePath collectionPath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState);
-
-	DomainResult createCollectionFetchDomainResult(
-			NavigablePath collectionPath,
-			TableGroup tableGroup,
-			DomainResultCreationState creationState);
-
-	DomainResult createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState);
 
-	DomainResult createDomainResult(
+	DomainResult<?> createCollectionFetchDomainResult(
+			NavigablePath collectionPath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState);
+
+	DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			boolean isKeyReferringSide,
+			Side side,
 			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(

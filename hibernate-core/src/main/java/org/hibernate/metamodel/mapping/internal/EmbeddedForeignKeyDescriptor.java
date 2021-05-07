@@ -58,7 +58,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private final SelectableMappings keySelectableMappings;
 	private final String targetTable;
 	private final SelectableMappings targetSelectableMappings;
-	private AssociationKey associationKey;
+	private final AssociationKey associationKey;
 
 	public EmbeddedForeignKeyDescriptor(
 			EmbeddableValuedModelPart keyMappingType,
@@ -74,6 +74,13 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.targetSelectableMappings = targetSelectableMappings;
 		this.targetMappingType = targetMappingType;
 		this.keyMappingType = keyMappingType;
+		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
+		keySelectableMappings.forEachSelectable(
+				(columnIndex, selection) -> {
+					columns.add( selection.getSelectionExpression() );
+				}
+		);
+		this.associationKey = new AssociationKey( keyTable, columns );
 
 		creationProcess.registerInitializationCallback(
 				"Embedded (composite) FK descriptor " + targetMappingType.getNavigableRole(),
@@ -105,6 +112,13 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				keySelectableMappings,
 				creationProcess
 		);
+		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
+		keySelectableMappings.forEachSelectable(
+				(columnIndex, selection) -> {
+					columns.add( selection.getSelectionExpression() );
+				}
+		);
+		this.associationKey = new AssociationKey( keyTable, columns );
 	}
 
 	@Override
@@ -135,14 +149,13 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public DomainResult<?> createKeyDomainResult(
-			NavigablePath collectionPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( collectionPath, keyTable ) != null;
-
 		return createDomainResult(
-				collectionPath,
+				navigablePath,
 				tableGroup,
+				null,
 				keyTable,
 				keyMappingType,
 				creationState
@@ -151,14 +164,15 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public DomainResult<?> createTargetDomainResult(
-			NavigablePath collectionPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( collectionPath, targetTable ) != null;
+		assert tableGroup.getTableReference( navigablePath, targetTable ) != null;
 
 		return createDomainResult(
-				collectionPath,
+				navigablePath,
 				tableGroup,
+				null,
 				targetTable,
 				targetMappingType,
 				creationState
@@ -166,7 +180,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public DomainResult createCollectionFetchDomainResult(
+	public DomainResult<?> createCollectionFetchDomainResult(
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
@@ -174,6 +188,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			return createDomainResult(
 					collectionPath,
 					tableGroup,
+					null,
 					targetTable,
 					targetMappingType,
 					creationState
@@ -183,6 +198,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			return createDomainResult(
 					collectionPath,
 					tableGroup,
+					null,
 					keyTable,
 					keyMappingType,
 					creationState
@@ -191,29 +207,16 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public DomainResult createDomainResult(
+	public DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			Side side,
 			DomainResultCreationState creationState) {
-		return createDomainResult(
-				navigablePath,
-				tableGroup,
-				keyTable,
-				keyMappingType,
-				creationState
-		);
-	}
-
-	@Override
-	public DomainResult createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			boolean isKeyReferringSide,
-			DomainResultCreationState creationState) {
-		if ( isKeyReferringSide ) {
+		if ( side == Side.KEY ) {
 			return createDomainResult(
 					navigablePath,
 					tableGroup,
+					null,
 					keyTable,
 					keyMappingType,
 					creationState
@@ -223,6 +226,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			return createDomainResult(
 					navigablePath,
 					tableGroup,
+					null,
 					targetTable,
 					targetMappingType,
 					creationState
@@ -230,9 +234,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 	}
 
-	private DomainResult createDomainResult(
+	@Override
+	public <T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return createDomainResult( navigablePath, tableGroup, resultVariable, keyTable, keyMappingType, creationState );
+	}
+
+	private <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
 			String columnContainingTable,
 			EmbeddableValuedModelPart modelPart,
 			DomainResultCreationState creationState) {
@@ -279,12 +293,19 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			);
 		}
 
-		return new EmbeddableForeignKeyResultImpl<>(
-				resultNavigablePath,
-				modelPart,
-				null,
-				creationState
-		);
+		final Side currentForeignKeyResolvingKey = creationState.getCurrentlyResolvingForeignKeyPart();
+		try {
+			creationState.setCurrentlyResolvingForeignKeyPart( keyMappingType == modelPart ? Side.KEY : Side.TARGET );
+			return new EmbeddableForeignKeyResultImpl<>(
+					resultNavigablePath,
+					modelPart,
+					resultVariable,
+					creationState
+			);
+		}
+		finally {
+			creationState.setCurrentlyResolvingForeignKeyPart( currentForeignKeyResolvingKey );
+		}
 	}
 
 	@Override
@@ -420,15 +441,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public AssociationKey getAssociationKey() {
-		if ( associationKey == null ) {
-			final List<String> columns = new ArrayList<>();
-			keySelectableMappings.forEachSelectable(
-					(columnIndex, selection) -> {
-						columns.add( selection.getSelectionExpression() );
-					}
-			);
-			associationKey = new AssociationKey( keyTable, columns );
-		}
 		return associationKey;
 	}
 
@@ -455,38 +467,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public NavigableRole getNavigableRole() {
 		return targetMappingType.getNavigableRole();
-	}
-
-	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final NavigablePath fkNavigablePath = navigablePath.append( getPartName() );
-		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
-				fkNavigablePath,
-				np -> {
-					final TableGroupJoin tableGroupJoin = keyMappingType.createTableGroupJoin(
-							fkNavigablePath,
-							tableGroup,
-							null,
-							null,
-							true,
-							LockMode.NONE,
-							creationState.getSqlAstCreationState()
-					);
-					return tableGroupJoin.getJoinedGroup();
-				}
-
-		);
-
-		return new EmbeddableForeignKeyResultImpl<>(
-				fkNavigablePath,
-				keyMappingType,
-				resultVariable,
-				creationState
-		);
 	}
 
 	@Override

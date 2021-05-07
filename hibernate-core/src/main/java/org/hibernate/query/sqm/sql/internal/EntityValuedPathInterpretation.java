@@ -12,12 +12,14 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -61,37 +63,52 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 		if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
-			final ForeignKeyDescriptor keyDescriptor = associationMapping.getForeignKeyDescriptor();
+			final ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
+			final String lhsTable;
+			final ModelPart lhsPart;
+			if ( associationMapping.getSide() == ForeignKeyDescriptor.Side.KEY ) {
+				lhsTable = fkDescriptor.getKeyTable();
+				lhsPart = fkDescriptor.getKeyPart();
+			}
+			else {
+				lhsTable = fkDescriptor.getTargetTable();
+				lhsPart = fkDescriptor.getTargetPart();
+			}
 			final TableReference tableReference = tableGroup.resolveTableReference(
 					sqmPath.getNavigablePath(),
-					keyDescriptor.getKeyTable()
+					lhsTable
 			);
 
-			if ( keyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-				final SimpleForeignKeyDescriptor simpleKeyDescriptor = (SimpleForeignKeyDescriptor) keyDescriptor;
+			if ( fkDescriptor instanceof SimpleForeignKeyDescriptor ) {
+				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) lhsPart;
 
 				sqlExpression = sqlExprResolver.resolveSqlExpression(
-						createColumnReferenceKey( tableReference, simpleKeyDescriptor.getSelectionExpression() ),
+						createColumnReferenceKey( tableReference, basicValuedModelPart.getSelectionExpression() ),
 						processingState -> new ColumnReference(
 								tableReference,
-								simpleKeyDescriptor,
+								basicValuedModelPart,
 								sessionFactory
 						)
 				);
 			}
 			else {
-				final List<Expression> expressions = new ArrayList<>();
-				keyDescriptor.forEachSelectable(
-						(selectionIndex, selectableMapping) -> sqlExprResolver.resolveSqlExpression(
-								createColumnReferenceKey( tableReference, selectableMapping.getSelectionExpression() ),
-								processingState -> new ColumnReference(
-										tableReference,
-										selectableMapping,
-										sessionFactory
+				final List<Expression> expressions = new ArrayList<>( fkDescriptor.getJdbcTypeCount() );
+				lhsPart.forEachSelectable(
+						(selectionIndex, selectableMapping) -> expressions.add(
+								sqlExprResolver.resolveSqlExpression(
+										createColumnReferenceKey(
+												tableReference,
+												selectableMapping.getSelectionExpression()
+										),
+										processingState -> new ColumnReference(
+												tableReference,
+												selectableMapping,
+												sessionFactory
+										)
 								)
 						)
 				);
-				sqlExpression = new SqlTuple( expressions, keyDescriptor );
+				sqlExpression = new SqlTuple( expressions, lhsPart );
 			}
 		}
 		else {

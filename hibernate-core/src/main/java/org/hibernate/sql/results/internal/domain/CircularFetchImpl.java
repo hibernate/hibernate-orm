@@ -10,14 +10,12 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -179,6 +177,11 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
 		return ( (Association) fetchParent ).getForeignKeyDescriptor();
+	}
+
+	@Override
+	public ForeignKeyDescriptor.Side getSide() {
+		return ( (Association) fetchParent ).getSide();
 	}
 
 	@Override

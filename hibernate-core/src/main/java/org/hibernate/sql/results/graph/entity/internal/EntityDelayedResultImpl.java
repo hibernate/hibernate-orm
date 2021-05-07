@@ -43,13 +43,11 @@ public class EntityDelayedResultImpl implements DomainResult {
 			DomainResultCreationState creationState) {
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
-		this.identifierResult = entityValuedModelPart.getForeignKeyDescriptor()
-				.createDomainResult(
-						navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
-						rootTableGroup,
-						null,
-						creationState
-				);
+		this.identifierResult = entityValuedModelPart.getForeignKeyDescriptor().createKeyDomainResult(
+				navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+				rootTableGroup,
+				creationState
+		);
 	}
 
 	@Override

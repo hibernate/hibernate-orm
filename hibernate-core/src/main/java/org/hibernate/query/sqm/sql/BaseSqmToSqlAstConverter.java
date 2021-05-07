@@ -339,6 +339,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private int fetchDepth;
 	private boolean resolvingCircularFetch;
+	private ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide;
 
 	private Map<String, FilterPredicate> collectionFilterPredicates;
 	private OrderByFragmentConsumer orderByFragmentConsumer;
@@ -2718,7 +2719,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final ForeignKeyDescriptor keyDescriptor = mapDescriptor.getKeyDescriptor();
 		final NavigablePath keyNavigablePath = mapNavigablePath.append( keyDescriptor.getPartName() );
-		final DomainResult keyResult = keyDescriptor.createDomainResult(
+		final DomainResult keyResult = keyDescriptor.createKeyDomainResult(
 				keyNavigablePath,
 				tableGroup,
 				this
@@ -4697,6 +4698,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
 		this.resolvingCircularFetch = resolvingCircularFetch;
+	}
+
+	@Override
+	public ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart() {
+		return currentlyResolvingForeignKeySide;
+	}
+
+	@Override
+	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide) {
+		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 
 	@Internal

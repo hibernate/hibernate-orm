@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 import java.util.function.IntFunction;
 
@@ -41,7 +40,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.sql.results.DomainResultCreationException;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -121,13 +119,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public DomainResult<?> createKeyDomainResult(
-			NavigablePath collectionPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( collectionPath, keySide.getContainingTableExpression() ) != null;
+		assert tableGroup.getTableReference( navigablePath, keySide.getContainingTableExpression() ) != null;
 
 		return createDomainResult(
-				collectionPath,
+				navigablePath,
 				tableGroup,
 				keySide,
 				creationState
@@ -135,11 +133,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public DomainResult<?> createTargetDomainResult(NavigablePath collectionPath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( collectionPath, targetSide.getContainingTableExpression() ) != null;
+	public DomainResult<?> createTargetDomainResult(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+		assert tableGroup.getTableReference( navigablePath, targetSide.getContainingTableExpression() ) != null;
 
 		return createDomainResult(
-				collectionPath,
+				navigablePath,
 				tableGroup,
 				targetSide,
 				creationState
@@ -158,34 +156,14 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			Side side,
 			DomainResultCreationState creationState) {
-		try {
+		if ( side == Side.KEY ) {
 			return createDomainResult( navigablePath, tableGroup, keySide, creationState );
 		}
-		catch (Exception e) {
-			throw new DomainResultCreationException(
-					String.format(
-							Locale.ROOT,
-							"Unable to create fk key domain-result `%s.%s` relative to `%s`",
-							keySide.getContainingTableExpression(),
-							keySide.getSelectionExpression(),
-							tableGroup
-					),
-					e
-			);
+		else {
+			return createDomainResult( navigablePath, tableGroup, targetSide, creationState );
 		}
-	}
-
-	@Override
-	public DomainResult<?> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			boolean isKeyReferringSide,
-			DomainResultCreationState creationState) {
-		if ( isKeyReferringSide ) {
-			return createDomainResult( navigablePath, tableGroup, keySide, creationState );
-		}
-		return createDomainResult( navigablePath, tableGroup, targetSide, creationState );
 	}
 
 	@Override

@@ -50,7 +50,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 		this.loadingAttribute = loadingAttribute;
 		this.resultVariable = resultVariable;
 
-		fkResult = loadingAttribute.getKeyDescriptor().createDomainResult(
+		fkResult = loadingAttribute.getKeyDescriptor().createKeyDomainResult(
 				loadingPath,
 				tableGroup,
 				creationState

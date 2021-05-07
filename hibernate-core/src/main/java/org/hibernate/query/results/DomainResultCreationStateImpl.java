@@ -77,6 +77,7 @@ public class DomainResultCreationStateImpl
 	private final Stack<NavigablePath> relativePathStack = new StandardStack<>();
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
+	private ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide;
 
 	public DomainResultCreationStateImpl(
 			String stateIdentifier,
@@ -418,6 +419,16 @@ public class DomainResultCreationStateImpl
 	@Override
 	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
 		this.resolvingCircularFetch = resolvingCircularFetch;
+	}
+
+	@Override
+	public ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart() {
+		return currentlyResolvingForeignKeySide;
+	}
+
+	@Override
+	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide) {
+		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 
 }

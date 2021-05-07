@@ -332,6 +332,11 @@ public class EntityCollectionPart
 	}
 
 	@Override
+	public ForeignKeyDescriptor.Side getSide() {
+		return ForeignKeyDescriptor.Side.TARGET;
+	}
+
+	@Override
 	public FetchStyle getStyle() {
 		return FetchStyle.JOIN;
 	}

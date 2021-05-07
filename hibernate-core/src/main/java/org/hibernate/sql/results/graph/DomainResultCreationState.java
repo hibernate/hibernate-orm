@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
@@ -81,4 +82,12 @@ public interface DomainResultCreationState {
 	boolean isResolvingCircularFetch();
 
 	void setResolvingCircularFetch(boolean resolvingCircularFetch);
+
+	/**
+	 * Returns the part of the foreign key that is currently being resolved,
+	 * or <code>null</code> if no foreign key is currently being resolved.
+	 */
+	ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart();
+
+	void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide);
 }

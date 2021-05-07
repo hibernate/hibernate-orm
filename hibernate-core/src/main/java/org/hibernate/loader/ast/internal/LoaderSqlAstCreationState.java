@@ -17,6 +17,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NavigablePath;
@@ -56,6 +57,7 @@ public class LoaderSqlAstCreationState
 	private final FetchProcessor fetchProcessor;
 
 	private boolean resolvingCircularFetch;
+	private ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide;
 	private Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public LoaderSqlAstCreationState(
@@ -123,6 +125,16 @@ public class LoaderSqlAstCreationState
 	@Override
 	public void setResolvingCircularFetch(boolean resolvingCircularFetch) {
 		this.resolvingCircularFetch = resolvingCircularFetch;
+	}
+
+	@Override
+	public ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart() {
+		return currentlyResolvingForeignKeySide;
+	}
+
+	@Override
+	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide) {
+		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 
 	@Override

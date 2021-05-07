@@ -163,6 +163,16 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 			assertNull( p.getMailingAddress() );
 
 		} );
+
+		inTransaction( session -> {
+			Address a = (Address) session.createQuery( "from Address" ).uniqueResult();
+
+			Person person = a.getPerson();
+			assertNotNull( person );
+			assertTrue( Hibernate.isInitialized( person.getAddress() ) );
+			assertTrue( Hibernate.isInitialized( person.getMailingAddress() ) );
+			assertNull( person.getMailingAddress() );
+		} );
 	}
 
 

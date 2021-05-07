@@ -18,26 +18,14 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class EmbeddableAssembler implements DomainResultAssembler {
 	protected final EmbeddableInitializer initializer;
-	private final boolean containingClass;
 
 	public EmbeddableAssembler(EmbeddableInitializer initializer) {
 		this.initializer = initializer;
-		if ( initializer instanceof AbstractCompositeIdentifierMapping ) {
-			containingClass = ( (AbstractCompositeIdentifierMapping) initializer.getInitializedPart() )
-					.hasContainingClass();
-		}
-		else {
-			containingClass = true;
-		}
 	}
 
 	@Override
 	public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
 		return initializer.getInitializedPart().getJavaTypeDescriptor();
-	}
-
-	public boolean hasContainingClass() {
-		return containingClass;
 	}
 
 	@Override

@@ -74,7 +74,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final List<Initializer> identifierInitializers = new ArrayList<>();
 
 	private final DomainResultAssembler identifierAssembler;
-	private final boolean embeddableIdentifierWithNoContainingClass;
 	private final DomainResultAssembler discriminatorAssembler;
 	private final DomainResultAssembler versionAssembler;
 	private final DomainResultAssembler<Object> rowIdAssembler;
@@ -161,8 +160,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.identifierAssembler = null;
 		}
 
-		embeddableIdentifierWithNoContainingClass = hasEmbeddableIdentifierWithNoContainingClass( identifierAssembler );
-
 		if ( discriminatorResult != null ) {
 			discriminatorAssembler = discriminatorResult.createResultAssembler( creationState );
 		}
@@ -212,13 +209,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				},
 				null
 		);
-	}
-
-	protected final boolean hasEmbeddableIdentifierWithNoContainingClass(DomainResultAssembler identifierAssembler) {
-		if ( identifierAssembler instanceof EmbeddableAssembler ) {
-			return !( (EmbeddableAssembler) identifierAssembler ).hasContainingClass();
-		}
-		return false;
 	}
 
 	@Override
@@ -369,27 +359,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
 		final SharedSessionContractImplementor session = jdbcValuesSourceProcessingState.getSession();
 
-		Object id;
 		//		1) resolve the hydrated identifier value(s) into its identifier representation
-		if ( identifierAssembler == null ) {
-			id = jdbcValuesSourceProcessingState.getProcessingOptions().getEffectiveOptionalId();
-		}
-		else {
-			initializeIdentifier( rowProcessingState );
-			id = identifierAssembler.assemble(
-					rowProcessingState,
-					jdbcValuesSourceProcessingState.getProcessingOptions()
-			);
-		}
+		final Object id = initializeIdentifier( rowProcessingState, jdbcValuesSourceProcessingState );
 
 		if ( id == null ) {
 			missing = true;
 			// EARLY EXIT!!!
 			return;
-		}
-
-		if ( embeddableIdentifierWithNoContainingClass ) {
-			entityInstance = id;
 		}
 
 		//		2) build the EntityKey
@@ -407,6 +383,28 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
+	private Object initializeIdentifier(
+			RowProcessingState rowProcessingState,
+			JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState) {
+		final Object id = jdbcValuesSourceProcessingState.getProcessingOptions().getEffectiveOptionalId();
+		final boolean useEmbeddedIdentifierInstanceAsEntity = id != null && id.getClass()
+				.equals( concreteDescriptor.getJavaTypeDescriptor().getJavaType() );
+		if ( useEmbeddedIdentifierInstanceAsEntity ) {
+			entityInstance = id;
+			return id;
+		}
+
+		if ( identifierAssembler == null ) {
+			return id;
+		}
+
+		initializeIdentifier( rowProcessingState );
+		return identifierAssembler.assemble(
+				rowProcessingState,
+				jdbcValuesSourceProcessingState.getProcessingOptions()
+		);
+	}
+
 	@SuppressWarnings("WeakerAccess")
 	protected void initializeIdentifier(RowProcessingState rowProcessingState) {
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
@@ -417,11 +415,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		if ( !embeddableIdentifierWithNoContainingClass ) {
-			identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
-			identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
-			identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
-		}
+		identifierInitializers.forEach( initializer -> initializer.resolveKey( rowProcessingState ) );
+		identifierInitializers.forEach( initializer -> initializer.resolveInstance( rowProcessingState ) );
+		identifierInitializers.forEach( initializer -> initializer.initializeInstance( rowProcessingState ) );
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
 			EntityLoadingLogger.LOGGER.tracef(

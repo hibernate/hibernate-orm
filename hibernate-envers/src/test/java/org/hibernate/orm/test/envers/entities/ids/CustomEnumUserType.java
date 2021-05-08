@@ -44,9 +44,9 @@ public class CustomEnumUserType implements UserType {
 		return (x == null) ? 0 : x.hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		String name = rs.getString( names[0] );
+	@Override
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		String name = rs.getString( position );
 		if ( rs.wasNull() ) {
 			return null;
 		}

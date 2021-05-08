@@ -2350,7 +2350,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				getFromClauseAccess()::findTableGroup
 		);
 		if ( localExpressable instanceof BasicType<?> ) {
-			expressable = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) localExpressable );
+			expressable = InferredBasicValueResolver.resolveSqlTypeIndicators(
+					this,
+					(BasicType<?>) localExpressable,
+					literal.getJavaTypeDescriptor()
+			);
 		}
 		else {
 			expressable = localExpressable;
@@ -2760,7 +2764,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Object visitCastTarget(SqmCastTarget target) {
 		BasicValuedMapping targetType = (BasicValuedMapping) target.getType();
 		if ( targetType instanceof BasicType<?> ) {
-			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators( this, (BasicType<?>) targetType );
+			targetType = InferredBasicValueResolver.resolveSqlTypeIndicators(
+					this,
+					(BasicType<?>) targetType,
+					target.getNodeJavaTypeDescriptor()
+			);
 		}
 		return new CastTarget(
 				targetType.getJdbcMapping(),

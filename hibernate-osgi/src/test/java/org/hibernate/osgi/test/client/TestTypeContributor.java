@@ -52,9 +52,7 @@ public class TestTypeContributor implements TypeContributor {
 		}
 
 		@Override
-		public Object nullSafeGet(
-				ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-				throws HibernateException, SQLException {
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 			return null;
 		}
 

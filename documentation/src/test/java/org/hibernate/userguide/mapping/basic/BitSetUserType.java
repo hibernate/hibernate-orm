@@ -48,14 +48,14 @@ public class BitSetUserType implements UserType {
     }
 
     @Override
-    public Object nullSafeGet(
-            ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-            throws HibernateException, SQLException {
-        String columnName = names[0];
-        String columnValue = (String) rs.getObject( columnName );
-        log.debugv("Result set column {0} value is {1}", columnName, columnValue);
-        return columnValue == null ? null :
-				BitSetTypeDescriptor.INSTANCE.fromString( columnValue );
+    public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+        String columnValue = (String) rs.getObject( position );
+        if ( rs.wasNull() ) {
+            columnValue = null;
+        }
+
+        log.debugv("Result set column {0} value is {1}", position, columnValue);
+        return BitSetHelper.stringToBitSet( columnValue );
     }
 
     @Override
@@ -67,7 +67,7 @@ public class BitSetUserType implements UserType {
             st.setNull( index, Types.VARCHAR );
         }
         else {
-            String stringValue = BitSetTypeDescriptor.INSTANCE.toString( (BitSet) value );
+            String stringValue = BitSetHelper.bitSetToString( (BitSet) value );
             log.debugv("Binding {0} to parameter {1} ", stringValue, index);
             st.setString( index, stringValue );
         }

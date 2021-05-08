@@ -8,6 +8,7 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
+import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
@@ -68,9 +69,19 @@ public class YesNoType
 		return CONVERTER;
 	}
 
-	private static class YesNoConverter implements BasicValueConverter<Boolean, Character> {
+	@Internal
+	public static class YesNoConverter implements BasicValueConverter<Boolean, Character> {
+		/**
+		 * Singleton access
+		 */
+		public static final YesNoConverter INSTANCE = new YesNoConverter();
+
 		@Override
 		public Boolean toDomainValue(Character relationalForm) {
+			return toDomain( relationalForm );
+		}
+
+		public static Boolean toDomain(Character relationalForm) {
 			if ( relationalForm == null ) {
 				return null;
 			}
@@ -88,6 +99,10 @@ public class YesNoType
 
 		@Override
 		public Character toRelationalValue(Boolean domainForm) {
+			return toRelational( domainForm );
+		}
+
+		public static Character toRelational(Boolean domainForm) {
 			if ( domainForm == null ) {
 				return null;
 			}

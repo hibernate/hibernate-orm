@@ -61,23 +61,13 @@ public class EnumUserType implements UserType, ParameterizedType {
 		return clazz;
 	}
 
-	public Object nullSafeGet(ResultSet resultSet, String[] names, Object owner)
-			throws HibernateException, SQLException {
-		String name = resultSet.getString( names[0] );
-		Object result = null;
-		if ( !resultSet.wasNull() ) {
-			result = Enum.valueOf( clazz, name.trim() );
-		}
-		return result;
-	}
-
 	@Override
-	public Object nullSafeGet(
-			ResultSet resultSet,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		return nullSafeGet( resultSet, names, owner );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		final String name = rs.getString( position );
+		if ( rs.wasNull() ) {
+			return null;
+		}
+		return Enum.valueOf( clazz, name.trim() );
 	}
 
 	public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index)

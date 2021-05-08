@@ -47,12 +47,13 @@ public class DefaultValueIntegerType implements UserType, ParameterizedType, Ser
 		return x.equals( y );
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		Number result = (Number) rs.getObject( names[0] );
-		return result == null ? defaultValue : new Integer( result.intValue() );
+	@Override
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		Number result = (Number) rs.getObject( position );
+		return result == null ? defaultValue : Integer.valueOf( result.intValue() );
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value == null || defaultValue.equals( value ) ) {

@@ -102,6 +102,16 @@ public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> im
 	}
 
 	@Override
+	public Class<Double[]> getArrayClass() {
+		return Double[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return double[].class;
+	}
+
+	@Override
 	public Double getDefaultValue() {
 		return 0.0;
 	}

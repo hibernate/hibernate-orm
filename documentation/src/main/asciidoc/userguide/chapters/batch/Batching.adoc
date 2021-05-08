@@ -1,7 +1,7 @@
 [[batch]]
 == Batching
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/batch
-:bulkid-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/test/bulkid
+:bulkid-sourcedir: ../../../../../../../hibernate-core/src/test_legacy/java/org/hibernate/test/bulkid
 :extrasdir: extras
 
 [[batch-jdbcbatch]]

@@ -40,12 +40,14 @@ public class StateType implements UserType {
 		return x.hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
-		int result = rs.getInt( names[0] );
+	@Override
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		int result = rs.getInt( position );
 		if ( rs.wasNull() ) return null;
 		return State.values()[result];
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		if (value == null) {
 			st.setNull( index, Types.INTEGER );

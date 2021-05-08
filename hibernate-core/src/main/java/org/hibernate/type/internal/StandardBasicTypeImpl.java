@@ -12,7 +12,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.CastType;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypeDescriptorIndicatorCapable;
+import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 @SuppressWarnings("rawtypes")
 public class StandardBasicTypeImpl<J>
 		extends AbstractSingleColumnStandardBasicType
-		implements SqlTypeDescriptorIndicatorCapable {
+		implements AdjustableBasicType {
 	public static final String[] NO_REG_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	public StandardBasicTypeImpl(JavaTypeDescriptor<J> jtd, JdbcTypeDescriptor std) {
@@ -45,7 +45,9 @@ public class StandardBasicTypeImpl<J>
 	}
 
 	@Override
-	public BasicType resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
+	public BasicType resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor domainJtd) {
 		final JdbcTypeDescriptor recommendedSqlType = getJavaTypeDescriptor().getRecommendedJdbcType( indicators );
 		if ( recommendedSqlType == getJdbcTypeDescriptor() ) {
 			return this;

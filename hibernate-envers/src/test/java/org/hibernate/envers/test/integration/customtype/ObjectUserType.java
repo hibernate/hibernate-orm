@@ -20,6 +20,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
@@ -60,10 +61,10 @@ public class ObjectUserType implements UserType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		final String type = rs.getString( names[0] ); // For debug purpose.
-		return convertInputStreamToObject( rs.getBinaryStream( names[1] ) );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		throw new NotYetImplementedFor6Exception(
+				"See https://github.com/hibernate/hibernate-orm/discussions/3960"
+		);
 	}
 
 	@Override

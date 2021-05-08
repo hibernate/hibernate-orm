@@ -93,6 +93,16 @@ public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer> 
 	}
 
 	@Override
+	public Class<Integer[]> getArrayClass() {
+		return Integer[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return int[].class;
+	}
+
+	@Override
 	public Integer getDefaultValue() {
 		return 0;
 	}

@@ -11,6 +11,7 @@ import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
@@ -22,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  */
 public class BooleanType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, SqlTypeDescriptorIndicatorCapable<Boolean> {
+		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, AdjustableBasicType<Boolean> {
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
@@ -60,7 +61,9 @@ public class BooleanType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<X> domainJtd) {
 		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
 		final JdbcTypeDescriptor jdbcTypeDescriptor;
 		// We treat BIT like BOOLEAN because it uses the same JDBC access methods

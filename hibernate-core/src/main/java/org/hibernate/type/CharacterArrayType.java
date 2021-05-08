@@ -8,9 +8,11 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -21,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class CharacterArrayType
 		extends AbstractSingleColumnStandardBasicType<Character[]>
-		implements SqlTypeDescriptorIndicatorCapable<Character[]> {
+		implements AdjustableBasicType<Character[]> {
 	public static final CharacterArrayType INSTANCE = new CharacterArrayType();
 
 	public CharacterArrayType() {
@@ -38,26 +40,36 @@ public class CharacterArrayType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
-		if ( indicators.isNationalized() ) {
-			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-			if ( indicators.isLob() ) {
-				//noinspection unchecked
-				return (BasicType<X>) CharacterArrayNClobType.INSTANCE;
-			}
-			else {
-				final JdbcTypeDescriptor nvarcharType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.NVARCHAR );
-				//noinspection unchecked
-				return (BasicType<X>) typeConfiguration.getBasicTypeRegistry().resolve( getJavaTypeDescriptor(), nvarcharType );
-			}
-		}
+	public <X> BasicType<X> resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<X> domainJtd) {
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 
+		final int jdbcTypeCode;
 		if ( indicators.isLob() ) {
-			//noinspection unchecked
-			return (BasicType<X>) CharacterArrayClobType.INSTANCE;
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
 		}
 
-		//noinspection unchecked
-		return (BasicType<X>) this;
+		final JdbcTypeDescriptor indicatedJdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+
+		if ( domainJtd != null && domainJtd.getJavaTypeClass() == Character[].class ) {
+			return typeConfiguration.getBasicTypeRegistry().resolve(
+					typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( Character[].class ),
+					indicatedJdbcType
+			);
+		}
+
+		if ( getJdbcTypeDescriptor() == indicatedJdbcType ) {
+			return (BasicType<X>) this;
+		}
+
+		return (BasicType<X>) typeConfiguration.getBasicTypeRegistry().resolve(
+				getJavaTypeDescriptor(),
+				indicatedJdbcType
+		);
 	}
 }

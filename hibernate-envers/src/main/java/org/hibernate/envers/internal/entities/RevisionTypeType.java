@@ -40,12 +40,11 @@ public class RevisionTypeType implements UserType, Serializable {
 	}
 
 	@Override
-	public RevisionType nullSafeGet(ResultSet resultSet, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		final Integer representationInt = IntegerType.INSTANCE.nullSafeGet( resultSet, names[0], session );
-		return representationInt == null ?
-				null :
-				RevisionType.fromRepresentation( representationInt.byteValue() );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		final Integer representationInt = IntegerType.INSTANCE.getJdbcValueExtractor().extract( rs, position, session );
+		return representationInt == null
+				? null
+				: RevisionType.fromRepresentation( representationInt.byteValue() );
 	}
 
 	@Override

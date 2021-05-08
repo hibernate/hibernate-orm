@@ -5,9 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+import java.sql.Types;
+
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link String}
@@ -18,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  */
 public class MaterializedClobType
 		extends AbstractSingleColumnStandardBasicType<String>
-		implements SqlTypeDescriptorIndicatorCapable<String> {
+		implements AdjustableBasicType<String> {
 	public static final MaterializedClobType INSTANCE = new MaterializedClobType();
 
 	public MaterializedClobType() {
@@ -30,10 +36,18 @@ public class MaterializedClobType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<X> domainJtd) {
 		if ( indicators.isNationalized() ) {
-			//noinspection unchecked
-			return (BasicType<X>) MaterializedNClobType.INSTANCE;
+			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+			final JdbcTypeDescriptor nclobType = jdbcTypeRegistry.getDescriptor( Types.NCLOB );
+
+			return typeConfiguration.getBasicTypeRegistry().resolve(
+					domainJtd,
+					nclobType
+			);
 		}
 
 		//noinspection unchecked

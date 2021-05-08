@@ -344,7 +344,7 @@ class Antlr4Plugin implements Plugin<Project> {
     }
 }
 
-class Antlr4GenerationTask extends DefaultTask {
+abstract class Antlr4GenerationTask extends DefaultTask {
     static final String HQL_PCKG        = 'org.hibernate.grammars.hql'
     static final String IMPORT_SQL_PCKG = 'org.hibernate.grammars.importsql'
     static final String GRAPH_PCKG      = 'org.hibernate.grammars.graph'

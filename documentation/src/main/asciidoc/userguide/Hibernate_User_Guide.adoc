@@ -37,6 +37,7 @@ include::appendices/Annotations.adoc[]
 include::appendices/BestPractices.adoc[]
 include::appendices/Legacy_Bootstrap.adoc[]
 include::appendices/Legacy_DomainModel.adoc[]
+include::appendices/LegacyBasicTypeResolution.adoc[]
 include::appendices/Legacy_Criteria.adoc[]
 include::appendices/Legacy_Native_Queries.adoc[]
 

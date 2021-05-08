@@ -72,12 +72,12 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
+	public ValueExtractor<T> getJdbcValueExtractor() {
 		return jdbcValueExtractor;
 	}
 
 	@Override
-	public ValueBinder getJdbcValueBinder() {
+	public ValueBinder<T> getJdbcValueBinder() {
 		return jdbcValueBinder;
 	}
 

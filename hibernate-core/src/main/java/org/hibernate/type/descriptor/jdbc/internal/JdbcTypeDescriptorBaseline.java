@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.jdbc.internal;
 
+import java.sql.Types;
+
 import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BinaryTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
@@ -42,6 +44,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 public class JdbcTypeDescriptorBaseline {
 	public interface BaselineTarget {
 		void addDescriptor(JdbcTypeDescriptor descriptor);
+		void addDescriptor(int code, JdbcTypeDescriptor descriptor);
 	}
 
 	public static void prime(BaselineTarget target) {
@@ -69,13 +72,14 @@ public class JdbcTypeDescriptorBaseline {
 		target.addDescriptor( VarcharTypeDescriptor.INSTANCE );
 		target.addDescriptor( LongVarcharTypeDescriptor.INSTANCE );
 
-		target.addDescriptor( NCharTypeDescriptor.INSTANCE );
-		target.addDescriptor( NVarcharTypeDescriptor.INSTANCE );
-		target.addDescriptor( LongNVarcharTypeDescriptor.INSTANCE );
-
-		// Use the default LOB mappings by default
 		target.addDescriptor( BlobTypeDescriptor.DEFAULT );
 		target.addDescriptor( ClobTypeDescriptor.DEFAULT );
-		target.addDescriptor( NClobTypeDescriptor.DEFAULT );
+
+		// Assume `NationalizationSupport#IMPLICIT`.  Dialects needing the
+		// explicit type will map them..
+		target.addDescriptor( Types.NCHAR, CharTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.NVARCHAR, VarcharTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.NCLOB, ClobTypeDescriptor.DEFAULT );
 	}
 }

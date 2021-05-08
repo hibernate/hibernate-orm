@@ -26,6 +26,8 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
@@ -33,8 +35,6 @@ import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.JdbcType;
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -49,6 +49,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -256,7 +257,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			isLob = modelXProperty.isAnnotationPresent( Lob.class );
 		}
 
-		if ( getDialect().supportsNationalizedTypes() ) {
+		if ( getDialect().getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
 			isNationalized = modelXProperty.isAnnotationPresent( Nationalized.class )
 					|| buildingContext.getBuildingOptions().useNationalizedCharacterData();
 		}

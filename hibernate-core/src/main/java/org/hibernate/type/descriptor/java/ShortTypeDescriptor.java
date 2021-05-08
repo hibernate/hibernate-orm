@@ -85,6 +85,16 @@ public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> impl
 	}
 
 	@Override
+	public Class<Short[]> getArrayClass() {
+		return Short[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return short[].class;
+	}
+
+	@Override
 	public Short getDefaultValue() {
 		return 0;
 	}

@@ -48,7 +48,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gavin King
  */
-public interface UserType {
+public interface UserType<J> {
 
 	/**
 	 * Return the SQL type codes for the columns mapped by this type. The
@@ -63,7 +63,7 @@ public interface UserType {
 	 *
 	 * @return Class
 	 */
-	Class returnedClass();
+	Class<J> returnedClass();
 
 	/**
 	 * Compare two instances of the class mapped by this type for persistence "equality".
@@ -83,31 +83,15 @@ public interface UserType {
 	/**
 	 * Retrieve an instance of the mapped class from a JDBC resultset. Implementors
 	 * should handle possibility of null values.
-	 *
-	 *
-	 * @param rs a JDBC result set
-	 * @param names the column names
-	 * @param session
-	 *@param owner the containing entity  @return Object
-	 * @throws HibernateException
-	 * @throws SQLException
 	 */
-	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException;
+	J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException;
 
 	/**
 	 * Write an instance of the mapped class to a prepared statement. Implementors
 	 * should handle possibility of null values. A multi-column type should be written
 	 * to parameters starting from <tt>index</tt>.
-	 *
-	 *
-	 * @param st a JDBC prepared statement
-	 * @param value the object to write
-	 * @param index statement parameter index
-	 * @param session
-	 * @throws HibernateException
-	 * @throws SQLException
 	 */
-	void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
+	void nullSafeSet(PreparedStatement st, J value, int index, SharedSessionContractImplementor session) throws SQLException;
 
 	/**
 	 * Return a deep copy of the persistent state, stopping at entities and at

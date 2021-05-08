@@ -7,11 +7,16 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
+import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Character}
@@ -21,7 +26,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  */
 public class CharacterType
 		extends AbstractSingleColumnStandardBasicType<Character>
-		implements PrimitiveType<Character>, DiscriminatorType<Character>, SqlTypeDescriptorIndicatorCapable<Character> {
+		implements PrimitiveType<Character>, DiscriminatorType<Character>, AdjustableBasicType<Character> {
 
 	public static final CharacterType INSTANCE = new CharacterType();
 
@@ -55,7 +60,15 @@ public class CharacterType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
-		return (BasicType<X>) ( indicators.isNationalized() ? CharacterNCharType.INSTANCE : this );
+	public <X> BasicType<X> resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<X> domainJtd) {
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeDescriptor jdbcType = indicators.isNationalized()
+				? jdbcTypeRegistry.getDescriptor( Types.NCHAR )
+				:  jdbcTypeRegistry.getDescriptor( Types.CHAR );
+
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType );
 	}
 }

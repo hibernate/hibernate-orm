@@ -15,6 +15,7 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
@@ -136,15 +137,14 @@ public class AttributeOverrideEnhancedUserTypeTest {
 		}
 
 		@Override
-		public Object nullSafeGet(
-				final ResultSet rs,
-				final String[] names,
-				final SharedSessionContractImplementor session,
-				final Object owner) throws HibernateException, SQLException {
-			assert names.length == 2;
-			final Integer year = IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
-			final Integer month = IntegerType.INSTANCE.nullSafeGet( rs, names[1], session );
-			return year == null || month == null ? null : YearMonth.of( year, month );
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+//			assert names.length == 2;
+//			final Integer year = IntegerType.INSTANCE.nullSafeGet( rs, names[0], session );
+//			final Integer month = IntegerType.INSTANCE.nullSafeGet( rs, names[1], session );
+//			return year == null || month == null ? null : YearMonth.of( year, month );
+
+			// this whole class should really be a `CompositeUserType`
+			throw new NotYetImplementedFor6Exception( getClass() );
 		}
 
 		@Override

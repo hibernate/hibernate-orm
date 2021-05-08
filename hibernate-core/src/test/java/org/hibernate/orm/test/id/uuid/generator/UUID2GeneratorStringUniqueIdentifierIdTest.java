@@ -1,4 +1,4 @@
-package org.hibernate.test.id.uuid;
+package org.hibernate.orm.test.id.uuid.generator;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +19,6 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -28,7 +27,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RequiresDialect( SQLServerDialect.class )
 @TestForIssue( jiraKey = "HHH-12943" )
-public class UUID2GeneratorBinaryUniqueIdentifierIdTest extends BaseEntityManagerFunctionalTestCase {
+public class UUID2GeneratorStringUniqueIdentifierIdTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] { FooEntity.class };
@@ -36,7 +35,7 @@ public class UUID2GeneratorBinaryUniqueIdentifierIdTest extends BaseEntityManage
 
 	@Test
 	public void testPaginationQuery() {
-		byte[] id = doInJPA( this::entityManagerFactory, entityManager -> {
+		String id = doInJPA( this::entityManagerFactory, entityManager -> {
 			FooEntity entity = new FooEntity();
 			entity.getFooValues().add("one");
 			entity.getFooValues().add("two");
@@ -48,6 +47,13 @@ public class UUID2GeneratorBinaryUniqueIdentifierIdTest extends BaseEntityManage
 		} );
 
 		assertNotNull(id);
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			FooEntity entity = entityManager.find(FooEntity.class, id.toUpperCase());
+			assertNotNull(entity);
+
+			assertTrue(entity.getFooValues().size() == 3);
+		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			FooEntity entity = entityManager.find(FooEntity.class, id);
@@ -65,18 +71,18 @@ public class UUID2GeneratorBinaryUniqueIdentifierIdTest extends BaseEntityManage
 		@GenericGenerator(name = "uuid", strategy = "uuid2")
 		@GeneratedValue(generator = "uuid")
 		@Column(columnDefinition = "UNIQUEIDENTIFIER")
-		private byte[] id;
+		private String id;
 
 		@ElementCollection
 		@JoinTable(name = "foo_values")
 		@Column(name = "foo_value")
 		private final Set<String> fooValues = new HashSet<>();
 
-		public byte[] getId() {
-			return id;
+		public String getId() {
+			return id.toUpperCase();
 		}
 
-		public void setId(byte[] id) {
+		public void setId(String id) {
 			this.id = id;
 		}
 

@@ -124,6 +124,16 @@ public interface JdbcTypeDescriptor extends Serializable {
 		return false;
 	}
 
+	default boolean isBinary() {
+		switch ( getJdbcType() ) {
+			case Types.BINARY:
+			case Types.VARBINARY:
+			case Types.LONGVARBINARY:
+				return true;
+		}
+		return false;
+	}
+
 	default boolean isString() {
 		switch ( getJdbcType() ) {
 			case Types.CHAR:

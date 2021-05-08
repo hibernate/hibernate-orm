@@ -6,6 +6,16 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.CallableStatement;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import javax.persistence.TemporalType;
+
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -41,28 +51,11 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BasicBinder;
-import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import java.sql.*;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -110,8 +103,12 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGNVARCHAR, "text" );
 
-		if ( getVersion() >= 920 ) {
-			registerColumnType( Types.JAVA_OBJECT, "json" );
+		if ( getVersion() >= 820 ) {
+			registerColumnType( PostgresUUIDType.INSTANCE.sqlType(), "uuid" );
+
+			if ( getVersion() >= 920 ) {
+				registerColumnType( Types.JAVA_OBJECT, "json" );
+			}
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
@@ -331,7 +328,7 @@ public class PostgreSQLDialect extends Dialect {
 	public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
 		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
- 		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
+		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
 		switch ( sqlCode ) {
 			case Types.BLOB:
 				// Force BLOB binding.  Otherwise, byte[] fields annotated
@@ -823,91 +820,7 @@ public class PostgreSQLDialect extends Dialect {
 
 		if ( getVersion() >= 820 ) {
 			// HHH-9562
-			typeContributions.contributeJdbcTypeDescriptor( PostgresUUIDType.INSTANCE );
-		}
-	}
-
-	private static class PostgresUUIDType implements JdbcTypeDescriptor {
-		/**
-		 * Singleton access
-		 */
-		private static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
-
-		/**
-		 * Postgres reports its UUID type as {@link java.sql.Types#OTHER}.  Unfortunately
-		 * it reports a lot of its types as {@link java.sql.Types#OTHER}, making that
-		 * value useless for distinguishing one SqlTypeDescriptor from another.
-		 * So here we define a "magic value" that is a (hopefully no collisions)
-		 * unique key within the {@link JdbcTypeDescriptorRegistry}
-		 */
-		private static final int JDBC_TYPE_CODE = 3975;
-
-		@Override
-		public int getJdbcType() {
-			return JDBC_TYPE_CODE;
-		}
-
-		@Override
-		public int getJdbcTypeCode() {
-			return getJdbcType();
-		}
-
-		@Override
-		public boolean canBeRemapped() {
-			return true;
-		}
-
-		@Override
-		public <J> BasicJavaDescriptor<J> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<J>) typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( UUID.class );
-		}
-
-		@Override
-		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
-			return null;
-		}
-
-		@Override
-		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicBinder<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected void doBind(
-						PreparedStatement st,
-						X value,
-						int index,
-						WrapperOptions wrapperOptions) throws SQLException {
-					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions ), Types.OTHER );
-				}
-
-				@Override
-				protected void doBind(
-						CallableStatement st,
-						X value,
-						String name,
-						WrapperOptions wrapperOptions) throws SQLException {
-					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions ), Types.OTHER );
-				}
-			};
-		}
-
-		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
-				@Override
-				protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getObject( position ), wrapperOptions );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getObject( position ), wrapperOptions );
-				}
-
-				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getObject( name ), wrapperOptions );
-				}
-			};
+			typeContributions.contributeType( PostgresUUIDType.INSTANCE );
 		}
 	}
 }

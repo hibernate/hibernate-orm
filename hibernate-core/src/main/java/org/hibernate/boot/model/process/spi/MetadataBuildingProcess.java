@@ -40,7 +40,10 @@ import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -355,16 +358,33 @@ public class MetadataBuildingProcess {
 			@Override
 			public void contributeType(org.hibernate.type.BasicType type) {
 				getBasicTypeRegistry().register( type );
+
+				final JavaTypeDescriptor<?> jtd;
+				if ( type instanceof CustomType ) {
+					final CustomType customType = (CustomType) type;
+					jtd = customType.getJavaTypeDescriptor();
+				}
+				else {
+					jtd = type.getJavaTypeDescriptor();
+				}
+
+				conditionallyRegisterJtd( jtd );
+			}
+
+			private void conditionallyRegisterJtd(JavaTypeDescriptor jtd) {
+				final JavaTypeDescriptorRegistry jtdRegistry = getTypeConfiguration().getJavaTypeDescriptorRegistry();
+				jtdRegistry.resolveDescriptor( jtd.getJavaTypeClass(), () -> jtd );
 			}
 
 			@Override
 			public void contributeType(BasicType type, String... keys) {
 				getBasicTypeRegistry().register( type, keys );
+				conditionallyRegisterJtd( type.getJavaTypeDescriptor() );
 			}
 
 			@Override
 			public void contributeType(UserType type, String[] keys) {
-				getBasicTypeRegistry().register( type, keys );
+				contributeType( new CustomType( type, keys, getTypeConfiguration() ) );
 			}
 
 			@Override
@@ -383,7 +403,7 @@ public class MetadataBuildingProcess {
 			}
 
 			final BasicTypeRegistry getBasicTypeRegistry() {
-				return bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
+				return getTypeConfiguration().getBasicTypeRegistry();
 			}
 
 		};

@@ -17,7 +17,9 @@ import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class DoubleType extends AbstractSingleColumnStandardBasicType<Double> implements PrimitiveType<Double> {
+public class DoubleType
+		extends AbstractSingleColumnStandardBasicType<Double>
+		implements PrimitiveType<Double> {
 	public static final DoubleType INSTANCE = new DoubleType();
 
 	public static final Double ZERO = 0.0;

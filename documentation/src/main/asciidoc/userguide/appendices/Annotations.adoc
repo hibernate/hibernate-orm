@@ -595,7 +595,7 @@ See the <<chapters/domain/identifiers.adoc#identifiers-generators-table-configur
 
 The {jpaJavadocUrlPrefix}Temporal.html[`@Temporal`] annotation is used to specify the `TemporalType` of the currently annotated `java.util.Date` or `java.util.Calendar` entity attribute.
 
-See the <<chapters/domain/basic_types.adoc#basic-datetime,Basic temporal types>> chapter for more info.
+See the <<chapters/domain/basic_types.adoc#basic-temporal,Basic temporal types>> chapter for more info.
 
 [[annotations-jpa-transient]]
 ==== `@Transient`

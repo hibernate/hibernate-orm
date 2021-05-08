@@ -63,30 +63,31 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 			columnName = jdbcResultsMetadata.resolveColumnName( resultPosition + 1 );
 		}
 
+		final int jdbcPosition;
+		if ( explicitColumnName != null ) {
+			jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
+		}
+		else {
+			jdbcPosition = resultPosition + 1;
+		}
+
+		final BasicValuedMapping basicType;
+		if ( explicitType != null ) {
+			basicType = explicitType;
+		}
+		else {
+			basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
+		}
+
 		final SqlSelection sqlSelection = creationStateImpl.resolveSqlSelection(
 				creationStateImpl.resolveSqlExpression(
 						columnName,
 						processingState -> {
-							final int jdbcPosition;
-							if ( explicitColumnName != null ) {
-								jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( explicitColumnName );
-							}
-							else {
-								jdbcPosition = resultPosition + 1;
-							}
 							final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
-
-							final BasicValuedMapping basicType;
-							if ( explicitType != null ) {
-								basicType = explicitType;
-							}
-							else {
-								basicType = jdbcResultsMetadata.resolveType( jdbcPosition, explicitJavaTypeDescriptor );
-							}
 							return new SqlSelectionImpl( valuesArrayPosition, basicType );
 						}
 				),
-				explicitJavaTypeDescriptor,
+				basicType.getExpressableJavaTypeDescriptor(),
 				sessionFactory.getTypeConfiguration()
 		);
 

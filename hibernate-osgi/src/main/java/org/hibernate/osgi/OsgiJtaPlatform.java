@@ -30,8 +30,6 @@ public class OsgiJtaPlatform implements JtaPlatform {
 
 	/**
 	 * Constructs a OsgiJtaPlatform
-	 *
-	 * @param bundleContext The OSGi bundle context
 	 */
 	public OsgiJtaPlatform(OsgiServiceUtil osgiServiceUtil) {
 		this.osgiServiceUtil = osgiServiceUtil;

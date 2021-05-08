@@ -147,6 +147,16 @@ public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long> implem
 	}
 
 	@Override
+	public Class<Long[]> getArrayClass() {
+		return Long[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return long[].class;
+	}
+
+	@Override
 	public Long getDefaultValue() {
 		return 0L;
 	}

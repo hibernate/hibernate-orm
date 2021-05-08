@@ -227,6 +227,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					basicTypeRegistration.getRegistrationKeys()
 			);
 
+			javaTypeDescriptorRegistry.resolveDescriptor(
+					basicType.getJavaType(),
+					() -> basicType.getJavaTypeDescriptor()
+			);
+
 			try {
 				int[] jdbcTypes = basicType.sqlTypes( null );
 

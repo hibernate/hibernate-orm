@@ -88,6 +88,16 @@ public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implem
 	}
 
 	@Override
+	public Class<Byte[]> getArrayClass() {
+		return Byte[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return byte[].class;
+	}
+
+	@Override
 	public Byte getDefaultValue() {
 		return 0;
 	}

@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.LongVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -18,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  */
 public class TextType
 		extends AbstractSingleColumnStandardBasicType<String>
-		implements SqlTypeDescriptorIndicatorCapable<String> {
+		implements AdjustableBasicType<String> {
 	public static final TextType INSTANCE = new TextType();
 
 	public TextType() {
@@ -30,7 +31,9 @@ public class TextType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<X> domainJtd) {
 		if ( indicators.isNationalized() ) {
 			//noinspection unchecked
 			return (BasicType<X>) NTextType.INSTANCE;

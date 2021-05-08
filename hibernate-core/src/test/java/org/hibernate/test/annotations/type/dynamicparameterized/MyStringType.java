@@ -101,8 +101,8 @@ public class MyStringType implements UserType, DynamicParameterizedType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		return rs.getString( names[0] );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		return rs.getString( position );
 	}
 
 	@Override

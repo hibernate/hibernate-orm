@@ -23,6 +23,7 @@ import javax.persistence.Version;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.BooleanMapping;
 import org.hibernate.annotations.CollectionId;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.JavaType;
@@ -111,6 +112,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	private boolean isLob;
 	private EnumType enumType;
 	private TemporalType temporalPrecision;
+	private BooleanMapping.Style booleanMappingStyle;
 
 	private Table table;
 	private Ejb3Column[] columns;
@@ -153,6 +155,11 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	@Override
 	public EnumType getEnumeratedType() {
 		return enumType;
+	}
+
+	@Override
+	public BooleanMapping.Style getPreferredBooleanMappingStyle() {
+		return booleanMappingStyle;
 	}
 
 	@Override
@@ -501,6 +508,23 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			this.enumType = null;
 		}
 
+		final BooleanMapping booleanMappingAnnotation = attributeDescriptor.getAnnotation( BooleanMapping.class );
+		if ( booleanMappingAnnotation != null ) {
+			if ( javaType == Boolean.class || javaType == boolean.class ) {
+				booleanMappingStyle = booleanMappingAnnotation.style();
+			}
+			else {
+				throw new AnnotationException(
+						String.format(
+								"Attribute [%s.%s] was annotated with @BooleanMapping, but its java type is not an boolean [%s]",
+								declaringClassName,
+								attributeDescriptor.getName(),
+								attributeType.getName()
+						)
+				);
+			}
+		}
+
 		normalSupplementalDetails( attributeDescriptor, buildingContext );
 	}
 
@@ -833,6 +857,10 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		if ( isNationalized ) {
 			basicValue.makeNationalized();
+		}
+
+		if ( booleanMappingStyle != null ) {
+			basicValue.setBooleanMappingStyle( booleanMappingStyle );
 		}
 	}
 }

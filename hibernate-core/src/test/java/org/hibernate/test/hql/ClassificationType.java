@@ -15,6 +15,7 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -60,8 +61,8 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
-		Integer ordinal = StandardBasicTypes.INTEGER.nullSafeGet( rs, names[0], session );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		Integer ordinal = StandardBasicTypes.INTEGER.getJdbcValueExtractor().extract( rs, position, session );
 		return Classification.valueOf( ordinal );
 	}
 

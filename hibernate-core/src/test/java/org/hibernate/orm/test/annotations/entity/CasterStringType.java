@@ -46,8 +46,9 @@ public class CasterStringType implements UserType, ParameterizedType {
 		return x.hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
-		String result = rs.getString( names[0] );
+	@Override
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		String result = rs.getString( position );
 		if ( rs.wasNull() ) return null;
 		if ( parameters.getProperty( CAST ).equals( "lower" ) ) {
 			return result.toLowerCase(Locale.ROOT);
@@ -57,6 +58,7 @@ public class CasterStringType implements UserType, ParameterizedType {
 		}
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		if ( value == null ) {
 			st.setNull( index, sqlTypes()[0] );

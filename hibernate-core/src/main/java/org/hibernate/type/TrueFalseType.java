@@ -68,9 +68,18 @@ public class TrueFalseType
 		return CONVERTER;
 	}
 
-	private static class TrueFalseConverter implements BasicValueConverter<Boolean, Character> {
+	public static class TrueFalseConverter implements BasicValueConverter<Boolean, Character> {
+		/**
+		 * Singleton access
+		 */
+		public static final TrueFalseConverter INSTANCE = new TrueFalseConverter();
+
 		@Override
 		public Boolean toDomainValue(Character relationalForm) {
+			return toDomain( relationalForm );
+		}
+
+		public static Boolean toDomain(Character relationalForm) {
 			if ( relationalForm == null ) {
 				return null;
 			}
@@ -88,6 +97,10 @@ public class TrueFalseType
 
 		@Override
 		public Character toRelationalValue(Boolean domainForm) {
+			return toRelational( domainForm );
+		}
+
+		public static Character toRelational(Boolean domainForm) {
 			if ( domainForm == null ) {
 				return null;
 			}

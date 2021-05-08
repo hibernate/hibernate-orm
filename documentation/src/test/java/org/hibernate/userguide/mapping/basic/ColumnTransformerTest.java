@@ -18,6 +18,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -26,6 +27,10 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+@NotImplementedYet(
+		reason = "composition-as-basic (basic mapped to multiple columns) is no longer supported. See https://github.com/hibernate/hibernate-orm/discussions/3960",
+		strict = false
+)
 @RequiresDialect(H2Dialect.class)
 public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 

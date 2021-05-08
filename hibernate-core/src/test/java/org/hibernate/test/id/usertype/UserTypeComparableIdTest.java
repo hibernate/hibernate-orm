@@ -139,12 +139,8 @@ public class UserTypeComparableIdTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public Object nullSafeGet(
-				ResultSet resultSet,
-				String[] names,
-				SharedSessionContractImplementor sessionImplementor,
-				Object o) throws HibernateException, SQLException {
-			Long value = resultSet.getLong( names[0] );
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+			Long value = rs.getLong( position );
 
 			return new CustomId( value );
 		}

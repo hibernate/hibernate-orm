@@ -7,14 +7,13 @@
 package org.hibernate.orm.test.sql.hand;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Currency;
 
 import org.hibernate.HibernateException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
@@ -60,20 +59,9 @@ public class MonetaryAmountUserType implements UserType {
 	}
 
 	@Override
-	public Object nullSafeGet(
-			ResultSet resultSet,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-
-		BigDecimal value = resultSet.getBigDecimal( names[0] );
-		if ( resultSet.wasNull() ) {
-			return null;
-		}
-		String cur = resultSet.getString( names[1] );
-		Currency userCurrency = Currency.getInstance( cur );
-
-		return new MonetaryAmount( value, userCurrency );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		// needs CompositeUserType
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

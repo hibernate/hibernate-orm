@@ -10,24 +10,22 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Comparator;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-
-import org.junit.Test;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.LongType;
 import org.hibernate.usertype.UserType;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
 
 public class UserTypeNonComparableIdTest extends BaseCoreFunctionalTestCase {
 
@@ -128,12 +126,8 @@ public class UserTypeNonComparableIdTest extends BaseCoreFunctionalTestCase {
 		}
 
 		@Override
-		public Object nullSafeGet(
-				ResultSet resultSet,
-				String[] names,
-				SharedSessionContractImplementor sessionImplementor,
-				Object o) throws HibernateException, SQLException {
-			Long value = resultSet.getLong( names[0] );
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+			Long value = rs.getLong( position );
 
 			return new CustomId( value );
 		}

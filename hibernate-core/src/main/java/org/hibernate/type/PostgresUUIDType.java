@@ -21,7 +21,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -48,22 +50,29 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		return true;
 	}
 
-	public static class PostgresUUIDJdbcTypeDescriptor implements JdbcTypeDescriptor {
-		public static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
+	private static class PostgresUUIDJdbcTypeDescriptor implements JdbcTypeDescriptor {
+		/**
+		 * Singleton access
+		 */
+		private static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
 
+		/**
+		 * Postgres reports its UUID type as {@link java.sql.Types#OTHER}.  Unfortunately
+		 * it reports a lot of its types as {@link java.sql.Types#OTHER}, making that
+		 * value useless for distinguishing one SqlTypeDescriptor from another.
+		 * So here we define a "magic value" that is a (hopefully no collisions)
+		 * unique key within the {@link JdbcTypeDescriptorRegistry}
+		 */
+		private static final int JDBC_TYPE_CODE = 3975;
+
+		@Override
 		public int getJdbcType() {
-			// ugh
-			return Types.OTHER;
+			return JDBC_TYPE_CODE;
 		}
 
 		@Override
-		public String getFriendlyName() {
-			return "OTHER (pg-uuid)";
-		}
-
-		@Override
-		public String toString() {
-			return "PostgresUUIDSqlTypeDescriptor";
+		public int getJdbcTypeCode() {
+			return getJdbcType();
 		}
 
 		@Override
@@ -72,41 +81,63 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public BasicJavaDescriptor getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( UUID.class );
+		public <J> BasicJavaDescriptor<J> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+			return (BasicJavaDescriptor<J>) typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( UUID.class );
 		}
 
-		public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		@Override
+		public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+			return null;
+		}
+
+		@Override
+		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
+
 				@Override
-				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, options ), getJdbcType() );
+				protected void doBindNull(PreparedStatement st, int index, WrapperOptions wrapperOptions) throws SQLException {
+					st.setNull( index, Types.OTHER );
+				}
+				@Override
+				protected void doBind(
+						PreparedStatement st,
+						X value,
+						int index,
+						WrapperOptions wrapperOptions) throws SQLException {
+					st.setObject( index, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions ), Types.OTHER );
 				}
 
 				@Override
-				protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
-						throws SQLException {
-					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, options ), getJdbcType() );
+				protected void doBindNull(CallableStatement st, String name, WrapperOptions wrapperOptions) throws SQLException {
+					st.setNull( name, Types.OTHER );
+				}
+				@Override
+				protected void doBind(
+						CallableStatement st,
+						X value,
+						String name,
+						WrapperOptions wrapperOptions) throws SQLException {
+					st.setObject( name, javaTypeDescriptor.unwrap( value, UUID.class, wrapperOptions ), Types.OTHER );
 				}
 			};
 		}
 
-		public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		@Override
+		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 				@Override
-				protected X doExtract(ResultSet rs, int name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( rs.getObject( name ), options );
+				protected X doExtract(ResultSet rs, int position, WrapperOptions wrapperOptions) throws SQLException {
+					return javaTypeDescriptor.wrap( rs.getObject( position ), wrapperOptions );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getObject( index ), options );
+				protected X doExtract(CallableStatement statement, int position, WrapperOptions wrapperOptions) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getObject( position ), wrapperOptions );
 				}
 
 				@Override
-				protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-					return javaTypeDescriptor.wrap( statement.getObject( name ), options );
+				protected X doExtract(CallableStatement statement, String name, WrapperOptions wrapperOptions) throws SQLException {
+					return javaTypeDescriptor.wrap( statement.getObject( name ), wrapperOptions );
 				}
 			};
 		}

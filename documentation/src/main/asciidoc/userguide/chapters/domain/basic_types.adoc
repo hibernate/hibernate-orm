@@ -6,11 +6,68 @@
 :converter-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/orm/test/mapping/converted/converter
 :extrasdir: extras
 
+A basic type is a mapping between a Java type and a single database column.
+
+Hibernate can map many standard Java types (`Integer`, `String`, etc) as basic
+types.  The mapping for many come from tables B-3 and B-4 in the JDBC specification<<jdbc>>.
+Others (`URL` as `VARCHAR`, e.g.) simply make sense.
+
+Additionally, Hibernate provides multiple, flexible ways to indicate how the Java type
+should be mapped to the database.
+
+
+[TIP]
+====
+The JPA specification strictly limits the Java types that can be marked as basic to the following:
+
+* Java primitive types (`boolean`, `int`, etc)
+* wrappers for the primitive types (`java.lang.Boolean`, `java.lang.Integer`, etc)
+* `java.lang.String`
+* `java.math.BigInteger`
+* `java.math.BigDecimal`
+* `java.time.Instant`
+* `java.time.LocalDate`
+* `java.time.LocalTime`
+* `java.time.LocalDateTime`
+* `java.time.OffsetTime`
+* `java.time.OffsetDateTime`
+* `java.util.Date`
+* `java.util.Calendar`
+* `java.sql.Date`
+* `java.sql.Time`
+* `java.sql.Timestamp`
+* `byte[]` or `Byte[]`
+* `char[]` or `Character[]`
+* enums
+* any other type that implements `Serializable`footnote:[JPA's support for Serializable types is to directly serialize their state to the database]
+
+If provider portability is a concern, you should stick to just these basic types.
+
+JPA 2.1 introduced the `javax.persistence.AttributeConverter` providing support for handling
+types beyond those defined in the specification. See <<basic-jpa-convert>> for more on this topic.
+====
+
+To deal with values of basic type, Hibernate needs to understand a few things about the mapping:
+
+* The capabilities of the Java type
+   ** How to compare values
+   ** How to calculate a hash-code
+   ** How to coerce values of this type to another type
+* The JDBC type it should use
+* Any conversion it should perform on the value to/from the database
+* The mutability of the value - whether the internal state can change like `java.util.Date` or is immutable like `java.lang.String`
+
+This chapter covers how Hibernate determines these pieces and how to influence that determination process.
+
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-basic-annotation]]
+==== @Basic
 
 Strictly speaking, a basic type is denoted by the `javax.persistence.Basic` annotation.
 
-Generally, however, the `@Basic` annotation can be ignored as it is assumed by default.  Both of the following
+Generally, the `@Basic` annotation can be ignored as it is assumed by default.  Both of the following
 examples are ultimately the same.
 
 [[basic-annotation-explicit-example]]
@@ -44,6 +101,13 @@ The `@Basic` annotation defines 2 attributes.
    fetching and on bytecode enhancement.
 
 
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-column-annotation]]
+==== @Column
+
 JPA defines rules for implicitly determining the name of tables and columns.
 For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
 
@@ -65,13 +129,18 @@ implicit column name `description`.
 The `@Column` annotation defines other mapping information as well. See its Javadocs for details.
 
 
-While `@Column` maps to a physical column on the database, Hibernate also allows users to map
-a computed value as a kind of virtual column called a formula.  Such mappings are implicitly
-read-only.
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+[[basic-formula-annotation]]
+==== @Formula
+
+`@Formula` allows mapping any database computed value as a virtual read-only column.
 
 [NOTE]
 ====
-You should be aware that the `@Formula` annotation takes a native SQL clause which may affect database portability.
+The `@Formula` annotation takes a native SQL clause which may affect database portability.
 ====
 
 [[mapping-column-formula-example]]
@@ -117,98 +186,39 @@ The SQL fragment defined by the `@Formula` annotation can be as complex as you w
 The following sections focus on approaches introduced in version 6 to influence how Hibernate will
 map basic value to the database.
 
-The legacy approach relying on `BasicType` and `UserType` is only lightly covered here.  However,
-both `BasicType` and `UserType` continue to be fully supported.  See <<basic-legacy>> for details.
-====
-
-Basic types map a Java type to a single database column.  To deal with values of basic type, Hibernate needs to
-understand a few things about the mapping:
-
-// todo (6.0) - flesh this out
-* The capabilities of the Java type
-* The JDBC type it should use
-* Any conversion it should perform on the value to/from the database
-* The mutability of the value - whether the internal state can change like `java.util.Date` or is immutable like `java.lang.String`
-
-
-Hibernate is capable of implicitly mapping many Java types as basic type.  Some of these mappings come from
-the JDBC specification and Hibernate generally follows the JDBC recommended mapping in those cases.
-Still others are just widely used Java types that have a reasonable mapping to a JDBC type (e.g. `URL` to `VARCHAR`).
-Worst case, if the Java type is `Serializable` Hibernate will try to handle it via binary serialization.
-
-[TIP]
-====
-The JPA specification strictly limits the Java types that can be marked as basic to the following:
-
-* Java primitive types (`boolean`, `int`, etc)
-* wrappers for the primitive types (`java.lang.Boolean`, `java.lang.Integer`, etc)
-* `java.lang.String`
-* `java.math.BigInteger`
-* `java.math.BigDecimal`
-* `java.time.Instant`
-* `java.time.LocalDate`
-* `java.time.LocalTime`
-* `java.time.LocalDateTime`
-* `java.time.OffsetTime`
-* `java.time.OffsetDateTime`
-* `java.util.Date`
-* `java.util.Calendar`
-* `java.sql.Date`
-* `java.sql.Time`
-* `java.sql.Timestamp`
-* `byte[]` or `Byte[]`
-* `char[]` or `Character[]`
-* enums
-* any other type that implements `Serializable`footnote:[JPA's support for Serializable types is to directly serialize their state to the database]
-
-If provider portability is a concern, you should stick to just these basic types.
-
-JPA 2.1 introduced the `javax.persistence.AttributeConverter` providing support for handling
-types beyond those defined in the specification. See <<basic-jpa-convert>> for more on this topic.
+The legacy approach relying on `BasicType` and `UserType` is only lightly covered here.  Both `BasicType`
+and `UserType` continue to be fully supported, however.  See <<basic-legacy>> for details.
 ====
 
 
-[[basic-mapping-implicit]]
-===== Implicit resolution
-
-Looking at <<basic-annotation-implicit-example, this example>>, how does Hibernate know how to handle the various attributes
-in terms of reading from and writing to the database?  The mapping does not really provide much information for
-what Hibernate should do.
+Looking at <<basic-annotation-implicit-example, this example>>, how does Hibernate know what mapping
+to use for these attributes?  The mapping does not really provide much information.
 
 This is an illustration of Hibernate's implicit basic-type resolution, which is a series of checks to determine
 the appropriate mapping to use.  Describing the complete process for implicit resolution is beyond the scope
 of this documentationfootnote:[For details see `org.hibernate.mapping.BasicValue#resolve()`].
 
 This is primarily driven by the Java type defined for the basic type, which can generally
-be determined through reflection.
-
-Is the Java type an enum?  Is it temporal?  These answers can indicate certain mappings be
-used.
+be determined through reflection.  Is the Java type an enum?  Is it temporal?  These answers
+can indicate certain mappings be used.
 
 The fallback is to map the value to the "recommended" JDBC type.
 
+Worst case, if the Java type is `Serializable` Hibernate will try to handle it via binary serialization.
 
-
-[[basic-mapping-explicit]]
-===== Influencing resolution
-
-For cases where the Java type is not a baseline type or if some specialized handling is desired, Hibernate
+For cases where the Java type is not a standard type or if some specialized handling is desired, Hibernate
 provides many ways to influence this mapping resolution.  Ultimately we want to influence the resolution of
 
-
-* `JavaTypeDescriptor` which describes capabilities of the Java type beyond what is available from just `java.lang.Class`.
-   `JavaTypeDescriptor` can be influenced through `@JavaType` and `@JavaTypeRegistration`.
-   `@JavaTypeRegistration` is a "global" form of `@JavaType`.
-   `@MapKeyJavaType` is also available to influence the `JavaTypeDescriptor` chosen for a Map key.
-* `JdbcTypeDescriptor` which describes aspects of the JDBC type such as how to read and write values.
-   `JdbcTypeDescriptor` can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
-   `@JdbcTypeRegistration` is a "global" form of `@JdbcType` / `@JdbcTypeCode`.
-   `@MapKeyJdbcType` and `@MapKeyJdbcTypeCode` are also available to influence the `JdbcTypeDescriptor` chosen for a Map key.
-* `BasicValueConverter` which describes the conversions that need to occur when reading from or writing to the database.
-   `BasicValueConverter` can be influenced by `AttributeConverter`.
-   An `AttributeConverter` can be applied "globally" (`@Converter( autoApply=true )`) or locally.
-* `MutabilityPlan` which describes whether values of the type are mutable (e.g. `java.util.Date`) or immutable (e.g. `java.lang.String`) -
-   whether its internal state can change.
+`JavaTypeDescriptor`:: Describes capabilities of the Java type as discussed in <<basic>>.  The descriptor
+      used can be influenced through `@JavaType` and `@JavaTypeRegistration`.  `@JavaTypeRegistration` is a global
+      form of `@JavaType`.  `@MapKeyJavaType` is used to influence the descriptor chosen for a `Map` key.
+`JdbcTypeDescriptor`:: Describes aspects of the JDBC type such as how to bind and extract values.  The descriptor
+      used can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
+      `@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`. `@MapKeyJdbcType` and
+      `@MapKeyJdbcTypeCode` are also available to influence the descriptor chosen for a Map key.
+`BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
+      It can be influenced `AttributeConverter`.  Some Java types (enums, e.g.) have an implicit conversion
+`MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
    `MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
 
 The legacy `@Type` and `@TypeDefs` can also be used as to indicate the `BasicType` or `UserType` to use.  Refer to <<basic-legacy>>
@@ -216,10 +226,10 @@ for more details.
 
 Note that implementations of `org.hibernate.boot.model.TypeContributor` can also be defined as a Java service
 (`java.util.ServiceLoader`) to contribute a types.  This approach might be more appropriate for libraries
-extending the Hibernate type system.
+extending the Hibernate type system.  Fpr more information, see <<basic-type-contributor>>.
 
 
-See <<basic-bitset-java-type>> for an example of most of these approaches to map a `BitSet`
+See <<basic-bitset-java-type>> examples of most of these approaches, using the mapping of `BitSet`.
 
 
 
@@ -1518,6 +1528,9 @@ include::{extrasdir}/basic/basic-jpa-convert-period-string-converter-sql-example
 ----
 ====
 
+An `AttributeConverter` can be applied globally for (`@Converter( autoApply=true )`) or locally.
+
+
 [[basic-jpa-convert-type]]
 ===== `AttributeConverter` Java and JDBC types
 
@@ -1607,7 +1620,7 @@ of the associated entity attribute type.
 
 ====== Immutable types
 
-If the entity attribute is a `String`, a primitive wrapper (e.g. `Integer`, `Long`) an Enum type, or any other immutable `Object` type,
+If the entity attribute is a `String`, a primitive wrapper (e.g. `Integer`, `Long`), an Enum type, or any other immutable `Object` type,
 then you can only change the entity attribute value by reassigning it to a new value.
 
 Considering we have the same `Period` entity attribute as illustrated in the <<basic-jpa-convert>> section:

@@ -87,7 +87,7 @@ public interface DomainResultCreationState {
 	 * Returns the part of the foreign key that is currently being resolved,
 	 * or <code>null</code> if no foreign key is currently being resolved.
 	 */
-	ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart();
+	ForeignKeyDescriptor.Nature getCurrentlyResolvingForeignKeyPart();
 
-	void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide);
+	void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide);
 }

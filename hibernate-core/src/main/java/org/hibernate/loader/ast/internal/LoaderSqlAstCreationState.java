@@ -57,7 +57,7 @@ public class LoaderSqlAstCreationState
 	private final FetchProcessor fetchProcessor;
 
 	private boolean resolvingCircularFetch;
-	private ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide;
+	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 	private Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public LoaderSqlAstCreationState(
@@ -128,12 +128,12 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart() {
+	public ForeignKeyDescriptor.Nature getCurrentlyResolvingForeignKeyPart() {
 		return currentlyResolvingForeignKeySide;
 	}
 
 	@Override
-	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide) {
+	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 

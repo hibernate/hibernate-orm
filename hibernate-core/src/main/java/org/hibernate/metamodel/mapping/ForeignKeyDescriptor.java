@@ -25,9 +25,17 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public interface ForeignKeyDescriptor extends VirtualModelPart {
 
-	enum Side {
+	enum Nature {
 		KEY,
 		TARGET;
+	}
+
+	interface Side {
+
+		Nature getNature();
+
+		ModelPart getModelPart();
+
 	}
 
 	String PART_NAME = "{fk}";
@@ -39,6 +47,10 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	ModelPart getKeyPart();
 
 	ModelPart getTargetPart();
+
+	Side getKeySide();
+
+	Side getTargetSide();
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk
@@ -64,7 +76,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			Side side,
+			Nature side,
 			DomainResultCreationState creationState);
 
 	Predicate generateJoinPredicate(

@@ -52,8 +52,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
-	private final EmbeddableValuedModelPart keyMappingType;
-	private final EmbeddableValuedModelPart targetMappingType;
+	private final EmbeddedForeignKeyDescriptorSide keySide;
+	private final EmbeddedForeignKeyDescriptorSide targetSide;
 	private final String keyTable;
 	private final SelectableMappings keySelectableMappings;
 	private final String targetTable;
@@ -72,8 +72,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.keySelectableMappings = keySelectableMappings;
 		this.targetTable = targetTable;
 		this.targetSelectableMappings = targetSelectableMappings;
-		this.targetMappingType = targetMappingType;
-		this.keyMappingType = keyMappingType;
+		this.targetSide = new EmbeddedForeignKeyDescriptorSide( Nature.TARGET, targetMappingType );
+		this.keySide = new EmbeddedForeignKeyDescriptorSide( Nature.KEY, keyMappingType );
 		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
 		keySelectableMappings.forEachSelectable(
 				(columnIndex, selection) -> {
@@ -106,11 +106,14 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		this.keySelectableMappings = keySelectableMappings;
 		this.targetTable = original.targetTable;
 		this.targetSelectableMappings = original.targetSelectableMappings;
-		this.targetMappingType = original.targetMappingType;
-		this.keyMappingType = EmbeddedAttributeMapping.createInverseModelPart(
-				targetMappingType,
-				keySelectableMappings,
-				creationProcess
+		this.targetSide = original.targetSide;
+		this.keySide = new EmbeddedForeignKeyDescriptorSide(
+				Nature.KEY,
+				EmbeddedAttributeMapping.createInverseModelPart(
+						original.targetSide.getModelPart(),
+						keySelectableMappings,
+						creationProcess
+				)
 		);
 		final List<String> columns = new ArrayList<>( keySelectableMappings.getJdbcTypeCount() );
 		keySelectableMappings.forEachSelectable(
@@ -129,6 +132,26 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public String getTargetTable() {
 		return targetTable;
+	}
+
+	@Override
+	public ModelPart getKeyPart() {
+		return keySide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
+	}
+
+	@Override
+	public ModelPart getTargetPart() {
+		return targetSide.getModelPart().getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
+	}
+
+	@Override
+	public Side getKeySide() {
+		return keySide;
+	}
+
+	@Override
+	public Side getTargetSide() {
+		return targetSide;
 	}
 
 	@Override
@@ -157,7 +180,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				tableGroup,
 				null,
 				keyTable,
-				keyMappingType,
+				keySide.getModelPart(),
 				creationState
 		);
 	}
@@ -174,7 +197,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				tableGroup,
 				null,
 				targetTable,
-				targetMappingType,
+				targetSide.getModelPart(),
 				creationState
 		);
 	}
@@ -190,7 +213,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					tableGroup,
 					null,
 					targetTable,
-					targetMappingType,
+					targetSide.getModelPart(),
 					creationState
 			);
 		}
@@ -200,7 +223,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					tableGroup,
 					null,
 					keyTable,
-					keyMappingType,
+					keySide.getModelPart(),
 					creationState
 			);
 		}
@@ -210,15 +233,15 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	public DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			Side side,
+			Nature side,
 			DomainResultCreationState creationState) {
-		if ( side == Side.KEY ) {
+		if ( side == Nature.KEY ) {
 			return createDomainResult(
 					navigablePath,
 					tableGroup,
 					null,
 					keyTable,
-					keyMappingType,
+					keySide.getModelPart(),
 					creationState
 			);
 		}
@@ -228,7 +251,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 					tableGroup,
 					null,
 					targetTable,
-					targetMappingType,
+					targetSide.getModelPart(),
 					creationState
 			);
 		}
@@ -240,7 +263,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, resultVariable, keyTable, keyMappingType, creationState );
+		return createDomainResult( navigablePath, tableGroup, resultVariable, keyTable, keySide.getModelPart(), creationState );
 	}
 
 	private <T> DomainResult<T> createDomainResult(
@@ -293,9 +316,9 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			);
 		}
 
-		final Side currentForeignKeyResolvingKey = creationState.getCurrentlyResolvingForeignKeyPart();
+		final Nature currentForeignKeyResolvingKey = creationState.getCurrentlyResolvingForeignKeyPart();
 		try {
-			creationState.setCurrentlyResolvingForeignKeyPart( keyMappingType == modelPart ? Side.KEY : Side.TARGET );
+			creationState.setCurrentlyResolvingForeignKeyPart( keySide.getModelPart() == modelPart ? Nature.KEY : Nature.TARGET );
 			return new EmbeddableForeignKeyResultImpl<>(
 					resultNavigablePath,
 					modelPart,
@@ -445,28 +468,18 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public ModelPart getKeyPart() {
-		return keyMappingType.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
-	}
-
-	@Override
-	public ModelPart getTargetPart() {
-		return targetMappingType.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
-	}
-
-	@Override
 	public MappingType getPartMappingType() {
-		return targetMappingType.getPartMappingType();
+		return targetSide.getModelPart().getPartMappingType();
 	}
 
 	@Override
 	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
-		return targetMappingType.getJavaTypeDescriptor();
+		return targetSide.getModelPart().getJavaTypeDescriptor();
 	}
 
 	@Override
 	public NavigableRole getNavigableRole() {
-		return targetMappingType.getNavigableRole();
+		return targetSide.getModelPart().getNavigableRole();
 	}
 
 	@Override
@@ -483,8 +496,8 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session) {
 		// If the mapping type has an identifier type, that identifier is the key
-		if ( targetMappingType instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) targetMappingType ).getIdentifier( targetObject, session );
+		if ( targetSide.getModelPart() instanceof SingleAttributeIdentifierMapping ) {
+			return ( (SingleAttributeIdentifierMapping) targetSide.getModelPart() ).getIdentifier( targetObject, session );
 		}
 		// Otherwise this is a key based on the target object i.e. without id-class
 		return targetObject;
@@ -492,12 +505,12 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
-		return targetMappingType.findContainingEntityMapping();
+		return targetSide.getModelPart().findContainingEntityMapping();
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		return targetMappingType.forEachJdbcType( offset, action );
+		return targetSide.getModelPart().forEachJdbcType( offset, action );
 	}
 
 	@Override
@@ -507,11 +520,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		return targetMappingType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+		return targetSide.getModelPart().forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		return targetMappingType.disassemble( value, session );
+		return targetSide.getModelPart().disassemble( value, session );
 	}
 }

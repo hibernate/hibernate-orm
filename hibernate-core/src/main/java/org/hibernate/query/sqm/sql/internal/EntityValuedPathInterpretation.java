@@ -66,7 +66,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
 			final String lhsTable;
 			final ModelPart lhsPart;
-			if ( associationMapping.getSide() == ForeignKeyDescriptor.Side.KEY ) {
+			if ( associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
 				lhsTable = fkDescriptor.getKeyTable();
 				lhsPart = fkDescriptor.getKeyPart();
 			}

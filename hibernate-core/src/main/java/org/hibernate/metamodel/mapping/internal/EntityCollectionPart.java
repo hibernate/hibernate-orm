@@ -332,8 +332,8 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public ForeignKeyDescriptor.Side getSide() {
-		return ForeignKeyDescriptor.Side.TARGET;
+	public ForeignKeyDescriptor.Nature getSideNature() {
+		return ForeignKeyDescriptor.Nature.TARGET;
 	}
 
 	@Override

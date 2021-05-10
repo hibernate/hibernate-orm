@@ -100,7 +100,7 @@ public class ToOneAttributeMapping
 	private final TableGroupProducer declaringTableGroupProducer;
 
 	private ForeignKeyDescriptor foreignKeyDescriptor;
-	private ForeignKeyDescriptor.Side lhsSide;
+	private ForeignKeyDescriptor.Nature sideNature;
 	private String identifyingColumnsTableExpression;
 
 	public ToOneAttributeMapping(
@@ -286,9 +286,9 @@ public class ToOneAttributeMapping
 	public void setForeignKeyDescriptor(ForeignKeyDescriptor foreignKeyDescriptor) {
 		assert identifyingColumnsTableExpression != null;
 		this.foreignKeyDescriptor = foreignKeyDescriptor;
-		this.lhsSide = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression )
-				? ForeignKeyDescriptor.Side.KEY
-				: ForeignKeyDescriptor.Side.TARGET;
+		this.sideNature = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression )
+				? ForeignKeyDescriptor.Nature.KEY
+				: ForeignKeyDescriptor.Nature.TARGET;
 	}
 
 	public void setIdentifyingColumnsTableExpression(String tableExpression) {
@@ -301,12 +301,12 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
-	public ForeignKeyDescriptor.Side getSide() {
-		return lhsSide;
+	public ForeignKeyDescriptor.Nature getSideNature() {
+		return sideNature;
 	}
 
 	public boolean canJoinForeignKey(EntityIdentifierMapping identifierMapping) {
-		return lhsSide == ForeignKeyDescriptor.Side.KEY && identifierMapping == getForeignKeyDescriptor().getTargetPart() && !isNullable;
+		return sideNature == ForeignKeyDescriptor.Nature.KEY && identifierMapping == getForeignKeyDescriptor().getTargetPart() && !isNullable;
 	}
 
 	public String getReferencedPropertyName() {
@@ -474,7 +474,7 @@ public class ToOneAttributeMapping
 
 				We have a cirularity but it is not bidirectional
 			 */
-			if ( lhsSide == ForeignKeyDescriptor.Side.KEY ) {
+			if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 				final TableGroup parentTableGroup = creationState
 						.getSqlAstCreationState()
 						.getFromClauseAccess()
@@ -641,15 +641,15 @@ public class ToOneAttributeMapping
 
 		 */
 
-		final ForeignKeyDescriptor.Side resolvingKeySideOfForeignKey = creationState.getCurrentlyResolvingForeignKeyPart();
-		final ForeignKeyDescriptor.Side side;
-		if ( resolvingKeySideOfForeignKey == ForeignKeyDescriptor.Side.KEY && this.lhsSide == ForeignKeyDescriptor.Side.TARGET ) {
+		final ForeignKeyDescriptor.Nature resolvingKeySideOfForeignKey = creationState.getCurrentlyResolvingForeignKeyPart();
+		final ForeignKeyDescriptor.Nature side;
+		if ( resolvingKeySideOfForeignKey == ForeignKeyDescriptor.Nature.KEY && this.sideNature == ForeignKeyDescriptor.Nature.TARGET ) {
 			// If we are currently resolving the key part of a foreign key we do not want to add joins.
 			// So if the lhs of this association is the target of the FK, we have to use the KEY part to avoid a join
-			side = ForeignKeyDescriptor.Side.KEY;
+			side = ForeignKeyDescriptor.Nature.KEY;
 		}
 		else {
-			side = this.lhsSide;
+			side = this.sideNature;
 		}
 		final DomainResult<?> keyResult = foreignKeyDescriptor.createDomainResult(
 				fetchablePath,
@@ -658,7 +658,7 @@ public class ToOneAttributeMapping
 				creationState
 		);
 		boolean selectByUniqueKey;
-		if ( side == ForeignKeyDescriptor.Side.KEY ) {
+		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			// case 1.2
 			selectByUniqueKey = false;
 		}
@@ -695,7 +695,7 @@ public class ToOneAttributeMapping
 			DomainResultCreationState creationState) {
 		// We only need a join if the key is on the referring side i.e. this is an inverse to-one
 		// and if the FK refers to a non-PK, in which case we must load the whole entity
-		if ( lhsSide == ForeignKeyDescriptor.Side.TARGET || referencedPropertyName != null ) {
+		if ( sideNature == ForeignKeyDescriptor.Nature.TARGET || referencedPropertyName != null ) {
 			final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 					navigablePath,
 					tableGroup,
@@ -781,7 +781,7 @@ public class ToOneAttributeMapping
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( aliasRoot );
 		// We can only use the parent table group if the FK is located there
 		// If this is false, the FK is on a join table
-		final boolean canUseParentTableGroup = lhsSide == ForeignKeyDescriptor.Side.KEY
+		final boolean canUseParentTableGroup = sideNature == ForeignKeyDescriptor.Nature.KEY
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				navigablePath,
@@ -921,7 +921,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {
-		if ( lhsSide == ForeignKeyDescriptor.Side.KEY ) {
+		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 			return foreignKeyDescriptor.visitKeySelectables( offset, consumer );
 		}
 		else {

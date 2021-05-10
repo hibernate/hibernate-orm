@@ -52,8 +52,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicValuedModelPart, FetchOptions {
-	private final BasicValuedModelPart keySide;
-	private final BasicValuedModelPart targetSide;
+	private final SimpleForeignKeyDescriptorSide keySide;
+	private final SimpleForeignKeyDescriptorSide targetSide;
 
 	private final boolean refersToPrimaryKey;
 
@@ -84,12 +84,12 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				keySelectableMapping
 		);
 		if ( swapDirection ) {
-			this.keySide = targetModelPart;
-			this.targetSide = keyModelPart;
+			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, targetModelPart );
+			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, keyModelPart );
 		}
 		else {
-			this.keySide = keyModelPart;
-			this.targetSide = targetModelPart;
+			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, keyModelPart );
+			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
 		}
 		this.disassemblyValueExtractor = disassemblyValueExtractor;
 		this.refersToPrimaryKey = refersToPrimaryKey;
@@ -97,12 +97,32 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public String getKeyTable() {
-		return keySide.getContainingTableExpression();
+		return keySide.getModelPart().getContainingTableExpression();
 	}
 
 	@Override
 	public String getTargetTable() {
-		return targetSide.getContainingTableExpression();
+		return targetSide.getModelPart().getContainingTableExpression();
+	}
+
+	@Override
+	public BasicValuedModelPart getKeyPart() {
+		return keySide.getModelPart();
+	}
+
+	@Override
+	public BasicValuedModelPart getTargetPart() {
+		return targetSide.getModelPart();
+	}
+
+	@Override
+	public Side getKeySide() {
+		return keySide;
+	}
+
+	@Override
+	public Side getTargetSide() {
+		return targetSide;
 	}
 
 	@Override
@@ -111,7 +131,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			MappingModelCreationProcess creationProcess) {
 		return new SimpleForeignKeyDescriptor(
 				selectableMappingAccess.apply( 0 ),
-				targetSide,
+				targetSide.getModelPart(),
 				disassemblyValueExtractor,
 				refersToPrimaryKey
 		);
@@ -122,24 +142,24 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( navigablePath, keySide.getContainingTableExpression() ) != null;
+		assert tableGroup.getTableReference( navigablePath, keySide.getModelPart().getContainingTableExpression() ) != null;
 
 		return createDomainResult(
 				navigablePath,
 				tableGroup,
-				keySide,
+				keySide.getModelPart(),
 				creationState
 		);
 	}
 
 	@Override
 	public DomainResult<?> createTargetDomainResult(NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
-		assert tableGroup.getTableReference( navigablePath, targetSide.getContainingTableExpression() ) != null;
+		assert tableGroup.getTableReference( navigablePath, targetSide.getModelPart().getContainingTableExpression() ) != null;
 
 		return createDomainResult(
 				navigablePath,
 				tableGroup,
-				targetSide,
+				targetSide.getModelPart(),
 				creationState
 		);
 	}
@@ -149,20 +169,20 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			NavigablePath collectionPath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		return createDomainResult( collectionPath, tableGroup, targetSide, creationState );
+		return createDomainResult( collectionPath, tableGroup, targetSide.getModelPart(), creationState );
 	}
 
 	@Override
 	public DomainResult<?> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			Side side,
+			Nature side,
 			DomainResultCreationState creationState) {
-		if ( side == Side.KEY ) {
-			return createDomainResult( navigablePath, tableGroup, keySide, creationState );
+		if ( side == Nature.KEY ) {
+			return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), creationState );
 		}
 		else {
-			return createDomainResult( navigablePath, tableGroup, targetSide, creationState );
+			return createDomainResult( navigablePath, tableGroup, targetSide.getModelPart(), creationState );
 		}
 	}
 
@@ -172,7 +192,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return createDomainResult( navigablePath, tableGroup, keySide, creationState );
+		return createDomainResult( navigablePath, tableGroup, keySide.getModelPart(), creationState );
 	}
 
 	private <T> DomainResult<T> createDomainResult(
@@ -221,17 +241,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstJoinType sqlAstJoinType,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		if ( lhs.getTableReference( keySide.getContainingTableExpression() ) != null ) {
+		if ( lhs.getTableReference( keySide.getModelPart().getContainingTableExpression() ) != null ) {
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
-							keySide,
+							keySide.getModelPart(),
 							creationContext.getSessionFactory()
 					),
 					ComparisonOperator.EQUAL,
 					new ColumnReference(
 							rhs,
-							targetSide,
+							targetSide.getModelPart(),
 							creationContext.getSessionFactory()
 					)
 			);
@@ -240,13 +260,13 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			return new ComparisonPredicate(
 					new ColumnReference(
 							lhs,
-							targetSide,
+							targetSide.getModelPart(),
 							creationContext.getSessionFactory()
 					),
 					ComparisonOperator.EQUAL,
 					new ColumnReference(
 							rhs,
-							keySide,
+							keySide.getModelPart(),
 							creationContext.getSessionFactory()
 					)
 			);
@@ -262,22 +282,22 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SqlAstCreationContext creationContext) {
 		TableReference lhsTableReference;
 		TableReference rhsTableKeyReference;
-		if ( targetSide.getContainingTableExpression().equals( keySide.getContainingTableExpression() )  ) {
-			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keySide.getContainingTableExpression() );
+		if ( targetSide.getModelPart().getContainingTableExpression().equals( keySide.getModelPart().getContainingTableExpression() )  ) {
+			lhsTableReference = getTableReferenceWhenTargetEqualsKey( lhs, tableGroup, keySide.getModelPart().getContainingTableExpression() );
 
 			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
-					targetSide.getContainingTableExpression()
+					targetSide.getModelPart().getContainingTableExpression()
 			);
 		}
 		else {
-			lhsTableReference = getTableReference( lhs, tableGroup, keySide.getContainingTableExpression() );
+			lhsTableReference = getTableReference( lhs, tableGroup, keySide.getModelPart().getContainingTableExpression() );
 
 			rhsTableKeyReference = getTableReference(
 					lhs,
 					tableGroup,
-					targetSide.getContainingTableExpression()
+					targetSide.getModelPart().getContainingTableExpression()
 			);
 		}
 
@@ -325,33 +345,23 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public BasicValuedModelPart getKeyPart() {
-		return keySide;
-	}
-
-	@Override
-	public BasicValuedModelPart getTargetPart() {
-		return targetSide;
-	}
-
-	@Override
 	public MappingType getPartMappingType() {
-		return targetSide.getMappedType();
+		return targetSide.getModelPart().getMappedType();
 	}
 
 	@Override
 	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
-		return targetSide.getJdbcMapping().getJavaTypeDescriptor();
+		return targetSide.getModelPart().getJdbcMapping().getJavaTypeDescriptor();
 	}
 
 	@Override
 	public NavigableRole getNavigableRole() {
-		return targetSide.getNavigableRole();
+		return targetSide.getModelPart().getNavigableRole();
 	}
 
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
-		return targetSide.findContainingEntityMapping();
+		return targetSide.getModelPart().findContainingEntityMapping();
 	}
 
 	@Override
@@ -383,38 +393,38 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
-		valueConsumer.consume( domainValue, keySide );
+		valueConsumer.consume( domainValue, keySide.getModelPart() );
 	}
 
 	@Override
 	public int visitKeySelectables(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, keySide );
+		consumer.accept( offset, keySide.getModelPart() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public int visitTargetSelectables(int offset, SelectableConsumer consumer) {
-		consumer.accept( offset, targetSide );
+		consumer.accept( offset, targetSide.getModelPart() );
 		return getJdbcTypeCount();
 	}
 
 	@Override
 	public AssociationKey getAssociationKey() {
 		if ( associationKey == null ) {
-			final List<String> associationKeyColumns = Collections.singletonList( keySide.getSelectionExpression() );
-			associationKey = new AssociationKey( keySide.getContainingTableExpression(), associationKeyColumns );
+			final List<String> associationKeyColumns = Collections.singletonList( keySide.getModelPart().getSelectionExpression() );
+			associationKey = new AssociationKey( keySide.getModelPart().getContainingTableExpression(), associationKeyColumns );
 		}
 		return associationKey;
 	}
 
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( targetSide.getJdbcMapping() );
+		return Collections.singletonList( targetSide.getModelPart().getJdbcMapping() );
 	}
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		action.accept( offset, targetSide.getJdbcMapping() );
+		action.accept( offset, targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -425,34 +435,34 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		valuesConsumer.consume( offset, value, targetSide.getJdbcMapping() );
+		valuesConsumer.consume( offset, value, targetSide.getModelPart().getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
 
 	@Override
 	public String getContainingTableExpression() {
-		return keySide.getContainingTableExpression();
+		return keySide.getModelPart().getContainingTableExpression();
 	}
 
 	@Override
 	public String getSelectionExpression() {
-		return keySide.getSelectionExpression();
+		return keySide.getModelPart().getSelectionExpression();
 	}
 
 	@Override
 	public boolean isFormula() {
-		return keySide.isFormula();
+		return keySide.getModelPart().isFormula();
 	}
 
 	@Override
 	public String getCustomReadExpression() {
-		return keySide.getCustomReadExpression();
+		return keySide.getModelPart().getCustomReadExpression();
 	}
 
 	@Override
 	public String getCustomWriteExpression() {
-		return keySide.getCustomWriteExpression();
+		return keySide.getModelPart().getCustomWriteExpression();
 	}
 
 	@Override
@@ -494,17 +504,17 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return keySide.getJdbcMapping();
+		return keySide.getModelPart().getJdbcMapping();
 	}
 
 	@Override
 	public String toString() {
 		return String.format(
 				"SimpleForeignKeyDescriptor : %s.%s -> %s.%s",
-				keySide.getContainingTableExpression(),
-				keySide.getSelectionExpression(),
-				targetSide.getContainingTableExpression(),
-				targetSide.getSelectionExpression()
+				keySide.getModelPart().getContainingTableExpression(),
+				keySide.getModelPart().getSelectionExpression(),
+				targetSide.getModelPart().getContainingTableExpression(),
+				targetSide.getModelPart().getSelectionExpression()
 		);
 	}
 }

@@ -180,8 +180,8 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	}
 
 	@Override
-	public ForeignKeyDescriptor.Side getSide() {
-		return ( (Association) fetchParent ).getSide();
+	public ForeignKeyDescriptor.Nature getSideNature() {
+		return ( (Association) fetchParent ).getSideNature();
 	}
 
 	@Override

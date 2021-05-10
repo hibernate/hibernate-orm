@@ -339,7 +339,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private int fetchDepth;
 	private boolean resolvingCircularFetch;
-	private ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide;
+	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
 
 	private Map<String, FilterPredicate> collectionFilterPredicates;
 	private OrderByFragmentConsumer orderByFragmentConsumer;
@@ -4701,12 +4701,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public ForeignKeyDescriptor.Side getCurrentlyResolvingForeignKeyPart() {
+	public ForeignKeyDescriptor.Nature getCurrentlyResolvingForeignKeyPart() {
 		return currentlyResolvingForeignKeySide;
 	}
 
 	@Override
-	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Side currentlyResolvingForeignKeySide) {
+	public void setCurrentlyResolvingForeignKeyPart(ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide) {
 		this.currentlyResolvingForeignKeySide = currentlyResolvingForeignKeySide;
 	}
 

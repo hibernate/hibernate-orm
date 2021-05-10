@@ -49,7 +49,7 @@ public class CharacterArrayNClobType
 			final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( Types.NCLOB );
 
 			return typeConfiguration.getBasicTypeRegistry().resolve(
-					typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( char[].class ),
+					typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( domainJtd.getJavaType() ),
 					jdbcType
 			);
 		}

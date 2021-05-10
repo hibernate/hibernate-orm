@@ -19,6 +19,8 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.transaction.TransactionUtil2;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -27,6 +29,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
+
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support a CONCAT function")
 public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 
@@ -41,7 +44,71 @@ public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testLifecycle() {
+	public void testNormalLifecycle() {
+		// same as `#testRefreshLifecycle` except that here we do not rely on
+		// `Session#refresh` which atm in 6.0 dev does not appear to work properly
+		// at least in this scenario
+
+		// create the entity
+		doInJPA(
+				this::entityManagerFactory,
+				(entityManager) -> {
+					Client client = new Client();
+					client.setId( 1L );
+					client.setFirstName( "John" );
+					client.setLastName( "Doe" );
+					entityManager.persist( client );
+
+					Account account = new Account();
+					account.setId( 1L );
+					account.setClient( client );
+					account.setDescription( "Checking account" );
+					entityManager.persist( account );
+
+					AccountTransaction transaction = new AccountTransaction();
+					transaction.setAccount( account );
+					transaction.setDescription( "Salary" );
+					transaction.setCents( 100 * 7000 );
+					entityManager.persist( transaction );
+				}
+		);
+
+		// load the entity, verify its state and add a new transaction (thereby updating the calculated balance)
+		doInJPA(
+				this::entityManagerFactory,
+				(entityManager) -> {
+					AccountSummary summary = entityManager.createQuery(
+							"select s " +
+									"from AccountSummary s " +
+									"where s.id = :id", AccountSummary.class)
+							.setParameter( "id", 1L )
+							.getSingleResult();
+
+					assertEquals( "John Doe", summary.getClientName() );
+					assertEquals( 100 * 7000, summary.getBalance() );
+
+					AccountTransaction transaction = new AccountTransaction();
+					transaction.setAccount( entityManager.getReference( Account.class, 1L ) );
+					transaction.setDescription( "Shopping" );
+					transaction.setCents( -100 * 2200 );
+					entityManager.persist( transaction );
+				}
+		);
+
+		// load the AccountSummary and verify the updated balance
+		doInJPA(
+				this::entityManagerFactory,
+				(entityManager) -> {
+					AccountSummary summary = entityManager.find( AccountSummary.class, 1L );
+
+					assertEquals( "John Doe", summary.getClientName() );
+					assertEquals( 100 * 4800, summary.getBalance() );
+				}
+		);
+	}
+
+	@Test
+	public void testRefreshLifecycle() {
 		//tag::mapping-Subselect-entity-find-example[]
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Client client = new Client();
@@ -92,6 +159,18 @@ public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 
 		//end::mapping-Subselect-entity-refresh-example[]
+	}
+
+	@After
+	public void dropTestData() {
+		doInJPA(
+				this::entityManagerFactory,
+				(entityManager) -> {
+					entityManager.createQuery( "delete AccountTransaction" ).executeUpdate();
+					entityManager.createQuery( "delete Account" ).executeUpdate();
+					entityManager.createQuery( "delete Client" ).executeUpdate();
+				}
+		);
 	}
 
 	//tag::mapping-Subselect-example[]

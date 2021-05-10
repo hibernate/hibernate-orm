@@ -90,15 +90,16 @@ include::{sourcedir}/basic/ImplicitBasicTypeTest.java[tags=basic-annotation-impl
 
 The `@Basic` annotation defines 2 attributes.
 
-`optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.
-   JPA defines this as "a hint", which essentially means that its effect is specifically required.
-   As long as the type is not primitive, Hibernate takes this to mean that the underlying column should be `NULLABLE`.
+`optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.  JPA defines
+    this as "a hint", which means the provider is free to ignore it.  JPA also says that it will be
+    ignored if the type is primitive.  As long as the type is not primitive, Hibernate will honor this
+    value.  Works in conjunction with `@Column#nullable` - see <<basic-column-annotation>>.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
-   JPA says that EAGER is a requirement to the provider (Hibernate) that the value should be fetched when the owner
-   is fetched, while LAZY is merely a hint that the value is fetched when the attribute is accessed.  Hibernate ignores
-   this setting for basic types unless you are using bytecode enhancement.  See the
-   <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enhancement>> for additional information on
-   fetching and on bytecode enhancement.
+    `EAGER` indicates that the value will be fetched as part of loading the owner.  `LAZY` values are
+    fetched only when the value is accessed.  JPA requires providers to support `EAGER`, while support for
+    `LAZY` is optional meaning that a provider is free to not support it.  Hibernate supports lazy loading
+    of basic values as long as you are using its <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancement>>
+    support.
 
 
 
@@ -217,19 +218,17 @@ provides many ways to influence this mapping resolution.  Ultimately we want to 
       `@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`. `@MapKeyJdbcType` and
       `@MapKeyJdbcTypeCode` are also available to influence the descriptor chosen for a Map key.
 `BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
-      It can be influenced `AttributeConverter`.  Some Java types (enums, e.g.) have an implicit conversion
+        Some Java types (enums, e.g.) have an implicit conversion.  Users can specify an explicit conversion using
+        `AttributeConverter`.  See <<basic-jpa-convert>>.
 `MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
    `MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
 
 The legacy `@Type` and `@TypeDefs` can also be used as to indicate the `BasicType` or `UserType` to use.  Refer to <<basic-legacy>>
 for more details.
 
-Note that implementations of `org.hibernate.boot.model.TypeContributor` can also be defined as a Java service
-(`java.util.ServiceLoader`) to contribute a types.  This approach might be more appropriate for libraries
-extending the Hibernate type system.  Fpr more information, see <<basic-type-contributor>>.
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
 
-
-See <<basic-bitset-java-type>> examples of most of these approaches, using the mapping of `BitSet`.
+See <<basic-bitset-java-type>> for examples of most of these approaches, mapping `BitSet` as a basic type.
 
 
 
@@ -286,26 +285,7 @@ You can do this via the `hibernate.use_nationalized_character_data` setting or b
 [[basic-lob]]
 ==== Handling LOB data
 
-Mapping LOBs (database Large Objects) come in 2 forms, those using the JDBC locator types and those materializing the LOB data.
-
-JDBC LOB locators exist to allow efficient access to the LOB data.
-They allow the JDBC driver to stream parts of the LOB data as needed, potentially freeing up memory space.
-However, they can be unnatural to deal with and have certain limitations.
-For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
-
-The idea of materialized LOBs is to trade-off the potential efficiency (not all drivers handle LOB data efficiently) for a more natural
-programming paradigm using familiar Java types such as `String` or `byte[]`, etc for these LOBs.
-
-Materialized deals with the entire LOB contents in memory, whereas LOB locators (in theory) allow streaming parts of the LOB contents into memory as needed.
-
-The JDBC LOB locator types include:
-
-* `java.sql.Blob`
-* `java.sql.Clob`
-* `java.sql.NClob`
-
-Mapping materialized forms of these LOB values would use more familiar Java types such as `String`, `char[]`, `byte[]`, etc.
-The trade-off for _more familiar_ is sometimes performance.
+Mapping basic values to database LOB (Large OBject) types is handled using `@Lob`.
 
 [NOTE]
 ====
@@ -315,6 +295,28 @@ However, some drivers are trickier (e.g. PostgreSQL), and, in such cases, you ma
 Such discussions are beyond the scope of this guide.
 ====
 
+Mapping basic values to LOB types comes in 2 forms...
+
+===== LOB Locator
+
+The JDBC LOB locator types include:
+
+* `java.sql.Blob`
+* `java.sql.Clob`
+* `java.sql.NClob`
+
+Through references of these types, JDBC drivers can support more efficient access to the LOB data.
+Some drivers stream parts of the LOB data as needed, potentially freeing up memory space.
+
+However, they can be unnatural to deal with and have certain limitations.
+For example, a LOB locator is only portably valid during the duration of the transaction in which it was obtained.
+
+===== Materialized LOB
+
+Hibernate allows mapping LOB data using familiar Java types such as `String`, `char[]`, `byte[]`, etc.  Materialization
+handles the entire LOB contents in memory.
+
+This trade-off for more familiar is sometimes performance, though this depends on the driver.
 
 
 
@@ -327,9 +329,9 @@ Such discussions are beyond the scope of this guide.
 Hibernate supports mapping temporal values in numerous ways, though ultimately these strategies
 boil down to the 3 main Date/Time types defined by the SQL specification:
 
-DATE:: Represents a calendar date by storing years, months and days. The JDBC equivalent is `java.sql.Date`
-TIME:: Represents the time of a day by storing hours, minutes and seconds. The JDBC equivalent is `java.sql.Time`
-TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds. The JDBC equivalent is `java.sql.Timestamp`
+DATE:: Represents a calendar date by storing years, months and days.
+TIME:: Represents the time of a day by storing hours, minutes and seconds.
+TIMESTAMP:: Represents both a DATE and a TIME plus nanoseconds.
 
 The mapping of `java.time` temporal types to the specific SQL Date/Time types is implied as follows:
 
@@ -337,20 +339,35 @@ DATE:: `java.time.LocalDate`
 TIME:: `java.time.LocalTime`, `java.time.OffsetTime`
 TIMESTAMP:: `java.time.Instant`, `java.time.LocalDateTime`, `java.time.OffsetDateTime` and `java.time.ZonedDateTime`
 
-[IMPORTANT]
-====
-Applying `@Temporal` to a `java.time` value is considered an exception
-====
-
 Although Hibernate recommends the use of the `java.time` package for representing temporal values,
 it does support using `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp`, `java.util.Date` and
 `java.util.Calendar`.
 
-Like the `java.time` classes, the mapping for the `java.sql` classes is also implied.  The one
-exception being `Timestamp` which can be mapped to `DATE` or `TIME` using `@Temporal(DATE)` or
-`@Temporal(TIME)` if desired; the other part is simply ignored.
+The mappings for `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` are implicit:
 
-When using the `java.util` classes, Hibernate assumes `TIMESTAMP`.  To alter that, use `@Temporal`.
+DATE:: `java.sql.Date`
+TIME:: `java.sql.Time`
+TIMESTAMP:: `java.sql.Timestamp`
+
+
+[IMPORTANT]
+====
+Applying `@Temporal` to `java.sql.Date`, `java.sql.Time`, `java.sql.Timestamp` or any of the `java.time` types
+is considered an exception
+====
+
+When using `java.util.Date` or `java.util.Calendar`, Hibernate assumes `TIMESTAMP`.  To alter that,
+use `@Temporal`.
+
+[[basic-temporal-java-util-example]]
+.Mapping java.util.Date
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/DatePrecisionTests.java[tags=basic-temporal-example]
+----
+====
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -623,7 +640,7 @@ include::{sourcedir}/basic/FloatMappingTests.java[tags=basic-float-example-impli
 ====
 
 A specific type can be influenced using any of the JDBC type influencers covered in
-<<basic-mapping-explicit>> section.
+<<basic-mapping>> section.
 
 If `@JdbcTypeCode` is used, the Dialect is still consulted to make sure the database
 supports the requested type.  If not, an appropriate type is selected
@@ -653,6 +670,16 @@ include::{sourcedir}/basic/BigDecimalMappingTests.java[tags=basic-bigdecimal-exa
 [[basic-character]]
 ==== Character
 
+By default, Hibernate maps values of `Character` to the `CHAR` JDBC type.
+
+[[basic-character-example-implicit]]
+.Mapping Character
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/CharacterMappingTests.java[tags=basic-character-example-implicit]
+----
+====
 
 
 
@@ -660,6 +687,21 @@ include::{sourcedir}/basic/BigDecimalMappingTests.java[tags=basic-bigdecimal-exa
 
 [[basic-String]]
 ==== String
+
+By default, Hibernate maps values of `String` to the `CHAR` JDBC type.
+
+[[basic-string-example-implicit]]
+.Mapping Character
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/StringMappingTests.java[tags=basic-string-example-implicit]
+----
+====
+
+See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
+
+See <<basic-lob>> for details on mapping strings as database LOB.
 
 
 
@@ -1296,9 +1338,14 @@ For additional details on using custom types, see <<basic-custom-type>> section.
 [[basic-type-contributor]]
 ==== TypeContributor
 
-// todo (6.0) : add doc
+`org.hibernate.boot.model.TypeContributor` is a contract for overriding or extending parts of the Hibernate type
+system.
 
-yadda yadda yadda
+There are many ways to integrate a `TypeContributor`.  The most common is to define the `TypeContributor` as
+a Java service (see `java.util.ServiceLoader`).
+
+`TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaTypeDescriptor`,
+`JdbcTypeDescriptor` and `BasicType` references.
 
 
 

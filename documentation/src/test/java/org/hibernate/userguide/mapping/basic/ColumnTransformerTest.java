@@ -9,7 +9,6 @@ package org.hibernate.userguide.mapping.basic;
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Locale;
-import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
@@ -48,13 +47,15 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::basic-datetime-temporal-date-persist-example[]
 			Savings savings = new Savings( );
 			savings.setId( 1L );
-			savings.setWallet( new MonetaryAmount( BigDecimal.TEN, Currency.getInstance( Locale.US ) ) );
+			savings.setCurrency( Currency.getInstance( Locale.US ) );
+			savings.setAmount( BigDecimal.TEN );
 			entityManager.persist( savings );
 		} );
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Savings savings = entityManager.find( Savings.class, 1L );
-			assertEquals( 10, savings.getWallet().getAmount().intValue());
+			assertEquals( 10, savings.getAmount().intValue());
+			assertEquals( Currency.getInstance( Locale.US ), savings.getCurrency() );
 		} );
 		//end::mapping-column-read-and-write-composite-type-persistence-example[]
 	}
@@ -66,14 +67,12 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 		@Id
 		private Long id;
 
-		@Embedded
 		@ColumnTransformer(
-			forColumn = "money",
-			read = "money / 100",
-			write = "? * 100"
+				read = "amount / 100",
+				write = "? * 100"
 		)
-		// todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
-		private MonetaryAmount wallet;
+		private BigDecimal amount;
+		private Currency currency;
 
 		//Getters and setters omitted for brevity
 
@@ -86,12 +85,20 @@ public class ColumnTransformerTest extends BaseEntityManagerFunctionalTestCase {
 			this.id = id;
 		}
 
-		public MonetaryAmount getWallet() {
-			return wallet;
+		public BigDecimal getAmount() {
+			return amount;
 		}
 
-		public void setWallet(MonetaryAmount wallet) {
-			this.wallet = wallet;
+		public void setAmount(BigDecimal amount) {
+			this.amount = amount;
+		}
+
+		public Currency getCurrency() {
+			return currency;
+		}
+
+		public void setCurrency(Currency currency) {
+			this.currency = currency;
 		}
 
 

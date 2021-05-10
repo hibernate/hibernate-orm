@@ -47,7 +47,7 @@ public class ClobCharArrayTest {
 	}
 
 	@AfterEach
-	public void dropData(SessionFactoryScope scope) {
+	public void dropData(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> session.createQuery( "delete Product" ).executeUpdate()
 		);

@@ -58,7 +58,7 @@ public class CharacterArrayType
 
 		if ( domainJtd != null && domainJtd.getJavaTypeClass() == Character[].class ) {
 			return typeConfiguration.getBasicTypeRegistry().resolve(
-					typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( Character[].class ),
+					typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( domainJtd.getJavaType() ),
 					indicatedJdbcType
 			);
 		}

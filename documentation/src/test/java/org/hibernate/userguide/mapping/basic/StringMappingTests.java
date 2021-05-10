@@ -6,7 +6,6 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import java.math.BigInteger;
 import java.sql.Types;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -25,66 +24,65 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
 
 /**
- * Tests for mapping `BigInteger` values
+ * Tests for mapping `double` values
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BigIntegerMappingTests.EntityOfBigIntegers.class )
+@DomainModel( annotatedClasses = StringMappingTests.EntityOfStrings.class )
 @SessionFactory
-public class BigIntegerMappingTests {
+public class StringMappingTests {
 
 	@Test
 	public void testMappings(SessionFactoryScope scope) {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfBigIntegers.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfStrings.class );
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BigInteger.class ) );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "string" );
+			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BigInteger.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.NUMERIC ) );
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.VARCHAR ) );
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfBigIntegers( 1, BigInteger.TEN ) )
+				(session) -> session.persist( new EntityOfStrings( 1, "a string" ) )
 		);
 		scope.inTransaction(
-				(session) -> session.get( EntityOfBigIntegers.class, 1 )
+				(session) -> session.get( EntityOfStrings.class, 1 )
 		);
 	}
 
 	@AfterEach
 	public void dropData(SessionFactoryScope scope) {
 		scope.inTransaction(
-				(session) -> session.createQuery( "delete EntityOfBigIntegers" ).executeUpdate()
+				(session) -> session.createQuery( "delete EntityOfStrings" ).executeUpdate()
 		);
 	}
 
-	@Entity( name = "EntityOfBigIntegers" )
-	@Table( name = "EntityOfBigIntegers" )
-	public static class EntityOfBigIntegers {
+	@Entity( name = "EntityOfStrings" )
+	@Table( name = "EntityOfStrings" )
+	public static class EntityOfStrings {
 		@Id
 		Integer id;
 
-		//tag::basic-biginteger-example-implicit[]
-		// will be mapped using NUMERIC
-		BigInteger wrapper;
-		//end::basic-biginteger-example-implicit[]
+		//tag::basic-string-example-implicit[]
+		// these will be mapped using VARCHAR
+		String string;
+		//end::basic-string-example-implicit[]
 
-		public EntityOfBigIntegers() {
+		public EntityOfStrings() {
 		}
 
-		public EntityOfBigIntegers(Integer id, BigInteger wrapper) {
+		public EntityOfStrings(Integer id, String string) {
 			this.id = id;
-			this.wrapper = wrapper;
+			this.string = string;
 		}
 	}
 }

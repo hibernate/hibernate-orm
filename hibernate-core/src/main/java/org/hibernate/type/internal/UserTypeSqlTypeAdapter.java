@@ -92,7 +92,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 		public J extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramIndex, options.getSession() );
+				return ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramIndex, options.getSession() );
 			}
 
 			throw new UnsupportedOperationException( "UserType does not support reading CallableStatement parameter values: " + userType );
@@ -102,7 +102,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 		public J extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
 			if ( userType instanceof ProcedureParameterExtractionAware ) {
 				//noinspection unchecked
-				( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramName, options.getSession() );
+				return ( (ProcedureParameterExtractionAware<J>) userType ).extract( statement, paramName, options.getSession() );
 			}
 
 			throw new UnsupportedOperationException( "UserType does not support reading CallableStatement parameter values: " + userType );

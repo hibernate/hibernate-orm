@@ -701,7 +701,7 @@ include::{sourcedir}/basic/StringMappingTests.java[tags=basic-string-example-imp
 
 See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
 
-See <<basic-lob>> for details on mapping strings as database LOB.
+See <<basic-lob>> for details on mapping as database LOB.
 
 
 
@@ -711,6 +711,20 @@ See <<basic-lob>> for details on mapping strings as database LOB.
 [[basic-chararray]]
 ==== Character array
 
+By default, Hibernate maps values of `Character[]` and `char[]` to the `VARCHAR` JDBC type.
+
+[[basic-string-example-implicit]]
+.Mapping Character
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/CharacterArrayMappingTests.java[tags=basic-chararray-examples]
+----
+====
+
+See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
+
+See <<basic-lob>> for details on mapping as database LOB.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -867,6 +881,20 @@ include::{sourcedir}/basic/NClobCharArrayTest.java[tags=basic-nclob-char-array-e
 [[basic-bytearray]]
 ==== Byte array
 
+By default, Hibernate maps values of type `byte[]` and `Byte[]` to the JDBC type
+`VARBINARY`.
+
+[[basic-bytearray-example]]
+.Mapping arrays of bytes
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ByteArrayMappingTests.java[tags=basic-bytearray-example]
+----
+====
+
+See <<basic-lob>> for details on mapping as database LOB.
+
 
 
 
@@ -945,16 +973,36 @@ include::{sourcedir}/basic/BlobByteArrayTest.java[tags=basic-blob-byte-array-exa
 
 ==== Duration
 
+By default, Hibernate will map `Duration` to the `NUMERIC` JDBC type.
+
+[[basic-duration-example]]
+.Mapping Duration
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/DurationMappingTests.java[tags=basic-duration-example]
+----
+====
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ==== Instant
 
-[NOTE]
+`Instant` is mapped to the `TIMESTAMP` JDBC type.
+
+
+[[basic-instant-example]]
+.Mapping Instant
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/InstantMappingTests.java[tags=basic-instant-example]
+----
+====
+
 See <<basic-temporal>> for basics of temporal mapping
-====
 
 
 
@@ -964,10 +1012,18 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== LocalDate
 
-[NOTE]
+`LocalDate` is mapped to the `DATE` JDBC type.
+
+[[basic-localDate-example]]
+.Mapping LocalDate
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/LocalDateMappingTests.java[tags=basic-localDate-example]
+----
+====
+
 See <<basic-temporal>> for basics of temporal mapping
-====
 
 
 
@@ -977,10 +1033,18 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== LocalDateTime
 
-[NOTE]
+`LocalDateTime` is mapped to the `TIMESTAMP` JDBC type.
+
+[[basic-localDateTime-example]]
+.Mapping LocalDateTime
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/LocalDateTimeMappingTests.java[tags=basic-localDateTime-example]
+----
+====
+
 See <<basic-temporal>> for basics of temporal mapping
-====
 
 
 
@@ -990,10 +1054,18 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== LocalTime
 
-[NOTE]
+`LocalTime` is mapped to the `TIME` JDBC type.
+
+[[basic-localTime-example]]
+.Mapping LocalTime
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/LocalTimeMappingTests.java[tags=basic-localTime-example]
+----
+====
+
 See <<basic-temporal>> for basics of temporal mapping
-====
 
 
 
@@ -1003,10 +1075,22 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== OffsetDateTime
 
-[NOTE]
+`OffsetDateTime` is mapped to the `TIMESTAMP` or `TIMESTAMP_WITH_TIMEZONE` JDBC type
+depending on the database.
+
+
+[[basic-OffsetDateTime-example]]
+.Mapping OffsetDateTime
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/OffsetDateTimeMappingTests.java[tags=basic-OffsetDateTime-example]
+----
+====
+
+
 See <<basic-temporal>> for basics of temporal mapping
-====
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1017,10 +1101,21 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== OffsetTime
 
-[NOTE]
+`OffsetTime` is mapped to the `TIME` or `TIME_WITH_TIMEZONE` JDBC type
+depending on the database.
+
+
+[[basic-OffsetTime-example]]
+.Mapping OffsetTime
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/OffsetTimeMappingTests.java[tags=basic-offsetTime-example]
+----
+====
+
 See <<basic-temporal>> for basics of temporal mapping
-====
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1030,6 +1125,16 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== TimeZone
 
+`TimeZone` is mapped to `VARCHAR` JDBC type.
+
+[[basic-TimeZone-example]]
+.Mapping OffsetTime
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/TimeZoneMappingTests.java[tags=basic-timeZone-example]
+----
+====
 
 
 
@@ -1039,10 +1144,22 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== ZonedDateTime
 
-[NOTE]
+
+`ZonedDateTime` is mapped to the `TIMESTAMP` or `TIMESTAMP_WITH_TIMEZONE` JDBC type
+depending on the database.
+
+
+[[basic-ZonedDateTime-example]]
+.Mapping ZonedDateTime
 ====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ZonedDateTimeMappingTests.java[tags=basic-ZonedDateTime-example]
+----
+====
+
 See <<basic-temporal>> for basics of temporal mapping
-====
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1054,6 +1171,17 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== ZoneOffset
 
+`ZoneOffset` is mapped to `VARCHAR` JDBC type.
+
+[[basic-ZoneOffset-example]]
+.Mapping ZoneOffset
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ZoneOffsetMappingTests.java[tags=basic-ZoneOffset-example]
+----
+====
+
 
 
 
@@ -1062,10 +1190,8 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== Calendar
 
-[NOTE]
-====
 See <<basic-temporal>> for basics of temporal mapping
-====
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1078,10 +1204,8 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== Date
 
-[NOTE]
-====
 See <<basic-temporal>> for basics of temporal mapping
-====
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1093,11 +1217,8 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== Time
 
-[NOTE]
-====
 See <<basic-temporal>> for basics of temporal mapping
-====
-
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1109,10 +1230,8 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== Timestamp
 
-[NOTE]
-====
 See <<basic-temporal>> for basics of temporal mapping
-====
+See <<basic-datetime-time-zone>> for basics of time-zone handling
 
 
 
@@ -1122,8 +1241,46 @@ See <<basic-temporal>> for basics of temporal mapping
 
 ==== Class
 
+Hibernate maps `Class` references to `VARCHAR` JDBC type
+
+[[basic-Class-example]]
+.Mapping Class
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/ClassMappingTests.java[tags=basic-Class-example]
+----
+====
+
+
+
 ==== Currency
+
+Hibernate maps `Currency` references to `VARCHAR` JDBC type
+
+[[basic-Currency-example]]
+.Mapping Currency
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/CurrencyMappingTests.java[tags=basic-Currency-example]
+----
+====
+
+
+
 ==== Locale
+
+Hibernate maps `Locale` references to `VARCHAR` JDBC type
+
+[[basic-Locale-example]]
+.Mapping Locale
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/LocaleMappingTests.java[tags=basic-Locale-example]
+----
+====
 
 
 

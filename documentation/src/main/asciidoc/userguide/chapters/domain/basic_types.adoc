@@ -468,22 +468,6 @@ Here the built-in `AttributeConverter` implementations provided by Hibernate are
 `AttributeConverter` could be used also.
 
 
-[[basic-boolean-example-annotated]]
-.Using `@BooleanMapping`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-annotated-yes-no]
-
-include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-annotated-t-f]
-
-include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-annotated-numeric]
-----
-====
-
-Here the Hibernate `@BooleanMapping` annotation is used to specify a conversion.
-
-
 [[basic-boolean-example-legacy]]
 .Using `@Type`
 ====

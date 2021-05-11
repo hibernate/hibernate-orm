@@ -7,32 +7,24 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
-import java.sql.Types;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
 
 import org.hibernate.MappingException;
-import org.hibernate.annotations.BooleanMapping;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BooleanType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.NumericBooleanType;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.TrueFalseType;
-import org.hibernate.type.YesNoType;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -138,17 +130,6 @@ public class InferredBasicValueResolver {
 			if ( explicitJdbcType != null ) {
 				// we also have an explicit @JdbcType(Code)
 
-				if ( reflectedJtd instanceof BooleanTypeDescriptor ) {
-					// apply the implied conversion
-					return fromMappedBoolean(
-							reflectedJtd,
-							explicitJdbcType,
-							stdIndicators.getPreferredBooleanMappingStyle(),
-							stdIndicators,
-							typeConfiguration
-					);
-				}
-
 				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
 						reflectedJtd,
 						explicitJdbcType
@@ -173,16 +154,6 @@ public class InferredBasicValueResolver {
 							(TemporalJavaTypeDescriptor) reflectedJtd,
 							null,
 							null,
-							stdIndicators,
-							typeConfiguration
-					);
-				}
-				else if ( reflectedJtd instanceof BooleanTypeDescriptor ) {
-					// apply the implied conversion
-					return fromMappedBoolean(
-							reflectedJtd,
-							null,
-							stdIndicators.getPreferredBooleanMappingStyle(),
 							stdIndicators,
 							typeConfiguration
 					);
@@ -267,62 +238,6 @@ public class InferredBasicValueResolver {
 		else {
 			return resolved;
 		}
-	}
-
-	private static BasicValue.Resolution fromMappedBoolean(
-			BasicJavaDescriptor<Boolean> reflectedJtd,
-			JdbcTypeDescriptor explicitJdbcType,
-			BooleanMapping.Style mappingStyle,
-			JdbcTypeDescriptorIndicators stdIndicators,
-			TypeConfiguration typeConfiguration) {
-		if ( mappingStyle == null ) {
-			mappingStyle = BooleanMapping.Style.BOOLEAN;
-		}
-
-		final JdbcTypeDescriptor jdbcTypeToUse;
-		final JavaTypeDescriptor<?> jdbcJtd;
-		final BasicType<Boolean> legacyType;
-
-		final BasicValueConverter<Boolean, ?> impliedConversion = mappingStyle.getImpliedConversion();
-		if ( impliedConversion == null ) {
-			jdbcTypeToUse = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.BOOLEAN );
-			jdbcJtd = reflectedJtd;
-			legacyType = BooleanType.INSTANCE;
-		}
-		else {
-			jdbcTypeToUse = explicitJdbcType != null
-					? explicitJdbcType
-					: impliedConversion.getRelationalJavaDescriptor().getRecommendedJdbcType( stdIndicators );
-			jdbcJtd = impliedConversion.getRelationalJavaDescriptor();
-
-			switch ( mappingStyle ) {
-				case NUMERIC: {
-					legacyType = NumericBooleanType.INSTANCE;
-					break;
-				}
-				case Y_N: {
-					legacyType = YesNoType.INSTANCE;
-					break;
-				}
-				case T_F: {
-					legacyType = TrueFalseType.INSTANCE;
-					break;
-				}
-				default: {
-					legacyType = BooleanType.INSTANCE;
-				}
-			}
-		}
-
-		return new InferredBasicValueResolution(
-				typeConfiguration.getBasicTypeRegistry().resolve( jdbcJtd, jdbcTypeToUse ),
-				reflectedJtd,
-				jdbcJtd,
-				jdbcTypeToUse,
-				impliedConversion,
-				legacyType,
-				ImmutableMutabilityPlan.INSTANCE
-		);
 	}
 
 	@SuppressWarnings("rawtypes")

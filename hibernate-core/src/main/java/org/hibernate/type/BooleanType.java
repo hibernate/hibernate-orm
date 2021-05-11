@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.sql.Types;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -33,6 +34,12 @@ public class BooleanType
 	protected BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
 		super( jdbcTypeDescriptor, javaTypeDescriptor );
 	}
+
+	@Incubating
+	public BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Boolean> javaTypeDescriptor) {
+		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	}
+
 	@Override
 	public String getName() {
 		return "boolean";

@@ -39,9 +39,9 @@ public class OffsetTimeMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityWithOffsetTime.class );
 
-		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "offsetDateTime" );
+		final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "offsetTime" );
 		final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( OffsetDateTime.class ) );
+		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( OffsetTime.class ) );
 		assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), isOneOf( Types.TIME, Types.TIME_WITH_TIMEZONE ) );
 
 		scope.inTransaction(

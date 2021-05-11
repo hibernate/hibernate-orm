@@ -7,15 +7,12 @@
 
 package org.hibernate.test.hql.size;
 
-import org.hibernate.annotations.ResultCheckStyle;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.Where;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Test;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -24,14 +21,21 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.TypedQuery;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
 
 @TestForIssue(jiraKey = "HHH-14585")
+@RequiresDialect(value = PostgreSQL82Dialect.class, comment = "Other databases may not support boolean data types")
+@RequiresDialect(value = H2Dialect.class, comment = "Other databases may not support boolean data types")
 public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -96,21 +100,6 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 		);
 	}
 
-	@After
-	public void cleanupDatabase() {
-		doInJPA(
-				this::entityManagerFactory,
-				entityManager -> {
-					for ( Book book : entityManager.createQuery( "from Book", Book.class ).getResultList() ) {
-						entityManager.remove( book );
-					}
-					for ( Person person : entityManager.createQuery( "from Person", Person.class ).getResultList() ) {
-						entityManager.remove( person );
-					}
-				}
-		);
-	}
-
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
@@ -119,6 +108,9 @@ public class WhereClauseOrderBySizeTest extends BaseEntityManagerFunctionalTestC
 		private String name;
 		@OneToMany(mappedBy = "owner", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
 		private List<Book> books = new ArrayList<>();
+
+		public Person() {
+		}
 
 		public Person(String name) {
 			this.name = name;

@@ -9,8 +9,10 @@ package org.hibernate.userguide.mapping.basic;
 import java.sql.Types;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Nationalized;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -49,10 +51,31 @@ public class StringMappingTests {
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.VARCHAR ) );
 		}
 
+		{
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nstring" );
+			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NVARCHAR ) );
+		}
+
+		{
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "clobString" );
+			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.CLOB ) );
+		}
+
+		{
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nclobString" );
+			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
+			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NCLOB ) );
+		}
+
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfStrings( 1, "a string" ) )
+				(session) -> session.persist( new EntityOfStrings( 1, "string", "nstring", "clob", "nclob" ) )
 		);
 		scope.inTransaction(
 				(session) -> session.get( EntityOfStrings.class, 1 )
@@ -73,16 +96,32 @@ public class StringMappingTests {
 		Integer id;
 
 		//tag::basic-string-example-implicit[]
-		// these will be mapped using VARCHAR
+		// will be mapped using VARCHAR
 		String string;
+
+		// will be mapped using NVARCHAR
+		@Nationalized
+		String nstring;
+
+		// will be mapped using CLOB
+		@Lob
+		String clobString;
+
+		// will be mapped using NCLOB
+		@Lob
+		@Nationalized
+		String nclobString;
 		//end::basic-string-example-implicit[]
 
 		public EntityOfStrings() {
 		}
 
-		public EntityOfStrings(Integer id, String string) {
+		public EntityOfStrings(Integer id, String string, String nstring, String clobString, String nclobString) {
 			this.id = id;
 			this.string = string;
+			this.nstring = nstring;
+			this.clobString = clobString;
+			this.nclobString = nclobString;
 		}
 	}
 }

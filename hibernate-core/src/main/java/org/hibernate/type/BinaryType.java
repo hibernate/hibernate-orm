@@ -6,11 +6,17 @@
  */
 package org.hibernate.type;
 
+import java.sql.Types;
 import java.util.Comparator;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
@@ -23,7 +29,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
  */
 public class BinaryType
 		extends AbstractSingleColumnStandardBasicType<byte[]>
-		implements VersionType<byte[]> {
+		implements VersionType<byte[]>, AdjustableBasicType<byte[]> {
 
 	public static final BinaryType INSTANCE = new BinaryType();
 
@@ -81,5 +87,19 @@ public class BinaryType
 	@Deprecated
 	public Comparator<byte[]> getComparator() {
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.getComparator();
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<X> domainJtd) {
+		if ( ! indicators.isLob() ) {
+			return (BasicType<X>) this;
+		}
+
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( Types.BLOB );
+
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType );
 	}
 }

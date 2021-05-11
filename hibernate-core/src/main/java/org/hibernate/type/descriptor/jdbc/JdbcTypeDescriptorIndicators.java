@@ -10,7 +10,6 @@ import java.sql.Types;
 import javax.persistence.EnumType;
 import javax.persistence.TemporalType;
 
-import org.hibernate.annotations.BooleanMapping;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -67,10 +66,6 @@ public interface JdbcTypeDescriptorIndicators {
 	 */
 	default int getPreferredSqlTypeCodeForBoolean() {
 		return Types.BOOLEAN;
-	}
-
-	default BooleanMapping.Style getPreferredBooleanMappingStyle() {
-		return BooleanMapping.Style.BOOLEAN;
 	}
 
 	/**

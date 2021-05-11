@@ -16,42 +16,38 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.transaction.TransactionUtil2;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-
+@Jpa(
+		annotatedClasses = {
+				SubselectTest.Client.class,
+				SubselectTest.Account.class,
+				SubselectTest.AccountTransaction.class,
+				SubselectTest.AccountSummary.class
+		}
+)
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support a CONCAT function")
-public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Client.class,
-			Account.class,
-			AccountTransaction.class,
-			AccountSummary.class
-		};
-	}
+public class SubselectTest {
 
 	@Test
-	public void testNormalLifecycle() {
+	public void testNormalLifecycle(EntityManagerFactoryScope scope) {
 		// same as `#testRefreshLifecycle` except that here we do not rely on
 		// `Session#refresh` which atm in 6.0 dev does not appear to work properly
 		// at least in this scenario
 
 		// create the entity
-		doInJPA(
-				this::entityManagerFactory,
+		scope.inTransaction(
 				(entityManager) -> {
 					Client client = new Client();
 					client.setId( 1L );
@@ -74,8 +70,7 @@ public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 		);
 
 		// load the entity, verify its state and add a new transaction (thereby updating the calculated balance)
-		doInJPA(
-				this::entityManagerFactory,
+		scope.inTransaction(
 				(entityManager) -> {
 					AccountSummary summary = entityManager.createQuery(
 							"select s " +
@@ -96,8 +91,7 @@ public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 		);
 
 		// load the AccountSummary and verify the updated balance
-		doInJPA(
-				this::entityManagerFactory,
+		scope.inTransaction(
 				(entityManager) -> {
 					AccountSummary summary = entityManager.find( AccountSummary.class, 1L );
 
@@ -108,63 +102,69 @@ public class SubselectTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testRefreshLifecycle() {
+	@NotImplementedYet(
+			reason = "Refreshing a managed-entity does not work - https://trello.com/c/QAKC08JT/230-refresh-does-not-work-with-managed-entity-the-state-is-not-refreshed",
+			strict = false
+	)
+	public void testRefreshLifecycle(EntityManagerFactoryScope scope) {
 		//tag::mapping-Subselect-entity-find-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Client client = new Client();
-			client.setId( 1L );
-			client.setFirstName( "John" );
-			client.setLastName( "Doe" );
-			entityManager.persist( client );
+		scope.inTransaction(
+				(entityManager) -> {
+					Client client = new Client();
+					client.setId( 1L );
+					client.setFirstName( "John" );
+					client.setLastName( "Doe" );
+					entityManager.persist( client );
 
-			Account account = new Account();
-			account.setId( 1L );
-			account.setClient( client );
-			account.setDescription( "Checking account" );
-			entityManager.persist( account );
+					Account account = new Account();
+					account.setId( 1L );
+					account.setClient( client );
+					account.setDescription( "Checking account" );
+					entityManager.persist( account );
 
-			AccountTransaction transaction = new AccountTransaction();
-			transaction.setAccount( account );
-			transaction.setDescription( "Salary" );
-			transaction.setCents( 100 * 7000 );
-			entityManager.persist( transaction );
+					AccountTransaction transaction = new AccountTransaction();
+					transaction.setAccount( account );
+					transaction.setDescription( "Salary" );
+					transaction.setCents( 100 * 7000 );
+					entityManager.persist( transaction );
 
-			AccountSummary summary = entityManager.createQuery(
-				"select s " +
-				"from AccountSummary s " +
-				"where s.id = :id", AccountSummary.class)
-			.setParameter( "id", account.getId() )
-			.getSingleResult();
+					AccountSummary summary = entityManager.createQuery(
+						"select s " +
+						"from AccountSummary s " +
+						"where s.id = :id", AccountSummary.class)
+					.setParameter( "id", account.getId() )
+					.getSingleResult();
 
-			assertEquals( "John Doe", summary.getClientName() );
-			assertEquals( 100 * 7000, summary.getBalance() );
-		} );
+					assertEquals( "John Doe", summary.getClientName() );
+					assertEquals( 100 * 7000, summary.getBalance() );
+				}
+		);
 		//end::mapping-Subselect-entity-find-example[]
 
 		//tag::mapping-Subselect-entity-refresh-example[]
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			AccountSummary summary = entityManager.find( AccountSummary.class, 1L );
-			assertEquals( "John Doe", summary.getClientName() );
-			assertEquals( 100 * 7000, summary.getBalance() );
+		scope.inTransaction(
+				(entityManager) -> {
+					AccountSummary summary = entityManager.find( AccountSummary.class, 1L );
+					assertEquals( "John Doe", summary.getClientName() );
+					assertEquals( 100 * 7000, summary.getBalance() );
 
-			AccountTransaction transaction = new AccountTransaction();
-			transaction.setAccount( entityManager.getReference( Account.class, 1L ) );
-			transaction.setDescription( "Shopping" );
-			transaction.setCents( -100 * 2200 );
-			entityManager.persist( transaction );
-			entityManager.flush();
+					AccountTransaction transaction = new AccountTransaction();
+					transaction.setAccount( entityManager.getReference( Account.class, 1L ) );
+					transaction.setDescription( "Shopping" );
+					transaction.setCents( -100 * 2200 );
+					entityManager.persist( transaction );
+					entityManager.flush();
 
-			entityManager.refresh( summary );
-			assertEquals( 100 * 4800, summary.getBalance() );
-		} );
-
+					entityManager.refresh( summary );
+					assertEquals( 100 * 4800, summary.getBalance() );
+				}
+		);
 		//end::mapping-Subselect-entity-refresh-example[]
 	}
 
-	@After
-	public void dropTestData() {
-		doInJPA(
-				this::entityManagerFactory,
+	@AfterEach
+	public void dropTestData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				(entityManager) -> {
 					entityManager.createQuery( "delete AccountTransaction" ).executeUpdate();
 					entityManager.createQuery( "delete Account" ).executeUpdate();

@@ -14,14 +14,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Objects;
 import java.util.Properties;
 import javax.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.BooleanMapping;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -53,9 +51,9 @@ import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 
@@ -80,7 +78,6 @@ public abstract class SimpleValue implements KeyValue {
 	private boolean isVersion;
 	private boolean isNationalized;
 	private boolean isLob;
-	private BooleanMapping.Style booleanMappingStyle;
 
 	private Properties identifierGeneratorProperties;
 	private String identifierGeneratorStrategy = DEFAULT_ID_GEN_STRATEGY;
@@ -252,14 +249,6 @@ public abstract class SimpleValue implements KeyValue {
 
 	public boolean isLob() {
 		return isLob;
-	}
-
-	public BooleanMapping.Style getPreferredBooleanMappingStyle() {
-		return booleanMappingStyle;
-	}
-
-	public void setBooleanMappingStyle(BooleanMapping.Style booleanMappingStyle) {
-		this.booleanMappingStyle = booleanMappingStyle;
 	}
 
 	public void setTable(Table table) {

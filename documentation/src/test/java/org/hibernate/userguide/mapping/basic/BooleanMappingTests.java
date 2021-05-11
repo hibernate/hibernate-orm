@@ -13,9 +13,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.BooleanMapping;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
@@ -23,15 +21,11 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.isOneOf;
-import static org.hibernate.annotations.BooleanMapping.Style.NUMERIC;
-import static org.hibernate.annotations.BooleanMapping.Style.T_F;
-import static org.hibernate.annotations.BooleanMapping.Style.Y_N;
 
 /**
  * Tests for mapping boolean values
@@ -92,44 +86,6 @@ public class BooleanMappingTests {
 					equalTo( Types.INTEGER )
 			);
 		}
-
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Annotations
-
-		{
-			final BasicAttributeMapping convertedYesNo = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "annotatedYesNo" );
-			final JdbcMapping jdbcMapping = convertedYesNo.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Character.class ) );
-			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					// could be NCHAR if nationalization is globally enabled
-					isOneOf( Types.CHAR, Types.NCHAR )
-			);
-		}
-
-		{
-			final BasicAttributeMapping convertedTrueFalse = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "annotatedTrueFalse" );
-			final JdbcMapping jdbcMapping = convertedTrueFalse.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Character.class ) );
-			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					// could be NCHAR if nationalization is globally enabled
-					isOneOf( Types.CHAR, Types.NCHAR )
-			);
-		}
-
-		{
-			final BasicAttributeMapping convertedNumeric = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "annotatedNumeric" );
-			final JdbcMapping jdbcMapping = convertedNumeric.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Integer.class ) );
-			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					equalTo( Types.INTEGER )
-			);
-		}
-
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -204,31 +160,6 @@ public class BooleanMappingTests {
 		@Convert( converter = org.hibernate.type.NumericBooleanConverter.class )
 		boolean convertedNumeric;
 		//end::basic-boolean-example-explicit-numeric[]
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Annotated
-
-		//tag::basic-boolean-example-explicit-annotated-yes-no[]
-		// this will get mapped to CHAR or NCHAR with a conversion
-		@Basic
-		@BooleanMapping( style = Y_N )
-		boolean annotatedYesNo;
-		//end::basic-boolean-example-explicit-annotated-yes-no[]
-
-		//tag::basic-boolean-example-explicit-annotated-t-f[]
-		// this will get mapped to CHAR or NCHAR with a conversion
-		@Basic
-		@BooleanMapping( style = T_F )
-		boolean annotatedTrueFalse;
-		//end::basic-boolean-example-explicit-annotated-t-f[]
-
-		//tag::basic-boolean-example-explicit-annotated-numeric[]
-		// this will get mapped to TINYINT with a conversion
-		@Basic
-		@BooleanMapping( style = NUMERIC )
-		boolean annotatedNumeric;
-		//end::basic-boolean-example-explicit-annotated-numeric[]
 
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

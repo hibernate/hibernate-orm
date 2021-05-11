@@ -302,6 +302,10 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 
 // Testing
 
+test {
+	include '**/mapping/basic/**'
+}
+
 // resources inherently exclude sources
 sourceSets.test.resources {
 	setSrcDirs( ['src/test/java','src/test/resources'] )

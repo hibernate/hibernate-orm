@@ -3,6 +3,19 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.0.Beta1 (May 12, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31938
+
+** Bug
+    * [HHH-14541] - SessionFactoryObserver#sessionFactoryClosing() gets called after the session factory is marked as closed
+    * [HHH-13779] - Schema migrator should use case insensitive column comparison of foreign keys
+
+** Improvement
+    * [HHH-12445] - Discriminator column should be nullable when using @DiscriminatorValue( "null" )
+
+
 Changes in 5.5.0.Alpha1 (April 30, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

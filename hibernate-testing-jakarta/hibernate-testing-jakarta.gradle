@@ -9,12 +9,6 @@ description = 'Support for testing Hibernate ORM Jakarta functionality'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
-tasks.withType(PublishToMavenRepository) {
-	onlyIf {
-		repository.name == "MavenLocal"
-	}
-}
-
 configurations {
 	jakartaeeTransformJars
 }

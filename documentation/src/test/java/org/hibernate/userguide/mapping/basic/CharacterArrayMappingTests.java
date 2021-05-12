@@ -51,19 +51,6 @@ public class CharacterArrayMappingTests {
 
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveNVarchar" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NVARCHAR ) );
-		}
-
-		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperNVarchar" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NVARCHAR ) );
-		}
-
-
-		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveClob" );
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.CLOB ) );
@@ -74,19 +61,6 @@ public class CharacterArrayMappingTests {
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.CLOB ) );
 		}
-
-
-		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveNClob" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NCLOB ) );
-		}
-
-		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperNClob" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NCLOB ) );
-		}
 	}
 
 	@Entity( name = "EntityWithCharArrays" )
@@ -95,30 +69,16 @@ public class CharacterArrayMappingTests {
 		@Id
 		public Integer id;
 
-		//tag::basic-chararray-examples[]
+		//tag::basic-chararray-example[]
 		// mapped as VARCHAR
 		char[] primitive;
 		Character[] wrapper;
-
-		// mapped as NVARCHAR
-		@Nationalized
-		char[] primitiveNVarchar;
-		@Nationalized
-		Character[] wrapperNVarchar;
 
 		// mapped as CLOB
 		@Lob
 		char[] primitiveClob;
 		@Lob
 		Character[] wrapperClob;
-
-		// mapped as NCLOB
-		@Lob
-		@Nationalized
-		char[] primitiveNClob;
-		@Lob
-		@Nationalized
-		Character[] wrapperNClob;
-		//end::basic-chararray-examples[]
+		//end::basic-chararray-example[]
 	}
 }

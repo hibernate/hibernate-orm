@@ -237,13 +237,18 @@ See <<basic-bitset-java-type>> for examples of most of these approaches, mapping
 [[basic-nationalized]]
 ==== Handling nationalized character data
 
-JDBC 4 added the ability to explicitly handle nationalized character data and added specific nationalized
-character data types:
+How nationalized character is handled and stored depends on the underlying database.
 
-* `NCHAR`
-* `NVARCHAR`
-* `LONGNVARCHAR`
-* `NCLOB`
+Some databases support storing nationalized data as part of CHAR, VARCHAR, LONGVARCHAR
+and CLOB.
+
+Others support storing nationalized data only through the specialized, standard SQL NCHAR,
+NVARCHAR, LONGNVARCHAR and NCLOB variants.
+
+Ultimately Hibernate understands this through `Dialect#getNationalizationSupport()`
+
+To ensure nationalized gets stored and accessed correctly, `@Nationalized` can be used
+locally or `hibernate.use_nationalized_character_data` can be set globally.
 
 Considering we have the following database table:
 
@@ -265,15 +270,6 @@ To map a specific attribute to a nationalized variant data type, Hibernate defin
 ----
 include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example]
 ----
-====
-
-
-[NOTE]
-====
-If your application and database use nationalization, you may instead want to enable nationalized character data as the default.
-
-You can do this via the `hibernate.use_nationalized_character_data` setting or by calling
-`MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during bootstrap.
 ====
 
 
@@ -491,7 +487,7 @@ Here the legacy approach is used.
 
 By default, Hibernate maps values of `Byte` / `byte` to the `TINYINT` JDBC type.
 
-[[basic-byte-example-implicit]]
+[[basic-byte-example]]
 .Mapping Byte
 ====
 [source, JAVA, indent=0]
@@ -513,7 +509,7 @@ See <<basic-bytearray>> for mapping arrays of bytes.
 
 By default, Hibernate maps values of `Short` / `short` to the `SMALLINT` JDBC type.
 
-[[basic-short-example-implicit]]
+[[basic-short-example]]
 .Mapping Short
 ====
 [source, JAVA, indent=0]
@@ -532,7 +528,7 @@ include::{sourcedir}/basic/ShortMappingTests.java[tags=basic-short-example-impli
 
 By default, Hibernate maps values of `Integer` / `int` to the `INTEGER` JDBC type.
 
-[[basic-integer-example-implicit]]
+[[basic-integer-example]]
 .Mapping Integer
 ====
 [source, JAVA, indent=0]
@@ -550,7 +546,7 @@ include::{sourcedir}/basic/IntegerMappingTests.java[tags=basic-integer-example-i
 
 By default, Hibernate maps values of `Long` / `long` to the `BIGINT` JDBC type.
 
-[[basic-long-example-implicit]]
+[[basic-long-example]]
 .Mapping Long
 ====
 [source, JAVA, indent=0]
@@ -569,7 +565,7 @@ include::{sourcedir}/basic/LongMappingTests.java[tags=basic-long-example-implici
 
 By default, Hibernate maps values of `BigInteger` to the `NUMERIC` JDBC type.
 
-[[basic-bitinteger-example-implicit]]
+[[basic-bitinteger-example]]
 .Mapping BigInteger
 ====
 [source, JAVA, indent=0]
@@ -589,7 +585,7 @@ include::{sourcedir}/basic/BigIntegerMappingTests.java[tags=basic-biginteger-exa
 By default, Hibernate maps values of `Double` to the `DOUBLE`, `FLOAT`, `REAL` or
 `NUMERIC` JDBC type depending on the capabilities of the database
 
-[[basic-double-example-implicit]]
+[[basic-double-example]]
 .Mapping Double
 ====
 [source, JAVA, indent=0]
@@ -614,7 +610,7 @@ supports the requested type.  If not, an appropriate type is selected
 By default, Hibernate maps values of `Float` to the `FLOAT`, `REAL` or
 `NUMERIC` JDBC type depending on the capabilities of the database.
 
-[[basic-float-example-implicit]]
+[[basic-float-example]]
 .Mapping Float
 ====
 [source, JAVA, indent=0]
@@ -638,7 +634,7 @@ supports the requested type.  If not, an appropriate type is selected
 
 By default, Hibernate maps values of `BigDecimal` to the `NUMERIC` JDBC type.
 
-[[basic-bigdecimal-example-implicit]]
+[[basic-bigdecimal-example]]
 .Mapping BigDecimal
 ====
 [source, JAVA, indent=0]
@@ -654,9 +650,9 @@ include::{sourcedir}/basic/BigDecimalMappingTests.java[tags=basic-bigdecimal-exa
 [[basic-character]]
 ==== Character
 
-By default, Hibernate maps values of `Character` to the `CHAR` JDBC type.
+By default, Hibernate maps `Character` to the `CHAR` JDBC type.
 
-[[basic-character-example-implicit]]
+[[basic-character-example]]
 .Mapping Character
 ====
 [source, JAVA, indent=0]
@@ -672,20 +668,33 @@ include::{sourcedir}/basic/CharacterMappingTests.java[tags=basic-character-examp
 [[basic-String]]
 ==== String
 
-By default, Hibernate maps values of `String` to the `CHAR` JDBC type.
+By default, Hibernate maps `String` to the `VARCHAR` JDBC type.
 
-[[basic-string-example-implicit]]
-.Mapping Character
+[[basic-string-example]]
+.Mapping String
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/StringMappingTests.java[tags=basic-string-example-implicit]
+include::{sourcedir}/basic/StringMappingTests.java[tags=basic-string-example]
+----
+====
+
+See <<basic-lob>> for details on mapping as database LOB.
+
+
+For databases which support nationalized character sets, you can also store strings as
+nationalized data.
+
+[[basic-nstring-example]]
+.Mapping String as nationalized
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/StringNationalizedMappingTests.java[tags=basic-nstring-example]
 ----
 ====
 
 See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
-
-See <<basic-lob>> for details on mapping as database LOB.
 
 
 
@@ -693,22 +702,35 @@ See <<basic-lob>> for details on mapping as database LOB.
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-chararray]]
-==== Character array
+==== Character arrays
 
-By default, Hibernate maps values of `Character[]` and `char[]` to the `VARCHAR` JDBC type.
+By default, Hibernate maps `Character[]` and `char[]` to the `VARCHAR` JDBC type.
 
 [[basic-string-example-implicit]]
 .Mapping Character
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/CharacterArrayMappingTests.java[tags=basic-chararray-examples]
+include::{sourcedir}/basic/CharacterArrayMappingTests.java[tags=basic-chararray-example]
+----
+====
+
+See <<basic-lob>> for details on mapping as database LOB.
+
+For databases which support nationalized character sets, you can also store character arrays as
+nationalized data.
+
+[[basic-nchararray-example]]
+.Mapping character arrays as nationalized
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/CharacterArrayNationalizedMappingTests.java[tags=basic-nchararray-example]
 ----
 ====
 
 See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
 
-See <<basic-lob>> for details on mapping as database LOB.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

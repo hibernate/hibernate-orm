@@ -8,6 +8,7 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.basics.sql;
 
 import java.sql.Clob;
 import java.sql.Types;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -18,6 +19,8 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -36,6 +39,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -50,28 +54,20 @@ public class JdbcTypeTests {
 
 	@Test
 	public void verifyResolutions(DomainModelScope scope) {
-		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( SimpleEntity.class.getName() );
-		final boolean supportsNationalizedTypes = scope.getDomainModel()
+		final Dialect dialect = scope.getDomainModel()
 				.getDatabase()
-				.getDialect()
-				.supportsNationalizedTypes();
-		verifyResolution( entityBinding.getProperty( "materializedClob" ), ClobTypeDescriptor.class );
-		verifyResolution( entityBinding.getProperty( "materializedNClob" ), NClobTypeDescriptor.class );
+				.getDialect();
+		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
 
-		verifyResolution( entityBinding.getProperty( "jpaMaterializedClob" ), ClobTypeDescriptor.class );
-		verifyResolution(
-				entityBinding.getProperty( "jpaMaterializedNClob" ),
-				supportsNationalizedTypes ? NClobTypeDescriptor.class : ClobTypeDescriptor.class
-		);
+		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( SimpleEntity.class.getName() );
 
-		verifyResolution(
-				entityBinding.getProperty( "nationalizedString" ),
-				supportsNationalizedTypes ? NVarcharTypeDescriptor.class : VarcharTypeDescriptor.class
-		);
-		verifyResolution(
-				entityBinding.getProperty( "nationalizedClob" ),
-				supportsNationalizedTypes ? NClobTypeDescriptor.class : ClobTypeDescriptor.class
-		);
+		verifyJdbcTypeCode( entityBinding.getProperty( "materializedClob" ), Types.CLOB );
+		verifyJdbcTypeCode( entityBinding.getProperty( "materializedNClob" ), nationalizationSupport.getClobVariantCode() );
+		verifyJdbcTypeCode( entityBinding.getProperty( "jpaMaterializedClob" ), Types.CLOB );
+		verifyJdbcTypeCode( entityBinding.getProperty( "jpaMaterializedNClob" ), nationalizationSupport.getClobVariantCode() );
+
+		verifyJdbcTypeCode( entityBinding.getProperty( "nationalizedString" ), nationalizationSupport.getVarcharVariantCode() );
+		verifyJdbcTypeCode( entityBinding.getProperty( "nationalizedClob" ), nationalizationSupport.getClobVariantCode() );
 
 		verifyResolution( entityBinding.getProperty( "customType" ), CustomJdbcTypeDescriptor.class );
 		verifyResolution( entityBinding.getProperty( "customTypeRegistration" ), RegisteredCustomJdbcTypeDescriptor.class );
@@ -85,6 +81,29 @@ public class JdbcTypeTests {
 				}
 		);
 	}
+
+	private void verifyJdbcTypeCode(Property property, int typeCode) {
+		verifyJdbcTypeResolution(
+				property,
+				(p, jdbcType) -> assertThat(
+						"JDBC type code mismatch for `" + property.getName() + "`",
+						jdbcType.getJdbcTypeCode(),
+						equalTo( typeCode )
+				)
+		);
+	}
+
+	private void verifyJdbcTypeResolution(
+			Property property,
+			BiConsumer<Property, JdbcTypeDescriptor> verifier) {
+		final Value value = property.getValue();
+		assertThat( value, instanceOf( BasicValue.class ) );
+		final BasicValue basicValue = (BasicValue) value;
+		final BasicValue.Resolution<?> resolution = basicValue.resolve();
+
+		verifier.accept( property, resolution.getJdbcTypeDescriptor() );
+	}
+
 
 	private void verifyResolution(
 			Property property,

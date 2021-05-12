@@ -288,13 +288,14 @@ abstract public class DialectChecks {
 	public static class SupportsNClob implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {
-			return !(
-				dialect instanceof DB2Dialect ||
-				dialect instanceof PostgreSQL81Dialect ||
-				dialect instanceof SybaseDialect ||
-				dialect instanceof MySQLDialect ||
-				dialect instanceof CockroachDialect
-			);
+			return dialect.supportsNationalizedTypes();
+//			return !(
+//				dialect instanceof DB2Dialect ||
+//				dialect instanceof PostgreSQL81Dialect ||
+//				dialect instanceof SybaseDialect ||
+//				dialect instanceof MySQLDialect ||
+//				dialect instanceof CockroachDialect
+//			);
 		}
 	}
 

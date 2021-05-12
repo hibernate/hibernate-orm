@@ -19,6 +19,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MaxDBDialect;
 import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -41,6 +42,18 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsExpectedLobUsagePattern implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsExpectedLobUsagePattern();
+		}
+	}
+
+	public static class SupportsNationalizedData implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getNationalizationSupport() != NationalizationSupport.UNSUPPORTED;
+		}
+	}
+
+	public static class SupportsNationalizedDataTypes implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
 		}
 	}
 

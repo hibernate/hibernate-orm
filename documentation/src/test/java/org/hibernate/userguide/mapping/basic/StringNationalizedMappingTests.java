@@ -6,12 +6,14 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import java.sql.Types;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.Nationalized;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -31,9 +33,9 @@ import static org.hamcrest.Matchers.equalTo;
  *
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = StringMappingTests.EntityOfStrings.class )
+@DomainModel( annotatedClasses = StringNationalizedMappingTests.EntityOfStrings.class )
 @SessionFactory
-public class StringMappingTests {
+public class StringNationalizedMappingTests {
 
 	@Test
 	public void testMappings(SessionFactoryScope scope) {
@@ -41,26 +43,27 @@ public class StringMappingTests {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfStrings.class );
 
-		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "string" );
-			assertThat( attribute.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
 
+		{
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nstring" );
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.VARCHAR ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( nationalizationSupport.getVarcharVariantCode() ) );
 		}
 
 		{
-			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "clobString" );
+			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nclobString" );
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.CLOB ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( nationalizationSupport.getClobVariantCode() ) );
 		}
 
 
 		// and try to use the mapping
 		scope.inTransaction(
-				(session) -> session.persist( new EntityOfStrings( 1, "string", "clob" ) )
+				(session) -> session.persist( new EntityOfStrings( 1, "nstring", "nclob" ) )
 		);
 		scope.inTransaction(
 				(session) -> session.get( EntityOfStrings.class, 1 )
@@ -80,22 +83,24 @@ public class StringMappingTests {
 		@Id
 		Integer id;
 
-		//tag::basic-string-example[]
-		// will be mapped using VARCHAR
-		String string;
+		//tag::basic-nstring-example[]
+		// will be mapped using NVARCHAR
+		@Nationalized
+		String nstring;
 
-		// will be mapped using CLOB
+		// will be mapped using NCLOB
 		@Lob
-		String clobString;
-		//end::basic-string-example[]
+		@Nationalized
+		String nclobString;
+		//end::basic-nstring-example[]
 
 		public EntityOfStrings() {
 		}
 
-		public EntityOfStrings(Integer id, String string, String clobString) {
+		public EntityOfStrings(Integer id, String nstring, String nclobString) {
 			this.id = id;
-			this.string = string;
-			this.clobString = clobString;
+			this.nstring = nstring;
+			this.nclobString = nclobString;
 		}
 	}
 }

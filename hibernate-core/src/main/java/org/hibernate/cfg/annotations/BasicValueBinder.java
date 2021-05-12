@@ -49,6 +49,7 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -256,7 +257,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			isLob = modelXProperty.isAnnotationPresent( Lob.class );
 		}
 
-		if ( getDialect().supportsNationalizedTypes() ) {
+		if ( getDialect().getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
 			isNationalized = modelXProperty.isAnnotationPresent( Nationalized.class )
 					|| buildingContext.getBuildingOptions().useNationalizedCharacterData();
 		}

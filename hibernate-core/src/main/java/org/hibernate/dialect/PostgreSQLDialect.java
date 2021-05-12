@@ -658,8 +658,8 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNationalizedTypes() {
-		return false;
+	public NationalizationSupport getNationalizationSupport() {
+		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override

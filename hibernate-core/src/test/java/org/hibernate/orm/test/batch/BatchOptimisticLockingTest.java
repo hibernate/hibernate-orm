@@ -21,6 +21,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -108,6 +109,15 @@ public class BatchOptimisticLockingTest extends
 				);
 			}
 		}
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Person" ).executeUpdate();
+				}
+		);
 	}
 
 	@Entity(name = "Person")

@@ -9,6 +9,7 @@ package org.hibernate.orm.test.bytecode.enhancement.dirty;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,9 +72,18 @@ public class DirtyTrackingCollectionTest extends BaseCoreFunctionalTestCase {
         } );
     }
 
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete StringsEntity" ).executeUpdate();
+                }
+        );
+    }
+
     // --- //
 
-    @Entity
+    @Entity( name = "StringsEntity")
     @Table( name = "STRINGS_ENTITY" )
     private static class StringsEntity {
 

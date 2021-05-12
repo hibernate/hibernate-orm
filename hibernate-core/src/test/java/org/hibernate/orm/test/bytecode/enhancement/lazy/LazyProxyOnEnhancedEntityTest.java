@@ -18,6 +18,7 @@ import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,6 +72,16 @@ public class LazyProxyOnEnhancedEntityTest extends BaseCoreFunctionalTestCase {
 
             // unwanted lazy load occurs on flush
         } );
+    }
+
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete Parent" ).executeUpdate();
+                    session.createQuery( "delete Child" ).executeUpdate();
+                }
+        );
     }
 
     private static class ImmediateLoadTrap implements LoadEventListener {

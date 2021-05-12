@@ -12,6 +12,7 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -106,13 +107,25 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
         Assert.assertEquals( 2, mergedItem.getParameters().size() );
     }
 
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete ItemField" ).executeUpdate();
+                    session.createQuery( "delete ItemProperty" ).executeUpdate();
+                }
+        );
+    }
+
+
+
     // --- //
 
     private interface Item {
         Map<String, String> getParameters();
     }
 
-    @Entity
+    @Entity( name = "ItemField" )
     @Table( name = "ITEM_F" )
     private static class ItemField implements Item {
 
@@ -132,7 +145,7 @@ public class LazyLoadingByEnhancerSetterTest extends BaseCoreFunctionalTestCase 
         }
     }
 
-    @Entity
+    @Entity( name = "ItemProperty" )
     @Table( name = "ITEM_P" )
     private static class ItemProperty implements Item {
 

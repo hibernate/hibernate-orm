@@ -19,6 +19,7 @@ import org.hibernate.test.annotations.AmericaCupClass;
 import org.hibernate.test.annotations.Boat;
 import org.hibernate.test.annotations.Country;
 import org.hibernate.test.annotations.Ferry;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -101,6 +102,15 @@ public class JoinedSubclassTest extends BaseCoreFunctionalTestCase {
 					assertTrue( v instanceof Carrot );
 					Carrot result = (Carrot) v;
 					assertEquals( 23, result.getLength() );
+				}
+		);
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Carrot" ).executeUpdate();
 				}
 		);
 	}

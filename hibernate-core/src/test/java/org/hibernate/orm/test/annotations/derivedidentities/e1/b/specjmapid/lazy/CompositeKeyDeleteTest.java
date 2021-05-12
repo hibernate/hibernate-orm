@@ -16,6 +16,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.orm.test.annotations.derivedidentities.e1.b.specjmapid.Item;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
 public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
@@ -95,6 +96,17 @@ public class CompositeKeyDeleteTest extends BaseCoreFunctionalTestCase {
       tx.commit();//fail
       s.close();
 
+   }
+
+   @After
+   public void dropTestData() {
+      inTransaction(
+              (session) -> {
+                 session.createQuery( "delete CustomerInventoryTwo" ).executeUpdate();
+                 session.createQuery( "delete CustomerTwo" ).executeUpdate();
+                 session.createQuery( "delete Item" ).executeUpdate();
+              }
+      );
    }
 
    @Override

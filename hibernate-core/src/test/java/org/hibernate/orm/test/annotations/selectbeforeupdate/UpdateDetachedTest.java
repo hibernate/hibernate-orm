@@ -21,6 +21,7 @@ import org.hibernate.annotations.SelectBeforeUpdate;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -170,6 +171,16 @@ public class UpdateDetachedTest extends BaseCoreFunctionalTestCase{
 		} );
 
 		assertEquals( 1, loadedBar.comments.size() );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Foo" ).executeUpdate();
+					session.createQuery( "delete Bar" ).executeUpdate();
+				}
+		);
 	}
 
 	@Entity(name = "Foo")

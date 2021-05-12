@@ -9,14 +9,14 @@ package org.hibernate.testing.orm.junit;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
+import java.util.Properties;
+import javax.persistence.EntityManagerFactory;
 import javax.persistence.spi.PersistenceUnitInfo;
 
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -27,10 +27,10 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.query.sqm.mutation.internal.idtable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.tool.schema.Action;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
-import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.StrandedDataHelper;
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
@@ -42,6 +42,9 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 
 /**
  * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
@@ -101,6 +104,7 @@ public class EntityManagerFactoryExtension
 		pui.getProperties().put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, emfAnn.loadByIdComplianceEnabled() );
 
 		final Setting[] properties = emfAnn.properties();
+		//noinspection ForLoopReplaceableByForEach
 		for ( int i = 0; i < properties.length; i++ ) {
 			final Setting property = properties[i];
 			pui.getProperties().setProperty( property.name(), property.value() );
@@ -176,7 +180,7 @@ public class EntityManagerFactoryExtension
 			for ( int i = 0; i < emfAnn.nonStringValueSettingProviders().length; i++ ) {
 				final Class<? extends NonStringValueSettingProvider> _class = emfAnn.nonStringValueSettingProviders()[i];
 				try {
-					NonStringValueSettingProvider valueProvider = _class.newInstance();
+					NonStringValueSettingProvider valueProvider = _class.getConstructor().newInstance();
 					integrationSettings.put( valueProvider.getKey(), valueProvider.getValue() );
 				}
 				catch (Exception e) {
@@ -196,6 +200,7 @@ public class EntityManagerFactoryExtension
 		// first, see if it has a static singleton reference and use that if so
 		try {
 			final Field[] declaredFields = modelDescriptorClass.getDeclaredFields();
+			//noinspection ForLoopReplaceableByForEach
 			for ( int i = 0; i < declaredFields.length; i++ ) {
 				final Field field = declaredFields[i];
 				if ( ReflectHelper.isStaticField( field ) ) {
@@ -215,7 +220,7 @@ public class EntityManagerFactoryExtension
 
 		// no singleton field, try to instantiate it via reflection
 		try {
-			return modelDescriptorClass.getConstructor( null ).newInstance( null );
+			return modelDescriptorClass.getConstructor().newInstance();
 		}
 		catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
 			throw new RuntimeException(
@@ -223,39 +228,6 @@ public class EntityManagerFactoryExtension
 					e
 			);
 		}
-	}
-
-	private static void prepareSchemaExport(
-			SessionFactoryImplementor sessionFactory,
-			MetadataImplementor model) {
-		final Map<String, Object> baseProperties = sessionFactory.getProperties();
-
-		final Set<ActionGrouping> groupings = ActionGrouping.interpret( model, baseProperties );
-		if ( !groupings.isEmpty() ) {
-			// the properties contained explicit settings for auto schema tooling - skip the annotation
-			return;
-		}
-
-		final HashMap settings = new HashMap<>( baseProperties );
-		//noinspection unchecked
-		settings.put( AvailableSettings.HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP );
-
-		final StandardServiceRegistry serviceRegistry = model.getMetadataBuildingOptions().getServiceRegistry();
-
-
-		SchemaManagementToolCoordinator.process(
-				model,
-				serviceRegistry,
-				settings,
-				action -> sessionFactory.addObserver(
-						new SessionFactoryObserver() {
-							@Override
-							public void sessionFactoryClosing(org.hibernate.SessionFactory factory) {
-								action.perform( serviceRegistry );
-							}
-						}
-				)
-		);
 	}
 
 	@Override
@@ -304,11 +276,15 @@ public class EntityManagerFactoryExtension
 		private final PersistenceUnitInfo persistenceUnitInfo;
 		private final Map<String, Object> integrationSettings;
 
+		private final boolean schemaExported;
+
 		private EntityManagerFactoryScopeImpl(
 				PersistenceUnitInfo persistenceUnitInfo,
 				Map<String, Object> integrationSettings) {
 			this.persistenceUnitInfo = persistenceUnitInfo;
 			this.integrationSettings = integrationSettings;
+
+			this.schemaExported = isSchemaExported( persistenceUnitInfo );
 		}
 
 		protected javax.persistence.EntityManagerFactory createEntityManagerFactory() {
@@ -317,7 +293,62 @@ public class EntityManagerFactoryExtension
 					integrationSettings
 			);
 
-			return emfBuilder.build();
+			final EntityManagerFactory emf = emfBuilder.build();
+
+			if ( schemaExported ) {
+				final boolean verifyDataCleanup = Boolean.getBoolean( BaseCoreFunctionalTestCase.VALIDATE_DATA_CLEANUP );
+				if ( verifyDataCleanup ) {
+					emf.unwrap( SessionFactoryImplementor.class ).addObserver(
+							new SessionFactoryObserver() {
+								@Override
+								public void sessionFactoryClosing(org.hibernate.SessionFactory sessionFactory) {
+									sessionFactory.inTransaction(
+											(session) -> {
+												final List<?> results = session.createQuery( "from Object" ).list();
+												StrandedDataHelper.handleStrandedData( results, session );
+											}
+									);
+								}
+							}
+					);
+				}
+			}
+
+			return emf;
 		}
+	}
+
+	public static boolean isSchemaExported(PersistenceUnitInfo persistenceUnitInfo) {
+		final Properties configurationValues = persistenceUnitInfo.getProperties();
+
+		final Action rootDatabaseAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_DATABASE_ACTION ) );
+		if ( meansExport( rootDatabaseAction ) ) {
+			return true;
+		}
+
+		final Action rootLegacySetting = Action.interpretHbm2ddlSetting( configurationValues.get( HBM2DDL_AUTO ) );
+		if ( meansExport( rootLegacySetting ) ) {
+			return true;
+		}
+
+		for ( Map.Entry<Object, Object> entry : configurationValues.entrySet() ) {
+			if ( entry.getKey() instanceof String ) {
+				if ( ( (String) entry.getKey() ).startsWith( HBM2DDL_DATABASE_ACTION ) ) {
+					final Action action = Action.interpretJpaSetting( entry.getValue() );
+					if ( meansExport( action ) ) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
+	}
+
+	private static boolean meansExport(Action action) {
+		return action == Action.CREATE
+				|| action == Action.CREATE_DROP
+				|| action == Action.CREATE_ONLY
+				|| action == Action.UPDATE;
 	}
 }

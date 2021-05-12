@@ -24,6 +24,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Join;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -247,6 +248,21 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
 		super.configureMetadataBuilder( metadataBuilder );
 		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Life" ).executeUpdate();
+					session.createQuery( "delete Death" ).executeUpdate();
+					session.createQuery( "delete Cat" ).executeUpdate();
+					session.createQuery( "delete Dog" ).executeUpdate();
+					session.createQuery( "delete B" ).executeUpdate();
+					session.createQuery( "delete sys_user" ).executeUpdate();
+					session.createQuery( "delete SysGroupsOrm" ).executeUpdate();
+				}
+		);
 	}
 
 	@Override

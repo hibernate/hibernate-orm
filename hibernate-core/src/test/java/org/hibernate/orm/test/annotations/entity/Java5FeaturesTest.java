@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
+import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -121,6 +122,16 @@ public class Java5FeaturesTest extends BaseCoreFunctionalTestCase {
 		s.delete( bid );
 		tx.commit();
 		s.close();
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Race" ).executeUpdate();
+					session.createQuery( "delete Bid" ).executeUpdate();
+				}
+		);
 	}
 
 	@Override

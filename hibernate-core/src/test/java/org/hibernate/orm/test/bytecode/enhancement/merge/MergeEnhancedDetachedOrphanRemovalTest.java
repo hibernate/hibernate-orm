@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.merge;
 
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -62,5 +63,15 @@ public class MergeEnhancedDetachedOrphanRemovalTest extends BaseCoreFunctionalTe
 			assertNotSame( entity, entityMerged );
 			assertNotSame( entity.getLeaves(), entityMerged.getLeaves() );
 		} );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Leaf" ).executeUpdate();
+					session.createQuery( "delete Root" ).executeUpdate();
+				}
+		);
 	}
 }

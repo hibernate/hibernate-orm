@@ -245,6 +245,12 @@ character data types:
 * `LONGNVARCHAR`
 * `NCLOB`
 
+[NOTE]
+====
+Not all databases support these nationalized types.  Attempting to use these nationalized
+types on those databases will result in an exception
+====
+
 Considering we have the following database table:
 
 [[basic-nationalized-sql-example]]
@@ -268,14 +274,12 @@ include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example
 ====
 
 
-[NOTE]
+[TIP]
 ====
-If your application and database use nationalization, you may instead want to enable nationalized character data as the default.
-
-You can do this via the `hibernate.use_nationalized_character_data` setting or by calling
-`MetadataBuilder#enableGlobalNationalizedCharacterDataSupport` during bootstrap.
+If your application and database use nationalization, you may instead want to enable nationalized
+character data as the default.  You can do this via the `hibernate.use_nationalized_character_data`
+setting.
 ====
-
 
 
 
@@ -672,10 +676,10 @@ include::{sourcedir}/basic/CharacterMappingTests.java[tags=basic-character-examp
 [[basic-String]]
 ==== String
 
-By default, Hibernate maps values of `String` to the `CHAR` JDBC type.
+By default, Hibernate maps values of `String` to the `VARCHAR` JDBC type.
 
-[[basic-string-example-implicit]]
-.Mapping Character
+[[basic-string-example]]
+.Mapping String
 ====
 [source, JAVA, indent=0]
 ----
@@ -683,9 +687,21 @@ include::{sourcedir}/basic/StringMappingTests.java[tags=basic-string-example-imp
 ----
 ====
 
-See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
-
 See <<basic-lob>> for details on mapping as database LOB.
+
+For databases which support nationalized character sets, you can also store strings as
+nationalized data.
+
+[[basic-nstring-example]]
+.Mapping String as nationalized
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NationalizedStringMappingTests.java[tags=basic-nstring-example-implicit]
+----
+====
+
+See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
 
 
 
@@ -697,8 +713,8 @@ See <<basic-lob>> for details on mapping as database LOB.
 
 By default, Hibernate maps values of `Character[]` and `char[]` to the `VARCHAR` JDBC type.
 
-[[basic-string-example-implicit]]
-.Mapping Character
+[[basic-chararray-example]]
+.Mapping character arrays
 ====
 [source, JAVA, indent=0]
 ----
@@ -706,9 +722,21 @@ include::{sourcedir}/basic/CharacterArrayMappingTests.java[tags=basic-chararray-
 ----
 ====
 
-See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
-
 See <<basic-lob>> for details on mapping as database LOB.
+
+For databases which support nationalized character sets, you can also store character arrays as
+nationalized data.
+
+[[basic-nchararray-example]]
+.Mapping character arrays as nationalized
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/NationalizedCharacterArrayMappingTests.java[tags=basic-nchararray-example]
+----
+====
+
+See <<basic-nationalized>> for details on mapping strings using nationalized character sets.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

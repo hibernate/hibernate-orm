@@ -17,10 +17,10 @@ import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.dialect.DerbyDialect;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 				SubselectTest.AccountSummary.class
 		}
 )
-@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support a CONCAT function")
+@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't support a CONCAT function" )
 public class SubselectTest {
 
 	@Test

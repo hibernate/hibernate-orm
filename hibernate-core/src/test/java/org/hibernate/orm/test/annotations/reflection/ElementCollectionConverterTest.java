@@ -10,6 +10,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -61,5 +62,14 @@ public class ElementCollectionConverterTest extends BaseCoreFunctionalTestCase {
 			assertEquals( 1, company.getOrganizations().size() );
 			assertEquals( "ACME" , company.getOrganizations().get( 0 ).getOrganizationId());
 		} );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Company" ).executeUpdate();
+				}
+		);
 	}
 }

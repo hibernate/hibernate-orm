@@ -32,6 +32,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -91,9 +92,18 @@ public class DirtyTrackingCollectionInDefaultFetchGroupTest extends BaseCoreFunc
         } );
     }
 
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete StringsEntity" ).executeUpdate();
+                }
+        );
+    }
+
     // --- //
 
-    @Entity
+    @Entity( name = "StringsEntity")
     @Table( name = "STRINGS_ENTITY" )
     private static class StringsEntity {
 

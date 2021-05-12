@@ -25,6 +25,7 @@ import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -140,7 +141,17 @@ public class UninitializedAssociationsInCacheTest extends BaseCoreFunctionalTest
 		assertEquals( 3, regionStatistics.getPutCount() );
 	}
 
-	@Entity
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "update Employee e set e.superior = null" ).executeUpdate();
+					session.createQuery( "delete Employee" ).executeUpdate();
+				}
+		);
+	}
+
+	@Entity( name = "Employee")
 	@Table(name = "EMPLOYEE_TABLE")
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE, region = "Employee")

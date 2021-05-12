@@ -15,139 +15,121 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.engine.jdbc.NClobProxy;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.SkipForDialect;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(
-        value = {
-                PostgreSQL81Dialect.class,
-                MySQL5Dialect.class,
-                AbstractHANADialect.class,
-                CockroachDialect.class,
-                DB2Dialect.class
-        },
-        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695 and https://hibernate.atlassian.net/browse/HHH-10473"
+@Jpa(annotatedClasses = NClobTest.Product.class)
+@RequiresDialectFeature(
+		feature = DialectFeatureChecks.SupportsNationalizedData.class,
+		comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695 and https://hibernate.atlassian.net/browse/HHH-10473"
 )
-public class NClobTest extends BaseEntityManagerFunctionalTestCase {
+public class NClobTest {
+	@Test
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				(entityManager) -> {
+					//tag::basic-nclob-persist-example[]
+					String warranty = "My product warranty";
 
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[] {
-            Product.class
-        };
-    }
+					final Product product = new Product();
+					product.setId( 1 );
+					product.setName( "Mobile phone" );
 
-    @Test
-    public void test() {
-        Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-            Session session = entityManager.unwrap( Session.class );
+					product.setWarranty( NClobProxy.generateProxy( warranty ) );
 
-            //tag::basic-nclob-persist-example[]
-            String warranty = "My product warranty";
+					entityManager.persist( product );
+					//end::basic-nclob-persist-example[]
+				}
+		);
 
-            final Product product = new Product();
-            product.setId( 1 );
-            product.setName( "Mobile phone" );
+		scope.inTransaction(
+				(entityManager) -> {
+					try {
+						//tag::basic-nclob-find-example[]
+						Product product = entityManager.find( Product.class, 1 );
 
-            product.setWarranty( NClobProxy.generateProxy( warranty ) );
+						try ( Reader reader = product.getWarranty().getCharacterStream() ) {
+							assertEquals( "My product warranty", toString( reader ) );
+						}
+						//end::basic-nclob-find-example[]
+					}
+					catch (Exception e) {
+						fail( e.getMessage() );
+					}
+				}
+		);
+	}
 
-            entityManager.persist( product );
-            //end::basic-nclob-persist-example[]
+	private String toString(Reader reader) throws IOException {
+		BufferedReader bufferedReader = new BufferedReader( reader );
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
-            return product.getId();
-        } );
-        doInJPA( this::entityManagerFactory, entityManager -> {
-            try {
-                //tag::basic-nclob-find-example[]
+		int result = bufferedReader.read();
 
-                Product product = entityManager.find( Product.class, productId );
+		while ( result != -1 ) {
+			byteArrayOutputStream.write( (byte) result );
+			result = bufferedReader.read();
+		}
 
-                try (Reader reader = product.getWarranty().getCharacterStream()) {
-                    assertEquals( "My product warranty", toString( reader ) );
-                }
-                //end::basic-nclob-find-example[]
-            }
-            catch (Exception e) {
-                fail( e.getMessage() );
-            }
-        } );
-    }
-
-    private String toString(Reader reader) throws IOException {
-        BufferedReader bufferedReader = new BufferedReader( reader);
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        int result = bufferedReader.read();
-
-        while(result != -1) {
-            byteArrayOutputStream.write((byte) result);
-            result = bufferedReader.read();
-        }
-
-        return byteArrayOutputStream.toString();
-    }
+		return byteArrayOutputStream.toString();
+	}
 
 
-    //tag::basic-nclob-example[]
-    @Entity(name = "Product")
-    public static class Product {
+	//tag::basic-nclob-example[]
+	@Entity(name = "Product")
+	public static class Product {
 
-        @Id
-        private Integer id;
+		@Id
+		private Integer id;
 
-        private String name;
+		private String name;
 
-        @Lob
-        @Nationalized
-        // Clob also works, because NClob extends Clob.
-        // The database type is still NCLOB either way and handled as such.
-        private NClob warranty;
+		@Lob
+		@Nationalized
+		// Clob also works, because NClob extends Clob.
+		// The database type is still NCLOB either way and handled as such.
+		private NClob warranty;
 
-        //Getters and setters are omitted for brevity
+		//Getters and setters are omitted for brevity
 
-    //end::basic-nclob-example[]
-        public Integer getId() {
-            return id;
-        }
+		//end::basic-nclob-example[]
+		public Integer getId() {
+			return id;
+		}
 
-        public void setId(Integer id) {
-            this.id = id;
-        }
+		public void setId(Integer id) {
+			this.id = id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
-        public NClob getWarranty() {
-            return warranty;
-        }
+		public NClob getWarranty() {
+			return warranty;
+		}
 
-        public void setWarranty(NClob warranty) {
-            this.warranty = warranty;
-        }
+		public void setWarranty(NClob warranty) {
+			this.warranty = warranty;
+		}
 
-        //tag::basic-nclob-example[]
-    }
-    //end::basic-nclob-example[]
+		//tag::basic-nclob-example[]
+	}
+	//end::basic-nclob-example[]
 }

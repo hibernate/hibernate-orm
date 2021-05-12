@@ -12,7 +12,6 @@ import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Nationalized;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -51,19 +50,6 @@ public class CharacterArrayMappingTests {
 
 
 		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveNVarchar" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NVARCHAR ) );
-		}
-
-		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperNVarchar" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NVARCHAR ) );
-		}
-
-
-		{
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveClob" );
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.CLOB ) );
@@ -73,19 +59,6 @@ public class CharacterArrayMappingTests {
 			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperClob" );
 			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.CLOB ) );
-		}
-
-
-		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "primitiveNClob" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NCLOB ) );
-		}
-
-		{
-			final BasicAttributeMapping attributeMapping = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapperNClob" );
-			final JdbcMapping jdbcMapping = attributeMapping.getJdbcMapping();
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.NCLOB ) );
 		}
 	}
 
@@ -100,25 +73,11 @@ public class CharacterArrayMappingTests {
 		char[] primitive;
 		Character[] wrapper;
 
-		// mapped as NVARCHAR
-		@Nationalized
-		char[] primitiveNVarchar;
-		@Nationalized
-		Character[] wrapperNVarchar;
-
 		// mapped as CLOB
 		@Lob
 		char[] primitiveClob;
 		@Lob
 		Character[] wrapperClob;
-
-		// mapped as NCLOB
-		@Lob
-		@Nationalized
-		char[] primitiveNClob;
-		@Lob
-		@Nationalized
-		Character[] wrapperNClob;
 		//end::basic-chararray-examples[]
 	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.onetoone.hhh4851;
 
+import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.PropertyValueException;
@@ -53,6 +54,17 @@ public class HHH4851Test extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.CHECK_NULLABILITY, "true" );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Device" );
+					session.createQuery( "delete ManagedDevice" );
+					session.createQuery( "delete Owner" );
+				}
+		);
 	}
 
 	@Override

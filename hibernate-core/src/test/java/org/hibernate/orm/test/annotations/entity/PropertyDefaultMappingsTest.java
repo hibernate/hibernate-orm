@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
+import org.junit.After;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -60,6 +61,16 @@ public class PropertyDefaultMappingsTest extends BaseCoreFunctionalTestCase {
 		s.delete( wm );
 		tx.commit();
 		s.close();
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Address" ).executeUpdate();
+					session.createQuery( "delete WashingMachine" ).executeUpdate();
+				}
+		);
 	}
 
 	@Override

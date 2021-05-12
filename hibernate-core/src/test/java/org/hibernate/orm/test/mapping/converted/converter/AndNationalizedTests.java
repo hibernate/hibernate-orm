@@ -50,15 +50,14 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			if ( dialect instanceof PostgreSQLDialect
-					|| dialect instanceof DB2Dialect
-					|| dialect instanceof CockroachDialect ){
+			if ( ! dialect.supportsNationalizedTypes() ) {
 				// See issue HHH-10693 for PostgreSQL and CockroachDB, HHH-12753 for DB2
 				assertEquals(
 						Types.VARCHAR,
 						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
 				);
-			} else {
+			}
+			else {
 				assertEquals(
 						Types.NVARCHAR,
 						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]

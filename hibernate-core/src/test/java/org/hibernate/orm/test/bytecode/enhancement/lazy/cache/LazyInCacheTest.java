@@ -14,6 +14,7 @@ import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,6 +74,16 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
             Order order = em.find( Order.class, orderId );
             Assert.assertEquals( 1, order.products.size() );
         } );
+    }
+
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete Order" ).executeUpdate();
+                    session.createQuery( "delete Product" ).executeUpdate();
+                }
+        );
     }
 
     // --- //

@@ -15,6 +15,7 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -119,6 +120,17 @@ public class IdMapManyToOneSpecjTest extends BaseNonConfigCoreFunctionalTestCase
 	
 		tx.rollback();
 		s.close();
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete CustomerInventory" ).executeUpdate();
+					session.createQuery( "delete Customer" ).executeUpdate();
+					session.createQuery( "delete Item" ).executeUpdate();
+				}
+		);
 	}
 
 	@Override

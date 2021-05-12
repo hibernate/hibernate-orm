@@ -63,17 +63,21 @@ public class DirtyCheckPrivateUnMappedCollectionTest extends BaseNonConfigCoreFu
 		if ( skipTest ) {
 			return;
 		}
-		inTransaction(
+		final Measurement saved = fromTransaction(
 				session -> {
-					Tag tag = new Tag();
+					final Tag tag = new Tag();
 					tag.setName( "tag1" );
 
 					Measurement measurementDescriptor = new Measurement();
 					measurementDescriptor.addTag( tag );
 
 					session.save( measurementDescriptor );
+
+					return measurementDescriptor;
 				}
 		);
+
+		inTransaction( (session) -> session.delete( saved ) );
 	}
 
 	@MappedSuperclass

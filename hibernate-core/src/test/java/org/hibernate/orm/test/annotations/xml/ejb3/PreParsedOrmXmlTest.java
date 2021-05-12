@@ -46,11 +46,17 @@ public class PreParsedOrmXmlTest extends BaseCoreFunctionalTestCase {
 		// Just check that the entity can be persisted, which means the mapping file was taken into account
 		NonAnnotatedEntity persistedEntity = new NonAnnotatedEntity( "someName" );
 		inTransaction( s -> s.persist( persistedEntity ) );
-		inTransaction( s -> {
-			NonAnnotatedEntity retrievedEntity = s.find( NonAnnotatedEntity.class, persistedEntity.getId() );
-			assertThat( retrievedEntity ).extracting( NonAnnotatedEntity::getName )
-					.isEqualTo( persistedEntity.getName() );
-		} );
+
+		try {
+			inTransaction( s -> {
+				NonAnnotatedEntity retrievedEntity = s.find( NonAnnotatedEntity.class, persistedEntity.getId() );
+				assertThat( retrievedEntity ).extracting( NonAnnotatedEntity::getName )
+						.isEqualTo( persistedEntity.getName() );
+			} );
+		}
+		finally {
+			inTransaction( s -> s.delete( persistedEntity ) );
+		}
 	}
 
 	public static class NonAnnotatedEntity {

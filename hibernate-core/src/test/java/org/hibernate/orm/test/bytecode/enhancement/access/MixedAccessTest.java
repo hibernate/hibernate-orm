@@ -79,12 +79,19 @@ public class MixedAccessTest extends BaseCoreFunctionalTestCase {
 
     @After
     public void cleanup() {
-        doInHibernate( this::sessionFactory, s -> {
-            TestEntity testEntity = s.get( TestEntity.class, ID );
-            Assert.assertTrue( testEntity.getParams().isEmpty() );
+        inTransaction(
+                (session) -> {
+                    TestEntity testEntity = session.get( TestEntity.class, ID );
+                    Assert.assertTrue( testEntity.getParams().isEmpty() );
 
-            TestOtherEntity testOtherEntity = s.get( TestOtherEntity.class, ID );
-            Assert.assertTrue( testOtherEntity.getParams().isEmpty() );
+                    TestOtherEntity testOtherEntity = session.get( TestOtherEntity.class, ID );
+                    Assert.assertTrue( testOtherEntity.getParams().isEmpty() );
+
+                    session.delete( testEntity );
+                    session.delete( testOtherEntity );
+                }
+        );
+        doInHibernate( this::sessionFactory, s -> {
         } );
     }
 

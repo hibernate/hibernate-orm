@@ -8,6 +8,7 @@ package org.hibernate.orm.test.annotations.lob.locator;
 
 import java.sql.SQLException;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -76,5 +77,14 @@ public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 		Assert.assertEquals( counter, entity.getCounter() );
 		Assert.assertArrayEquals( blob, DataHelper.extractBytes( entity.getBlobLocator().getBinaryStream() ) );
 		Assert.assertEquals( clob, DataHelper.extractString( entity.getClobLocator() ) );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete LobHolder" ).executeUpdate();
+				}
+		);
 	}
 }

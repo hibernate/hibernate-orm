@@ -81,6 +81,9 @@ public class NotNullManyToOneTest extends BaseCoreFunctionalTestCase {
 		@ManyToOne(cascade = CascadeType.ALL)
 		private Child child;
 
+		public Parent() {
+		}
+
 		public Parent(Child child) {
 			this.child = child;
 			this.child.setParent( this );

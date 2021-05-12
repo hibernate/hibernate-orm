@@ -12,6 +12,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -93,6 +94,18 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
             retrievedPost.tags.forEach( tag -> System.out.println( "Found tag: " + tag ) );
         } );
     }
+
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete AdditionalDetails" ).executeUpdate();
+                    session.createQuery( "delete Post" ).executeUpdate();
+                    session.createQuery( "delete Tag" ).executeUpdate();
+                }
+        );
+    }
+
 
     // --- //
 

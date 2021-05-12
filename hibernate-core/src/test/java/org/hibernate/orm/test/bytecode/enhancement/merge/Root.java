@@ -48,7 +48,7 @@ public class Root {
 		this.name = name;
 	}
 
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "root")
 	public Set<Leaf> getLeaves() {
 		return leaves;
 	}

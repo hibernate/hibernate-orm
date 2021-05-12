@@ -22,6 +22,7 @@ import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.bytecode.enhancement.EnhancerTestContext;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -56,9 +57,18 @@ public class LazyInitializationWithoutInlineDirtyTrackingTest extends BaseCoreFu
 		} );
 	}
 
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete File" ).executeUpdate();
+				}
+		);
+	}
+
 	// --- //
 
-	@Entity
+	@Entity( name = "File")
 	@Table(name = "T_FILE")
 	public static class File {
 

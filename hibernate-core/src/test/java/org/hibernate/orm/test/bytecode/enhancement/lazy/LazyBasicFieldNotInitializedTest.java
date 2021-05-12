@@ -22,6 +22,7 @@ import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,6 +79,15 @@ public class LazyBasicFieldNotInitializedTest extends BaseCoreFunctionalTestCase
             assertEquals( 1, properties.length );
             assertTrue( properties[0].isLazy() );
         } );
+    }
+
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete TestEntity" ).executeUpdate();
+                }
+        );
     }
 
     // --- //

@@ -9,6 +9,7 @@ package org.hibernate.orm.test.bytecode.enhancement.dirty;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -41,7 +42,7 @@ public class DirtyTrackingNonUpdateableTest extends BaseCoreFunctionalTestCase {
             entityManager.persist( thing );
 
             entityManager
-            .createQuery( "update thing set special = :s, version = version + 1" )
+            .createQuery( "update Thing set special = :s, version = version + 1" )
             .setParameter( "s", "new" )
             .executeUpdate();
 
@@ -49,11 +50,20 @@ public class DirtyTrackingNonUpdateableTest extends BaseCoreFunctionalTestCase {
         } );
     }
 
+    @After
+    public void dropTestData() {
+        inTransaction(
+                (session) -> {
+                    session.createQuery( "delete Thing" ).executeUpdate();
+                }
+        );
+    }
+
     // --- //
 
-    @Entity( name = "thing" )
+    @Entity( name = "Thing" )
     @Table( name = "THING_ENTITY" )
-    public class Thing {
+    public static class Thing {
 
         @Id
         @GeneratedValue( strategy = GenerationType.AUTO )

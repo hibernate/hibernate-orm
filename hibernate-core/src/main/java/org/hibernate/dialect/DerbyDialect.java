@@ -74,6 +74,7 @@ public class DerbyDialect extends Dialect {
 
 	// KNOWN LIMITATIONS:
 
+	// no support for nationalized data (nchar, nvarchar, nclob)
 	// * limited set of fields for extract()
 	//   (no 'day of xxxx', nor 'week of xxxx')
 	// * no support for format()
@@ -158,6 +159,11 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public int getVersion() {
 		return version;
+	}
+
+	@Override
+	public boolean supportsNationalizedTypes() {
+		return false;
 	}
 
 	@Override

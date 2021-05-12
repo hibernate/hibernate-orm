@@ -29,6 +29,11 @@ public class NamingStrategyJoinTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
+		inTransaction(
+				(session) -> {
+					session.delete( life );
+				}
+		);
 	}
 
 	@Override

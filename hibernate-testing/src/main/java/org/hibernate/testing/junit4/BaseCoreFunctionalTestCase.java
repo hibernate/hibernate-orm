@@ -10,9 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -22,7 +20,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.StatelessSession;
-import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
@@ -52,6 +49,7 @@ import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.orm.StrandedDataHelper;
 import org.hibernate.testing.transaction.TransactionUtil2;
 import org.junit.After;
 import org.junit.Before;
@@ -452,43 +450,17 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		if ( !createSchema() ) {
 			return; // no tables were created...
 		}
+
 		if ( !Boolean.getBoolean( VALIDATE_DATA_CLEANUP ) ) {
 			return;
 		}
 
-		Session tmpSession = sessionFactory.openSession();
-		Transaction transaction = tmpSession.beginTransaction();
-		try {
-
-			List list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
-
-			Map<String,Integer> items = new HashMap<String,Integer>();
-			if ( !list.isEmpty() ) {
-				for ( Object element : list ) {
-					Integer l = items.get( tmpSession.getEntityName( element ) );
-					if ( l == null ) {
-						l = 0;
-					}
-					l = l + 1 ;
-					items.put( tmpSession.getEntityName( element ), l );
-					System.out.println( "Data left: " + element );
+		inTransaction(
+				(session) -> {
+					List<?> list = session.createQuery( "select o from java.lang.Object o" ).list();
+					StrandedDataHelper.handleStrandedData( list, session );
 				}
-				transaction.rollback();
-				fail( "Data is left in the database: " + items.toString() );
-			}
-			transaction.rollback();
-		}
-		finally {
-			try {
-				if(transaction.getStatus().canRollback()){
-					transaction.rollback();
-				}
-				tmpSession.close();
-			}
-			catch( Throwable t ) {
-				// intentionally empty
-			}
-		}
+		);
 	}
 
 	protected boolean readCommittedIsolationMaintained(String scenario) {

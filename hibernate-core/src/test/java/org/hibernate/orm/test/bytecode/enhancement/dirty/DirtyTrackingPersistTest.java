@@ -33,13 +33,11 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Christian Beikov
@@ -82,6 +80,16 @@ public class DirtyTrackingPersistTest extends BaseCoreFunctionalTestCase {
 			hentity.bumpNumber();
 			session.saveOrUpdate( hentity );
 		} );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete HotherEntity" ).executeUpdate();
+					session.createQuery( "delete Hentity" ).executeUpdate();
+				}
+		);
 	}
 
 	// --- //

@@ -7,6 +7,7 @@
 package org.hibernate.testing.orm.junit;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -28,6 +29,8 @@ import org.hibernate.tool.schema.Action;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.StrandedDataHelper;
 import org.hibernate.testing.orm.transaction.TransactionUtil;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -36,6 +39,8 @@ import org.junit.jupiter.api.extension.TestInstancePostProcessor;
 import org.junit.platform.commons.support.AnnotationSupport;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
  * hibernate-testing implementation of a few JUnit5 contracts to support SessionFactory-based testing,
@@ -142,13 +147,36 @@ public class SessionFactoryExtension
 			SessionFactoryImplementor sessionFactory,
 			MetadataImplementor model,
 			boolean createSecondarySchemas) {
-		final Map<String, Object> baseProperties = sessionFactory.getProperties();
+		final boolean verifyDataCleanup = Boolean.getBoolean( BaseCoreFunctionalTestCase.VALIDATE_DATA_CLEANUP );
+		final Consumer<? super org.hibernate.SessionFactory> dataCleanupChecker = (sf) -> {
+			log.debug( "Handling `hibernate.test.validateDataCleanup`" );
+			inTransaction(
+					sessionFactory,
+					(session) -> {
+						final List<?> results = session.createQuery( "from Object" ).list();
+						StrandedDataHelper.handleStrandedData( results, session );
+					}
+			);
+		};
 
+		final Map<String, Object> baseProperties = sessionFactory.getProperties();
 		final Set<ActionGrouping> groupings = ActionGrouping.interpret( model, baseProperties );
 
 		// if there are explicit setting for auto schema tooling then skip the annotation
 		if ( ! groupings.isEmpty() ) {
-			// the properties contained explicit settings for auto schema tooling - skip the annotation
+			// the properties contained explicit settings for auto schema tooling ->
+			//		- skip the doing schema export ourselves,
+			//			however, we do still want to perform data-cleanup validation
+			if ( verifyDataCleanup ) {
+				sessionFactory.addObserver(
+						new SessionFactoryObserver() {
+							@Override
+							public void sessionFactoryClosing(org.hibernate.SessionFactory factory) {
+								dataCleanupChecker.accept( factory );
+							}
+						}
+				);
+			}
 			return;
 		}
 
@@ -172,6 +200,7 @@ public class SessionFactoryExtension
 						new SessionFactoryObserver() {
 							@Override
 							public void sessionFactoryClosing(org.hibernate.SessionFactory factory) {
+								dataCleanupChecker.accept( factory );
 								action.perform( serviceRegistry );
 							}
 						}

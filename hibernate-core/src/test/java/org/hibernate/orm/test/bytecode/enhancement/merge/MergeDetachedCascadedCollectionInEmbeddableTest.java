@@ -20,6 +20,7 @@ import javax.persistence.OneToMany;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -55,6 +56,16 @@ public class MergeDetachedCascadedCollectionInEmbeddableTest extends BaseCoreFun
 			assertNotSame( heading.grouping, headingMerged.grouping );
 			assertNotSame( heading.grouping.things, headingMerged.grouping.things );
 		} );
+	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Thing" ).executeUpdate();
+					session.createQuery( "delete Heading" ).executeUpdate();
+				}
+		);
 	}
 
 	@Entity(name = "Heading")

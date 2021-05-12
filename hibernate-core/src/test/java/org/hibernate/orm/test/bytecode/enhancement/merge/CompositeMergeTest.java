@@ -8,6 +8,7 @@ package org.hibernate.orm.test.bytecode.enhancement.merge;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -100,6 +101,17 @@ public class CompositeMergeTest extends BaseCoreFunctionalTestCase {
             Assert.assertEquals( "Honduras", parent[2].address.country.name );
         } );
     }
+
+//    @After
+//    public void dropTestData() {
+//        inTransaction(
+//                (session) -> {
+////                    session.createQuery( "delete ParentEntity" ).executeUpdate();
+//                    session.delete( session.find( ParentEntity.class, entityId ) );
+//                }
+//        );
+//    }
+
 
     // --- //
 

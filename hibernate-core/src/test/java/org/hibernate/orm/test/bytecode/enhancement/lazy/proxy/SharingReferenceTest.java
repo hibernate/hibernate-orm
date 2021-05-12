@@ -27,6 +27,7 @@ import org.hibernate.testing.bytecode.enhancement.CustomEnhancementContext;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.DirtyCheckEnhancementContext;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking.NoDirtyCheckEnhancementContext;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -115,6 +116,19 @@ public class SharingReferenceTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 
 	}
+
+	@After
+	public void dropTestData() {
+		inTransaction(
+				(session) -> {
+					session.createQuery( "delete Worker" ).executeUpdate();
+					session.createQuery( "delete Supervisor" ).executeUpdate();
+					session.createQuery( "delete Manager" ).executeUpdate();
+					session.createQuery( "delete Ceo" ).executeUpdate();
+				}
+		);
+	}
+
 
 	@Entity(name = "Ceo")
 	public static class Ceo {

@@ -535,7 +535,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	protected void validateNotClosed() {
-		if ( Status.CLOSED == status ) {
+		if ( status == Status.CLOSED ) {
 			throw new IllegalStateException( "EntityManagerFactory is closed" );
 		}
 	}
@@ -625,7 +625,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
-		assert Status.CLOSED != status;
+		assert status != Status.CLOSED;
 
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
@@ -694,7 +694,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public boolean isOpen() {
-		return Status.CLOSED != status;
+		return status != Status.CLOSED;
 	}
 
 	@Override
@@ -792,7 +792,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public void close() throws HibernateException {
 		synchronized (this) {
-			if ( Status.OPEN != status ) {
+			if ( status != Status.OPEN ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
@@ -988,7 +988,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public boolean isClosed() {
-		return Status.CLOSED == status;
+		return status == Status.CLOSED;
 	}
 
 	private transient StatisticsImplementor statistics;

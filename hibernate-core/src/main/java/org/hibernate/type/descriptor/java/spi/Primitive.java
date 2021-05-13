@@ -22,7 +22,17 @@ public interface Primitive<J extends Serializable> extends BasicJavaDescriptor<J
 	 *
 	 * @return The primitive Java type.
 	 */
-	Class getPrimitiveClass();
+	Class<?> getPrimitiveClass();
+
+	/**
+	 * Get the Java type that describes an array of this type.
+	 */
+	Class<J[]> getArrayClass();
+
+	/**
+	 * Get the Java type that describes an array of this type's primitive variant.
+	 */
+	Class<?> getPrimitiveArrayClass();
 
 	/**`
 	 * Get this Java type's default value.

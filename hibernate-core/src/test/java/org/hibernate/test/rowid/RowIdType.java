@@ -39,11 +39,12 @@ public class RowIdType implements UserType {
 		return x.hashCode();
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return rs.getObject( names[0] );
+	@Override
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		return rs.getObject( position );
 	}
 
+	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		throw new UnsupportedOperationException();

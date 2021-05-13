@@ -37,9 +37,10 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 		return String.class;
 	}
 
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return StringType.INSTANCE.nullSafeGet( rs, names[0], session );
+	@Override
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		final String string = rs.getString( position );
+		return rs.wasNull() ? null : string;
 	}
 
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)

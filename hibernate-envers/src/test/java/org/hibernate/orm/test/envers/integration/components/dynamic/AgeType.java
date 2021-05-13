@@ -41,9 +41,8 @@ public class AgeType implements UserType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return new Age( rs.getInt( rs.findColumn( names[0] ) ) );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		return new Age( rs.getInt( position ) );
 	}
 
 	@Override

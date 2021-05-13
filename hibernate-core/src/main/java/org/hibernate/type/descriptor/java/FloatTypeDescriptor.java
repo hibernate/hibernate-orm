@@ -92,6 +92,16 @@ public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> impl
 	}
 
 	@Override
+	public Class<Float[]> getArrayClass() {
+		return Float[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return float[].class;
+	}
+
+	@Override
 	public Float getDefaultValue() {
 		return 0F;
 	}

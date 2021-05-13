@@ -12,18 +12,15 @@ import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.MetadataImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.SkipForDialect;
@@ -50,20 +47,10 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 
 			final PersistentClass entityBinding = metadata.getEntityBinding( TestEntity.class.getName() );
 			final Dialect dialect = metadata.getDatabase().getDialect();
-			if ( dialect instanceof PostgreSQLDialect
-					|| dialect instanceof DB2Dialect
-					|| dialect instanceof CockroachDialect ){
-				// See issue HHH-10693 for PostgreSQL and CockroachDB, HHH-12753 for DB2
-				assertEquals(
-						Types.VARCHAR,
-						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
-				);
-			} else {
-				assertEquals(
-						Types.NVARCHAR,
-						entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
-				);
-			}
+			assertEquals(
+					dialect.getNationalizationSupport().getVarcharVariantCode(),
+					entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
+			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

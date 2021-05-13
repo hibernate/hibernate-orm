@@ -77,6 +77,16 @@ public class CharacterTypeDescriptor extends AbstractClassTypeDescriptor<Charact
 	}
 
 	@Override
+	public Class<Character[]> getArrayClass() {
+		return Character[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return char[].class;
+	}
+
+	@Override
 	public Character getDefaultValue() {
 		return 0;
 	}

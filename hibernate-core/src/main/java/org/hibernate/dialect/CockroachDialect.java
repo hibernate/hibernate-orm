@@ -234,8 +234,9 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsNationalizedTypes() {
-		return false;
+	public NationalizationSupport getNationalizationSupport() {
+		// TEXT / STRING inherently support nationalized data
+		return NationalizationSupport.IMPLICIT;
 	}
 
 	@Override

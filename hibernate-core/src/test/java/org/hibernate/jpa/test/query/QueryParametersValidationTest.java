@@ -141,10 +141,8 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		}
 
 		@Override
-		public Object nullSafeGet(
-				ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-				throws HibernateException, SQLException {
-			return "Y".equals(rs.getString(names[0]));
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+			return "Y".equals( rs.getString( position ) );
 		}
 
 		@Override

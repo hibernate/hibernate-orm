@@ -48,12 +48,8 @@ public class DollarValueUserType implements UserType {
 	}
 
 	@Override
-	public DollarValue nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		return new DollarValue( rs.getBigDecimal( rs.findColumn( names[0])));
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		return new DollarValue( rs.getBigDecimal( position ) );
 	}
 
 	@Override

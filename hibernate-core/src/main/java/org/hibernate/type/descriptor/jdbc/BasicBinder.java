@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -16,14 +17,12 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
-import org.jboss.logging.Logger;
-
 /**
  * Convenience base implementation of {@link ValueBinder}
  *
  * @author Steve Ebersole
  */
-public abstract class BasicBinder<J> implements ValueBinder<J> {
+public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [%s]";
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
 

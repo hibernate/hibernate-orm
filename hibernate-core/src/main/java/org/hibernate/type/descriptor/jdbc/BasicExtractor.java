@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
+import java.io.Serializable;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -21,7 +22,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public abstract class BasicExtractor<J> implements ValueExtractor<J> {
+public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializable {
 	private final JavaTypeDescriptor<J> javaTypeDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 

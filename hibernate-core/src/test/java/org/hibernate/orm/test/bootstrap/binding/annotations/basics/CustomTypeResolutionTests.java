@@ -208,12 +208,9 @@ public class CustomTypeResolutionTests {
 		}
 
 		@Override
-		public Object nullSafeGet(
-				ResultSet rs,
-				String[] names,
-				SharedSessionContractImplementor session,
-				Object owner) throws HibernateException, SQLException {
-			throw new UnsupportedOperationException();
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+			final String value = rs.getString( position );
+			return rs.wasNull() ? null : value;
 		}
 
 		@Override

@@ -18,7 +18,7 @@ public class BitSetType
     public static final BitSetType INSTANCE = new BitSetType();
 
     public BitSetType() {
-        super( VarcharTypeDescriptor.INSTANCE, BitSetTypeDescriptor.INSTANCE );
+        super( VarcharTypeDescriptor.INSTANCE, BitSetJavaType.INSTANCE );
     }
 
     @Override

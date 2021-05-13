@@ -19,7 +19,6 @@ import javax.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,6 +28,8 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -78,7 +79,10 @@ public class EnumType<T extends Enum<T>>
 
 	private Class<T> enumClass;
 
-	private EnumValueConverter<T,?> enumValueConverter;
+	private EnumValueConverter<T,Object> enumValueConverter;
+	private JdbcTypeDescriptor jdbcTypeDescriptor;
+	private ValueExtractor<T> jdbcValueExtractor;
+	private ValueBinder<T> jdbcValueBinder;
 
 	private TypeConfiguration typeConfiguration;
 
@@ -90,8 +94,12 @@ public class EnumType<T extends Enum<T>>
 			EnumValueConverter enumValueConverter,
 			TypeConfiguration typeConfiguration) {
 		this.enumClass = enumClass;
-		this.enumValueConverter = enumValueConverter;
 		this.typeConfiguration = typeConfiguration;
+
+		this.enumValueConverter = enumValueConverter;
+		this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
+		this.jdbcValueExtractor = jdbcTypeDescriptor.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
+		this.jdbcValueBinder = jdbcTypeDescriptor.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
 	}
 
 	public EnumValueConverter getEnumValueConverter() {
@@ -171,6 +179,9 @@ public class EnumType<T extends Enum<T>>
 			}
 
 			this.enumValueConverter = interpretParameters( parameters );
+			this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
+			this.jdbcValueExtractor = (ValueExtractor) jdbcTypeDescriptor.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
+			this.jdbcValueBinder = (ValueBinder) jdbcTypeDescriptor.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
 		}
 
 		if ( LOG.isDebugEnabled() ) {
@@ -217,7 +228,7 @@ public class EnumType<T extends Enum<T>>
 		return null;
 	}
 
-	private EnumValueConverter<T,?> interpretParameters(Properties parameters) {
+	private EnumValueConverter<T,Object> interpretParameters(Properties parameters) {
 		//noinspection rawtypes
 		final EnumJavaTypeDescriptor enumJavaDescriptor = (EnumJavaTypeDescriptor) typeConfiguration
 				.getJavaTypeDescriptorRegistry()
@@ -349,14 +360,14 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		verifyConfigured();
-//		return enumValueConverter.readValue( rs, names[0], session );
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		verifyConfigured();
+		final Object relational = jdbcValueExtractor.extract( rs, position, session );
+		return enumValueConverter.toDomainValue( relational );
 	}
 
 	private void verifyConfigured() {
-		if ( enumValueConverter == null ) {
+		if ( enumValueConverter == null || jdbcValueBinder == null || jdbcValueExtractor == null ) {
 			throw new AssertionFailure( "EnumType (" + enumClass.getName() + ") not properly, fully configured" );
 		}
 	}

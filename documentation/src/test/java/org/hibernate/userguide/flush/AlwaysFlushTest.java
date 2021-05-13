@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.userguide.flush;
 
@@ -55,7 +55,7 @@ public class AlwaysFlushTest extends BaseEntityManagerFunctionalTestCase {
             Session session = entityManager.unwrap( Session.class);
             assertTrue(((Number) session
                     .createNativeQuery("select count(*) from Person")
-                    .setFlushMode( FlushMode.ALWAYS)
+                    .setHibernateFlushMode( FlushMode.ALWAYS)
                     .uniqueResult()).intValue() == 1);
             //end::flushing-always-flush-sql-example[]
         });

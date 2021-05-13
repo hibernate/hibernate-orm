@@ -5,7 +5,10 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import java.io.Serializable;
+
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Additional contract for primitive / primitive wrapper types.
@@ -13,14 +16,14 @@ import java.io.Serializable;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface PrimitiveType<T> extends LiteralType<T> {
+public interface PrimitiveType<T> extends LiteralType<T>, AdjustableBasicType<T> {
 	/**
 	 * Retrieve the primitive counterpart to the wrapper type identified by
 	 * {@link org.hibernate.type.Type#getReturnedClass()}.
 	 *
 	 * @return The primitive Java type.
 	 */
-	public abstract Class getPrimitiveClass();
+	Class<?> getPrimitiveClass();
 
 	/**
 	 * Retrieve the string representation of the given value.
@@ -29,12 +32,18 @@ public interface PrimitiveType<T> extends LiteralType<T> {
 	 *
 	 * @return The string representation
 	 */
-	public String toString(T value);
+	String toString(T value);
 
 	/**
 	 * Get this type's default value.
 	 *
 	 * @return The default value.
 	 */
-	public abstract Object getDefaultValue();
+	Object getDefaultValue();
+
+	@Override
+	default  <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<X> domainJtd) {
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, getJdbcTypeDescriptor() );
+	}
 }

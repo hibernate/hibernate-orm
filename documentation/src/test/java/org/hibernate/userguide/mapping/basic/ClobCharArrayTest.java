@@ -10,40 +10,47 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertArrayEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ClobCharArrayTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@Jpa( annotatedClasses = ClobCharArrayTest.Product.class )
+public class ClobCharArrayTest {
 
 	@Test
-	public void test() {
-		Integer productId = doInJPA( this::entityManagerFactory, entityManager -> {
-			final Product product = new Product( );
-			product.setId( 1 );
-			product.setName( "Mobile phone" );
-			product.setWarranty( "My product warranty".toCharArray() );
+	public void test(EntityManagerFactoryScope scope) {
+		Integer productId = scope.fromTransaction(
+				(em) -> {
+					final Product product = new Product( );
+					product.setId( 1 );
+					product.setName( "Mobile phone" );
+					product.setWarranty( "My product warranty".toCharArray() );
 
-			entityManager.persist( product );
-			return product.getId();
-		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Product product = entityManager.find( Product.class, productId );
-			assertArrayEquals( "My product warranty".toCharArray(), product.getWarranty() );
-		} );
+					em.persist( product );
+					return product.getId();
+				}
+		);
+
+		scope.inTransaction(
+				(em) -> {
+					final Product product = em.find( Product.class, productId );
+					assertArrayEquals( "My product warranty".toCharArray(), product.getWarranty() );
+				}
+		);
+	}
+
+	@AfterEach
+	public void dropData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> session.createQuery( "delete Product" ).executeUpdate()
+		);
 	}
 
 	//tag::basic-clob-char-array-example[]

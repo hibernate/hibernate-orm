@@ -167,14 +167,14 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner) throws HibernateException, SQLException {
-			String string = rs.getString(names[0]);
+		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+			String string = rs.getString( position );
 
 			if (rs.wasNull()) {
 				return null;
 			}
 
-			List<String> list = new ArrayList<String>();
+			List<String> list = new ArrayList<>();
 			int lastIndex = 0, index;
 
 			while ((index = string.indexOf('|', lastIndex)) != -1) {
@@ -193,8 +193,10 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 			return new int[]{SQLTYPE};
 		}
 
-		public Class returnedClass() {
-			return List.class;
+		@Override
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		public Class<List<?>> returnedClass() {
+			return (Class) List.class;
 		}
 
 		@Override

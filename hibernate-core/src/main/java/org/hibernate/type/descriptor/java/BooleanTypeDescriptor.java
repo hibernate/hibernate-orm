@@ -137,6 +137,16 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 	}
 
 	@Override
+	public Class<Boolean[]> getArrayClass() {
+		return Boolean[].class;
+	}
+
+	@Override
+	public Class<?> getPrimitiveArrayClass() {
+		return boolean[].class;
+	}
+
+	@Override
 	public Boolean getDefaultValue() {
 		return false;
 	}

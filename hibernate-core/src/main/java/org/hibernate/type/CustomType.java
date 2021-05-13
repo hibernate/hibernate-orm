@@ -25,12 +25,14 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
+import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
-import org.hibernate.usertype.LoggableUserType;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
@@ -51,22 +53,21 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType
 		extends AbstractType
-		implements BasicType, IdentifierType, DiscriminatorType, VersionType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware, ValueBinder {
+		implements BasicType, IdentifierType, DiscriminatorType, VersionType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
-	private final UserType userType;
+	private final UserType<Object> userType;
 	private final String[] registrationKeys;
 
 	private final String name;
 
-	private final JavaTypeDescriptor mappedJavaTypeDescriptor;
+	private final BasicJavaDescriptor<Object> mappedJavaTypeDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
-	private final ValueExtractor valueExtractor;
+	private final ValueExtractor<Object> valueExtractor;
+	private final ValueBinder<Object> valueBinder;
 
 	private final Size dictatedSize;
 	private final Size defaultSize;
-
-	private final boolean customLogging;
 
 	public CustomType(UserType userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
@@ -76,9 +77,23 @@ public class CustomType
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 
-		//noinspection unchecked
-		this.mappedJavaTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( userType.returnedClass() );
-		this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
+		if ( userType instanceof BasicJavaDescriptor ) {
+			//noinspection rawtypes
+			this.mappedJavaTypeDescriptor = ( (BasicJavaDescriptor) userType );
+		}
+		else if ( userType instanceof JavaTypedExpressable ) {
+			//noinspection rawtypes
+			this.mappedJavaTypeDescriptor = (BasicJavaDescriptor) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
+		}
+		else {
+			this.mappedJavaTypeDescriptor = new UserTypeJavaTypeWrapper<>( userType );
+		}
+
+		// create a JdbcTypeDescriptor adapter that uses the UserType binde/extract handling
+		this.jdbcTypeDescriptor = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor );
+
+		this.valueExtractor = jdbcTypeDescriptor.getExtractor( mappedJavaTypeDescriptor );
+		this.valueBinder = jdbcTypeDescriptor.getBinder( mappedJavaTypeDescriptor );
 
 		if ( userType instanceof Sized ) {
 			final Sized sized = (Sized) userType;
@@ -90,35 +105,11 @@ public class CustomType
 			this.defaultSize = null;
 		}
 
-		if ( userType instanceof ValueExtractor ) {
-			this.valueExtractor = (ValueExtractor) userType;
-		}
-		else {
-			this.valueExtractor = jdbcTypeDescriptor.getExtractor( mappedJavaTypeDescriptor );
-		}
-
-		this.customLogging = userType instanceof LoggableUserType;
 		this.registrationKeys = registrationKeys;
 	}
 
-	@Override
-	public ValueBinder<?> getJdbcValueBinder() {
-		return this;
-	}
-
-	@Override
-	public void bind(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		userType.nullSafeSet( st, value, index, options.getSession() );
-	}
-
-	@Override
-	public void bind(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
-		if ( userType instanceof ProcedureParameterNamedBinder ) {
-			final ProcedureParameterNamedBinder namedParamSupport = (ProcedureParameterNamedBinder) userType;
-			if ( namedParamSupport.canDoSetting() ) {
-				namedParamSupport.nullSafeSet( st, value, name, options.getSession() );
-			}
-		}
+	public UserType getUserType() {
+		return userType;
 	}
 
 	@Override
@@ -126,8 +117,9 @@ public class CustomType
 		return valueExtractor;
 	}
 
-	public UserType getUserType() {
-		return userType;
+	@Override
+	public ValueBinder<?> getJdbcValueBinder() {
+		return valueBinder;
 	}
 
 	@Override
@@ -181,7 +173,7 @@ public class CustomType
 			String[] names,
 			SharedSessionContractImplementor session,
 			Object owner) throws SQLException {
-		return getUserType().nullSafeGet( rs, names, session, owner);
+		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
 	}
 
 	@Override
@@ -190,7 +182,7 @@ public class CustomType
 			String columnName,
 			SharedSessionContractImplementor session,
 			Object owner) throws SQLException {
-		return nullSafeGet(rs, new String[] { columnName }, session, owner);
+		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
 	}
 
 	@Override
@@ -285,13 +277,9 @@ public class CustomType
 	}
 
 	@Override
-	public String toLoggableString(Object value, SessionFactoryImplementor factory)
-			throws HibernateException {
+	public String toLoggableString(Object value, SessionFactoryImplementor factory) {
 		if ( value == null ) {
 			return "null";
-		}
-		else if ( customLogging ) {
-			return ( ( LoggableUserType ) getUserType() ).toLoggableString( value, factory );
 		}
 		else {
 			return toXMLString( value, factory );

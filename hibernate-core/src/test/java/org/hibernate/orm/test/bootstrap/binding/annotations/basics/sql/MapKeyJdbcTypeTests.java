@@ -8,28 +8,29 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.basics.sql;
 
 import java.sql.Types;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.MapKeyJdbcType;
-import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 
@@ -41,35 +42,63 @@ public class MapKeyJdbcTypeTests {
 
 	@Test
 	public void verifyResolutions(DomainModelScope scope) {
+		final Dialect dialect = scope.getDomainModel().getDatabase().getDialect();
+		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
+
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( MyEntity.class.getName() );
 
-		verifyResolutions( entityBinding.getProperty( "baseMap" ), IntegerTypeDescriptor.class, VarcharTypeDescriptor.class );
-		verifyResolutions( entityBinding.getProperty( "sqlTypeCodeMap" ), TinyIntTypeDescriptor.class, NVarcharTypeDescriptor.class );
-		verifyResolutions( entityBinding.getProperty( "sqlTypeMap" ), TinyIntTypeDescriptor.class, NVarcharTypeDescriptor.class );
+		verifyJdbcTypeCodes(
+				entityBinding.getProperty( "baseMap" ),
+				Types.INTEGER,
+				Types.VARCHAR
+		);
+
+		verifyJdbcTypeCodes(
+				entityBinding.getProperty( "sqlTypeCodeMap" ),
+				Types.TINYINT,
+				nationalizationSupport.getVarcharVariantCode()
+		);
+
+		verifyJdbcTypeCodes(
+				entityBinding.getProperty( "sqlTypeMap" ),
+				Types.TINYINT,
+				nationalizationSupport.getVarcharVariantCode()
+		);
 
 	}
 
-	private void verifyResolutions(
-			Property property,
-			Class<? extends JdbcTypeDescriptor> keyStd,
-			Class<? extends JdbcTypeDescriptor> valueStd) {
-		assertThat( property.getValue(), instanceOf( org.hibernate.mapping.Map.class ) );
+	private void verifyJdbcTypeCodes(Property property, int keyJdbcTypeCode, int valueJdbcTypeCode) {
+		verifyJdbcTypeResolution(
+				property,
+				(keyJdbcType) -> assertThat(
+						"Map key for `" + property.getName() + "`",
+						keyJdbcType.getJdbcTypeCode(),
+						equalTo( keyJdbcTypeCode )
+				),
+				(valueJdbcType) -> assertThat(
+						"Map value for `" + property.getName() + "`",
+						valueJdbcType.getJdbcTypeCode(),
+						equalTo( valueJdbcTypeCode )
+				)
+		);
+	}
 
+	private void verifyJdbcTypeResolution(
+			Property property,
+			Consumer<JdbcTypeDescriptor> keyTypeVerifier,
+			Consumer<JdbcTypeDescriptor> valueTypeVerifier) {
+		assertThat( property.getValue(), instanceOf( org.hibernate.mapping.Map.class ) );
 		final org.hibernate.mapping.Map mapValue = (org.hibernate.mapping.Map) property.getValue();
 
 		assertThat( mapValue.getIndex(), instanceOf( BasicValue.class ) );
 		final BasicValue indexValue = (BasicValue) mapValue.getIndex();
 		final BasicValue.Resolution<?> indexResolution = indexValue.resolve();
-		assertThat( indexResolution.getJdbcTypeDescriptor(), instanceOf( keyStd ) );
-		assertThat( indexResolution.getJdbcMapping().getJdbcTypeDescriptor(), instanceOf( keyStd ) );
-		assertThat( indexResolution.getLegacyResolvedBasicType().getJdbcTypeDescriptor(), instanceOf( keyStd ) );
+		keyTypeVerifier.accept( indexResolution.getJdbcTypeDescriptor() );
 
 		assertThat( mapValue.getElement(), instanceOf( BasicValue.class ) );
 		final BasicValue elementValue = (BasicValue) mapValue.getElement();
 		final BasicValue.Resolution<?> elementResolution = elementValue.resolve();
-		assertThat( elementResolution.getJdbcTypeDescriptor(), instanceOf( valueStd ) );
-		assertThat( elementResolution.getJdbcMapping().getJdbcTypeDescriptor(), instanceOf( valueStd ) );
-		assertThat( elementResolution.getLegacyResolvedBasicType().getJdbcTypeDescriptor(), instanceOf( valueStd ) );
+		valueTypeVerifier.accept( elementResolution.getJdbcTypeDescriptor() );
 	}
 
 	@Entity( name = "MyEntity" )

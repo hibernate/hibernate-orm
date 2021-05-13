@@ -10,46 +10,52 @@ import java.util.BitSet;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class BitSetTypeDefTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Product.class
-		};
-	}
+@DomainModel( annotatedClasses = BitSetTypeDefTest.Product.class )
+@SessionFactory
+public class BitSetTypeDefTest {
 
 	@Test
-	public void test() {
+	public void test(SessionFactoryScope scope) {
 
 		//tag::basic-custom-type-BitSetTypeDef-persistence-example[]
 		BitSet bitSet = BitSet.valueOf( new long[] {1, 2, 3} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			Product product = new Product( );
-			product.setId( 1 );
-			product.setBitSet( bitSet );
-			session.persist( product );
-		} );
+		scope.inTransaction(
+				(session) -> {
+					Product product = new Product( );
+					product.setId( 1 );
+					product.setBitSet( bitSet );
+					session.persist( product );
+				}
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
-			Product product = session.get( Product.class, 1 );
-			assertEquals(bitSet, product.getBitSet());
-		} );
+		scope.inTransaction(
+				(session) -> {
+					final Product product = session.get( Product.class, 1 );
+					assertEquals(bitSet, product.getBitSet());
+				}
+		);
 		//end::basic-custom-type-BitSetTypeDef-persistence-example[]
+	}
+
+	@AfterEach
+	public void dropData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				(session) -> session.createQuery( "delete Product" ).executeUpdate()
+		);
 	}
 
 	//tag::basic-custom-type-BitSetTypeDef-mapping-example[]

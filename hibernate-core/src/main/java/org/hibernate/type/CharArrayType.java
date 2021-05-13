@@ -7,10 +7,13 @@
 package org.hibernate.type;
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@code char[]}
@@ -20,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
  */
 public class CharArrayType
 		extends AbstractSingleColumnStandardBasicType<char[]>
-		implements SqlTypeDescriptorIndicatorCapable<char[]> {
+		implements AdjustableBasicType<char[]> {
 	public static final CharArrayType INSTANCE = new CharArrayType();
 
 	public CharArrayType() {
@@ -37,22 +40,23 @@ public class CharArrayType
 	}
 
 	@Override
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators) {
+	public <X> BasicType<X> resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<X> domainJtd) {
+		assert domainJtd != null;
+
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+
+		final int jdbcTypeCode;
 		if ( indicators.isLob() ) {
-			//noinspection unchecked
-			return (BasicType<X>) ( indicators.isNationalized() ? CharacterArrayNClobType.INSTANCE : CharacterArrayClobType.INSTANCE );
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
 		}
 
-		if ( indicators.isNationalized() ) {
-			final JdbcTypeDescriptor nvarcharType = indicators.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry()
-					.getDescriptor( Types.NVARCHAR );
-
-			//noinspection unchecked
-			return (BasicType<X>) indicators.getTypeConfiguration().getBasicTypeRegistry().resolve( getJavaTypeDescriptor(), nvarcharType );
-		}
-
-		//noinspection unchecked
-		return (BasicType<X>) this;
+		final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType );
 	}
 }

@@ -13,10 +13,14 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderBasicValuedStandard;
+import org.hibernate.resource.beans.spi.ManagedBean;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.UserType;
 
 /**
  * Implementation of ResultMappingMemento for scalar (basic) results.
@@ -60,6 +64,8 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			ResultSetMappingResolutionContext context) {
 		this.explicitColumnName = definition.name();
 
+		BasicType resolvedBasicType = null;
+
 		final Class<?> definedType = definition.type();
 		if ( void.class == definedType ) {
 			explicitJavaTypeDescriptor = null;
@@ -67,11 +73,35 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 		else {
 			final SessionFactoryImplementor sessionFactory = context.getSessionFactory();
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
-			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
-			this.explicitJavaTypeDescriptor = jtdRegistry.getDescriptor( definition.type() );
+
+			// first see if this is a registered BasicType...
+			final BasicType<Object> registeredBasicType = typeConfiguration.getBasicTypeRegistry()
+					.getRegisteredType( definition.type().getName() );
+			if ( registeredBasicType != null ) {
+				this.explicitJavaTypeDescriptor = registeredBasicType.getJavaTypeDescriptor();
+			}
+			else {
+				final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
+				final JavaTypeDescriptor<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
+				final ManagedBeanRegistry beanRegistry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
+				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
+					final ManagedBean<BasicType<?>> typeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
+					resolvedBasicType = typeBean.getBeanInstance();
+					this.explicitJavaTypeDescriptor = resolvedBasicType.getJavaTypeDescriptor();
+				}
+				else if ( UserType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
+					final ManagedBean<UserType<?>> userTypeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
+					// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> CustomType mapping somewhere?
+					resolvedBasicType = new CustomType( userTypeBean.getBeanInstance(), sessionFactory.getTypeConfiguration() );
+					this.explicitJavaTypeDescriptor = resolvedBasicType.getJavaTypeDescriptor();
+				}
+				else {
+					this.explicitJavaTypeDescriptor = jtdRegistry.getDescriptor( definition.type() );
+				}
+			}
 		}
 
-		explicitType = null;
+		explicitType = resolvedBasicType;
 	}
 
 	public ResultMementoBasicStandard(

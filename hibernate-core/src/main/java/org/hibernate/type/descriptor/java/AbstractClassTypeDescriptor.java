@@ -90,14 +90,10 @@ public abstract class AbstractClassTypeDescriptor<T> implements BasicJavaDescrip
 	}
 
 	protected HibernateException unknownUnwrap(Class conversionType) {
-		throw new HibernateException(
-				"Unknown unwrap conversion requested: " + type.getName() + " to " + conversionType.getName()
-		);
+		return JavaTypeDescriptorHelper.unknownUnwrap( type, conversionType, this );
 	}
 
 	protected HibernateException unknownWrap(Class conversionType) {
-		throw new HibernateException(
-				"Unknown wrap conversion requested: " + conversionType.getName() + " to " + type.getName()
-		);
+		return JavaTypeDescriptorHelper.unknownWrap( conversionType, type, this );
 	}
 }

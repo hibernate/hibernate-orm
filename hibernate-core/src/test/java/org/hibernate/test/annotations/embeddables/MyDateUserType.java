@@ -48,12 +48,8 @@ public class MyDateUserType implements UserType {
 	}
 
 	@Override
-	public MyDate nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		return new MyDate(rs.getDate(rs.findColumn(names[0])));
+	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		return new MyDate( rs.getDate( position ) );
 	}
 
 	@Override

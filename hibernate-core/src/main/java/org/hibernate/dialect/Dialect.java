@@ -82,6 +82,10 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongNVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NCharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import javax.persistence.TemporalType;
@@ -958,7 +962,15 @@ public abstract class Dialect implements ConversionContext {
 	 * @param serviceRegistry The service registry
 	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		// by default, nothing to do
+		// by default, not much to do...
+
+		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
+		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
+			typeContributions.contributeJdbcTypeDescriptor( NCharTypeDescriptor.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( NVarcharTypeDescriptor.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharTypeDescriptor.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( NClobTypeDescriptor.DEFAULT );
+		}
 	}
 
 //	public static interface Initializable {
@@ -3441,9 +3453,18 @@ public abstract class Dialect implements ConversionContext {
 	 * Does this dialect supports Nationalized Types
 	 *
 	 * @return boolean
+	 *
+	 * @deprecated (since 6.0) Prefer {@link #getNationalizationSupport()} which gives a little
+	 * better insight into what is supported.  This is interpreted as true if the supported
+	 * strategy is {@link NationalizationSupport#EXPLICIT}
 	 */
-	public boolean supportsNationalizedTypes() {
-		return true;
+	@Deprecated
+	public final boolean supportsNationalizedTypes() {
+		return getNationalizationSupport() == NationalizationSupport.EXPLICIT;
+	}
+
+	public NationalizationSupport getNationalizationSupport() {
+		return NationalizationSupport.EXPLICIT;
 	}
 
 	/**

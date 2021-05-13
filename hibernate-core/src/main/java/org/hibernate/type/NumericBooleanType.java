@@ -60,9 +60,18 @@ public class NumericBooleanType
 		return CONVERTER;
 	}
 
-	private static class NumericConverter implements BasicValueConverter<Boolean, Integer> {
+	public static class NumericConverter implements BasicValueConverter<Boolean, Integer> {
+		/**
+		 * Singleton access
+		 */
+		public static final NumericConverter INSTANCE = new NumericConverter();
+
 		@Override
 		public Boolean toDomainValue(Integer relationalForm) {
+			return toDomain( relationalForm );
+		}
+
+		public static Boolean toDomain(Integer relationalForm) {
 			if ( relationalForm == null ) {
 				return null;
 			}
@@ -80,6 +89,10 @@ public class NumericBooleanType
 
 		@Override
 		public Integer toRelationalValue(Boolean domainForm) {
+			return toRelational( domainForm );
+		}
+
+		public static Integer toRelational(Boolean domainForm) {
 			if ( domainForm == null ) {
 				return null;
 			}

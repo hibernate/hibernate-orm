@@ -3464,7 +3464,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public NationalizationSupport getNationalizationSupport() {
-		return supportsNationalizedTypes() ? NationalizationSupport.EXPLICIT : NationalizationSupport.UNSUPPORTED;
+		return NationalizationSupport.EXPLICIT;
 	}
 
 	/**

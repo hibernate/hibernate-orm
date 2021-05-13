@@ -38,6 +38,10 @@ public interface DomainResultCreationState {
 		return false;
 	}
 
+	default boolean isRegisteringVisitedAssociationKeys(){
+		return false;
+	}
+
 	/**
 	 * Resolve the ModelPart associated with a given NavigablePath.  More specific ModelParts should be preferred - e.g.
 	 * the SingularAssociationAttributeMapping rather than just the EntityTypeMapping for the associated type

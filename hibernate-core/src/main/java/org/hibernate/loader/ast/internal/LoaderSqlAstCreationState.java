@@ -158,6 +158,11 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
+	public boolean isRegisteringVisitedAssociationKeys(){
+		return true;
+	}
+
+	@Override
 	public ModelPart resolveModelPart(NavigablePath navigablePath) {
 		// for now, let's assume that the navigable-path refers to TableGroup
 		return fromClauseAccess.findTableGroup( navigablePath ).getModelPart();

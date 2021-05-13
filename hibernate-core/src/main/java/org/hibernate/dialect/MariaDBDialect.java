@@ -55,6 +55,11 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public NationalizationSupport getNationalizationSupport() {
+		return NationalizationSupport.IMPLICIT;
+	}
+
+	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 

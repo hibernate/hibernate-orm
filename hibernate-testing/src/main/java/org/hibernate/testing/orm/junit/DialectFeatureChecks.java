@@ -45,12 +45,18 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	/**
+	 * Does the database support nationalized data in any form
+	 */
 	public static class SupportsNationalizedData implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getNationalizationSupport() != NationalizationSupport.UNSUPPORTED;
 		}
 	}
 
+	/**
+	 * Does the database specifically support the explicit nationalized data types
+	 */
 	public static class SupportsNationalizedDataTypes implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;

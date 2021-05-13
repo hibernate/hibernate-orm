@@ -33,7 +33,9 @@ import static org.junit.Assert.fail;
 @Jpa(annotatedClasses = NClobTest.Product.class)
 @RequiresDialectFeature(
         feature = DialectFeatureChecks.SupportsNationalizedDataTypes.class,
-        comment = "@see https://hibernate.atlassian.net/browse/HHH-10693 and https://hibernate.atlassian.net/browse/HHH-10695 and https://hibernate.atlassian.net/browse/HHH-10473"
+        comment = "This is different from other tests checking generalized nationalization support; " +
+                "because we explicitly map this attribute to the `NClob` java type the database really" +
+                " has to support those types"
 )
 public class NClobTest {
     @Test

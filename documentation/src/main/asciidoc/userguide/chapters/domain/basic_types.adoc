@@ -258,6 +258,16 @@ of the specific database support for nationalized data and allows the applicatio
 work portably across databases with varying support.
 ====
 
+[IMPORTANT]
+====
+For databases that do not support `NCLOB` data-types, it is unsupported to map
+the attribute using `java.sql.NClob`.  Use `java.sql.Clob` (which `NClob` extends)
+or use a materialized mapping (`String`, `char[]`, ...) instead.
+
+See also <<basic-lob>> regarding similar limitation for databases which do not support
+explicit `CLOB` data-type.
+====
+
 Considering we have the following database table:
 
 [[basic-nationalized-sql-example]]
@@ -298,6 +308,13 @@ variances on your behalf.
 
 However, some drivers (i.e. PostgreSQL) are trickier and, in such cases, you may have to do some
 extra steps to get LOBs working.  Such discussions are beyond the scope of this guide.
+====
+
+[IMPORTANT]
+====
+For databases that do not support `CLOB` data-types, it is unsupported to map
+the attribute using `java.sql.Clob`.  Use a materialized mapping (`String`,
+`char[]`, ...) instead.
 ====
 
 Mapping basic values to LOB types comes in 2 forms...

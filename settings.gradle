@@ -5,6 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+
 plugins {
     id 'com.gradle.enterprise' version '3.2.1'
 }
@@ -92,8 +93,6 @@ include 'hibernate-testing'
 include 'hibernate-envers'
 // todo (6.0): re-enable hibernate-spatial
 //include 'hibernate-spatial'
-
-include 'hibernate-java8'
 
 include 'hibernate-osgi'
 

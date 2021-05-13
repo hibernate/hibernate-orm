@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.onetoone.singletable;
+package org.hibernate.orm.test.onetoone.singletable;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/test/onetoone/singletable/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/onetoone/singletable/Person.hbm.xml"
 )
 @SessionFactory(
 		generateStatistics = true
@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class DiscrimSubclassOneToOneTest {
 
 	@AfterEach
-	public void teardDown(SessionFactoryScope scope) {
+	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Address" ).executeUpdate();
@@ -69,7 +69,7 @@ public class DiscrimSubclassOneToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+					final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 					EntityStatistics addressStats = sessionFactory.getStatistics()
 							.getEntityStatistics( Address.class.getName() );
 					EntityStatistics mailingAddressStats = sessionFactory.getStatistics().getEntityStatistics(
@@ -125,7 +125,6 @@ public class DiscrimSubclassOneToOneTest {
 
 					assertEquals( 2, addressStats.getFetchCount() );
 					assertEquals( 3, mailingAddressStats.getFetchCount() );
-
 				}
 		);
 
@@ -145,14 +144,14 @@ public class DiscrimSubclassOneToOneTest {
 
 		scope.inTransaction(
 				session -> {
-					Org org = (Org) session.get( Entity.class, "IFA" );
+					session.get( Entity.class, "IFA" );
 					session.clear();
 
 					List list = session.createQuery( "from Entity e order by e.name" ).list();
 					Person p = (Person) list.get( 0 );
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
-					org = (Org) list.get( 1 );
+					Org org = (Org) list.get( 1 );
 					assertEquals( org.addresses.size(), 1 );
 					session.clear();
 
@@ -164,9 +163,6 @@ public class DiscrimSubclassOneToOneTest {
 					assertNotNull( p.address );
 					assertNull( p.mailingAddress );
 					assertEquals( org.addresses.size(), 1 );
-
-					session.delete( p );
-					session.delete( org );
 				}
 		);
 	}

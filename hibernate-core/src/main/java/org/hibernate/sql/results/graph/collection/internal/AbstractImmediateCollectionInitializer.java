@@ -259,6 +259,10 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			return;
 		}
 
+		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+			return;
+		}
+
 		resolveKeyCollectionValue( rowProcessingState );
 
 		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();

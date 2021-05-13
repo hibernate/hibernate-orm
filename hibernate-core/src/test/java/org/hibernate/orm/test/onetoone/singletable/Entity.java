@@ -5,14 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id: Org.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.onetoone.singletable;
-import java.util.HashSet;
-import java.util.Set;
+//$Id: Entity.java 5686 2005-02-12 07:27:32Z steveebersole $
+package org.hibernate.orm.test.onetoone.singletable;
+
 
 /**
  * @author Gavin King
  */
-public class Org extends Entity {
-	public Set addresses = new HashSet();
+public class Entity {
+	public String name;
 }

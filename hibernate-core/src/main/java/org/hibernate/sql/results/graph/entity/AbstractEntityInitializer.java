@@ -272,7 +272,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// 		- see AbstractEntityPersister#hasSequentialSelect and
 		//			AbstractEntityPersister#getSequentialSelect in 5.2
 
-		if ( entityInstance != null ) {
+		if ( entityKey != null ) {
 			return;
 		}
 

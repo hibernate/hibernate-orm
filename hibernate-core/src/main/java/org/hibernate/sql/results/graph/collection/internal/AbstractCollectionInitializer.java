@@ -9,9 +9,12 @@ package org.hibernate.sql.results.graph.collection.internal;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -45,6 +48,10 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			return;
 		}
 
+		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+			return;
+		}
+
 		final Object parentKey = parentAccess.getParentKey();
 		if ( parentKey != null ) {
 			collectionKey = new CollectionKey(
@@ -52,6 +59,21 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 					parentKey
 			);
 		}
+	}
+
+	protected boolean isAttributeAssignableToConcreteDescriptor() {
+		if ( parentAccess instanceof EntityInitializer ) {
+			final AbstractEntityPersister concreteDescriptor = (AbstractEntityPersister) ( (EntityInitializer) parentAccess ).getConcreteDescriptor();
+			if ( concreteDescriptor.isPolymorphic() ) {
+				final AbstractEntityPersister declaringType = (AbstractEntityPersister) collectionAttributeMapping.getDeclaringType();
+				if ( concreteDescriptor != declaringType ) {
+					if ( !declaringType.getEntityMetamodel().getSubclassEntityNames().contains( concreteDescriptor.getEntityMetamodel().getName() ) ) {
+						return false;
+					}
+				}
+			}
+		}
+		return true;
 	}
 
 	@Override

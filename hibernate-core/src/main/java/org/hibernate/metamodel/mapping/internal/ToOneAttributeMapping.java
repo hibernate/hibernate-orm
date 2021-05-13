@@ -358,7 +358,8 @@ public class ToOneAttributeMapping
 			DomainResultCreationState creationState) {
 		final AssociationKey associationKey = foreignKeyDescriptor.getAssociationKey();
 
-		if ( creationState.isAssociationKeyVisited( associationKey ) ) {
+		if ( creationState.isAssociationKeyVisited( associationKey )
+				|| bidirectionalAttributeName != null && !creationState.isRegisteringVisitedAssociationKeys() ) {
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
 			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
 			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch

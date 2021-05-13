@@ -21,8 +21,9 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.test.onetoone.bidirectional;
+package org.hibernate.orm.test.onetoone.bidirectional;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 /**
  * Test cases for fetch joining a bi-directional one-to-one mapping.
@@ -116,9 +118,13 @@ public class BiDirectionalOneToOneFetchTest {
 				}
 			} );
 
-			session.createQuery(
+			List<EntityA> list = session.createQuery(
 					"from EntityA a join fetch a.b"
 			).list();
+
+			EntityA entityA = list.get( 0 );
+			assertSame( entityA, entityA.getB().getA() );
+
 
 			assertEquals(
 					"Join fetching inverse one-to-one didn't use the object already present in the result set!",
@@ -178,6 +184,14 @@ public class BiDirectionalOneToOneFetchTest {
 			this.b = b;
 			this.b.a = this;
 		}
+
+		public EntityB getB() {
+			return b;
+		}
+
+		public void setB(EntityB b) {
+			this.b = b;
+		}
 	}
 
 	@Entity(name = "EntityB")
@@ -194,6 +208,10 @@ public class BiDirectionalOneToOneFetchTest {
 
 		public EntityB(Long id) {
 			this.id = id;
+		}
+
+		public EntityA getA() {
+			return a;
 		}
 	}
 

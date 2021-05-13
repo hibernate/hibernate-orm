@@ -5,7 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-
 plugins {
     id 'com.gradle.enterprise' version '3.2.1'
 }
@@ -103,10 +102,11 @@ include 'hibernate-vibur'
 include 'hibernate-agroal'
 
 include 'hibernate-jcache'
-include 'hibernate-ehcache'
-include 'hibernate-infinispan'
+
 include 'hibernate-micrometer'
 include 'hibernate-graalvm'
+
+include 'hibernate-ehcache'
 
 // The plugin used to generate Java modules was compiled using JDK11.
 // This means even with toolchains, Gradle needs to be run with Java 11+ in order to run Java modules ITs.

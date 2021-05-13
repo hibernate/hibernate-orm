@@ -36,7 +36,9 @@ public enum NationalizationSupport {
 	private final int longVarcharVariantCode;
 	private final int clobVariantCode;
 
-	NationalizationSupport() { this( -1, -1, -1, -1 ); }
+	NationalizationSupport() {
+		this( -1, -1, -1, -1 );
+	}
 
 	NationalizationSupport(
 			int charVariantCode,

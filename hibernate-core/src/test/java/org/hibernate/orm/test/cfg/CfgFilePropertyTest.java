@@ -17,10 +17,10 @@ import javax.persistence.Persistence;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -50,14 +50,15 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 			@Override
 			protected Enumeration<URL> findResources(String name) throws IOException {
 				return name.equals( "META-INF/persistence.xml" ) ?
-					Collections.enumeration(
-						Collections.singletonList(
-							findAsResource( "org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" )
-						)
-					) :
-					Collections.emptyEnumeration();
+						Collections.enumeration(
+								Collections.singletonList(
+										ClassLoaderServiceTestingImpl.INSTANCE.locateResource(
+												"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" )
+								)
+						) :
+						Collections.emptyEnumeration();
 			}
-		}  );
+		} );
 
 		thread.start();
 		thread.join();

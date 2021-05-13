@@ -8,6 +8,8 @@ package org.hibernate.cfg;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -17,7 +19,7 @@ import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.UnsupportedLogger;
-import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.ResourcesHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
@@ -177,27 +179,31 @@ public final class Environment implements AvailableSettings {
 		//Set USE_REFLECTION_OPTIMIZER to false to fix HHH-227
 		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.FALSE.toString() );
 
-		try {
-			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
+		InputStream stream = ResourcesHelper.locateResourceAsStream(
+				"/hibernate.properties",
+				Thread.currentThread().getContextClassLoader(),
+				Environment.class.getClassLoader()
+		);
+		if ( stream != null ) {
 			try {
-				GLOBAL_PROPERTIES.load(stream);
+				GLOBAL_PROPERTIES.load( stream );
 				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES, PASS ) );
 			}
 			catch (Exception e) {
 				LOG.unableToLoadProperties();
 			}
 			finally {
-				try{
+				try {
 					stream.close();
 				}
-				catch (IOException ioe){
+				catch (IOException ioe) {
 					LOG.unableToCloseStreamError( ioe );
 				}
 			}
-		}
-		catch (HibernateException he) {
+		} else {
 			LOG.propertiesNotFound();
 		}
+
 
 		try {
 			Properties systemProperties = System.getProperties();

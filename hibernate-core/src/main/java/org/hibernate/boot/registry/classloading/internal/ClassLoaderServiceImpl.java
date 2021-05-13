@@ -27,6 +27,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ResourcesHelper;
 
 /**
  * Standard implementation of the service for interacting with class loaders
@@ -37,8 +38,6 @@ import org.hibernate.internal.CoreMessageLogger;
 public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( ClassLoaderServiceImpl.class );
-
-	private static final String CLASS_PATH_SCHEME = "classpath://";
 
 	private final ConcurrentMap<Class, AggregatedServiceLoader<?>> serviceLoaders = new ConcurrentHashMap<>();
 	private volatile AggregatedClassLoader aggregatedClassLoader;
@@ -139,88 +138,12 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 
 	@Override
 	public URL locateResource(String name) {
-		// first we try name as a URL
-		try {
-			return new URL( name );
-		}
-		catch (Exception ignore) {
-		}
-
-		// if we couldn't find the resource containing a classpath:// prefix above, that means we don't have a URL
-		// handler for it. So let's remove the prefix and resolve against our class loader.
-		name = stripClasspathScheme( name );
-
-		try {
-			final URL url = getAggregatedClassLoader().getResource( name );
-			if ( url != null ) {
-				return url;
-			}
-		}
-		catch (Exception ignore) {
-		}
-
-		if ( name.startsWith( "/" ) ) {
-			name = name.substring( 1 );
-
-			try {
-				final URL url = getAggregatedClassLoader().getResource( name );
-				if ( url != null ) {
-					return url;
-				}
-			}
-			catch (Exception ignore) {
-			}
-		}
-
-		return null;
+		return ResourcesHelper.locateResourceAsUrl( name, getAggregatedClassLoader() );
 	}
 
 	@Override
 	public InputStream locateResourceStream(String name) {
-		// first we try name as a URL
-		try {
-			log.tracef( "trying via [new URL(\"%s\")]", name );
-			return new URL( name ).openStream();
-		}
-		catch (Exception ignore) {
-		}
-
-		// if we couldn't find the resource containing a classpath:// prefix above, that means we don't have a URL
-		// handler for it. So let's remove the prefix and resolve against our class loader.
-		name = stripClasspathScheme( name );
-
-		try {
-			log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", name );
-			final InputStream stream = getAggregatedClassLoader().getResourceAsStream( name );
-			if ( stream != null ) {
-				return stream;
-			}
-		}
-		catch (Exception ignore) {
-		}
-
-		final String stripped = name.startsWith( "/" ) ? name.substring( 1 ) : null;
-
-		if ( stripped != null ) {
-			try {
-				log.tracef( "trying via [new URL(\"%s\")]", stripped );
-				return new URL( stripped ).openStream();
-			}
-			catch (Exception ignore) {
-			}
-
-			try {
-				log.tracef( "trying via [ClassLoader.getResourceAsStream(\"%s\")]", stripped );
-				final InputStream stream = getAggregatedClassLoader().getResourceAsStream( stripped );
-				if ( stream != null ) {
-					return stream;
-				}
-			}
-			catch (Exception ignore) {
-			}
-		}
-
-		return null;
+		return ResourcesHelper.locateResourceAsStream( name, getAggregatedClassLoader() );
 	}
 
 	@Override
@@ -288,18 +211,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 			throw log.usingStoppedClassLoaderService();
 		}
 		return aggregated;
-	}
-
-	private String stripClasspathScheme(String name) {
-		if ( name == null ) {
-			return null;
-		}
-
-		if ( name.startsWith( CLASS_PATH_SCHEME ) ) {
-			return name.substring( CLASS_PATH_SCHEME.length() );
-		}
-
-		return name;
 	}
 
 	@Override

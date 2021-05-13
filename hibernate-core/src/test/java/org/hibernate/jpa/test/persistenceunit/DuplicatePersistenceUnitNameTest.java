@@ -22,6 +22,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
@@ -34,7 +35,6 @@ import org.junit.runner.RunWith;
 import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -75,13 +75,13 @@ public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 
 		public TestClassLoader() {
 			urls = Arrays.asList(
-				findAsResource(
-					"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml"
-				)
-				,
-				findAsResource(
-					"org/hibernate/jpa/test/persistenceunit/META-INF/persistenceUnitForNameDuplicationTest.xml"
-				)
+					ClassLoaderServiceTestingImpl.INSTANCE.locateResource(
+							"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml"
+					)
+					,
+					ClassLoaderServiceTestingImpl.INSTANCE.locateResource(
+							"org/hibernate/jpa/test/persistenceunit/META-INF/persistenceUnitForNameDuplicationTest.xml"
+					)
 			);
 		}
 

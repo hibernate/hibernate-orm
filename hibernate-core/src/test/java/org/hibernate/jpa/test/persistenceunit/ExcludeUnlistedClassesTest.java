@@ -17,10 +17,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -75,7 +75,7 @@ public class ExcludeUnlistedClassesTest extends BaseUnitTestCase {
     	@Override
         protected Enumeration<URL> findResources(String name) throws IOException {
     		if (name.equals( "META-INF/persistence.xml" )) {
-    			final URL puUrl = ConfigHelper.findAsResource(
+    			final URL puUrl = ClassLoaderServiceTestingImpl.INSTANCE.locateResource(
     					"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" );
     			return new Enumeration<URL>() {
         			boolean hasMore = true;

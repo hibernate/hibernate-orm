@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.bootstrap.scanning;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
@@ -15,10 +16,13 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.test.Distributor;
@@ -281,7 +285,9 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		HashMap properties = new HashMap();
 		properties.put( AvailableSettings.JTA_DATASOURCE, null );
 		Properties p = new Properties();
-		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
+
+		ClassLoaderService cls = new ClassLoaderServiceImpl( Arrays.asList( Thread.currentThread().getContextClassLoader(), Environment.class.getClassLoader() ), TcclLookupPrecedence.BEFORE );
+		p.load( cls.locateResourceStream( "/overridenpar.properties" ) );
 		properties.putAll( p );
 		emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		TransactionUtil.doInJPA( () -> emf, em -> {
@@ -372,7 +378,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
-		item.setDistributors( new HashSet<Distributor>() );
+		item.setDistributors( new HashSet<>() );
 		item.getDistributors().add( res );
 		Statistics stats = ( (HibernateEntityManagerFactory) emf ).getSessionFactory().getStatistics();
 		stats.clear();
@@ -417,7 +423,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		Scooter scooter = TransactionUtil.doInJPA( () -> emf, em -> {
 			Scooter s = new Scooter();
 			s.setModel( "Abadah" );
-			s.setSpeed( 85l );
+			s.setSpeed( 85L );
 			em.persist( s );
 			return s;
 		} );
@@ -445,7 +451,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		Scooter scooter = TransactionUtil.doInJPA( () -> emf, em -> {
 			Scooter s = new Scooter();
 			s.setModel( "Abadah" );
-			s.setSpeed( 85l );
+			s.setSpeed( 85L );
 			em.persist( s );
 			return s;
 		} );

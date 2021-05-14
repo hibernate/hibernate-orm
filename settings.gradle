@@ -87,7 +87,6 @@ logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
 logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
 
 include 'hibernate-core'
-include 'hibernate-entitymanager'
 include 'hibernate-testing'
 include 'hibernate-envers'
 // todo (6.0): re-enable hibernate-spatial

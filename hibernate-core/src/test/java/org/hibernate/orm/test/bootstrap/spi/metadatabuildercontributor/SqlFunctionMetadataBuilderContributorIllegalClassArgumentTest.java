@@ -11,6 +11,10 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
+import org.hamcrest.Matchers;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -35,8 +39,16 @@ public class SqlFunctionMetadataBuilderContributorIllegalClassArgumentTest
 			fail("Should throw exception!");
 		}
 		catch (ClassCastException e) {
-			assertTrue( e.getMessage().contains( "cannot be cast to" ) );
-			assertTrue( e.getMessage().contains( "org.hibernate.boot.spi.MetadataBuilderContributor" ) );
+			System.out.println( "Checking exception : " + e.getMessage() );
+
+			assertThat(
+					e.getMessage(),
+					// depends on the JDK used
+					Matchers.anyOf(
+							containsString( "cannot be cast to" ),
+							containsString( "incompatible with" )
+					)
+			);
 		}
 	}
 

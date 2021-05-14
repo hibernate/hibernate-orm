@@ -8,12 +8,15 @@
 apply plugin: 'base'
 
 ext {
-	ormVersionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
-	ormVersion = HibernateVersion.fromFile( ormVersionFile, project )
-	// Override during releases
 	if ( project.hasProperty( 'releaseVersion' ) ) {
-		ormVersion = new HibernateVersion( project.releaseVersion, project )
+		// Override during releases
+		ormVersion = new HibernateVersion( project.property( 'releaseVersion' ) as String, project )
 	}
+	else {
+		ormVersionFile = file("${rootProject.projectDir}/gradle/version.properties")
+		ormVersion = HibernateVersion.fromFile(ormVersionFile, project)
+	}
+
 	jpaVersion = new JpaVersion('2.2')
 }
 

@@ -3,6 +3,7 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+
 Changes in 6.0.0.Alpha7 (March 18, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

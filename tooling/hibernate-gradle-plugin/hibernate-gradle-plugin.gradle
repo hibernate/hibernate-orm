@@ -9,42 +9,41 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
+	id 'com.gradle.plugin-publish' version '0.14.0'
+
 	id 'com.github.sebersole.testkit-junit5' version '1.0.1'
-
-	// for portal publishing
-	id "com.gradle.plugin-publish" version "0.12.0"
-
-	// for publishing snapshots
-	id 'maven-publish'
-
-	id 'idea'
-	id 'eclipse'
 }
 
-description = "Gradle plugin for integrating Hibernate aspects into your build"
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
-apply from: rootProject.file( 'gradle/base-information.gradle' )
-apply from: rootProject.file( 'gradle/libraries.gradle' )
-apply from: rootProject.file( 'gradle/javadoc.gradle' )
+description = "Gradle plugin for integrating Hibernate aspects into your build"
 
 ext {
 	pluginId = 'org.hibernate.orm'
 	pluginVersion = project.version
 
-	//noinspection GrUnresolvedAccess
-	publishKey = credentials.'hibernate.gradle.publish.key'
-	//noinspection GrUnresolvedAccess
-	publishSecret = credentials.'hibernate.gradle.publish.secret'
-
-	if ( publishKey != null && publishSecret != null ) {
-		project.'gradle.publish.key' = publishKey
-		project.'gradle.publish.secret' = publishSecret
+	// look for command-line overrides of the username/password pairs for publishing
+	if ( project.hasProperty( 'hibernatePluginPortalUsername' ) ) {
+		credentials.hibernatePluginPortalUsername = project.property( 'hibernatePluginPortalUsername' )
+	}
+	if ( project.hasProperty( 'hibernatePluginPortalPassword' ) ) {
+		credentials.hibernatePluginPortalPassword = project.property( 'hibernatePluginPortalPassword' )
 	}
 }
 
 dependencies {
-	implementation project( ':hibernate-core' )
+//	compileOnly project( ':hibernate-core' )
+//
+//	implementation gradleApi()
+//	implementation localGroovy()
+//
+//	testRuntimeOnly project( ':hibernate-core' ) {
+//	}
 
+	implementation project( ':hibernate-core' )
+	implementation libraries.jpa
+	implementation libraries.javassist
+	implementation libraries.byteBuddy
 	implementation gradleApi()
 	implementation localGroovy()
 }
@@ -77,8 +76,6 @@ processResources {
 }
 
 
-task release
-
 if ( project.version.toString().endsWith( '-SNAPSHOT' ) ) {
 	tasks.publishPlugins.enabled = false
 	tasks.release.dependsOn tasks.publish
@@ -86,16 +83,6 @@ if ( project.version.toString().endsWith( '-SNAPSHOT' ) ) {
 else {
 	tasks.publish.enabled = false
 	tasks.release.dependsOn( tasks.publishPlugins )
-}
-
-ext {
-	// look for command-line overrides of the username/password pairs for publishing
-	if ( project.hasProperty( 'hibernatePluginPortalUsername' ) ) {
-		credentials.hibernatePluginPortalUsername = project.property( 'hibernatePluginPortalUsername' )
-	}
-	if ( project.hasProperty( 'hibernatePluginPortalPassword' ) ) {
-		credentials.hibernatePluginPortalPassword = project.property( 'hibernatePluginPortalPassword' )
-	}
 }
 
 tasks.publishPlugins {
@@ -108,7 +95,6 @@ tasks.publishPlugins {
 		}
 	}
 }
-
 
 publishing {
 	publications {

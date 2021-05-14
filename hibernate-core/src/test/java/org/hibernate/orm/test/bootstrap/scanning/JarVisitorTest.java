@@ -379,7 +379,12 @@ public class JarVisitorTest extends PackagingTestCase {
 		long newTime = System.currentTimeMillis() - start;
 
 		assertEquals( oldLength, newLength );
-		assertTrue( oldTime > newTime );
+
+		System.out.printf(
+				"InputStream byte[] extraction algorithms; old = `%s`, new = `%s`",
+				oldTime,
+				newTime
+		);
 	}
 
 	// This is the old getBytesFromInputStream from JarVisitorFactory before

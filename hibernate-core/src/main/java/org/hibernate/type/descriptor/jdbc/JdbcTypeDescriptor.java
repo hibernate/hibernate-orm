@@ -60,7 +60,6 @@ public interface JdbcTypeDescriptor extends Serializable {
 	 */
 	boolean canBeRemapped();
 
-	@SuppressWarnings("unchecked")
 	default <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 		// match legacy behavior
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
@@ -129,6 +128,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 			case Types.BINARY:
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
+			case Types.BLOB:
 				return true;
 		}
 		return false;
@@ -142,6 +142,8 @@ public interface JdbcTypeDescriptor extends Serializable {
 			case Types.NVARCHAR:
 			case Types.LONGVARCHAR:
 			case Types.LONGNVARCHAR:
+			case Types.CLOB:
+			case Types.NCLOB:
 				return true;
 		}
 		return false;

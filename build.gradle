@@ -92,41 +92,7 @@ ext {
 	if ( project.hasProperty( 'hibernatePublishPassword' ) ) {
 		credentials.hibernatePublishPassword = project.property( 'hibernatePublishPassword' )
 	}
-
-	if ( project.hasProperty( 'hibernateSnapshotsUsername' ) ) {
-		credentials.hibernateSnapshotsUsername = project.property( 'hibernateSnapshotsUsername' )
-	}
-	if ( project.hasProperty( 'hibernateSnapshotsPassword' ) ) {
-		credentials.hibernateSnapshotsPassword = project.property( 'hibernateSnapshotsPassword' )
-	}
 }
-
-gradle.taskGraph.addTaskExecutionGraphListener(
-		new TaskExecutionGraphListener() {
-			@Override
-			void graphPopulated(TaskExecutionGraph graph) {
-				// make sure the needed username/password pair is available based on whether
-				// we are trying to perform a release or snapshot publishing (if either)
-				if ( graph.hasTask( 'publishMavenJavaPublicationToSnapshotRepository' ) ) {
-					if ( ! project.hcannVersion.isSnapshot ) {
-						throw new GradleException("Cannot publish non-snapshot version to snapshot repository");
-					}
-					if ( project.credentials.hibernateSnapshotsUsername == null ) {
-						throw new GradleException("Snapshot publishing credentials not specified");
-					}
-				}
-
-				if (graph.hasTask('publishMavenJavaPublicationToOssrhRepository')) {
-					if ( project.hcannVersion.isSnapshot ) {
-						throw new GradleException("Cannot publish snapshot version to non-snapshot repository");
-					}
-					if (project.credentials.hibernatePublishUsername == null) {
-						throw new GradleException("Publishing credentials not specified");
-					}
-				}
-			}
-		}
-)
 
 nexusPublishing {
 	repositories {
@@ -137,6 +103,35 @@ nexusPublishing {
 	}
 }
 
+gradle.taskGraph.addTaskExecutionGraphListener(
+		new TaskExecutionGraphListener() {
+			@Override
+			void graphPopulated(TaskExecutionGraph graph) {
+				String[] tasksToLookFor = [
+						'publish',
+						'publishToSonatype',
+						'publishAllPublicationsToSonatype',
+						'publishPublishedArtifactsPublicationToSonatypeRepository',
+						'publishRelocationArtifactsPublicationToSonatypeRepository',
+				]
+
+				for ( String taskToLookFor : tasksToLookFor ) {
+					if ( graph.hasTask( taskToLookFor ) ) {
+						// trying to publish - make sure the needed tokens are available
+
+						if ( project.credentials.hibernatePublishUsername == null ) {
+							throw new GradleException( "Publishing credentials not specified" );
+						}
+						if ( project.credentials.hibernatePublishPassword == null ) {
+							throw new GradleException( "Publishing credentials not specified" );
+						}
+
+						break;
+					}
+				}
+			}
+		}
+)
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

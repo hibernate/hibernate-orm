@@ -88,19 +88,28 @@ else {
 	tasks.release.dependsOn( tasks.publishPlugins )
 }
 
+ext {
+	// look for command-line overrides of the username/password pairs for publishing
+	if ( project.hasProperty( 'hibernatePluginPortalUsername' ) ) {
+		credentials.hibernatePluginPortalUsername = project.property( 'hibernatePluginPortalUsername' )
+	}
+	if ( project.hasProperty( 'hibernatePluginPortalPassword' ) ) {
+		credentials.hibernatePluginPortalPassword = project.property( 'hibernatePluginPortalPassword' )
+	}
+}
+
 tasks.publishPlugins {
 	doFirst {
-		if ( project.'gradle.publish.key' == null ) {
-			throw new RuntimeException( "`gradle.publish.key` not found" )
+		if ( credentials.hibernatePluginPortalUsername == null ) {
+			throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
 		}
-		if ( project.'gradle.publish.secret' == null ) {
-			throw new RuntimeException( "`gradle.publish.secret` not found" )
+		if ( credentials.hibernatePluginPortalPassword == null ) {
+			throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
 		}
 	}
 }
 
 
-// for SNAPSHOT version
 publishing {
 	publications {
 		plugin( MavenPublication ) {

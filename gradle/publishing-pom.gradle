@@ -14,9 +14,8 @@ tasks.withType(GenerateModuleMetadata) {
 }
 
 publishing {
-
 	publications {
-		publishedArtifacts {
+		publishedArtifacts( MavenPublication ) {
 			pom {
 				name = 'Hibernate ORM - ' + project.name
 				description = project.description

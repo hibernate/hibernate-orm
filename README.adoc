@@ -1,0 +1,144 @@
+Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
+to applications, libraries, and frameworks.
+
+It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
+
+This is the repository of its source code; see http://hibernate.org/orm/[Hibernate.org] for additional information.
+
+image:http://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon[Build Status,link=http://ci.hibernate.org/job/hibernate-orm-main-h2-main/]
+image:https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18[Language grade: Java,link=https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java]
+
+== Continuous Integration
+
+Hibernate uses both http://jenkins-ci.org[Jenkins] and https://github.com/features/actions[GitHub Actions]
+for its CI needs. See
+
+* http://ci.hibernate.org/view/ORM/[Jenkins Jobs]
+* https://github.com/hibernate/hibernate-orm/actions[GitHub Actions Jobs]
+
+== Building from sources
+
+The build requires at least Java 8 JDK.
+
+Hibernate uses https://gradle.org[Gradle] as its build tool. See the _Gradle Primer_ section below if you are new to
+Gradle.
+
+Contributors should read the link:CONTRIBUTING.md[Contributing Guide].
+
+See the guides for setting up http://hibernate.org/community/contribute/intellij-idea/[IntelliJ] or
+https://hibernate.org/community/contribute/eclipse-ide/[Eclipse] as your development environment.
+
+== Gradle Primer
+
+The Gradle build tool has amazing documentation.  2 in particular that are indispensable:
+
+* https://docs.gradle.org/current/userguide/userguide_single.html[Gradle User Guide] is a typical user guide in that
+it follows a topical approach to describing all of the capabilities of Gradle.
+* https://docs.gradle.org/current/dsl/index.html[Gradle DSL Guide] is unique and excellent in quickly
+getting up to speed on certain aspects of Gradle.
+
+We will cover the basics developers and contributors new to Gradle need to know to get productive quickly.
+
+NOTE: The project defines a https://docs.gradle.org/current/userguide/gradle_wrapper.html[Gradle Wrapper].
+The rest of the section will assume execution through the wrapper.
+
+=== Executing Tasks
+
+Gradle uses the concept of build tasks (equivalent to Ant targets or Maven phases/goals). You can get a list of
+available tasks via 
+
+----
+gradle tasks
+----
+
+To execute a task across all modules, simply perform that task from the root directory. Gradle will visit each
+sub-project and execute that task if the sub-project defines it. To execute a task in a specific module you can
+either:
+
+. `cd` into that module directory and execute the task
+. name the "task path". For example, to run the tests for the _hibernate-core_ module from the root directory
+you could say `gradle hibernate-core:test`
+
+=== Common tasks
+
+The common tasks you might use in building Hibernate include:
+
+* _build_ - Assembles (jars) and tests this project
+* _compile_ - Performs all compilation tasks including staging resources from both main and test
+* _jar_ - Generates a jar archive with all the compiled classes
+* _test_ - Runs the tests
+* _publishToMavenLocal_ - Installs the project jar to your local maven cache (aka ~/.m2/repository). Note that Gradle
+never uses this, but it can be useful for testing your build with other local Maven-based builds.
+* _clean_ - Cleans the build directory
+
+== Testing and databases
+
+Testing against a specific database can be achieved in 2 different ways:
+
+=== Using the "Matrix Testing Plugin" for Gradle.
+
+Coming later…
+
+=== Using "profiles"
+
+The Hibernate build defines several database testing "profiles" in `databases.gradle`. These
+profiles can be activated by name using the `db` build property which can be passed either as
+a JVM system prop (`-D`) or as a Gradle project property (`-P`). Examples below use the Gradle
+project property approach.
+
+----
+gradle clean build -Pdb=pgsql
+----
+
+To run a test from your IDE, you need to ensure the property expansions happen.
+Use the following command:
+
+----
+gradle clean compile -Pdb=pgsql
+----
+
+__NOTE: If you are running tests against a JDBC driver that is not available via Maven central be sure to
+add these drivers to your local Maven repo cache (~/.m2/repository) or (better) add it to a personal Maven repo server__
+
+=== Running database-specific tests from the IDE using "profiles"
+
+You can run any test on any particular database that is configured in a `databases.gradle` profile.
+
+All you have to do is run the following command:
+
+----
+gradlew setDataBase -Pdb=pgsql
+----
+
+or you can use the shortcut version: 
+
+----
+gradlew sDB -Pdb=pgsql
+----
+
+You can do this from the module which you are interested in testing or from the `hibernate-orm` root folder.
+
+Afterward, just pick any test from the IDE and run it as usual. Hibernate will pick the database configuration from the `hibernate.properties`
+file that was set up by the `setDataBase` Gradle task.
+
+=== Starting test databases locally as docker containers
+
+You don't have to install all databases locally to be able to test against them in case you have docker available.
+The script `docker_db.sh` allows you to start a pre-configured database which can be used for testing.
+
+All you have to do is run the following command:
+
+----
+./docker_db.sh postgresql_9_5
+----
+
+omitting the argument will print a list of possible options.
+
+When the database is properly started, you can run tests with special profiles that are suffixed with `_ci`
+e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can configure the IP address of your docker host.
+
+The command for running tests could look like the following:
+
+----
+gradlew test -Pdb=pgsql_ci "-DdbHost=192.168.99.100"
+----

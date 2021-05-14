@@ -13,11 +13,9 @@ plugins {
 
 	// for portal publishing
 	id "com.gradle.plugin-publish" version "0.12.0"
-	id "nu.studer.credentials" version "2.1"
 
 	// for publishing snapshots
 	id 'maven-publish'
-	id 'org.hibernate.build.maven-repo-auth'
 
 	id 'idea'
 	id 'eclipse'
@@ -45,11 +43,10 @@ ext {
 }
 
 dependencies {
-	compile project( ':hibernate-core' )
-	compile project( ':hibernate-testing' )
-	implementation( libraries.jpa )
-	implementation( libraries.javassist )
-	implementation( libraries.byteBuddy )
+	implementation project( ':hibernate-core' )
+
+	implementation gradleApi()
+	implementation localGroovy()
 }
 
 gradlePlugin {
@@ -108,13 +105,6 @@ publishing {
 	publications {
 		plugin( MavenPublication ) {
 			from components.java
-		}
-	}
-
-	repositories {
-		maven {
-			name 'jboss-snapshots-repository'
-			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
 		}
 	}
 }

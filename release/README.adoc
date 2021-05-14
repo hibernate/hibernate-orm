@@ -1,0 +1,22 @@
+This project coordinates the tasks that need to be performed as part of creating a release for Hibernate.
+
+== Artifacts
+
+Both snapshot and release artifacts are published to Sonatype https://oss.sonatype.org/[OSSRH].
+
+The "official" detials about OSSRH + Gradle can be found at https://central.sonatype.org/publish/publish-gradle/.
+However, its content is way out of date as of the time of this writing.
+https://dev.to/kengotoda/deploying-to-ossrh-with-gradle-in-2020-1lhi presents a much better guide.  Regardless,
+This is all just for background; all of this information is "backed into" the build scripts.
+
+After release, be sure to manage the staging repository created for it on https://oss.sonatype.org/[OSSRH].
+
+
+== Documentation
+
+JBoss doc server...
+
+
+== SourceForge
+
+Release bundles (as ZIP and TGZ) are uploaded to https://sourceforge.net/projects/hibernate/files/hibernate-orm/[SourceForge]

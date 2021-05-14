@@ -22,11 +22,17 @@ buildscript {
 	}
 }
 
+
 plugins {
+	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+	id 'nu.studer.credentials' version '2.1'
+
+	id 'idea'
+	id 'org.jetbrains.gradle.plugin.idea-ext' version '0.5'
+	id 'eclipse'
+
 	id 'me.champeau.buildscan-recipes' version '0.2.3'
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
-	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
-	id 'org.jetbrains.gradle.plugin.idea-ext' version '0.5'
 	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
 
@@ -40,21 +46,15 @@ allprojects {
 				dirs "${System.env.ADDITIONAL_REPO}"
 			}
 		}
-		// Needed atm for asciidoclet PR-91, which does not seem to work anyway :(
-		// todo (6.0) : remove once/if PR-91 ever works and becomes part of asciidoclet proper
-		maven {
-			name 'jboss-snapshots-repository'
-			url 'https://repository.jboss.org/nexus/content/repositories/snapshots'
-		}
 	}
+
+	apply from: rootProject.file( 'gradle/base-information.gradle' )
+
 	apply plugin: 'idea'
 	apply plugin: 'eclipse'
 
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"
-
-	apply from: rootProject.file( 'gradle/base-information.gradle' )
-
 }
 
 
@@ -84,6 +84,59 @@ task publish {
 			"themselves if they have any release-related activities to perform"
 }
 
+ext {
+	// look for command-line overrides of the username/password pairs for publishing
+	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
+		credentials.hibernatePublishUsername = project.property( 'hibernatePublishUsername' )
+	}
+	if ( project.hasProperty( 'hibernatePublishPassword' ) ) {
+		credentials.hibernatePublishPassword = project.property( 'hibernatePublishPassword' )
+	}
+
+	if ( project.hasProperty( 'hibernateSnapshotsUsername' ) ) {
+		credentials.hibernateSnapshotsUsername = project.property( 'hibernateSnapshotsUsername' )
+	}
+	if ( project.hasProperty( 'hibernateSnapshotsPassword' ) ) {
+		credentials.hibernateSnapshotsPassword = project.property( 'hibernateSnapshotsPassword' )
+	}
+}
+
+gradle.taskGraph.addTaskExecutionGraphListener(
+		new TaskExecutionGraphListener() {
+			@Override
+			void graphPopulated(TaskExecutionGraph graph) {
+				// make sure the needed username/password pair is available based on whether
+				// we are trying to perform a release or snapshot publishing (if either)
+				if ( graph.hasTask( 'publishMavenJavaPublicationToSnapshotRepository' ) ) {
+					if ( ! project.hcannVersion.isSnapshot ) {
+						throw new GradleException("Cannot publish non-snapshot version to snapshot repository");
+					}
+					if ( project.credentials.hibernateSnapshotsUsername == null ) {
+						throw new GradleException("Snapshot publishing credentials not specified");
+					}
+				}
+
+				if (graph.hasTask('publishMavenJavaPublicationToOssrhRepository')) {
+					if ( project.hcannVersion.isSnapshot ) {
+						throw new GradleException("Cannot publish snapshot version to non-snapshot repository");
+					}
+					if (project.credentials.hibernatePublishUsername == null) {
+						throw new GradleException("Publishing credentials not specified");
+					}
+				}
+			}
+		}
+)
+
+nexusPublishing {
+	repositories {
+		sonatype {
+			username = project.credentials.hibernatePublishUsername
+			password = project.credentials.hibernatePublishPassword
+		}
+	}
+}
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -96,6 +149,10 @@ task ciBuild {
 			"which should be performed from these CI jobs"
 }
 
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Misc...
 
 wrapper {
 	// To upgrade the version of gradle used in the wrapper, run:

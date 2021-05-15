@@ -7,7 +7,6 @@
 package org.hibernate.persister.walking.internal;
 
 import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.profile.Fetch;
@@ -19,13 +18,14 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.OuterJoinLoadable;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.type.AssociationType;
 
 /**
  * @author Steve Ebersole
  */
-public final class FetchStrategyHelper {
-	private FetchStrategyHelper() {
+public final class FetchOptionsHelper {
+	private FetchOptionsHelper() {
 	}
 
 	/**
@@ -150,8 +150,8 @@ public final class FetchStrategyHelper {
 		}
 	}
 
-	public static boolean isJoinFetched(FetchStrategy fetchStrategy) {
-		return fetchStrategy.getTiming() == FetchTiming.IMMEDIATE
-				&& fetchStrategy.getStyle() == FetchStyle.JOIN;
+	public static boolean isJoinFetched(FetchOptions fetchOptions) {
+		return fetchOptions.getTiming() == FetchTiming.IMMEDIATE
+				&& fetchOptions.getStyle() == FetchStyle.JOIN;
 	}
 }

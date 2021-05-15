@@ -38,7 +38,7 @@ public interface EntityGraphTraversalState {
 			return previousContext;
 		}
 
-		public FetchTiming getFetchStrategy() {
+		public FetchTiming getFetchTiming() {
 			return fetchTiming;
 		}
 

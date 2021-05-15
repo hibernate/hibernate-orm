@@ -15,7 +15,6 @@ import java.util.function.Supplier;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -131,7 +130,7 @@ public class PluralAttributeMappingImpl
 			CollectionPart elementDescriptor,
 			CollectionPart indexDescriptor,
 			CollectionIdentifierDescriptor identifierDescriptor,
-			FetchStrategy fetchStrategy,
+			FetchOptions fetchOptions,
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
 			CollectionPersister collectionDescriptor) {
@@ -145,8 +144,8 @@ public class PluralAttributeMappingImpl
 				elementDescriptor,
 				indexDescriptor,
 				identifierDescriptor,
-				fetchStrategy.getTiming(),
-				fetchStrategy.getStyle(),
+				fetchOptions.getTiming(),
+				fetchOptions.getStyle(),
 				cascadeStyle,
 				declaringType,
 				collectionDescriptor

@@ -15,4 +15,8 @@ import org.hibernate.engine.FetchTiming;
  * @author Steve Ebersole
  */
 public interface FetchOptions extends FetchTimingAccess, FetchStyleAccess {
+
+	static FetchOptions valueOf(FetchTiming fetchTiming, FetchStyle fetchStyle) {
+		return new FetchOptionsImpl( fetchTiming, fetchStyle );
+	}
 }

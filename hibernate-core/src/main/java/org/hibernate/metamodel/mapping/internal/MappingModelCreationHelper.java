@@ -26,7 +26,6 @@ import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
 import org.hibernate.collection.internal.StandardListSemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -79,7 +78,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.persister.walking.internal.FetchStrategyHelper;
+import org.hibernate.persister.walking.internal.FetchOptionsHelper;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -347,9 +346,8 @@ public class MappingModelCreationHelper {
 			}
 		};
 
-		final FetchStrategy fetchStrategy = bootProperty.isLazy()
-				? new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT )
-				: FetchStrategy.IMMEDIATE_JOIN;
+		final FetchTiming fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
+		final FetchStyle fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
 
 		if ( valueConverter != null ) {
 
@@ -379,7 +377,8 @@ public class MappingModelCreationHelper {
 					navigableRole,
 					stateArrayPosition,
 					attributeMetadataAccess,
-					fetchStrategy,
+					fetchTiming,
+					fetchStyle,
 					tableExpression,
 					attrColumnName,
 					false,
@@ -397,7 +396,8 @@ public class MappingModelCreationHelper {
 					navigableRole,
 					stateArrayPosition,
 					attributeMetadataAccess,
-					fetchStrategy,
+					fetchTiming,
+					fetchStyle,
 					tableExpression,
 					attrColumnName,
 					isAttrFormula,
@@ -444,7 +444,8 @@ public class MappingModelCreationHelper {
 						tableExpression,
 						attributeMetadataAccess,
 						component.getParentProperty(),
-						FetchStrategy.IMMEDIATE_JOIN,
+						FetchTiming.IMMEDIATE,
+						FetchStyle.JOIN,
 						attributeMappingType,
 						declaringType,
 						propertyAccess
@@ -807,8 +808,14 @@ public class MappingModelCreationHelper {
 			}
 		};
 
-		final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(
+		final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
 				fetchMode,
+				collectionDescriptor.getCollectionType(),
+				sessionFactory
+		);
+
+		final FetchTiming timing = FetchOptionsHelper.determineFetchTiming(
+				style,
 				collectionDescriptor.getCollectionType(),
 				sessionFactory
 		);
@@ -823,14 +830,8 @@ public class MappingModelCreationHelper {
 				elementDescriptor,
 				indexDescriptor,
 				identifierDescriptor,
-				new FetchStrategy(
-						FetchStrategyHelper.determineFetchTiming(
-								style,
-								collectionDescriptor.getCollectionType(),
-								sessionFactory
-						),
-						style
-				),
+				timing,
+				style,
 				cascadeStyle,
 				declaringType,
 				collectionDescriptor
@@ -1488,7 +1489,7 @@ public class MappingModelCreationHelper {
 			SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
 			final AssociationType type = (AssociationType) bootProperty.getType();
-			final FetchStyle fetchStyle = FetchStrategyHelper
+			final FetchStyle fetchStyle = FetchOptionsHelper
 					.determineFetchStyleByMetadata(
 							bootProperty.getValue().getFetchMode(),
 							type,
@@ -1503,10 +1504,8 @@ public class MappingModelCreationHelper {
 				fetchTiming = FetchTiming.IMMEDIATE;
 			}
 			else {
-				fetchTiming = FetchStrategyHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
+				fetchTiming = FetchOptionsHelper.determineFetchTiming( fetchStyle, type, sessionFactory );
 			}
-
-			final FetchStrategy fetchStrategy = new FetchStrategy( fetchTiming, fetchStyle );
 
 			final ToOneAttributeMapping attributeMapping = new ToOneAttributeMapping(
 					attrName,
@@ -1514,7 +1513,8 @@ public class MappingModelCreationHelper {
 					stateArrayPosition,
 					(ToOne) bootProperty.getValue(),
 					stateArrayContributorMetadataAccess,
-					fetchStrategy,
+					fetchTiming,
+					fetchStyle,
 					entityPersister,
 					declaringType,
 					declaringEntityPersister,

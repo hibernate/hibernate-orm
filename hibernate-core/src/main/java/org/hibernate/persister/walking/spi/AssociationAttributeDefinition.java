@@ -6,11 +6,11 @@
  */
 package org.hibernate.persister.walking.spi;
 
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.type.AssociationType;
 
 /**
@@ -36,7 +36,7 @@ public interface AssociationAttributeDefinition extends AttributeDefinition {
 
 	AnyMappingDefinition toAnyDefinition();
 
-	FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath);
+	FetchOptions determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath);
 
 	CascadeStyle determineCascadeStyle();
 

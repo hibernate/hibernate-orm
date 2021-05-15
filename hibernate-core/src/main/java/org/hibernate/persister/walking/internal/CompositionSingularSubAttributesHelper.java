@@ -9,8 +9,8 @@ package org.hibernate.persister.walking.internal;
 import java.util.Iterator;
 
 import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -31,6 +31,7 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
@@ -182,20 +183,18 @@ public final class CompositionSingularSubAttributesHelper {
 								}
 
 								@Override
-								public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
-									final FetchStyle style = FetchStrategyHelper.determineFetchStyleByMetadata(
+								public FetchOptions determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
+									final FetchStyle style = FetchOptionsHelper.determineFetchStyleByMetadata(
 											fetchMode,
 											(AssociationType) type,
 											ownerEntityPersister.getFactory()
 									);
-									return new FetchStrategy(
-											FetchStrategyHelper.determineFetchTiming(
-													style,
-													getType(),
-													ownerEntityPersister.getFactory()
-											),
-											style
+									final FetchTiming timing = FetchOptionsHelper.determineFetchTiming(
+											style,
+											getType(),
+											ownerEntityPersister.getFactory()
 									);
+									return FetchOptions.valueOf( timing, style );
 								}
 
 								@Override

@@ -63,7 +63,7 @@ public interface DomainResultCreationState {
 	 * 			so something like:
 	 * 				List<Fetch> visitFetches(
 	 * 	 					FetchParent fetchParent,
-	 * 	 					BiFunction<FetchParent,Fetchable,(FetchTiming,`selected`)> fetchStrategyResolver,
+	 * 	 					BiFunction<FetchParent,Fetchable,(FetchTiming,`selected`)> fetchOptionsResolver,
 	 * 	 					BiFunction<FetchParent,Fetchable,LockMode> lockModeResolver)
 	 *
 	 * [1] `selected` refers to the named parameter in

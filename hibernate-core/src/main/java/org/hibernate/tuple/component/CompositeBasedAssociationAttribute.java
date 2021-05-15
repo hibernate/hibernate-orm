@@ -7,7 +7,6 @@
 package org.hibernate.tuple.component;
 
 import org.hibernate.FetchMode;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -18,7 +17,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
-import org.hibernate.persister.walking.internal.FetchStrategyHelper;
+import org.hibernate.persister.walking.internal.FetchOptionsHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
@@ -26,6 +25,7 @@ import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.tuple.AbstractNonIdentifierAttribute;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.tuple.NonIdentifierAttribute;
@@ -138,10 +138,10 @@ public class CompositeBasedAssociationAttribute
 	}
 
 	@Override
-	public FetchStrategy determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
+	public FetchOptions determineFetchPlan(LoadQueryInfluencers loadQueryInfluencers, PropertyPath propertyPath) {
 		final EntityPersister owningPersister = getSource().locateOwningPersister();
 
-		FetchStyle style = FetchStrategyHelper.determineFetchStyleByProfile(
+		FetchStyle style = FetchOptionsHelper.determineFetchStyleByProfile(
 				loadQueryInfluencers,
 				owningPersister,
 				propertyPath,
@@ -151,15 +151,15 @@ public class CompositeBasedAssociationAttribute
 			style = determineFetchStyleByMetadata( getFetchMode(), getType() );
 		}
 
-		return new FetchStrategy( determineFetchTiming( style ), style );
+		return FetchOptions.valueOf( determineFetchTiming( style ), style );
 	}
 
 	protected FetchStyle determineFetchStyleByMetadata(FetchMode fetchMode, AssociationType type) {
-		return FetchStrategyHelper.determineFetchStyleByMetadata( fetchMode, type, sessionFactory() );
+		return FetchOptionsHelper.determineFetchStyleByMetadata( fetchMode, type, sessionFactory() );
 	}
 
 	private FetchTiming determineFetchTiming(FetchStyle style) {
-		return FetchStrategyHelper.determineFetchTiming( style, getType(), sessionFactory() );
+		return FetchOptionsHelper.determineFetchTiming( style, getType(), sessionFactory() );
 	}
 
 	@Override

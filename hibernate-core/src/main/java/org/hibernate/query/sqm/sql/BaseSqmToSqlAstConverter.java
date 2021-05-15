@@ -4556,7 +4556,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( !( fetchable instanceof CollectionPart ) ) {
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-					fetchTiming = traversalResult.getFetchStrategy();
+					fetchTiming = traversalResult.getFetchTiming();
 					joined = traversalResult.isJoined();
 				}
 				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {

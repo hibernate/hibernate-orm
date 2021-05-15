@@ -11,7 +11,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -55,6 +55,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -109,7 +110,34 @@ public class ToOneAttributeMapping
 			int stateArrayPosition,
 			ToOne bootValue,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			FetchStrategy mappedFetchStrategy,
+			FetchOptions mappedFetchOptions,
+			EntityMappingType entityMappingType,
+			ManagedMappingType declaringType,
+			EntityPersister declaringEntityPersister,
+			PropertyAccess propertyAccess) {
+		this(
+				name,
+				navigableRole,
+				stateArrayPosition,
+				bootValue,
+				attributeMetadataAccess,
+				mappedFetchOptions.getTiming(),
+				mappedFetchOptions.getStyle(),
+				entityMappingType,
+				declaringType,
+				declaringEntityPersister,
+				propertyAccess
+		);
+	}
+
+	public ToOneAttributeMapping(
+			String name,
+			NavigableRole navigableRole,
+			int stateArrayPosition,
+			ToOne bootValue,
+			StateArrayContributorMetadataAccess attributeMetadataAccess,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
 			EntityMappingType entityMappingType,
 			ManagedMappingType declaringType,
 			EntityPersister declaringEntityPersister,
@@ -118,7 +146,8 @@ public class ToOneAttributeMapping
 				name,
 				stateArrayPosition,
 				attributeMetadataAccess,
-				mappedFetchStrategy,
+				mappedFetchTiming,
+				mappedFetchStyle,
 				declaringType,
 				propertyAccess
 		);

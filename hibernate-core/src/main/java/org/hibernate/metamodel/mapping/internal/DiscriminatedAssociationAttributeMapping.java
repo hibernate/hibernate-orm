@@ -13,10 +13,8 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.engine.FetchStrategy;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.IndexedConsumer;
@@ -75,9 +73,8 @@ public class DiscriminatedAssociationAttributeMapping
 				bootProperty.getName(),
 				stateArrayPosition,
 				attributeMetadataAccess,
-				fetchTiming == FetchTiming.IMMEDIATE
-						? new FetchStrategy( FetchTiming.IMMEDIATE, FetchStyle.SELECT )
-						: new FetchStrategy( FetchTiming.DELAYED, FetchStyle.SELECT ),
+				fetchTiming,
+				FetchStyle.SELECT,
 				declaringType,
 				propertyAccess
 		);

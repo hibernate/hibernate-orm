@@ -83,7 +83,6 @@ import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
-import org.hibernate.tuple.entity.EntityMetamodel;
 
 import org.jboss.logging.Logger;
 
@@ -716,7 +715,7 @@ public class LoaderSelectBuilder {
 				// 'entity graph' takes precedence over 'fetch profile'
 				if ( entityGraphTraversalState != null ) {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-					fetchTiming = traversalResult.getFetchStrategy();
+					fetchTiming = traversalResult.getFetchTiming();
 					joined = traversalResult.isJoined();
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {

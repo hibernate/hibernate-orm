@@ -19,11 +19,6 @@ public interface Fetchable extends ModelPart {
 
 	FetchOptions getMappedFetchOptions();
 
-	// todo (6.0) : all we need here is (1) FetchTiming and (2) whether the values are available in the current JdbcValuesSource
-	//		Having to instantiate new FetchStrategy potentially multiple times
-	// 		per Fetch generation is performance drain.  Would be better to
-	// 		simply pass these 2 pieces of information
-
 	default Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,

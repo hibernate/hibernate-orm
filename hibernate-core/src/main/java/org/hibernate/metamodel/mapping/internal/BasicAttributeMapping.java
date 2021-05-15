@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
@@ -67,7 +67,8 @@ public class BasicAttributeMapping
 			NavigableRole navigableRole,
 			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			FetchStrategy mappedFetchStrategy,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
 			String tableExpression,
 			String mappedColumnExpression,
 			boolean isFormula,
@@ -77,7 +78,7 @@ public class BasicAttributeMapping
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
-		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchStrategy, declaringType, propertyAccess );
+		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchTiming, mappedFetchStyle, declaringType, propertyAccess );
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
@@ -134,7 +135,8 @@ public class BasicAttributeMapping
 				original.getNavigableRole(),
 				stateArrayPosition,
 				attributeMetadataAccess,
-				FetchStrategy.IMMEDIATE_JOIN,
+				FetchTiming.IMMEDIATE,
+				FetchStyle.JOIN,
 				selectableMapping.getContainingTableExpression(),
 				selectableMapping.getSelectionExpression(),
 				selectableMapping.isFormula(),

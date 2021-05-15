@@ -43,14 +43,14 @@ public abstract class AbstractStateArrayContributorMapping
 	public AbstractStateArrayContributorMapping(
 			String name,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
-			FetchOptions mappedFetchStrategy,
+			FetchOptions mappedFetchOptions,
 			int stateArrayPosition,
 			ManagedMappingType declaringType) {
 		this(
 				name,
 				attributeMetadataAccess,
-				mappedFetchStrategy.getTiming(),
-				mappedFetchStrategy.getStyle(),
+				mappedFetchOptions.getTiming(),
+				mappedFetchOptions.getStyle(),
 				stateArrayPosition,
 				declaringType
 		);

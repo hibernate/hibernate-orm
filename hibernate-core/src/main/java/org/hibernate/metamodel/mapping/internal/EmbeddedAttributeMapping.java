@@ -11,7 +11,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
-import org.hibernate.engine.FetchStrategy;
+import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -72,7 +72,8 @@ public class EmbeddedAttributeMapping
 			String tableExpression,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			String parentInjectionAttributeName,
-			FetchStrategy mappedFetchStrategy,
+			FetchTiming mappedFetchTiming,
+			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
 			PropertyAccess propertyAccess) {
@@ -80,7 +81,8 @@ public class EmbeddedAttributeMapping
 				name,
 				stateArrayPosition,
 				attributeMetadataAccess,
-				mappedFetchStrategy,
+				mappedFetchTiming,
+				mappedFetchStyle,
 				declaringType,
 				propertyAccess
 		);

@@ -68,7 +68,7 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 		}
 
 		if ( entity instanceof HibernateProxy ) {
-			return ((HibernateProxy) entity).getHibernateLazyInitializer().getIdentifier();
+			return ((HibernateProxy) entity).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else if ( entity instanceof ManagedEntity ) {
 			EntityEntry entityEntry = ((ManagedEntity) entity).$$_hibernate_getEntityEntry();

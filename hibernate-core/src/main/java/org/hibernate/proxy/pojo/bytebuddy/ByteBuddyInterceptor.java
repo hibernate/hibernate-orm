@@ -85,7 +85,7 @@ public class ByteBuddyInterceptor extends BasicLazyInitializer implements ProxyC
 				getEntityName(),
 				persistentClass,
 				interfaces,
-				getIdentifier(),
+				getInternalIdentifier(),
 				( isReadOnlySettingAvailable() ? Boolean.valueOf( isReadOnly() ) : isReadOnlyBeforeAttachedToSession() ),
 				getSessionFactoryUuid(),
 				isAllowLoadOutsideTransaction(),

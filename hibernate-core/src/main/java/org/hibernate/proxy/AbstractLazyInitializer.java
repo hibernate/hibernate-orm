@@ -86,16 +86,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Serializable getIdentifier() {
-		if ( isUninitialized() && isInitializeProxyWhenAccessingIdentifier() ) {
-			initialize();
-		}
 		return id;
-	}
-
-	private boolean isInitializeProxyWhenAccessingIdentifier() {
-		return session != null && session.getFactory()
-				.getSessionFactoryOptions()
-				.getJpaCompliance().isJpaProxyComplianceEnabled();
 	}
 
 	@Override

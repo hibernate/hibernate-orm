@@ -62,7 +62,7 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 				return System.identityHashCode( proxy );
 			}
 			else if ( isUninitialized() && method.equals( getIdentifierMethod ) ) {
-				return getIdentifier();
+				return getIdentifier( isInitializeProxyWhenAccessingIdentifier() );
 			}
 			else if ( "getHibernateLazyInitializer".equals( methodName ) ) {
 				return this;
@@ -87,6 +87,19 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 		// otherwise:
 		return INVOKE_IMPLEMENTATION;
 
+	}
+
+	Serializable getIdentifier(boolean needsToInitializeProxy) {
+		if ( needsToInitializeProxy ) {
+			initialize();
+		}
+		return getIdentifier();
+	}
+
+	private boolean isInitializeProxyWhenAccessingIdentifier() {
+		return isUninitialized() && getSession() != null && getSession().getFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance().isJpaProxyComplianceEnabled();
 	}
 
 	private Object getReplacement() {

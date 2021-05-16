@@ -54,7 +54,7 @@ public class DefaultEvictEventListener implements EvictEventListener {
 
 		if ( object instanceof HibernateProxy ) {
 			final LazyInitializer li = ( (HibernateProxy) object ).getHibernateLazyInitializer();
-			final Serializable id = li.getIdentifier();
+			final Serializable id = li.getInternalIdentifier();
 			if ( id == null ) {
 				throw new IllegalArgumentException( "Could not determine identifier of proxy passed to evict()" );
 			}

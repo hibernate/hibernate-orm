@@ -103,7 +103,7 @@ public class DefaultMergeEventListener extends AbstractSaveEventListener impleme
 				LazyInitializer li = ( (HibernateProxy) original ).getHibernateLazyInitializer();
 				if ( li.isUninitialized() ) {
 					LOG.trace( "Ignoring uninitialized proxy" );
-					event.setResult( source.load( li.getEntityName(), li.getIdentifier() ) );
+					event.setResult( source.load( li.getEntityName(), li.getInternalIdentifier() ) );
 					//EARLY EXIT!
 					return;
 				}

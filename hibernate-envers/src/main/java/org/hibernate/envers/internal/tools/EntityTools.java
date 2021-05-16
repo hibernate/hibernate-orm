@@ -33,7 +33,7 @@ public abstract class EntityTools {
 
 		if ( obj instanceof HibernateProxy ) {
 			final HibernateProxy hibernateProxy = (HibernateProxy) obj;
-			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
 		}
 
 		return session.getEntityPersister( entityName, obj ).getIdentifier( obj, session );
@@ -51,7 +51,7 @@ public abstract class EntityTools {
 		try {
 			return tempSession.get(
 					proxy.getHibernateLazyInitializer().getEntityName(),
-					proxy.getHibernateLazyInitializer().getIdentifier()
+					proxy.getHibernateLazyInitializer().getInternalIdentifier()
 			);
 		}
 		finally {

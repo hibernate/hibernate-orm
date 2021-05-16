@@ -80,7 +80,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		Object revisionInfoObject = ( (Map) versionsEntity.get( originalId ) ).get( revisionPropertyName );
 
 		if ( revisionInfoObject instanceof HibernateProxy ) {
-			return (Number) ( (HibernateProxy) revisionInfoObject ).getHibernateLazyInitializer().getIdentifier();
+			return (Number) ( (HibernateProxy) revisionInfoObject ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
 			// Not a proxy - must be read from cache or with a join

@@ -369,7 +369,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 
 		final Serializable id;
 		if ( x instanceof HibernateProxy ) {
-			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getIdentifier();
+			id = ( (HibernateProxy) x ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
 			final Class mappedClass = persister.getMappedClass();
@@ -399,7 +399,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		Serializable xid;
 		if ( x instanceof HibernateProxy ) {
 			xid = ( (HibernateProxy) x ).getHibernateLazyInitializer()
-					.getIdentifier();
+					.getInternalIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
@@ -414,7 +414,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		Serializable yid;
 		if ( y instanceof HibernateProxy ) {
 			yid = ( (HibernateProxy) y ).getHibernateLazyInitializer()
-					.getIdentifier();
+					.getInternalIdentifier();
 		}
 		else {
 			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
@@ -558,7 +558,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 			final Serializable id;
 			if ( value instanceof HibernateProxy ) {
 				HibernateProxy proxy = (HibernateProxy) value;
-				id = proxy.getHibernateLazyInitializer().getIdentifier();
+				id = proxy.getHibernateLazyInitializer().getInternalIdentifier();
 			}
 			else {
 				id = persister.getIdentifier( value );

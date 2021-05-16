@@ -123,7 +123,7 @@ public class JavassistLazyInitializer extends BasicLazyInitializer implements Me
 				getEntityName(),
 				persistentClass,
 				interfaces,
-				getIdentifier(),
+				getInternalIdentifier(),
 				( isReadOnlySettingAvailable() ? Boolean.valueOf( isReadOnly() ) : isReadOnlyBeforeAttachedToSession() ),
 				getSessionFactoryUuid(),
 				isAllowLoadOutsideTransaction(),

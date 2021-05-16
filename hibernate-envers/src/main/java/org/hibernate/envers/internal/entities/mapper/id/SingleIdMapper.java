@@ -88,7 +88,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 
 		if ( data instanceof HibernateProxy ) {
 			final HibernateProxy hibernateProxy = (HibernateProxy) data;
-			return hibernateProxy.getHibernateLazyInitializer().getIdentifier();
+			return hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
 			return AccessController.doPrivileged(
@@ -122,7 +122,7 @@ public class SingleIdMapper extends AbstractIdMapper implements SimpleIdMapperBu
 		else {
 			if ( obj instanceof HibernateProxy ) {
 				final HibernateProxy hibernateProxy = (HibernateProxy) obj;
-				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getIdentifier() );
+				data.put( propertyData.getName(), hibernateProxy.getHibernateLazyInitializer().getInternalIdentifier() );
 			}
 			else {
 				final Object value = AccessController.doPrivileged(

@@ -251,10 +251,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( AccessType.class, "access" );
 		annotationToXml.put( AttributeOverride.class, "attribute-override" );
 		annotationToXml.put( AttributeOverrides.class, "attribute-override" );
-		annotationToXml.put( AttributeOverride.class, "association-override" );
-		annotationToXml.put( AttributeOverrides.class, "association-override" );
-		annotationToXml.put( AttributeOverride.class, "map-key-attribute-override" );
-		annotationToXml.put( AttributeOverrides.class, "map-key-attribute-override" );
+		annotationToXml.put( AssociationOverride.class, "association-override" );
+		annotationToXml.put( AssociationOverrides.class, "association-override" );
+		//annotationToXml.put( AttributeOverride.class, "map-key-attribute-override" );
+		//annotationToXml.put( AttributeOverrides.class, "map-key-attribute-override" );
 		annotationToXml.put( Id.class, "id" );
 		annotationToXml.put( EmbeddedId.class, "embedded-id" );
 		annotationToXml.put( GeneratedValue.class, "generated-value" );

@@ -558,7 +558,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 

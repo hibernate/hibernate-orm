@@ -421,7 +421,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( EntityLoadingLogger.TRACE_ENABLED ) {
 			EntityLoadingLogger.LOGGER.tracef(
-					"(%s) Fiish Initializer#initializeIdentifier process for entity (%s) ",
+					"(%s) Finished Initializer#initializeIdentifier process for entity (%s) ",
 					StringHelper.collapse( this.getClass().getName() ),
 					getNavigablePath()
 			);

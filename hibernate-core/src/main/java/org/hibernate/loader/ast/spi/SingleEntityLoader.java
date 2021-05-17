@@ -25,6 +25,6 @@ public interface SingleEntityLoader<T> extends Loader {
 	T load(Object key, LockOptions lockOptions, Boolean readOnly, SharedSessionContractImplementor session);
 
 	default T load(Object key, LockOptions lockOptions, SharedSessionContractImplementor session) {
-		return load( key, lockOptions, session );
+		return load( key, lockOptions, Boolean.FALSE, session );
 	}
 }

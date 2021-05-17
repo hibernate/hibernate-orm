@@ -24,7 +24,7 @@ For code contributions, these guidelines include:
 * respect the project code style - find templates for [IntelliJ IDEA](https://community.jboss.org/docs/DOC-15468) or [Eclipse](https://community.jboss.org/docs/DOC-16649)
 * have a corresponding JIRA issue and the key for this JIRA issue should be used in the commit message
 * have a set of appropriate tests.  For bug reports, the tests reproduce the initial reported bug
-	and illustrates that the solution actually fixes the bug.  For features/enhancements, the 
+	and illustrate that the solution actually fixes the bug.  For features/enhancements, the 
 	tests illustrate the feature working as intended.  In both cases the tests are incorporated into
 	the project to protect against regressions
 * if applicable, documentation is updated to reflect the introduced changes

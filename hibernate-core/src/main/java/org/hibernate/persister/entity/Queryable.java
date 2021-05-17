@@ -82,7 +82,7 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 * the first dimension.  If not, that would be a problem ;)
 	 *
 	 */
-	public String[][] getContraintOrderedTableKeyColumnClosure();
+	public String[][] getConstraintOrderedTableKeyColumnClosure();
 
 	/**
 	 * Given a property name, determine the number of the table which contains the column

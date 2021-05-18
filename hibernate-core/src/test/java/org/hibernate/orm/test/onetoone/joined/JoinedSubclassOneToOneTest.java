@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.onetoone.joined;
+package org.hibernate.orm.test.onetoone.joined;
 
 import java.util.List;
 
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/test/onetoone/joined/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/onetoone/joined/Person.hbm.xml"
 )
 @SessionFactory(
 		generateStatistics = true

@@ -592,6 +592,7 @@ public class ToOneAttributeMapping
 				tableGroup = createTableGroupJoin(
 						fetchablePath,
 						true,
+						getJoinType( fetchablePath, parentTableGroup ),
 						lockMode,
 						creationState,
 						parentTableGroup
@@ -737,18 +738,35 @@ public class ToOneAttributeMapping
 			LockMode lockMode,
 			DomainResultCreationState creationState,
 			TableGroup parentTableGroup) {
-		final SqlAstJoinType sqlAstJoinType;
+		return createTableGroupJoin(
+				fetchablePath,
+				fetched,
+				getDefaultSqlAstJoinType( parentTableGroup ),
+				lockMode,
+				creationState,
+				parentTableGroup
+		);
+	}
 
+	private SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
 		if ( isNullable ) {
-			sqlAstJoinType = SqlAstJoinType.LEFT;
+			return SqlAstJoinType.LEFT;
 		}
 		else if ( parentTableGroup.getModelPart() instanceof CollectionPart ) {
-			sqlAstJoinType = SqlAstJoinType.LEFT;
+			return SqlAstJoinType.LEFT;
 		}
 		else {
-			sqlAstJoinType = SqlAstJoinType.INNER;
+			return SqlAstJoinType.INNER;
 		}
+	}
 
+	private TableGroup createTableGroupJoin(
+			NavigablePath fetchablePath,
+			boolean fetched,
+			SqlAstJoinType sqlAstJoinType,
+			LockMode lockMode,
+			DomainResultCreationState creationState,
+			TableGroup parentTableGroup) {
 		final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 				fetchablePath,
 				parentTableGroup,
@@ -821,14 +839,14 @@ public class ToOneAttributeMapping
 				lhs
 		);
 
-		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
-
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				sqlAstJoinType,
 				lazyTableGroup,
 				null
 		);
+
+		final TableReference lhsTableReference = lhs.resolveTableReference( navigablePath, identifyingColumnsTableExpression );
 
 		lazyTableGroup.setTableGroupInitializerCallback(
 				tableGroup -> tableGroupJoin.applyPredicate(
@@ -849,6 +867,15 @@ public class ToOneAttributeMapping
 		}
 
 		return tableGroupJoin;
+	}
+
+	private SqlAstJoinType getJoinType(NavigablePath navigablePath, TableGroup tableGroup) {
+		for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
+			if ( tableGroupJoin.getNavigablePath().equals( navigablePath ) ) {
+				return tableGroupJoin.getJoinType();
+			}
+		}
+		return getDefaultSqlAstJoinType( tableGroup );
 	}
 
 	public TableGroup createTableGroupJoinInternal(

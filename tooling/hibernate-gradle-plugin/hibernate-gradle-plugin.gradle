@@ -76,34 +76,6 @@ processResources {
 }
 
 
-if ( project.version.toString().endsWith( '-SNAPSHOT' ) ) {
-	tasks.publishPlugins.enabled = false
-	tasks.release.dependsOn tasks.publish
-}
-else {
-	tasks.publish.enabled = false
-	tasks.release.dependsOn( tasks.publishPlugins )
-}
-
-tasks.publishPlugins {
-	doFirst {
-		if ( credentials.hibernatePluginPortalUsername == null ) {
-			throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
-		}
-		if ( credentials.hibernatePluginPortalPassword == null ) {
-			throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
-		}
-	}
-}
-
-publishing {
-	publications {
-		plugin( MavenPublication ) {
-			from components.java
-		}
-	}
-}
-
 tasks.withType( GroovyCompile ) {
 	options.encoding = 'UTF-8'
 }
@@ -123,5 +95,16 @@ tasks.test {
 	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
 		// Needs add-opens because Gradle uses illegal accesses to inject... mocks? Something like that.
 		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
+}
+
+gradle.taskGraph.whenReady { tg ->
+	if ( tg.hasTask( project.tasks.publishPlugins ) ) {
+		if ( credentials.hibernatePluginPortalUsername == null ) {
+			throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
+		}
+		if ( credentials.hibernatePluginPortalPassword == null ) {
+			throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
+		}
 	}
 }

@@ -3,6 +3,33 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Alpha8 (May 18, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31932
+
+** Bug
+    * [HHH-14449] - ResultStream closing is not properly handled 
+
+** Improvement
+    * [HHH-14601] - fix typos of 'extracter' in v6
+    * [HHH-14600] - verify UUID in v6
+    * [HHH-10992] - Extend support for integrator-contributed domain and relational objects
+
+** Remove Feature
+    * [HHH-14598] - Drop `hibernate-infinispan`
+    * [HHH-14518] - Drop hibernate-osgi module
+
+** Task
+    * [HHH-14589] - Make sure documentation examples regarding basic-types work and update the section
+    * [HHH-14524] - Rename SqlType(X) as JdbcType(X)
+    * [HHH-14513] - Move publishing release artifacts from BinTray
+    * [HHH-12416] - Drop (or set up relocation) for hibernate-ehcache
+    * [HHH-11995] - Drop hibernate-entitymanager artifact
+    * [HHH-11994] - Drop hibernate-java8 artifact
+    * [HHH-11692] - Consider a new matches operator
+
+
 
 Changes in 6.0.0.Alpha7 (March 18, 2021)
 ------------------------------------------------------------------------------------------------------------------------

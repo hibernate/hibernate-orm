@@ -1380,7 +1380,7 @@ public class HQLTest extends QueryTranslatorTestCase {
 	@Test
 	public void testOneToOneJoinedFetch() throws Exception {
 		// From OneToOneTest.testOneToOneOnSubclass
-		assertTranslation( "from org.hibernate.test.onetoone.joined.Person p join fetch p.address left join fetch p.mailingAddress" );
+		assertTranslation( "from org.hibernate.orm.test.onetoone.joined.Person p join fetch p.address left join fetch p.mailingAddress" );
 	}
 
 	@Test

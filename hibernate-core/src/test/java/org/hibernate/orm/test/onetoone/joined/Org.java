@@ -5,14 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id: Person.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.onetoone.joined;
+//$Id: Org.java 5686 2005-02-12 07:27:32Z steveebersole $
+package org.hibernate.orm.test.onetoone.joined;
+
 
 
 /**
  * @author Gavin King
  */
-public class Person extends Entity {
-	public Address address;
-	public Address mailingAddress;
+public class Org extends Entity {
 }

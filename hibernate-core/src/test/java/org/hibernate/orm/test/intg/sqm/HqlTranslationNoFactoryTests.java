@@ -20,7 +20,6 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.hql.internal.StandardHqlTranslator;

@@ -501,19 +501,6 @@ Can reference a
 This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via JPA
 `javax.persistence.EntityManagerFactory`.
 
-`*hibernate.criteria.literal_handling_mode*` (e.g. `AUTO` (default value), `BIND` or `INLINE`)::
-By default, Criteria queries use bind parameters for any literal that is not a numeric value.
-However, to increase the likelihood of JDBC statement caching, you might want to use bind parameters for numeric values too.
-+
-The `org.hibernate.query.criteria.LiteralHandlingMode#BIND` mode will use bind variables for any literal value.
-The `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode will inline literal values as is.
-+
-To prevent SQL injection, never use `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` with String variables.
-Always use constants with the `org.hibernate.query.criteria.LiteralHandlingMode#INLINE` mode.
-+
-Valid options are defined by the `org.hibernate.query.criteria.LiteralHandlingMode` enum.
-The default value is `org.hibernate.query.criteria.LiteralHandlingMode#AUTO`.
-
 `*hibernate.criteria.value_handling_mode*` (e.g. `BIND` (default value) or `INLINE`)::
 By default, Criteria queries uses bind parameters for any value passed through the JPA Criteria API.
 +

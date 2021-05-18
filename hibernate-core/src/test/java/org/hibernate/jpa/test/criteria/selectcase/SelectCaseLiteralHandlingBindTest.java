@@ -20,7 +20,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.criteria.LiteralHandlingMode;
+import org.hibernate.query.criteria.ValueHandlingMode;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -132,7 +132,7 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 	@Override
 	protected Map getConfig() {
 		Map config = super.getConfig();
-		config.put( AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE, LiteralHandlingMode.BIND );
+		config.put( AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, ValueHandlingMode.BIND );
 		return config;
 	}
 

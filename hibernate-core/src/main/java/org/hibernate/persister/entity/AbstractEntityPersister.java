@@ -165,6 +165,7 @@ public abstract class AbstractEntityPersister
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
 	public static final String ENTITY_CLASS = "class";
+	public static final String VERSION_COLUMN_ALIAS = "v";
 
 	private final NavigableRole navigableRole;
 
@@ -1709,7 +1710,7 @@ public abstract class AbstractEntityPersister
 		SimpleSelect select = new SimpleSelect( getFactory().getDialect() )
 				.setTableName( getVersionedTableName() );
 		if ( isVersioned() ) {
-			select.addColumn( versionColumnName );
+			select.addColumn( getVersionColumnName(), VERSION_COLUMN_ALIAS );
 		}
 		else {
 			select.addColumns( rootTableKeyColumnNames );
@@ -1935,7 +1936,7 @@ public abstract class AbstractEntityPersister
 					if ( !isVersioned() ) {
 						return this;
 					}
-					return getVersionType().nullSafeGet( rs, getVersionColumnName(), session, null );
+					return getVersionType().nullSafeGet( rs, VERSION_COLUMN_ALIAS, session, null );
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );

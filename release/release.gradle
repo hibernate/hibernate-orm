@@ -104,7 +104,6 @@ task uploadDocumentation(type:Exec) {
     }
 }
 
-
 /**
  * Configuration of the distribution plugin, used to build release bundle as both ZIP and TGZ
  */
@@ -117,11 +116,8 @@ distributions {
             from rootProject.file( 'hibernate_logo.gif' )
 
             into('lib/required') {
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
-                from parent.project( 'hibernate-core' ).configurations.runtime
-                from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                // for now,
-                from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'javassist' }
+                from ( parent.project( 'hibernate-core' ).configurations.default +
+                        parent.project( 'hibernate-core' ).configurations.default.allArtifacts.files )
             }
 
             // todo (6.0) - add back
@@ -141,31 +137,28 @@ distributions {
 //            }
 
             into( 'lib/jpa-metamodel-generator' ) {
-                from parent.project( 'hibernate-jpamodelgen' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+                from ( parent.project( 'hibernate-jpamodelgen' ).configurations.default +
+                        parent.project( 'hibernate-jpamodelgen' ).configurations.default.allArtifacts.files )
             }
 
             into( 'lib/envers' ) {
                 from(
-                        ( parent.project( 'hibernate-envers' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                + parent.project( 'hibernate-envers' ).configurations.runtime )
-                                - parent.project( 'hibernate-core' ).configurations.runtime
-                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                        ( parent.project( 'hibernate-envers' ).configurations.default.allArtifacts.files +
+                                parent.project( 'hibernate-envers' ).configurations.default ) -
+                                ( parent.project( 'hibernate-core' ).configurations.default.allArtifacts.files +
+                                        parent.project( 'hibernate-core' ).configurations.default )
                 )
             }
 
 
-            // todo : this closure is problematic as it does not write into the hibernate-release-$project.version directory
-            // due to http://issues.gradle.org/browse/GRADLE-1450
             [ 'hibernate-agroal', 'hibernate-c3p0', 'hibernate-hikaricp', 'hibernate-jcache', 'hibernate-proxool', 'hibernate-vibur' ].each { feature ->
                 final String shortName = feature.substring( 'hibernate-'.length() )
-// WORKAROUND http://issues.gradle.org/browse/GRADLE-1450
-//                into('lib/optional/' + shortName) {
                 owner.into('lib/optional/' + shortName) {
-                    from (
-                            ( parent.project( feature ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-                                    + parent.project( feature ).configurations.runtime )
-                                    - parent.project( 'hibernate-core' ).configurations.runtime
-                                    - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
+                    from(
+                            ( parent.project( feature ).configurations.default.files +
+                                    parent.project( feature ).configurations.default.allArtifacts.files ) -
+                                    ( parent.project( 'hibernate-core' ).configurations.default.files +
+                                            parent.project( 'hibernate-core' ).configurations.default.allArtifacts.files )
                     )
                 }
             }
@@ -206,9 +199,10 @@ distributions {
     }
 }
 
-// this is the common task between distTar and distZip
-assembleDist.dependsOn assembleDocumentation
 distTar.compression = Compression.GZIP
+
+distTar.dependsOn assembleDocumentation
+distZip.dependsOn assembleDocumentation
 
 /**
  * "virtual" task for building both types of dist bundles
@@ -318,7 +312,7 @@ task gitTasksAfterRelease {
         executeGitCommand( 'add', '.' )
         executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
 
-        if ( project.releaseTag != '' ) {
+        if ( project.createTag ) {
             logger.lifecycle("Tagging release : `${project.releaseTag}`...")
             executeGitCommand( 'tag', project.releaseTag )
         }
@@ -509,26 +503,58 @@ class ReleaseNote {
 
 
 gradle.getTaskGraph().whenReady {tg->
+
     if ( tg.hasTask( project.tasks.releaseChecks ) ) {
-        // make sure we have everything we need
-        if ( ! ( project.hasProperty( 'releaseVersion' ) && project.hasProperty( 'developmentVersion' ) ) ) {
-            throw new GradleException(
-                    "`release`-related tasks require the following properties: 'releaseVersion', 'developmentVersion'"
-            )
+        String releaseVersionLocal
+        String developmentVersionLocal
+
+        def console = tg.hasTask( project.tasks.ciReleaseChecks )
+                ? null
+                : System.console()
+
+        if (project.hasProperty('releaseVersion')) {
+            releaseVersionLocal = project.property('releaseVersion')
         }
+        else {
+            if (console) {
+                // prompt for `releaseVersion`
+                releaseVersionLocal = console.readLine('> Enter the release version: ')
+            }
+            else {
+                throw new GradleException(
+                        "`release`-related tasks require the following properties: 'releaseVersion', 'developmentVersion'"
+                )
+            }
+        }
+
+        if (project.hasProperty('developmentVersion')) {
+            developmentVersionLocal = project.property('developmentVersion')
+        }
+        else {
+            if (console) {
+                // prompt for `developmentVersion`
+                developmentVersionLocal = console.readLine('> Enter the next development version: ')
+            }
+            else {
+                throw new GradleException(
+                        "`release`-related tasks require the following properties: 'releaseVersion', 'developmentVersion'"
+                )
+            }
+        }
+
+        assert releaseVersionLocal != null && developmentVersionLocal != null;
 
         // set up information for the release-related tasks
         project.ext {
-            releaseVersion = project.property( 'releaseVersion' )
-            developmentVersion = project.property( 'developmentVersion' )
-            createTag = ! project.hasProperty( 'noTag' )
-            releaseTag = determineReleaseTag( project )
+            releaseVersion = releaseVersionLocal;
+            developmentVersion = developmentVersionLocal;
+            createTag = !project.hasProperty('noTag')
+            releaseTag = project.createTag ? determineReleaseTag(releaseVersionLocal) : ''
         }
 
-
-        logger.lifecycle( "Checking that the working tree is clean..." )
-        String uncommittedFiles = executeGitCommand( 'status', '--porcelain' )
-        if ( !uncommittedFiles.isEmpty() ) {
+        logger.lifecycle("Checking that the working tree is clean...")
+        String uncommittedFiles = executeGitCommand('status', '--porcelain')
+        if (!uncommittedFiles.isEmpty()) {
             throw new GradleException(
                     "Cannot release because there are uncommitted or untracked files in the working tree.\n" +
                             "Commit or stash your changes first.\n" +
@@ -536,50 +562,52 @@ gradle.getTaskGraph().whenReady {tg->
                             uncommittedFiles
             );
         }
-    }
 
-    if ( tg.hasTask( project.tasks.ciReleaseChecks ) ) {
-        // make sure we have everything we need
-        if ( ! project.hasProperty( 'gitBranch' ) || ! project.hasProperty( 'gitRemote' ) ) {
-            throw new GradleException(
-                    "`ciRelease`-related tasks require the following properties: 'releaseVersion', 'developmentVersion', 'gitRemote', 'gitBranch'."
-            )
-        }
+        if (tg.hasTask(project.tasks.ciReleaseChecks)) {
+            String gitBranchLocal
+            String gitRemoteLocal
 
-        // set up information for the release-related tasks
-        project.ext {
-            gitBranch = project.property( 'gitBranch' )
+            if (project.hasProperty('gitBranch')) {
+                gitBranchLocal = project.property('gitBranch')
+            }
+            else {
+                gitBranchLocal = executeGitCommand( 'branch', '--show-current' )
+            }
 
-            gitRemote = project.hasProperty( 'gitRemote' )
-                    ? project.property( 'gitRemote' )
-                    : 'origin'
-        }
+            if (project.hasProperty('gitRemote')) {
+                gitRemoteLocal = project.property('gitRemote')
+            }
+            else {
+                final String remotes = executeGitCommand( 'remote', 'show' )
+                final List<String> tokens = remotes.tokenize()
+                if ( tokens.size() != 1 ) {
+                    throw new GradleException( "Could not determine `gitRemote` property for `ciRelease` tasks." )
+                }
+                gitRemoteLocal = tokens.get( 0 )
+            }
 
-        logger.lifecycle( "Switching to branch '${project.gitBranch}'..." )
-        executeGitCommand( 'checkout', project.gitBranch )
+            project.ext {
+                gitBranch = gitBranchLocal
+                gitRemote = gitRemoteLocal
+            }
 
-        logger.lifecycle( "Checking that all commits are pushed..." )
-        String diffWithUpstream = executeGitCommand( 'diff', '@{u}' )
-        if ( !diffWithUpstream.isEmpty() ) {
-            throw new GradleException(
-                    "Cannot release because there are commits on the branch-to-release that haven't been pushed yet.\n" +
-                            "Push your commits to the branch-to-release first."
-            );
+            logger.lifecycle("Switching to branch '${project.gitBranch}'...")
+            executeGitCommand('checkout', project.gitBranch)
+
+            logger.lifecycle("Checking that all commits are pushed...")
+            String diffWithUpstream = executeGitCommand('diff', '@{u}')
+            if (!diffWithUpstream.isEmpty()) {
+                throw new GradleException(
+                        "Cannot perform `ciRelease` tasks because there are un-pushed local commits .\n" +
+                                "Push your commits first."
+                );
+            }
         }
     }
 }
 
-static String determineReleaseTag(Project project) {
-    if ( ! project.hasProperty( 'noTag' ) ) {
-        return "";
-    }
-
-    final String tag = project.ormVersion.fullName
-
-    if ( tag.endsWith( ".Final" ) ) {
-        return tag.replace( ".Final", "" )
-    }
-
-    return tag;
-
+static String determineReleaseTag(String releaseVersion) {
+    return releaseVersion.endsWith( '.Final' )
+            ? releaseVersion.replace( ".Final", "" )
+            : releaseVersion;
 }

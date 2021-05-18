@@ -98,6 +98,10 @@ tasks.test {
 	}
 }
 
+task release {
+	dependsOn tasks.publishPlugins
+}
+
 gradle.taskGraph.whenReady { tg ->
 	if ( tg.hasTask( project.tasks.publishPlugins ) ) {
 		if ( credentials.hibernatePluginPortalUsername == null ) {

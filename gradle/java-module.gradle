@@ -67,9 +67,6 @@ configurations {
 	provided {
 		description = 'Non-exported compile-time dependencies.'
 	}
-	asciidoclet {
-		description = "Dependencies for Asciidoctor Javadoc taglet"
-	}
 }
 
 configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
@@ -347,6 +344,119 @@ test {
 			events "passed", "skipped", "failed"
 		}
 	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Artifacts (jar, sources, javadoc)
+
+ext {
+	java9ModuleNameBase = project.name.startsWith( 'hibernate-' ) ? name.drop( 'hibernate-'.length() ): name
+	java9ModuleName = "org.hibernate.orm.$project.java9ModuleNameBase"
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Jar
+
+jar {
+	manifest {
+		attributes(
+				// Basic JAR manifest attributes
+				'Specification-Title': project.name,
+				'Specification-Version': project.version,
+				'Specification-Vendor': 'Hibernate.org',
+				'Implementation-Title': project.name,
+				'Implementation-Version': project.version,
+				'Implementation-Vendor': 'Hibernate.org',
+				'Implementation-Vendor-Id': 'org.hibernate',
+				'Implementation-Url': 'http://hibernate.org/orm',
+
+				// Java 9 module name
+				'Automatic-Module-Name': project.java9ModuleName,
+
+				// Hibernate-specific JAR manifest attributes
+				'Hibernate-VersionFamily': project.ormVersion.family,
+				'Hibernate-JpaVersion': project.jpaVersion.name,
+
+				// BND Plugin instructions (for OSGi):
+				'Bundle-Name': project.name,
+				'Bundle-SymbolicName': project.java9ModuleName,
+				'Bundle-Vendor': 'Hibernate.org',
+				'Bundle-DocURL': "http://www.hibernate.org/orm/${project.ormVersion.family}",
+				// This is overridden in some sub-projects
+				'Import-Package': [
+						// Temporarily support JTA 1.1 -- Karaf and other frameworks still
+						// use it.  Without this, the plugin generates [1.2,2).
+						'javax.transaction;version="[1.1,2)"',
+						// Also import every package referenced in the code
+						// (note that '*' is resolved at build time to a list of packages)
+						'*'
+				].join( ',' ),
+				'-exportcontents': "*;version=${project.version}"
+		)
+	}
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// sources
+
+task sourcesJar(type: Jar) {
+	from project.sourceSets.main.allSource
+	manifest {
+		attributes(
+				// Basic JAR manifest attributes
+				'Specification-Title': project.name,
+				'Specification-Version': project.version,
+				'Specification-Vendor': 'Hibernate.org',
+				'Implementation-Title': project.name,
+				'Implementation-Version': project.version,
+				'Implementation-Vendor': 'Hibernate.org',
+				'Implementation-Vendor-Id': 'org.hibernate',
+				'Implementation-Url': 'http://hibernate.org/orm',
+
+				// Hibernate-specific JAR manifest attributes
+				'Hibernate-VersionFamily': project.ormVersion.family,
+				'Hibernate-JpaVersion': project.jpaVersion.name
+		)
+	}
+	archiveClassifier.set( 'sources' )
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Javadoc
+
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+
+javadoc {
+	doFirst {
+		// ordering problems if we try to do this during config phase :(
+		classpath += project.sourceSets.main.output.classesDirs + project.sourceSets.main.compileClasspath + project.configurations.provided
+	}
+}
+
+task javadocJar(type: Jar) {
+	from project.tasks.javadoc.outputs
+	manifest {
+		attributes(
+				// Basic JAR manifest attributes
+				'Specification-Title': project.name,
+				'Specification-Version': project.version,
+				'Specification-Vendor': 'Hibernate.org',
+				'Implementation-Title': project.name,
+				'Implementation-Version': project.version,
+				'Implementation-Vendor': 'Hibernate.org',
+				'Implementation-Vendor-Id': 'org.hibernate',
+				'Implementation-Url': 'http://hibernate.org/orm',
+
+				// Hibernate-specific JAR manifest attributes
+				'Hibernate-VersionFamily': project.ormVersion.family,
+				'Hibernate-JpaVersion': project.jpaVersion.name
+		)
+	}
+	archiveClassifier.set( 'javadoc' )
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

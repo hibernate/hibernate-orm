@@ -1989,26 +1989,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String VALIDATE_QUERY_PARAMETERS = "hibernate.query.validate_parameters";
 
 	/**
-	 * By default, Criteria queries uses bind parameters for any literal that is not a numeric value.
-	 *
-	 * However, to increase the likelihood of JDBC statement caching,
-	 * you might want to use bind parameters for numeric values too.
-	 * The {@link org.hibernate.query.criteria.LiteralHandlingMode#BIND} mode will use bind variables for any literal value.
-	 *
-	 * The {@link org.hibernate.query.criteria.LiteralHandlingMode#INLINE} mode will inline literal values as-is.
-	 * To prevent SQL injection, never use {@link org.hibernate.query.criteria.LiteralHandlingMode#INLINE} with String variables.
-	 * Always use constants with the {@link org.hibernate.query.criteria.LiteralHandlingMode#INLINE} mode.
-	 * </p>
-	 * Valid options are defined by the {@link org.hibernate.query.criteria.LiteralHandlingMode} enum.
-	 * </p>
-	 * The default value is {@link org.hibernate.query.criteria.LiteralHandlingMode#AUTO}
-	 *
-	 * @since 5.2.12
-	 * @see org.hibernate.query.criteria.LiteralHandlingMode
-	 */
-	String CRITERIA_LITERAL_HANDLING_MODE = "hibernate.criteria.literal_handling_mode";
-
-	/**
 	 * By default, Criteria queries uses bind parameters for any value passed through the JPA Criteria API.
 	 *
 	 * The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND} mode (default) will use bind variables for any value.

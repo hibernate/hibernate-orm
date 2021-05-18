@@ -23,7 +23,7 @@ public class CriteriaLiteralHandlingModeInlineShortNameLowercaseTest extends Abs
 	protected Map getConfig() {
 		Map config = super.getConfig();
 		config.put(
-				AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE,
+				AvailableSettings.CRITERIA_VALUE_HANDLING_MODE,
 				"inline"
 		);
 		return config;

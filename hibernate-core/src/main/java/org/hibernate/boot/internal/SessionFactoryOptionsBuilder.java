@@ -56,7 +56,6 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -85,7 +84,6 @@ import static org.hibernate.cfg.AvailableSettings.CALLABLE_NAMED_PARAMS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.CHECK_NULLABILITY;
 import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.CONVENTIONAL_JAVA_CONSTANTS;
-import static org.hibernate.cfg.AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CRITERIA_VALUE_HANDLING_MODE;
 import static org.hibernate.cfg.AvailableSettings.CUSTOM_ENTITY_DIRTINESS_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.DEFAULT_BATCH_FETCH_SIZE;
@@ -248,7 +246,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean wrapResultSetsEnabled;
 	private TimeZone jdbcTimeZone;
 	private boolean queryParametersValidationEnabled;
-	private LiteralHandlingMode criteriaLiteralHandlingMode;
 	private ValueHandlingMode criteriaValueHandlingMode;
 	private ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 
@@ -537,9 +534,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				true
 		);
 
-		this.criteriaLiteralHandlingMode = LiteralHandlingMode.interpret(
-				configurationSettings.get( CRITERIA_LITERAL_HANDLING_MODE )
-		);
 		this.criteriaValueHandlingMode = ValueHandlingMode.interpret(
 				configurationSettings.get( CRITERIA_VALUE_HANDLING_MODE )
 		);
@@ -1133,11 +1127,6 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isQueryParametersValidationEnabled() {
 		return this.queryParametersValidationEnabled;
-	}
-
-	@Override
-	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
-		return this.criteriaLiteralHandlingMode;
 	}
 
 	@Override

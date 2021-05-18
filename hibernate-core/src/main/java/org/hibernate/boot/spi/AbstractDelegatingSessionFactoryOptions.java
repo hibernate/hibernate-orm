@@ -28,7 +28,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -408,11 +407,6 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isQueryParametersValidationEnabled() {
 		return delegate.isQueryParametersValidationEnabled();
-	}
-
-	@Override
-	public LiteralHandlingMode getCriteriaLiteralHandlingMode() {
-		return delegate.getCriteriaLiteralHandlingMode();
 	}
 
 	@Override

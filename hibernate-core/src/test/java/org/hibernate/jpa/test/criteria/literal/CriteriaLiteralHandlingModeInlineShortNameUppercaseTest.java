@@ -10,7 +10,6 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.query.criteria.LiteralHandlingMode;
 
 import org.hibernate.testing.RequiresDialect;
 
@@ -24,7 +23,7 @@ public class CriteriaLiteralHandlingModeInlineShortNameUppercaseTest extends Abs
 	protected Map getConfig() {
 		Map config = super.getConfig();
 		config.put(
-				AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE,
+				AvailableSettings.CRITERIA_VALUE_HANDLING_MODE,
 				"INLINE"
 		);
 		return config;

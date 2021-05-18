@@ -30,8 +30,6 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
-import org.hibernate.query.QueryLiteralRendering;
-import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
@@ -269,16 +267,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return isJpaBootstrap();
 	}
 
-	default LiteralHandlingMode getCriteriaLiteralHandlingMode() {
-		return LiteralHandlingMode.AUTO;
-	}
-
 	default ValueHandlingMode getCriteriaValueHandlingMode() {
 		return ValueHandlingMode.BIND;
-	}
-
-	default QueryLiteralRendering getQueryLiteralRenderingMode() {
-		return getCriteriaLiteralHandlingMode().getCounterpart();
 	}
 
 	JpaCompliance getJpaCompliance();

@@ -219,7 +219,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final int count = entityEntries.length;
 
 		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
-
 			// Update the status of the object and if necessary, schedule an update
 
 			EntityEntry entry = me.getValue();

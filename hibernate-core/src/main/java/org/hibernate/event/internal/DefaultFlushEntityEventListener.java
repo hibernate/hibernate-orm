@@ -485,6 +485,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 	private boolean hasDirtyCollections(FlushEntityEvent event, EntityPersister persister, Status status) {
 		if ( isCollectionDirtyCheckNecessary( persister, status ) ) {
 			DirtyCollectionSearchVisitor visitor = new DirtyCollectionSearchVisitor(
+					event.getEntity(),
 					event.getSession(),
 					persister.getPropertyVersionability()
 			);

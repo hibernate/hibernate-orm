@@ -36,6 +36,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hibernate.Hibernate.isInitialized;
 import static org.hibernate.Hibernate.isPropertyInitialized;
 import static org.hibernate.testing.bytecode.enhancement.EnhancerTestUtils.checkDirtyTracking;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -101,7 +102,40 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
             checkDirtyTracking( parent );
 
             assertThat( children1, sameInstance( children2 ) );
+
+            assertFalse( isInitialized( children1 ) );
             assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
+            assertTrue( isInitialized( children1 ) );
+        } );
+    }
+
+    @Test
+    @TestForIssue( jiraKey = "HHH-14620" )
+    public void testTransaction_noProxy() {
+        doInHibernate( this::sessionFactory, s -> {
+            // find will not return a proxy, which is exactly what we want here.
+            Parent parent = s.find( Parent.class, parentID );
+            assertThat( parent, notNullValue() );
+            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
+            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
+            assertFalse( isPropertyInitialized( parent, "children" ) );
+            checkDirtyTracking( parent );
+
+            List<Child> children1 = parent.children;
+            List<Child> children2 = parent.children;
+
+            assertTrue( isPropertyInitialized( parent, "children" ) );
+            checkDirtyTracking( parent );
+
+            assertThat( children1, sameInstance( children2 ) );
+
+            // This check is important: a bug used to cause the collection to be initialized
+            // during the call to parent.children above.
+            // Note the same problem would occur if we were using getters:
+            // we only need extended enhancement to be enabled.
+            assertFalse( isInitialized( children1 ) );
+            assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
+            assertTrue( isInitialized( children1 ) );
         } );
     }
 
@@ -122,7 +156,10 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
 
         checkDirtyTracking( parent );
         assertThat( children1, sameInstance( children2 ) );
+
+        assertFalse( isInitialized( children1 ) );
         assertThat( children1.size(), equalTo( CHILDREN_SIZE ) );
+        assertTrue( isInitialized( children1 ) );
     }
 
     // --- //

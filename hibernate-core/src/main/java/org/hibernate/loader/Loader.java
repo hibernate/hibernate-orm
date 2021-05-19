@@ -1189,14 +1189,8 @@ public abstract class Loader {
 			LOG.tracev( "Total objects hydrated: {0}", hydratedObjectsSize );
 
 			if ( hydratedObjectsSize != 0 ) {
-				final Iterable<PreLoadEventListener> listeners = session
-					.getFactory()
-					.getFastSessionServices()
-					.eventListenerGroup_PRE_LOAD
-					.listeners();
-
 				for ( Object hydratedObject : hydratedObjects ) {
-					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre, listeners );
+					TwoPhaseLoad.initializeEntity( hydratedObject, readOnly, session, pre );
 				}
 
 			}

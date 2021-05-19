@@ -16,6 +16,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.test.util.jdbc.PreparedStatementSpyConnectionProvider;
 
 import com.nuodb.hibernate.NuoDBDialect;
 

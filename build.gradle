@@ -26,10 +26,53 @@ buildscript {
     }
 }
 
+
 plugins {
-    id 'com.gradle.build-scan' version '1.16'
     id 'me.champeau.buildscan-recipes' version '0.2.3'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+    id 'nu.studer.credentials' version '2.1'
+    id 'org.hibernate.build.xjc' version '2.0.1' apply false
+    id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
+    id 'biz.aQute.bnd' version '5.1.1' apply false
 }
+
+
+ext {
+    sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
+    sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
+}
+
+File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
+
+ext {
+    ormVersionFile = versionFile
+    ormVersion = HibernateVersion.fromFile( versionFile, project )
+    // Override during releases
+    if ( project.hasProperty( 'releaseVersion' ) ) {
+        ormVersion = new HibernateVersion( project.releaseVersion, project )
+    }
+    jpaVersion = new JpaVersion('2.2')
+    jakartaJpaVersion = new JpaVersion('3.0.0')
+}
+
+// The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
+
+group = 'org.hibernate'
+version = project.ormVersion.fullName
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            username = project.sonatypeOssrhUser
+            password = project.sonatypeOssrhPassword
+        }
+    }
+}
+
+//plugins {
+//    id 'com.gradle.build-scan' version '1.16'
+//    id 'me.champeau.buildscan-recipes' version '0.2.3'
+//}
 
 allprojects {
     repositories {
@@ -78,7 +121,8 @@ allprojects {
     // minimize changes, at least for now (gradle uses 'build' by default)..
     buildDir = "target"
 
-    apply from: rootProject.file( 'gradle/base-information.gradle' )
+    group = 'org.hibernate'
+    version = project.ormVersion.fullName
 }
 
 

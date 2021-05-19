@@ -298,11 +298,11 @@ test {
     //     println "Starting test: " + descriptor
     // }
 
-    // Dinamically retrieves the plan of tests to run. If not provided, all tests are included.
+    // Dynamically retrieves the plan of tests to run. If not provided, all tests are included.
     // Pre-defined test plans are: green and red.
     // Custom plans can be created as long the .test-list file is added to hibernate-core and
     // the environment variable is set to the name of the file without the extension section
-    //     ex.: TEST_PLAN=my ./gradlew clean :hibernate-core:test
+    //     ex.: TEST_PLAN=green ./gradlew clean :hibernate-core:test
     def testPlan = System.env['TEST_PLAN']
 
     if (testPlan != null) {
@@ -318,7 +318,7 @@ test {
         } else {
             println "Environment variable TEST_PLAN is set as ${testPlan} but no ${testPlan}.test-list file was found."
             println "A .test-file contains a list of filtered tests to run. If you would like to have"
-            println "your own list just create a new file like `hibernate-core/my.test-list` and assing the environment"
+            println "your own list just create a new file like `hibernate-core/my.test-list` and set the environment"
             println "variable like so:"
             println "  export TEST_PLAN=my"
             println "Run the test command again."

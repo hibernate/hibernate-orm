@@ -1,14 +1,14 @@
 #!/bin/bash
 
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
-IMG_NAME=nuodb/nuodb-ce:4.0.4
-rm -fr "$SCRIPT_DIR"/{vol1,vol2}
+IMG_NAME=${NUODB_IMAGE:-"nuodb/nuodb-ce:latest"}
+sudo rm -fr "$SCRIPT_DIR"/{vol1,vol2}
 mkdir "$SCRIPT_DIR"/{vol1,vol2}
 chmod a+rw "$SCRIPT_DIR"/{vol1,vol2}
 
-docker network create nuodb-net
-
 docker rm -f te1 sm1 ad1
+
+docker network create nuodb-net
 
 docker run -d --name ad1 --rm \
     --hostname ad1 \

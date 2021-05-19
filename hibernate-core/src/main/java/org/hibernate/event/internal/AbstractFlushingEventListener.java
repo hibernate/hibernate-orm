@@ -104,8 +104,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		logFlushResults( event );
 	}
 
-	@SuppressWarnings( value = {"unchecked"} )
-	private void logFlushResults(FlushEvent event) {
+	@SuppressWarnings("unchecked")
+	protected void logFlushResults(FlushEvent event) {
 		if ( !LOG.isDebugEnabled() ) {
 			return;
 		}

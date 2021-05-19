@@ -16,6 +16,7 @@ import java.util.Set;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
@@ -152,10 +153,17 @@ public class LazyAttributeLoadingInterceptor extends AbstractLazyLoadInterceptor
 
 	private void takeCollectionSizeSnapshot(Object target, String fieldName, Object value) {
 		if ( value instanceof Collection && target instanceof SelfDirtinessTracker ) {
+			// This must be called first, so that we remember that there is a collection out there,
+			// even if we don't know its size (see below).
 			CollectionTracker tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
 			if ( tracker == null ) {
 				( (SelfDirtinessTracker) target ).$$_hibernate_clearDirtyAttributes();
 				tracker = ( (SelfDirtinessTracker) target ).$$_hibernate_getCollectionTracker();
+			}
+
+			if ( value instanceof PersistentCollection && !( (PersistentCollection) value ).wasInitialized() ) {
+				// Cannot take a snapshot of an un-initialized collection.
+				return;
 			}
 			tracker.add( fieldName, ( (Collection) value ).size() );
 		}

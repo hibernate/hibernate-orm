@@ -119,16 +119,17 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
             store.getInventories().size();
             assertTrue( isPropertyInitialized( store, "inventories" ) );
 
-            // the extra Session is the temp Session needed to perform the init
-            assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+            // the extra Sessions are the temp Sessions needed to perform the init:
+            // first the entity, then the collection (since it's lazy)
+            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
 
             // clear Session again.  The collection should still be recognized as initialized from above
             s.clear();
             assertNotNull( store );
             assertTrue( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
 
             // lets clear the Session again and this time reload the Store
             s.clear();
@@ -138,21 +139,22 @@ public class OnDemandLoadTest extends BaseCoreFunctionalTestCase {
 
             // collection should be back to uninitialized since we have a new entity instance
             assertFalse( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 1, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
             store.getInventories().size();
             assertTrue( isPropertyInitialized( store, "inventories" ) );
 
-            // the extra Session is the temp Session needed to perform the init
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+            // the extra Sessions are the temp Sessions needed to perform the init:
+            // first the entity, then the collection (since it's lazy)
+            assertEquals( 5, sessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 4, sessionFactory().getStatistics().getSessionCloseCount() );
 
             // clear Session again.  The collection should still be recognized as initialized from above
             s.clear();
             assertNotNull( store );
             assertTrue( isPropertyInitialized( store, "inventories" ) );
-            assertEquals( 3, sessionFactory().getStatistics().getSessionOpenCount() );
-            assertEquals( 2, sessionFactory().getStatistics().getSessionCloseCount() );
+            assertEquals( 5, sessionFactory().getStatistics().getSessionOpenCount() );
+            assertEquals( 4, sessionFactory().getStatistics().getSessionCloseCount() );
         } );
     }
 

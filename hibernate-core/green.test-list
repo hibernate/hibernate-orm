@@ -216,9 +216,7 @@ org.hibernate.property.GetAndIsVariantGetterTest
 org.hibernate.property.GetAndIsVariantGetterWithTransientAnnotationTest
 org.hibernate.property.PropertyAccessStrategyMapTest
 org.hibernate.query.criteria.internal.expression.SearchedCaseExpressionTest
-org.hibernate.query.hhh12076.HbmMappingJoinClassTest
 org.hibernate.query.hhh13712.HHH13712Test
-org.hibernate.secure.JaccIntegratorTest
 org.hibernate.serialization.EntityProxySerializationTest
 org.hibernate.serialization.GetterSetterSerializationTest
 org.hibernate.serialization.MapProxySerializationTest
@@ -386,7 +384,6 @@ org.hibernate.test.bytecode.enhancement.lazy.proxy.MapsIdProxyUnidirectionalTest
 org.hibernate.test.bytecode.enhancement.lazy.proxy.MergeDetachedToProxyTest
 org.hibernate.test.bytecode.enhancement.lazy.proxy.MergeProxyTest
 org.hibernate.test.bytecode.enhancement.lazy.proxy.NaturalIdInUninitializedProxyTest
-org.hibernate.test.bytecode.enhancement.lazy.StatelessQueryScrollingTest
 org.hibernate.test.bytecode.enhancement.pk.EmbeddedPKTest
 org.hibernate.test.bytecode.enhancement.tracker.CompositeOwnerTrackerTest
 org.hibernate.test.bytecode.enhancement.tracker.DirtyTrackerTest
@@ -763,7 +760,6 @@ org.hibernate.test.onetomany.RecursiveBidirectionalOneToManyNoCacheTest
 org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyCacheTest
 org.hibernate.test.onetomany.RecursiveVersionedBidirectionalOneToManyNoCacheTest
 org.hibernate.test.onetoone.basic.OneToOneSchemaTest
-org.hibernate.test.onetoone.bidirectional.BiDirectionalOneToOneFetchTest
 org.hibernate.test.onetoone.jointable.OneToOneJoinTableTest
 org.hibernate.test.ops.DeleteTest
 org.hibernate.test.ops.genericApi.BasicGetLoadAccessTest
@@ -789,7 +785,6 @@ org.hibernate.test.propertyref.component.partial.PartialComponentPropertyRefTest
 org.hibernate.test.propertyref.inheritence.discrim.SubclassPropertyRefTest
 org.hibernate.test.propertyref.inheritence.joined.JoinedSubclassPropertyRefTest
 org.hibernate.test.propertyref.inheritence.union.UnionSubclassPropertyRefTest
-org.hibernate.test.proxy.ProxyReferenceEqualityTest
 org.hibernate.test.querycache.QueryCacheJoinFetchTest
 org.hibernate.test.querycache.StructuredQueryCacheTest
 org.hibernate.test.queryplan.GetHqlQueryPlanTest

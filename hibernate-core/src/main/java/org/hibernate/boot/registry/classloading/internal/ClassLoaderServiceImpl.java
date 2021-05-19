@@ -18,13 +18,11 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ResourcesHelper;
@@ -86,40 +84,6 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 				return new AggregatedClassLoader( orderedClassLoaderSet, lookupPrecedence );
 			}
 		} );
-	}
-
-	/**
-	 * No longer used/supported!
-	 *
-	 * @param configValues The config values
-	 *
-	 * @return The built service
-	 *
-	 * @deprecated No longer used/supported!
-	 */
-	@Deprecated
-	@SuppressWarnings({"UnusedDeclaration", "unchecked", "deprecation"})
-	public static ClassLoaderServiceImpl fromConfigSettings(Map configValues) {
-		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
-
-		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) configValues.get( AvailableSettings.CLASSLOADERS );
-		if ( classLoaders != null ) {
-			providedClassLoaders.addAll( classLoaders );
-		}
-
-		addIfSet( providedClassLoaders, AvailableSettings.APP_CLASSLOADER, configValues );
-		addIfSet( providedClassLoaders, AvailableSettings.RESOURCES_CLASSLOADER, configValues );
-		addIfSet( providedClassLoaders, AvailableSettings.HIBERNATE_CLASSLOADER, configValues );
-		addIfSet( providedClassLoaders, AvailableSettings.ENVIRONMENT_CLASSLOADER, configValues );
-
-		return new ClassLoaderServiceImpl( providedClassLoaders,TcclLookupPrecedence.AFTER );
-	}
-
-	private static void addIfSet(List<ClassLoader> providedClassLoaders, String name, Map configVales) {
-		final ClassLoader providedClassLoader = (ClassLoader) configVales.get( name );
-		if ( providedClassLoader != null ) {
-			providedClassLoaders.add( providedClassLoader );
-		}
 	}
 
 	@Override

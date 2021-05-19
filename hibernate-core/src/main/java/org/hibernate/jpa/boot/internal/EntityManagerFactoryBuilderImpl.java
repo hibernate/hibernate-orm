@@ -433,14 +433,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				bsrBuilder.applyClassLoader( providedClassLoader );
 			}
 
-			final ClassLoader appClassLoader = (ClassLoader) integrationSettings.get( org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER );
-			if ( appClassLoader != null ) {
-				LOG.debugf(
-						"Found use of deprecated `%s` setting; use `%s` instead.",
-						org.hibernate.cfg.AvailableSettings.APP_CLASSLOADER,
-						org.hibernate.cfg.AvailableSettings.CLASSLOADERS
-				);
-			}
 			final Object classLoadersSetting = integrationSettings.get( org.hibernate.cfg.AvailableSettings.CLASSLOADERS );
 			if ( classLoadersSetting != null ) {
 				if ( java.util.Collection.class.isInstance( classLoadersSetting ) ) {

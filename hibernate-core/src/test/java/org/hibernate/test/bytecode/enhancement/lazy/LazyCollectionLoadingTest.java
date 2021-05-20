@@ -91,7 +91,6 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
             Parent parent = s.load( Parent.class, parentID );
             assertThat( parent, notNullValue() );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
-            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertFalse( isPropertyInitialized( parent, "children" ) );
             checkDirtyTracking( parent );
 
@@ -116,7 +115,6 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
             // find will not return a proxy, which is exactly what we want here.
             Parent parent = s.find( Parent.class, parentID );
             assertThat( parent, notNullValue() );
-            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertFalse( isPropertyInitialized( parent, "children" ) );
             checkDirtyTracking( parent );
@@ -144,7 +142,6 @@ public class LazyCollectionLoadingTest extends BaseCoreFunctionalTestCase {
         doInHibernate( this::sessionFactory, s -> {
             parent = s.load( Parent.class, parentID );
             assertThat( parent, notNullValue() );
-            assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertThat( parent, not( instanceOf( HibernateProxy.class ) ) );
             assertFalse( isPropertyInitialized( parent, "children" ) );
         } );

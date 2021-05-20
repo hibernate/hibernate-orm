@@ -8,12 +8,8 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.List;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.NavigablePath;
@@ -21,8 +17,8 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -114,36 +110,6 @@ public class SqmListJoin<O,E>
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		//noinspection unchecked
 		return new SqmTreatedListJoin( this, treatTarget, null );
-	}
-
-	@Override
-	public <A> SqmSingularJoin<E, A> fetch(SingularAttribute<? super E, A> attribute) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <A> SqmSingularJoin<E,A> fetch(SingularAttribute<? super E, A> attribute, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <F> SqmAttributeJoin<E,F> fetch(PluralAttribute<? super E, ?, F> attribute) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <F> SqmAttributeJoin<E,F> fetch(PluralAttribute<? super E, ?, F> attribute, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
 	}
 
 	@Override

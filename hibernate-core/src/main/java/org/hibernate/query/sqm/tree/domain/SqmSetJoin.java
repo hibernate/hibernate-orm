@@ -10,10 +10,7 @@ import java.util.Set;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.PathException;
@@ -99,36 +96,9 @@ public class SqmSetJoin<O, E>
 		return new SqmTreatedSetJoin<>( this, treatTarget, null );
 	}
 
-	// todo (6.0) : need to resolve these fetches against the element/index descriptors
-
-	@Override
-	public <A> SqmSingularJoin<E, A> fetch(SingularAttribute<? super E, A> attribute) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <A> SqmSingularJoin<E, A> fetch(SingularAttribute<? super E, A> attribute, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <F> SqmAttributeJoin<E, F> fetch(PluralAttribute<? super E, ?, F> attribute) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <F> SqmAttributeJoin<E, F> fetch(PluralAttribute<? super E, ?, F> attribute, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
 	@Override
 	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <X, Y> SqmAttributeJoin<X, Y> fetch(String attributeName, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
+		return fetch( attributeName, JoinType.INNER);
 	}
 
 	@Override

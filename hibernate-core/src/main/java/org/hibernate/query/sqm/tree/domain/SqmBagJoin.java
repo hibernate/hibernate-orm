@@ -8,20 +8,16 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.PluralAttribute;
-import javax.persistence.metamodel.SingularAttribute;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -43,8 +39,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public BagPersistentAttribute<O,E> getReferencedPathSource() {
-		//noinspection unchecked
-		return (BagPersistentAttribute) super.getReferencedPathSource();
+		return (BagPersistentAttribute<O,E>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -84,36 +79,6 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	// todo (6.0) : need to resolve these fetches against the element/index descriptors
-
-	@Override
-	public <A> SqmSingularJoin<E, A> fetch(SingularAttribute<? super E, A> attribute) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <A> SqmSingularJoin<E,A> fetch(SingularAttribute<? super E, A> attribute, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <F> SqmAttributeJoin<E,F> fetch(PluralAttribute<? super E, ?, F> attribute) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <F> SqmAttributeJoin<E,F> fetch(PluralAttribute<? super E, ?, F> attribute, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName) {
-		throw new NotYetImplementedFor6Exception();
-	}
-
-	@Override
-	public <X,Y> SqmAttributeJoin<X,Y> fetch(String attributeName, JoinType jt) {
-		throw new NotYetImplementedFor6Exception();
-	}
 
 	@Override
 	public SqmCorrelatedBagJoin<O, E> createCorrelation() {

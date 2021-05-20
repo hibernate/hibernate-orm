@@ -11,6 +11,7 @@ import java.util.Set;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;

@@ -198,6 +198,10 @@ public abstract class AbstractEntityPersister
 	private final String sqlWhereString;
 	private final String sqlWhereStringTemplate;
 
+	// The optional SQL string defined in the where attribute of joined subclass
+	private final String sqlJoinedSubclassWhereString;
+	private final String sqlJoinedSubclassWhereStringTemplate;
+
 	//information about properties of this class,
 	//including inherited properties
 	//(only really needed for updatable/insertable properties)
@@ -675,6 +679,17 @@ public abstract class AbstractEntityPersister
 				null :
 				Template.renderWhereStringTemplate(
 						sqlWhereString,
+						dialect,
+						factory.getSqlFunctionRegistry()
+				);
+
+		sqlJoinedSubclassWhereString = StringHelper.isNotEmpty( persistentClass.getJoinedSubclassWhere() ) ?
+				"( " + persistentClass.getJoinedSubclassWhere() + ") " :
+				null;
+		sqlJoinedSubclassWhereStringTemplate = sqlJoinedSubclassWhereString == null ?
+				null :
+				Template.renderWhereStringTemplate(
+						sqlJoinedSubclassWhereString,
 						dialect,
 						factory.getSqlFunctionRegistry()
 				);
@@ -2617,8 +2632,16 @@ public abstract class AbstractEntityPersister
 		return StringHelper.replace( sqlWhereStringTemplate, Template.TEMPLATE, alias );
 	}
 
+	protected String getSqlJoinedSubclassWhereString(String alias) {
+		return StringHelper.replace( sqlJoinedSubclassWhereStringTemplate, Template.TEMPLATE, alias );
+	}
+
 	protected boolean hasWhere() {
 		return sqlWhereString != null;
+	}
+
+	protected boolean hasJoinedSubclassWhere() {
+		return sqlJoinedSubclassWhereString != null;
 	}
 
 	private void initOrdinaryPropertyPaths(Mapping mapping) throws MappingException {

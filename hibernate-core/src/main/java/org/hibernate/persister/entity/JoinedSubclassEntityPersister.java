@@ -933,9 +933,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected String filterFragment(String alias) {
-		return hasWhere()
-				? " and " + getSQLWhereString( generateFilterConditionAlias( alias ) )
-				: "";
+		if ( hasWhere() && hasJoinedSubclassWhere() ) {
+			return " and " + getSQLWhereString( generateFilterConditionAlias( alias ) ) + " and "
+					+ getSqlJoinedSubclassWhereString( alias );
+		}
+		if ( hasWhere() ) {
+			return " and " + getSQLWhereString( generateFilterConditionAlias( alias ) );
+		}
+		if ( hasJoinedSubclassWhere() ) {
+			return " and " + getSqlJoinedSubclassWhereString( alias );
+		}
+		return "";
 	}
 
 	@Override

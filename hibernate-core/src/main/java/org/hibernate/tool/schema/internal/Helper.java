@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -24,6 +25,7 @@ import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
+import org.hibernate.tool.schema.internal.exec.ScriptSourceInputAggregate;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
@@ -33,8 +35,6 @@ import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
-import org.jboss.logging.Logger;
-
 /**
  * Helper methods.
  *
@@ -43,6 +43,7 @@ import org.jboss.logging.Logger;
 public class Helper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
+	private static final Pattern COMMA_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting,
@@ -55,22 +56,38 @@ public class Helper {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
 			log.debugf( "Attempting to resolve script source setting : %s", scriptSourceSettingString );
 
-			// setting could be either:
-			//		1) string URL representation (i.e., "file://...")
-			//		2) relative file path (resource lookup)
-			//		3) absolute file path
-
-			log.trace( "Trying as URL..." );
-			// ClassLoaderService.locateResource() first tries the given resource name as url form...
-			final URL url = classLoaderService.locateResource( scriptSourceSettingString );
-			if ( url != null ) {
-				return new ScriptSourceInputFromUrl( url, charsetName );
+			final String[] paths = COMMA_PATTERN.split( scriptSourceSettingString );
+			if ( paths.length == 1 ) {
+				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
+			}
+			final ScriptSourceInput[] inputs = new ScriptSourceInput[paths.length];
+			for ( int i = 0; i < paths.length; i++ ) {
+				inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName ) ;
 			}
 
-			// assume it is a File path
-			final File file = new File( scriptSourceSettingString );
-			return new ScriptSourceInputFromFile( file, charsetName );
+			return new ScriptSourceInputAggregate( inputs );
 		}
+	}
+
+	private static ScriptSourceInput interpretScriptSourceSetting(
+			String scriptSourceSettingString,
+			ClassLoaderService classLoaderService,
+			String charsetName) {
+		// setting could be either:
+		//		1) string URL representation (i.e., "file://...")
+		//		2) relative file path (resource lookup)
+		//		3) absolute file path
+
+		log.trace( "Trying as URL..." );
+		// ClassLoaderService.locateResource() first tries the given resource name as url form...
+		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
+		if ( url != null ) {
+			return new ScriptSourceInputFromUrl( url, charsetName );
+		}
+
+		// assume it is a File path
+		final File file = new File( scriptSourceSettingString );
+		return new ScriptSourceInputFromFile( file, charsetName );
 	}
 
 	public static ScriptTargetOutput interpretScriptTargetSetting(

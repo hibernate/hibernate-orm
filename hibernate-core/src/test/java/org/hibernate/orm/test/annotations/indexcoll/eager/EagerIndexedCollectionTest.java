@@ -16,8 +16,8 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.annotations.indexcoll.Gas;
-import org.hibernate.test.annotations.indexcoll.GasKey;
+import org.hibernate.orm.test.annotations.indexcoll.Gas;
+import org.hibernate.orm.test.annotations.indexcoll.GasKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

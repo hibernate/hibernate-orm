@@ -12,7 +12,6 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ public class OneToOneWithDerivedIdentityTest {
 				session -> {
 
 					Person p = new Person();
-					p.setId( 0 );
+					p.setId( PERSON_ID );
 					p.setName( "Alfio" );
 					PersonInfo pi = new PersonInfo();
 					pi.setId( p );
@@ -56,7 +55,7 @@ public class OneToOneWithDerivedIdentityTest {
 				} );
 	}
 
-	@Entity(name="Person")
+	@Entity(name = "Person")
 	public static class Person {
 		@Id
 		private Integer id;
@@ -92,7 +91,7 @@ public class OneToOneWithDerivedIdentityTest {
 		}
 	}
 
-	@Entity(name="PersonInfo")
+	@Entity(name = "PersonInfo")
 	public static class PersonInfo {
 		@Id
 		@OneToOne

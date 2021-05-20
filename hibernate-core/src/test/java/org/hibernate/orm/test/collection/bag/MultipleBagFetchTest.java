@@ -39,12 +39,8 @@ public class MultipleBagFetchTest {
 				.addAnnotatedClass( Tag.class )
 				.getMetadataBuilder()
 				.build();
-		try {
-			metadata.buildSessionFactory();
-			fail( "MultipleBagFetchException should have been thrown." );
-		}
-		catch (MultipleBagFetchException expected) {
-		}
+		// make sure that this model does not cause a MultipleBagFetchException
+		metadata.buildSessionFactory();
 	}
 
 	@Entity(name = "Post")

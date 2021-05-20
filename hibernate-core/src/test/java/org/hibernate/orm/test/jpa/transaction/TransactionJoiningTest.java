@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.test.transaction.Book;
+import org.hibernate.orm.test.jpa.txn.JtaTransactionJoiningTest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.TestForIssue;
@@ -34,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Largely a copy of {@link org.hibernate.test.jpa.txn.JtaTransactionJoiningTest}
+ * Largely a copy of {@link JtaTransactionJoiningTest}
  *
  * @author Steve Ebersole
  */

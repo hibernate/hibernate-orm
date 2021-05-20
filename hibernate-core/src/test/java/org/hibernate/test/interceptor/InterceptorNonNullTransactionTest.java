@@ -22,7 +22,7 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-import org.hibernate.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
+import org.hibernate.orm.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
 import org.junit.Test;
 import org.junit.runner.RunWith;

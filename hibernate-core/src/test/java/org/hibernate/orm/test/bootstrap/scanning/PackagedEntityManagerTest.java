@@ -362,7 +362,6 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "none", reason = "Problem with caching, specifically managing SoftLocks" )
 	public void testConfiguration() throws Exception {
 		File testPackage = buildExplicitPar();
 		addPackageToClasspath( testPackage );

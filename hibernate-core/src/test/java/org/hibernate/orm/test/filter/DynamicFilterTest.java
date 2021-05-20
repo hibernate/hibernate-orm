@@ -107,7 +107,6 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "none", message = "v6 imperfection")
 	public void testSecondLevelCachedCollectionsFiltering() {
 
 		CollectionPersister persister = sessionFactory().getCollectionPersister( Salesperson.class.getName() + ".orders" );

@@ -11,7 +11,7 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.test.jpa.xml.versions.JpaXsdVersionsTest;
+import org.hibernate.orm.test.jpa.xml.versions.JpaXsdVersionsTest;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.junit.jupiter.api.Test;

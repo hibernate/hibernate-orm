@@ -13,7 +13,7 @@ import javax.persistence.Id;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -76,7 +76,7 @@ public class JpaFunctionTest extends BaseEntityManagerFunctionalTestCase {
 			} );
 		}
 		catch ( Exception e ) {
-			assertEquals( ParsingException.class, e.getCause().getClass() );
+			assertEquals( SemanticException.class, e.getCause().getClass() );
 		}
 	}
 

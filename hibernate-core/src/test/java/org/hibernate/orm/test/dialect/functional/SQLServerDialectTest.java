@@ -24,7 +24,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.query.Query;
@@ -32,10 +31,6 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.dialect.functional.Category;
-import org.hibernate.test.dialect.functional.Contact;
-import org.hibernate.test.dialect.functional.Folder;
-import org.hibernate.test.dialect.functional.Product2;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

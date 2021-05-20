@@ -41,6 +41,8 @@ jobs:
             experimental: true
           - rdbms: mssql
             experimental: true
+          - rdbms: cockroachdb
+            experimental: true
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
 #            experimental: true

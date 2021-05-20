@@ -219,7 +219,7 @@ hana() {
 
 cockroachdb() {
   docker rm -f cockroach || true
-  docker run -d --name=cockroach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v20.2.4 start-single-node --insecure
+  docker run -d --name=cockroach -p 26257:26257 -p 8080:8080 cockroachdb/cockroach:v20.2.8 start-single-node --insecure
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
         echo "Waiting for CockroachDB to start..."

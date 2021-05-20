@@ -14,6 +14,8 @@ elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "mssql" ]; then
   goal="-Pdb=mssql_ci"
+elif [ "$RDBMS" == "cockroachdb" ]; then
+  goal="-Pdb=cockroachdb_ci"
 elif [ "$RDBMS" == "hana" ]; then
   goal="-Pdb=hana_ci"
 fi

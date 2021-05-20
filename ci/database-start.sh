@@ -16,6 +16,8 @@ elif [ "$RDBMS" == 'oracle' ]; then
   bash $DIR/../docker_db.sh oracle
 elif [ "$RDBMS" == 'mssql' ]; then
   bash $DIR/../docker_db.sh mssql
+elif [ "$RDBMS" == 'cockroachdb' ]; then
+  bash $DIR/../docker_db.sh cockroachdb
 elif [ "$RDBMS" == 'hana' ]; then
   bash $DIR/../docker_db.sh hana
 fi

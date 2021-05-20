@@ -8,8 +8,13 @@ package org.hibernate.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.engine.spi.RowSelection;
+
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
+import static java.util.regex.Pattern.compile;
 
 /**
  * Default implementation of {@link LimitHandler} interface. 
@@ -17,6 +22,10 @@ import org.hibernate.engine.spi.RowSelection;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractLimitHandler implements LimitHandler {
+
+	private static final Pattern FOR_UPDATE_PATTERN =
+			compile("\\s+for\\s+update\\b|\\s*(;|$)", CASE_INSENSITIVE);
+
 
 	protected AbstractLimitHandler() {
 		// NOP
@@ -176,6 +185,33 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		}
 		else {
 			return maxRows;
+		}
+	}
+
+	/**
+	 * The offset/limit clauses typically must come
+	 * before the {@code FOR UPDATE}ish clauses, so
+	 * we need a way to identify these clauses in
+	 * the text of the whole query.
+	 */
+	protected Pattern getForUpdatePattern() {
+		return FOR_UPDATE_PATTERN;
+	}
+
+	/**
+	 * Insert a fragment of SQL right before the
+	 * {@code FOR UPDATE}ish clauses at the end
+	 * of the query.
+	 */
+	protected String insertBeforeForUpdate(String limitOffsetClause, String sqlStatement) {
+		Matcher forUpdateMatcher = getForUpdatePattern().matcher( sqlStatement );
+		if ( forUpdateMatcher.find() ) {
+			return new StringBuilder( sqlStatement )
+					.insert( forUpdateMatcher.start(), limitOffsetClause )
+					.toString();
+		}
+		else {
+			return sqlStatement;
 		}
 	}
 }

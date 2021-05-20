@@ -154,7 +154,7 @@ public class ImmutableNaturalIdTest {
 				}
 		);
 
-		assertEquals( 0, statistics.getNaturalIdQueryExecutionCount() );
+		assertEquals( 1, statistics.getNaturalIdQueryExecutionCount() );
 		assertEquals( 0, statistics.getNaturalIdCacheHitCount() );
 		assertEquals( 0, statistics.getNaturalIdCachePutCount() );
 

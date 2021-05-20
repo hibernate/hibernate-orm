@@ -14,9 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.CacheDialect;
@@ -24,13 +22,11 @@ import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.Cache71Dialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.dialect.functional.cache.TestInterSystemsFunctionsClass;
 import org.hibernate.test.legacy.Blobber;
 import org.hibernate.test.legacy.Broken;
 import org.hibernate.test.legacy.Fixed;

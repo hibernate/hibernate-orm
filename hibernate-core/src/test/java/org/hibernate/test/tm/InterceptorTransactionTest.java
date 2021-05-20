@@ -25,7 +25,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
-import org.hibernate.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
+import org.hibernate.orm.test.exceptionhandling.BaseJpaOrNativeBootstrapFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;

@@ -19,7 +19,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
-import org.hibernate.test.jpa.xml.versions.JpaXsdVersionsTest;
+import org.hibernate.orm.test.jpa.xml.versions.JpaXsdVersionsTest;
 
 
 import org.junit.jupiter.api.AfterEach;

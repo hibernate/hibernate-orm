@@ -28,8 +28,8 @@ import javax.persistence.MapKeyJoinColumns;
 import javax.persistence.MapKeyTemporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.test.annotations.indexcoll.Gas;
-import org.hibernate.test.annotations.indexcoll.GasKey;
+import org.hibernate.orm.test.annotations.indexcoll.Gas;
+import org.hibernate.orm.test.annotations.indexcoll.GasKey;
 
 /**
  * @author Emmanuel Bernard

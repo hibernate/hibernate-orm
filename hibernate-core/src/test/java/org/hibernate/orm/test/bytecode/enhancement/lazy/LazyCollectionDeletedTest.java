@@ -82,7 +82,7 @@ public class LazyCollectionDeletedTest extends BaseCoreFunctionalTestCase {
             additionalDetails.details = "New data";
             s.persist( additionalDetails );
 
-            // additionalDetais.post.tags get deleted on commit
+            // additionalDetails.post.tags get deleted on commit
         } );
 
         doInHibernate( this::sessionFactory, s -> {

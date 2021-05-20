@@ -19,7 +19,6 @@ import org.hibernate.dialect.DerbyDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -102,10 +101,6 @@ public class SubselectTest {
 	}
 
 	@Test
-	@NotImplementedYet(
-			reason = "Refreshing a managed-entity does not work - https://trello.com/c/QAKC08JT/230-refresh-does-not-work-with-managed-entity-the-state-is-not-refreshed",
-			strict = false
-	)
 	public void testRefreshLifecycle(EntityManagerFactoryScope scope) {
 		//tag::mapping-Subselect-entity-find-example[]
 		scope.inTransaction(

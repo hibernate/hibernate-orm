@@ -6,8 +6,11 @@
  */
 package org.hibernate.internal.util;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Enumeration;
 import java.util.List;
 
 import org.hibernate.Internal;
@@ -89,15 +92,14 @@ public class ResourcesHelper {
 		return inputStream;
 	}
 
-	public static URL locateResourceAsUrl(String name, ClassLoader classLoader) {
-		if (name == null) {
-			return null;
-		}
+	public static List<URL> locateResourceAsUrls(String name, ClassLoader classLoader) {
+		final List<URL> rtn = new ArrayList<>();
 
 		// first we try name as a URL
 		try {
 			log.tracef( "trying via [new URL(\"%s\")]", name );
-			return new URL( name );
+			rtn.add( new URL( name ) );
+			return rtn;
 		}
 		catch (Exception ignore) {
 		}
@@ -107,30 +109,44 @@ public class ResourcesHelper {
 		name = stripClasspathScheme( name );
 
 		try {
-			log.tracef( "trying via [ClassLoader.getResource(\"%s\")]", name );
-			final URL url = classLoader.getResource( name );
-			if ( url != null ) {
-				return url;
-			}
-		}
-		catch (Exception ignore) {
-		}
+			final Enumeration<URL> resources = classLoader.getResources( name );
 
-		if ( name.startsWith( "/" ) ) {
-			name = name.substring( 1 );
-
-			try {
-				log.tracef( "trying via [ClassLoader.getResource(\"%s\")]", name );
-				final URL url = classLoader.getResource( name );
-				if ( url != null ) {
-					return url;
+			if ( resources.hasMoreElements() ) {
+				while ( resources.hasMoreElements() ) {
+					rtn.add( resources.nextElement() );
 				}
 			}
-			catch (Exception ignore) {
+
+			if ( name.startsWith( "/" ) ) {
+				name = name.substring( 1 );
+
+				try {
+					log.tracef( "trying via [ClassLoader.getResource(\"%s\")]", name );
+					final Enumeration<URL> strippedResources = classLoader.getResources( name );
+
+					if ( strippedResources.hasMoreElements() ) {
+						while ( strippedResources.hasMoreElements() ) {
+							rtn.add( strippedResources.nextElement() );
+						}
+					}
+				}
+				catch (Exception ignore) {
+				}
 			}
 		}
+		catch (IOException ignore) {
+		}
 
-		return null;
+		return rtn;
+	}
+
+	public static URL locateResourceAsUrl(String name, ClassLoader classLoader) {
+		final List<URL> urls = locateResourceAsUrls( name, classLoader );
+		if ( urls.isEmpty() ) {
+			return null;
+		}
+
+		return urls.get( 0 );
 	}
 
 	private static String stripClasspathScheme(String name) {

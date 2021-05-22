@@ -165,7 +165,7 @@ public abstract class AbstractEntityPersister
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( AbstractEntityPersister.class );
 
 	public static final String ENTITY_CLASS = "class";
-	public static final String VERSION_COLUMN_ALIAS = "v";
+	public static final String VERSION_COLUMN_ALIAS = "version_";
 
 	private final NavigableRole navigableRole;
 

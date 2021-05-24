@@ -10,6 +10,8 @@ plugins {
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.2.1'
 }
 
+apply from: file( 'gradle/gradle-enterprise.gradle' )
+
 if ( !JavaVersion.current().java8Compatible ) {
     throw new GradleException( "Gradle must be run with Java 8 or later" )
 }
@@ -137,25 +139,4 @@ rootProject.children.each { project ->
     assert project.projectDir.isDirectory()
     assert project.buildFile.exists()
     assert project.buildFile.isFile()
-}
-
-gradleEnterprise {
-    server = 'https://ge.hibernate.org'
-
-    buildScan {
-        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-        termsOfServiceAgree = 'yes'
-
-        captureTaskInputFiles = true
-        uploadInBackground = true
-
-        if ( System.properties.CI == true ) {
-            // always publish build-scans and upload the scans immediately
-            publishAlways()
-            uploadInBackground = false
-            tag 'ci'
-        }
-
-        value 'database', rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
-    }
 }

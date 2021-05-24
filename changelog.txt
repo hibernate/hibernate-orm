@@ -3,6 +3,27 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.0.CR1 (May 24, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31942
+
+** Bug
+    * [HHH-14620] - Retrieving a collection from an entity triggers collection initialization (with extended bytecode enhancement enabled)
+    * [HHH-14619] - ClassCastException because collection of uninitialized proxy is dirty checked
+    * [HHH-14616] - Optimistic Lock throws org.hibernate.exception.SQLGrammarException: could not retrieve version
+    * [HHH-14596] - WhereAnnotatedOneToManySizeTest fails on HANA database
+
+** Improvement
+    * [HHH-14622] - Improved iteration of PreLoadEventListener
+    * [HHH-14621] - Introduce new methods on EventListenerGroup which allow Hibernate Reactive to fire events more efficiently
+    * [HHH-14618] - Having the possibility to include several SQL files into the import.sql file
+    * [HHH-14574] - Avoid NullPointerExceptions from LoadContexts.cleanup(ResultSet)
+
+** Task
+    * [HHH-14610] - Upgrade to Byte Buddy 1.10.22
+
+
 Changes in 5.5.0.Beta1 (May 12, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -200,6 +200,8 @@ public class QueryPlanCache implements Serializable {
 			Map<String,Filter> enabledFilters) throws QueryException, MappingException {
 		final FilterQueryPlanKey key =  new FilterQueryPlanKey( filterString, collectionRole, shallow, enabledFilters );
 		FilterQueryPlan value = (FilterQueryPlan) queryPlanCache.get( key );
+		final StatisticsImplementor statistics = factory.getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 		if ( value == null ) {
 			LOG.tracev(
 					"Unable to locate collection-filter query plan in cache; generating ({0} : {1} )",
@@ -207,10 +209,17 @@ public class QueryPlanCache implements Serializable {
 					filterString
 			);
 			value = new FilterQueryPlan( filterString, collectionRole, shallow, enabledFilters,factory );
+			if ( stats ) {
+				statistics.queryPlanCacheMiss( key.query  );
+			}
 			queryPlanCache.putIfAbsent( key, value );
 		}
 		else {
 			LOG.tracev( "Located collection-filter query plan in cache ({0} : {1})", collectionRole, filterString );
+
+			if ( stats ) {
+				statistics.queryPlanCacheHit( key.query );
+			}
 		}
 		return value;
 	}
@@ -228,13 +237,22 @@ public class QueryPlanCache implements Serializable {
 	@SuppressWarnings("unchecked")
 	public NativeSQLQueryPlan getNativeSQLQueryPlan(final NativeSQLQuerySpecification spec) {
 		NativeSQLQueryPlan value = (NativeSQLQueryPlan) queryPlanCache.get( spec );
+		final StatisticsImplementor statistics = factory.getStatistics();
+		boolean stats = statistics.isStatisticsEnabled();
 		if ( value == null ) {
 			LOG.tracev( "Unable to locate native-sql query plan in cache; generating ({0})", spec.getQueryString() );
 			value = nativeQueryInterpreter.createQueryPlan( spec, factory );
+			if ( stats ) {
+				statistics.queryPlanCacheMiss( spec.getQueryString() );
+			}
 			queryPlanCache.putIfAbsent( spec, value );
 		}
 		else {
 			LOG.tracev( "Located native-sql query plan in cache ({0})", spec.getQueryString() );
+
+			if ( stats ) {
+				statistics.queryPlanCacheHit( spec.getQueryString() );
+			}
 		}
 		return value;
 	}

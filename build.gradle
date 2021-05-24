@@ -88,18 +88,26 @@ task publish {
 ext {
 	// look for command-line overrides of the username/password pairs for publishing
 	if ( project.hasProperty( 'hibernatePublishUsername' ) ) {
+		if ( ! project.hasProperty( 'hibernatePublishPassword' ) ) {
+			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as project properties" );
+		}
 		credentials.hibernatePublishUsername = project.property( 'hibernatePublishUsername' )
-	}
-	if ( project.hasProperty( 'hibernatePublishPassword' ) ) {
 		credentials.hibernatePublishPassword = project.property( 'hibernatePublishPassword' )
+	}
+	else if ( System.properties.hibernatePublishUsername != null ) {
+		if ( System.properties.hibernatePublishPassword == null ) {
+			throw new GradleException( "Should specify both `hibernatePublishUsername` and `hibernatePublishPassword` as system properties" );
+		}
+		credentials.hibernatePublishUsername = System.properties.hibernatePublishUsername
+		credentials.hibernatePublishPassword = System.properties.hibernatePublishPassword
 	}
 }
 
 nexusPublishing {
 	repositories {
 		sonatype {
-			username = project.credentials.hibernatePublishUsername
-			password = project.credentials.hibernatePublishPassword
+			username = credentials.hibernatePublishUsername
+			password = credentials.hibernatePublishPassword
 		}
 	}
 }
@@ -118,12 +126,12 @@ gradle.taskGraph.addTaskExecutionGraphListener(
 
 				for ( String taskToLookFor : tasksToLookFor ) {
 					if ( graph.hasTask( taskToLookFor ) ) {
-						// trying to publish - make sure the needed tokens are available
+						// trying to publish - make sure the needed credentials are available
 
-						if ( project.credentials.hibernatePublishUsername == null ) {
+						if ( credentials.hibernatePublishUsername == null ) {
 							throw new GradleException( "Publishing credentials not specified" );
 						}
-						if ( project.credentials.hibernatePublishPassword == null ) {
+						if ( credentials.hibernatePublishPassword == null ) {
 							throw new GradleException( "Publishing credentials not specified" );
 						}
 

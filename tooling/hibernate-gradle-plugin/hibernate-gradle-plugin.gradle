@@ -22,18 +22,20 @@ ext {
 	pluginId = 'org.hibernate.orm'
 	pluginVersion = project.version
 
+	// look for command-line overrides of the username/password pairs for publishing
 	if ( project.hasProperty( 'hibernatePluginPortalUsername' ) ) {
+		if ( ! project.hasProperty( 'hibernatePluginPortalPassword' ) ) {
+			throw new GradleException( "Should specify both `hibernatePluginPortalUsername` and `hibernatePluginPortalPassword` as project properties" );
+		}
 		credentials.hibernatePluginPortalUsername = project.property( 'hibernatePluginPortalUsername' )
-	}
-	if ( credentials.hibernatePluginPortalUsername != null ) {
-		project.setProperty( 'gradle.publish.key', credentials.hibernatePluginPortalUsername )
-	}
-
-	if ( project.hasProperty( 'hibernatePluginPortalPassword' ) ) {
 		credentials.hibernatePluginPortalPassword = project.property( 'hibernatePluginPortalPassword' )
 	}
-	if ( credentials.hibernatePluginPortalPassword != null ) {
-		project.setProperty( 'gradle.publish.secret', credentials.hibernatePluginPortalPassword )
+	else if ( System.properties.hibernatePluginPortalUsername != null ) {
+		if ( System.properties.hibernatePluginPortalPassword == null ) {
+			throw new GradleException( "Should specify both `hibernatePluginPortalUsername` and `hibernatePluginPortalPassword` as system properties" );
+		}
+		credentials.hibernatePluginPortalUsername = System.properties.hibernatePluginPortalUsername
+		credentials.hibernatePluginPortalPassword = System.properties.hibernatePluginPortalPassword
 	}
 }
 

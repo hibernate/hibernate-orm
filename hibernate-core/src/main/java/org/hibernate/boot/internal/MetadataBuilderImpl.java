@@ -591,7 +591,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sharedCacheMode = configService.getSetting(
-					"javax.persistence.sharedCache.mode",
+					AvailableSettings.JPA_SHARED_CACHE_MODE,
 					new ConfigurationService.Converter<SharedCacheMode>() {
 						@Override
 						public SharedCacheMode convert(Object value) {
@@ -606,7 +606,24 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 							return SharedCacheMode.valueOf( value.toString() );
 						}
 					},
-					SharedCacheMode.UNSPECIFIED
+					configService.getSetting(
+							AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE,
+							new ConfigurationService.Converter<SharedCacheMode>() {
+								@Override
+								public SharedCacheMode convert(Object value) {
+									if ( value == null ) {
+										return null;
+									}
+
+									if ( SharedCacheMode.class.isInstance( value ) ) {
+										return (SharedCacheMode) value;
+									}
+
+									return SharedCacheMode.valueOf( value.toString() );
+								}
+							},
+							SharedCacheMode.UNSPECIFIED
+					)
 			);
 
 			this.defaultCacheAccessType = configService.getSetting(

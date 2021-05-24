@@ -8,14 +8,12 @@ package org.hibernate.tool.schema.internal.exec;
 
 import java.io.Reader;
 
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
-
 /**
  * ScriptSourceInput implementation for explicitly given Readers.
  *
  * @author Steve Ebersole
  */
-public class ScriptSourceInputFromReader extends AbstractScriptSourceInput implements ScriptSourceInput {
+public class ScriptSourceInputFromReader extends AbstractScriptSourceInput {
 	private final Reader reader;
 
 	/**

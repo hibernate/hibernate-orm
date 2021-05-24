@@ -22,9 +22,11 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 
@@ -33,6 +35,7 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
+@TestForIssue(jiraKey = {"HHH-2884", "HHH-10674",  "HHH-14541"})
 public class CallbackTest extends BaseCoreFunctionalTestCase {
 	private TestingObserver observer = new TestingObserver();
 	private TestingListener listener = new TestingListener();
@@ -97,16 +100,22 @@ public class CallbackTest extends BaseCoreFunctionalTestCase {
 		private int closedCount = 0;
 		private int closingCount = 0;
 
+		@Override
 		public void sessionFactoryCreated(SessionFactory factory) {
+			assertThat( factory.isClosed() ).isFalse();
 			creationCount++;
 		}
 
 		@Override
 		public void sessionFactoryClosing(SessionFactory factory) {
+			// Test for HHH-14541
+			assertThat( factory.isClosed() ).isFalse();
 			closingCount++;
 		}
 
+		@Override
 		public void sessionFactoryClosed(SessionFactory factory) {
+			assertThat( factory.isClosed() ).isTrue();
 			closedCount++;
 		}
 	}

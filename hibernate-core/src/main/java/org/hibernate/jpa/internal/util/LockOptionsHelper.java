@@ -13,6 +13,8 @@ import javax.persistence.PessimisticLockScope;
 
 import org.hibernate.LockOptions;
 
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 
@@ -31,7 +33,12 @@ public final class LockOptionsHelper {
 	 * @param lockOptionsSupplier The reference to the lock to modify
 	 */
 	public static void applyPropertiesToLockOptions(final Map<String, Object> props, final Supplier<LockOptions> lockOptionsSupplier) {
-		Object lockScope = props.get( JPA_LOCK_SCOPE );
+		String lockScopeHint = JPA_LOCK_SCOPE;
+		Object lockScope = props.get( lockScopeHint );
+		if ( lockScope == null ) {
+			lockScopeHint = JAKARTA_JPA_LOCK_SCOPE;
+			lockScope = props.get( lockScopeHint );
+		}
 		if ( lockScope instanceof String && PessimisticLockScope.valueOf( (String) lockScope ) == PessimisticLockScope.EXTENDED ) {
 			lockOptionsSupplier.get().setScope( true );
 		}
@@ -40,10 +47,15 @@ public final class LockOptionsHelper {
 			lockOptionsSupplier.get().setScope( extended );
 		}
 		else if ( lockScope != null ) {
-			throw new PersistenceException( "Unable to parse " + JPA_LOCK_SCOPE + ": " + lockScope );
+			throw new PersistenceException( "Unable to parse " + lockScopeHint + ": " + lockScope );
 		}
 
-		Object lockTimeout = props.get( JPA_LOCK_TIMEOUT );
+		String timeoutHint = JPA_LOCK_TIMEOUT;
+		Object lockTimeout = props.get( timeoutHint );
+		if (lockTimeout == null) {
+			timeoutHint = JAKARTA_JPA_LOCK_TIMEOUT;
+			lockTimeout = props.get( timeoutHint );
+		}
 		int timeout = 0;
 		boolean timeoutSet = false;
 		if ( lockTimeout instanceof String ) {
@@ -55,7 +67,7 @@ public final class LockOptionsHelper {
 			timeoutSet = true;
 		}
 		else if ( lockTimeout != null ) {
-			throw new PersistenceException( "Unable to parse " + JPA_LOCK_TIMEOUT + ": " + lockTimeout );
+			throw new PersistenceException( "Unable to parse " + timeoutHint + ": " + lockTimeout );
 		}
 
 		if ( timeoutSet ) {

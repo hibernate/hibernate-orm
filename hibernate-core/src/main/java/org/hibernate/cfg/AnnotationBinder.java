@@ -146,6 +146,7 @@ import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.PropertyBinder;
 import org.hibernate.cfg.annotations.QueryBinder;
 import org.hibernate.cfg.annotations.TableBinder;
+import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
@@ -1556,6 +1557,8 @@ public final class AnnotationBinder {
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev( "Setting discriminator for entity {0}", rootClass.getEntityName() );
 			}
+			context.getMetadataCollector().addSecondPass(
+					new NullableDiscriminatorColumnSecondPass( rootClass.getEntityName() ) );
 		}
 	}
 

@@ -1,0 +1,103 @@
+import org.apache.tools.ant.filters.ReplaceTokens
+
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Hibernate\'s entity version (audit/history) support Jakarta edition'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+configurations {
+	jakartaeeTransformJars
+}
+
+dependencies {
+	compile( project( ':hibernate-core-jakarta' ) ) {
+		// Exclude access to this to avoid future use.
+		exclude group: "org.javassist", module: "javassist"
+	}
+
+	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+			'commons-cli:commons-cli:1.4',
+			'org.slf4j:slf4j-simple:1.7.30',
+			'org.slf4j:slf4j-api:1.7.26',
+			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+
+	testCompile( project( ':hibernate-envers-jakarta' ) )
+	testCompile( project( ':hibernate-testing-jakarta' ) )
+	testCompile( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
+}
+
+jar {
+	mustRunAfter project(':hibernate-envers').tasks.jar
+	mustRunAfter project(':hibernate-envers').tasks.testJar
+	dependsOn project(':hibernate-envers').tasks.jar
+	dependsOn project(':hibernate-envers').tasks.testJar
+	def baseDir = project(':hibernate-envers').buildDir
+	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
+	inputs.files(baseJars).skipWhenEmpty()
+	outputs.dir project.buildDir
+	doLast {
+		new File(project.buildDir, "libs").mkdirs()
+		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+
+		baseJars.each { bundleJar ->
+			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
+			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+
+			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-envers', 'hibernate-envers-jakarta' )
+			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+
+			def transformerArgs = [
+					sourceJarPath, finalBundleJarName,
+					'-q', // quiet output
+					'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
+					'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
+					'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
+			]
+
+			println 'Transformer options:'
+			transformerArgs.each {
+				println '  [ ' + it + ' ]'
+			}
+
+			javaexec {
+				classpath configurations.jakartaeeTransformJars
+				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+				args = transformerArgs
+			}
+		}
+	}
+}
+
+task unpackTestJar(type: Copy) {
+	dependsOn jar
+	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+		def outputDir = file("${buildDir}/unpacked/" + it.name)
+		from zipTree(it)
+		into outputDir
+	}
+}
+
+test {
+	dependsOn unpackTestJar
+	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+		def outputDir = file("${buildDir}/unpacked/" + it.name)
+		testClassesDirs += files(outputDir)
+		classpath += files(outputDir)
+	}
+	systemProperty 'file.encoding', 'utf-8'
+
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+		// Weld needs this to generate proxies
+		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
+}

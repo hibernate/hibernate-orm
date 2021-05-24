@@ -22,9 +22,9 @@ dependencies {
     api libraries.byteman_bmunit
 
     api libraries.xapool
-//    api( libraries.jboss_tx_spi ) {
-//        transitive=false;
-//    }
+    api( libraries.jboss_tx_spi ) {
+        transitive=false;
+    }
     api( libraries.jboss_jta ) {
         transitive=false;
     }

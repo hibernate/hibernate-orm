@@ -164,7 +164,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final String name;
 	private final String uuid;
 
-	private transient volatile boolean isClosed;
+	private transient volatile Status status = Status.OPEN;
 
 	private final transient SessionFactoryObserverChain observer = new SessionFactoryObserverChain();
 
@@ -235,10 +235,15 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
-		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY ) ) {
+		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY )
+				&& !properties.containsKey( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
 				properties.put(
 						AvailableSettings.JPA_VALIDATION_FACTORY,
+						getSessionFactoryOptions().getValidatorFactoryReference()
+				);
+				properties.put(
+						AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
 						getSessionFactoryOptions().getValidatorFactoryReference()
 				);
 			}
@@ -588,7 +593,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	protected void validateNotClosed() {
-		if ( isClosed ) {
+		if ( status == Status.CLOSED ) {
 			throw new IllegalStateException( "EntityManagerFactory is closed" );
 		}
 	}
@@ -663,7 +668,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	private <K,V> Session buildEntityManager(final SynchronizationType synchronizationType, final Map<K,V> map) {
-		assert !isClosed;
+		assert status != Status.CLOSED;
 
 		SessionBuilderImplementor builder = withOptions();
 		if ( synchronizationType == SynchronizationType.SYNCHRONIZED ) {
@@ -732,7 +737,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	@Override
 	public boolean isOpen() {
-		return !isClosed;
+		return status != Status.CLOSED;
 	}
 
 	@Override
@@ -809,9 +814,10 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	 * collector release the memory.
 	 * @throws HibernateException
 	 */
+	@Override
 	public void close() throws HibernateException {
 		synchronized (this) {
-			if ( isClosed ) {
+			if ( status != Status.OPEN ) {
 				if ( getSessionFactoryOptions().getJpaCompliance().isJpaClosedComplianceEnabled() ) {
 					throw new IllegalStateException( "EntityManagerFactory is already closed" );
 				}
@@ -820,45 +826,53 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				return;
 			}
 
-			isClosed = true;
+			status = Status.CLOSING;
 		}
 
-		LOG.closing();
-		observer.sessionFactoryClosing( this );
+		try {
+			LOG.closing();
+			observer.sessionFactoryClosing( this );
 
 		// NOTE : the null checks below handle cases where close is called from
 		//		a failed attempt to create the SessionFactory
 
-		if ( cacheAccess != null ) {
-			cacheAccess.close();
-		}
+			if ( cacheAccess != null ) {
+				cacheAccess.close();
+			}
 
-		if ( runtimeMetamodels != null && runtimeMetamodels.getMappingMetamodel() != null ) {
-			final JdbcConnectionAccess jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
-			runtimeMetamodels.getMappingMetamodel().visitEntityDescriptors(
-					entityPersister -> {
-						if ( entityPersister.getSqmMultiTableMutationStrategy() != null ) {
-							entityPersister.getSqmMultiTableMutationStrategy().release( this, jdbcConnectionAccess );
+			if ( runtimeMetamodels != null && runtimeMetamodels.getMappingMetamodel() != null ) {
+				final JdbcConnectionAccess jdbcConnectionAccess = jdbcServices.getBootstrapJdbcConnectionAccess();
+				runtimeMetamodels.getMappingMetamodel().visitEntityDescriptors(
+						entityPersister -> {
+							if ( entityPersister.getSqmMultiTableMutationStrategy() != null ) {
+								entityPersister.getSqmMultiTableMutationStrategy().release(
+										this,
+										jdbcConnectionAccess
+								);
+							}
 						}
-					}
+				);
+				( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
+			}
+
+			if ( queryEngine != null ) {
+				queryEngine.close();
+			}
+
+			if ( delayedDropAction != null ) {
+				delayedDropAction.perform( serviceRegistry );
+			}
+
+			SessionFactoryRegistry.INSTANCE.removeSessionFactory(
+					getUuid(),
+					name,
+					settings.isSessionFactoryNameAlsoJndiName(),
+					serviceRegistry.getService( JndiService.class )
 			);
-			( (MappingMetamodelImpl) runtimeMetamodels.getMappingMetamodel() ).close();
 		}
-
-		if ( queryEngine != null ) {
-			queryEngine.close();
+		finally {
+			status = Status.CLOSED;
 		}
-
-		if ( delayedDropAction != null ) {
-			delayedDropAction.perform( serviceRegistry );
-		}
-
-		SessionFactoryRegistry.INSTANCE.removeSessionFactory(
-				getUuid(),
-				name,
-				settings.isSessionFactoryNameAlsoJndiName(),
-				serviceRegistry.getService( JndiService.class )
-		);
 
 		observer.sessionFactoryClosed( this );
 		serviceRegistry.destroy();
@@ -956,8 +970,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		getMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
 	}
 
+	@Override
 	public boolean isClosed() {
-		return isClosed;
+		return status == Status.CLOSED;
 	}
 
 	private transient StatisticsImplementor statistics;
@@ -1624,6 +1639,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void maskOutSensitiveInformation(Map<String, Object> props) {
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_USER );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD );
 		maskOutIfSet( props, AvailableSettings.USER );
 		maskOutIfSet( props, AvailableSettings.PASS );
 	}
@@ -1658,4 +1675,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return this.fastSessionServices;
 	}
 
+	private enum Status {
+		OPEN,
+		CLOSING,
+		CLOSED;
+	}
 }

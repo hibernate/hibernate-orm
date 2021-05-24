@@ -19,6 +19,7 @@ ext {
 	}
 
 	jpaVersion = new JpaVersion('2.2')
+	jakartaJpaVersion = new JpaVersion('3.0.0')
 }
 
 group = 'org.hibernate.orm'

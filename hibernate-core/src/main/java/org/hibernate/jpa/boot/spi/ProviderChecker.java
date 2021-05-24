@@ -101,7 +101,10 @@ public final class ProviderChecker {
 		if ( integration == null ) {
 			return null;
 		}
-		final String setting = (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER );
+		String setting = (String) integration.get(AvailableSettings.JPA_PERSISTENCE_PROVIDER);
+		if ( setting == null ) {
+			setting = (String) integration.get(AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER);
+		}
 		return setting == null ? null : setting.trim();
 	}
 

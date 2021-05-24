@@ -7,6 +7,8 @@
 package org.hibernate.bytecode.internal.bytebuddy;
 
 import java.util.Collections;
+import java.lang.reflect.Constructor;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +31,7 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 
 	private final Class proxyClass;
 	private final ProxyConfiguration.Interceptor interceptor;
+	private final Constructor proxyClassConstructor;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState byteBuddyState) {
@@ -50,12 +53,18 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 						.intercept( byteBuddyState.getProxyDefinitionHelpers().getInterceptorFieldAccessor() )
 		);
 		this.interceptor = new PassThroughInterceptor( proxyClass.getName() );
+		try {
+			proxyClassConstructor = proxyClass.getConstructor();
+		}
+		catch (NoSuchMethodException e) {
+			throw new AssertionFailure( "Could not access default constructor from newly generated basic proxy" );
+		}
 	}
 
 	@Override
 	public Object getProxy() {
 		try {
-			final ProxyConfiguration proxy = (ProxyConfiguration) proxyClass.newInstance();
+			final ProxyConfiguration proxy = (ProxyConfiguration) proxyClassConstructor.newInstance();
 			proxy.$$_hibernate_set_interceptor( this.interceptor );
 			return proxy;
 		}

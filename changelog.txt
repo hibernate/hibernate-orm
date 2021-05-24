@@ -3,6 +3,26 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.4.32.Final (May 24, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31937
+
+** Bug
+    * [HHH-14619] - ClassCastException because collection of uninitialized proxy is dirty checked
+    * [HHH-14616] - Optimistic Lock throws org.hibernate.exception.SQLGrammarException: could not retrieve version
+    * [HHH-14585] - size() HQL function discards '@Where' clause
+    * [HHH-13779] - Schema migrator should use case insensitive column comparison of foreign keys
+
+** Improvement
+    * [HHH-14622] - Improved iteration of PreLoadEventListener
+    * [HHH-14621] - Introduce new methods on EventListenerGroup which allow Hibernate Reactive to fire events more efficiently
+    * [HHH-14574] - Avoid NullPointerExceptions from LoadContexts.cleanup(ResultSet)
+
+** Task
+    * [HHH-14610] - Upgrade to Byte Buddy 1.10.22
+
+
 Changes in 5.4.31.Final (April 29, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -14,20 +14,26 @@ configurations {
 }
 
 dependencies {
-	compile project( ':hibernate-core-jakarta' )
-	compile( libraries.jakarta_jta )
-	compile( libraries.junit )
-	compile( libraries.byteman )
-	compile( libraries.byteman_install )
-	compile( libraries.byteman_bmunit )
-	compile( libraries.xapool )
-	compile( libraries.log4j )
-	compile( libraries.jboss_tx_spi_jakarta ) {
+	api project( ':hibernate-core-jakarta' )
+
+	api libraries.junit
+	api libraries.junit5_api
+	api libraries.junit5_params
+	api 'org.hamcrest:hamcrest-all:1.3'
+	api libraries.byteman
+	api libraries.byteman_install
+	api libraries.byteman_bmunit
+
+	api libraries.xapool
+	api( libraries.jboss_tx_spi_jakarta ) {
 		transitive=false;
 	}
-	compile ( libraries.jboss_jta_jakarta ) {
+	api( libraries.jboss_jta_jakarta ) {
 		transitive=false;
 	}
+
+	api 'javax.money:money-api:1.0.1'
+	api 'org.javamoney:moneta:1.1'
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',

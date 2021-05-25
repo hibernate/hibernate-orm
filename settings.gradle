@@ -10,6 +10,8 @@ plugins {
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.2.1'
 }
 
+rootProject.name = 'hibernate-orm'
+
 apply from: file( 'gradle/gradle-enterprise.gradle' )
 
 if ( !JavaVersion.current().java8Compatible ) {

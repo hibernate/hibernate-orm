@@ -107,7 +107,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			new SingleIdLoadPlan( attributeMapping.getKeyDescriptor(), sqlAst, jdbcParameters ).load( key, LockOptions.READ, session );
 		}
 		else {
-			batchLoad( batchIds, session );
+			batchLoad( batchIds, numberOfIds , session );
 		}
 
 		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
@@ -116,6 +116,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 
 	private void batchLoad(
 			Object[] batchIds,
+			int numberOfIds,
 			SharedSessionContractImplementor session) {
 		if ( log.isDebugEnabled() ) {
 			log.debugf(
@@ -126,7 +127,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 		}
 
 		int smallBatchStart = 0;
-		int smallBatchLength = Math.min( batchIds.length, batchSize );
+		int smallBatchLength = Math.min( numberOfIds, batchSize );
 
 		while ( true ) {
 			final List<JdbcParameter> jdbcParameters;
@@ -144,7 +145,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						null,
 						getLoadable().getKeyDescriptor(),
 						null,
-						batchIds.length,
+						numberOfIds,
 						session.getLoadQueryInfluencers(),
 						LockOptions.READ,
 						jdbcParameters::add,
@@ -209,11 +210,11 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 
 			// prepare for the next round...
 			smallBatchStart += smallBatchLength;
-			if ( smallBatchStart >= batchIds.length ) {
+			if ( smallBatchStart >= numberOfIds ) {
 				break;
 			}
 
-			smallBatchLength = Math.min( batchIds.length - smallBatchStart, batchSize );
+			smallBatchLength = Math.min( numberOfIds - smallBatchStart, batchSize );
 		}
 	}
 }

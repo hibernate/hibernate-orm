@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.manytomany.batchload;
+package org.hibernate.orm.test.manytomany.batchload;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,15 +13,15 @@ import java.util.Set;
  *
  * @author Steve Ebersole
  */
-public class Group {
+public class User {
 	private Long id;
 	private String name;
-	private Set<User> users = new HashSet<User>();
+	private Set<Group> groups = new HashSet<Group>();
 
-	public Group() {
+	public User() {
 	}
 
-	public Group(String name) {
+	public User(String name) {
 		this.name = name;
 	}
 
@@ -41,11 +41,11 @@ public class Group {
 		this.name = name;
 	}
 
-	public Set<User> getUsers() {
-		return users;
+	public Set<Group> getGroups() {
+		return groups;
 	}
 
-	public void setUsers(Set<User> users) {
-		this.users = users;
+	public void setGroups(Set<Group> groups) {
+		this.groups = groups;
 	}
 }

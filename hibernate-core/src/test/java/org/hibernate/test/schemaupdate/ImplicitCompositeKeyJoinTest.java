@@ -15,8 +15,6 @@ import javax.persistence.Table;
 import java.io.Serializable;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import org.hibernate.annotations.ForeignKey;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -26,6 +24,7 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;

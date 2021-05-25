@@ -38,7 +38,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 
 	ModelPartContainer getModelPart();
 
-	LockMode getLockMode();
+	String getSourceAlias();
 
 	List<TableGroupJoin> getTableGroupJoins();
 

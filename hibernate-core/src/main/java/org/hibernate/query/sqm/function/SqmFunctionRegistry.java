@@ -112,7 +112,19 @@ public class SqmFunctionRegistry {
 	 * @return The builder
 	 */
 	public PatternFunctionDescriptorBuilder patternDescriptorBuilder(String registrationKey, String pattern) {
-		return new PatternFunctionDescriptorBuilder( this, registrationKey, pattern );
+		return new PatternFunctionDescriptorBuilder( this, registrationKey, false, pattern );
+	}
+
+	/**
+	 * Get a builder for creating and registering a pattern-based aggregate function descriptor.
+	 *
+	 * @param registrationKey The name under which the descriptor will get registered
+	 * @param pattern The pattern defining the the underlying function call
+	 *
+	 * @return The builder
+	 */
+	public PatternFunctionDescriptorBuilder patternAggregateDescriptorBuilder(String registrationKey, String pattern) {
+		return new PatternFunctionDescriptorBuilder( this, registrationKey, true, pattern );
 	}
 
 	/**
@@ -151,6 +163,19 @@ public class SqmFunctionRegistry {
 	}
 
 	/**
+	 * Get a builder for creating and registering a name-based aggregate function descriptor
+	 * using the passed name as both the registration key and underlying SQL
+	 * function name
+	 *
+	 * @param name The function name (and registration key)
+	 *
+	 * @return The builder
+	 */
+	public NamedFunctionDescriptorBuilder namedAggregateDescriptorBuilder(String name) {
+		return namedAggregateDescriptorBuilder( name, name );
+	}
+
+	/**
 	 * Get a builder for creating and registering a name-based function descriptor.
 	 *
 	 * @param registrationKey The name under which the descriptor will get registered
@@ -159,7 +184,19 @@ public class SqmFunctionRegistry {
 	 * @return The builder
 	 */
 	public NamedFunctionDescriptorBuilder namedDescriptorBuilder(String registrationKey, String name) {
-		return new NamedFunctionDescriptorBuilder( this, registrationKey, name );
+		return new NamedFunctionDescriptorBuilder( this, registrationKey, false, name );
+	}
+
+	/**
+	 * Get a builder for creating and registering a name-based aggregate function descriptor.
+	 *
+	 * @param registrationKey The name under which the descriptor will get registered
+	 * @param name The underlying SQL function name to use
+	 *
+	 * @return The builder
+	 */
+	public NamedFunctionDescriptorBuilder namedAggregateDescriptorBuilder(String registrationKey, String name) {
+		return new NamedFunctionDescriptorBuilder( this, registrationKey, true, name );
 	}
 
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {

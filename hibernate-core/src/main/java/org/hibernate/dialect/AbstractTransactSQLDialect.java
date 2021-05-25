@@ -159,6 +159,11 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.TABLE;
+	}
+
+	@Override
 	public String appendLockHint(LockOptions lockOptions, String tableName) {
 		return lockOptions.getLockMode().greaterThan( LockMode.READ ) ? tableName + " holdlock" : tableName;
 	}

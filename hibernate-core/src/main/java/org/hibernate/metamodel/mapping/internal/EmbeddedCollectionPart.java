@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -151,7 +150,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return new EmbeddableFetchImpl(
@@ -203,7 +201,6 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {

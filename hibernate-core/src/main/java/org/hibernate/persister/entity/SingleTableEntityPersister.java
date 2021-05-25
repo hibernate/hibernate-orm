@@ -18,7 +18,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -924,16 +923,15 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = super.createRootTableGroup(
 				navigablePath,
 				explicitSourceAlias,
-				lockMode,
 				additionalPredicateCollectorAccess,
-				creationState, creationContext
+				creationState,
+				creationContext
 		);
 
 		if ( needsDiscriminator() ) {

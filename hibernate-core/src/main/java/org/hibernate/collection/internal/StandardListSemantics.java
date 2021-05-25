@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -75,7 +74,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			DomainResultCreationState creationState) {
 		return new ListInitializerProducer(
 				attributeMapping,
@@ -84,7 +82,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 						navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
-						lockMode,
 						null,
 						creationState
 				),
@@ -93,7 +90,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
-						lockMode,
 						null,
 						creationState
 				)
@@ -107,7 +103,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState) {
@@ -117,7 +112,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 					navigablePath.append( CollectionPart.Nature.INDEX.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
-					lockMode,
 					null,
 					creationState
 			);
@@ -128,7 +122,6 @@ public class StandardListSemantics<E> implements CollectionSemantics<List<E>, E>
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
-					lockMode,
 					null,
 					creationState
 			);

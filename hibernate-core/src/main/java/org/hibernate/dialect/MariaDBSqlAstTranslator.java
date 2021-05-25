@@ -30,6 +30,11 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		super( sessionFactory, statement );
 	}
 
+	@Override
+	protected String getForShare() {
+		return " lock in share mode";
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );

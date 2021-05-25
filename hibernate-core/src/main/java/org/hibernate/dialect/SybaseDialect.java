@@ -38,7 +38,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
 	public SybaseDialect(){
-		this(1100);
+		this( 1100 );
 	}
 
 	public SybaseDialect(DialectResolutionInfo info){

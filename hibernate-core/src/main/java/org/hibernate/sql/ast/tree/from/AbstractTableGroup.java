@@ -23,7 +23,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
 public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
-	private final LockMode lockMode;
+	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
 
 	private List<TableGroupJoin> tableGroupJoins;
@@ -35,24 +35,24 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	public AbstractTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
-			LockMode lockMode,
+			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		this( navigablePath, producer, lockMode, sqlAliasBase, false, sessionFactory );
+		this( navigablePath, producer, sourceAlias, sqlAliasBase, false, sessionFactory );
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
-			LockMode lockMode,
+			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			boolean isInnerJoinPossible,
 			SessionFactoryImplementor sessionFactory) {
 		super();
 		this.navigablePath = navigablePath;
 		this.producer = producer;
-		this.lockMode = lockMode;
+		this.sourceAlias = sourceAlias;
 		this.sqlAliasBase = sqlAliasBase;
 		this.isInnerJoinPossible = isInnerJoinPossible;
 		this.sessionFactory = sessionFactory;
@@ -83,8 +83,8 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return lockMode;
+	public String getSourceAlias() {
+		return sourceAlias;
 	}
 
 	@Override

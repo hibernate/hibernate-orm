@@ -12,6 +12,9 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 import java.util.List;
 import java.util.Locale;
@@ -43,6 +46,7 @@ public class NamedSqmFunctionDescriptor
 				argumentsValidator,
 				returnTypeResolver,
 				functionName,
+				false,
 				null,
 				SqlAstNodeRenderingMode.DEFAULT
 		);
@@ -54,9 +58,10 @@ public class NamedSqmFunctionDescriptor
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			String name,
+			boolean isAggregate,
 			String argumentListSignature,
 			SqlAstNodeRenderingMode argumentRenderingMode) {
-		super( name, argumentsValidator, returnTypeResolver );
+		super( name, isAggregate, argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;
@@ -75,7 +80,7 @@ public class NamedSqmFunctionDescriptor
 
 	@Override
 	public String getArgumentListSignature() {
-		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
+		return argumentListSignature == null ? super.getArgumentListSignature() : argumentListSignature;
 	}
 
 	@Override
@@ -87,8 +92,18 @@ public class NamedSqmFunctionDescriptor
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
-			SqlAstTranslator<?> walker) {
+			SqlAstTranslator<?> translator) {
+		render( sqlAppender, sqlAstArguments, null, translator );
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			SqlAstTranslator<?> translator) {
 		final boolean useParens = useParenthesesWhenNoArgs || !sqlAstArguments.isEmpty();
+		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 
 		sqlAppender.appendSql( functionName );
 		if ( useParens ) {
@@ -96,16 +111,31 @@ public class NamedSqmFunctionDescriptor
 		}
 
 		boolean firstPass = true;
-		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
+		for ( SqlAstNode arg : sqlAstArguments ) {
 			if ( !firstPass ) {
 				sqlAppender.appendSql( ", " );
 			}
-			walker.render( sqlAstArgument, argumentRenderingMode );
+			if ( caseWrapper && !( arg instanceof Distinct ) && !( arg instanceof Star ) ) {
+				sqlAppender.appendSql( "case when " );
+				filter.accept( translator );
+				sqlAppender.appendSql( " then " );
+				translator.render( arg, argumentRenderingMode );
+				sqlAppender.appendSql( " else null end" );
+			}
+			else {
+				translator.render( arg, argumentRenderingMode );
+			}
 			firstPass = false;
 		}
 
 		if ( useParens ) {
 			sqlAppender.appendSql( ")" );
+		}
+
+		if ( filter != null && !caseWrapper ) {
+			sqlAppender.appendSql( " filter (where " );
+			filter.accept( translator );
+			sqlAppender.appendSql( ')' );
 		}
 	}
 

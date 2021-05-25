@@ -35,6 +35,19 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		return LockStrategy.NONE;
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// Ingres does not support the FOR UPDATE clause
+	}
+
+	@Override
 	protected void renderFetchPlusOffsetExpression(
 			Expression fetchClauseExpression,
 			Expression offsetClauseExpression,

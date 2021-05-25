@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 import java.util.List;
 
@@ -47,9 +48,11 @@ public class PatternBasedSqmFunctionDescriptor
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			String name,
+			boolean isAggregate,
 			String argumentListSignature) {
 		super(
 				name,
+				isAggregate,
 				argumentsValidator != null
 						? argumentsValidator
 						// If no validator is given, it's still better to
@@ -70,11 +73,16 @@ public class PatternBasedSqmFunctionDescriptor
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
-		renderer.render( sqlAppender, sqlAstArguments, walker );
+		renderer.render( sqlAppender, sqlAstArguments, null, walker );
+	}
+
+	@Override
+	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, Predicate filter, SqlAstTranslator<?> walker) {
+		renderer.render( sqlAppender, sqlAstArguments, filter, walker );
 	}
 
 	@Override
 	public String getArgumentListSignature() {
-		return argumentListSignature==null ? super.getArgumentListSignature() : argumentListSignature;
+		return argumentListSignature == null ? super.getArgumentListSignature() : argumentListSignature;
 	}
 }

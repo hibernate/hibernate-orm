@@ -57,8 +57,8 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return underlyingTableGroup.getLockMode();
+	public String getSourceAlias() {
+		return underlyingTableGroup.getSourceAlias();
 	}
 
 	@Override

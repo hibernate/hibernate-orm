@@ -11,8 +11,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -33,7 +31,7 @@ public class TableGroupImpl implements TableGroup {
 	private List<TableGroupJoin> tableGroupJoins;
 
 	private final ModelPartContainer container;
-	private final LockMode lockMode;
+	private final String sourceAlias;
 
 
 	public TableGroupImpl(
@@ -41,12 +39,12 @@ public class TableGroupImpl implements TableGroup {
 			String alias,
 			TableReference primaryTableReference,
 			ModelPartContainer container,
-			LockMode lockMode) {
+			String sourceAlias) {
 		this.navigablePath = navigablePath;
 		this.alias = alias;
 		this.primaryTableReference = primaryTableReference;
 		this.container = container;
-		this.lockMode = lockMode;
+		this.sourceAlias = sourceAlias;
 	}
 
 	@Override
@@ -70,8 +68,8 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return lockMode;
+	public String getSourceAlias() {
+		return sourceAlias;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -21,6 +22,7 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -127,8 +129,23 @@ public final class ExecuteWithIdTableHelper {
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockMode lockMode = lockOptions.getLockMode();
+		// Acquire a WRITE lock for the rows that are about to be modified
+		lockOptions.setLockMode( LockMode.WRITE );
+		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
+		if ( !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+			matchingIdSelection.getFromClause().visitTableJoins(
+					tableJoin -> {
+						if ( tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+							lockOptions.setLockMode( lockMode );
+						}
+					}
+			);
+		}
 		final JdbcInsert jdbcInsert = sqlAstTranslatorFactory.buildInsertTranslator( factory, idTableInsert )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		lockOptions.setLockMode( lockMode );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(
 				jdbcInsert,
@@ -158,7 +175,7 @@ public final class ExecuteWithIdTableHelper {
 		final TableGroup idTableGroup = new StandardTableGroup(
 				new NavigablePath( idTableReference.getTableExpression() ),
 				entityDescriptor,
-				LockMode.NONE,
+				null,
 				idTableReference,
 				null,
 				executionContext.getSession().getFactory()
@@ -182,7 +199,7 @@ public final class ExecuteWithIdTableHelper {
 			if ( idTableColumn != idTable.getSessionUidColumn() ) {
 				querySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								i+1,
+								i + 1,
 								i,
 								new ColumnReference(
 										tableReference,

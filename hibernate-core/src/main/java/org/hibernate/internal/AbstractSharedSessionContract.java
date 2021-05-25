@@ -801,6 +801,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			HqlQueryImplementor<T> query = namedHqlDescriptor.toQuery( this, resultType );
 			query.setComment( "dynamic HQL query" );
 			applyQuerySettingsAndHints( query );
+			if ( namedHqlDescriptor.getLockOptions() != null ) {
+				query.setLockOptions( namedHqlDescriptor.getLockOptions() );
+			}
 			return query;
 		}
 

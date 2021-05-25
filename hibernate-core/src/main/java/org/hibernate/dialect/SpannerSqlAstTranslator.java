@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -30,6 +31,19 @@ public class SpannerSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	public SpannerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		return LockStrategy.NONE;
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// Spanner does not support the FOR UPDATE clause
 	}
 
 	@Override

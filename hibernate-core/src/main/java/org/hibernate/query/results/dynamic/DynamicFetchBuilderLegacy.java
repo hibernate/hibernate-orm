@@ -109,7 +109,6 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 					tableAlias,
 					SqlAstJoinType.INNER,
 					true,
-					LockMode.NONE,
 					s -> sqlAliasBase,
 					creationState.getSqlExpressionResolver(),
 					creationState.getCreationContext()

@@ -75,6 +75,7 @@ public class DomainResultCreationStateImpl
 
 	private final Stack<Function<String, FetchBuilder>> fetchBuilderResolverStack = new StandardStack<>( fetchableName -> null );
 	private final Stack<NavigablePath> relativePathStack = new StandardStack<>();
+	private Map<String, LockMode> registeredLockModes;
 	private boolean processingKeyFetches = false;
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
@@ -209,8 +210,15 @@ public class DomainResultCreationStateImpl
 	}
 
 	@Override
-	public LockMode determineLockMode(String identificationVariable) {
-		return LockMode.READ;
+	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
+		if (registeredLockModes == null ) {
+			registeredLockModes = new HashMap<>();
+		}
+		registeredLockModes.put( identificationVariable, explicitLockMode );
+	}
+
+	public Map<String, LockMode> getRegisteredLockModes() {
+		return registeredLockModes;
 	}
 
 	@Override

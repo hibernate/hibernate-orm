@@ -483,6 +483,16 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsNoWait() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWait() {
+		return false;
+	}
+
+	@Override
 	public boolean useFollowOnLocking(String sql, QueryOptions queryOptions) {
 		return getVersion() >= 14;
 	}
@@ -581,7 +591,6 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		//TODO: is this right?!
 		return TopLimitHandler.INSTANCE;
 	}
 

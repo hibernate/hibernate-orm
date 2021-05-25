@@ -40,6 +40,21 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected String getForUpdate() {
+		return " for update";
+	}
+
+	@Override
+	protected String getForShare() {
+		return " for read only";
+	}
+
+	@Override
+	protected String getForUpdateWithClause() {
+		return " with rs";
+	}
+
+	@Override
 	public void visitCteContainer(CteContainer cteContainer) {
 		if ( cteContainer.isWithRecursive() ) {
 			throw new IllegalArgumentException( "Recursive CTEs can't be emulated" );

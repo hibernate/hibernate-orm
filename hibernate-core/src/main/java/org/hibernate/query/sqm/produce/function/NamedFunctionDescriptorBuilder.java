@@ -19,6 +19,7 @@ public class NamedFunctionDescriptorBuilder {
 
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;
+	private final boolean isAggregate;
 
 	private final String functionName;
 
@@ -29,9 +30,14 @@ public class NamedFunctionDescriptorBuilder {
 	private String argumentListSignature;
 	private SqlAstNodeRenderingMode argumentRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 
-	public NamedFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String functionName) {
+	public NamedFunctionDescriptorBuilder(
+			SqmFunctionRegistry registry,
+			String registrationKey,
+			boolean isAggregate,
+			String functionName) {
 		this.registry = registry;
 		this.registrationKey = registrationKey;
+		this.isAggregate = isAggregate;
 		this.functionName = functionName;
 	}
 
@@ -88,6 +94,7 @@ public class NamedFunctionDescriptorBuilder {
 				argumentsValidator,
 				returnTypeResolver,
 				registrationKey,
+				isAggregate,
 				argumentListSignature,
 				argumentRenderingMode
 		);

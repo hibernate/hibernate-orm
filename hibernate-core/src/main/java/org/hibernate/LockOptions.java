@@ -124,7 +124,12 @@ public class LockOptions implements Serializable {
 		if ( aliasSpecificLockModes == null ) {
 			aliasSpecificLockModes = new LinkedHashMap<>();
 		}
-		aliasSpecificLockModes.put( alias, lockMode );
+		if ( lockMode == null ) {
+			aliasSpecificLockModes.remove( alias );
+		}
+		else {
+			aliasSpecificLockModes.put( alias, lockMode );
+		}
 		return this;
 	}
 
@@ -338,13 +343,16 @@ public class LockOptions implements Serializable {
 		return destination;
 	}
 
-	public boolean isCompatible(LockOptions that) {
-		if ( that == null ) {
-			return isEmpty();
-		}
-		else if ( this == that ) {
+	@Override
+	public boolean equals(Object o) {
+		if ( this == o ) {
 			return true;
 		}
+		if ( o == null || getClass() != o.getClass() ) {
+			return false;
+		}
+
+		LockOptions that = (LockOptions) o;
 
 		if ( timeout != that.timeout ) {
 			return false;
@@ -361,6 +369,16 @@ public class LockOptions implements Serializable {
 			return false;
 		}
 		return followOnLocking != null ? followOnLocking.equals( that.followOnLocking ) : that.followOnLocking == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = lockMode != null ? lockMode.hashCode() : 0;
+		result = 31 * result + timeout;
+		result = 31 * result + ( aliasSpecificLockModes != null ? aliasSpecificLockModes.hashCode() : 0 );
+		result = 31 * result + ( followOnLocking != null ? followOnLocking.hashCode() : 0 );
+		result = 31 * result + ( scope ? 1 : 0 );
+		return result;
 	}
 
 }

@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.FetchStyle;
@@ -478,7 +477,6 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
@@ -499,7 +497,6 @@ public class PluralAttributeMappingImpl
 									null,
 									SqlAstJoinType.LEFT,
 									true,
-									lockMode,
 									creationState.getSqlAstCreationState()
 							);
 							return tableGroupJoin.getJoinedGroup();
@@ -556,7 +553,6 @@ public class PluralAttributeMappingImpl
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -568,7 +564,6 @@ public class PluralAttributeMappingImpl
 					explicitSourceAlias,
 					sqlAstJoinType,
 					fetched,
-					lockMode,
 					aliasBaseGenerator,
 					sqlExpressionResolver,
 					creationContext
@@ -581,7 +576,6 @@ public class PluralAttributeMappingImpl
 					explicitSourceAlias,
 					sqlAstJoinType,
 					fetched,
-					lockMode,
 					aliasBaseGenerator,
 					sqlExpressionResolver,
 					creationContext
@@ -600,14 +594,13 @@ public class PluralAttributeMappingImpl
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createOneToManyTableGroup(
 				navigablePath,
 				fetched,
-				lockMode,
+				explicitSourceAlias,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
 				creationContext
@@ -634,7 +627,7 @@ public class PluralAttributeMappingImpl
 	private TableGroup createOneToManyTableGroup(
 			NavigablePath navigablePath,
 			boolean fetched,
-			LockMode lockMode,
+			String sourceAlias,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -661,7 +654,7 @@ public class PluralAttributeMappingImpl
 				navigablePath,
 				this,
 				fetched,
-				lockMode,
+				sourceAlias,
 				primaryTableReference,
 				true,
 				sqlAliasBase,
@@ -684,14 +677,13 @@ public class PluralAttributeMappingImpl
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createCollectionTableGroup(
 				navigablePath,
 				fetched,
-				lockMode,
+				explicitSourceAlias,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
 				creationContext
@@ -718,7 +710,7 @@ public class PluralAttributeMappingImpl
 	private TableGroup createCollectionTableGroup(
 			NavigablePath navigablePath,
 			boolean fetched,
-			LockMode lockMode,
+			String sourceAlias,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -847,7 +839,7 @@ public class PluralAttributeMappingImpl
 				navigablePath,
 				this,
 				fetched,
-				lockMode,
+				sourceAlias,
 				collectionTableReference,
 				true,
 				sqlAliasBase,
@@ -931,7 +923,6 @@ public class PluralAttributeMappingImpl
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
@@ -939,7 +930,7 @@ public class PluralAttributeMappingImpl
 			return createOneToManyTableGroup(
 					navigablePath,
 					false,
-					lockMode,
+					explicitSourceAlias,
 					creationState.getSqlAliasBaseGenerator(),
 					creationState.getSqlExpressionResolver(),
 					creationContext
@@ -949,7 +940,7 @@ public class PluralAttributeMappingImpl
 			return createCollectionTableGroup(
 					navigablePath,
 					false,
-					lockMode,
+					explicitSourceAlias,
 					creationState.getSqlAliasBaseGenerator(),
 					creationState.getSqlExpressionResolver(),
 					creationContext

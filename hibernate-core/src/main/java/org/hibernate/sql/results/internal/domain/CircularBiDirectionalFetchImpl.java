@@ -166,7 +166,6 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException();

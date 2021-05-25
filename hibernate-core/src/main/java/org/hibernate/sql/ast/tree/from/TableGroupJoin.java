@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 /**
  * @author Steve Ebersole
  */
-public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
+public class TableGroupJoin implements TableJoin, DomainResultProducer {
 	private final NavigablePath navigablePath;
 	private final SqlAstJoinType sqlAstJoinType;
 	private final TableGroup joinedGroup;
@@ -44,6 +44,7 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 		this( navigablePath, sqlAstJoinType, joinedGroup, null );
 	}
 
+	@Override
 	public SqlAstJoinType getJoinType() {
 		return sqlAstJoinType;
 	}
@@ -52,6 +53,12 @@ public class TableGroupJoin implements SqlAstNode, DomainResultProducer {
 		return joinedGroup;
 	}
 
+	@Override
+	public SqlAstNode getJoinedNode() {
+		return joinedGroup;
+	}
+
+	@Override
 	public Predicate getPredicate() {
 		return predicate;
 	}

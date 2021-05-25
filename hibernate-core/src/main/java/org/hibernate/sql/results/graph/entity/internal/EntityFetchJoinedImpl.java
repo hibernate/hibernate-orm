@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -25,19 +24,18 @@ import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 
 	private final EntityResultImpl entityResult;
-	private final LockMode lockMode;
+	private final String sourceAlias;
 
 	public EntityFetchJoinedImpl(
 			FetchParent fetchParent,
 			EntityValuedFetchable fetchedAttribute,
 			TableGroup tableGroup,
-			LockMode lockMode,
 			boolean nullable,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
 		super( fetchParent, fetchedAttribute, navigablePath, nullable );
-		this.lockMode = lockMode;
-		entityResult = new EntityResultImpl(
+		this.sourceAlias = tableGroup.getSourceAlias();
+		this.entityResult = new EntityResultImpl(
 				navigablePath,
 				fetchedAttribute,
 				tableGroup,
@@ -57,7 +55,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						entityResult,
 						getReferencedModePart(),
 						getNavigablePath(),
-						lockMode,
+						creationState.determineEffectiveLockMode( sourceAlias ),
 						entityResult.getIdentifierResult(),
 						entityResult.getDiscriminatorResult(),
 						entityResult.getVersionResult(),
@@ -80,7 +78,4 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		return entityResult;
 	}
 
-	public LockMode getLockMode() {
-		return lockMode;
-	}
 }

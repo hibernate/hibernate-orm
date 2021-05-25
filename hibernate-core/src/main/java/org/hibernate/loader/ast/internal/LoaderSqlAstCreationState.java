@@ -108,8 +108,8 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public LockMode determineLockMode(String identificationVariable) {
-		return lockOptions.getEffectiveLockMode( identificationVariable );
+	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
+		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings!" );
 	}
 
 	@Override

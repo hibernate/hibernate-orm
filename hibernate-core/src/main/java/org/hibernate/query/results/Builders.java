@@ -43,11 +43,9 @@ import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -292,7 +290,6 @@ public class Builders {
 						fetchablePath,
 						FetchTiming.IMMEDIATE,
 						true,
-						LockMode.NONE,
 						null,
 						domainResultCreationState
 				);

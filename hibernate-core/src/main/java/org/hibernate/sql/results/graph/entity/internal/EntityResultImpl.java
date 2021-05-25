@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
@@ -49,7 +50,6 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 			DomainResultCreationState creationState) {
 		super(
 				entityValuedModelPart,
-				creationState.getSqlAstCreationState().determineLockMode( resultVariable ),
 				navigablePath,
 				creationState
 		);
@@ -89,6 +89,10 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 		return resultVariable;
 	}
 
+	protected LockMode getLockMode(AssemblerCreationState creationState) {
+		return creationState.determineEffectiveLockMode( tableGroup.getSourceAlias() );
+	}
+
 	@Override
 	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
@@ -97,7 +101,7 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 				() -> new EntityResultInitializer(
 						this,
 						getNavigablePath(),
-						getLockMode(),
+						getLockMode( creationState ),
 						getIdentifierResult(),
 						getDiscriminatorResult(),
 						getVersionResult(),

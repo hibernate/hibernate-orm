@@ -39,28 +39,24 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private final DomainResult discriminatorResult;
 	private final DomainResult versionResult;
 	private final DomainResult<Object> rowIdResult;
-	private final LockMode lockMode;
 
 	private final EntityMappingType targetType;
 
 	public AbstractEntityResultGraphNode(
 			EntityValuedModelPart referencedModelPart,
-			LockMode lockMode,
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
-		this( referencedModelPart, lockMode, navigablePath, null, creationState );
+		this( referencedModelPart, navigablePath, null, creationState );
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractEntityResultGraphNode(
 			EntityValuedModelPart referencedModelPart,
-			LockMode lockMode,
 			NavigablePath navigablePath,
 			EntityMappingType targetType,
 			DomainResultCreationState creationState) {
 		super( referencedModelPart.getEntityMappingType(), navigablePath );
 		this.referencedModelPart = referencedModelPart;
-		this.lockMode = lockMode;
 		this.targetType = targetType;
 
 		final EntityMappingType entityDescriptor = referencedModelPart.getEntityMappingType();
@@ -203,10 +199,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	@Override
 	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
 		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
-	}
-
-	public LockMode getLockMode() {
-		return lockMode;
 	}
 
 	public DomainResult getIdentifierResult() {

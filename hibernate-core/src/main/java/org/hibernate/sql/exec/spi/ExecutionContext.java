@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -31,6 +32,10 @@ public interface ExecutionContext {
 	QueryParameterBindings getQueryParameterBindings();
 
 	Callback getCallback();
+
+	default void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+		// No-op because by default there is callback
+	}
 
 	/**
 	 * Get the collection key for the collection which is to be loaded immediately.

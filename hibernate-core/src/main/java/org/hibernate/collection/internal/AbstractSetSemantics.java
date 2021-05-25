@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchTiming;
@@ -53,7 +52,6 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			DomainResultCreationState creationState) {
 		return new SetInitializerProducer(
 				attributeMapping,
@@ -62,7 +60,6 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
-						lockMode,
 						null,
 						creationState
 				)
@@ -76,7 +73,6 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState){
@@ -87,7 +83,6 @@ public abstract class AbstractSetSemantics<SE extends Set<E>,E> implements Colle
 					fetchParent,
 					selected,
 					resultVariable,
-					lockMode,
 					creationState
 			);
 		}

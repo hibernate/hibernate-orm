@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Any;
@@ -106,7 +105,6 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return discriminatorMapping.generateFetch(
@@ -114,7 +112,6 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 				fetchablePath,
 				fetchTiming,
 				selected,
-				lockMode,
 				resultVariable,
 				creationState
 		);

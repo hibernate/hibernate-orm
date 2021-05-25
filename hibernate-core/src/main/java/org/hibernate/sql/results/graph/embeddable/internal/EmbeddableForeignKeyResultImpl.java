@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -59,7 +58,6 @@ public class EmbeddableForeignKeyResultImpl<T>
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final boolean shouldSelect;
@@ -78,7 +76,6 @@ public class EmbeddableForeignKeyResultImpl<T>
 				fetchablePath,
 				fetchTiming,
 				shouldSelect,
-				lockMode,
 				resultVariable,
 				creationState
 		);

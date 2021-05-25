@@ -1059,6 +1059,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.COLUMN;
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return " for update nowait";
 	}
@@ -1092,7 +1097,7 @@ public class OracleDialect extends Dialect {
 			case LockOptions.WAIT_FOREVER:
 				return lockString;
 			default:
-				return supportsNoWait() ? lockString + " wait " + Math.round(timeout / 1e3f) : lockString;
+				return supportsWait() ? lockString + " wait " + Math.round(timeout / 1e3f) : lockString;
 		}
 	}
 

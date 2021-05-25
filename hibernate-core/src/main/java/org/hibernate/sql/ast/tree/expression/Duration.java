@@ -24,7 +24,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  * @author Gavin King
  */
 public class Duration implements Expression, DomainResultProducer {
-	private Expression magnitude;
+	private final Expression magnitude;
 	private final TemporalUnit unit;
 	private final BasicValuedMapping type;
 

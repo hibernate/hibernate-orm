@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -91,7 +90,6 @@ class DatabaseSnapshotExecutor {
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 				rootPath,
 				null,
-				LockMode.NONE,
 				() -> rootQuerySpec::applyPredicate,
 				state,
 				sessionFactory

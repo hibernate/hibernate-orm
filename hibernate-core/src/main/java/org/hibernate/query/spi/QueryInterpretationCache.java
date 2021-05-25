@@ -21,6 +21,12 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 @Incubating
 public interface QueryInterpretationCache {
 	interface Key {
+		/**
+		 * The possibility for a cache key to do defensive copying in case it has mutable state.
+		 */
+		default Key prepareForStore() {
+			return this;
+		}
 	}
 
 	int getNumberOfCachedHqlInterpretations();

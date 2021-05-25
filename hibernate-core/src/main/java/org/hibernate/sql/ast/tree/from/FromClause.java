@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -40,6 +41,76 @@ public class FromClause implements SqlAstNode {
 
 	public void visitRoots(Consumer<TableGroup> action) {
 		roots.forEach( action );
+	}
+
+	public void visitTableGroups(Consumer<TableGroup> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			visitTableGroups( roots.get( i ), action );
+		}
+	}
+
+	private void visitTableGroups(TableGroup tableGroup, Consumer<TableGroup> action) {
+		action.accept( tableGroup );
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			visitTableGroups( tableGroupJoins.get( i ).getJoinedGroup(), action );
+		}
+	}
+
+	public <T> T queryTableGroups(Function<TableGroup, T> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			final T result = queryTableGroups( roots.get( i ), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private <T> T queryTableGroups(TableGroup tableGroup, Function<TableGroup, T> action) {
+		final T result = action.apply( tableGroup );
+		if ( result != null ) {
+			return result;
+		}
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			final T nestedResult = queryTableGroups( tableGroupJoins.get( i ).getJoinedGroup(), action );
+			if ( nestedResult != null ) {
+				return nestedResult;
+			}
+		}
+		return null;
+	}
+
+	public void visitTableJoins(Consumer<TableJoin> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			visitTableJoins( roots.get( i ), action );
+		}
+	}
+
+	private void visitTableJoins(TableGroup tableGroup, Consumer<TableJoin> action) {
+		tableGroup.getTableReferenceJoins().forEach( action );
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
+			action.accept( tableGroupJoin );
+			visitTableJoins( tableGroupJoin.getJoinedGroup(), action );
+		}
+	}
+
+	public void visitTableGroupJoins(Consumer<TableGroupJoin> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			visitTableGroupJoins( roots.get( i ), action );
+		}
+	}
+
+	private void visitTableGroupJoins(TableGroup tableGroup, Consumer<TableGroupJoin> action) {
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
+			action.accept( tableGroupJoin );
+			visitTableGroupJoins( tableGroupJoin.getJoinedGroup(), action );
+		}
 	}
 
 	@Override

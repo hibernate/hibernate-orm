@@ -38,7 +38,7 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 				() -> new EntityResultInitializer(
 						this,
 						getNavigablePath(),
-						getLockMode(),
+						getLockMode( creationState ),
 						getIdentifierResult(),
 						getDiscriminatorResult(),
 						getVersionResult(),

@@ -12,6 +12,9 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Distinct;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -132,19 +135,37 @@ public class PatternRenderer {
 	public void render(
 			SqlAppender sqlAppender,
 			List<SqlAstNode> args,
-			SqlAstTranslator<?> walker) {
+			SqlAstTranslator<?> translator) {
+		render( sqlAppender, args, null, translator );
+	}
+
+	public void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> args,
+			Predicate filter,
+			SqlAstTranslator<?> translator) {
 		final int numberOfArguments = args.size();
+		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		if ( numberOfArguments < maxParamIndex ) {
 			LOG.missingArguments( maxParamIndex, numberOfArguments );
 		}
 
 		for ( int i = 0; i < chunks.length; i++ ) {
-			if ( i==varargParam ) {
+			if ( i == varargParam ) {
 				for ( int j = i; j < numberOfArguments; j++ ) {
 					final SqlAstNode arg = args.get( j );
 					if ( arg != null ) {
 						sqlAppender.appendSql( chunks[i] );
-						walker.render( arg, argumentRenderingMode );
+						if ( caseWrapper && !( arg instanceof Distinct ) && !( arg instanceof Star ) ) {
+							sqlAppender.appendSql( "case when " );
+							filter.accept( translator );
+							sqlAppender.appendSql( " then " );
+							translator.render( arg, argumentRenderingMode );
+							sqlAppender.appendSql( " else null end" );
+						}
+						else {
+							translator.render( arg, argumentRenderingMode );
+						}
 					}
 				}
 			}
@@ -155,12 +176,27 @@ public class PatternRenderer {
 					sqlAppender.appendSql( chunks[i] );
 				}
 				if ( arg != null ) {
-					walker.render( arg, argumentRenderingMode );
+					if ( caseWrapper && !( arg instanceof Distinct ) && !( arg instanceof Star ) ) {
+						sqlAppender.appendSql( "case when " );
+						filter.accept( translator );
+						sqlAppender.appendSql( " then " );
+						translator.render( arg, argumentRenderingMode );
+						sqlAppender.appendSql( " else null end" );
+					}
+					else {
+						translator.render( arg, argumentRenderingMode );
+					}
 				}
 			}
 			else {
 				sqlAppender.appendSql( chunks[i] );
 			}
+		}
+
+		if ( filter != null && !caseWrapper ) {
+			sqlAppender.appendSql( " filter (where " );
+			filter.accept( translator );
+			sqlAppender.appendSql( ')' );
 		}
 	}
 }

@@ -25,7 +25,6 @@ import javax.persistence.TemporalType;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
@@ -89,7 +88,7 @@ import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
@@ -505,11 +504,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public LockMode determineLockMode(String identificationVariable) {
-		final LockOptions lockOptions = getQueryOptions().getLockOptions();
-		return lockOptions.getScope() || identificationVariable == null
-				? lockOptions.getLockMode()
-				: lockOptions.getEffectiveLockMode( identificationVariable );
+	public void registerLockMode(String identificationVariable, LockMode explicitLockMode) {
+		throw new UnsupportedOperationException( "Registering lock modes should only be done for result set mappings!" );
 	}
 
 	public QueryOptions getQueryOptions() {
@@ -589,7 +585,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getRoot().getAlias(),
-					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
@@ -847,7 +842,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					statement.getRoot().getAlias(),
-					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
@@ -930,7 +924,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
-					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
@@ -1029,7 +1022,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
-					LockMode.WRITE,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
 					this,
 					getCreationContext()
@@ -1083,6 +1075,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public SelectStatement visitSelectStatement(SqmSelectStatement<?> statement) {
 		Map<String, CteStatement> cteStatements = this.visitCteContainer( statement );
 		final QueryPart queryPart = visitQueryPart( statement.getQueryPart() );
+		final List<DomainResult<?>> domainResults = queryPart.isRoot() ? this.domainResults : Collections.emptyList();
 		return new SelectStatement( statement.isWithRecursive(), cteStatements, queryPart, domainResults );
 	}
 
@@ -1147,6 +1140,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return new CteStatement(
 				cteTable,
 				visitStatement( sqmCteStatement.getCteDefinition() ),
+				sqmCteStatement.getMaterialization(),
 				sqmCteStatement.getSearchClauseKind(),
 				visitSearchBySpecifications( cteTable, sqmCteStatement.getSearchBySpecifications() ),
 				visitCycleColumns( cteTable, sqmCteStatement.getCycleColumns() ),
@@ -1751,7 +1745,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
 			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
 		}
-		final SqlExpressionResolver sqlExpressionResolver = getSqlExpressionResolver();
 		final TableGroup tableGroup;
 		if ( sqmRoot.isCorrelated() ) {
 			final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
@@ -1784,7 +1777,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroup = entityDescriptor.createRootTableGroup(
 						sqmRoot.getNavigablePath(),
 						sqmRoot.getExplicitAlias(),
-						LockMode.NONE,
 						() -> predicate -> {},
 						this,
 						creationContext
@@ -1849,7 +1841,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroup = entityDescriptor.createRootTableGroup(
 					sqmRoot.getNavigablePath(),
 					sqmRoot.getExplicitAlias(),
-					LockMode.NONE,
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 							additionalRestrictions,
 							predicate
@@ -1935,7 +1926,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
-					determineLockMode( sqmJoin.getExplicitAlias() ),
 					this
 			);
 		}
@@ -1950,7 +1940,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmJoin.getExplicitAlias(),
 					sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
 					sqmJoin.isFetched(),
-					determineLockMode( sqmJoin.getExplicitAlias() ),
 					this
 			);
 		}
@@ -2002,7 +1991,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				determineLockMode( sqmJoin.getExplicitAlias() ),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 						additionalRestrictions,
 						predicate
@@ -2031,7 +2019,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
-				determineLockMode( sqmJoin.getExplicitAlias() ),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 						additionalRestrictions,
 						predicate
@@ -2102,7 +2089,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								null,
 								parentTableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
 								false,
-								null,
 								this
 						);
 
@@ -2709,7 +2695,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							null,
 							SqlAstJoinType.INNER,
 							false,
-							LockMode.READ,
 							sqlAliasBaseManager,
 							getSqlExpressionResolver(),
 							creationContext
@@ -3834,7 +3819,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup tableGroup = collectionPart.createRootTableGroup(
 					pluralPath.getNavigablePath(),
 					null,
-					LockOptions.NONE.getLockMode(),
 					() -> subQuerySpec::applyPredicate,
 					this,
 					creationContext
@@ -3851,10 +3835,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final BasicType<Integer> integerType = creationContext.getDomainModel()
 					.getTypeConfiguration()
 					.getBasicTypeForJavaType( Integer.class );
-			final Expression expression = new SelfRenderingFunctionSqlAstExpression(
+			final Expression expression = new SelfRenderingAggregateFunctionSqlAstExpression(
 					functionDescriptor.getName(),
 					functionDescriptor::render,
 					Collections.singletonList( new QueryLiteral<>( 1, integerType ) ),
+					null,
 					integerType,
 					integerType
 			);
@@ -3902,7 +3887,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
 					pluralPartPath.getNavigablePath(),
 					null,
-					LockOptions.NONE.getLockMode(),
 					() -> subQuerySpec::applyPredicate,
 					this,
 					creationContext
@@ -3932,10 +3916,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						);
 					}
 			);
-			final Expression expression = new SelfRenderingFunctionSqlAstExpression(
+			final Expression expression = new SelfRenderingAggregateFunctionSqlAstExpression(
 					functionDescriptor.getName(),
 					functionDescriptor::render,
 					arguments,
+					null,
 					(AllowableFunctionReturnType<?>) collectionPart.getJdbcMappings().get( 0 ),
 					collectionPart
 			);
@@ -4050,7 +4035,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
 					pluralPath.getNavigablePath(),
 					null,
-					LockOptions.NONE.getLockMode(),
 					() -> subQuerySpec::applyPredicate,
 					this,
 					creationContext
@@ -4164,7 +4148,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					sqmPluralPath.getExplicitAlias(),
 					SqlAstJoinType.INNER,
 					false,
-					LockMode.NONE,
 					sqlAliasBaseManager,
 					subQueryState,
 					creationContext
@@ -4527,7 +4510,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// "initializing" state as part of AfterLoadAction
 
 		final String alias;
-		LockMode lockMode = LockMode.READ;
 		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 		boolean joined = false;
 
@@ -4547,7 +4529,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			joined = true;
 			alias = fetchedJoin.getExplicitAlias();
-			lockMode = determineLockMode( alias );
 		}
 		else {
 			// there was not an explicit fetch in the SQM
@@ -4611,7 +4592,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									alias,
 									SqlAstJoinType.LEFT,
 									true,
-									LockMode.NONE,
 									this
 							);
 							return tableGroupJoin.getJoinedGroup();
@@ -4627,7 +4607,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					fetchablePath,
 					fetchTiming,
 					joined,
-					lockMode,
 					alias,
 					this
 			);

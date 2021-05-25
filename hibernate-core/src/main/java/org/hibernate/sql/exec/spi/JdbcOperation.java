@@ -38,15 +38,9 @@ public interface JdbcOperation {
 	 * Signals that the SQL depends on the parameter bindings e.g. due to the need for inlining
 	 * of parameter values or multiValued parameters.
 	 */
-	default boolean dependsOnParameterBindings() {
-		return false;
-	}
+	boolean dependsOnParameterBindings();
 
-	default boolean isCompatibleWith(
-			JdbcParameterBindings jdbcParameterBindings,
-			QueryOptions queryOptions) {
-		return true;
-	}
+	boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions);
 
 	default void bindFilterJdbcParameters(JdbcParameterBindings jdbcParameterBindings) {
 		if ( CollectionHelper.isNotEmpty( getFilterJdbcParameters() ) ) {

@@ -23,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An SQM function
+ * A SQM function
  *
  * @author Steve Ebersole
  */
@@ -34,17 +34,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	private final String functionName;
 	private final SqmFunctionDescriptor functionDescriptor;
 
-	private List<SqmTypedNode<?>> arguments;
-
-	public SqmFunction(
-			String functionName,
-			SqmFunctionDescriptor functionDescriptor,
-			SqmExpressable<T> type,
-			NodeBuilder criteriaBuilder) {
-		super( type, criteriaBuilder );
-		this.functionName = functionName;
-		this.functionDescriptor = functionDescriptor;
-	}
+	private final List<SqmTypedNode<?>> arguments;
 
 	public SqmFunction(
 			String functionName,
@@ -69,15 +59,6 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 
 	public List<SqmTypedNode<?>> getArguments() {
 		return arguments;
-	}
-
-	public void addArgument(SqmTypedNode<?> argument) {
-		assert argument != null;
-
-		if ( arguments == null ) {
-			arguments = new ArrayList<>();
-		}
-		arguments.add( argument );
 	}
 
 	public abstract Expression convertToSqlAst(SqmToSqlAstConverter walker);

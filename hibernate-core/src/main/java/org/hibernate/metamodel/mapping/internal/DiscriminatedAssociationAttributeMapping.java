@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.engine.FetchStyle;
@@ -120,7 +119,6 @@ public class DiscriminatedAssociationAttributeMapping
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return discriminatorMapping.generateFetch(
@@ -128,7 +126,6 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchablePath,
 				fetchTiming,
 				selected,
-				lockMode,
 				resultVariable,
 				creationState
 		);

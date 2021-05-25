@@ -7,12 +7,14 @@
 package org.hibernate.dialect;
 
 
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -20,6 +22,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 import java.sql.Types;
+import java.util.Map;
 
 /**
  * SQL Dialect for Sybase Anywhere
@@ -28,7 +31,7 @@ import java.sql.Types;
 public class SybaseAnywhereDialect extends SybaseDialect {
 
 	public SybaseAnywhereDialect() {
-		this(8);
+		this( 800 );
 	}
 
 	public SybaseAnywhereDialect(DialectResolutionInfo info){
@@ -128,6 +131,41 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SybaseAnywhereIdentityColumnSupport();
+	}
+
+	@Override
+	public boolean forUpdateOfColumns() {
+		return getVersion() >= 1000;
+	}
+
+	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return getVersion() >= 1000 ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+	}
+
+	@Override
+	public String getForUpdateString() {
+		return getVersion() < 1000 ? "" : " for update";
+	}
+
+	@Override
+	public String getForUpdateString(String aliases) {
+		return getVersion() < 1000
+				? ""
+				: getForUpdateString() + " of " + aliases;
+	}
+
+	@Override
+	public String appendLockHint(LockOptions mode, String tableName) {
+		return getVersion() < 1000 ? super.appendLockHint( mode, tableName ) : tableName;
+	}
+
+	@Override
+	@SuppressWarnings("deprecation")
+	public String applyLocksToSql(String sql, LockOptions aliasedLockOptions, Map<String, String[]> keyColumnNames) {
+		return getVersion() < 1000
+				? super.applyLocksToSql( sql, aliasedLockOptions, keyColumnNames )
+				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
 	@Override

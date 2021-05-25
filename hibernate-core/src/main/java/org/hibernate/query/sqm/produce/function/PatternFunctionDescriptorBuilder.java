@@ -19,6 +19,7 @@ import org.hibernate.type.BasicType;
 public class PatternFunctionDescriptorBuilder {
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;
+	private final boolean isAggregate;
 	private final String pattern;
 	private String argumentListSignature;
 
@@ -26,9 +27,10 @@ public class PatternFunctionDescriptorBuilder {
 	private FunctionReturnTypeResolver returnTypeResolver;
 	private SqlAstNodeRenderingMode argumentRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 
-	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, String pattern) {
+	public PatternFunctionDescriptorBuilder(SqmFunctionRegistry registry, String registrationKey, boolean isAggregate, String pattern) {
 		this.registry = registry;
 		this.registrationKey = registrationKey;
+		this.isAggregate = isAggregate;
 		this.pattern = pattern;
 	}
 
@@ -71,6 +73,7 @@ public class PatternFunctionDescriptorBuilder {
 				argumentsValidator,
 				returnTypeResolver,
 				registrationKey,
+				isAggregate,
 				argumentListSignature
 		);
 	}

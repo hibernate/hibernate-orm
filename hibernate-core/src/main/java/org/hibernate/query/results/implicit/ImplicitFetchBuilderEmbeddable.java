@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.Builders;
@@ -89,7 +88,6 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 							null,
 							SqlAstJoinType.INNER,
 							true,
-							LockMode.READ,
 							creationStateImpl
 					);
 					return tableGroupJoin.getJoinedGroup();
@@ -101,7 +99,6 @@ public class ImplicitFetchBuilderEmbeddable implements ImplicitFetchBuilder {
 				fetchPath,
 				FetchTiming.IMMEDIATE,
 				true,
-				LockMode.READ,
 				null,
 				creationState
 		);

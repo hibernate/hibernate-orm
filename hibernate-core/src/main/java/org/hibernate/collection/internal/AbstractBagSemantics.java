@@ -11,7 +11,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.engine.FetchTiming;
@@ -68,7 +67,6 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			DomainResultCreationState creationState) {
 		return new BagInitializerProducer(
 				attributeMapping,
@@ -77,7 +75,6 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 						navigablePath.append( CollectionPart.Nature.ID.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
-						lockMode,
 						null,
 						creationState
 				),
@@ -86,7 +83,6 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 						navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 						FetchTiming.IMMEDIATE,
 						selected,
-						lockMode,
 						null,
 						creationState
 				)
@@ -100,7 +96,6 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState){
@@ -110,7 +105,6 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 					navigablePath.append( CollectionPart.Nature.ID.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
-					lockMode,
 					null,
 					creationState
 			);
@@ -121,7 +115,6 @@ public abstract class AbstractBagSemantics<E> implements BagSemantics<Collection
 					navigablePath.append( CollectionPart.Nature.ELEMENT.getName() ),
 					FetchTiming.IMMEDIATE,
 					selected,
-					lockMode,
 					null,
 					creationState
 			);

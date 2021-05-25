@@ -8,14 +8,12 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -29,7 +27,6 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
-import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -136,8 +133,6 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 				fetchParent,
 				true,
 				null,
-				// todo (6.0) : we need to propagate these lock modes
-				LockMode.READ,
 				indexFetch,
 				elementFetch,
 				creationState

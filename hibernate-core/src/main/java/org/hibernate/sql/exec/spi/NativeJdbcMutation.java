@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.query.spi.QueryOptions;
 
 /**
  * Executable JDBC command
@@ -51,4 +52,13 @@ public class NativeJdbcMutation implements JdbcMutation {
 		return Collections.EMPTY_SET;
 	}
 
+	@Override
+	public boolean dependsOnParameterBindings() {
+		return false;
+	}
+
+	@Override
+	public boolean isCompatibleWith(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
+		return true;
+	}
 }

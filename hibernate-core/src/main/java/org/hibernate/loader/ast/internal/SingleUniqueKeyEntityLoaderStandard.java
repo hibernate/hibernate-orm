@@ -123,8 +123,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 					@Override
 					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
+						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
 				},
 				row -> row[0],
@@ -201,8 +200,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 
 					@Override
 					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
+						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
 				},
 				row -> row[0],

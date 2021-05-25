@@ -27,7 +27,6 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAstCreationState creationState) {
 		return createTableGroupJoin(
 				navigablePath,
@@ -35,7 +34,6 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 				explicitSourceAlias,
 				sqlAstJoinType,
 				fetched,
-				lockMode,
 				creationState.getSqlAliasBaseGenerator(),
 				creationState.getSqlExpressionResolver(),
 				creationState.getCreationContext()
@@ -51,7 +49,6 @@ public interface TableGroupJoinProducer extends TableGroupProducer {
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext);

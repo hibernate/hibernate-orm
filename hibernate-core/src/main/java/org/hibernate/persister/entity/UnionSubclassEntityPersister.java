@@ -21,7 +21,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.LockMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -54,7 +53,6 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
-import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -245,7 +243,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
@@ -253,7 +250,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		final TableReference tableReference = resolvePrimaryTableReference(sqlAliasBase);
 
-		return new UnionTableGroup( navigablePath, tableReference, this );
+		return new UnionTableGroup( navigablePath, tableReference, this, explicitSourceAlias );
 	}
 
 	@Override

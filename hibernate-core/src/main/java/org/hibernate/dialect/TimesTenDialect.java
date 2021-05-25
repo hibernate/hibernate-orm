@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.lock.*;
@@ -216,8 +217,56 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
+	public boolean forUpdateOfColumns() {
+		return true;
+	}
+
+	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.COLUMN;
+	}
+
+	@Override
+	public String getForUpdateString(String aliases) {
+		return " for update of " + aliases;
+	}
+
+	@Override
 	public String getForUpdateNowaitString() {
 		return " for update nowait";
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString(aliases), timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return getWriteLockString( timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return getWriteLockString( aliases, timeout );
+	}
+
+
+	private String withTimeout(String lockString, int timeout) {
+		switch (timeout) {
+			case LockOptions.NO_WAIT:
+				return supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED:
+			case LockOptions.WAIT_FOREVER:
+				return lockString;
+			default:
+				return supportsWait() ? lockString + " wait " + Math.round( timeout / 1e3f ) : lockString;
+		}
 	}
 
 	@Override

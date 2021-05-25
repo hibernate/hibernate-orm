@@ -29,6 +29,32 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		super( sessionFactory, statement );
 	}
 
+	@Override
+	protected String getForShare() {
+		return " for share";
+	}
+
+	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getDialect().getVersion() < 2010 ) {
+			return LockStrategy.NONE;
+		}
+		return super.determineLockingStrategy( querySpec, forUpdateClause, followOnLocking );
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getDialect().getVersion() < 2010 ) {
+			return;
+		}
+		super.renderForUpdateClause( querySpec, forUpdateClause );
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart

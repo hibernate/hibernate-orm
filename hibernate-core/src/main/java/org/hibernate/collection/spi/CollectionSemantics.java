@@ -65,7 +65,6 @@ public interface CollectionSemantics<CE, E> {
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			DomainResultCreationState creationState);
 
 	CollectionInitializerProducer createInitializerProducer(
@@ -74,7 +73,6 @@ public interface CollectionSemantics<CE, E> {
 			FetchParent fetchParent,
 			boolean selected,
 			String resultVariable,
-			LockMode lockMode,
 			Fetch indexFetch,
 			Fetch elementFetch,
 			DomainResultCreationState creationState);

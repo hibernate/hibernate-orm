@@ -77,6 +77,10 @@ public class SelfRenderingFunctionSqlAstExpression
 		return expressable;
 	}
 
+	protected FunctionRenderingSupport getRenderer() {
+		return renderer;
+	}
+
 	@Override
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,

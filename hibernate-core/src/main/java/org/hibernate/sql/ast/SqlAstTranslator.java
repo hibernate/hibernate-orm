@@ -24,6 +24,11 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	void render(SqlAstNode sqlAstNode, SqlAstNodeRenderingMode renderingMode);
 
 	/**
+	 * Whether the FILTER clause for aggregate functions is supported.
+	 */
+	boolean supportsFilterClause();
+
+	/**
 	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.
 	 * Its ok here because the translator is consider a one-time-use.  It just needs to be called
 	 * after translation.

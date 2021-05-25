@@ -6,13 +6,10 @@
  */
 package org.hibernate.query.sqm.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.query.Limit;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
-import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryInterpretationCache;
 
 /**
@@ -20,7 +17,7 @@ import org.hibernate.query.spi.QueryInterpretationCache;
  */
 public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	@SuppressWarnings("WeakerAccess")
-	public static SqmInterpretationsKey generateFrom(QuerySqmImpl query) {
+	public static SqmInterpretationsKey generateFrom(QuerySqmImpl<?> query) {
 		if ( ! isCacheable( query ) ) {
 			return null;
 		}
@@ -28,12 +25,14 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		return new SqmInterpretationsKey(
 				query.getQueryString(),
 				query.getResultType(),
-				query.getQueryOptions()
+				query.getLockOptions(),
+				query.getQueryOptions().getTupleTransformer(),
+				query.getQueryOptions().getResultListTransformer()
 		);
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public static QueryInterpretationCache.Key generateNonSelectKey(QuerySqmImpl query) {
+	public static QueryInterpretationCache.Key generateNonSelectKey(QuerySqmImpl<?> query) {
 		// todo (6.0) : do we want to cache non-select plans?  If so, what requirements?
 		//		- very minimum is that it be a "simple" (non-multi-table) statement
 		//
@@ -73,37 +72,38 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 			return false;
 		}
 
-		if ( definesLocking( query.getQueryOptions().getLockOptions() ) ) {
-			// cannot cache query plans if it defines locking
-			return false;
-		}
-
 		return true;
 	}
 
-	private static boolean hasLimit(Limit limit) {
-		return limit.getFirstRow() != null || limit.getMaxRows() != null;
-	}
-
-	private static boolean definesLocking(LockOptions lockOptions) {
-		final LockMode mostRestrictiveLockMode = lockOptions.findGreatestLockMode();
-		return mostRestrictiveLockMode.greaterThan( LockMode.READ );
-	}
-
-
 	private final String query;
-	private final Class resultType;
-	private final TupleTransformer tupleTransformer;
+	private final Class<?> resultType;
+	private final LockOptions lockOptions;
+	private final TupleTransformer<?> tupleTransformer;
 	private final ResultListTransformer resultListTransformer;
 
 	private SqmInterpretationsKey(
 			String query,
-			Class resultType,
-			QueryOptions queryOptions) {
+			Class<?> resultType,
+			LockOptions lockOptions,
+			TupleTransformer<?> tupleTransformer,
+			ResultListTransformer resultListTransformer) {
 		this.query = query;
 		this.resultType = resultType;
-		this.tupleTransformer = queryOptions.getTupleTransformer();
-		this.resultListTransformer = queryOptions.getResultListTransformer();
+		this.lockOptions = lockOptions;
+		this.tupleTransformer = tupleTransformer;
+		this.resultListTransformer = resultListTransformer;
+	}
+
+	@Override
+	public QueryInterpretationCache.Key prepareForStore() {
+		return new SqmInterpretationsKey(
+				query,
+				resultType,
+				// Since lock options are mutable, we need a copy for the cache key
+				lockOptions.makeCopy(),
+				tupleTransformer,
+				resultListTransformer
+		);
 	}
 
 	@Override
@@ -118,6 +118,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		final SqmInterpretationsKey that = (SqmInterpretationsKey) o;
 		return query.equals( that.query )
 				&& areEqual( resultType, that.resultType )
+				&& areEqual( lockOptions, that.lockOptions )
 				&& areEqual( tupleTransformer, that.tupleTransformer )
 				&& areEqual( resultListTransformer, that.resultListTransformer );
 	}
@@ -135,6 +136,7 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	public int hashCode() {
 		int result = query.hashCode();
 		result = 31 * result + ( resultType != null ? resultType.hashCode() : 0 );
+		result = 31 * result + ( lockOptions != null ? lockOptions.hashCode() : 0 );
 		result = 31 * result + ( tupleTransformer != null ? tupleTransformer.hashCode() : 0 );
 		result = 31 * result + ( resultListTransformer != null ? resultListTransformer.hashCode() : 0 );
 		return result;

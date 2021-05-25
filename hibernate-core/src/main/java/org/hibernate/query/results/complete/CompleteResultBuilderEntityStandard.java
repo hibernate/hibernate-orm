@@ -73,7 +73,6 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 					np -> entityDescriptor.createRootTableGroup(
 							navigablePath,
 							null,
-							lockMode,
 							() -> predicate -> {},
 							impl,
 							impl.getCreationContext()

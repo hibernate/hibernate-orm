@@ -41,7 +41,7 @@ public final class ExecuteWithoutIdTableHelper {
 		final StandardTableGroup matchingIdSelectTableGroup = new StandardTableGroup(
 				navigablePath,
 				rootEntityPersister,
-				LockMode.PESSIMISTIC_WRITE,
+				rootTableReference.getIdentificationVariable(),
 				rootTableReference,
 				null,
 				sessionFactory

@@ -10,6 +10,7 @@ import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -28,6 +29,26 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 
 	public PostgreSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void renderMaterializationHint(CteMaterialization materialization) {
+		if ( getDialect().getVersion() >= 1200 ) {
+			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
+				appendSql( "not " );
+			}
+			appendSql( "materialized " );
+		}
+	}
+
+	@Override
+	public boolean supportsFilterClause() {
+		return getDialect().getVersion() >= 940;
+	}
+
+	@Override
+	protected String getForShare() {
+		return " for share";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {

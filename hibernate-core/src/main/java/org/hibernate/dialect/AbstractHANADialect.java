@@ -924,6 +924,11 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.COLUMN;
+	}
+
+	@Override
 	public String getAddColumnString() {
 		return "add (";
 	}

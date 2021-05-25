@@ -57,8 +57,8 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return collectionTableGroup.getLockMode();
+	public String getSourceAlias() {
+		return collectionTableGroup.getSourceAlias();
 	}
 
 	@Override

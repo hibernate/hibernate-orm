@@ -167,7 +167,7 @@ public class CommonFunctionFactory {
 	}
 
 	public static void median(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "median" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "median" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -189,7 +189,7 @@ public class CommonFunctionFactory {
 	 * - On Oracle, DB2, MySQL it means stdev_pop()
 	 */
 	public static void stddev(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "stddev" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -202,47 +202,47 @@ public class CommonFunctionFactory {
 	 * - On Oracle, DB2, MySQL it means var_pop()
 	 */
 	public static void variance(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "variance" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "variance" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
 
 	public static void stddevPopSamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "stddev_pop" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev_pop" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "stddev_samp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev_samp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
 
 	public static void varPopSamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "var_pop" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "var_pop" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "var_samp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "var_samp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
 	}
 
 	public static void covarPopSamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "covar_pop" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "covar_pop" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "covar_samp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "covar_samp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
 	}
 
 	public static void corr(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "corr" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "corr" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 2 )
 				.register();
@@ -254,7 +254,7 @@ public class CommonFunctionFactory {
 				"regr_slope", "regr_sxx", "regr_sxy", "regr_syy"
 		)
 				.forEach( fnName ->
-								queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( fnName )
+								queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( fnName )
 										.setInvariantType( StandardBasicTypes.DOUBLE )
 										.setExactArgumentCount( 2 )
 										.register()
@@ -265,11 +265,11 @@ public class CommonFunctionFactory {
 	 * DB2
 	 */
 	public static void stdevVarianceSamp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "stddev_samp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stddev_samp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "variance_samp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "variance_samp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -279,11 +279,11 @@ public class CommonFunctionFactory {
 	 * SQL Server-style
 	 */
 	public static void stddevPopSamp_stdevp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "stdev" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stdev" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "stdevp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "stdevp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -295,11 +295,11 @@ public class CommonFunctionFactory {
 	 * SQL Server-style
 	 */
 	public static void varPopSamp_varp(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "var" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "var" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "varp" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "varp" )
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount( 1 )
 				.register();
@@ -638,11 +638,11 @@ public class CommonFunctionFactory {
 	 * These are aggregate functions taking one argument!
 	 */
 	public static void bitAndOr(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_and" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "bit_and" )
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bit_or" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "bit_or" )
 				.setExactArgumentCount( 1 )
 				.register();
 
@@ -656,13 +656,13 @@ public class CommonFunctionFactory {
 	 * These are aggregate functions taking one argument!
 	 */
 	public static void everyAny(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "every" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "every" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "any" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "any" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
@@ -675,14 +675,14 @@ public class CommonFunctionFactory {
 	 * and predicates!
 	 */
 	public static void everyAny_boolAndOr(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bool_and" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "bool_and" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "every", "bool_and" );
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "bool_or" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "bool_or" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
@@ -696,14 +696,14 @@ public class CommonFunctionFactory {
 	 * aggregation functions using sum() and case.
 	 */
 	public static void everyAny_sumCase(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "every",
+		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "every",
 				"(sum(case when ?1 then 0 else 1 end)=0)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "any",
+		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "any",
 				"(sum(case when ?1 then 1 else 0 end)>0)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
@@ -716,14 +716,14 @@ public class CommonFunctionFactory {
 	 * for SQL Server.
 	 */
 	public static void everyAny_sumIif(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "every",
+		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "every",
 				"min(iif(?1,1,0))" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "any",
+		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "any",
 				"max(iif(?1,1,0))" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
@@ -736,14 +736,14 @@ public class CommonFunctionFactory {
 	 * for Oracle.
 	 */
 	public static void everyAny_sumCaseCase(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "every",
+		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "every",
 				"min(case when ?1 then 1 else 0 end)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setArgumentListSignature("(predicate)")
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "any",
+		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "any",
 				"max(case when ?1 then 1 else 0 end)" )
 				.setExactArgumentCount( 1 )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
@@ -1482,11 +1482,11 @@ public class CommonFunctionFactory {
 	}
 
 	public static void aggregates(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("max")
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder("max")
 				.setExactArgumentCount(1)
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("min")
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder("min")
 				.setExactArgumentCount(1)
 				.register();
 
@@ -1500,7 +1500,7 @@ public class CommonFunctionFactory {
 		// Double when applied to state fields of floating point types;
 		// BigInteger when applied to state fields of type BigInteger;
 		// and BigDecimal when applied to state fields of type BigDecimal.
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("sum")
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder("sum")
 				.setReturnTypeResolver( new FunctionReturnTypeResolver() {
 					@Override
 					public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
@@ -1574,12 +1574,12 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount(1)
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("avg")
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder("avg")
 				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.setExactArgumentCount(1)
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("count")
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder("count")
 				.setInvariantType( StandardBasicTypes.LONG )
 				.setExactArgumentCount(1)
 				.setArgumentListSignature("([distinct ]{arg|*})")

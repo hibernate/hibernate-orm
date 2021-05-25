@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -24,6 +26,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
+import java.util.Iterator;
+import java.util.Map;
 
 import javax.persistence.TemporalType;
 
@@ -43,10 +47,10 @@ public class CockroachDialect extends Dialect {
 
 	// * no support for java.sql.Clob
 
-	private int version;
+	private final int version;
 
 	public CockroachDialect() {
-		this(192);
+		this( 1920 );
 	}
 
 	public CockroachDialect(DialectResolutionInfo info) {
@@ -354,4 +358,151 @@ public class CockroachDialect extends Dialect {
 		return OffsetFetchLimitHandler.INSTANCE;
 	}
 
+	@Override
+	public String getForUpdateString(String aliases) {
+		return getForUpdateString() + " of " + aliases;
+	}
+
+	@Override
+	public String getForUpdateString(LockOptions lockOptions) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getVersion() < 2010 ) {
+			return "";
+		}
+		return super.getForUpdateString( lockOptions );
+	}
+
+	@Override
+	public String getForUpdateString(String aliases, LockOptions lockOptions) {
+		// Support was added in 20.1: https://www.cockroachlabs.com/docs/v20.1/select-for-update.html
+		if ( getVersion() < 2010 ) {
+			return "";
+		}
+		/*
+		 * Parent's implementation for (aliases, lockOptions) ignores aliases.
+		 */
+		if ( aliases.isEmpty() ) {
+			LockMode lockMode = lockOptions.getLockMode();
+			final Iterator<Map.Entry<String, LockMode>> itr = lockOptions.getAliasLockIterator();
+			while ( itr.hasNext() ) {
+				// seek the highest lock mode
+				final Map.Entry<String, LockMode> entry = itr.next();
+				final LockMode lm = entry.getValue();
+				if ( lm.greaterThan( lockMode ) ) {
+					aliases = entry.getKey();
+				}
+			}
+		}
+		LockMode lockMode = lockOptions.getAliasSpecificLockMode( aliases );
+		if (lockMode == null ) {
+			lockMode = lockOptions.getLockMode();
+		}
+		switch ( lockMode ) {
+			//noinspection deprecation
+			case UPGRADE:
+				return getForUpdateString(aliases);
+			case PESSIMISTIC_READ:
+				return getReadLockString( aliases, lockOptions.getTimeOut() );
+			case PESSIMISTIC_WRITE:
+				return getWriteLockString( aliases, lockOptions.getTimeOut() );
+			case UPGRADE_NOWAIT:
+				//noinspection deprecation
+			case FORCE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+				return getForUpdateNowaitString(aliases);
+			case UPGRADE_SKIPLOCKED:
+				return getForUpdateSkipLockedString(aliases);
+			default:
+				return "";
+		}
+	}
+
+	private String withTimeout(String lockString, int timeout) {
+		switch (timeout) {
+			case LockOptions.NO_WAIT:
+				return supportsNoWait() ? lockString + " nowait" : lockString;
+			case LockOptions.SKIP_LOCKED:
+				return supportsSkipLocked() ? lockString + " skip locked" : lockString;
+			default:
+				return lockString;
+		}
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return withTimeout( getForUpdateString(), timeout );
+	}
+
+	@Override
+	public String getWriteLockString(String aliases, int timeout) {
+		return withTimeout( getForUpdateString( aliases ), timeout );
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return withTimeout(" for share", timeout );
+	}
+
+	@Override
+	public String getReadLockString(String aliases, int timeout) {
+		return withTimeout(" for share of " + aliases, timeout );
+	}
+
+	@Override
+	public String getForUpdateNowaitString() {
+		return supportsNoWait()
+				? " for update nowait"
+				: getForUpdateString();
+	}
+
+	@Override
+	public String getForUpdateNowaitString(String aliases) {
+		return supportsNoWait()
+				? " for update of " + aliases + " nowait"
+				: getForUpdateString(aliases);
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString() {
+		return supportsSkipLocked()
+				? " for update skip locked"
+				: getForUpdateString();
+	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return supportsSkipLocked()
+				? " for update of " + aliases + " skip locked"
+				: getForUpdateString( aliases );
+	}
+
+	@Override
+	public boolean supportsOuterJoinForUpdate() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsNoWait() {
+		return getVersion() >= 2010;
+	}
+
+	@Override
+	public boolean supportsWait() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return getVersion() >= 2010;
+	}
+
+	@Override
+	public boolean forUpdateOfColumns() {
+		return getVersion() >= 2010;
+	}
+
+	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return getVersion() >= 2010 ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
+	}
 }

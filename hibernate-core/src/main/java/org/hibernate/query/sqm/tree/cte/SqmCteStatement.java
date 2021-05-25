@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.util.List;
 
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -22,6 +23,7 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
 public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableNode {
 	private final SqmCteContainer cteContainer;
 	private final SqmCteTable cteTable;
+	private final CteMaterialization materialization;
 	private final SqmStatement<?> cteDefinition;
 	private final CteSearchClauseKind searchClauseKind;
 	private final List<SqmSearchClauseSpecification> searchBySpecifications;
@@ -33,10 +35,12 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	public SqmCteStatement(
 			SqmCteTable cteTable,
 			SqmStatement<?> cteDefinition,
+			CteMaterialization materialization,
 			NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
 		this.cteTable = cteTable;
 		this.cteDefinition = cteDefinition;
+		this.materialization = materialization;
 		this.cteContainer = null;
 		this.searchClauseKind = null;
 		this.searchBySpecifications = null;
@@ -49,10 +53,12 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	public SqmCteStatement(
 			SqmCteTable cteTable,
 			SqmStatement<?> cteDefinition,
+			CteMaterialization materialization,
 			SqmCteContainer cteContainer) {
 		super( cteContainer.nodeBuilder() );
 		this.cteTable = cteTable;
 		this.cteDefinition = cteDefinition;
+		this.materialization = materialization;
 		this.cteContainer = cteContainer;
 		this.searchClauseKind = null;
 		this.searchBySpecifications = null;
@@ -72,6 +78,10 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 
 	public SqmCteContainer getCteContainer() {
 		return cteContainer;
+	}
+
+	public CteMaterialization getMaterialization() {
+		return materialization;
 	}
 
 	public CteSearchClauseKind getSearchClauseKind() {

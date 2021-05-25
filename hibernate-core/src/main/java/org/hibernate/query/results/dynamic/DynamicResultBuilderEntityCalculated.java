@@ -114,10 +114,13 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 				tableAlias,
 				tableReference,
 				entityMapping,
-				explicitLockMode
+				tableAlias
 		);
 
 		creationStateImpl.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+		if ( explicitLockMode != null ) {
+			domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, explicitLockMode );
+		}
 
 		return (EntityResult) entityMapping.createDomainResult(
 				navigablePath,

@@ -41,8 +41,8 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return LockMode.NONE;
+	public String getSourceAlias() {
+		return null;
 	}
 
 	@Override

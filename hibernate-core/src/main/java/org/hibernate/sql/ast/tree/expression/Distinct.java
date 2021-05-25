@@ -16,7 +16,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class Distinct implements Expression, SqlExpressable, SqlAstNode {
-	private Expression expression;
+	private final Expression expression;
 
 	public Distinct(Expression expression) {
 		this.expression = expression;

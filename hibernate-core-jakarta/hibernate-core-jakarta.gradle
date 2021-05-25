@@ -21,7 +21,6 @@ configurations {
 dependencies {
 	compile( libraries.jakarta_jpa )
 	// This can now be made provided
-	compile( libraries.javassist )
 	// Could be made optional?
 	compile( libraries.byteBuddy )
 	compile( libraries.antlr )
@@ -72,6 +71,7 @@ dependencies {
 	// for testing stored procedure support
 	testCompile( libraries.derby )
 
+	testRuntime( 'org.hamcrest:hamcrest-all:1.3' )
 	testRuntime( "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final" )
 	testRuntime( libraries.jakarta_el )
 	testRuntime( 'jaxen:jaxen:1.1' )

@@ -13,22 +13,23 @@ import org.hibernate.EmptyInterceptor;
 import org.hibernate.Hibernate;
 import org.hibernate.Interceptor;
 import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderImpl;
-import org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch;
-import org.hibernate.engine.jdbc.batch.spi.Batch;
-import org.hibernate.engine.jdbc.batch.spi.BatchKey;
-import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.stat.CollectionStatistics;
 
-import org.junit.Test;
-import junit.framework.Assert;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Tests loading of many-to-many collection which should trigger
@@ -36,74 +37,20 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "manytomany/batchload/UserGroupBatchLoad.hbm.xml" };
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false" );
-		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( Environment.BATCH_STRATEGY, TestingBatchBuilder.class.getName() );
-	}
-
-	public static class TestingBatchBuilder extends BatchBuilderImpl {
-		@Override
-		public Batch buildBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			return new TestingBatch( key, jdbcCoordinator );
+@DomainModel(
+		xmlMappings = "org/hibernate/test/manytomany/batchload/UserGroupBatchLoad.hbm.xml"
+)
+@SessionFactory(generateStatistics = true)
+@ServiceRegistry(
+		settings = {
+				@Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "false"),
+				@Setting(name = Environment.BATCH_STRATEGY, value = "org.hibernate.test.manytomany.batchload.TestingBatchBuilder"),
 		}
-	}
+)
+public class BatchedManyToManyTest {
 
-	public static class TestingBatch extends NonBatchingBatch {
-		public TestingBatch(BatchKey key, JdbcCoordinator jdbcCoordinator) {
-			super( key, jdbcCoordinator );
-		}
-	}
-
-	@Test
-	public void testLoadingNonInverseSide() {
-		prepareTestData();
-
-		sessionFactory().getStatistics().clear();
-		CollectionStatistics userGroupStats = sessionFactory().getStatistics()
-				.getCollectionStatistics( User.class.getName() + ".groups" );
-		CollectionStatistics groupUserStats = sessionFactory().getStatistics()
-				.getCollectionStatistics( Group.class.getName() + ".users" );
-
-		Interceptor testingInterceptor = new EmptyInterceptor() {
-			@Override
-            public String onPrepareStatement(String sql) {
-				// ugh, this is the best way I could come up with to assert this.
-				// unfortunately, this is highly dependent on the dialect and its
-				// outer join fragment.  But at least this wil fail on the majority
-				// of dialects...
-				Assert.assertFalse(
-						"batch load of many-to-many should use inner join",
-						sql.toLowerCase(Locale.ROOT).contains( "left outer join" )
-				);
-				return super.onPrepareStatement( sql );
-			}
-		};
-
-		Session s = openSession( testingInterceptor );
-		s.beginTransaction();
-		List users = s.createQuery( "from User u" ).list();
-		User user = ( User ) users.get( 0 );
-		assertTrue( Hibernate.isInitialized( user ) );
-		assertTrue( Hibernate.isInitialized( user.getGroups() ) );
-		user = ( User ) users.get( 1 );
-		assertTrue( Hibernate.isInitialized( user ) );
-		assertTrue( Hibernate.isInitialized( user.getGroups() ) );
-		assertEquals( 1, userGroupStats.getFetchCount() ); // should have been just one fetch (the batch fetch)
-		assertEquals( 1, groupUserStats.getFetchCount() ); // should have been just one fetch (the batch fetch)
-		s.getTransaction().commit();
-		s.close();
-
-	}
-
-	protected void prepareTestData() {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
 		// set up the test data
 		User me = new User( "steve" );
 		User you = new User( "not steve" );
@@ -116,31 +63,85 @@ public class BatchedManyToManyTest extends BaseCoreFunctionalTestCase {
 		translators.getUsers().add( you );
 		you.getGroups().add( contributors );
 		contributors.getUsers().add( you );
-		Session s = openSession();
-		s.beginTransaction();
-		s.save( me );
-		s.save( you );
-		s.getTransaction().commit();
-		s.close();
+
+		scope.inTransaction(
+				session -> {
+					session.save( me );
+					session.save( you );
+				}
+		);
 	}
 
-	protected void cleanupTestData() {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
 		// clean up the test data
-		Session s = openSession();
-		s.beginTransaction();
-		// User is the non-inverse side...
-		List<User> users = s.createQuery( "from User" ).list();
-		for ( User user : users ) {
-			s.delete( user );
-		}
-		s.flush();
-		s.createQuery( "delete Group" ).executeUpdate();
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					// User is the non-inverse side...
+					List<User> users = session.createQuery( "from User" ).list();
+					for ( User user : users ) {
+						session.delete( user );
+					}
+					session.flush();
+					session.createQuery( "delete Group" ).executeUpdate();
+				}
+		);
 	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@Test
+	public void testLoadingNonInverseSide(SessionFactoryScope scope) {
+
+		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+		sessionFactory.getStatistics().clear();
+		CollectionStatistics userGroupStats = sessionFactory.getStatistics()
+				.getCollectionStatistics( User.class.getName() + ".groups" );
+		CollectionStatistics groupUserStats = sessionFactory.getStatistics()
+				.getCollectionStatistics( Group.class.getName() + ".users" );
+
+		Interceptor testingInterceptor = new EmptyInterceptor() {
+			@Override
+			public String onPrepareStatement(String sql) {
+				// ugh, this is the best way I could come up with to assert this.
+				// unfortunately, this is highly dependent on the dialect and its
+				// outer join fragment.  But at least this wil fail on the majority
+				// of dialects...
+				assertFalse(
+						sql.toLowerCase( Locale.ROOT ).contains( "left outer join" ),
+						"batch load of many-to-many should use inner join"
+				);
+				return super.onPrepareStatement( sql );
+			}
+		};
+
+		try (final Session session = scope.getSessionFactory()
+				.withOptions()
+				.interceptor( testingInterceptor )
+				.openSession()) {
+			session.getTransaction().begin();
+			try {
+				List users = session.createQuery( "from User u" ).list();
+				User user = (User) users.get( 0 );
+				assertTrue( Hibernate.isInitialized( user ) );
+				assertTrue( Hibernate.isInitialized( user.getGroups() ) );
+				user = (User) users.get( 1 );
+				assertTrue( Hibernate.isInitialized( user ) );
+				assertTrue( Hibernate.isInitialized( user.getGroups() ) );
+				assertEquals(
+						1,
+						userGroupStats.getFetchCount()
+				); // should have been just one fetch (the batch fetch)
+				assertEquals(
+						1,
+						groupUserStats.getFetchCount()
+				); // should have been just one fetch (the batch fetch)
+				session.getTransaction().commit();
+			}
+			finally {
+				if ( session.getTransaction().isActive() ) {
+					session.getTransaction().rollback();
+				}
+			}
+		}
 	}
+
 }

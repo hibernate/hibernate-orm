@@ -78,7 +78,6 @@ public class DeleteSharedOneToManyOrphansTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11144")
-	@FailureExpected( jiraKey = "HHH-11144" )
 	public void testInitializingSecondCollection(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

@@ -5,24 +5,26 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id: User.java 7085 2005-06-08 17:59:47Z oneovthafew $
-package org.hibernate.test.manytomany;
+//$Id: Group.java 7085 2005-06-08 17:59:47Z oneovthafew $
+package org.hibernate.orm.test.manytomany;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class User implements Serializable {
-	
+public class Group implements Serializable {
+
 	private String org;
 	private String name;
-	private Set groups = new HashSet();
+	private String description;
 
-	public User(String name, String org) {
+	private Set users = new HashSet();
+	
+	public Group(String name, String org) {
 		this.org = org;
 		this.name = name;
 	}
 
-	public User() {
+	public Group() {
 	}
 
 	public String getName() {
@@ -41,12 +43,20 @@ public class User implements Serializable {
 		this.org = org;
 	}
 
-	public Set getGroups() {
-		return groups;
+	public Set getUsers() {
+		return users;
 	}
 
-	public void setGroups(Set groups) {
-		this.groups = groups;
+	public void setUsers(Set users) {
+		this.users = users;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 }

@@ -4,11 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.manytomany;
+package org.hibernate.orm.test.manytomany;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,29 +16,37 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				ManyToManyBidirectionalTest.Person.class,
+				ManyToManyBidirectionalTest.Address.class,
+		}
+)
+public class ManyToManyBidirectionalTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Address.class,
-		};
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Person" ).executeUpdate();
+					entityManager.createQuery( "delete from Address" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testRemoveOwnerSide() {
-		Person _person1 = doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testRemoveOwnerSide(EntityManagerFactoryScope scope) {
+		Person _person1 = scope.fromTransaction( entityManager -> {
 			Person person1 = new Person( "ABC-123" );
 			Person person2 = new Person( "DEF-456" );
 
@@ -57,7 +64,7 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 			return person1;
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Person person1 = entityManager.find( Person.class, _person1.id );
 
 			entityManager.remove( person1 );
@@ -65,9 +72,9 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12239")
-	public void testRemoveMappedBySide() {
-		Address _address1 = doInJPA( this::entityManagerFactory, entityManager -> {
+	@FailureExpected(jiraKey = "HHH-12239")
+	public void testRemoveMappedBySide(EntityManagerFactoryScope scope) {
+		Address _address1 = scope.fromTransaction( entityManager -> {
 			Person person1 = new Person( "ABC-123" );
 			Person person2 = new Person( "DEF-456" );
 
@@ -85,7 +92,7 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 			return address1;
 		} );
 
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Address address1 = entityManager.find( Address.class, _address1.id );
 
 			entityManager.remove( address1 );
@@ -102,7 +109,7 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 		@NaturalId
 		private String registrationNumber;
 
-		@ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+		@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 		private List<Address> addresses = new ArrayList<>();
 
 		public Person() {

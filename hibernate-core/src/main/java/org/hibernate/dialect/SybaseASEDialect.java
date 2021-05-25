@@ -47,7 +47,7 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	public SybaseASEDialect(int version) {
-		super(version);
+		super( version );
 
 		//On Sybase ASE, the 'bit' type cannot be null,
 		//and cannot have indexes (while we don't use
@@ -422,14 +422,19 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return getVersion() >= 1570 ? RowLockStrategy.COLUMN : RowLockStrategy.TABLE;
+	}
+
+	@Override
 	public String getForUpdateString() {
-		return getVersion() < 1570 ? super.getForUpdateString() : " for update";
+		return getVersion() < 1570 ? "" : " for update";
 	}
 
 	@Override
 	public String getForUpdateString(String aliases) {
 		return getVersion() < 1570
-				? super.getForUpdateString( aliases )
+				? ""
 				: getForUpdateString() + " of " + aliases;
 	}
 

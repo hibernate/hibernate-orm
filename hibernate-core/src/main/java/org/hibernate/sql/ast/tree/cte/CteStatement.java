@@ -19,6 +19,7 @@ import org.hibernate.sql.ast.tree.Statement;
 public class CteStatement {
 	private final CteTable cteTable;
 	private final Statement cteDefinition;
+	private final CteMaterialization materialization;
 	private final CteSearchClauseKind searchClauseKind;
 	private final List<SearchClauseSpecification> searchBySpecifications;
 	private final List<CteColumn> cycleColumns;
@@ -27,8 +28,13 @@ public class CteStatement {
 	private final char noCycleValue;
 
 	public CteStatement(CteTable cteTable, Statement cteDefinition) {
+		this( cteTable, cteDefinition, CteMaterialization.UNDEFINED );
+	}
+
+	public CteStatement(CteTable cteTable, Statement cteDefinition, CteMaterialization materialization) {
 		this.cteDefinition = cteDefinition;
 		this.cteTable = cteTable;
+		this.materialization = materialization;
 		this.searchClauseKind = null;
 		this.searchBySpecifications = null;
 		this.cycleColumns = null;
@@ -40,6 +46,7 @@ public class CteStatement {
 	public CteStatement(
 			CteTable cteTable,
 			Statement cteDefinition,
+			CteMaterialization materialization,
 			CteSearchClauseKind searchClauseKind,
 			List<SearchClauseSpecification> searchBySpecifications,
 			List<CteColumn> cycleColumns,
@@ -48,6 +55,7 @@ public class CteStatement {
 			char noCycleValue) {
 		this.cteTable = cteTable;
 		this.cteDefinition = cteDefinition;
+		this.materialization = materialization;
 		this.searchClauseKind = searchClauseKind;
 		this.searchBySpecifications = searchBySpecifications;
 		this.cycleColumns = cycleColumns;
@@ -62,6 +70,10 @@ public class CteStatement {
 
 	public Statement getCteDefinition() {
 		return cteDefinition;
+	}
+
+	public CteMaterialization getMaterialization() {
+		return materialization;
 	}
 
 	public CteSearchClauseKind getSearchClauseKind() {

@@ -29,7 +29,6 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 	TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState, SqlAstCreationContext creationContext);
 }

@@ -8,7 +8,6 @@ package org.hibernate.query.results.implicit;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
@@ -66,7 +65,6 @@ public class ImplicitModelPartResultBuilderEmbeddable
 							null,
 							SqlAstJoinType.INNER,
 							true,
-							LockMode.READ,
 							creationStateImpl
 					);
 

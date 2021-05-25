@@ -395,6 +395,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsWait() {
+		return false;
+	}
+
+	@Override
 	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
 		return GroupBySummarizationRenderingStrategy.CLAUSE;
 	}

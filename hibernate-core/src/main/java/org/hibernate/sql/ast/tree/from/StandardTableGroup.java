@@ -33,11 +33,11 @@ public class StandardTableGroup extends AbstractTableGroup {
 	public StandardTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			LockMode lockMode,
+			String sourceAlias,
 			TableReference primaryTableReference,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
+		super( navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = false;
 		this.fetched = false;
@@ -56,14 +56,14 @@ public class StandardTableGroup extends AbstractTableGroup {
 	public StandardTableGroup(
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
-			LockMode lockMode,
+			String sourceAlias,
 			TableReference primaryTableReference,
 			boolean realTableGroup,
 			SqlAliasBase sqlAliasBase,
 			Predicate<String> tableReferenceJoinNameChecker,
 			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
+		super( navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
 		this.fetched = false;
@@ -76,14 +76,14 @@ public class StandardTableGroup extends AbstractTableGroup {
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
 			boolean fetched,
-			LockMode lockMode,
+			String sourceAlias,
 			TableReference primaryTableReference,
 			boolean realTableGroup,
 			SqlAliasBase sqlAliasBase,
 			Predicate<String> tableReferenceJoinNameChecker,
 			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, lockMode, sqlAliasBase, sessionFactory );
+		super( navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
 		this.fetched = fetched;

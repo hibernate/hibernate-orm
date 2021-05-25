@@ -20,35 +20,27 @@ import org.hibernate.internal.util.StringHelper;
  */
 public class ForUpdateFragment {
 	private final StringBuilder aliases = new StringBuilder();
-	private boolean isNowaitEnabled;
-	private boolean isSkipLockedEnabled;
 	private final Dialect dialect;
-	private LockMode lockMode;
-	private LockOptions lockOptions;
-
-	public ForUpdateFragment(Dialect dialect) {
-		this.dialect = dialect;
-	}
+	private final LockOptions lockOptions;
 
 	public ForUpdateFragment(Dialect dialect, LockOptions lockOptions, Map<String, String[]> keyColumnNames) throws QueryException {
-		this( dialect );
+		this.dialect = dialect;
 		LockMode upgradeType = null;
-		Iterator iter = lockOptions.getAliasLockIterator();
+		Iterator<Map.Entry<String, LockMode>> iter = lockOptions.getAliasLockIterator();
 		this.lockOptions =  lockOptions;
 
 		if ( !iter.hasNext()) {  // no tables referenced
 			final LockMode lockMode = lockOptions.getLockMode();
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				upgradeType = lockMode;
-				this.lockMode = lockMode;
 			}
 		}
 
 		while ( iter.hasNext() ) {
-			final Map.Entry me = ( Map.Entry ) iter.next();
-			final LockMode lockMode = ( LockMode ) me.getValue();
+			final Map.Entry<String, LockMode> me = iter.next();
+			final LockMode lockMode = me.getValue();
 			if ( LockMode.READ.lessThan( lockMode ) ) {
-				final String tableAlias = ( String ) me.getKey();
+				final String tableAlias = me.getKey();
 				if ( dialect.forUpdateOfColumns() ) {
 					String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
 					if ( keyColumns == null ) {
@@ -68,14 +60,6 @@ public class ForUpdateFragment {
 				upgradeType = lockMode;
 			}
 		}
-
-		if ( upgradeType == LockMode.UPGRADE_NOWAIT || lockOptions.getTimeOut() == LockOptions.NO_WAIT ) {
-			setNowaitEnabled( true );
-		}
-
-		if ( upgradeType == LockMode.UPGRADE_SKIPLOCKED || lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ) {
-			setSkipLockedEnabled( true );
-		}
 	}
 
 	public ForUpdateFragment addTableAlias(String alias) {
@@ -87,40 +71,13 @@ public class ForUpdateFragment {
 	}
 
 	public String toFragmentString() {
-		if ( lockOptions!= null ) {
-			if ( aliases.length() == 0) {
-				return dialect.getForUpdateString( lockOptions );
-			}
-			else {
-				return dialect.getForUpdateString( aliases.toString(), lockOptions );
-			}
-		}
-		else if ( aliases.length() == 0) {
-			if ( lockMode != null ) {
-				return dialect.getForUpdateString( lockMode );
-			}
-			return "";
-		}
-		// TODO:  pass lock mode
-		if(isNowaitEnabled) {
-			return dialect.getForUpdateNowaitString( aliases.toString() );
-		}
-		else if (isSkipLockedEnabled) {
-			return dialect.getForUpdateSkipLockedString( aliases.toString() );
+		if ( aliases.length() == 0) {
+			return dialect.getForUpdateString( lockOptions );
 		}
 		else {
-			return dialect.getForUpdateString( aliases.toString() );
+			return dialect.getForUpdateString( aliases.toString(), lockOptions );
 		}
 	}
 
-	public ForUpdateFragment setNowaitEnabled(boolean nowait) {
-		isNowaitEnabled = nowait;
-		return this;
-	}
-
-	public ForUpdateFragment setSkipLockedEnabled(boolean skipLocked) {
-		isSkipLockedEnabled = skipLocked;
-		return this;
-	}
 
 }

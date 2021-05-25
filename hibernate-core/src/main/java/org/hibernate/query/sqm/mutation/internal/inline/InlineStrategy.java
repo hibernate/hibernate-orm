@@ -34,7 +34,7 @@ public class InlineStrategy implements SqmMultiTableMutationStrategy {
 	}
 
 	private static Function<SqmDeleteOrUpdateStatement,MatchingIdRestrictionProducer> determinePredicateProducer(Dialect dialect) {
-		throw new NotYetImplementedFor6Exception();
+		return statement -> new InPredicateRestrictionProducer();
 	}
 
 	public InlineStrategy(Function<SqmDeleteOrUpdateStatement,MatchingIdRestrictionProducer> matchingIdsStrategy) {

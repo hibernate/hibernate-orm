@@ -9,7 +9,6 @@ package org.hibernate.loader.ast.spi;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -40,7 +39,6 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 	default TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );

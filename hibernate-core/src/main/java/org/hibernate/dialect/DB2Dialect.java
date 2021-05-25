@@ -57,11 +57,6 @@ import javax.persistence.TemporalType;
  */
 public class DB2Dialect extends Dialect {
 
-	// KNOWN LIMITATIONS:
-
-	// * can't select a parameter unless wrapped
-	//   in a cast or function call
-
 	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
 	private static final String FOR_SHARE_SQL = FOR_READ_ONLY_SQL + " use and keep share locks";
 	private static final String FOR_UPDATE_SQL = FOR_READ_ONLY_SQL + " use and keep update locks";
@@ -71,8 +66,7 @@ public class DB2Dialect extends Dialect {
 
 	private final int version;
 
-	private LimitHandler limitHandler;
-
+	private final LimitHandler limitHandler;
 	private final UniqueDelegate uniqueDelegate;
 
 	public DB2Dialect(DialectResolutionInfo info) {
@@ -80,7 +74,7 @@ public class DB2Dialect extends Dialect {
 	}
 
 	public DB2Dialect() {
-		this(900);
+		this( 900 );
 	}
 
 	public DB2Dialect(int version) {
@@ -292,6 +286,10 @@ public class DB2Dialect extends Dialect {
 		pattern.append("+(");
 		// DB2 supports temporal arithmetic. See https://www.ibm.com/support/knowledgecenter/en/SSEPGG_9.7.0/com.ibm.db2.luw.sql.ref.doc/doc/r0023457.html
 		switch (unit) {
+			case NATIVE:
+				// AFAICT the native format is seconds with fractional parts after the decimal point
+				pattern.append("?2) seconds");
+				break;
 			case NANOSECOND:
 				pattern.append("(?2)/1e9) seconds");
 				break;
@@ -340,33 +338,42 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getReadLockString(int timeout) {
-		return timeout==LockOptions.SKIP_LOCKED
-				? FOR_SHARE_SKIP_LOCKED_SQL
-				: FOR_SHARE_SQL;
-	}
-
-	@Override
-	public String getWriteLockString(int timeout) {
-		return timeout==LockOptions.SKIP_LOCKED
-				? FOR_UPDATE_SKIP_LOCKED_SQL
-				: FOR_UPDATE_SQL;
-	}
-
-	@Override
 	public String getForUpdateString() {
 		return FOR_UPDATE_SQL;
 	}
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return true;
+		// Introduced in 11.5: https://www.ibm.com/docs/en/db2/11.5?topic=statement-concurrent-access-resolution-clause
+		return getVersion() >= 1150;
 	}
 
 	@Override
 	public String getForUpdateSkipLockedString() {
-		return FOR_UPDATE_SKIP_LOCKED_SQL;
+		return supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
 	}
+
+	@Override
+	public String getForUpdateSkipLockedString(String aliases) {
+		return getForUpdateSkipLockedString();
+	}
+
+	@Override
+	public String getWriteLockString(int timeout) {
+		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+				? FOR_UPDATE_SKIP_LOCKED_SQL
+				: FOR_UPDATE_SQL;
+	}
+
+	@Override
+	public String getReadLockString(int timeout) {
+		return timeout == LockOptions.SKIP_LOCKED && supportsSkipLocked()
+				? FOR_SHARE_SKIP_LOCKED_SQL
+				: FOR_SHARE_SQL;
+	}
+
 	@Override
 	public boolean supportsOuterJoinForUpdate() {
 		return false;

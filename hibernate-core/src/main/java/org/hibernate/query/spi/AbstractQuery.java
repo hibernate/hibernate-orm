@@ -1184,6 +1184,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public <T> T getParameterValue(Parameter<T> param) {
 		QueryLogging.QUERY_LOGGER.tracef( "#getParameterValue(%s)", param );
 
+		getSession().checkOpen( false );
+
 		final QueryParameterImplementor qp = getParameterMetadata().resolve( param );
 		if ( qp == null ) {
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
@@ -1204,6 +1206,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public Object getParameterValue(String name) {
+		getSession().checkOpen( false );
+
 		final QueryParameterImplementor<?> parameter = getParameterMetadata().getQueryParameter( name );
 		if ( parameter == null ) {
 			throw new IllegalArgumentException( "Could not resolve parameter by name - " + name );
@@ -1369,7 +1373,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( e );
 		}
 		catch (HibernateException he) {
-			throw getSession().getExceptionConverter().convert( he );
+			throw getSession().getExceptionConverter().convert( he, getLockOptions() );
 		}
 		finally {
 			afterQuery();
@@ -1394,7 +1398,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		}
 		catch ( HibernateException e ) {
 			if ( getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getSession().getExceptionConverter().convert( e );
+				throw getSession().getExceptionConverter().convert( e, getLockOptions() );
 			}
 			else {
 				throw e;
@@ -1459,12 +1463,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			throw new IllegalArgumentException( e );
 		}
 		catch ( HibernateException e) {
-			if ( getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getSession().getExceptionConverter().convert( e );
-			}
-			else {
-				throw e;
-			}
+			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
 			afterQuery();

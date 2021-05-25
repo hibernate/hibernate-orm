@@ -63,7 +63,6 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 				this,
 				true,
 				null,
-				LockMode.READ,
 				creationState
 		);
 	}

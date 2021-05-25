@@ -15,6 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -22,6 +23,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
+import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcSelectExecutorStandardImpl;
 import org.hibernate.sql.exec.spi.Callback;
@@ -111,10 +113,12 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			);
 		}
 		assert offset == jdbcParameters.size();
+		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, readOnly );
+		final Callback callback = new CallbackImpl();
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( jdbcParameterBindings, QueryOptions.NONE );
+				.translate( jdbcParameterBindings, queryOptions );
 
-		final List list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		final List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {
@@ -135,12 +139,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 					@Override
 					public QueryOptions getQueryOptions() {
-						return new QueryOptionsAdapter() {
-							@Override
-							public Boolean isReadOnly() {
-								return readOnly;
-							}
-						};
+						return queryOptions;
 					}
 
 					@Override
@@ -150,8 +149,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 
 					@Override
 					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
+						return callback;
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
@@ -162,7 +160,6 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			return null;
 		}
 
-		//noinspection unchecked
-		return (T) list.get( 0 );
+		return list.get( 0 );
 	}
 }

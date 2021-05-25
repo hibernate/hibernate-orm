@@ -39,7 +39,7 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 		super(
 				correlatedTableGroup.getNavigablePath(),
 				(TableGroupProducer) correlatedTableGroup.getExpressionType(),
-				LockMode.NONE,
+				null,
 				sqlAliasBase,
 				sessionFactory
 		);

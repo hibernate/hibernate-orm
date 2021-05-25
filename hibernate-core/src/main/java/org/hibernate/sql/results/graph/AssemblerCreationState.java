@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import java.util.function.Supplier;
 
+import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -16,6 +17,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
  * @author Steve Ebersole
  */
 public interface AssemblerCreationState {
+
+	LockMode determineEffectiveLockMode(String identificationVariable);
 
 	Initializer resolveInitializer(
 			NavigablePath navigablePath,

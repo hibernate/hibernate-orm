@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
@@ -36,11 +37,11 @@ public class DB2zDialect extends DB2Dialect {
 	private final int version;
 
 	public DB2zDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() );
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	public DB2zDialect() {
-		this(7);
+		this( 700 );
 	}
 
 	public DB2zDialect(int version) {
@@ -55,7 +56,7 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public boolean supportsTimezoneTypes() {
-		return getVersion() > 1000;
+		return getZVersion() > 1000;
 	}
 
 	int getZVersion() {
@@ -64,14 +65,14 @@ public class DB2zDialect extends DB2Dialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getZVersion() < 8
+		return getZVersion() < 800
 				? NoSequenceSupport.INSTANCE
 				: DB2390SequenceSupport.INSTANCE;
 	}
 
 	@Override
 	public String getQuerySequencesString() {
-		return getZVersion() < 8 ? null : "select * from sysibm.syssequences";
+		return getZVersion() < 800 ? null : "select * from sysibm.syssequences";
 	}
 
 	@Override
@@ -82,6 +83,11 @@ public class DB2zDialect extends DB2Dialect {
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new DB2390IdentityColumnSupport();
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return true;
 	}
 
 	@Override

@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
@@ -93,7 +92,6 @@ public class DynamicFetchBuilderStandard
 					fetchPath,
 					FetchTiming.IMMEDIATE,
 					true,
-					LockMode.NONE,
 					null,
 					creationStateImpl
 			);
@@ -109,7 +107,6 @@ public class DynamicFetchBuilderStandard
 					fetchPath,
 					FetchTiming.DELAYED,
 					false,
-					LockMode.NONE,
 					null,
 					creationStateImpl
 			);

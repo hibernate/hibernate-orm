@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.internal.domain;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
@@ -195,7 +194,6 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		throw new UnsupportedOperationException();

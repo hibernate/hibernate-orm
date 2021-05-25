@@ -10,6 +10,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 import java.util.List;
 
@@ -29,4 +30,13 @@ public interface FunctionRenderingSupport {
 			SqlAppender sqlAppender,
 			List<SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker);
+
+	default void render(
+			SqlAppender sqlAppender,
+			List<SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			SqlAstTranslator<?> walker) {
+		// Ignore the filter by default. Subclasses will override this
+		render( sqlAppender, sqlAstArguments, walker );
+	}
 }

@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -182,8 +183,8 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 			domainResults.add( domainResult );
 		}
-
-		return new JdbcValuesMappingImpl( sqlSelections, domainResults, rowSize );
+		final Map<String, LockMode> registeredLockModes = creationState.getRegisteredLockModes();
+		return new JdbcValuesMappingImpl( sqlSelections, domainResults, rowSize, registeredLockModes );
 	}
 
 	private DomainResult<?> makeImplicitDomainResult(

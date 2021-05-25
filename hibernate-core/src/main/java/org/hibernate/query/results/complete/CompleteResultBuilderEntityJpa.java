@@ -81,7 +81,6 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 					np -> entityDescriptor.createRootTableGroup(
 							navigablePath,
 							null,
-							lockMode,
 							() -> predicate -> {},
 							impl.getSqlAstCreationState(),
 							impl.getSqlAstCreationState().getCreationContext()

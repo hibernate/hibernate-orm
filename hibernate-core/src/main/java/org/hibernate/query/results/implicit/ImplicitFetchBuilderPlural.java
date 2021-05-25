@@ -8,7 +8,6 @@ package org.hibernate.query.results.implicit;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -50,7 +49,6 @@ public class ImplicitFetchBuilderPlural implements ImplicitFetchBuilder {
 				fetchPath,
 				FetchTiming.DELAYED,
 				false,
-				LockMode.READ,
 				null,
 				creationState
 		);

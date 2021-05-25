@@ -8,7 +8,6 @@ package org.hibernate.query.results.implicit;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
@@ -60,7 +59,6 @@ public class ImplicitModelPartResultBuilderEntity
 					return modelPart.getEntityMappingType().createRootTableGroup(
 							navigablePath,
 							null,
-							LockMode.READ,
 							() -> predicate -> {
 							},
 							creationStateImpl,

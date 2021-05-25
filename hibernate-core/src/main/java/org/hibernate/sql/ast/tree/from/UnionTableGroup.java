@@ -25,15 +25,18 @@ public class UnionTableGroup implements VirtualTableGroup {
 	private List<TableGroupJoin> tableGroupJoins;
 
 	private final UnionSubclassEntityPersister modelPart;
+	private final String sourceAlias;
 	private final TableReference tableReference;
 
 	public UnionTableGroup(
 			NavigablePath navigablePath,
 			TableReference tableReference,
-			UnionSubclassEntityPersister modelPart) {
+			UnionSubclassEntityPersister modelPart,
+			String sourceAlias) {
 		this.navigablePath = navigablePath;
 		this.tableReference = tableReference;
 		this.modelPart = modelPart;
+		this.sourceAlias = sourceAlias;
 	}
 
 	@Override
@@ -57,8 +60,8 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return LockMode.NONE;
+	public String getSourceAlias() {
+		return sourceAlias;
 	}
 
 	@Override

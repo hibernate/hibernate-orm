@@ -7,7 +7,9 @@
 
 package org.hibernate.sql.exec.spi;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.AfterLoadAction;
+import org.hibernate.persister.entity.Loadable;
 
 /**
  * Callback to allow SQM interpretation to trigger certain things within ORM.  See the current
@@ -18,4 +20,6 @@ import org.hibernate.loader.ast.spi.AfterLoadAction;
  */
 public interface Callback {
 	void registerAfterLoadAction(AfterLoadAction afterLoadAction);
+
+	void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister);
 }

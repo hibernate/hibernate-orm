@@ -600,7 +600,6 @@ public class ToOneAttributeMapping
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 
@@ -622,7 +621,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						true,
 						getJoinType( fetchablePath, parentTableGroup ),
-						lockMode,
+						resultVariable,
 						creationState,
 						parentTableGroup
 				);
@@ -632,7 +631,7 @@ public class ToOneAttributeMapping
 				tableGroup = fromClauseAccess.resolveTableGroup(
 						fetchablePath,
 						np ->
-								createTableGroupJoin( fetchablePath, true, lockMode, creationState, parentTableGroup )
+								createTableGroupJoin( fetchablePath, true, resultVariable, creationState, parentTableGroup )
 				);
 			}
 
@@ -641,7 +640,6 @@ public class ToOneAttributeMapping
 					fetchParent,
 					this,
 					tableGroup,
-					lockMode,
 					true,
 					fetchablePath,
 					creationState
@@ -733,7 +731,6 @@ public class ToOneAttributeMapping
 					null,
 					tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
 					true,
-					null,
 					creationState.getSqlAstCreationState()
 			);
 
@@ -764,14 +761,14 @@ public class ToOneAttributeMapping
 	private TableGroup createTableGroupJoin(
 			NavigablePath fetchablePath,
 			boolean fetched,
-			LockMode lockMode,
+			String sourceAlias,
 			DomainResultCreationState creationState,
 			TableGroup parentTableGroup) {
 		return createTableGroupJoin(
 				fetchablePath,
 				fetched,
 				getDefaultSqlAstJoinType( parentTableGroup ),
-				lockMode,
+				sourceAlias,
 				creationState,
 				parentTableGroup
 		);
@@ -793,16 +790,15 @@ public class ToOneAttributeMapping
 			NavigablePath fetchablePath,
 			boolean fetched,
 			SqlAstJoinType sqlAstJoinType,
-			LockMode lockMode,
+			String sourceAlias,
 			DomainResultCreationState creationState,
 			TableGroup parentTableGroup) {
 		final TableGroupJoin tableGroupJoin = createTableGroupJoin(
 				fetchablePath,
 				parentTableGroup,
-				null,
+				sourceAlias,
 				sqlAstJoinType,
 				fetched,
-				lockMode,
 				creationState.getSqlAstCreationState()
 		);
 
@@ -821,7 +817,6 @@ public class ToOneAttributeMapping
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -862,7 +857,7 @@ public class ToOneAttributeMapping
 					);
 				},
 				this,
-				null,
+				explicitSourceAlias,
 				sqlAliasBase,
 				creationContext.getSessionFactory(),
 				lhs
@@ -910,7 +905,7 @@ public class ToOneAttributeMapping
 	public TableGroup createTableGroupJoinInternal(
 			NavigablePath navigablePath,
 			boolean fetched,
-			LockMode lockMode,
+			String sourceAlias,
 			final SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -924,7 +919,7 @@ public class ToOneAttributeMapping
 				navigablePath,
 				this,
 				fetched,
-				lockMode,
+				sourceAlias,
 				primaryTableReference,
 				false,
 				sqlAliasBase,

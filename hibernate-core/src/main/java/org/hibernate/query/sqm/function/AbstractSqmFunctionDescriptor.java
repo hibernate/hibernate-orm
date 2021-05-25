@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -120,5 +121,27 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration);
+
+	/**
+	 * Return an SQM node or subtree representing an invocation of this aggregate function
+	 * with the given arguments. This method may be overridden in the case of
+	 * function descriptors that wish to customize creation of the node.
+	 *
+	 * @param arguments the arguments of the function invocation
+	 * @param impliedResultType the function return type as inferred from its usage
+	 */
+	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
+			List<SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return (SelfRenderingSqmAggregateFunction<T>) generateSqmExpression(
+				arguments,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
 }
 

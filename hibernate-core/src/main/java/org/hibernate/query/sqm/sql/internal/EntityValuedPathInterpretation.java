@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.sql.internal;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -220,7 +219,6 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 								null,
 								SqlAstJoinType.INNER,
 								false,
-								LockMode.READ,
 								sqlAstCreationState
 						);
 

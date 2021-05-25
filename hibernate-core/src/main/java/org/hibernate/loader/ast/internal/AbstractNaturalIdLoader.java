@@ -107,7 +107,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 										navigablePath,
 										fetchable.getMappedFetchOptions().getTiming(),
 										true,
-										options.getLockOptions() != null ? options.getLockOptions().getLockMode() : LockMode.READ,
 										null,
 										creationState
 								);
@@ -158,7 +157,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		else {
 			lockOptions = LockOptions.READ;
 		}
-		final LockMode lockMode = lockOptions.getLockMode();
 
 		final NavigablePath entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
@@ -176,7 +174,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
 				entityPath,
 				null,
-				lockMode,
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,
 				sessionFactory
@@ -232,7 +229,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 					@Override
 					public Callback getCallback() {
-						return afterLoadAction -> {};
+						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
 				},
 				row -> (L) row[0],
@@ -327,7 +324,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 										navigablePath,
 										fetchable.getMappedFetchOptions().getTiming(),
 										true,
-										LockMode.READ,
 										null,
 										creationState
 								);
@@ -410,8 +406,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 					@Override
 					public Callback getCallback() {
-						return afterLoadAction -> {
-						};
+						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
 				},
 				(row) -> {

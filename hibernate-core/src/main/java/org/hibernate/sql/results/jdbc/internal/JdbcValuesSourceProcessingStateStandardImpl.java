@@ -22,6 +22,7 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
 import org.hibernate.query.spi.QueryOptions;
@@ -199,6 +200,11 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
 						listener.onPostLoad( postLoadEvent );
 					}
+					executionContext.invokeAfterLoadActions(
+							getSession(),
+							loadingEntityEntry.getEntityInstance(),
+							(Loadable) loadingEntityEntry.getDescriptor()
+					);
 				}
 		);
 	}

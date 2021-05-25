@@ -42,6 +42,21 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		super( sessionFactory, statement );
 	}
 
+	@Override
+	protected String getForUpdate() {
+		return " for read only with rs use and keep update locks";
+	}
+
+	@Override
+	protected String getForShare() {
+		return " for read only with rs use and keep share locks";
+	}
+
+	@Override
+	protected String getSkipLocked() {
+		return " skip locked data";
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Percent fetches or ties fetches aren't supported in DB2
 		// According to LegacyDB2LimitHandler, variable limit also isn't supported before 11.1
@@ -59,7 +74,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( queryGroup );
-		if ( emulateFetchClause || hasOffset( queryGroup ) && !supportsOffsetClause() ) {
+		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( queryGroup ) ) {
 			emulateFetchOffsetWithWindowFunctions( queryGroup, emulateFetchClause );
 		}
 		else {
@@ -70,7 +85,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitQuerySpec(QuerySpec querySpec) {
 		final boolean emulateFetchClause = shouldEmulateFetchClause( querySpec );
-		if ( emulateFetchClause || hasOffset( querySpec ) && !supportsOffsetClause() ) {
+		if ( emulateFetchClause || !supportsOffsetClause() && hasOffset( querySpec ) ) {
 			emulateFetchOffsetWithWindowFunctions( querySpec, emulateFetchClause );
 		}
 		else {
@@ -81,7 +96,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( !hasOffset( queryPart ) || supportsOffsetClause() ) {
+			if ( supportsOffsetClause() || !hasOffset( queryPart ) ) {
 				renderOffsetFetchClause( queryPart, true );
 			}
 			else if ( queryPart.isRoot() && hasLimit() ) {

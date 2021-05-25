@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
@@ -22,6 +24,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -36,15 +39,20 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  */
 public class ResultsHelper {
 	public static <R> RowReader<R> createRowReader(
-			SessionFactoryImplementor sessionFactory,
-			Callback callback,
+			ExecutionContext executionContext,
+			LockOptions lockOptions,
 			RowTransformer<R> rowTransformer,
 			JdbcValues jdbcValues) {
-		final Map<NavigablePath,Initializer> initializerMap = new LinkedHashMap<>();
+		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
 		final List<Initializer> initializers = new ArrayList<>();
+		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValues.getValuesMapping().resolveAssemblers(
 				new AssemblerCreationState() {
+					@Override
+					public LockMode determineEffectiveLockMode(String identificationVariable) {
+						return lockOptions.getEffectiveLockMode( identificationVariable );
+					}
 
 					@Override
 					public Initializer resolveInitializer(
@@ -86,8 +94,7 @@ public class ResultsHelper {
 		return new StandardRowReader<>(
 				(List) assemblers,
 				initializers,
-				rowTransformer,
-				callback
+				rowTransformer
 		);
 	}
 

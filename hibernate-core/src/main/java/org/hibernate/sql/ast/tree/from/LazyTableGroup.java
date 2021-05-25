@@ -25,7 +25,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
-	private final LockMode lockMode;
+	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
 	private final SessionFactoryImplementor sessionFactory;
 	private final Supplier<TableGroup> tableGroupSupplier;
@@ -39,13 +39,13 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 			Supplier<TableGroup> tableGroupSupplier,
 			Predicate<NavigablePath> navigablePathChecker,
 			TableGroupProducer tableGroupProducer,
-			LockMode lockMode,
+			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory,
 			TableGroup parentTableGroup) {
 		this.navigablePath = navigablePath;
 		this.producer = tableGroupProducer;
-		this.lockMode = lockMode;
+		this.sourceAlias = sourceAlias;
 		this.sqlAliasBase = sqlAliasBase;
 		this.tableGroupSupplier = tableGroupSupplier;
 		this.navigablePathChecker = navigablePathChecker;
@@ -133,8 +133,8 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return lockMode;
+	public String getSourceAlias() {
+		return sourceAlias;
 	}
 
 	@Override

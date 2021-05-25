@@ -30,6 +30,11 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		super( sessionFactory, statement );
 	}
 
+	@Override
+	protected String getForShare() {
+		return getDialect().getVersion() >= 800 ? " for share" : " lock in share mode";
+	}
+
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart

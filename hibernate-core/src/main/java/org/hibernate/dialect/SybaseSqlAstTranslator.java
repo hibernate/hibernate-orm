@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -18,7 +19,9 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
@@ -30,6 +33,20 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	public SybaseSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
+		super.renderTableReference( tableReference, lockMode );
+		if ( LockMode.READ.lessThan( lockMode ) ) {
+			appendSql( " holdlock" );
+		}
+		return true;
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// Sybase does not support the FOR UPDATE clause
 	}
 
 	@Override

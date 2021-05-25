@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -24,7 +23,6 @@ public interface EntityValuedFetchable extends Fetchable, EntityValuedModelPart 
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState);
 }

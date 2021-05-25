@@ -12,6 +12,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.FilterHelper;
@@ -23,6 +26,7 @@ import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -65,6 +69,7 @@ public class MatchingIdSelectionHelper {
 	public static SelectStatement generateMatchingIdSelectStatement(
 			EntityMappingType targetEntityDescriptor,
 			SqmDeleteOrUpdateStatement sqmStatement,
+			boolean queryRoot,
 			Predicate restriction,
 			MultiTableSqmMutationConverter sqmConverter,
 			ExecutionContext executionContext,
@@ -77,7 +82,7 @@ public class MatchingIdSelectionHelper {
 			);
 		}
 
-		final QuerySpec idSelectionQuery = new QuerySpec( true, 1 );
+		final QuerySpec idSelectionQuery = new QuerySpec( queryRoot, 1 );
 
 		final TableGroup mutatingTableGroup = sqmConverter.getMutatingTableGroup();
 		idSelectionQuery.getFromClause().addRoot( mutatingTableGroup );
@@ -224,6 +229,7 @@ public class MatchingIdSelectionHelper {
 		final SelectStatement matchingIdSelection = generateMatchingIdSelectStatement(
 				entityDescriptor,
 				sqmMutationStatement,
+				true,
 				restriction,
 				sqmConverter,
 				executionContext,
@@ -231,7 +237,8 @@ public class MatchingIdSelectionHelper {
 		);
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcServices.getJdbcEnvironment()
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslator<JdbcSelect> sqlAstSelectTranslator = jdbcEnvironment
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( factory, matchingIdSelection );
 
@@ -244,10 +251,25 @@ public class MatchingIdSelectionHelper {
 				sqmConverter.getSqmParameterMappingModelExpressableResolutions()::get,
 				executionContext.getSession()
 		);
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockMode lockMode = lockOptions.getLockMode();
+		// Acquire a WRITE lock for the rows that are about to be modified
+		lockOptions.setLockMode( LockMode.WRITE );
+		// Visit the table joins and reset the lock mode if we encounter OUTER joins that are not supported
+		if ( !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
+			matchingIdSelection.getQuerySpec().getFromClause().visitTableJoins(
+					tableJoin -> {
+						if ( tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+							lockOptions.setLockMode( lockMode );
+						}
+					}
+			);
+		}
 		final JdbcSelect idSelectJdbcOperation = sqlAstSelectTranslator.translate(
 				jdbcParameterBindings,
 				executionContext.getQueryOptions()
 		);
+		lockOptions.setLockMode( lockMode );
 
 		return jdbcServices.getJdbcSelectExecutor().list(
 				idSelectJdbcOperation,

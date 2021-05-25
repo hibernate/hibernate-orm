@@ -380,7 +380,6 @@ public class LoaderSelectBuilder {
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
 				null,
-				lockOptions.getLockMode(),
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,
 				creationContext
@@ -705,7 +704,6 @@ public class LoaderSelectBuilder {
 				}
 			}
 
-			final LockMode lockMode = LockMode.READ;
 			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 			boolean joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
 
@@ -779,7 +777,6 @@ public class LoaderSelectBuilder {
 						fetchablePath,
 						fetchTiming,
 						joined,
-						lockMode,
 						null,
 						creationState
 				);
@@ -865,7 +862,6 @@ public class LoaderSelectBuilder {
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				rootNavigablePath,
 				null,
-				lockOptions.getLockMode(),
 				() -> rootQuerySpec::applyPredicate,
 				sqlAstCreationState,
 				creationContext

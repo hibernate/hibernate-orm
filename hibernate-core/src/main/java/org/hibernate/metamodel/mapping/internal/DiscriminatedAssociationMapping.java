@@ -315,7 +315,6 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return new AnyValuedFetch(

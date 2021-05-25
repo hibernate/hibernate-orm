@@ -149,7 +149,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	@Override
 	public Callback getCallback() {
-		return afterLoadAction -> {};
+		return executionContext.getCallback();
 	}
 
 	@Override

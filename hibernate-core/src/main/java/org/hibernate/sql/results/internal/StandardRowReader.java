@@ -33,21 +33,18 @@ public class StandardRowReader<T> implements RowReader<T> {
 	private final RowTransformer<T> rowTransformer;
 
 	private final int assemblerCount;
-	private final Callback callback;
 
 
 	@SuppressWarnings("WeakerAccess")
 	public StandardRowReader(
 			List<DomainResultAssembler> resultAssemblers,
 			List<Initializer> initializers,
-			RowTransformer<T> rowTransformer,
-			Callback callback) {
+			RowTransformer<T> rowTransformer) {
 		this.resultAssemblers = resultAssemblers;
 		this.initializers = initializers;
 		this.rowTransformer = rowTransformer;
 
 		this.assemblerCount = resultAssemblers.size();
-		this.callback = callback;
 
 		logDebugInfo();
 	}

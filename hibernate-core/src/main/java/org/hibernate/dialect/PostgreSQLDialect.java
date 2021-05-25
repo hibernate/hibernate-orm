@@ -785,8 +785,18 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsWait() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsSkipLocked() {
 		return getVersion() >= 950;
+	}
+
+	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.TABLE;
 	}
 
 	@Override

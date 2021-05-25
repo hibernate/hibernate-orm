@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -19,8 +20,15 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.hibernate.LockMode;
+import org.hibernate.QueryException;
+import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.LockOptions;
@@ -137,6 +145,7 @@ import org.hibernate.sql.exec.internal.JdbcParametersImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcInsert;
+import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
@@ -144,6 +153,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesMappingProducerStandard;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.IntegerType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -194,6 +204,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private Limit limit;
 	private JdbcParameter offsetParameter;
 	private JdbcParameter limitParameter;
+	private ForUpdateClause forUpdate;
 
 	public Dialect getDialect() {
 		return dialect;
@@ -321,6 +332,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public boolean supportsFilterClause() {
+		// By default we report false because not many dialects support this
+		return false;
+	}
+
+	@Override
 	public void appendSql(String fragment) {
 		sqlBuffer.append( fragment );
 	}
@@ -354,6 +371,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return appliedParameterBindings;
 	}
 
+	protected JdbcLockStrategy getJdbcLockStrategy() {
+		return lockOptions == null ? JdbcLockStrategy.FOLLOW_ON : JdbcLockStrategy.NONE;
+	}
+
 	protected JdbcParameterBindings getJdbcParameterBindings() {
 		return jdbcParameterBindings;
 	}
@@ -371,8 +392,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean hasOffset(QueryPart queryPart) {
-		if ( queryPart.isRoot() && hasLimit() ) {
-			return limit.getFirstRowJpa() != 0;
+		if ( queryPart.isRoot() && hasLimit() && limit.getFirstRowJpa() != 0 ) {
+			return true;
 		}
 		else {
 			return queryPart.getOffsetClauseExpression() != null;
@@ -532,79 +553,37 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected JdbcDelete translateDelete(DeleteStatement sqlAst) {
 		visitDeleteStatement( sqlAst );
 
-		return new JdbcDelete() {
-			@Override
-			public String getSql() {
-				return AbstractSqlAstTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return AbstractSqlAstTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return AbstractSqlAstTranslator.this.getAffectedTableNames();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return AbstractSqlAstTranslator.this.getFilterJdbcParameters();
-			}
-		};
+		return new JdbcDelete(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				getFilterJdbcParameters(),
+				getAppliedParameterBindings()
+		);
 	}
 
 	protected JdbcUpdate translateUpdate(UpdateStatement sqlAst) {
 		visitUpdateStatement( sqlAst );
 
-		return new JdbcUpdate() {
-			@Override
-			public String getSql() {
-				return AbstractSqlAstTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return AbstractSqlAstTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return AbstractSqlAstTranslator.this.getFilterJdbcParameters();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return AbstractSqlAstTranslator.this.getAffectedTableNames();
-			}
-		};
+		return new JdbcUpdate(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				getFilterJdbcParameters(),
+				getAppliedParameterBindings()
+		);
 	}
 
 	protected JdbcInsert translateInsert(InsertStatement sqlAst) {
 		visitInsertStatement( sqlAst );
 
-		return new JdbcInsert() {
-			@Override
-			public String getSql() {
-				return AbstractSqlAstTranslator.this.getSql();
-			}
-
-			@Override
-			public List<JdbcParameterBinder> getParameterBinders() {
-				return AbstractSqlAstTranslator.this.getParameterBinders();
-			}
-
-			@Override
-			public Set<String> getAffectedTableNames() {
-				return AbstractSqlAstTranslator.this.getAffectedTableNames();
-			}
-
-			@Override
-			public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-				return AbstractSqlAstTranslator.this.getFilterJdbcParameters();
-			}
-		};
+		return new JdbcInsert(
+				getSql(),
+				getParameterBinders(),
+				getAffectedTableNames(),
+				getFilterJdbcParameters(),
+				getAppliedParameterBindings()
+		);
 	}
 
 	protected JdbcSelect translateSelect(SelectStatement sqlAstSelect) {
@@ -626,7 +605,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				rowsToSkip = getRowsToSkip( sqlAstSelect, getJdbcParameterBindings() ),
 				getMaxRows( sqlAstSelect, getJdbcParameterBindings(), rowsToSkip ),
 				getAppliedParameterBindings(),
-				getLockOptions(),
+				getJdbcLockStrategy(),
 				getOffsetParameter(),
 				getLimitParameter()
 		);
@@ -676,40 +655,58 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Limit limit = getLimit();
 		if ( limit.getFirstRow() != null ) {
 			setOffsetParameter(
-					new JdbcParameterImpl( IntegerType.INSTANCE ) {
-						@Override
-						public void bindParameterValue(
-								PreparedStatement statement,
-								int startPosition,
-								JdbcParameterBindings jdbcParamBindings,
-								ExecutionContext executionContext) throws SQLException {
-							IntegerType.INSTANCE.getJdbcValueBinder().bind(
-									statement,
-									executionContext.getQueryOptions().getLimit().getFirstRow(),
-									startPosition,
-									executionContext.getSession()
-							);
-						}
-					}
+					new OffsetJdbcParameter(
+							sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
+					)
 			);
 		}
 		if ( limit.getMaxRows() != null ) {
 			setLimitParameter(
-					new JdbcParameterImpl( IntegerType.INSTANCE ) {
-						@Override
-						public void bindParameterValue(
-								PreparedStatement statement,
-								int startPosition,
-								JdbcParameterBindings jdbcParamBindings,
-								ExecutionContext executionContext) throws SQLException {
-							IntegerType.INSTANCE.getJdbcValueBinder().bind(
-									statement,
-									executionContext.getQueryOptions().getLimit().getMaxRows(),
-									startPosition,
-									executionContext.getSession()
-							);
-						}
-					}
+					new LimitJdbcParameter(
+							sessionFactory.getTypeConfiguration().getBasicTypeForJavaType( Integer.class )
+					)
+			);
+		}
+	}
+
+	private static class OffsetJdbcParameter extends JdbcParameterImpl {
+
+		public OffsetJdbcParameter(BasicType<Integer> type) {
+			super( type );
+		}
+
+		@Override
+		public void bindParameterValue(
+				PreparedStatement statement,
+				int startPosition,
+				JdbcParameterBindings jdbcParamBindings,
+				ExecutionContext executionContext) throws SQLException {
+			getJdbcMapping().getJdbcValueBinder().bind(
+					statement,
+					executionContext.getQueryOptions().getLimit().getFirstRow(),
+					startPosition,
+					executionContext.getSession()
+			);
+		}
+	}
+
+	private static class LimitJdbcParameter extends JdbcParameterImpl {
+
+		public LimitJdbcParameter(BasicType<Integer> type) {
+			super( type );
+		}
+
+		@Override
+		public void bindParameterValue(
+				PreparedStatement statement,
+				int startPosition,
+				JdbcParameterBindings jdbcParamBindings,
+				ExecutionContext executionContext) throws SQLException {
+			getJdbcMapping().getJdbcValueBinder().bind(
+					statement,
+					executionContext.getQueryOptions().getLimit().getMaxRows(),
+					startPosition,
+					executionContext.getSession()
 			);
 		}
 	}
@@ -779,7 +776,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.DELETE );
-			renderTableReference( statement.getTargetTable() );
+			renderTableReference( statement.getTargetTable(), LockMode.NONE );
 		}
 		finally {
 			clauseStack.pop();
@@ -804,7 +801,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Stack<Clause> clauseStack = getClauseStack();
 		try {
 			clauseStack.push( Clause.UPDATE );
-			renderTableReference( statement.getTargetTable() );
+			renderTableReference( statement.getTargetTable(), LockMode.NONE );
 		}
 		finally {
 			clauseStack.pop();
@@ -924,6 +921,262 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void visitForUpdateClause(QuerySpec querySpec) {
+		if ( querySpec.isRoot() ) {
+			if ( forUpdate != null ) {
+				final Boolean followOnLocking = getLockOptions().getFollowOnLocking();
+				if ( Boolean.TRUE.equals( followOnLocking ) ) {
+					lockOptions = null;
+				}
+				else {
+					forUpdate.merge( getLockOptions() );
+					forUpdate.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
+					final LockStrategy lockStrategy = determineLockingStrategy( querySpec, forUpdate, followOnLocking );
+					switch ( lockStrategy ) {
+						case CLAUSE:
+							renderForUpdateClause( querySpec, forUpdate );
+							break;
+						case FOLLOW_ON:
+							lockOptions = null;
+							break;
+					}
+				}
+				forUpdate = null;
+			}
+			else {
+				// Since we get here, we know that no alias locks were applied.
+				// We only apply locking on the root query though if there is a global lock mode
+				final LockOptions lockOptions = getLockOptions();
+				final Boolean followOnLocking = lockOptions.getFollowOnLocking();
+				if ( Boolean.TRUE.equals( followOnLocking )) {
+					this.lockOptions = null;
+				}
+				else if ( lockOptions.getLockMode() != LockMode.NONE ) {
+					final ForUpdateClause forUpdateClause = new ForUpdateClause();
+					forUpdateClause.merge( getLockOptions() );
+					forUpdateClause.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
+					final LockStrategy lockStrategy = determineLockingStrategy(
+							querySpec,
+							forUpdateClause,
+							followOnLocking
+					);
+					switch ( lockStrategy ) {
+						case CLAUSE:
+							renderForUpdateClause(
+									querySpec,
+									forUpdateClause
+							);
+							break;
+						case FOLLOW_ON:
+							if ( Boolean.FALSE.equals( followOnLocking ) ) {
+								throw new UnsupportedOperationException( "" );
+							}
+							this.lockOptions = null;
+							break;
+					}
+				}
+			}
+		}
+		else if ( forUpdate != null ) {
+			forUpdate.merge( getLockOptions() );
+			forUpdate.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
+			final LockStrategy lockStrategy = determineLockingStrategy( querySpec, forUpdate, null );
+			switch ( lockStrategy ) {
+				case CLAUSE:
+					renderForUpdateClause( querySpec, forUpdate );
+					break;
+				case FOLLOW_ON:
+					throw new UnsupportedOperationException( "Follow-on locking for subqueries is not supported" );
+			}
+			forUpdate = null;
+		}
+	}
+
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		int timeoutMillis = forUpdateClause.getTimeoutMillis();
+		LockKind lockKind = LockKind.NONE;
+		switch ( forUpdateClause.getLockMode() ) {
+			//noinspection deprecation
+			case UPGRADE:
+				timeoutMillis = LockOptions.WAIT_FOREVER;
+			case PESSIMISTIC_WRITE:
+				lockKind = LockKind.UPDATE;
+				break;
+			case PESSIMISTIC_READ:
+				lockKind = LockKind.SHARE;
+				break;
+			case UPGRADE_NOWAIT:
+				//noinspection deprecation
+			case FORCE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+				timeoutMillis = LockOptions.NO_WAIT;
+				lockKind = LockKind.UPDATE;
+				break;
+			case UPGRADE_SKIPLOCKED:
+				timeoutMillis = LockOptions.SKIP_LOCKED;
+				lockKind = LockKind.UPDATE;
+				break;
+			default:
+				break;
+		}
+		if ( lockKind != LockKind.NONE ) {
+			if ( lockKind == LockKind.SHARE ) {
+				appendSql( getForShare() );
+				if ( forUpdateClause.hasAliases() && getDialect().getReadRowLockStrategy() != RowLockStrategy.NONE ) {
+					appendSql( " of " );
+					forUpdateClause.appendAliases( this );
+				}
+			}
+			else {
+				appendSql( getForUpdate() );
+				if ( forUpdateClause.hasAliases() && getDialect().getWriteRowLockStrategy() != RowLockStrategy.NONE ) {
+					appendSql( " of " );
+					forUpdateClause.appendAliases( this );
+				}
+			}
+			appendSql( getForUpdateWithClause() );
+			switch ( timeoutMillis ) {
+				case LockOptions.NO_WAIT:
+					if ( getDialect().supportsNoWait() ) {
+						appendSql( getNoWait() );
+					}
+					break;
+				case LockOptions.SKIP_LOCKED:
+					if ( getDialect().supportsSkipLocked() ) {
+						appendSql( getSkipLocked() );
+					}
+					break;
+				case LockOptions.WAIT_FOREVER:
+					break;
+				default:
+					if ( getDialect().supportsWait() ) {
+						appendSql( " wait " );
+						appendSql( Integer.toString( Math.round( timeoutMillis / 1e3f ) ) );
+					}
+					break;
+			}
+		}
+	}
+
+	private enum LockKind {
+		NONE,
+		SHARE,
+		UPDATE;
+	}
+
+	protected String getForUpdate() {
+		return " for update";
+	}
+
+	protected String getForShare() {
+		return " for update";
+	}
+
+	protected String getForUpdateWithClause() {
+		// This is a clause to specify the lock isolation for e.g. Derby
+		return "";
+	}
+
+	protected String getNoWait() {
+		return " nowait";
+	}
+
+	protected String getSkipLocked() {
+		return " skip locked";
+	}
+
+	protected LockMode getEffectiveLockMode(String alias) {
+		final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
+		LockMode lockMode = getLockOptions().getAliasSpecificLockMode( alias );
+		if ( currentQueryPart.isRoot() && lockMode == null ) {
+			lockMode = getLockOptions().getLockMode();
+		}
+		return lockMode == null ? LockMode.NONE : lockMode;
+	}
+
+	protected int getEffectiveLockTimeout(LockMode lockMode) {
+		int timeoutMillis = getLockOptions().getTimeOut();
+		switch ( lockMode ) {
+			//noinspection deprecation
+			case UPGRADE:
+				timeoutMillis = LockOptions.WAIT_FOREVER;
+				break;
+			case UPGRADE_NOWAIT:
+				//noinspection deprecation
+			case FORCE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+				timeoutMillis = LockOptions.NO_WAIT;
+				break;
+			case UPGRADE_SKIPLOCKED:
+				timeoutMillis = LockOptions.SKIP_LOCKED;
+				break;
+			default:
+				break;
+		}
+		return timeoutMillis;
+	}
+
+	protected boolean hasAggregateFunctions(QuerySpec querySpec) {
+		return AggregateFunctionChecker.hasAggregateFunctions( querySpec );
+	}
+
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		LockStrategy strategy = LockStrategy.CLAUSE;
+		if ( !querySpec.getGroupByClauseExpressions().isEmpty() ) {
+			if ( Boolean.FALSE.equals( followOnLocking ) ) {
+				throw new IllegalQueryOperationException( "Locking with GROUP BY is not supported!" );
+			}
+			strategy = LockStrategy.FOLLOW_ON;
+		}
+		if ( querySpec.getHavingClauseRestrictions() != null ) {
+			if ( Boolean.FALSE.equals( followOnLocking ) ) {
+				throw new IllegalQueryOperationException( "Locking with HAVING is not supported!" );
+			}
+			strategy = LockStrategy.FOLLOW_ON;
+		}
+		if ( querySpec.getSelectClause().isDistinct() ) {
+			if ( Boolean.FALSE.equals( followOnLocking ) ) {
+				throw new IllegalQueryOperationException( "Locking with DISTINCT is not supported!" );
+			}
+			strategy = LockStrategy.FOLLOW_ON;
+		}
+		if ( !getDialect().supportsOuterJoinForUpdate() ) {
+			if ( forUpdateClause.hasAliases() ) {
+				// Only need to visit the TableGroupJoins for which the alias is registered
+				querySpec.getFromClause().visitTableGroupJoins(
+						tableGroupJoin -> {
+							final TableGroup group = tableGroupJoin.getJoinedGroup();
+							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
+								if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
+									throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported!" );
+								}
+							}
+						}
+				);
+			}
+			else {
+				// Visit TableReferenceJoin and TableGroupJoin to see if all use INNER
+				querySpec.getFromClause().visitTableJoins(
+						tableJoin -> {
+							if ( tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
+								throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported!" );
+							}
+						}
+				);
+			}
+		}
+		if ( hasAggregateFunctions( querySpec ) ) {
+			if ( Boolean.FALSE.equals( followOnLocking ) ) {
+				throw new IllegalQueryOperationException( "Locking with aggregate functions is not supported!" );
+			}
+			strategy = LockStrategy.FOLLOW_ON;
+		}
+		return strategy;
+	}
+
 	protected void visitReturningColumns(MutationStatement mutationStatement) {
 		final List<ColumnReference> returningColumns = mutationStatement.getReturningColumns();
 		final int size = returningColumns.size();
@@ -966,8 +1219,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = ", ";
 			}
 
-			appendSql( ") as (" );
+			appendSql( ") as " );
 
+			if ( cte.getMaterialization() != CteMaterialization.UNDEFINED ) {
+				renderMaterializationHint( cte.getMaterialization() );
+			}
+
+			appendSql( '(' );
 			cte.getCteDefinition().accept( this );
 
 			appendSql( ')' );
@@ -978,6 +1236,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			mainSeparator = ", ";
 		}
 		appendSql( ' ' );
+	}
+
+	protected void renderMaterializationHint(CteMaterialization materialization) {
+		// No-op by default
 	}
 
 	protected void renderSearchClause(CteStatement cte) {
@@ -1088,7 +1350,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitQuerySpec(QuerySpec querySpec) {
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 		final boolean needsSelectAliases = this.needsSelectAliases;
+		final ForUpdateClause forUpdate = this.forUpdate;
 		try {
+			this.forUpdate = null;
 			final QueryPart currentQueryPart = queryPartStack.getCurrent();
 			if ( currentQueryPart != null && queryPartForRowNumbering != currentQueryPart ) {
 				this.queryPartForRowNumbering = null;
@@ -1124,6 +1388,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			visitHavingClause( querySpec );
 			visitOrderBy( querySpec.getSortSpecifications() );
 			visitOffsetFetchClause( querySpec );
+			// We render the FOR UPDATE clause in the parent query
+			if ( queryPartForRowNumbering == null ) {
+				visitForUpdateClause( querySpec );
+			}
 
 			if ( needsParenthesis ) {
 				appendSql( ")" );
@@ -1131,9 +1399,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		finally {
-			queryPartStack.pop();
+			this.queryPartStack.pop();
 			this.queryPartForRowNumbering = queryPartForRowNumbering;
 			this.needsSelectAliases = needsSelectAliases;
+			if ( queryPartForRowNumbering == null ) {
+				this.forUpdate = forUpdate;
+			}
 		}
 	}
 
@@ -2252,7 +2523,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			appendSql( " from (" );
 			queryPart.accept( this );
-			appendSql( " ) ");
+			appendSql( ") ");
 			appendSql( alias );
 			appendSql( " where " );
 			final Stack<Clause> clauseStack = getClauseStack();
@@ -2271,7 +2542,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							appendSql( alias );
 							appendSql( ".cnt * " );
 							fetchExpression.accept( this );
-							appendSql( " / 100 )" );
+							appendSql( " / 100)" );
 							break;
 						case ROWS_ONLY:
 							appendSql( alias );
@@ -2289,7 +2560,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							appendSql( alias );
 							appendSql( ".cnt * " );
 							fetchExpression.accept( this );
-							appendSql( " / 100 )" );
+							appendSql( " / 100)" );
 							break;
 						case ROWS_WITH_TIES:
 							appendSql( alias );
@@ -2326,6 +2597,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( alias );
 					appendSql( ".rn" );
 				}
+
+				// We render the FOR UPDATE clause in the outer query
+				if ( queryPart instanceof QuerySpec ) {
+					clauseStack.pop();
+					clauseStack.push( Clause.FOR_UPDATE );
+					visitForUpdateClause( (QuerySpec) queryPart );
+				}
 			}
 			finally {
 				clauseStack.pop();
@@ -2336,6 +2614,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			this.needsSelectAliases = needsSelectAliases;
 		}
 	}
+
+	protected final void withRowNumbering(QueryPart queryPart, Runnable r) {
+		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
+		final boolean needsSelectAliases = this.needsSelectAliases;
+		try {
+			this.queryPartForRowNumbering = queryPart;
+			this.needsSelectAliases = false;
+			r.run();
+		}
+		finally {
+			this.queryPartForRowNumbering = queryPartForRowNumbering;
+			this.needsSelectAliases = needsSelectAliases;
+		}
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// SELECT clause
@@ -2378,7 +2671,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							appendSql( "count(*) over () cnt," );
 						case ROWS_ONLY:
 							renderRowNumber( selectClause, queryPartForRowNumbering );
-							appendSql( " rn " );
+							appendSql( " rn" );
 							break;
 						case PERCENT_WITH_TIES:
 							appendSql( "count(*) over () cnt," );
@@ -2451,7 +2744,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected List<SortSpecification> getSortSpecificationsRowNumbering(
 			SelectClause selectClause,
 			QueryPart queryPart) {
-		final List<SortSpecification> sortSpecifications = queryPart.getSortSpecifications();
+		final List<SortSpecification> sortSpecifications;
+		if ( queryPart.hasSortSpecifications() ) {
+			sortSpecifications = queryPart.getSortSpecifications();
+		}
+		else {
+			sortSpecifications = Collections.emptyList();
+		}
 		if ( selectClause.isDistinct() ) {
 			// When select distinct is used, we need to add all select items to the order by clause
 			final List<SqlSelection> sqlSelections = new ArrayList<>( selectClause.getSqlSelections() );
@@ -2477,7 +2776,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final List<SortSpecification> sortSpecificationsRowNumbering = new ArrayList<>( sqlSelectionsSize + specificationsSize );
 				sortSpecificationsRowNumbering.addAll( sortSpecifications );
 				for ( int i = 0; i < sqlSelectionsSize; i++ ) {
-					sortSpecifications.add(
+					sortSpecificationsRowNumbering.add(
 							new SortSpecification(
 									new SqlSelectionExpression( sqlSelections.get( i ) ),
 									null,
@@ -2604,7 +2903,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 //			sqlAppender.appendSql( OPEN_PARENTHESIS );
 //		}
 
-		renderTableReference( tableGroup.getPrimaryTableReference() );
+		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
+		final boolean usesLockHint = renderTableReference( tableGroup.getPrimaryTableReference(), effectiveLockMode );
 
 		renderTableReferenceJoins( tableGroup );
 
@@ -2622,6 +2922,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				registerAffectedTable( querySpaces[i] );
 			}
 		}
+		if ( !usesLockHint && tableGroup.getSourceAlias() != null && LockMode.READ.lessThan( effectiveLockMode ) ) {
+			if ( forUpdate == null ) {
+				forUpdate = new ForUpdateClause( effectiveLockMode );
+			}
+			else {
+				forUpdate.setLockMode( effectiveLockMode );
+			}
+			forUpdate.applyAliases( getDialect().getLockRowIdentifier( effectiveLockMode ), tableGroup );
+		}
 	}
 
 	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate) {
@@ -2632,7 +2941,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( '(' );
 		}
 
-		renderTableReference( tableGroup.getPrimaryTableReference() );
+		final LockMode effectiveLockMode = getEffectiveLockMode( tableGroup.getSourceAlias() );
+		final boolean usesLockHint = renderTableReference( tableGroup.getPrimaryTableReference(), effectiveLockMode );
 
 		if ( realTableGroup ) {
 			renderTableReferenceJoins( tableGroup );
@@ -2654,21 +2964,30 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				registerAffectedTable( querySpaces[i] );
 			}
 		}
+		if ( !usesLockHint && tableGroup.getSourceAlias() != null && LockMode.READ.lessThan( effectiveLockMode ) ) {
+			if ( forUpdate == null ) {
+				forUpdate = new ForUpdateClause( effectiveLockMode );
+			}
+			else {
+				forUpdate.setLockMode( effectiveLockMode );
+			}
+			forUpdate.applyAliases( getDialect().getLockRowIdentifier( effectiveLockMode ), tableGroup );
+		}
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void renderTableReference(TableReference tableReference) {
+	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
 		appendSql( tableReference.getTableExpression() );
 		registerAffectedTable( tableReference );
 		final Clause currentClause = clauseStack.getCurrent();
-		if ( !rendersTableReferenceAlias( currentClause ) ) {
-			return;
+		if ( rendersTableReferenceAlias( currentClause ) ) {
+			final String identificationVariable = tableReference.getIdentificationVariable();
+			if ( identificationVariable != null ) {
+				appendSql( getDialect().getTableAliasSeparator() );
+				appendSql( identificationVariable );
+			}
 		}
-		final String identificationVariable = tableReference.getIdentificationVariable();
-		if ( identificationVariable != null ) {
-			appendSql( getDialect().getTableAliasSeparator() );
-			appendSql( identificationVariable );
-		}
+		return false;
 	}
 
 	public static boolean rendersTableReferenceAlias(Clause clause) {
@@ -2702,11 +3021,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( tableJoin.getJoinType().getText() );
 			appendSql( " join " );
 
-			renderTableReference( tableJoin.getJoinedTableReference() );
+			renderTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
 
-			if ( tableJoin.getJoinPredicate() != null && !tableJoin.getJoinPredicate().isEmpty() ) {
+			if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
 				appendSql( " on " );
-				tableJoin.getJoinPredicate().accept( this );
+				tableJoin.getPredicate().accept( this );
 			}
 		}
 	}
@@ -4162,6 +4481,175 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected String getFromDualForSelectOnly() {
 		return "";
+	}
+
+	protected enum LockStrategy {
+		CLAUSE,
+		FOLLOW_ON,
+		NONE;
+	}
+
+	protected static class ForUpdateClause {
+		private LockMode lockMode;
+		private int timeoutMillis = LockOptions.WAIT_FOREVER;
+		private Map<String, String[]> keyColumnNames;
+		private Map<String, String> aliases;
+
+		public ForUpdateClause(LockMode lockMode) {
+			this.lockMode = lockMode;
+		}
+
+		public ForUpdateClause() {
+			this.lockMode = LockMode.NONE;
+		}
+
+		public void applyAliases(RowLockStrategy lockIdentifier, QuerySpec querySpec) {
+			if ( lockIdentifier != RowLockStrategy.NONE ) {
+				querySpec.getFromClause().visitTableGroups( tableGroup -> applyAliases( lockIdentifier, tableGroup ) );
+			}
+		}
+
+		public void applyAliases(RowLockStrategy lockIdentifier, TableGroup tableGroup) {
+			if ( aliases != null && lockIdentifier != RowLockStrategy.NONE ) {
+				final String tableAlias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
+				if ( aliases.containsKey( tableGroup.getSourceAlias() ) ) {
+					addAlias( tableGroup.getSourceAlias(), tableAlias );
+					if ( lockIdentifier == RowLockStrategy.COLUMN ) {
+						addKeyColumnNames( tableGroup );
+					}
+				}
+			}
+		}
+
+		public LockMode getLockMode() {
+			return lockMode;
+		}
+
+		public void setLockMode(LockMode lockMode) {
+			if ( this.lockMode != LockMode.NONE && lockMode != this.lockMode ) {
+				throw new QueryException( "mixed LockModes" );
+			}
+			this.lockMode = lockMode;
+		}
+
+		public void addKeyColumnNames(TableGroup tableGroup) {
+			final String[] keyColumnNames = determineKeyColumnNames( tableGroup.getModelPart() );
+			if ( keyColumnNames == null ) {
+				throw new IllegalArgumentException( "Can't lock table group: " + tableGroup );
+			}
+			addKeyColumnNames(
+					tableGroup.getSourceAlias(),
+					tableGroup.getPrimaryTableReference().getIdentificationVariable(),
+					keyColumnNames
+			);
+		}
+
+		private String[] determineKeyColumnNames(ModelPart modelPart) {
+			if ( modelPart instanceof Loadable ) {
+				return ( (Loadable) modelPart ).getIdentifierColumnNames();
+			}
+			else if ( modelPart instanceof PluralAttributeMapping ) {
+				return ((PluralAttributeMapping) modelPart).getCollectionDescriptor().getKeyColumnAliases( null );
+			}
+			else if ( modelPart instanceof EntityAssociationMapping ) {
+				return determineKeyColumnNames( ( (EntityAssociationMapping) modelPart ).getAssociatedEntityMappingType() );
+			}
+			return null;
+		}
+
+		private void addKeyColumnNames(String alias, String tableAlias, String[] keyColumnNames) {
+			if ( this.keyColumnNames == null ) {
+				this.keyColumnNames = new HashMap<>();
+			}
+			this.keyColumnNames.put( tableAlias, keyColumnNames );
+		}
+
+		public boolean hasAlias(String alias) {
+			return aliases != null && aliases.containsKey( alias );
+		}
+
+		private void addAlias(String alias, String tableAlias) {
+			if ( aliases == null ) {
+				aliases = new HashMap<>();
+			}
+			aliases.put( alias, tableAlias );
+		}
+
+		public int getTimeoutMillis() {
+			return timeoutMillis;
+		}
+
+		public boolean hasAliases() {
+			return aliases != null;
+		}
+
+		public void appendAliases(SqlAppender appender) {
+			if ( aliases == null ) {
+				return;
+			}
+			if ( keyColumnNames != null ) {
+				boolean first = true;
+				for ( String tableAlias : aliases.values() ) {
+					final String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
+					if ( keyColumns == null ) {
+						throw new IllegalArgumentException( "alias not found: " + tableAlias );
+					}
+					for ( String keyColumn : keyColumns ) {
+						if ( first ) {
+							first = false;
+						}
+						else {
+							appender.appendSql( ", " );
+						}
+						appender.appendSql( tableAlias );
+						appender.appendSql( '.' );
+						appender.appendSql( keyColumn );
+					}
+				}
+			}
+			else {
+				boolean first = true;
+				for ( String tableAlias : aliases.values() ) {
+					if ( first ) {
+						first = false;
+					}
+					else {
+						appender.appendSql( ", " );
+					}
+					appender.appendSql( tableAlias );
+				}
+			}
+		}
+
+		public String getAliases() {
+			if ( aliases == null ) {
+				return null;
+			}
+			return aliases.toString();
+		}
+
+		public void merge(LockOptions lockOptions) {
+			if ( lockOptions != null ) {
+				LockMode upgradeType = LockMode.NONE;
+				if ( lockOptions.getAliasLockCount() == 0 ) {
+					upgradeType = lockOptions.getLockMode();
+				}
+				else {
+					for ( Map.Entry<String, LockMode> entry : lockOptions.getAliasSpecificLocks() ) {
+						final LockMode lockMode = entry.getValue();
+						if ( LockMode.READ.lessThan( lockMode ) ) {
+							addAlias( entry.getKey(), null );
+							if ( upgradeType != LockMode.NONE && lockMode != upgradeType ) {
+								throw new QueryException( "mixed LockModes" );
+							}
+							upgradeType = lockMode;
+						}
+					}
+				}
+				lockMode = upgradeType;
+				timeoutMillis = lockOptions.getTimeOut();
+			}
+		}
 	}
 
 }

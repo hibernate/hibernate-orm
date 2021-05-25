@@ -63,6 +63,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
 
+	private volatile CacheableSqmInterpretation cacheableSqmInterpretation;
+
 	@SuppressWarnings("WeakerAccess")
 	public ConcreteSqmSelectQueryPlan(
 			SqmSelectStatement sqm,
@@ -195,8 +197,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return withCacheableSqmInterpretation( executionContext, scrollMode, scrollInterpreter );
 	}
 
-	private volatile CacheableSqmInterpretation cacheableSqmInterpretation;
-
 	private <T, X> T withCacheableSqmInterpretation(ExecutionContext executionContext, X context, SqmInterpreter<T, X> interpreter) {
 		// NOTE : VERY IMPORTANT - intentional double-lock checking
 		//		The other option would be to leverage `java.util.concurrent.locks.ReadWriteLock`
@@ -227,6 +227,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			if ( localCopy.jdbcSelect.dependsOnParameterBindings() ) {
 				jdbcParameterBindings = createJdbcParameterBindings( localCopy, executionContext );
 			}
+			// If the translation depends on the limit or lock options, we have to rebuild the JdbcSelect
+			// We could avoid this by putting the lock options into the cache key
 			if ( !localCopy.jdbcSelect.isCompatibleWith( jdbcParameterBindings, executionContext.getQueryOptions() ) ) {
 				localCopy = buildCacheableSqmInterpretation(
 						sqm,

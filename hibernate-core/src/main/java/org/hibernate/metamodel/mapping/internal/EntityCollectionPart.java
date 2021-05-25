@@ -8,7 +8,6 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.function.BiConsumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -144,7 +143,6 @@ public class EntityCollectionPart
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		// find or create the TableGroup associated with this `fetchablePath`
@@ -166,7 +164,7 @@ public class EntityCollectionPart
 				}
 		);
 
-		return new EntityFetchJoinedImpl( fetchParent, this, tableGroup, lockMode, selected, fetchablePath, creationState );
+		return new EntityFetchJoinedImpl( fetchParent, this, tableGroup, selected, fetchablePath, creationState );
 	}
 
 	@Override
@@ -353,7 +351,6 @@ public class EntityCollectionPart
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
@@ -363,7 +360,6 @@ public class EntityCollectionPart
 				explicitSourceAlias,
 				sqlAstJoinType,
 				fetched,
-				lockMode,
 				aliasBaseGenerator,
 				sqlExpressionResolver,
 				creationContext

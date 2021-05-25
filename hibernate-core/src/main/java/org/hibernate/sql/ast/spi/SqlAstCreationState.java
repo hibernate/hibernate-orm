@@ -24,5 +24,5 @@ public interface SqlAstCreationState {
 
 	SqlAliasBaseGenerator getSqlAliasBaseGenerator();
 
-	LockMode determineLockMode(String identificationVariable);
+	void registerLockMode(String identificationVariable, LockMode explicitLockMode);
 }

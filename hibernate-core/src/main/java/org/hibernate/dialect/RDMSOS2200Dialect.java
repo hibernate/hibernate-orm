@@ -176,7 +176,7 @@ public class RDMSOS2200Dialect extends Dialect {
 			@Override
 			protected <T extends JdbcOperation> SqlAstTranslator<T> buildTranslator(
 					SessionFactoryImplementor sessionFactory, Statement statement) {
-				return new RDBMSOS2200SqlAstTranslator<>( sessionFactory, statement );
+				return new RDMSOS2200SqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
 	}

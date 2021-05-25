@@ -101,7 +101,7 @@ public class H2Dialect extends Dialect {
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
 		cascadeConstraints = version >= 104200;
 		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = version >= 140199;
+		useLocalTime = version >= 104199;
 
 		getDefaultProperties().setProperty( AvailableSettings.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		// http://code.google.com/p/h2database/issues/detail?id=235
@@ -193,7 +193,13 @@ public class H2Dialect extends Dialect {
 		CommonFunctionFactory.median( queryEngine );
 		CommonFunctionFactory.stddevPopSamp( queryEngine );
 		CommonFunctionFactory.varPopSamp( queryEngine );
-		CommonFunctionFactory.format_formatdatetime( queryEngine );
+		if ( version == 104200 ) {
+			// See https://github.com/h2database/h2database/issues/2518
+			CommonFunctionFactory.format_toChar( queryEngine );
+		}
+		else {
+			CommonFunctionFactory.format_formatdatetime( queryEngine );
+		}
 		CommonFunctionFactory.rownum( queryEngine );
 	}
 
@@ -432,6 +438,10 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String translateDatetimeFormat(String format) {
+		if ( version == 104200 ) {
+			// See https://github.com/h2database/h2database/issues/2518
+			return OracleDialect.datetimeFormat( format, true, true ).result();
+		}
 		return new Replacer( format, "'", "''" )
 				.replace("e", "u")
 				.replace( "xxx", "XXX" )

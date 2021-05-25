@@ -31,7 +31,6 @@ public interface Fetchable extends ModelPart {
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState);
 

@@ -35,6 +35,19 @@ public class CacheSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		return LockStrategy.NONE;
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// Cache does not support the FOR UPDATE clause
+	}
+
+	@Override
 	protected boolean needsRowsToSkip() {
 		return true;
 	}

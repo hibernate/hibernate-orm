@@ -68,7 +68,7 @@ public class QueryParametersValidationArrayTest {
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
-		@Column(columnDefinition = "ARRAY(1)")
+		@Column(columnDefinition = "ARRAY")
 		private String[] readings;
 	}
 

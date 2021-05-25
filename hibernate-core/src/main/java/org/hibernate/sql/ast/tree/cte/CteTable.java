@@ -80,7 +80,7 @@ public class CteTable {
 		final StandardTableGroup tableValueCtorGroup = new StandardTableGroup(
 				new NavigablePath( "cte" ),
 				null,
-				LockMode.NONE,
+				null,
 				tableValueConstructorReference,
 				null,
 				sessionFactory

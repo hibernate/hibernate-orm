@@ -201,8 +201,7 @@ public class IdSelectionTests {
 
 		@Override
 		public Callback getCallback() {
-			return afterLoadAction -> {
-			};
+			throw new UnsupportedOperationException();
 		}
 	}
 }

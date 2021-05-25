@@ -27,7 +27,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  */
 public class Conversion
 		implements Expression, DomainResultProducer {
-	private Duration duration;
+	private final Duration duration;
 	private final TemporalUnit unit;
 	private final BasicValuedMapping type;
 

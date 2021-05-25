@@ -87,7 +87,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		}
 
 		final SelectQueryPlan plan = creator.get();
-		queryPlanCache.put( key, plan );
+		queryPlanCache.put( key.prepareForStore(), plan );
 		return plan;
 	}
 

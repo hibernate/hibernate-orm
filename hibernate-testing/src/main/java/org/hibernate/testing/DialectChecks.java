@@ -190,6 +190,12 @@ abstract public class DialectChecks {
 		}
 	}
 
+	public static class SupportsSkipLocked implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsSkipLocked();
+		}
+	}
+
 	public static class DoubleQuoteQuoting implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {
@@ -252,6 +258,12 @@ abstract public class DialectChecks {
 	public static class SupportNoWait implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsNoWait();
+		}
+	}
+
+	public static class SupportWait implements DialectCheck {
+		public boolean isMatch(Dialect dialect) {
+			return dialect.supportsWait();
 		}
 	}
 

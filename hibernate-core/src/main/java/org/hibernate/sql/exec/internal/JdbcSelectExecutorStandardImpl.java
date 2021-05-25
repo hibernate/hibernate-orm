@@ -7,7 +7,6 @@
 package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -16,17 +15,18 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.hibernate.CacheMode;
+import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.spi.AfterLoadAction;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
@@ -166,16 +166,17 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			Function<String, PreparedStatement> statementCreator,
 			ResultsConsumer<T, R> resultsConsumer) {
 
+		final DeferredResultSetAccess deferredResultSetAccess = new DeferredResultSetAccess(
+				jdbcSelect,
+				jdbcParameterBindings,
+				executionContext,
+				statementCreator
+		);
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
 				jdbcSelect,
 				resultsConsumer.canResultsBeCached(),
 				executionContext,
-				new DeferredResultSetAccess(
-						jdbcSelect,
-						jdbcParameterBindings,
-						executionContext,
-						statementCreator
-				)
+				deferredResultSetAccess
 		);
 
 		/*
@@ -209,11 +210,15 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				executionContext::registerLoadingEntityEntry
 		);
 
-		final List<AfterLoadAction> afterLoadActions = new ArrayList<>();
-
 		final RowReader<R> rowReader = ResultsHelper.createRowReader(
-				executionContext.getSession().getFactory(),
-				afterLoadActions::add,
+				executionContext,
+				// If follow on locking is used, we must omit the lock options here,
+				// because these lock options are only for Initializers.
+				// If we wouldn't omit this, the follow on lock requests would be no-ops,
+				// because the EntityEntrys would already have the desired lock mode
+				deferredResultSetAccess.usesFollowOnLocking()
+						? LockOptions.NONE
+						: executionContext.getQueryOptions().getLockOptions(),
 				rowTransformer,
 				jdbcValues
 		);
@@ -233,11 +238,6 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowProcessingState,
 				rowReader
 		);
-
-		for ( AfterLoadAction afterLoadAction : afterLoadActions ) {
-			// todo (6.0) : see notes on
-			afterLoadAction.afterLoad( executionContext.getSession(), null, null );
-		}
 
 		return result;
 	}

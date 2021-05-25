@@ -109,25 +109,25 @@ public class SpannerDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// Aggregate Functions
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "any_value" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "any_value" )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "array_agg" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "array_agg" )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "countif" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "countif" )
 				.setInvariantType( StandardBasicTypes.LONG )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "logical_and" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "logical_and" )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "logical_or" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "logical_or" )
 				.setInvariantType( StandardBasicTypes.BOOLEAN )
 				.setExactArgumentCount( 1 )
 				.register();
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "string_agg" )
+		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "string_agg" )
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setArgumentCountBetween( 1, 2 )
 				.register();

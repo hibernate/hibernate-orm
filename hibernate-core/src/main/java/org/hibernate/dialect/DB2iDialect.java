@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LockOptions;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -88,11 +89,6 @@ public class DB2iDialect extends DB2Dialect {
 	}
 
 	@Override
-	public String getForUpdateString() {
-		return " for update with rs";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		if ( getIVersion() >= 730) {
 			return FetchLimitHandler.INSTANCE;
@@ -110,6 +106,11 @@ public class DB2iDialect extends DB2Dialect {
 		else {
 			return new DB2390IdentityColumnSupport();
 		}
+	}
+
+	@Override
+	public boolean supportsSkipLocked() {
+		return true;
 	}
 
 	@Override

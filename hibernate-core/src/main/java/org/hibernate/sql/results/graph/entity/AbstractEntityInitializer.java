@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.StaleObjectStateException;
 import org.hibernate.WrongClassException;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
@@ -48,7 +50,9 @@ import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableAssembler;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.TypeHelper;
+import org.hibernate.type.VersionType;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -114,10 +118,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		this.navigablePath = navigablePath;
 		this.lockMode = lockMode;
+		assert lockMode != null;
 
 		if ( identifierResult != null ) {
 			this.identifierAssembler = identifierResult.createResultAssembler(
 					new AssemblerCreationState() {
+						@Override
+						public LockMode determineEffectiveLockMode(String identificationVariable) {
+							return creationState.determineEffectiveLockMode( identificationVariable );
+						}
+
 						@Override
 						public Initializer resolveInitializer(
 								NavigablePath navigablePath,
@@ -468,7 +478,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityInstance = existingEntity;
 			}
 			else {
-
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
 				if ( entityInstance == null ) {
@@ -481,10 +490,45 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 				}
 			}
+
+			if ( LockMode.NONE != lockMode ) {
+				final EntityEntry entry = session.getPersistenceContextInternal().getEntry( entityInstance );
+				if ( entry != null && entry.getLockMode().lessThan( lockMode ) ) {
+					//we only check the version when _upgrading_ lock modes
+					if ( versionAssembler != null ) {
+						checkVersion( entry, rowProcessingState );
+					}
+					//we need to upgrade the lock mode to the mode requested
+					entry.setLockMode( lockMode );
+				}
+			}
 		}
 		notifyParentResolutionListeners( entityInstance );
 
 		preLoad( rowProcessingState );
+	}
+
+	/**
+	 * Check the version of the object in the <tt>RowProcessingState</tt> against
+	 * the object version in the session cache, throwing an exception
+	 * if the version numbers are different
+	 */
+	private void checkVersion(EntityEntry entry, final RowProcessingState rowProcessingState) throws HibernateException {
+		final Object version = entry.getVersion();
+
+		if ( version != null ) {
+			// null version means the object is in the process of being loaded somewhere else in the ResultSet
+			final VersionType<?> versionType = concreteDescriptor.getVersionType();
+			final Object currentVersion = versionAssembler.assemble( rowProcessingState );
+			if ( !versionType.isEqual( version, currentVersion ) ) {
+				final StatisticsImplementor statistics = rowProcessingState.getSession().getFactory().getStatistics();
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.optimisticFailure( concreteDescriptor.getEntityName() );
+				}
+				throw new StaleObjectStateException( concreteDescriptor.getEntityName(), entry.getId() );
+			}
+		}
+
 	}
 
 	protected Object getProxy(PersistenceContext persistenceContext) {
@@ -666,6 +710,11 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else {
 			rowId = null;
 		}
+		// from the perspective of Hibernate, an entity is read locked as soon as it is read
+		// so regardless of the requested lock mode, we upgrade to at least the read level
+		final LockMode lockModeToAcquire = lockMode == LockMode.NONE
+				? LockMode.READ
+				: lockMode;
 
 		final EntityEntry entityEntry = persistenceContext.addEntry(
 				toInitialize,
@@ -674,7 +723,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowId,
 				entityKey.getIdentifier(),
 				version,
-				lockMode,
+				lockModeToAcquire,
 				true,
 				concreteDescriptor,
 				false

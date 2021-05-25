@@ -31,7 +31,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 	}
 
 	public static ExecutionContext omitSqlQueryOptions(ExecutionContext context, JdbcSelect select) {
-		return omitSqlQueryOptions( context, !select.usesLimitParameters(), true );
+		return omitSqlQueryOptions( context, !select.usesLimitParameters(), false );
 	}
 
 	public static ExecutionContext omitSqlQueryOptions(ExecutionContext context, boolean omitLimit, boolean omitLocks) {

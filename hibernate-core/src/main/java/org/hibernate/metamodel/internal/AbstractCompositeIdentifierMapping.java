@@ -9,7 +9,6 @@ package org.hibernate.metamodel.internal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -151,7 +150,6 @@ public abstract class AbstractCompositeIdentifierMapping
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return new EmbeddableFetchImpl(
@@ -172,7 +170,6 @@ public abstract class AbstractCompositeIdentifierMapping
 			String explicitSourceAlias,
 			SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			LockMode lockMode,
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {

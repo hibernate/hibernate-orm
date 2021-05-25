@@ -59,7 +59,7 @@ public abstract class QueryPart implements SqlAstNode, Expression, DomainResultP
 		return sortSpecifications;
 	}
 
-	void visitSortSpecifications(Consumer<SortSpecification> consumer) {
+	public void visitSortSpecifications(Consumer<SortSpecification> consumer) {
 		if ( sortSpecifications != null ) {
 			sortSpecifications.forEach( consumer );
 		}

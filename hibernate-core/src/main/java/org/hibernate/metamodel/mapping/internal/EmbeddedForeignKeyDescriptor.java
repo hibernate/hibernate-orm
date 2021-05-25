@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.IntFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AssociationKey;
@@ -303,7 +302,6 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 							null,
 							SqlAstJoinType.INNER,
 							true,
-							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);
 					return tableGroupJoin.getJoinedGroup();

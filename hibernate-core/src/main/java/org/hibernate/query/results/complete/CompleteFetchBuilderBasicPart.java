@@ -8,7 +8,6 @@ package org.hibernate.query.results.complete;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
@@ -109,7 +108,6 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Mode
 				fetchPath,
 				FetchTiming.IMMEDIATE,
 				true,
-				LockMode.READ,
 				selectedAlias,
 				domainResultCreationState
 		);

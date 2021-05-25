@@ -13,6 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -34,6 +36,7 @@ import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
@@ -101,10 +104,19 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		final SqmDeleteOrUpdateStatement sqmMutationStatement = getSqmDeleteOrUpdateStatement();
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
+		final String explicitDmlTargetAlias;
+		// We need an alias because we try to acquire a WRITE lock for these rows in the CTE
+		if ( sqmMutationStatement.getTarget().getExplicitAlias() == null ) {
+			explicitDmlTargetAlias = "dml_target";
+		}
+		else {
+			explicitDmlTargetAlias = sqmMutationStatement.getTarget().getExplicitAlias();
+		}
 
 		final MultiTableSqmMutationConverter sqmConverter = new MultiTableSqmMutationConverter(
 				entityDescriptor,
 				sqmMutationStatement.getTarget().getExplicitAlias(),
+				explicitDmlTargetAlias,
 				domainParameterXref,
 				executionContext.getQueryOptions(),
 				executionContext.getLoadQueryInfluencers(),
@@ -132,11 +144,14 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				MatchingIdSelectionHelper.generateMatchingIdSelectStatement(
 						entityDescriptor,
 						sqmMutationStatement,
+						false,
 						restriction,
 						sqmConverter,
 						executionContext,
 						factory
-				)
+				),
+				// The id-select cte will be reused multiple times
+				CteMaterialization.MATERIALIZED
 		);
 
 		// Create the main query spec that will return the count of
@@ -181,7 +196,12 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				paramTypeResolutions::get,
 				executionContext.getSession()
 		);
+		final LockOptions lockOptions = executionContext.getQueryOptions().getLockOptions();
+		final LockMode lockMode = lockOptions.getAliasSpecificLockMode( explicitDmlTargetAlias );
+		// Acquire a WRITE lock for the rows that are about to be modified
+		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, LockMode.WRITE );
 		final JdbcSelect select = translator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+		lockOptions.setAliasSpecificLockMode( explicitDmlTargetAlias, lockMode );
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,

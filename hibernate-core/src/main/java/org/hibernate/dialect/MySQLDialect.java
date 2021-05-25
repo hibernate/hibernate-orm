@@ -956,9 +956,15 @@ public class MySQLDialect extends Dialect {
 		return getMySQLVersion() >= 800;
 	}
 
+	@Override
 	public boolean supportsWait() {
 		//only supported on MariaDB
 		return false;
+	}
+
+	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return supportsAliasLocks() ? RowLockStrategy.TABLE : RowLockStrategy.NONE;
 	}
 
 	boolean supportsForShare() {

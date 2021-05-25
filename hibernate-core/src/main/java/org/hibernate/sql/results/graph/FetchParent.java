@@ -76,7 +76,6 @@ public interface FetchParent extends DomainResultGraphNode {
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return fetchable.generateFetch(
@@ -84,7 +83,6 @@ public interface FetchParent extends DomainResultGraphNode {
 				fetchablePath,
 				fetchTiming,
 				selected,
-				lockMode,
 				resultVariable,
 				creationState
 		);

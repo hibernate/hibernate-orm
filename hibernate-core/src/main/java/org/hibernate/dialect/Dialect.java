@@ -1725,10 +1725,27 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return True if the database supports <tt>FOR UPDATE OF</tt> syntax;
 	 * false otherwise.
+	 * @deprecated Use {@link #getWriteRowLockStrategy()} instead
 	 */
+	@Deprecated
 	public boolean forUpdateOfColumns() {
 		// by default we report no support
 		return false;
+	}
+
+	/**
+	 * The row lock strategy to use for write locks.
+	 */
+	public RowLockStrategy getWriteRowLockStrategy() {
+		// by default we report no support
+		return RowLockStrategy.NONE;
+	}
+
+	/**
+	 * The row lock strategy to use for read locks.
+	 */
+	public RowLockStrategy getReadRowLockStrategy() {
+		return getWriteRowLockStrategy();
 	}
 
 	/**
@@ -1843,7 +1860,9 @@ public abstract class Dialect implements ConversionContext {
 	 * @param lockOptions The lock options to apply
 	 * @param tableName The name of the table to which to apply the lock hint.
 	 * @return The table with any required lock hints.
+	 * @deprecated This was moved to {@link AbstractSqlAstTranslator}
 	 */
+	@Deprecated
 	public String appendLockHint(LockOptions lockOptions, String tableName){
 		return tableName;
 	}
@@ -3516,6 +3535,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect/database support WAIT timeout.
+	 *
+	 * @return {@code true} if WAIT is supported
+	 */
+	public boolean supportsWait() {
+		return supportsNoWait();
+	}
+
+	/**
 	 * Inline String literal.
 	 *
 	 * @return escaped String
@@ -3730,6 +3758,23 @@ public abstract class Dialect implements ConversionContext {
 
 	public String formatBinaryLiteral(byte[] bytes) {
 		return "X'" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
+	}
+
+	public RowLockStrategy getLockRowIdentifier(LockMode lockMode) {
+		switch ( lockMode ) {
+			case PESSIMISTIC_READ:
+				return getReadRowLockStrategy();
+			case WRITE:
+			case FORCE:
+			case PESSIMISTIC_FORCE_INCREMENT:
+			case PESSIMISTIC_WRITE:
+			case UPGRADE:
+			case UPGRADE_SKIPLOCKED:
+			case UPGRADE_NOWAIT:
+				return getWriteRowLockStrategy();
+			default:
+				return RowLockStrategy.NONE;
+		}
 	}
 
 	/**

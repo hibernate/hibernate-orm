@@ -8,6 +8,8 @@ package org.hibernate.dialect;
 
 import java.util.List;
 
+import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
@@ -20,6 +22,8 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -34,8 +38,96 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  */
 public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
+	private static final String UNION_ALL = " union all ";
+
 	public SQLServerSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected boolean renderTableReference(TableReference tableReference, LockMode lockMode) {
+		final String tableExpression = tableReference.getTableExpression();
+		if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
+			// SQL Server requires to push down the lock hint to the actual table names
+			int searchIndex = 0;
+			int unionIndex;
+			while ( ( unionIndex = tableExpression.indexOf( UNION_ALL, searchIndex ) ) != -1 ) {
+				appendSql( tableExpression.substring( searchIndex, unionIndex ) );
+				renderLockHint( lockMode );
+				appendSql( UNION_ALL );
+				searchIndex = unionIndex + UNION_ALL.length();
+			}
+			appendSql( tableExpression.substring( searchIndex, tableExpression.length() - 2 ) );
+			renderLockHint( lockMode );
+			appendSql( " )" );
+
+			registerAffectedTable( tableReference );
+			final Clause currentClause = getClauseStack().getCurrent();
+			if ( rendersTableReferenceAlias( currentClause ) ) {
+				final String identificationVariable = tableReference.getIdentificationVariable();
+				if ( identificationVariable != null ) {
+					appendSql( getDialect().getTableAliasSeparator() );
+					appendSql( identificationVariable );
+				}
+			}
+		}
+		else {
+			super.renderTableReference( tableReference, lockMode );
+			renderLockHint( lockMode );
+		}
+		// Just always return true because SQL Server doesn't support the FOR UPDATE clause
+		return true;
+	}
+
+	private void renderLockHint(LockMode lockMode) {
+		if ( getDialect().getVersion() >= 9 ) {
+			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
+			final String writeLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? "updlock" : "updlock, holdlock";
+			final String readLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
+
+			final String noWaitStr = effectiveLockTimeout == LockOptions.NO_WAIT ? ", nowait" : "";
+			final String skipLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? ", readpast" : "";
+
+			switch ( lockMode ) {
+				//noinspection deprecation
+				case UPGRADE:
+				case PESSIMISTIC_WRITE:
+				case WRITE:
+					appendSql( " with (" + writeLockStr + ", rowlock" + noWaitStr + skipLockStr + ")" );
+					break;
+				case PESSIMISTIC_READ:
+					appendSql( " with (" + readLockStr + ", rowlock" + noWaitStr + skipLockStr + ")" );
+					break;
+				case UPGRADE_SKIPLOCKED:
+					appendSql( " with (updlock, rowlock, readpast" + noWaitStr + ")" );
+					break;
+				case UPGRADE_NOWAIT:
+					appendSql( " with (updlock, holdlock, rowlock, nowait)" );
+					break;
+			}
+		}
+		else {
+			switch ( lockMode ) {
+				//noinspection deprecation
+				case UPGRADE:
+				case UPGRADE_NOWAIT:
+				case PESSIMISTIC_WRITE:
+				case WRITE:
+					appendSql( " with (updlock, rowlock)" );
+					break;
+				case PESSIMISTIC_READ:
+					appendSql(" with (holdlock, rowlock)" );
+					break;
+				case UPGRADE_SKIPLOCKED:
+					appendSql( " with (updlock, rowlock, readpast)" );
+					break;
+			}
+		}
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// SQL Server does not support the FOR UPDATE clause
 	}
 
 	protected OffsetFetchClauseMode getOffsetFetchClauseMode(QueryPart queryPart) {

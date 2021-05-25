@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -138,7 +137,6 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,
 			boolean selected,
-			LockMode lockMode,
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final FromClauseAccess fromClauseAccess = creationState

@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
  *
  * @author Steve Ebersole
  */
-public class TableReferenceJoin implements SqlAstNode, PredicateContainer {
+public class TableReferenceJoin implements TableJoin, PredicateContainer {
 	private final SqlAstJoinType sqlAstJoinType;
 	private final TableReference joinedTableBinding;
 	private Predicate predicate;
@@ -35,6 +35,7 @@ public class TableReferenceJoin implements SqlAstNode, PredicateContainer {
 //		}
 	}
 
+	@Override
 	public SqlAstJoinType getJoinType() {
 		return sqlAstJoinType;
 	}
@@ -43,7 +44,13 @@ public class TableReferenceJoin implements SqlAstNode, PredicateContainer {
 		return joinedTableBinding;
 	}
 
-	public Predicate getJoinPredicate() {
+	@Override
+	public SqlAstNode getJoinedNode() {
+		return joinedTableBinding;
+	}
+
+	@Override
+	public Predicate getPredicate() {
 		return predicate;
 	}
 

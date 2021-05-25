@@ -78,8 +78,8 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
-	public LockMode getLockMode() {
-		return LockMode.WRITE;
+	public String getSourceAlias() {
+		return null;
 	}
 
 	@Override

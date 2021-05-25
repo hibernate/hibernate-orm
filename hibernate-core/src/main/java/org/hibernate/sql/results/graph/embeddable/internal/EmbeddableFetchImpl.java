@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -67,7 +66,6 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 							null,
 							nullable ? SqlAstJoinType.LEFT : SqlAstJoinType.INNER,
 							true,
-							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);
 					return tableGroupJoin.getJoinedGroup();

@@ -35,6 +35,46 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
+	public void visitQuerySpec(QuerySpec querySpec) {
+		if ( querySpec.isRoot() && getDialect().getVersion() >= 14 ) {
+			final ForUpdateClause forUpdateClause = new ForUpdateClause();
+			forUpdateClause.merge( getLockOptions() );
+			super.renderForUpdateClause( querySpec, forUpdateClause );
+		}
+		else {
+			super.visitQuerySpec( querySpec );
+		}
+	}
+
+	@Override
+	protected String getForUpdate() {
+		return "locking row for write ";
+	}
+
+	@Override
+	protected String getForShare() {
+		return "locking row for read ";
+	}
+
+	@Override
+	protected String getNoWait() {
+		return "nowait ";
+	}
+
+	@Override
+	protected LockStrategy determineLockingStrategy(
+			QuerySpec querySpec,
+			ForUpdateClause forUpdateClause,
+			Boolean followOnLocking) {
+		return LockStrategy.NONE;
+	}
+
+	@Override
+	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
+		// Teradata does not support the FOR UPDATE clause but has a proprietary LOCKING clause
+	}
+
+	@Override
 	protected boolean needsRowsToSkip() {
 		return true;
 	}

@@ -31,6 +31,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
@@ -69,6 +70,7 @@ import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.BasicType;
@@ -98,6 +100,7 @@ public class QuerySqmImpl<R>
 	private final QueryParameterBindingsImpl parameterBindings;
 
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
+	private Callback callback;
 
 	/**
 	 * Creates a Query instance from a named HQL memento
@@ -143,10 +146,6 @@ public class QuerySqmImpl<R>
 
 		if ( memento.getMaxResults() != null ) {
 			setMaxResults( memento.getMaxResults() );
-		}
-
-		if ( memento.getLockOptions() != null ) {
-			setLockOptions( memento.getLockOptions() );
 		}
 
 		if ( memento.getParameterTypes() != null ) {
@@ -400,6 +399,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public Set<Parameter<?>> getParameters() {
+		getSession().checkOpen( false );
 		Set<Parameter<?>> parameters = new HashSet<>();
 		parameterMetadata.collectAllParameters( parameters::add );
 		return parameters;
@@ -713,10 +713,26 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public Callback getCallback() {
-		return afterLoadAction -> {};
+	protected void prepareForExecution() {
+		super.prepareForExecution();
+		// Reset the callback before every execution
+		callback = null;
 	}
 
+	@Override
+	public Callback getCallback() {
+		if ( callback == null ) {
+			callback = new CallbackImpl();
+		}
+		return callback;
+	}
+
+	@Override
+	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+		if ( callback != null ) {
+			callback.invokeAfterLoadActions( session, entity, persister );
+		}
+	}
 
 	@Override
 	public NamedHqlQueryMemento toMemento(String name) {

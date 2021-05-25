@@ -11,31 +11,24 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.LockOptions;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Executable JDBC command
  *
  * @author Steve Ebersole
  */
-public class JdbcSelect implements JdbcOperation {
-	private final String sql;
-	private final List<JdbcParameterBinder> parameterBinders;
+public class JdbcSelect extends AbstractJdbcOperation {
 	private final JdbcValuesMappingProducer jdbcValuesMappingProducer;
-	private final Set<String> affectedTableNames;
-	private final Set<FilterJdbcParameter> filterJdbcParameters;
 	private final int rowsToSkip;
 	private final int maxRows;
-	private final Map<JdbcParameter, JdbcParameterBinding> appliedParameters;
-	private final LockOptions appliedLockOptions;
 	private final JdbcParameter offsetParameter;
 	private final JdbcParameter limitParameter;
+	private final JdbcLockStrategy jdbcLockStrategy;
 
 	public JdbcSelect(
 			String sql,
@@ -52,7 +45,7 @@ public class JdbcSelect implements JdbcOperation {
 				0,
 				Integer.MAX_VALUE,
 				Collections.emptyMap(),
-				null,
+				JdbcLockStrategy.AUTO,
 				null,
 				null
 		);
@@ -67,40 +60,16 @@ public class JdbcSelect implements JdbcOperation {
 			int rowsToSkip,
 			int maxRows,
 			Map<JdbcParameter, JdbcParameterBinding> appliedParameters,
-			LockOptions appliedLockOptions,
+			JdbcLockStrategy jdbcLockStrategy,
 			JdbcParameter offsetParameter,
 			JdbcParameter limitParameter) {
-		this.sql = sql;
-		this.parameterBinders = parameterBinders;
+		super( sql, parameterBinders, affectedTableNames, filterJdbcParameters, appliedParameters );
 		this.jdbcValuesMappingProducer = jdbcValuesMappingProducer;
-		this.affectedTableNames = affectedTableNames;
-		this.filterJdbcParameters = filterJdbcParameters;
 		this.rowsToSkip = rowsToSkip;
 		this.maxRows = maxRows;
-		this.appliedParameters = appliedParameters;
-		this.appliedLockOptions = appliedLockOptions;
+		this.jdbcLockStrategy = jdbcLockStrategy;
 		this.offsetParameter = offsetParameter;
 		this.limitParameter = limitParameter;
-	}
-
-	@Override
-	public String getSql() {
-		return sql;
-	}
-
-	@Override
-	public List<JdbcParameterBinder> getParameterBinders() {
-		return parameterBinders;
-	}
-
-	@Override
-	public Set<String> getAffectedTableNames() {
-		return affectedTableNames;
-	}
-
-	@Override
-	public Set<FilterJdbcParameter> getFilterJdbcParameters() {
-		return filterJdbcParameters;
 	}
 
 	public JdbcValuesMappingProducer getJdbcValuesMappingProducer() {
@@ -119,9 +88,8 @@ public class JdbcSelect implements JdbcOperation {
 		return offsetParameter != null || limitParameter != null;
 	}
 
-	@Override
-	public boolean dependsOnParameterBindings() {
-		return !appliedParameters.isEmpty();
+	public JdbcLockStrategy getLockStrategy() {
+		return jdbcLockStrategy;
 	}
 
 	@Override
@@ -132,10 +100,30 @@ public class JdbcSelect implements JdbcOperation {
 			}
 			for ( Map.Entry<JdbcParameter, JdbcParameterBinding> entry : appliedParameters.entrySet() ) {
 				final JdbcParameter parameter = entry.getKey();
+				final JdbcParameterBinding appliedBinding = entry.getValue();
+				// This is a special case where the rendered SQL depends on the presence of the parameter,
+				// but not specifically on the value. In this case we have to re-generate the SQL if we can't find a binding
+				// The need for this can be tested with the OracleFollowOnLockingTest#testPessimisticLockWithMaxResultsThenNoFollowOnLocking
+				// Since the Limit is not part of the query plan cache key, but this has an effect on follow on locking,
+				// we must treat the absence of Limit parameters, when they were considered for locking, as incompatible
+				if ( appliedBinding == null ) {
+					if ( parameter == offsetParameter ) {
+						if ( queryOptions.getLimit() == null || queryOptions.getLimit().getFirstRowJpa() == 0 ) {
+							return false;
+						}
+					}
+					else if ( parameter == limitParameter ) {
+						if ( queryOptions.getLimit() == null || queryOptions.getLimit().getMaxRowsJpa() == Integer.MAX_VALUE ) {
+							return false;
+						}
+					}
+					else if ( jdbcParameterBindings.getBinding( parameter ) == null ) {
+						return false;
+					}
+				}
 				// We handle limit and offset parameters below
 				if ( parameter != offsetParameter && parameter != limitParameter ) {
-					final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( entry.getKey() );
-					final JdbcParameterBinding appliedBinding = entry.getValue();
+					final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( parameter );
 					if ( binding == null || !appliedBinding.getBindType()
 							.getJavaTypeDescriptor()
 							.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
@@ -143,15 +131,6 @@ public class JdbcSelect implements JdbcOperation {
 					}
 				}
 			}
-		}
-		final LockOptions lockOptions = queryOptions.getLockOptions();
-		if ( appliedLockOptions == null ) {
-			if ( lockOptions != null && !lockOptions.isEmpty() ) {
-				return false;
-			}
-		}
-		else if ( !appliedLockOptions.isCompatible( lockOptions ) ) {
-			return false;
 		}
 		final Limit limit = queryOptions.getLimit();
 		if ( offsetParameter == null && limitParameter == null ) {

@@ -22,8 +22,8 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  * @author Gavin King
  */
 public class DurationUnit implements Expression, SqlAstNode {
-	private TemporalUnit unit;
-	private BasicValuedMapping type;
+	private final TemporalUnit unit;
+	private final BasicValuedMapping type;
 
 	public DurationUnit(TemporalUnit unit, BasicValuedMapping type) {
 		this.unit = unit;

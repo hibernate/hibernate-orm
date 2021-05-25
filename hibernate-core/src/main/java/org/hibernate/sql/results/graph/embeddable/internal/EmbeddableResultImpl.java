@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
@@ -53,7 +52,6 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 							resultVariable,
 							SqlAstJoinType.INNER,
 							true,
-							LockMode.NONE,
 							creationState.getSqlAstCreationState()
 					);
 

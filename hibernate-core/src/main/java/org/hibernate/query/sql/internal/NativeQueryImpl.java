@@ -51,6 +51,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.Limit;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
@@ -86,6 +87,7 @@ import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.NonSelectInterpretationsKey;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
+import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
@@ -114,6 +116,7 @@ public class NativeQueryImpl<R>
 	private final QueryOptionsImpl queryOptions = new QueryOptionsImpl();
 
 	private Set<String> querySpaces;
+	private Callback callback;
 
 	private Object collectionKey;
 	private NativeQueryInterpreter nativeQueryInterpreter;
@@ -345,7 +348,17 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public Callback getCallback() {
-		throw new NotYetImplementedFor6Exception();
+		if ( callback == null ) {
+			callback = new CallbackImpl();
+		}
+		return callback;
+	}
+
+	@Override
+	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
+		if ( callback != null ) {
+			callback.invokeAfterLoadActions( session, entity, persister );
+		}
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -438,6 +451,8 @@ public class NativeQueryImpl<R>
 		if ( shouldFlush() ) {
 			getSession().flush();
 		}
+		// Reset the callback before every execution
+		callback = null;
 	}
 
 	private boolean shouldFlush() {
@@ -536,9 +551,12 @@ public class NativeQueryImpl<R>
 
 	@SuppressWarnings("RedundantIfStatement")
 	private static boolean isCacheable(NativeQueryImpl query) {
-		if ( hasLimit( query.getQueryOptions().getLimit() ) ) {
-			return false;
-		}
+		// todo (6.0): unless we move the limit rendering from DeferredResultSetAccess to NativeSelectQueryPlanImpl
+		//  we don't need to consider the limit here at all because that is applied on demand.
+		//  It certainly is better for performance to include the limit early, but then we might trash the cache
+//		if ( hasLimit( query.getQueryOptions().getLimit() ) ) {
+//			return false;
+//		}
 
 		return true;
 	}

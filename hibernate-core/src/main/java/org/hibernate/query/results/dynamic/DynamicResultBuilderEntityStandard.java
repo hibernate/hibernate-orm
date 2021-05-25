@@ -134,7 +134,6 @@ public class DynamicResultBuilderEntityStandard
 						navigablePath,
 						FetchTiming.IMMEDIATE,
 						true,
-						lockMode,
 						null,
 						domainResultCreationState
 				),
@@ -157,7 +156,11 @@ public class DynamicResultBuilderEntityStandard
 							creationState.getSqlExpressionResolver(),
 							creationState.getCreationContext()
 					);
-					return new TableGroupImpl( navigablePath, tableAlias, tableReference, entityMapping, lockMode );
+
+					if ( lockMode != null ) {
+						domainResultCreationState.getSqlAstCreationState().registerLockMode( tableAlias, lockMode );
+					}
+					return new TableGroupImpl( navigablePath, tableAlias, tableReference, entityMapping, tableAlias );
 				}
 		);
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();

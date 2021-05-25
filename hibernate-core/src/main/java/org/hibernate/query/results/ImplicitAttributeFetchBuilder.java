@@ -8,7 +8,6 @@ package org.hibernate.query.results;
 
 import java.util.function.BiFunction;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.query.NavigablePath;
@@ -47,7 +46,6 @@ public class ImplicitAttributeFetchBuilder implements FetchBuilder, ImplicitFetc
 				fetchPath,
 				FetchTiming.IMMEDIATE,
 				true,
-				LockMode.READ,
 				null,
 				domainResultCreationState
 		);

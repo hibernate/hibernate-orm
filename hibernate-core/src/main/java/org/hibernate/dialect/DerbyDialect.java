@@ -402,6 +402,16 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	public RowLockStrategy getWriteRowLockStrategy() {
+		return RowLockStrategy.NONE;
+	}
+
+	@Override
+	public RowLockStrategy getReadRowLockStrategy() {
+		return RowLockStrategy.NONE;
+	}
+
+	@Override
 	public String getForUpdateString() {
 		return " for update with rs";
 	}
@@ -414,11 +424,6 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public String getReadLockString(int timeout) {
 		return " for read only with rs";
-	}
-
-	@Override
-	public String getWriteLockString(String aliases, int timeout) {
-		return " for update of " + aliases + " with rs";
 	}
 
 	@Override

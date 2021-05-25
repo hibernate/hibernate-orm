@@ -1362,7 +1362,6 @@ public abstract class AbstractEntityPersister
 	public TableGroup createRootTableGroup(
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
-			LockMode lockMode,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
@@ -1379,7 +1378,7 @@ public abstract class AbstractEntityPersister
 		return new StandardTableGroup(
 				navigablePath,
 				this,
-				lockMode,
+				explicitSourceAlias,
 				primaryTableReference,
 				true,
 				sqlAliasBase,
@@ -2245,7 +2244,7 @@ public abstract class AbstractEntityPersister
 					if ( !isVersioned() ) {
 						return this;
 					}
-					return getVersionType().nullSafeGet( rs, VERSION_COLUMN_ALIAS, session, null );
+					return getVersionMapping().getJdbcMapping().getJdbcValueExtractor().extract( rs, 1, session );
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );

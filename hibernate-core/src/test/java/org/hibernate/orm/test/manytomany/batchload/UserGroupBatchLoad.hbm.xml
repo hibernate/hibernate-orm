@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 
-<hibernate-mapping package="org.hibernate.test.manytomany.batchload">
+<hibernate-mapping package="org.hibernate.orm.test.manytomany.batchload">
 	
 	<class name="User" table="M2N_BATCHED_USER">
         <id name="id" type="long">

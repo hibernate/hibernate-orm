@@ -17,14 +17,9 @@ gradleEnterprise {
         termsOfServiceAgree = 'yes'
 
         captureTaskInputFiles = true
-        uploadInBackground = true
 
-        if ( System.properties.CI == true ) {
-            // always publish build-scans and upload the scans immediately
-            publishAlways()
-            uploadInBackground = false
-            tag 'ci'
-        }
+        publishAlways()
+        uploadInBackground = System.getenv("CI") == null && System.getProperty("CI") == null
 
         value 'database', rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
     }

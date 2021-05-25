@@ -31,8 +31,6 @@ plugins {
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '0.5'
 	id 'eclipse'
 
-	id 'me.champeau.buildscan-recipes' version '0.2.3'
-
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
 	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
@@ -164,15 +162,6 @@ wrapper {
 	distributionType = Wrapper.DistributionType.ALL
 }
 
-
-buildScan {
-	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-	termsOfServiceAgree = 'yes'
-}
-
-buildScanRecipes {
-	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
-}
 
 idea {
 //    project {

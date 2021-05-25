@@ -11,7 +11,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.manytomany.mapkey;
+package org.hibernate.orm.test.manytomany.mapkey;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,14 +25,18 @@ import javax.persistence.MapKey;
 import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -41,22 +45,22 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-4235")
-@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
-public class ManyToManyWithMaykeyAndSchemaDefinitionTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
+@DomainModel(
+		annotatedClasses = {
+				ManyToManyWithMaykeyAndSchemaDefinitionTest.EntityA.class,
+				ManyToManyWithMaykeyAndSchemaDefinitionTest.EntityB.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = AvailableSettings.HBM2DDL_CREATE_SCHEMAS, value = "true")
+)
+public class ManyToManyWithMaykeyAndSchemaDefinitionTest {
 
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.HBM2DDL_CREATE_SCHEMAS, "true" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { EntityA.class, EntityB.class };
-	}
-
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EntityA entityA = new EntityA();
 					entityA.setId( 1L );
@@ -70,10 +74,19 @@ public class ManyToManyWithMaykeyAndSchemaDefinitionTest extends BaseCoreFunctio
 		);
 	}
 
-	@Test
-	public void testRetrievingTheMapGeneratesACorrectlyQuery() {
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from EntityA" ).executeUpdate();
+					session.createQuery( "delete from EntityB" ).executeUpdate();
+				}
+		);
+	}
 
-		inTransaction(
+	@Test
+	public void testRetrievingTheMapGeneratesACorrectlyQuery(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					EntityA entityA = session.get( EntityA.class, 1L );
 					Collection<EntityB> values = entityA.getEntityBMap().values();

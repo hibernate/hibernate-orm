@@ -174,35 +174,36 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						jdbcParameters,
 						session
 				);
-
-				jdbcServices.getJdbcSelectExecutor().list(
-						jdbcSelect,
-						jdbcParameterBindings,
-						new ExecutionContext() {
-							@Override
-							public SharedSessionContractImplementor getSession() {
-								return session;
-							}
-
-							@Override
-							public QueryOptions getQueryOptions() {
-								return QueryOptions.NONE;
-							}
-
-							@Override
-							public QueryParameterBindings getQueryParameterBindings() {
-								return QueryParameterBindings.NO_PARAM_BINDINGS;
-							}
-
-							@Override
-							public Callback getCallback() {
-								return null;
-							}
-						},
-						RowTransformerPassThruImpl.instance(),
-						true
-				);
 			}
+
+			jdbcServices.getJdbcSelectExecutor().list(
+					jdbcSelect,
+					jdbcParameterBindings,
+					new ExecutionContext() {
+						@Override
+						public SharedSessionContractImplementor getSession() {
+							return session;
+						}
+
+						@Override
+						public QueryOptions getQueryOptions() {
+							return QueryOptions.NONE;
+						}
+
+						@Override
+						public QueryParameterBindings getQueryParameterBindings() {
+							return QueryParameterBindings.NO_PARAM_BINDINGS;
+						}
+
+						@Override
+						public Callback getCallback() {
+							return null;
+						}
+					},
+					RowTransformerPassThruImpl.instance(),
+					true
+			);
+
 
 			assert offset == jdbcParameters.size();
 

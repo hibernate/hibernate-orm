@@ -326,7 +326,7 @@ public class BatchFetchQueue {
 				}
 
 				if ( checkForEnd && i == end ) {
-					return keys; //the first key found after the given key
+					return resize( keys, i ); //the first key found after the given key
 				}
 
 				final boolean isEqual = collectionPersister.getKeyType().isEqual(
@@ -352,7 +352,15 @@ public class BatchFetchQueue {
 				}
 			}
 		}
-		return keys; //we ran out of keys to try
+		return resize( keys, i ); //we ran out of keys to try
+	}
+
+	private Object[] resize(Object[] keys, int size) {
+		Object[] result = new Object[size];
+		for ( int i = 0; i < size; i++ ) {
+			result[i] = keys[i];
+		}
+		return result;
 	}
 
 	private boolean isCached(Object collectionKey, CollectionPersister persister) {

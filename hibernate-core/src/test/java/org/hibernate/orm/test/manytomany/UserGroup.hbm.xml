@@ -18,7 +18,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.test.manytomany">
+	package="org.hibernate.orm.test.manytomany">
 	
 	<class name="User" table="`User`">
 		<composite-id>

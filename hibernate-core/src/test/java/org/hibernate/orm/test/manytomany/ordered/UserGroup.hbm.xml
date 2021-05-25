@@ -18,7 +18,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.test.manytomany.ordered">
+	package="org.hibernate.orm.test.manytomany.ordered">
 
 
 	<class name="User" table="`User`">

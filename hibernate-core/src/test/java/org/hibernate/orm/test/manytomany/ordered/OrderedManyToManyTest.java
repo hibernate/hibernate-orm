@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.manytomany.ordered;
+package org.hibernate.orm.test.manytomany.ordered;
 
 import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -12,38 +12,39 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
 
 import org.hibernate.Hibernate;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gavin King
  */
-public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "manytomany/ordered/UserGroup.hbm.xml" };
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.USE_SECOND_LEVEL_CACHE, "false");
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/manytomany/ordered/UserGroup.hbm.xml"
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = Environment.USE_SECOND_LEVEL_CACHE, value = "false")
+)
+public class OrderedManyToManyTest {
 
 	@Test
-	public void testManyToManyOrdering() {
+	public void testManyToManyOrdering(SessionFactoryScope scope) {
 		User gavin = new User( "gavin", "jboss" );
 		User steve = new User( "steve", "jboss" );
 		User max = new User( "max", "jboss" );
 		User emmanuel = new User( "emmanuel", "jboss" );
 		Group hibernate = new Group( "hibernate", "jboss" );
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					s.persist( gavin );
 					s.persist( steve );
@@ -58,7 +59,7 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 		);
 
 		// delayed collection load...
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					Group h = s.get( Group.class, hibernate.getId() );
 					assertFalse( Hibernate.isInitialized( h.getUsers() ) );
@@ -68,7 +69,7 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 		);
 
 		// HQL (non eager)
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					Group h = (Group) s.createQuery( "from Group" ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( h.getUsers() ) );
@@ -79,9 +80,9 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 
 
 		// HQL (eager)
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					Group h = ( Group ) s.createQuery( "from Group g inner join fetch g.users" ).uniqueResult();
+					Group h = (Group) s.createQuery( "from Group g inner join fetch g.users" ).uniqueResult();
 					assertTrue( Hibernate.isInitialized( h.getUsers() ) );
 					assertEquals( 4, h.getUsers().size() );
 					assertOrdering( h.getUsers() );
@@ -89,7 +90,7 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 		);
 
 		// criteria load (forced eager fetch)
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Group> criteria = criteriaBuilder.createQuery( Group.class );
@@ -107,7 +108,7 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 
 
 		// criteria load (forced non eager fetch)
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Group> criteria = criteriaBuilder.createQuery( Group.class );
@@ -125,7 +126,7 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 
 
 		// clean up
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					s.delete( gavin );
 					s.delete( steve );
@@ -138,17 +139,17 @@ public class OrderedManyToManyTest extends BaseCoreFunctionalTestCase {
 
 	private void assertOrdering(List users) {
 		User user = extractUser( users, 0 );
-		assertTrue( "many-to-many ordering not applied", user.getName().equals( "emmanuel" ) );
+		assertTrue( user.getName().equals( "emmanuel" ), "many-to-many ordering not applied" );
 		user = extractUser( users, 1 );
-		assertTrue( "many-to-many ordering not applied", user.getName().equals( "gavin" ) );
+		assertTrue( user.getName().equals( "gavin" ), "many-to-many ordering not applied" );
 		user = extractUser( users, 2 );
-		assertTrue( "many-to-many ordering not applied", user.getName().equals( "max" ) );
+		assertTrue( user.getName().equals( "max" ), "many-to-many ordering not applied" );
 		user = extractUser( users, 3 );
-		assertTrue( "many-to-many ordering not applied", user.getName().equals( "steve" ) );
+		assertTrue( user.getName().equals( "steve" ), "many-to-many ordering not applied" );
 	}
 
 	private User extractUser(List users, int position) {
-		return ( User ) users.get( position );
+		return (User) users.get( position );
 	}
 
 }

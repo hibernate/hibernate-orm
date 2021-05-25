@@ -18,7 +18,7 @@ dependencies {
     compile( libraries.byteman_install )
     compile( libraries.byteman_bmunit )
     compile( libraries.xapool )
-    compile( libraries.log4j )
+    compile( libraries.log4j2 )
     compile ( libraries.jboss_jta ) {
         transitive=false;
     }

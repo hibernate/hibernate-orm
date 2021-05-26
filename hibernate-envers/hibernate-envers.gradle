@@ -17,7 +17,7 @@ dependencies {
     }
 
     provided( libraries.ant )
-    provided( project( ':hibernate-jpamodelgen' ) )
+    annotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile( project( ':hibernate-testing' ) )
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )

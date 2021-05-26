@@ -37,6 +37,7 @@ File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
 
 ext {
 	ormVersionFile = versionFile
+	baselineJavaVersion = '1.8'
 	ormVersion = HibernateVersion.fromFile( versionFile, project )
 	// Override during releases
 	if ( project.hasProperty( 'releaseVersion' ) ) {

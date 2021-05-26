@@ -2021,10 +2021,12 @@ public abstract class Loader {
 		final LimitHandler limitHandler = getLimitHandler(
 				queryParameters.getRowSelection()
 		);
-		String sql = limitHandler.processSql( queryParameters.getFilteredSQL(), queryParameters.getRowSelection() );
+		String sql = queryParameters.getFilteredSQL();
 
 		// Adding locks and comments.
 		sql = preprocessSQL( sql, queryParameters, getFactory(), afterLoadActions );
+
+        sql = limitHandler.processSql( sql, queryParameters.getRowSelection() );
 
 		final PreparedStatement st = prepareQueryStatement( sql, queryParameters, limitHandler, scroll, session );
 

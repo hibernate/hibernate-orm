@@ -217,13 +217,12 @@ test {
 
 // Enable the experimental features of ByteBuddy with JDK 15+
 test {
-	if ( Integer.valueOf( gradle.ext.testedJavaVersionAsEnum.getMajorVersion() ) >= 15 ) {
-		if ( JavaVersion.current().isJava11Compatible() ) {
-			int majorJVMVersionInt = Integer.valueOf(JavaVersion.current().toString());
-			//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
-			if (majorJVMVersionInt >= 12) {
-				systemProperty 'net.bytebuddy.experimental', true
-			}
+	if ( JavaVersion.current().isJava11Compatible() ) {
+		int majorJVMVersionInt = Integer.valueOf( JavaVersion.current().toString() );
+		//Set the -Dnet.bytebuddy.experimental=true property only when we need it:
+		if ( majorJVMVersionInt >= 12 ) {
+			systemProperty 'net.bytebuddy.experimental', true
+		}
 	}
 }
 

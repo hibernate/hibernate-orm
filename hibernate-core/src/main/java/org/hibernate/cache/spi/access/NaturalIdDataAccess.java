@@ -16,10 +16,10 @@ import org.hibernate.persister.entity.EntityPersister;
  *     <li><b>INSERTS</b> : {@link #insert} -> {@link #afterInsert}</li>
  *     <li><b>UPDATES</b> : {@link #lockItem} -> {@link #remove} -> {@link #update} -> {@link #afterUpdate}</li>
  *     <li><b>DELETES</b> : {@link #lockItem} -> {@link #remove} -> {@link #unlockItem}</li>
- *     <li><b>LOADS</b> : {@link @putFromLoad}</li>
+ *     <li><b>LOADS</b> : {@link #putFromLoad}</li>
  * </ul>
  * Note the special case of <b>UPDATES</b> above.  Because the cache key itself has changed here we need to remove the
- * old entry as well as
+ * old entry as well
  * <p/>
  * There is another usage pattern that is used to invalidate entries
  * afterQuery performing "bulk" HQL/SQL operations:
@@ -44,7 +44,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 * @param naturalIdValues the sequence of values which unequivocally identifies a cached element on this region
 	 * @param rootEntityDescriptor the persister of the element being cached
 	 *
-	 * @return a key which can be used to identify this an element unequivocally on this same region
+	 * @return a key which can be used to identify an element unequivocally on this same region
 	 */
 	Object generateCacheKey(
 			Object[] naturalIdValues,
@@ -69,7 +69,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 * @param key The item key
 	 * @param value The item
 	 *
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
@@ -84,7 +84,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 * @param key The item key
 	 * @param value The item
 	 *
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
@@ -99,7 +99,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 * @param key The item key
 	 * @param value The item
 	 *
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */
@@ -115,7 +115,7 @@ public interface NaturalIdDataAccess extends CachedDomainDataAccess {
 	 * @param value The item
 	 * @param lock The lock previously obtained from {@link #lockItem}
 	 *
-	 * @return Were the contents of the cache actual changed by this operation?
+	 * @return Were the contents of the cache actually changed by this operation?
 	 *
 	 * @throws CacheException Propagated from underlying cache provider
 	 */

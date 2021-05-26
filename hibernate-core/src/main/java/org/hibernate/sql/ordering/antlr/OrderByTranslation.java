@@ -7,7 +7,7 @@
 package org.hibernate.sql.ordering.antlr;
 
 /**
- * Represents the result of an order-by translation by {@link @OrderByTranslator}
+ * Represents the result of an order-by translation by {@link OrderByFragmentTranslator}
  *
  * @author Steve Ebersole
  */

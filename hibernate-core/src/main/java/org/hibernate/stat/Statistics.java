@@ -10,7 +10,7 @@ package org.hibernate.stat;
  * Exposes statistics for a particular {@link org.hibernate.SessionFactory}.  Beware of milliseconds metrics, they
  * are dependent of the JVM precision: you may then encounter a 10 ms approximation depending on you OS platform.
  * Please refer to the JVM documentation for more information.
- * 
+ *
  * @author Emmanuel Bernard
  */
 public interface Statistics {
@@ -37,7 +37,7 @@ public interface Statistics {
 
     /**
 	 * find entity statistics per name
-	 * 
+	 *
 	 * @param entityName entity name
 	 * @return EntityStatistics object
 	 */
@@ -45,7 +45,7 @@ public interface Statistics {
 
 	/**
 	 * Get collection statistics per role
-	 * 
+	 *
 	 * @param role collection role
 	 * @return CollectionStatistics
 	 */
@@ -69,7 +69,7 @@ public interface Statistics {
 	QueryStatistics getQueryStatistics(String queryString);
 
 	/**
-	 * Second level cache statistics per domain data (entity, collection, natural-id) region
+	 * Second-level cache statistics per domain data (entity, collection, natural-id) region
 	 *
 	 * @param regionName The unqualified region name
 	 *
@@ -81,7 +81,7 @@ public interface Statistics {
 	CacheRegionStatistics getDomainDataRegionStatistics(String regionName);
 
 	/**
-	 * Second level cache statistics per query region
+	 * Second-level cache statistics per query region
 	 *
 	 * @param regionName The unqualified region name
 	 *
@@ -125,7 +125,7 @@ public interface Statistics {
 	long getEntityLoadCount();
 
 	/**
-     * Get global number of entity fetchs
+     * Get global number of entity fetches
 	 * @return entity fetch (from DB)
 	 */
 	long getEntityFetchCount();
@@ -168,34 +168,34 @@ public interface Statistics {
 	long getQueryCachePutCount();
 
 	/**
-	 * Get the global number of naturalId queries executed against the database
+	 * Get the global number of natural id queries executed against the database
 	 */
 	long getNaturalIdQueryExecutionCount();
 
 	/**
-	 * Get the global maximum query time for naturalId queries executed against the database
+	 * Get the global maximum query time for natural id queries executed against the database
 	 */
 	long getNaturalIdQueryExecutionMaxTime();
 
 	/**
-	 * Get the region for the maximum naturalId query time 
+	 * Get the region for the maximum natural id query time
 	 */
 	String getNaturalIdQueryExecutionMaxTimeRegion();
 
 	String getNaturalIdQueryExecutionMaxTimeEntity();
 
     /**
-     * Get the global number of cached naturalId lookups successfully retrieved from cache
+     * Get the global number of cached natural id lookups successfully retrieved from cache
      */
 	long getNaturalIdCacheHitCount();
 
     /**
-     * Get the global number of cached naturalId lookups *not* found in cache
+     * Get the global number of cached natural id lookups *not* found in cache
      */
 	long getNaturalIdCacheMissCount();
 
     /**
-     * Get the global number of cacheable naturalId lookups put in cache
+     * Get the global number of cacheable natural id lookups put in cache
      */
 	long getNaturalIdCachePutCount();
 
@@ -205,7 +205,7 @@ public interface Statistics {
 	long getUpdateTimestampsCacheHitCount();
 
     /**
-     * Get the global number of tables for which no update timestamps was *not* found in cache
+     * Get the global number of timestamp requests that were not found in the cache
      */
 	long getUpdateTimestampsCacheMissCount();
 
@@ -278,9 +278,9 @@ public interface Statistics {
 	long getCollectionRecreateCount();
 
 	/**
-	 * The milliseconds (JVM standard {@link System#currentTimeMillis()}) from
-	 * which all statistics accessed since the initial creation of this Statistics
-	 * instance or the last {@link #clear()}
+	 * The milliseconds (JVM standard {@link System#currentTimeMillis()})
+	 * since the initial creation of this Statistics
+	 * instance or the last time {@link #clear()} was called.
 	 *
 	 * @apiNote This time(stamp) is
 	 */
@@ -336,7 +336,7 @@ public interface Statistics {
 
 
 	/**
-	 * Second level cache statistics per region
+	 * Second-level cache statistics per region
 	 *
 	 * @param regionName qualified region name
 	 *
@@ -356,7 +356,7 @@ public interface Statistics {
 	 * @return NaturalIdCacheStatistics
 	 *
 	 * @deprecated (since 5.3) Use {@link #getNaturalIdStatistics} or
-	 * {@link @getDomainDataRegionStatistics} instead depending on need
+	 * {@link #getDomainDataRegionStatistics} instead depending on need
 	 */
 	@Deprecated
 	NaturalIdCacheStatistics getNaturalIdCacheStatistics(String regionName);

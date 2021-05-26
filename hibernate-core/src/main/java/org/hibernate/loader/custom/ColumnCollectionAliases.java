@@ -12,8 +12,8 @@ import org.hibernate.loader.CollectionAliases;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 
 /**
- * CollectionAliases that uses columnnames instead of generated aliases.
- * Aliases can still be overwritten via <return-property>
+ * CollectionAliases that uses column names instead of generated aliases.
+ * Aliases can still be overwritten via {@code <return-property>}
  *
  * @author Max Rydahl Andersen
  */

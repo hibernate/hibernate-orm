@@ -236,7 +236,7 @@ public interface AvailableSettings {
 	 *         <b>enabled</b> - Do the build
 	 *     </li>
 	 *     <li>
-	 *         <b>disabled</b> - Do not so the build
+	 *         <b>disabled</b> - Do not do the build
 	 *     </li>
 	 *     <li>
 	 *         <b>ignoreUnsupported</b> - Do the build, but ignore any non-JPA features that would otherwise
@@ -283,14 +283,14 @@ public interface AvailableSettings {
 
 	/**
 	 * Caching configuration should follow the following pattern
-	 * hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]
+	 * {@code hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]}
 	 * where usage is the cache strategy used and region the cache region name
 	 */
 	String CLASS_CACHE_PREFIX = "hibernate.ejb.classcache";
 
 	/**
 	 * Caching configuration should follow the following pattern
-	 * hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]
+	 * {@code hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]}
 	 * where usage is the cache strategy used and region the cache region name
 	 */
 	String COLLECTION_CACHE_PREFIX = "hibernate.ejb.collectioncache";

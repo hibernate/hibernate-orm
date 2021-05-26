@@ -10,7 +10,9 @@ import java.util.List;
 import javax.persistence.AttributeNode;
 
 /**
- * @author Strong Liu <stliu@hibernate.org>
+ * Integration version of the GraphNode contract
+ *
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  */
 public interface GraphNodeImplementor {
 	List<AttributeNodeImplementor<?>> attributeImplementorNodes();

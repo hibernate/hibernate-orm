@@ -21,9 +21,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * therefore we need to take care of its impact on memory consumption.
  *
  * @author Gavin King
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  * @author Gunnar Morling
- * @author Sanne Grinovero  <sanne@hibernate.org>
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero </a>
  */
 public interface EntityEntry {
 	LockMode getLockMode();

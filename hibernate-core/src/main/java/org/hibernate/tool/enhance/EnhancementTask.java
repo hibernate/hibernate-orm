@@ -36,7 +36,7 @@ import java.util.List;
  * Code based on from:
  * https://github.com/hibernate/hibernate-orm/blob/159bc99a36d86988b61b88ba91eec82cac044e1c/hibernate-core/src/main/java/org/hibernate/tool/enhance/EnhancementTask.java
  * https://github.com/hibernate/hibernate-orm/blob/159bc99a36d86988b61b88ba91eec82cac044e1c/tooling/hibernate-enhance-maven-plugin/src/main/java/org/hibernate/orm/tooling/maven/MavenEnhancePlugin.java
- *
+ * <pre>{@code
  * <target name="enhance" depends="compile">
  *     <taskdef name="enhance" classname="org.hibernate.tool.enhance.EnhancementTask">
  *         <classpath refid="<some-ant-path-including-hibernate-core-jar>"/>
@@ -44,6 +44,7 @@ import java.util.List;
  *     </taskdef>
  *     <enhance base="${base}" dir="${base}" failOnError="true" enableLazyInitialization="true" enableDirtyTracking="false" enableAssociationManagement="false" enableExtendedEnhancement="false" />
  * </target>
+ * }</pre>
  *
  * @author Luis Barreiro
  * @author Taro App

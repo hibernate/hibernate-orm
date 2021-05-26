@@ -52,7 +52,7 @@ import org.jboss.logging.Logger;
  * and we try to match the node to entity graph ( and subgraph ), if there is a match, then the attribute is fetched,
  * it is not, then depends on which property is used to apply this entity graph.
  *
- * @author Strong Liu <stliu@hibernate.org>
+ * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Brett Meyer
  */
 public abstract class AbstractEntityGraphVisitationStrategy

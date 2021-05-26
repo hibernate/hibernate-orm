@@ -113,7 +113,7 @@ public interface SharedSessionContractImplementor
 	/**
 	 * Checks whether the session is closed.  Provided separately from
 	 * {@link #isOpen()} as this method does not attempt any JTA synchronization
-	 * registration, where as {@link #isOpen()} does; which makes this one
+	 * registration, whereas {@link #isOpen()} does; which makes this one
 	 * nicer to use for most internal purposes.
 	 *
 	 * @return {@code true} if the session is closed; {@code false} otherwise.
@@ -185,7 +185,7 @@ public interface SharedSessionContractImplementor
 	 * Check if an active Transaction is necessary for the update operation to be executed.
 	 * If an active Transaction is necessary but it is not then a TransactionRequiredException is raised.
 	 *
-	 * @param exceptionMessage, the message to use for the TransactionRequiredException
+	 * @param exceptionMessage the message to use for the TransactionRequiredException
 	 */
 	default void checkTransactionNeededForUpdateOperation(String exceptionMessage) {
 		if ( !isTransactionInProgress() ) {

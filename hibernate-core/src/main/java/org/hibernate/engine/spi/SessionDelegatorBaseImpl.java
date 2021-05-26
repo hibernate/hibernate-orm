@@ -76,7 +76,7 @@ import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
  * API so that only some methods need to be overridden
  * (Used by Hibernate Search).
  *
- * @author Sanne Grinovero <sanne@hibernate.org> (C) 2012 Red Hat Inc.
+ * @author <a href="mailto:sanne@hibernate.org">Sanne Grinovero</a> (C) 2012 Red Hat Inc.
  */
 @SuppressWarnings("deprecation")
 public class SessionDelegatorBaseImpl implements SessionImplementor {
@@ -107,7 +107,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	/**
-	 * Returns the underlying delegate. Be careful that is has a different behavior from the {@link #getDelegate()}
+	 * Returns the underlying delegate. Be careful that it has a different behavior from the {@link #getDelegate()}
 	 * method coming from the EntityManager interface which returns the current session.
 	 *
 	 * @see SessionDelegatorBaseImpl#getDelegate()

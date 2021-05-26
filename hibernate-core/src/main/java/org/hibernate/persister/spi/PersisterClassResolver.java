@@ -21,7 +21,7 @@ import org.hibernate.service.Service;
  *     <li>the default provider as chosen by Hibernate Core (best choice most of the time)</li>
  * </ol>
  *
- * @author Emmanuel Bernard <emmanuel@hibernate.org>
+ * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  * @author Steve Ebersole
  */
 public interface PersisterClassResolver extends Service {

@@ -29,7 +29,7 @@ public interface ExpandingCollectionQuerySpace extends CollectionQuerySpace, Exp
 	 * @param join The element or index join to add.
 	 *
 	 * @throws java.lang.IllegalArgumentException if {@code join} is an instance of
-	 * {@link org.hibernate.loader.plan.spi.JoinDefinedByMetadata} and {@code join.getJoinedPropertyName()
+	 * {@link org.hibernate.loader.plan.spi.JoinDefinedByMetadata} and {@code join.getJoinedPropertyName()}
 	 * is neither {@code "elements"} and {@code "indices"}.
 	 * @throws java.lang.IllegalStateException if there is already an existing join with the same joined property name.
 	 */

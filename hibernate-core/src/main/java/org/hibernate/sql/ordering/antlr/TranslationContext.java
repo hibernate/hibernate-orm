@@ -31,7 +31,7 @@ public interface TranslationContext {
 	public Dialect getDialect();
 
 	/**
-	 * Retrieves the <tt>SQL function registry/tt> for this context.
+	 * Retrieves the <tt>SQL function registry</tt> for this context.
 	 *
 	 * @return The SQL function registry.
 	 */

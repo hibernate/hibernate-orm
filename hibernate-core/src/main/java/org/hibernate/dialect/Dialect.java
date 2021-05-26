@@ -336,7 +336,7 @@ public abstract class Dialect implements ConversionContext {
 
 	/**
 	 * Get the name of the database type associated with the given
-	 * {@link java.sql.Types} typecode with the given storage specification
+	 * {@link Types} typecode with the given storage specification
 	 * parameters.
 	 *
 	 * @param code The {@link java.sql.Types} typecode
@@ -1655,7 +1655,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The Dialect's preferred SQLExceptionConverter, or null to
 	 * indicate that the default {@link SQLExceptionConverter} should be used.
 	 *
-	 * @see {@link #buildSQLExceptionConversionDelegate()}
+	 * @see #buildSQLExceptionConversionDelegate()
 	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
 	 * overridden instead.
 	 */
@@ -2510,7 +2510,7 @@ public abstract class Dialect implements ConversionContext {
 	 * Are subselects supported as the left-hand-side (LHS) of
 	 * IN-predicates.
 	 * <p/>
-	 * In other words, is syntax like "... <subquery> IN (1, 2, 3) ..." supported?
+	 * In other words, is syntax like {@code ... <subquery> IN (1, 2, 3) ...} supported?
 	 *
 	 * @return True if subselects can appear as the LHS of an in-predicate;
 	 * false otherwise.

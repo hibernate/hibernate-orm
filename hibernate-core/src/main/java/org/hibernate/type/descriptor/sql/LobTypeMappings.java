@@ -31,7 +31,7 @@ public final class LobTypeMappings {
 	/**
 	 *
 	 * @param jdbcTypeCode
-	 * @return
+	 * @return true if corresponding Lob code exists; false otherwise.
 	 * @deprecated use {@link #isMappedToKnownLobCode(int)}
 	 */
 	@Deprecated
@@ -42,7 +42,7 @@ public final class LobTypeMappings {
 	/**
 	 *
 	 * @param jdbcTypeCode
-	 * @return
+	 * @return corresponding Lob code
 	 * @deprecated use {@link #getLobCodeTypeMapping(int)}
 	 */
 	@Deprecated

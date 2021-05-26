@@ -160,7 +160,8 @@ public class ConnectionProviderBuilder implements DialectCheck {
 			try {
 				actualConnection.close();
 			}
-			catch (SQLException ignore) {}
+			catch (SQLException ignore) {
+			}
 		}
 	}
 

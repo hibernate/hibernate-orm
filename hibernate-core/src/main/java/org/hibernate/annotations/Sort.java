@@ -34,7 +34,7 @@ public @interface Sort {
 	/**
 	 * Specifies the comparator to use.  Only valid when {@link #type} specifies {@link SortType#COMPARATOR}.
 	 *
-	 * TODO find a way to use Class<Comparator> -> see HHH-8164
+	 * TODO find a way to use {@code Class<Comparator>} -> see HHH-8164
 	 */
 	Class comparator() default void.class;
 }

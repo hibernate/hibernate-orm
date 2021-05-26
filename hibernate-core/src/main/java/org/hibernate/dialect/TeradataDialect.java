@@ -65,7 +65,7 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 
 		// bit_length feels a bit broken to me. We have to cast to char in order to
 		// pass when a numeric value is supplied. But of course the answers given will
-		// be wildly different for these two datatypes. 1234.5678 will be 9 bytes as
+		// be wildly different for these two data types. 1234.5678 will be 9 bytes as
 		// a char string but will be 8 or 16 bytes as a true numeric.
 		// Jay Nance 2006-09-22
 		registerFunction(
@@ -103,7 +103,7 @@ public class TeradataDialect extends Dialect implements IdTableSupport {
 	/**
 	 * Does this dialect support the <tt>FOR UPDATE</tt> syntax?
 	 *
-	 * @return empty string ... Teradata does not support <tt>FOR UPDATE<tt> syntax
+	 * @return empty string ... Teradata does not support <tt>FOR UPDATE</tt> syntax
 	 */
 	@Override
 	public String getForUpdateString() {

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.LongSummaryStatistics;
 import java.util.OptionalDouble;
 import java.util.OptionalLong;
@@ -26,14 +27,13 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
- * The {@link LongStreamDecorator} wraps a Java {@link LongStream} and registers a {@code closeHandler}
- * which is passed further to any resulting {@link Stream}.
- *
- * The goal of the {@link LongStreamDecorator} is to close the underlying {@link LongStream} upon
- * calling a terminal operation.
+ * The {@link LongStreamDecorator} wraps a Java {@link LongStream} to close the underlying
+ * {@link LongStream} upon calling a terminal operation.
  *
  * @author Vlad Mihalcea
  * @since 5.4
@@ -42,101 +42,69 @@ import org.hibernate.Incubating;
 public class LongStreamDecorator implements LongStream {
 
 	private final LongStream delegate;
-	private final Runnable closeHandler;
 
 	public LongStreamDecorator(
-			LongStream delegate,
-			Runnable closeHandler) {
-		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose( closeHandler );
+			LongStream delegate) {
+		this.delegate = delegate;
+	}
+
+	private LongStream newDecorator(LongStream stream) {
+		return delegate == stream ? this : new LongStreamDecorator( stream );
 	}
 
 	@Override
 	public LongStream filter(LongPredicate predicate) {
-		return new LongStreamDecorator(
-				delegate.filter( predicate ),
-				closeHandler
-		);
+		return newDecorator( delegate.filter( predicate ) );
 	}
 
 	@Override
 	public LongStream map(LongUnaryOperator mapper) {
-		return new LongStreamDecorator(
-				delegate.map( mapper ),
-				closeHandler
-		);
+		return newDecorator( delegate.map( mapper ) );
 	}
 
 	@Override
 	public <U> Stream<U> mapToObj(LongFunction<? extends U> mapper) {
-		return new StreamDecorator<>(
-				delegate.mapToObj( mapper ),
-				closeHandler
-		);
+		return new StreamDecorator<>( delegate.mapToObj( mapper ) );
 	}
 
 	@Override
 	public IntStream mapToInt(LongToIntFunction mapper) {
-		return new IntStreamDecorator(
-				delegate.mapToInt( mapper ),
-				closeHandler
-		);
+		return new IntStreamDecorator( delegate.mapToInt( mapper ) );
 	}
 
 	@Override
 	public DoubleStream mapToDouble(LongToDoubleFunction mapper) {
-		return new DoubleStreamDecorator(
-				delegate.mapToDouble( mapper ),
-				closeHandler
-		);
+		return new DoubleStreamDecorator( delegate.mapToDouble( mapper ) );
 	}
 
 	@Override
 	public LongStream flatMap(LongFunction<? extends LongStream> mapper) {
-		return new LongStreamDecorator(
-				delegate.flatMap( mapper ),
-				closeHandler
-		);
+		return newDecorator( delegate.flatMap( mapper ) );
 	}
 
 	@Override
 	public LongStream distinct() {
-		return new LongStreamDecorator(
-				delegate.distinct(),
-				closeHandler
-		);
+		return newDecorator( delegate.distinct() );
 	}
 
 	@Override
 	public LongStream sorted() {
-		return new LongStreamDecorator(
-				delegate.sorted(),
-				closeHandler
-		);
+		return newDecorator( delegate.sorted() );
 	}
 
 	@Override
 	public LongStream peek(LongConsumer action) {
-		return new LongStreamDecorator(
-				delegate.peek( action ),
-				closeHandler
-		);
+		return newDecorator( delegate.peek( action ) );
 	}
 
 	@Override
 	public LongStream limit(long maxSize) {
-		return new LongStreamDecorator(
-				delegate.limit( maxSize ),
-				closeHandler
-		);
+		return newDecorator( delegate.limit( maxSize ) );
 	}
 
 	@Override
 	public LongStream skip(long n) {
-		return new LongStreamDecorator(
-				delegate.skip( n ),
-				closeHandler
-		);
+		return newDecorator( delegate.skip( n ) );
 	}
 
 	@Override
@@ -266,40 +234,27 @@ public class LongStreamDecorator implements LongStream {
 
 	@Override
 	public Stream<Long> boxed() {
-		return new StreamDecorator<>(
-				delegate.boxed(),
-				closeHandler
-		);
+		return new StreamDecorator<>( delegate.boxed() );
 	}
 
 	@Override
 	public LongStream sequential() {
-		return new LongStreamDecorator(
-				delegate.sequential(),
-				closeHandler
-		);
+		return newDecorator( delegate.sequential() );
 	}
 
 	@Override
 	public LongStream parallel() {
-		return new LongStreamDecorator(
-				delegate.parallel(),
-				closeHandler
-		);
+		return newDecorator( delegate.parallel() );
 	}
 
 	@Override
 	public LongStream unordered() {
-		return new LongStreamDecorator(
-				delegate.unordered(),
-				closeHandler
-		);
+		return newDecorator( delegate.unordered() );
 	}
 
 	@Override
 	public LongStream onClose(Runnable closeHandler) {
-		this.delegate.onClose( closeHandler );
-		return this;
+		return newDecorator( delegate.onClose( closeHandler ) );
 	}
 
 	@Override
@@ -320,5 +275,31 @@ public class LongStreamDecorator implements LongStream {
 	@Override
 	public boolean isParallel() {
 		return delegate.isParallel();
+	}
+
+	//Methods added to JDK 9
+
+	public LongStream takeWhile(LongPredicate predicate) {
+		try {
+			LongStream result = (LongStream)
+					ReflectHelper.getMethod( LongStream.class, "takeWhile", LongPredicate.class )
+							.invoke( delegate, predicate );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public LongStream dropWhile(LongPredicate predicate) {
+		try {
+			LongStream result = (LongStream)
+					ReflectHelper.getMethod( Stream.class, "dropWhile", LongPredicate.class )
+							.invoke( delegate, predicate );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
 	}
 }

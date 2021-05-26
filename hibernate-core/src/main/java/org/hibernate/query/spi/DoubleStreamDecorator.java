@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.DoubleSummaryStatistics;
 import java.util.OptionalDouble;
 import java.util.PrimitiveIterator;
@@ -25,14 +26,13 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
- * The {@link DoubleStreamDecorator} wraps a Java {@link DoubleStream} and registers a {@code closeHandler}
- * which is passed further to any resulting {@link Stream}.
- * <p>
- * The goal of the {@link DoubleStreamDecorator} is to close the underlying {@link DoubleStream} upon
- * calling a terminal operation.
+ * The {@link DoubleStreamDecorator} wraps a Java {@link DoubleStream} to close the underlying
+ * {@link DoubleStream} upon calling a terminal operation.
  *
  * @author Vlad Mihalcea
  * @since 5.4
@@ -41,101 +41,69 @@ import org.hibernate.Incubating;
 public class DoubleStreamDecorator implements DoubleStream {
 
 	private final DoubleStream delegate;
-	private final Runnable closeHandler;
 
 	public DoubleStreamDecorator(
-			DoubleStream delegate,
-			Runnable closeHandler) {
-		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose( closeHandler );
+			DoubleStream delegate) {
+		this.delegate = delegate;
+	}
+
+	private DoubleStream newDecorator(DoubleStream stream) {
+		return delegate == stream ? this : new DoubleStreamDecorator( stream );
 	}
 
 	@Override
 	public DoubleStream filter(DoublePredicate predicate) {
-		return new DoubleStreamDecorator(
-				delegate.filter( predicate ),
-				closeHandler
-		);
+		return newDecorator( delegate.filter( predicate ) );
 	}
 
 	@Override
 	public DoubleStream map(DoubleUnaryOperator mapper) {
-		return new DoubleStreamDecorator(
-				delegate.map( mapper ),
-				closeHandler
-		);
+		return newDecorator( delegate.map( mapper ) );
 	}
 
 	@Override
 	public <U> Stream<U> mapToObj(DoubleFunction<? extends U> mapper) {
-		return new StreamDecorator<>(
-				delegate.mapToObj( mapper ),
-				closeHandler
-		);
+		return new StreamDecorator<>( delegate.mapToObj( mapper ) );
 	}
 
 	@Override
 	public IntStream mapToInt(DoubleToIntFunction mapper) {
-		return new IntStreamDecorator(
-				delegate.mapToInt( mapper ),
-				closeHandler
-		);
+		return new IntStreamDecorator( delegate.mapToInt( mapper ) );
 	}
 
 	@Override
 	public LongStream mapToLong(DoubleToLongFunction mapper) {
-		return new LongStreamDecorator(
-				delegate.mapToLong( mapper ),
-				closeHandler
-		);
+		return new LongStreamDecorator( delegate.mapToLong( mapper ) );
 	}
 
 	@Override
 	public DoubleStream flatMap(DoubleFunction<? extends DoubleStream> mapper) {
-		return new DoubleStreamDecorator(
-				delegate.flatMap( mapper ),
-				closeHandler
-		);
+		return newDecorator( delegate.flatMap( mapper ) );
 	}
 
 	@Override
 	public DoubleStream distinct() {
-		return new DoubleStreamDecorator(
-				delegate.distinct(),
-				closeHandler
-		);
+		return newDecorator( delegate.distinct() );
 	}
 
 	@Override
 	public DoubleStream sorted() {
-		return new DoubleStreamDecorator(
-				delegate.sorted(),
-				closeHandler
-		);
+		return newDecorator( delegate.sorted() );
 	}
 
 	@Override
 	public DoubleStream peek(DoubleConsumer action) {
-		return new DoubleStreamDecorator(
-				delegate.peek( action ),
-				closeHandler
-		);
+		return newDecorator( delegate.peek( action ) );
 	}
 
 	@Override
 	public DoubleStream limit(long maxSize) {
-		return new DoubleStreamDecorator(
-				delegate.limit( maxSize ),
-				closeHandler
-		);
+		return newDecorator( delegate.limit( maxSize ) );
 	}
 
 	@Override
 	public DoubleStream skip(long n) {
-		return new DoubleStreamDecorator(
-				delegate.skip( n ),
-				closeHandler
-		);
+		return newDecorator( delegate.skip( n ) );
 	}
 
 	@Override
@@ -258,40 +226,27 @@ public class DoubleStreamDecorator implements DoubleStream {
 
 	@Override
 	public Stream<Double> boxed() {
-		return new StreamDecorator<>(
-				delegate.boxed(),
-				closeHandler
-		);
+		return new StreamDecorator<>( delegate.boxed() );
 	}
 
 	@Override
 	public DoubleStream sequential() {
-		return new DoubleStreamDecorator(
-				delegate.sequential(),
-				closeHandler
-		);
+		return newDecorator( delegate.sequential() );
 	}
 
 	@Override
 	public DoubleStream parallel() {
-		return new DoubleStreamDecorator(
-				delegate.parallel(),
-				closeHandler
-		);
+		return newDecorator( delegate.parallel() );
 	}
 
 	@Override
 	public DoubleStream unordered() {
-		return new DoubleStreamDecorator(
-				delegate.unordered(),
-				closeHandler
-		);
+		return newDecorator( delegate.unordered() );
 	}
 
 	@Override
 	public DoubleStream onClose(Runnable closeHandler) {
-		this.delegate.onClose( closeHandler );
-		return this;
+		return newDecorator( delegate.onClose( closeHandler ) );
 	}
 
 	@Override
@@ -312,5 +267,31 @@ public class DoubleStreamDecorator implements DoubleStream {
 	@Override
 	public boolean isParallel() {
 		return delegate.isParallel();
+	}
+
+	//Methods added to JDK 9
+
+	public DoubleStream takeWhile(DoublePredicate predicate) {
+		try {
+			DoubleStream result = (DoubleStream)
+					ReflectHelper.getMethod( DoubleStream.class, "takeWhile", DoublePredicate.class )
+							.invoke( delegate, predicate );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public DoubleStream dropWhile(DoublePredicate predicate) {
+		try {
+			DoubleStream result = (DoubleStream)
+					ReflectHelper.getMethod( Stream.class, "dropWhile", DoublePredicate.class )
+							.invoke( delegate, predicate );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
 	}
 }

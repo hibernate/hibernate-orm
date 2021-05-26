@@ -33,11 +33,8 @@ import org.hibernate.Incubating;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
- * The {@link StreamDecorator} wraps a Java {@link Stream} and registers a {@code closeHandler}
- * which is passed further to any resulting {@link Stream}.
- *
- * The goal of the {@link StreamDecorator} is to close the underlying {@link Stream} upon
- * calling a terminal operation.
+ * The {@link StreamDecorator} wraps a Java {@link Stream} to close the underlying
+ * {@link Stream} upon calling a terminal operation.
  *
  * @author Vlad Mihalcea
  * @since 5.4
@@ -46,106 +43,90 @@ import org.hibernate.internal.util.ReflectHelper;
 public class StreamDecorator<R> implements Stream<R> {
 
 	private final Stream<R> delegate;
-	private final Runnable closeHandler;
 
 	public StreamDecorator(
-			Stream<R> delegate,
-			Runnable closeHandler) {
-		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose( closeHandler );
+			Stream<R> delegate) {
+		this.delegate = delegate;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> Stream<T> newDecorator(Stream<T> stream) {
+		return delegate == stream ? (Stream<T>) this : new StreamDecorator<>( stream );
 	}
 
 	@Override
 	public Stream<R> filter(Predicate<? super R> predicate) {
-		return new StreamDecorator<R>( delegate.filter( predicate ), closeHandler );
+		return newDecorator( delegate.filter( predicate ) );
 	}
 
 	@Override
 	public <R1> Stream<R1> map(Function<? super R, ? extends R1> mapper) {
-		return new StreamDecorator<>( delegate.map( mapper ), closeHandler );
+		return newDecorator( delegate.map( mapper ) );
 	}
 
 	@Override
 	public IntStream mapToInt(ToIntFunction<? super R> mapper) {
-		return new IntStreamDecorator(
-				delegate.mapToInt( mapper ),
-				closeHandler
-		);
+		return new IntStreamDecorator( delegate.mapToInt( mapper ) );
 	}
 
 	@Override
 	public LongStream mapToLong(ToLongFunction<? super R> mapper) {
-		return new LongStreamDecorator(
-				delegate.mapToLong( mapper ),
-				closeHandler
-		);
+		return new LongStreamDecorator( delegate.mapToLong( mapper ) );
 	}
 
 	@Override
 	public DoubleStream mapToDouble(ToDoubleFunction<? super R> mapper) {
-		return new DoubleStreamDecorator(
-				delegate.mapToDouble( mapper ),
-				closeHandler
-		);
+		return new DoubleStreamDecorator( delegate.mapToDouble( mapper ) );
 	}
 
 	@Override
 	public <R1> Stream<R1> flatMap(Function<? super R, ? extends Stream<? extends R1>> mapper) {
-		return new StreamDecorator<>( delegate.flatMap( mapper ), closeHandler );
+		return newDecorator( delegate.flatMap( mapper ) );
 	}
 
 	@Override
 	public IntStream flatMapToInt(Function<? super R, ? extends IntStream> mapper) {
-		return new IntStreamDecorator(
-				delegate.flatMapToInt( mapper ),
-				closeHandler
-		);
+		return new IntStreamDecorator( delegate.flatMapToInt( mapper ) );
 	}
 
 	@Override
 	public LongStream flatMapToLong(Function<? super R, ? extends LongStream> mapper) {
-		return new LongStreamDecorator(
-				delegate.flatMapToLong( mapper ),
-				closeHandler
-		);
+		return new LongStreamDecorator( delegate.flatMapToLong( mapper ) );
 	}
 
 	@Override
 	public DoubleStream flatMapToDouble(Function<? super R, ? extends DoubleStream> mapper) {
-		return new DoubleStreamDecorator(
-				delegate.flatMapToDouble( mapper ),
-				closeHandler
-		);
+		return new DoubleStreamDecorator( delegate.flatMapToDouble( mapper ) );
 	}
 
 	@Override
 	public Stream<R> distinct() {
-		return new StreamDecorator<>( delegate.distinct(), closeHandler );
+		return newDecorator( delegate.distinct() );
 	}
 
 	@Override
 	public Stream<R> sorted() {
-		return new StreamDecorator<>( delegate.sorted(), closeHandler );
+		return newDecorator( delegate.sorted() );
 	}
 
 	@Override
 	public Stream<R> sorted(Comparator<? super R> comparator) {
-		return new StreamDecorator<>( delegate.sorted( comparator ), closeHandler );
+		return newDecorator( delegate.sorted( comparator ) );
 	}
 
 	@Override
 	public Stream<R> peek(Consumer<? super R> action) {
-		return new StreamDecorator<>( delegate.peek( action ), closeHandler );
+		return newDecorator( delegate.peek( action ) );
 	}
 
 	@Override
 	public Stream<R> limit(long maxSize) {
-		return new StreamDecorator<>( delegate.limit( maxSize ), closeHandler );
+		return newDecorator( delegate.limit( maxSize ) );
 	}
 
 	@Override
 	public Stream<R> skip(long n) {
-		return new StreamDecorator<>( delegate.skip( n ), closeHandler );
+		return newDecorator( delegate.skip( n ) );
 	}
 
 	@Override
@@ -284,23 +265,22 @@ public class StreamDecorator<R> implements Stream<R> {
 
 	@Override
 	public Stream<R> sequential() {
-		return new StreamDecorator<>( delegate.sequential(), closeHandler );
+		return newDecorator( delegate.sequential() );
 	}
 
 	@Override
 	public Stream<R> parallel() {
-		return new StreamDecorator<>( delegate.parallel(), closeHandler );
+		return newDecorator( delegate.parallel() );
 	}
 
 	@Override
 	public Stream<R> unordered() {
-		return new StreamDecorator<>( delegate.unordered(), closeHandler );
+		return newDecorator( delegate.unordered() );
 	}
 
 	@Override
 	public Stream<R> onClose(Runnable closeHandler) {
-		this.delegate.onClose( closeHandler );
-		return this;
+		return newDecorator( delegate.onClose( closeHandler ) );
 	}
 
 	@Override
@@ -316,7 +296,7 @@ public class StreamDecorator<R> implements Stream<R> {
 			Stream<R> result = (Stream<R>)
 					ReflectHelper.getMethod( Stream.class, "takeWhile", Predicate.class )
 							.invoke( delegate, predicate );
-			return new StreamDecorator<>( result, closeHandler );
+			return newDecorator( result );
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			throw new HibernateException( e );
@@ -329,7 +309,7 @@ public class StreamDecorator<R> implements Stream<R> {
 			Stream<R> result = (Stream<R>)
 					ReflectHelper.getMethod( Stream.class, "dropWhile", Predicate.class )
 							.invoke( delegate, predicate );
-			return new StreamDecorator<>( result, closeHandler );
+			return newDecorator( result );
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			throw new HibernateException( e );

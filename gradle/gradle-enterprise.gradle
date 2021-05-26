@@ -17,10 +17,19 @@ gradleEnterprise {
         termsOfServiceAgree = 'yes'
 
         captureTaskInputFiles = true
-
         publishAlways()
-        uploadInBackground = System.getenv("CI") == null && System.getProperty("CI") == null
 
+        if ( System.getenv("CI") == null && System.getProperty("CI") == null ) {
+            // not a CI job..
+            uploadInBackground = true
+        }
+        else {
+            // is  CI job
+            uploadInBackground = false
+            tag "JOB ${System.getenv('JOB_NAME')}"
+        }
+
+        tag "JDK ${JavaVersion.current().toString()}"
         value 'database', rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
     }
 }

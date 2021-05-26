@@ -14,9 +14,9 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 description = 'Hibernate\'s core ORM functionality'
 
 configurations {
-    hibernateJpaModelGenTool {
-        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
-    }
+//    hibernateJpaModelGenTool {
+//        description = "Dependencies for running the Hibernate JPA Metamodel Generator AnnotationProcessor tool"
+//    }
     tests {
         description = 'Configuration for the produced test jar'
     }
@@ -89,7 +89,7 @@ dependencies {
     testRuntime( libraries.weld )
     testRuntime(libraries.wildfly_transaction_client)
 
-	testCompile( project( ':hibernate-jpamodelgen' ) )
+    testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
     testCompile libraries.arquillian_junit_container
     testCompile libraries.arquillian_protocol_servlet
@@ -103,39 +103,42 @@ dependencies {
 
 jar {
     manifest {
-        mainAttributes( 'Main-Class': 'org.hibernate.Version' )
+        attributes(
+                'Main-Class': 'org.hibernate.Version',
 
-        instructionFirst 'Import-Package',
-            'javax.security.auth;resolution:=optional',
-            'javax.security.jacc;resolution:=optional',
-            'javax.validation;resolution:=optional',
-            'javax.validation.constraints;resolution:=optional',
-            'javax.validation.groups;resolution:=optional',
-            'javax.validation.metadata;resolution:=optional',
-            // TODO: Shouldn't have to explicitly list this, but the plugin
-            // generates it with a [1.0,2) version.
-            "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-            // optionals
-            'javax.management;resolution:=optional',
-            'javax.naming.event;resolution:=optional',
-            'javax.naming.spi;resolution:=optional',
-            'org.apache.tools.ant;resolution:=optional',
-            'org.apache.tools.ant.taskdefs;resolution:=optional',
-            'org.apache.tools.ant.types;resolution:=optional',
-            '!javax.enterprise*',
-            'javax.enterprise.context.spi;resolution:=optional',
-            'javax.enterprise.inject.spi;resolution:=optional',
-            'javax.inject;resolution:=optional',
-            'net.bytebuddy.*;resolution:=optional',
-            // We must specify the version explicitly to allow Karaf
-            // to use an older version of JAXB (the only one we can use in Karaf)
-            "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
+                'Import-Package': [
+                        'javax.security.auth;resolution:=optional',
+                        'javax.security.jacc;resolution:=optional',
+                        'javax.validation;resolution:=optional',
+                        'javax.validation.constraints;resolution:=optional',
+                        'javax.validation.groups;resolution:=optional',
+                        'javax.validation.metadata;resolution:=optional',
+                        // TODO: Shouldn't have to explicitly list this, but the plugin
+                        // generates it with a [1.0,2) version.
+                        "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+                        // optionals
+                        'javax.management;resolution:=optional',
+                        'javax.naming.event;resolution:=optional',
+                        'javax.naming.spi;resolution:=optional',
+                        'org.apache.tools.ant;resolution:=optional',
+                        'org.apache.tools.ant.taskdefs;resolution:=optional',
+                        'org.apache.tools.ant.types;resolution:=optional',
+                        '!javax.enterprise*',
+                        'javax.enterprise.context.spi;resolution:=optional',
+                        'javax.enterprise.inject.spi;resolution:=optional',
+                        'javax.inject;resolution:=optional',
+                        'net.bytebuddy.*;resolution:=optional',
+                        // We must specify the version explicitly to allow Karaf
+                        // to use an older version of JAXB (the only one we can use in Karaf)
+                        "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\""
 
 //        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer
 //        // uses ClassLoaderServiceImpl.
 //        instruction 'Export-Package',
 //            'org.hibernate.boot.registry.classloading.internal',
 //            '*'
+                ].join( ',' )
+        )
     }
 }
 

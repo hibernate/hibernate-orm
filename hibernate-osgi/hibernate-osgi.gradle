@@ -44,8 +44,8 @@ sourceSets {
 	test {
 		// send javac output and resource copying to the same output directory for test
 		// so Pax Exam can more easily find it without explicit TinyBundle hooks
-		output.classesDir = "${buildDir}/classes/test"
-		output.resourcesDir = output.classesDir
+		java.outputDir = file( "${buildDir}/classes/test" )
+		output.resourcesDir = java.outputDir
 	}
 }
 
@@ -102,13 +102,16 @@ dependencies {
 
 jar {
 	manifest {
-		instruction 'Bundle-Activator', 'org.hibernate.osgi.HibernateBundleActivator'
-        instruction 'Provide-Capability', 'osgi.service;effective:=active;objectClass=javax.persistence.spi.PersistenceProvider'
-		instructionFirst 'Import-Package',
-			// TODO: Shouldn't have to explicitly list this, but the plugin
-			// generates it with a [1.0,2) version.
-			"javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-			"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\""
+		attributes(
+				'Bundle-Activator' : 'org.hibernate.osgi.HibernateBundleActivator',
+				'Provide-Capability': 'osgi.service;effective:=active;objectClass=javax.persistence.spi.PersistenceProvider',
+				'Import-Package': [
+						// TODO: Shouldn't have to explicitly list this, but the plugin
+						// generates it with a [1.0,2) version.
+						"javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+						"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\""
+				].join( ',' )
+		)
 	}
 }
 

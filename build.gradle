@@ -12,7 +12,7 @@ buildscript {
 	}
 	dependencies {
 		classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:2.0.0.Final'
+		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'org.hibernate.build.gradle:gradle-xjc-plugin:1.0.2.Final'
 		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.1.1'
@@ -23,8 +23,29 @@ buildscript {
 }
 
 plugins {
-	id 'com.gradle.build-scan' version '1.9'
-	id 'me.champeau.buildscan-recipes' version '0.1.7'
+//	id 'me.champeau.buildscan-recipes' version '0.2.3'
+	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
+	id 'nu.studer.credentials' version '2.1'
+	id 'org.hibernate.build.xjc' version '2.0.1' apply false
+	id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
+	id 'biz.aQute.bnd' version '5.1.1' apply false
+}
+
+apply from: rootProject.file( 'gradle/base-information.gradle' )
+
+
+ext {
+	sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
+	sonatypeOssrhPassword = project.findProperty( 'SONATYPE_OSSRH_PASSWORD' )
+}
+
+nexusPublishing {
+	repositories {
+		sonatype {
+			username = project.sonatypeOssrhUser
+			password = project.sonatypeOssrhPassword
+		}
+	}
 }
 
 allprojects {
@@ -43,7 +64,8 @@ allprojects {
 	// minimize changes, at least for now (gradle uses 'build' by default)..
 	buildDir = "target"
 
-	apply from: rootProject.file( 'gradle/base-information.gradle' )
+	group = 'org.hibernate'
+	version = project.ormVersion.fullName
 }
 
 
@@ -89,19 +111,14 @@ wrapper {
 }
 
 
-buildScan {
-	licenseAgreementUrl = 'https://gradle.com/terms-of-service'
-	licenseAgree = 'yes'
-
-	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
-}
-
-
-
-
-
-
-
+//buildScan {
+//	termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+//	termsOfServiceAgree = 'yes'
+//}
+//
+//buildScanRecipes {
+//	recipe 'git-commit', baseUrl: 'https://github.com/hibernate/hibernate-orm/tree'
+//}
 
 //idea {
 //    project {

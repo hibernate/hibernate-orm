@@ -7,11 +7,21 @@
 
 apply plugin: 'base'
 
+File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
+
 ext {
-	ormVersion = new HibernateVersion( '5.3.21-SNAPSHOT', project )
 	baselineJavaVersion = '1.8'
+	ormVersionFile = versionFile
+	ormVersion = HibernateVersion.fromFile( versionFile, project )
+	// Override during releases
+	if ( project.hasProperty( 'releaseVersion' ) ) {
+		ormVersion = new HibernateVersion( project.releaseVersion, project )
+	}
 	jpaVersion = new JpaVersion('2.2')
+	jakartaJpaVersion = new JpaVersion('3.0.0')
 }
+
+// The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
 
 group = 'org.hibernate'
 version = project.ormVersion.fullName
@@ -52,6 +62,22 @@ class HibernateVersion {
 		this.isSnapshot = fullName.endsWith( '-SNAPSHOT' )
 
 		this.osgiVersion = isSnapshot ? family + '.' + hibernateVersionComponents[2] + '.SNAPSHOT' : fullName
+	}
+
+	static HibernateVersion fromFile(File file, Project project){
+		def fullName = readVersionProperties(file)
+		return new HibernateVersion(fullName, project)
+	}
+
+	private static String readVersionProperties(File file) {
+		if ( !file.exists() ) {
+			throw new GradleException( "Version file $file.canonicalPath does not exists" )
+		}
+		Properties versionProperties = new Properties()
+		file.withInputStream {
+			stream -> versionProperties.load( stream )
+		}
+		return versionProperties.hibernateVersion
 	}
 
 	@Override

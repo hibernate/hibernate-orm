@@ -8,6 +8,7 @@ package org.hibernate.orm.test.bootstrap.scanning;
 
 import java.io.File;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -81,13 +82,14 @@ public class ScannerTest extends PackagingTestCase {
 
 	@Test
 	public void testCustomScanner() throws Exception {
-		File defaultPar = buildDefaultPar();
-		File explicitPar = buildExplicitPar();
-		addPackageToClasspath( defaultPar, explicitPar );
-		
 		EntityManagerFactory emf;
 		CustomScanner.resetUsed();
+
+		File defaultPar = buildDefaultPar();
+		File explicitPar = buildExplicitPar();
 		final HashMap integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( defaultPar, explicitPar ) ) );
+
 		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( ! CustomScanner.isUsed() );
 		emf.close();
@@ -101,11 +103,6 @@ public class ScannerTest extends PackagingTestCase {
 		integration.put( AvailableSettings.SCANNER, new CustomScanner() );
 		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( CustomScanner.isUsed() );
-		emf.close();
-
-		CustomScanner.resetUsed();
-		emf = Persistence.createEntityManagerFactory( "defaultpar", null );
-		assertTrue( ! CustomScanner.isUsed() );
 		emf.close();
 	}
 }

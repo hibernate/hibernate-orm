@@ -11,7 +11,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -63,7 +63,15 @@ public class PersistenceXmlParser {
 	 */
 	public static List<ParsedPersistenceXmlDescriptor> locatePersistenceUnits(Map integration) {
 		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				Hibernate.class::getClassLoader,
+				() -> {
+					Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) integration.get( AvailableSettings.CLASSLOADERS );
+					if ( classLoaders != null && classLoaders.size() > 0 ) {
+						return classLoaders.iterator().next();
+					}
+					else {
+						return Hibernate.class.getClassLoader();
+					}
+				},
 				PersistenceUnitTransactionType.RESOURCE_LOCAL
 		);
 		parser.doResolve( integration );

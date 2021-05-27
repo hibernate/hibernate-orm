@@ -123,7 +123,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		thread.setContextClassLoader( originalClassLoader );
 	}
 
-	protected void addPackageToClasspath(File... files) throws MalformedURLException {
+	protected URLClassLoader addPackageToClasspath(File... files) throws MalformedURLException {
 		List<URL> urlList = new ArrayList<>();
 		for ( File file : files ) {
 			urlList.add( file.toURL() );
@@ -131,7 +131,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		URLClassLoader classLoader = new URLClassLoader(
 				urlList.toArray( new URL[urlList.size()] ), originalClassLoader
 		);
-		thread.setContextClassLoader( classLoader );
+		return classLoader;
 	}
 
 	protected void addPackageToClasspath(URL... urls) throws MalformedURLException {

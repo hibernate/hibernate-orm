@@ -7,23 +7,23 @@
 package org.hibernate.orm.test.bootstrap.scanning;
 
 import java.io.File;
-import java.util.Arrays;
+import java.io.InputStream;
+import java.net.URLClassLoader;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
-import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.internal.util.ResourcesHelper;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
@@ -81,10 +81,11 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
 		// run the test
-		emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer as = new ApplicationServer();
 			as.setName( "JBoss AS" );
@@ -113,9 +114,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testDefaultParForPersistence_1_0() throws Exception {
 		File testPackage = buildDefaultPar_1_0();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "defaultpar_1_0", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar_1_0", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer1 as = new ApplicationServer1();
 			as.setName( "JBoss AS" );
@@ -144,11 +146,12 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testListenersDefaultPar() throws Exception {
 		File testPackage = buildDefaultPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
 		IncrementListener.reset();
 		OtherIncrementListener.reset();
-		emf = Persistence.createEntityManagerFactory( "defaultpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			ApplicationServer as = new ApplicationServer();
 			as.setName( "JBoss AS" );
@@ -181,9 +184,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testExplodedPar() throws Exception {
 		File testPackage = buildExplodedPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "explodedpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "explodedpar", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Carpet carpet = new Carpet();
 			Elephant el = new Elephant();
@@ -200,10 +204,11 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testExcludeHbmPar() throws Exception {
 		File testPackage = buildExcludeHbmPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
 		try {
-			emf = Persistence.createEntityManagerFactory( "excludehbmpar", new HashMap() );
+			emf = Persistence.createEntityManagerFactory( "excludehbmpar", integration );
 		}
 		catch ( PersistenceException e ) {
 			if ( emf != null ) {
@@ -237,9 +242,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testCfgXmlPar() throws Exception {
 		File testPackage = buildCfgXmlPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "cfgxmlpar", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "cfgxmlpar", integration );
 
 		assertTrue( emf.getProperties().containsKey( "hibernate.test-assertable-setting" ) );
 
@@ -263,9 +269,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testSpacePar() throws Exception {
 		File testPackage = buildSpacePar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "space par", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "space par", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			org.hibernate.jpa.test.pack.spacepar.Bug bug = new org.hibernate.jpa.test.pack.spacepar.Bug();
 			bug.setSubject( "Spaces in directory name don't play well on Windows" );
@@ -280,14 +287,15 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testOverriddenPar() throws Exception {
 		File testPackage = buildOverridenPar();
-		addPackageToClasspath( testPackage );
+		URLClassLoader urlClassLoader = addPackageToClasspath( testPackage );
 
 		HashMap properties = new HashMap();
+		properties.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( urlClassLoader ) );
 		properties.put( AvailableSettings.JTA_DATASOURCE, null );
 		Properties p = new Properties();
 
-		ClassLoaderService cls = new ClassLoaderServiceImpl( Arrays.asList( Thread.currentThread().getContextClassLoader(), Environment.class.getClassLoader() ), TcclLookupPrecedence.BEFORE );
-		p.load( cls.locateResourceStream( "/overridenpar.properties" ) );
+		InputStream inputStream = ResourcesHelper.locateResourceAsStream( "/overridenpar.properties", urlClassLoader );
+		p.load( inputStream );
 		properties.putAll( p );
 		emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		TransactionUtil.doInJPA( () -> emf, em -> {
@@ -304,9 +312,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testListeners() throws Exception {
 		File testPackage = buildExplicitPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
 		EntityManager em = emf.createEntityManager();
 		try {
 			EventListenerRegistry listenerRegistry = em.unwrap( SharedSessionContractImplementor.class ).getFactory()
@@ -326,9 +335,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testExtendedEntityManager() throws Exception {
 		File testPackage = buildExplicitPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Item item = new Item( "Mouse", "Micro$oft mouse" );
 			em.persist( item );
@@ -372,9 +382,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testConfiguration() throws Exception {
 		File testPackage = buildExplicitPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
 		Item item = new Item( "Mouse", "Micro$oft mouse" );
 		Distributor res = new Distributor();
 		res.setName( "Bruce" );
@@ -417,9 +428,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	public void testExternalJar() throws Exception {
 		File externalJar = buildExternalJar();
 		File testPackage = buildExplicitPar();
-		addPackageToClasspath( testPackage, externalJar );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
 		Scooter scooter = TransactionUtil.doInJPA( () -> emf, em -> {
 			Scooter s = new Scooter();
 			s.setModel( "Abadah" );
@@ -438,10 +450,11 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	public void testRelativeJarReferences() throws Exception {
 		File externalJar = buildExternalJar2();
 		File testPackage = buildExplicitPar2();
-		addPackageToClasspath( testPackage, externalJar );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
 		// if the jar cannot be resolved, this call should fail
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
 
 		// but to make sure, also verify that the entity defined in the external jar was found
 		emf.getMetamodel().entity( Airplane.class );
@@ -465,9 +478,10 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 	@Test
 	public void testORMFileOnMainAndExplicitJars() throws Exception {
 		File testPackage = buildExplicitPar();
-		addPackageToClasspath( testPackage );
+		Map integration = new HashMap();
+		integration.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( addPackageToClasspath( testPackage ) ) );
 
-		emf = Persistence.createEntityManagerFactory( "manager1", new HashMap() );
+		emf = Persistence.createEntityManagerFactory( "manager1", integration );
 		TransactionUtil.doInJPA( () -> emf, em -> {
 			Seat seat = new Seat();
 			seat.setNumber( "3B" );

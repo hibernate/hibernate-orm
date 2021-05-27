@@ -4,15 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.onetomany;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+package org.hibernate.orm.test.onetomany;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,25 +16,42 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctionalTestCase {
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@Jpa(
+		annotatedClasses = {
+				OneToManyDuplicateInsertionTest.Parent.class,
+				OneToManyDuplicateInsertionTest.Child.class,
+				OneToManyDuplicateInsertionTest.ParentCascade.class,
+				OneToManyDuplicateInsertionTest.ChildCascade.class
+		}
+)
+public class OneToManyDuplicateInsertionTest {
 
 	private int parentId;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[]{ Parent.class, Child.class, ParentCascade.class, ChildCascade.class };
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-6776")
-	public void testDuplicateInsertion() {
+	public void testDuplicateInsertion(EntityManagerFactoryScope scope) {
 		// persist parent entity in a transaction
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			Parent parent = new Parent();
 			em.persist( parent );
 			parentId = parent.getId();
@@ -46,7 +59,7 @@ public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctional
 
 		// relate and persist child entity in another transaction
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			Parent parent = em.find( Parent.class, parentId );
 			Child child = new Child();
 			child.setParent( parent );
@@ -58,7 +71,7 @@ public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctional
 
 		// get the parent again
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			Parent parent = em.find( Parent.class, parentId );
 
 			assertEquals( 1, parent.getChildren().size() );
@@ -67,15 +80,15 @@ public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctional
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-7404")
-	public void testDuplicateInsertionWithCascadeAndMerge() {
-		doInJPA( this::entityManagerFactory, em -> {
+	public void testDuplicateInsertionWithCascadeAndMerge(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
 			ParentCascade p = new ParentCascade();
 			// merge with 0 children
 			p = em.merge( p );
 			parentId = p.getId();
 		} );
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			ParentCascade p = em.find( ParentCascade.class, parentId );
 			final ChildCascade child = new ChildCascade();
 			child.setParent( p );
@@ -83,7 +96,7 @@ public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctional
 			em.merge( p );
 		} );
 
-		doInJPA( this::entityManagerFactory, em -> {
+		scope.inTransaction( em -> {
 			// again, load the Parent by id
 			ParentCascade p = em.find( ParentCascade.class, parentId );
 
@@ -98,6 +111,8 @@ public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctional
 		@Id
 		@GeneratedValue
 		private int id;
+
+		private String name;
 
 		@OneToMany(mappedBy = "parent")
 		private List<Child> children = new LinkedList<Child>();
@@ -125,6 +140,8 @@ public class OneToManyDuplicateInsertionTest extends BaseEntityManagerFunctional
 		@Id
 		@GeneratedValue
 		private int id;
+
+		private String name;
 
 		@ManyToOne
 		private Parent parent;

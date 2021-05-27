@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.onetomany;
+package org.hibernate.orm.test.onetomany;
 
 import org.hibernate.CacheMode;
 
@@ -12,8 +12,12 @@ import org.hibernate.CacheMode;
  * @author Burkhard Graves
  * @author Gail Badner
  */
-public class RecursiveBidirectionalOneToManyCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
+public class RecursiveBidirectionalOneToManyNoCacheTest extends AbstractRecursiveBidirectionalOneToManyTest {
+	public String getCacheConcurrencyStrategy() {
+			return null;
+	}
+	
 	protected CacheMode getSessionCacheMode() {
-			return CacheMode.NORMAL;
+			return CacheMode.IGNORE;
 	}
 }

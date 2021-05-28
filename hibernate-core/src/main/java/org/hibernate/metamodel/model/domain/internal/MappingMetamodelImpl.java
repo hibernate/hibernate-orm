@@ -75,7 +75,7 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
  *
- * Really more of the mapping model then the domain model, though it does have reference to the `JpaMetamodel`
+ * Really more of the mapping model than the domain model, though it does have reference to the `JpaMetamodel`
  *
  * NOTE : we suppress deprecation warnings because at the moment we still implement a deprecated API so
  * have to reference deprecated things
@@ -741,6 +741,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 		if ( sqmExpressable instanceof CompositeSqmPathSource ) {
 			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressable nodes not yet implemented" );
+		}
+
+		if ( sqmExpressable instanceof EntityTypeImpl ) {
+			throw new NotYetImplementedFor6Exception( "Resolution of entity-valued SqmExpressable nodes not yet implemented" );
 		}
 
 		if ( sqmExpressable instanceof EmbeddableTypeImpl ) {

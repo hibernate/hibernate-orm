@@ -9,8 +9,8 @@ package org.hibernate.query.sqm.internal;
 import java.util.function.Function;
 import javax.persistence.metamodel.Bindable;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -21,10 +21,8 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.internal.AnyMappingSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
-import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -35,7 +33,6 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.type.BasicType;
 
 /**
  * Helper for dealing with Hibernate's "mapping model" while processing an SQM which is defined
@@ -119,11 +116,7 @@ public class SqmMappingModelHelper {
 		}
 
 		final SqmExpressable<?> nodeType = sqmNode.getNodeType();
-		if ( nodeType instanceof BasicType ) {
-			return ( (BasicType) nodeType );
-		}
-
-		throw new NotYetImplementedFor6Exception( DomainModelHelper.class );
+		return domainModel.resolveMappingExpressable( nodeType, tableGroupLocator );
 	}
 
 	private static ModelPart resolveSqmPath(

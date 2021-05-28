@@ -25,29 +25,29 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import org.hamcrest.MatcherAssert;
+
+import static org.hamcrest.Matchers.hasSize;
+
 public class CastTest extends AbstractCriteriaTest {
 	private static final int QUANTITY = 2;
 
 	@AfterEach
 	public void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction(
-				entityManager -> {
-					entityManager.createQuery( "delete from Product" ).executeUpdate();
-				}
-		);
+		scope.inTransaction( em -> em.createQuery( "delete Product" ).executeUpdate() );
 	}
 
 	@Test
 	@SkipForDialect(value = DerbyDialect.class, comment = "Derby does not support cast from INTEGER to VARCHAR")
 	@TestForIssue(jiraKey = "HHH-5755")
-	public void testCastToString(EntityManagerFactoryScope scope) {
+	void testCastToString(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
 					Product product = new Product();
 					product.setId( "product1" );
 					product.setPrice( 1.23d );
 					product.setQuantity( QUANTITY );
-					product.setPartNumber( ( (long) Integer.MAX_VALUE ) + 1 );
+					product.setPartNumber( (long)Integer.MAX_VALUE + 1 );
 					product.setRating( 1.999f );
 					product.setSomeBigInteger( BigInteger.valueOf( 987654321 ) );
 					product.setSomeBigDecimal( BigDecimal.valueOf( 987654.321 ) );
@@ -61,11 +61,11 @@ public class CastTest extends AbstractCriteriaTest {
 					CriteriaQuery<Product> criteria = builder.createQuery( Product.class );
 					Root<Product> root = criteria.from( Product.class );
 					criteria.where( builder.equal(
-							root.get( Product_.quantity ).as( String.class ),
+							root.get( Product_.QUANTITY ).as( String.class ),
 							builder.literal( String.valueOf( QUANTITY ) )
 					) );
 					List<Product> result = entityManager.createQuery( criteria ).getResultList();
-					Assertions.assertEquals( 1, result.size() );
+					MatcherAssert.assertThat( result, hasSize( 1 ) );
 				}
 		);
 	}

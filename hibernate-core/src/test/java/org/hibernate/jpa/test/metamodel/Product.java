@@ -27,7 +27,7 @@ import javax.persistence.Table;
  *
  * @author Steve Ebersole
  */
-@Entity
+@Entity(name = "Product")
 @Table(name = "PRODUCT_TABLE")
 @SecondaryTable(name = "PRODUCT_DETAILS", pkJoinColumns = @PrimaryKeyJoinColumn(name = "ID"))
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)

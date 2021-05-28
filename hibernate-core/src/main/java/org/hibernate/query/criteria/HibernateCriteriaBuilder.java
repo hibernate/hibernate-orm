@@ -33,7 +33,6 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -648,7 +647,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@SuppressWarnings("unchecked")
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values);
 
-	<T> JpaInPredicate<T> in(Expression<? extends T> expression, List<T> values);
+	<T> JpaInPredicate<T> in(Expression<? extends T> expression, Collection<T> values);
 
 	@Override
 	JpaPredicate exists(Subquery<?> subquery);

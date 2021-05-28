@@ -14,13 +14,11 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import javax.persistence.AssociationOverride;
-import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -35,21 +33,10 @@ import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 
-import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.jpa.test.criteria.components.Alias;
-import org.hibernate.jpa.test.criteria.components.Client;
-import org.hibernate.jpa.test.criteria.components.Client_;
-import org.hibernate.jpa.test.criteria.components.Name_;
 
-import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;

@@ -14,6 +14,9 @@ import java.util.function.Consumer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -22,24 +25,25 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * todo (6.0) : how is this different from {@link org.hibernate.query.sqm.internal.ParameterCollector}?
+ * A criteria parameter collector to feed parameter collected to a {@link Consumer}
+ * while walking a Semantic Query Model (SQM) tree.
  *
  * @author Steve Ebersole
  */
-public class ParameterCollector extends BaseSemanticQueryWalker {
+public class CriteriaParameterCollectQueryWalker extends BaseSemanticQueryWalker {
 
 	public static Set<SqmParameter<?>> collectParameters(
 			SqmStatement<?> statement,
 			Consumer<SqmParameter<?>> consumer,
 			ServiceRegistry serviceRegistry) {
-		final ParameterCollector collector = new ParameterCollector( serviceRegistry, consumer );
+		final CriteriaParameterCollectQueryWalker collector = new CriteriaParameterCollectQueryWalker( serviceRegistry, consumer );
 		statement.accept( collector );
 		return collector.parameterExpressions == null
 				? Collections.emptySet()
 				: collector.parameterExpressions;
 	}
 
-	private ParameterCollector(
+	private CriteriaParameterCollectQueryWalker(
 			ServiceRegistry serviceRegistry,
 			Consumer<SqmParameter<?>> consumer) {
 		super( serviceRegistry );
@@ -91,6 +95,42 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		consumer.accept( param );
 
 		return param;
+	}
+
+	@Override
+	public Object visitFunction(SqmFunction sqmFunction) {
+		for ( Object argument : sqmFunction.getArguments() ) {
+			if ( argument instanceof SqmFunction) {
+				visitFunction( (SqmFunction) argument );
+			}
+			else if ( argument instanceof JpaCriteriaParameter ) {
+				visitJpaCriteriaParameter( (JpaCriteriaParameter<?>) argument );
+			}
+			else if ( argument instanceof SqmPositionalParameter ) {
+				visitPositionalParameterExpression( (SqmPositionalParameter) argument );
+			}
+			else if ( argument instanceof SqmNamedParameter ) {
+				visitNamedParameterExpression( ( SqmNamedParameter ) argument );
+			}
+		}
+		return sqmFunction;
+	}
+
+	@Override
+	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
+		expression.getWhenFragments().forEach( whenFragment -> {
+			whenFragment.getPredicate().accept( this );
+			whenFragment.getResult().accept( this );
+		} );
+		expression.getOtherwise().accept( this );
+		return expression;
+	}
+
+	@Override
+	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
+		expression.getLeftHandOperand().accept( this );
+		expression.getRightHandOperand().accept( this );
+		return expression;
 	}
 
 }

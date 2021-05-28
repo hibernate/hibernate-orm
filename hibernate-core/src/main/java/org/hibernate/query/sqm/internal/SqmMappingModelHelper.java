@@ -11,7 +11,6 @@ import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -59,10 +58,11 @@ public class SqmMappingModelHelper {
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
-			CollectionPart.Nature nature,
+			String name,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
-		return resolveSqmPathSource( nature.getName(), valueDomainType, jpaBindableType );
+		// todo (6.0): the key path source must create a special path for the key
+		return resolveSqmPathSource( name, valueDomainType, jpaBindableType );
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(

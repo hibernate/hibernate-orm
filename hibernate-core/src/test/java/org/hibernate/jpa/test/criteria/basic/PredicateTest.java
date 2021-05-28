@@ -10,16 +10,27 @@ import java.util.List;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-
+import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
+import org.hibernate.jpa.test.metamodel.CreditCard;
+import org.hibernate.jpa.test.metamodel.CreditCard_;
+import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
-
+import org.hibernate.jpa.test.metamodel.Order_;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test the various predicates.
@@ -114,5 +125,4 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		em.getTransaction().commit();
 		em.close();
 	}
-
 }

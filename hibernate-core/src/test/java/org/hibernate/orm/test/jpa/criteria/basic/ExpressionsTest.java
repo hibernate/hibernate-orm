@@ -18,7 +18,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
@@ -247,52 +246,6 @@ public class ExpressionsTest extends AbstractCriteriaTest {
 			criteria.where( from.get( Product_.PART_NUMBER ).in( from.get( Product_.PART_NUMBER ) ) );
 			List<Product> result = em.createQuery( criteria ).getResultList();
 			assertThat( result, hasSize( 1 ) );
-		} );
-	}
-
-	@Test
-	void testJoinedElementCollectionValuesInTupleList(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			CriteriaQuery<Phone> criteria = em.getCriteriaBuilder().createQuery( Phone.class );
-			Root<Phone> from = criteria.from( Phone.class );
-			criteria.where(
-					from.join( "types" )
-							.in( Collections.singletonList( Phone.Type.WORK ) )
-			);
-			em.createQuery( criteria ).getResultList();
-		} );
-	}
-
-	@Test
-	void testQuotientAndMultiply(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			CriteriaBuilder builder = em.getCriteriaBuilder();
-			CriteriaQuery<Number> criteria = builder.createQuery( Number.class );
-			criteria.from( Product.class );
-			criteria.select(
-					builder.quot(
-							builder.prod(
-									builder.literal( BigDecimal.valueOf( 10.0 ) ),
-									builder.literal( BigDecimal.valueOf( 5.0 ) )
-							),
-							builder.literal( BigDecimal.valueOf( 2.0 ) )
-					)
-			);
-			Number result = em.createQuery( criteria ).getSingleResult();
-			assertThat( result.doubleValue(), closeTo( 25.0d, 0.1d ) );
-
-			criteria.select(
-					builder.prod(
-							builder.quot(
-									builder.literal( BigDecimal.valueOf( 10.0 ) ),
-									builder.literal( BigDecimal.valueOf( 5.0 ) )
-							),
-							builder.literal( BigDecimal.valueOf( 2.0 ) )
-					)
-			);
-			result = em.createQuery( criteria ).getSingleResult();
-			assertThat( result.doubleValue(), closeTo( 4.0d, 0.1d ) );
-
 		} );
 	}
 }

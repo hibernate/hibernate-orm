@@ -641,23 +641,32 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
-				BinaryArithmeticOperator.ADD,
-				value( x, (SqmExpression) y ),
+				BinaryArithmeticOperator.MULTIPLY,
+				(SqmExpression<?>) x,
 				(SqmExpression<?>) y
 		);
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, N y) {
-		return sum( x, y );
+		return createSqmArithmeticNode(
+				BinaryArithmeticOperator.MULTIPLY,
+				(SqmExpression<?>) x,
+				value( y, (SqmExpression) x )
+		);
 	}
 
 	@Override
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public <N extends Number> SqmExpression<N> prod(N x, Expression<? extends N> y) {
-		return sum( x, y );
+		return createSqmArithmeticNode(
+				BinaryArithmeticOperator.MULTIPLY,
+				value( x, (SqmExpression) y ),
+				(SqmExpression<?>) y
+		);
 	}
 
 	@Override
@@ -2065,13 +2074,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> SqmInPredicate<T> in(Expression<? extends T> expression, List<T> values) {
+	public <T> SqmInPredicate<T> in(Expression<? extends T> expression, Collection<T> values) {
 		final SqmExpression<T> sqmExpression = (SqmExpression<T>) expression;
 		final SqmInListPredicate<T> predicate = new SqmInListPredicate<>( sqmExpression, this );
 		for ( T value : values ) {
-			predicate.addExpression(
-					new SqmLiteral<>( value, sqmExpression.getNodeType(), this )
-			);
+			final SqmExpression valueSqmExpression;
+			if ( value instanceof SqmExpression ) {
+				valueSqmExpression = ( SqmExpression ) value;
+			}
+			else {
+				valueSqmExpression = new SqmLiteral<>( value, sqmExpression.getNodeType(), this );
+			}
+			predicate.addExpression( valueSqmExpression );
 		}
 		return predicate;
 	}

@@ -55,6 +55,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -75,7 +76,7 @@ import static org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetti
 /**
  * Hibernate implementation of the JPA {@link javax.persistence.metamodel.Metamodel} contract.
  *
- * Really more of the mapping model then the domain model, though it does have reference to the `JpaMetamodel`
+ * Really more of the mapping model than the domain model, though it does have reference to the `JpaMetamodel`
  *
  * NOTE : we suppress deprecation warnings because at the moment we still implement a deprecated API so
  * have to reference deprecated things
@@ -710,6 +711,9 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if ( sqmExpressable == null ) {
+			return null;
+		}
 		try {
 			return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
 		}
@@ -721,6 +725,20 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if ( sqmExpressable == null ) {
+			throw new IllegalArgumentException( "'sqmExpressable' param cannot be null" );
+		}
+
+		if ( sqmExpressable instanceof PluralPersistentAttribute ) {
+			final ManagedDomainType declaringType = ( (PluralPersistentAttribute) sqmExpressable ).getDeclaringType();
+			final EntityPersister entityDescriptor = getEntityDescriptor( declaringType.getTypeName() );
+			return entityDescriptor.findSubPart( ( (PluralPersistentAttribute<?, ?, ?>) sqmExpressable ).getPathName(), entityDescriptor );
+		}
+
+		if ( sqmExpressable instanceof MappingModelExpressable ) {
+			return (MappingModelExpressable) sqmExpressable;
+		}
+
 		if ( sqmExpressable instanceof SqmPath ) {
 			final SqmPath sqmPath = (SqmPath) sqmExpressable;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
@@ -731,16 +749,16 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return tableGroupLocator.apply( navigablePath.getParent() ).getModelPart();
 		}
 
-		if ( sqmExpressable instanceof BasicType<?> ) {
-			return (BasicType) sqmExpressable;
-		}
-
 		if ( sqmExpressable instanceof BasicSqmPathSource<?> ) {
 			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressable).getJavaType());
 		}
 
 		if ( sqmExpressable instanceof CompositeSqmPathSource ) {
 			throw new NotYetImplementedFor6Exception( "Resolution of embedded-valued SqmExpressable nodes not yet implemented" );
+		}
+
+		if ( sqmExpressable instanceof EntityTypeImpl ) {
+			throw new NotYetImplementedFor6Exception( "Resolution of entity-valued SqmExpressable nodes not yet implemented" );
 		}
 
 		if ( sqmExpressable instanceof EmbeddableTypeImpl ) {

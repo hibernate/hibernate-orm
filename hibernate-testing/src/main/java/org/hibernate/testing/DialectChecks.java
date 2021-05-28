@@ -18,9 +18,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.dialect.TimesTenDialect;
 
@@ -58,18 +56,6 @@ abstract public class DialectChecks {
 	public static class SupportsColumnCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsColumnCheck();
-		}
-	}
-
-	public static class SupportsEmptyInListCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsEmptyInList();
-		}
-	}
-
-	public static class NotSupportsEmptyInListCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return !dialect.supportsEmptyInList();
 		}
 	}
 

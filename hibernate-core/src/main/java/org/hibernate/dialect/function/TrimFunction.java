@@ -28,12 +28,12 @@ import java.util.List;
  */
 public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private Dialect dialect;
+	private final Dialect dialect;
 
 	public TrimFunction(Dialect dialect) {
 		super(
 				"trim",
-				StandardArgumentsValidators.exactly( 3 ),
+				StandardArgumentsValidators.between( 1, 3 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
 		this.dialect = dialect;
@@ -41,9 +41,31 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	@Override
 	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-		final TrimSpec specification = ( (TrimSpecification) sqlAstArguments.get( 0 ) ).getSpecification();
-		final Character trimCharacter = ( (QueryLiteral<Character>) sqlAstArguments.get( 1 ) ).getLiteralValue();
-		final Expression sourceExpr = (Expression) sqlAstArguments.get( 2 );
+		TrimSpec specification = TrimSpec.BOTH;
+		Character trimCharacter = ' ';
+		Expression sourceExpr;
+		switch ( sqlAstArguments.size() ) {
+			case 1:
+				sourceExpr = (Expression) sqlAstArguments.get( 0 );
+				break;
+			case 2:
+				final boolean isFirstArgumentTrimSpec = sqlAstArguments.get( 0 ) instanceof TrimSpecification;
+				if ( isFirstArgumentTrimSpec ) {
+					specification = ( ( TrimSpecification ) sqlAstArguments.get( 0 ) ).getSpecification();
+				}
+				else {
+					trimCharacter = ( (QueryLiteral<Character>) sqlAstArguments.get( 0 ) ).getLiteralValue();
+				}
+				sourceExpr = (Expression) sqlAstArguments.get( 1 );
+				break;
+			case 3:
+				specification = ( ( TrimSpecification ) sqlAstArguments.get( 0 ) ).getSpecification();
+				trimCharacter = ( (QueryLiteral<Character>) sqlAstArguments.get( 1 ) ).getLiteralValue();
+				sourceExpr = (Expression) sqlAstArguments.get( 2 );
+				break;
+			default:
+				throw new IllegalArgumentException("Unexpected usage of Trim function");
+		}
 
 		String trim = dialect.trimPattern( specification, trimCharacter );
 

@@ -29,19 +29,20 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
+import org.hibernate.query.sqm.tree.jpa.CriteriaParameterCollectQueryWalker;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements JpaCriteriaQuery<T>, SqmStatement<T>,
-		org.hibernate.query.sqm.internal.ParameterCollector {
+		ParameterCollector {
 	private final SqmQuerySource querySource;
 
 	private Set<SqmParameter<?>> parameters;
@@ -137,7 +138,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		if ( querySource == SqmQuerySource.CRITERIA ) {
 			assert parameters == null : "SqmSelectStatement (as Criteria) should not have collected parameters";
 
-			return ParameterCollector.collectParameters(
+			return CriteriaParameterCollectQueryWalker.collectParameters(
 					this,
 					sqmParameter -> {},
 					nodeBuilder().getServiceRegistry()
@@ -152,7 +153,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		if ( querySource == SqmQuerySource.CRITERIA ) {
 			final CriteriaParameterCollector parameterCollector = new CriteriaParameterCollector();
 
-			ParameterCollector.collectParameters(
+			CriteriaParameterCollectQueryWalker.collectParameters(
 					this,
 					parameterCollector::process,
 					nodeBuilder().getServiceRegistry()

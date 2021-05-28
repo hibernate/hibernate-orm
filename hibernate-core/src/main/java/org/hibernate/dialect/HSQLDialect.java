@@ -616,11 +616,6 @@ public class HSQLDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean requiresCastingOfParametersInSelectClause() {
 		return true;
 	}

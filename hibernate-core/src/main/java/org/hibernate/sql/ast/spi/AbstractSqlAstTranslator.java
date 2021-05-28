@@ -3907,7 +3907,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		if ( inListPredicate.getListExpressions().isEmpty() ) {
-			appendSql( "false" );
+			// trick to simulate empty in list expression
+			// many a DBMS refuses SQL like 'x in ()'
+			appendSql( "(1 = 0)" );
 			return;
 		}
 		final SqlTuple lhsTuple;
@@ -4192,8 +4194,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		final String separator = junction.getNature() == Junction.Nature.CONJUNCTION
-						? " and "
-						: " or ";
+				? " and "
+				: " or ";
 		final List<Predicate> predicates = junction.getPredicates();
 		predicates.get( 0 ).accept( this );
 		for ( int i = 1; i < predicates.size(); i++ ) {

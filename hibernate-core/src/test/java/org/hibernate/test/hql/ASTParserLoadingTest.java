@@ -725,8 +725,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-8901" )
-	@RequiresDialectFeature(DialectChecks.NotSupportsEmptyInListCheck.class)
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
 	public void testEmptyInListForDialectsNotSupportsEmptyInList() {
 		Session session = openSession();
 		session.beginTransaction();

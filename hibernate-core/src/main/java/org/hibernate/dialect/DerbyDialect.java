@@ -11,6 +11,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DerbyConcatEmulation;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
 import org.hibernate.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -209,6 +210,7 @@ public class DerbyDialect extends Dialect {
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatEmulation() );
 		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( true ) );
@@ -491,12 +493,6 @@ public class DerbyDialect extends Dialect {
 	public boolean requiresCastingOfParametersInSelectClause() {
 		//checked on Derby 10.14
 		return true;
-	}
-
-	@Override
-	public boolean supportsEmptyInList() {
-		//checked on Derby 10.14
-		return false;
 	}
 
 	@Override

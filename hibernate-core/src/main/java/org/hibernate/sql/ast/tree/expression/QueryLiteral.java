@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -24,7 +24,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 
 /**
- * Represents a literal in the SQL AST.  This form accepts a {@link BasicValuedMapping} is its MappingModelExpressable.
+ * Represents a literal in the SQL AST.  This form accepts a {@link BasicValuedMapping} as its {@link MappingModelExpressable}.
  *
  * @see JdbcLiteral
  *

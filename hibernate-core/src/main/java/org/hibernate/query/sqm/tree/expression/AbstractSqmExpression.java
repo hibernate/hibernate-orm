@@ -125,7 +125,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public SqmPredicate in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		return nodeBuilder().in( this, (Collection) values );
 	}
 
 	@Override

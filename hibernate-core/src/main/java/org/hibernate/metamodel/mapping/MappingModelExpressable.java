@@ -9,7 +9,7 @@ package org.hibernate.metamodel.mapping;
 /**
  * Something that can be expressable at the mapping model level.
  *
- * Generally this is used generation of SQL AST
+ * Generally this is used during generation of SQL AST
  *
  * todo (6.0) : Better name?  This one's a bit verbose.  See description for clues
  *

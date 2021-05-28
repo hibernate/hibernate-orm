@@ -67,7 +67,6 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -2354,9 +2353,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			expressable = localExpressable;
 		}
 
+		final BasicValuedMapping basicValuedMapping;
+		if ( expressable instanceof PluralAttributeMapping ) {
+			basicValuedMapping = (BasicValuedMapping) ( ( PluralAttributeMapping ) expressable ).getElementDescriptor();
+		}
+		else {
+			basicValuedMapping = (BasicValuedMapping) expressable;
+		}
 		return new QueryLiteral<>(
 				literal.getLiteralValue(),
-				(BasicValuedMapping) expressable
+				basicValuedMapping
 		);
 	}
 
@@ -2582,29 +2588,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		assert parameterSqmType != null;
 
-		if ( parameterSqmType instanceof SqmPath ) {
-			final SqmPath sqmPath = (SqmPath) parameterSqmType;
-			final NavigablePath navigablePath = sqmPath.getNavigablePath();
-			if ( navigablePath.getParent() != null ) {
-				final TableGroup tableGroup = getFromClauseAccess().getTableGroup( navigablePath.getParent() );
-				return tableGroup.getModelPart().findSubPart(
-						navigablePath.getLocalName(),
-						null
-				);
-			}
-
-			return getFromClauseAccess().getTableGroup( navigablePath ).getModelPart();
-		}
-
-		if ( parameterSqmType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) parameterSqmType;
-		}
-
-		if ( parameterSqmType instanceof CompositeSqmPathSource ) {
-			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
-		}
-
-		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+		return creationContext.getDomainModel().resolveMappingExpressable( parameterSqmType, this::findTableGroupByPath );
 	}
 
 	protected final Stack<Supplier<MappingModelExpressable>> inferrableTypeAccessStack = new StandardStack<>(
@@ -3231,12 +3215,35 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic expression) {
-		SqmExpressable leftHandOperandType = expression.getLeftHandOperand().getNodeType();
-		if ( leftHandOperandType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) leftHandOperandType;
+		final SqmExpressable leftHandOperandExpressable = getSqmExpressableForArithmeticOperand( expression.getLeftHandOperand() );
+		final SqmExpressable rightHandOperandExpressable = getSqmExpressableForArithmeticOperand( expression.getRightHandOperand() );
+		final SqmExpressable sqmExpressable = getTypeConfiguration().resolveArithmeticType( leftHandOperandExpressable, rightHandOperandExpressable, expression.getOperator() );
+		if ( sqmExpressable == null ) {
+			if ( leftHandOperandExpressable instanceof BasicValuedMapping)  {
+				return (BasicValuedMapping) leftHandOperandExpressable;
+			}
+			if ( rightHandOperandExpressable instanceof BasicValuedMapping ) {
+				return (BasicValuedMapping) rightHandOperandExpressable;
+			}
+			throw new NotYetImplementedFor6Exception( BaseSqmToSqlAstConverter.class );
+		}
+		final MappingModelExpressable mappingModelExpressable = getCreationContext().getDomainModel().resolveMappingExpressable( sqmExpressable, this::findTableGroupByPath );
+		return (BasicValuedMapping) mappingModelExpressable;
+	}
+
+	private SqmExpressable<?> getSqmExpressableForArithmeticOperand(SqmExpression operand) {
+		if ( operand instanceof SqmBinaryArithmetic ) {
+			BasicValuedMapping basicValuedMapping = getExpressionType( (SqmBinaryArithmetic) operand );
+			if ( basicValuedMapping instanceof BasicType ) {
+				return (BasicType) basicValuedMapping;
+			}
+			if ( basicValuedMapping instanceof SqmExpression ) {
+				return ( (SqmExpression) basicValuedMapping ).getNodeType();
+			}
+			throw new NotYetImplementedFor6Exception( BaseSqmToSqlAstConverter.class );
 		}
 		else {
-			return (BasicValuedMapping) expression.getRightHandOperand().getNodeType();
+			return operand.getNodeType();
 		}
 	}
 
@@ -3611,14 +3618,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private MappingModelExpressable<?> determineCurrentExpressable(SqmTypedNode<?> expression) {
-		try {
-			return creationContext
-					.getDomainModel()
-					.resolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
-		}
-		catch (UnsupportedOperationException e) {
-			return null;
-		}
+		return creationContext.getDomainModel().lenientlyResolveMappingExpressable( expression.getNodeType(), getFromClauseIndex()::findTableGroup );
 	}
 
 	@Override

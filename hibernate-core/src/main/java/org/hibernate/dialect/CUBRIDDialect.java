@@ -274,11 +274,6 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsIfExistsBeforeTableName() {
 		return true;
 	}

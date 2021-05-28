@@ -344,11 +344,6 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		String v = "null";
 

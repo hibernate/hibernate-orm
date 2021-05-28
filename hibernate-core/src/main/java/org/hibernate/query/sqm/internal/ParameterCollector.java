@@ -9,8 +9,6 @@ package org.hibernate.query.sqm.internal;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
- * todo (6.0) : how is this different from {@link org.hibernate.query.sqm.tree.jpa.ParameterCollector}?
- *
  * @author Steve Ebersole
  */
 public interface ParameterCollector {

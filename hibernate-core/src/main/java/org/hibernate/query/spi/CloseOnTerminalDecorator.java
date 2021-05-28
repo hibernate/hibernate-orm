@@ -64,7 +64,7 @@ public class CloseOnTerminalDecorator implements InvocationHandler {
 			}
 		}
 
-		if ( !terminal ) {
+		if ( result != null && !terminal ) {
 			if ( delegate == result ) {
 				result = proxy;
 

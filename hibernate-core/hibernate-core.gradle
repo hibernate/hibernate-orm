@@ -161,8 +161,13 @@ jar {
                         'org.apache.tools.ant.types;resolution:=optional',
                         'javax.inject;resolution:=optional',
                         'net.bytebuddy.*;resolution:=optional',
-                        'org.objectweb.jonas_tm;resolution:=optional',
-                        'com.ibm.websphere.jtaextensions;resolution:=optional',
+                        // Remove JTA-related dependencies that weren't there in 5.3.0,
+                        // but were added after the switch to a different OSGi plugin.
+                        // The dependencies *are* there in 5.4.x, but marked as optional.
+                        // We're only removing them here as an extra cautious step
+                        // to preserve backwards compatibility.
+                        '!org.objectweb.jonas_tm',
+                        '!com.ibm.websphere.jtaextensions',
                         // We must specify the version explicitly to allow Karaf
                         // to use an older version of JAXB (the only one we can use in Karaf)
                         "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\"",

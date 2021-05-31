@@ -805,20 +805,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public void queryPlanCacheHit(String query) {
+	public void queryPlanCacheHit(String hql) {
 		queryPlanCacheHitCount.increment();
 
-		if ( query != null ) {
-			getQueryStatistics( query ).incrementPlanCacheHitCount();
-		}
-	}
-
-	@Override
-	public void queryPlanCacheMiss(String query) {
-		queryPlanCacheMissCount.increment();
-
-		if ( query != null ) {
-			getQueryStatistics( query ).incrementPlanCacheMissCount();
+		if ( hql != null ) {
+			getQueryStatistics( hql ).incrementPlanCacheHitCount();
 		}
 	}
 

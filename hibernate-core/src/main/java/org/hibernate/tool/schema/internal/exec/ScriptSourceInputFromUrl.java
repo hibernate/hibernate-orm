@@ -12,7 +12,6 @@ import java.io.Reader;
 import java.net.URL;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 import org.jboss.logging.Logger;
 
@@ -22,7 +21,7 @@ import org.jboss.logging.Logger;
  * @author Christian Beikov
  * @author Steve Ebersole
  */
-public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput implements ScriptSourceInput {
+public class ScriptSourceInputFromUrl extends AbstractScriptSourceInput {
 	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final URL url;

@@ -1,0 +1,186 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+import org.apache.tools.ant.filters.ReplaceTokens
+
+description = 'Hibernate O/RM implementation of the Jakarta Persistence specification'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+configurations {
+	tests {
+		description = 'Configuration for the produced test jar'
+	}
+	jakartaeeTransformJars
+}
+
+dependencies {
+	api libraries.jakarta_jpa
+	// This can now be made provided
+	// Could be made optional?
+	api libraries.byteBuddy
+	api libraries.antlr
+	api libraries.jakarta_jta
+	api libraries.jandex
+	api libraries.classmate
+	api libraries.jakarta_activation
+
+	compileOnly libraries.jakarta_jacc
+	compileOnly libraries.jakarta_validation
+	compileOnly libraries.ant
+	compileOnly libraries.jakarta_cdi
+
+	api libraries.dom4j
+	api libraries.commons_annotations
+
+	api libraries.jakarta_jaxb_api
+	api libraries.jakarta_jaxb_runtime
+
+	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+			'commons-cli:commons-cli:1.4',
+			'org.slf4j:slf4j-simple:1.7.30',
+			'org.slf4j:slf4j-api:1.7.26',
+			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+
+	testImplementation project(':hibernate-testing-jakarta')
+	testImplementation fileTree(dir: 'libs', include: '*.jar')
+
+	testImplementation libraries.shrinkwrap_api
+	testImplementation libraries.shrinkwrap
+	testImplementation libraries.jakarta_jacc
+	testImplementation libraries.jakarta_validation
+	testImplementation libraries.jandex
+	testImplementation libraries.classmate
+	testImplementation libraries.mockito
+	testImplementation libraries.mockito_inline
+	testImplementation libraries.jodaTime
+	testImplementation libraries.assertj
+
+	testImplementation libraries.jakarta_cdi
+
+	testImplementation( libraries.jakarta_validator ) {
+		// for test runtime
+		transitive = true
+	}
+
+	// for testing stored procedure support
+	testImplementation libraries.derby
+
+	testRuntimeOnly 'org.hamcrest:hamcrest-all:1.3'
+	testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
+	testRuntimeOnly libraries.jakarta_el
+	testRuntimeOnly 'jaxen:jaxen:1.1'
+	testRuntimeOnly libraries.javassist
+	testRuntimeOnly libraries.byteBuddy
+	testRuntimeOnly libraries.jakarta_weld
+	testRuntimeOnly libraries.atomikos
+	testRuntimeOnly libraries.atomikos_jta
+// todo (jakarta): replace this when the jakarta artifact is released
+	testRuntimeOnly project(':hibernate-transaction-client')
+//	testRuntimeOnly libraries.wildfly_transaction_client_jakarta
+
+	testImplementation libraries.shrinkwrap_descriptors_api_javaee
+	testImplementation libraries.shrinkwrap_descriptors_impl_javaee
+
+	testImplementation libraries.jboss_ejb_spec_jar
+	testImplementation libraries.jboss_annotation_spec_jar
+}
+
+jar {
+	mustRunAfter project(':hibernate-core').tasks.jar
+	mustRunAfter project(':hibernate-core').tasks.testJar
+	dependsOn project(':hibernate-core').tasks.jar
+	dependsOn project(':hibernate-core').tasks.testJar
+	def baseDir = project(':hibernate-core').buildDir
+	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
+	inputs.files(baseJars).skipWhenEmpty()
+	outputs.dir project.buildDir
+	doLast {
+		new File(project.buildDir, "libs").mkdirs()
+		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+
+		baseJars.each { bundleJar ->
+			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
+			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+
+			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-core', 'hibernate-core-jakarta' )
+			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+
+			def transformerArgs = [
+					sourceJarPath, finalBundleJarName,
+					'-q', // quiet output
+					'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
+					'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
+					'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
+			]
+
+			println 'Transformer options:'
+			transformerArgs.each {
+				println '  [ ' + it + ' ]'
+			}
+
+			javaexec {
+				classpath configurations.jakartaeeTransformJars
+				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+				args = transformerArgs
+			}
+		}
+	}
+}
+
+task unpackTestJar(type: Copy) {
+	dependsOn jar
+	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+		def outputDir = file("${buildDir}/unpacked/" + it.name)
+		from zipTree(it)
+		into outputDir
+	}
+}
+
+task copyBundleResources (type: Copy) {
+	dependsOn unpackTestJar
+	File unpackedDir = new File(project.buildDir, "libs/hibernate-core-jakarta-${project.version}-test.jar")
+	ext {
+		bundlesTargetDir = file( "${buildDir}/bundles" )
+		bundleTokens = dbBundle[db]
+		ext.bundleTokens['buildDirName'] = buildDir.absolutePath
+	}
+	from file("${buildDir}/unpacked/${unpackedDir.name}/templates")
+	into ext.bundlesTargetDir
+	// There are persistence.xml files referencing jar files through their absolute path so we
+	// have to replace 'hibernate-core/hibernate-core' in the path with 'hibernate-core/hibernate-core-jakarta'
+	filter { line ->
+		line.replaceAll( 'hibernate-core/hibernate-core', 'hibernate-core/hibernate-core-jakarta' )
+	}
+	doFirst {
+		ext.bundlesTargetDir.mkdirs()
+	}
+}
+
+processTestResources.dependsOn copyBundleResources
+
+artifacts {
+	tests new File(project.buildDir, "libs/hibernate-core-jakarta-${project.version}-test.jar")
+}
+
+test {
+	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
+		def outputDir = file("${buildDir}/unpacked/" + it.name)
+		testClassesDirs += files(outputDir)
+		classpath += files(outputDir)
+	}
+	systemProperty 'file.encoding', 'utf-8'
+
+	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+		// Weld needs this to generate proxies
+		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+	}
+}

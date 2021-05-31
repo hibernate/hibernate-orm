@@ -12,6 +12,7 @@ import java.io.Writer;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -24,6 +25,8 @@ import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
+import org.hibernate.tool.schema.internal.exec.AbstractScriptSourceInput;
+import org.hibernate.tool.schema.internal.exec.ScriptSourceInputAggregate;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromFile;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromReader;
 import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
@@ -41,6 +44,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 public class Helper {
 
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( Helper.class );
+	private static final Pattern COMMA_PATTERN = Pattern.compile( "\\s*,\\s*" );
 
 	public static ScriptSourceInput interpretScriptSourceSetting(
 			Object scriptSourceSetting,
@@ -53,22 +57,38 @@ public class Helper {
 			final String scriptSourceSettingString = scriptSourceSetting.toString();
 			log.debugf( "Attempting to resolve script source setting : %s", scriptSourceSettingString );
 
-			// setting could be either:
-			//		1) string URL representation (i.e., "file://...")
-			//		2) relative file path (resource lookup)
-			//		3) absolute file path
-
-			log.trace( "Trying as URL..." );
-			// ClassLoaderService.locateResource() first tries the given resource name as url form...
-			final URL url = classLoaderService.locateResource( scriptSourceSettingString );
-			if ( url != null ) {
-				return new ScriptSourceInputFromUrl( url, charsetName );
+			final String[] paths = COMMA_PATTERN.split( scriptSourceSettingString );
+			if ( paths.length == 1 ) {
+				return interpretScriptSourceSetting( scriptSourceSettingString, classLoaderService, charsetName );
+			}
+			final AbstractScriptSourceInput[] inputs = new AbstractScriptSourceInput[paths.length];
+			for ( int i = 0; i < paths.length; i++ ) {
+				inputs[i] = interpretScriptSourceSetting( paths[i], classLoaderService, charsetName ) ;
 			}
 
-			// assume it is a File path
-			final File file = new File( scriptSourceSettingString );
-			return new ScriptSourceInputFromFile( file, charsetName );
+			return new ScriptSourceInputAggregate( inputs );
 		}
+	}
+
+	private static AbstractScriptSourceInput interpretScriptSourceSetting(
+			String scriptSourceSettingString,
+			ClassLoaderService classLoaderService,
+			String charsetName) {
+		// setting could be either:
+		//		1) string URL representation (i.e., "file://...")
+		//		2) relative file path (resource lookup)
+		//		3) absolute file path
+
+		log.trace( "Trying as URL..." );
+		// ClassLoaderService.locateResource() first tries the given resource name as url form...
+		final URL url = classLoaderService.locateResource( scriptSourceSettingString );
+		if ( url != null ) {
+			return new ScriptSourceInputFromUrl( url, charsetName );
+		}
+
+		// assume it is a File path
+		final File file = new File( scriptSourceSettingString );
+		return new ScriptSourceInputFromFile( file, charsetName );
 	}
 
 	public static ScriptTargetOutput interpretScriptTargetSetting(
@@ -109,6 +129,9 @@ public class Helper {
 		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_SCHEMAS ) ) {
 			count++;
 		}
+		if ( configurationValues.containsKey( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS ) ) {
+			count++;
+		}
 		if ( configurationValues.containsKey( AvailableSettings.HBM2DDL_CREATE_NAMESPACES ) ) {
 			count++;
 		}
@@ -122,15 +145,20 @@ public class Helper {
 		return ConfigurationHelper.getBoolean(
 				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
 				configurationValues,
-				//Then try the Hibernate ORM setting:
+				//Then try the Jakarta JPA setting:
 				ConfigurationHelper.getBoolean(
-						AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
+						AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
 						configurationValues,
-						//And finally fall back to the old name this had before we fixed the typo:
+						//Then try the Hibernate ORM setting:
 						ConfigurationHelper.getBoolean(
-								AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+								AvailableSettings.HBM2DDL_CREATE_NAMESPACES,
 								configurationValues,
-								false
+								//And finally fall back to the old name this had before we fixed the typo:
+								ConfigurationHelper.getBoolean(
+										AvailableSettings.HBM2DLL_CREATE_NAMESPACES,
+										configurationValues,
+										false
+								)
 						)
 				)
 		);

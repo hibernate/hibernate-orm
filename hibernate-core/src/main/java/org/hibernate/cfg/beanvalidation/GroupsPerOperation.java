@@ -22,6 +22,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  */
 public class GroupsPerOperation {
 	private static final String JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
+	private static final String JAKARTA_JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
 	private static final String HIBERNATE_GROUP_PREFIX = "org.hibernate.validator.group.";
 
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
@@ -55,7 +56,10 @@ public class GroupsPerOperation {
 	}
 
 	public static Class<?>[] buildGroupsForOperation(Operation operation, Map settings, ClassLoaderAccess classLoaderAccess) {
-		final Object property = settings.get( operation.getGroupPropertyName() );
+		Object property = settings.get( operation.getGroupPropertyName() );
+		if ( property == null ) {
+			property = settings.get( operation.getJakartaGroupPropertyName() );
+		}
 
 		if ( property == null ) {
 			return operation == Operation.DELETE ? EMPTY_GROUPS : DEFAULT_GROUPS;
@@ -96,18 +100,20 @@ public class GroupsPerOperation {
 	}
 
 	public static enum Operation {
-		INSERT("persist", JPA_GROUP_PREFIX + "pre-persist"),
-		UPDATE("update", JPA_GROUP_PREFIX + "pre-update"),
-		DELETE("remove", JPA_GROUP_PREFIX + "pre-remove"),
-		DDL("ddl", HIBERNATE_GROUP_PREFIX + "ddl");
+		INSERT( "persist", JPA_GROUP_PREFIX + "pre-persist", JAKARTA_JPA_GROUP_PREFIX + "pre-persist" ),
+		UPDATE( "update", JPA_GROUP_PREFIX + "pre-update", JAKARTA_JPA_GROUP_PREFIX + "pre-update" ),
+		DELETE( "remove", JPA_GROUP_PREFIX + "pre-remove", JAKARTA_JPA_GROUP_PREFIX + "pre-remove" ),
+		DDL( "ddl", HIBERNATE_GROUP_PREFIX + "ddl", HIBERNATE_GROUP_PREFIX + "ddl" );
 
 
 		private final String exposedName;
 		private final String groupPropertyName;
+		private final String jakartaGroupPropertyName;
 
-		Operation(String exposedName, String groupProperty) {
+		Operation(String exposedName, String groupProperty, String jakartaGroupPropertyName) {
 			this.exposedName = exposedName;
 			this.groupPropertyName = groupProperty;
+			this.jakartaGroupPropertyName = jakartaGroupPropertyName;
 		}
 
 		public String getName() {
@@ -116,6 +122,10 @@ public class GroupsPerOperation {
 
 		public String getGroupPropertyName() {
 			return groupPropertyName;
+		}
+
+		public String getJakartaGroupPropertyName() {
+			return jakartaGroupPropertyName;
 		}
 	}
 

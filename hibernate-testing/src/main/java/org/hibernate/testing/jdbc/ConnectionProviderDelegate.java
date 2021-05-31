@@ -75,6 +75,9 @@ public class ConnectionProviderDelegate implements
 						serviceRegistry
 				);
 			}
+			if ( connectionProvider instanceof ServiceRegistryAwareService ) {
+				( (ServiceRegistryAwareService) connectionProvider ).injectServices( serviceRegistry );
+			}
 			if ( connectionProvider instanceof Configurable ) {
 				Configurable configurableConnectionProvider = (Configurable) connectionProvider;
 				configurableConnectionProvider.configure( configurationValues );

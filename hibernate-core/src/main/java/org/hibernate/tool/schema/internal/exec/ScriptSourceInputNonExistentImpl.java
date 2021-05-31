@@ -18,11 +18,26 @@ import org.hibernate.tool.schema.spi.ScriptSourceInput;
  *
  * @author Steve Ebersole
  */
-public class ScriptSourceInputNonExistentImpl implements ScriptSourceInput {
+public class ScriptSourceInputNonExistentImpl extends AbstractScriptSourceInput {
 	/**
 	 * Singleton access
 	 */
 	public static final ScriptSourceInputNonExistentImpl INSTANCE = new ScriptSourceInputNonExistentImpl();
+
+	@Override
+	protected String getScriptDescription() {
+		return "[injected ScriptSourceInputNonExistentImpl script]";
+	}
+
+	@Override
+	protected Reader prepareReader() {
+		return null;
+	}
+
+	@Override
+	protected void releaseReader(Reader reader) {
+
+	}
 
 	@Override
 	public List<String> extract(Function<Reader, List<String>> extractor) {

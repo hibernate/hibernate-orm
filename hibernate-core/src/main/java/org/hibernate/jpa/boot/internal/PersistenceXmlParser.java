@@ -269,15 +269,28 @@ public class PersistenceXmlParser {
 					if ( integration.containsKey( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) ) {
 						persistenceUnit.setProviderClassName( (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) );
 					}
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER ) ) {
+						persistenceUnit.setProviderClassName( (String) integration.get( AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER ) );
+					}
 					if ( integration.containsKey( AvailableSettings.JPA_TRANSACTION_TYPE ) ) {
 						String transactionType = (String) integration.get( AvailableSettings.JPA_TRANSACTION_TYPE );
+						persistenceUnit.setTransactionType( parseTransactionType( transactionType ) );
+					}
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_TRANSACTION_TYPE ) ) {
+						String transactionType = (String) integration.get( AvailableSettings.JAKARTA_JPA_TRANSACTION_TYPE );
 						persistenceUnit.setTransactionType( parseTransactionType( transactionType ) );
 					}
 					if ( integration.containsKey( AvailableSettings.JPA_JTA_DATASOURCE ) ) {
 						persistenceUnit.setJtaDataSource( integration.get( AvailableSettings.JPA_JTA_DATASOURCE ) );
 					}
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_JTA_DATASOURCE ) ) {
+						persistenceUnit.setJtaDataSource( integration.get( AvailableSettings.JAKARTA_JPA_JTA_DATASOURCE ) );
+					}
 					if ( integration.containsKey( AvailableSettings.JPA_NON_JTA_DATASOURCE ) ) {
 						persistenceUnit.setNonJtaDataSource( integration.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ) );
+					}
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_NON_JTA_DATASOURCE ) ) {
+						persistenceUnit.setNonJtaDataSource( integration.get( AvailableSettings.JAKARTA_JPA_NON_JTA_DATASOURCE ) );
 					}
 
 					decodeTransactionType( persistenceUnit );

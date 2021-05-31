@@ -102,28 +102,6 @@ public final class TwoPhaseLoad {
 	}
 
 	/**
-	 * @deprecated This method will be removed. Use {@link #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable)} instead.
-	 *
-	 * @param entity The entity being loaded
-	 * @param readOnly Is the entity being loaded as read-only
-	 * @param session The Session
-	 * @param preLoadEvent The (re-used) pre-load event
-	 */
-	@Deprecated
-	public static void initializeEntity(
-			final Object entity,
-			final boolean readOnly,
-			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent) {
-		final EventListenerGroup<PreLoadEventListener> listenerGroup = session
-			.getFactory()
-			.getFastSessionServices()
-			.eventListenerGroup_PRE_LOAD;
-		final Iterable<PreLoadEventListener> listeners = listenerGroup.listeners();
-		initializeEntity( entity, readOnly, session, preLoadEvent, listeners, EntityResolver.DEFAULT );
-	}
-
-	/**
 	 * Perform the second step of 2-phase load. Fully initialize the entity
 	 * instance.
 	 * <p/>
@@ -135,15 +113,13 @@ public final class TwoPhaseLoad {
 	 * @param readOnly Is the entity being loaded as read-only
 	 * @param session The Session
 	 * @param preLoadEvent The (re-used) pre-load event
-	 * @param preLoadEventListeners the pre-load event listeners
 	 */
 	public static void initializeEntity(
 		final Object entity,
 		final boolean readOnly,
 		final SharedSessionContractImplementor session,
-		final PreLoadEvent preLoadEvent,
-		final Iterable<PreLoadEventListener> preLoadEventListeners) {
-		initializeEntity( entity, readOnly, session, preLoadEvent, preLoadEventListeners, EntityResolver.DEFAULT );
+		final PreLoadEvent preLoadEvent) {
+		initializeEntity( entity, readOnly, session, preLoadEvent, EntityResolver.DEFAULT );
 	}
 
 	/**
@@ -158,7 +134,6 @@ public final class TwoPhaseLoad {
 	 * @param readOnly Is the entity being loaded as read-only
 	 * @param session The Session
 	 * @param preLoadEvent The (re-used) pre-load event
-	 * @param preLoadEventListeners the pre-load event listeners
 	 * @param entityResolver the resolver used for to-one entity associations
 	 *                       (not used when an entity is a bytecode-enhanced lazy entity)
 	 */
@@ -167,7 +142,6 @@ public final class TwoPhaseLoad {
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
 			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners,
 			final EntityResolver entityResolver) {
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityEntry entityEntry = persistenceContext.getEntry( entity );
@@ -175,7 +149,7 @@ public final class TwoPhaseLoad {
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
 		initializeEntityEntryLoadedState( entity, entityEntry, session, entityResolver );
-		initializeEntityFromEntityEntryLoadedState( entity, entityEntry, readOnly, session, preLoadEvent, preLoadEventListeners );
+		initializeEntityFromEntityEntryLoadedState( entity, entityEntry, readOnly, session, preLoadEvent );
 	}
 
 	public static void initializeEntityEntryLoadedState(
@@ -255,8 +229,7 @@ public final class TwoPhaseLoad {
 			final EntityEntry entityEntry,
 			final boolean readOnly,
 			final SharedSessionContractImplementor session,
-			final PreLoadEvent preLoadEvent,
-			final Iterable<PreLoadEventListener> preLoadEventListeners) throws HibernateException {
+			final PreLoadEvent preLoadEvent) throws HibernateException {
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		final EntityPersister persister = entityEntry.getPersister();
@@ -268,9 +241,8 @@ public final class TwoPhaseLoad {
 		//Must occur after resolving identifiers!
 		if ( session.isEventSource() ) {
 			preLoadEvent.setEntity( entity ).setState( hydratedState ).setId( id ).setPersister( persister );
-			for ( PreLoadEventListener listener : preLoadEventListeners ) {
-				listener.onPreLoad( preLoadEvent );
-			}
+			session.getFactory().getFastSessionServices()
+					.eventListenerGroup_PRE_LOAD.fireEventOnEachListener( preLoadEvent, PreLoadEventListener::onPreLoad );
 		}
 
 		persister.setPropertyValues( entity, hydratedState );
@@ -583,7 +555,7 @@ public final class TwoPhaseLoad {
 	/**
 	 * Implementations determine how a to-one associations is resolved.
 	 *
-	 * @see #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, Iterable, EntityResolver)
+	 * @see #initializeEntity(Object, boolean, SharedSessionContractImplementor, PreLoadEvent, EntityResolver)
 	 */
 	public interface EntityResolver {
 

@@ -104,8 +104,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		logFlushResults( event );
 	}
 
-	@SuppressWarnings( value = {"unchecked"} )
-	private void logFlushResults(FlushEvent event) {
+	@SuppressWarnings("unchecked")
+	protected void logFlushResults(FlushEvent event) {
 		if ( !LOG.isDebugEnabled() ) {
 			return;
 		}
@@ -219,7 +219,6 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		final int count = entityEntries.length;
 
 		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
-
 			// Update the status of the object and if necessary, schedule an update
 
 			EntityEntry entry = me.getValue();

@@ -1,0 +1,85 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Support for testing Hibernate ORM Jakarta functionality'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+configurations {
+	jakartaeeTransformJars
+}
+
+dependencies {
+	api project( ':hibernate-core-jakarta' )
+
+	api libraries.junit
+	api libraries.junit5_api
+	api libraries.junit5_params
+	api 'org.hamcrest:hamcrest-all:1.3'
+	api libraries.byteman
+	api libraries.byteman_install
+	api libraries.byteman_bmunit
+
+	api libraries.xapool
+	api( libraries.jboss_tx_spi_jakarta ) {
+		transitive=false;
+	}
+	api( libraries.jboss_jta_jakarta ) {
+		transitive=false;
+	}
+
+	api 'javax.money:money-api:1.0.1'
+	api 'org.javamoney:moneta:1.1'
+
+	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+			'commons-cli:commons-cli:1.4',
+			'org.slf4j:slf4j-simple:1.7.30',
+			'org.slf4j:slf4j-api:1.7.26',
+			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+	testCompile fileTree(dir: 'libs', include: '*.jar')
+}
+
+jar {
+	mustRunAfter project(':hibernate-testing').tasks.jar
+	dependsOn project(':hibernate-testing').tasks.jar
+	def baseDir = project(':hibernate-testing').buildDir
+	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
+	inputs.files(baseJars).skipWhenEmpty()
+	outputs.dir project.buildDir
+	doLast {
+		new File(project.buildDir, "libs").mkdirs()
+		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
+
+		baseJars.each { bundleJar ->
+			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
+			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+
+			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-testing', 'hibernate-testing-jakarta' )
+			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+
+			def transformerArgs = [
+					sourceJarPath, finalBundleJarName,
+					'-q', // quiet output
+					'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
+					'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
+					'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
+			]
+
+			println 'Transformer options:'
+			transformerArgs.each {
+				println '  [ ' + it + ' ]'
+			}
+
+			javaexec {
+				classpath configurations.jakartaeeTransformJars
+				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
+				args = transformerArgs
+			}
+		}
+	}
+}

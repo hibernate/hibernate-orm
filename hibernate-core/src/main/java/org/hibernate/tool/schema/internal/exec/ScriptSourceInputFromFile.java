@@ -13,7 +13,6 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.tool.schema.spi.ScriptSourceInput;
 
 import org.jboss.logging.Logger;
 
@@ -22,7 +21,7 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class ScriptSourceInputFromFile extends AbstractScriptSourceInput implements ScriptSourceInput {
+public class ScriptSourceInputFromFile extends AbstractScriptSourceInput {
 	private static final Logger log = Logger.getLogger( ScriptSourceInputFromFile.class );
 
 	private final File file;

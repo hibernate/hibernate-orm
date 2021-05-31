@@ -154,8 +154,10 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx = s.beginTransaction();
 
 		// please enable
-		// log4j.logger.org.hibernate.cache.StandardQueryCache=DEBUG
-		// log4j.logger.org.hibernate.cache.UpdateTimestampsCache=DEBUG
+		// logger.standard-query-cache.name=org.hibernate.cache.StandardQueryCache
+		// logger.standard-query-cache.level=debug
+		// logger.update-timestamps-cache.name=org.hibernate.cache.UpdateTimestampsCache
+		// logger.update-timestamps-cache.level=debug
 		// to see that isUpToDate is called where not appropriated
 
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
@@ -254,8 +256,10 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx = s.beginTransaction();
 
 		// please enable
-		// log4j.logger.org.hibernate.cache.StandardQueryCache=DEBUG
-		// log4j.logger.org.hibernate.cache.UpdateTimestampsCache=DEBUG
+		// logger.standard-query-cache.name=org.hibernate.cache.StandardQueryCache
+		// logger.standard-query-cache.level=debug
+		// logger.update-timestamps-cache.name=org.hibernate.cache.UpdateTimestampsCache
+		// logger.update-timestamps-cache.level=debug
 		// to see that isUpToDate is called where not appropriated
 
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );
@@ -303,8 +307,10 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 		newTx = s.beginTransaction();
 
 		// please enable
-		// log4j.logger.org.hibernate.cache.StandardQueryCache=DEBUG
-		// log4j.logger.org.hibernate.cache.UpdateTimestampsCache=DEBUG
+		// logger.standard-query-cache.name=org.hibernate.cache.StandardQueryCache
+		// logger.standard-query-cache.level=debug
+		// logger.update-timestamps-cache.name=org.hibernate.cache.UpdateTimestampsCache
+		// logger.update-timestamps-cache.level=debug
 		// to see that isUpToDate is called where not appropriated
 
 		Assert.assertTrue( s.getSessionFactory().getStatistics().isStatisticsEnabled() );

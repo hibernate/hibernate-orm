@@ -9,9 +9,9 @@
 // use.  In that respect it serves a role similar to <dependencyManagement> in Maven
 ext {
 
-    junitVersion = '4.12'
-    junitVintageVersion = '5.4.2'
-    junit5Version = '5.4.2'
+    junitVersion = '4.13'
+    junitVintageVersion = '5.7.1'
+    junit5Version = '5.7.1'
 
     h2Version = '1.4.199'
     bytemanVersion = '4.0.13' //Compatible with JDK16
@@ -133,7 +133,7 @@ ext {
             junit:          "junit:junit:${junitVersion}",
             junit5_vintage: "org.junit.vintage:junit-vintage-engine:${junitVintageVersion}",
 
-            log4j:          "log4j:log4j:1.2.17",
+            log4j2:          "org.apache.logging.log4j:log4j-core:2.14.1",
 
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",

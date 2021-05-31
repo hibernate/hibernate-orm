@@ -22,9 +22,6 @@ import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -33,6 +30,13 @@ import org.hibernate.testing.orm.junit.Setting;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
+
 
 @TestForIssue(jiraKey = "HHH-13244")
 @Jpa(
@@ -75,11 +79,13 @@ public class JpaProxyComplianceWithDebugTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13244")
 	public void testJpaComplianceProxyWithDebug(EntityManagerFactoryScope scope) {
+		LoggerContext context = (LoggerContext) LogManager.getContext( false );
+		Configuration configuration = context.getConfiguration();
 
 		//This could be replaced with setting the root logger level, or the "org.hibernate" logger to debug.
 		//These are simply the narrowest log settings that trigger the bug
-		Logger entityLogger = LogManager.getLogger("org.hibernate.internal.util.EntityPrinter");
-		Logger listenerLogger = LogManager.getLogger("org.hibernate.event.internal.AbstractFlushingEventListener");
+		LoggerConfig entityLogger = configuration.getLoggerConfig( "org.hibernate.internal.util.EntityPrinter");
+		LoggerConfig listenerLogger = configuration.getLoggerConfig("org.hibernate.event.internal.AbstractFlushingEventListener");
 
 		Level oldEntityLogLevel = entityLogger.getLevel();
 		Level oldListenerLogLevel = listenerLogger.getLevel();

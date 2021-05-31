@@ -88,7 +88,6 @@ dependencies {
     testImplementation libraries.mockito_inline
     testImplementation libraries.jodaTime
     testImplementation libraries.assertj
-    testImplementation libraries.log4j
     testImplementation libraries.cdi
     testImplementation libraries.jboss_ejb_spec_jar
     testImplementation libraries.jboss_annotation_spec_jar

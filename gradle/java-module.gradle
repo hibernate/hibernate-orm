@@ -91,7 +91,7 @@ dependencies {
 	testImplementation libraries.byteman_install
 	testImplementation libraries.byteman_bmunit
 
-	testRuntimeOnly libraries.log4j
+	testRuntimeOnly libraries.log4j2
 	testRuntimeOnly libraries.javassist
 	testRuntimeOnly libraries.byteBuddy
 

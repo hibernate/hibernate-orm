@@ -32,7 +32,7 @@ dependencies {
     api 'javax.money:money-api:1.0.1'
     api 'org.javamoney:moneta:1.1'
 
-    compileOnly libraries.log4j
+    api libraries.log4j2
 }
 
 tasks.test.include '**/*'

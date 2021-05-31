@@ -35,6 +35,8 @@ dependencies {
 	api 'javax.money:money-api:1.0.1'
 	api 'org.javamoney:moneta:1.1'
 
+	api libraries.log4j2
+
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',
 			'org.slf4j:slf4j-simple:1.7.30',

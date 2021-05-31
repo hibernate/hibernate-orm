@@ -12,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.LockModeType;
 import javax.persistence.NamedQuery;
+import javax.persistence.Table;
 import javax.persistence.Tuple;
 import javax.persistence.TypedQuery;
 
@@ -146,7 +147,7 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 5, employees.size() );
 
-			//The miss count is still 1, as no we got the query plan from the cache
+			//The miss count is still 1, as now we got the query plan from the cache
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
 			//And the cache hit count increases.
 			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
@@ -160,7 +161,55 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 5, employees.size() );
 
-			//The miss count is still 1, as no we got the query plan from the cache
+			//The miss count is still 1, as now we got the query plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
+		} );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14632" )
+	public void testCreateNativeQueryHitCount(SessionFactoryScope scope) {
+		statistics.clear();
+
+		scope.inTransaction( entityManager -> {
+
+			List<Employee> employees = entityManager.createNativeQuery(
+				"select * from employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//First time, we get a cache miss, so the query is compiled
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//The hit count should be 0 as we don't need to go to the cache after we already compiled the query
+			assertEquals( 0, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		scope.inTransaction( entityManager -> {
+
+			List<Employee> employees = entityManager.createNativeQuery(
+				"select * from employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 1, as now we got the query plan from the cache
+			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
+			//And the cache hit count increases.
+			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
+		} );
+
+		scope.inTransaction( entityManager -> {
+
+			List<Employee> employees = entityManager.createNativeQuery(
+				"select * from employee e", Employee.class )
+			.getResultList();
+
+			assertEquals( 5, employees.size() );
+
+			//The miss count is still 1, as now we got the query plan from the cache
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
 			//And the cache hit count increases.
 			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
@@ -225,7 +274,7 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 5, employees.size() );
 
-			//The miss count is still 1, as no we got the query plan from the cache
+			//The miss count is still 1, as now we got the query plan from the cache
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
 			//And the cache hit count increases.
 			assertEquals( 1, statistics.getQueryPlanCacheHitCount() );
@@ -239,7 +288,7 @@ public class QueryPlanCacheStatisticsTest {
 
 			assertEquals( 5, employees.size() );
 
-			//The miss count is still 1, as no we got the query plan from the cache
+			//The miss count is still 1, as now we got the query plan from the cache
 			assertEquals( 1, statistics.getQueryPlanCacheMissCount() );
 			//And the cache hit count increases.
 			assertEquals( 2, statistics.getQueryPlanCacheHitCount() );
@@ -283,6 +332,7 @@ public class QueryPlanCacheStatisticsTest {
 	}
 
 	@Entity(name = "Employee")
+	@Table(name = "employee")
 	@NamedQuery(
 		name = "find_employee_by_name",
 		query = "select e from Employee e where e.name = :name"

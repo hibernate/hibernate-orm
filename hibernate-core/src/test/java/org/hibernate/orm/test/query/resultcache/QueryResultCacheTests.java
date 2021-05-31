@@ -27,8 +27,12 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.LoggerConfig;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
@@ -40,15 +44,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @ServiceRegistry(
 		settings = {
-				@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "true" )
+				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true")
 		}
 )
-@DomainModel( annotatedClasses = { TestEntity.class, AggregateEntity.class } )
-@SessionFactory( generateStatistics = true )
+@DomainModel(annotatedClasses = { TestEntity.class, AggregateEntity.class })
+@SessionFactory(generateStatistics = true)
 public class QueryResultCacheTests {
-	private final Logger resultsLogger = Logger.getLogger( ResultsLogger.LOGGER_NAME );
-	private final Logger execLogger = Logger.getLogger( SqlExecLogger.LOGGER_NAME );
-	private final Logger cacheLogger = Logger.getLogger( SecondLevelCacheLogger.LOGGER_NAME );
+	private final LoggerContext context = (LoggerContext) LogManager.getContext( false );
+	private final Configuration configuration = context.getConfiguration();
+	private final LoggerConfig resultsLoggerConfig = configuration.getLoggerConfig( ResultsLogger.LOGGER_NAME );
+	private final LoggerConfig execLoggerConfig = configuration.getLoggerConfig( SqlExecLogger.LOGGER_NAME );
+	private final LoggerConfig cacheLoggerConfig = configuration.getLoggerConfig( SecondLevelCacheLogger.LOGGER_NAME );
+
+	Logger resultsLogger = LogManager.getLogger( ResultsLogger.LOGGER_NAME );
 
 	private Level originalResultsLevel;
 	private Level originalExecLevel;
@@ -56,21 +64,21 @@ public class QueryResultCacheTests {
 
 	@BeforeAll
 	public void setUpLogger() {
-		originalResultsLevel = resultsLogger.getLevel();
-		resultsLogger.setLevel( Level.TRACE );
+		originalResultsLevel = resultsLoggerConfig.getLevel();
+		resultsLoggerConfig.setLevel( Level.TRACE );
 
-		originalExecLevel = execLogger.getLevel();
-		execLogger.setLevel( Level.TRACE );
+		originalExecLevel = execLoggerConfig.getLevel();
+		execLoggerConfig.setLevel( Level.TRACE );
 
-		originalCacheLevel = cacheLogger.getLevel();
-		cacheLogger.setLevel( Level.TRACE );
+		originalCacheLevel = cacheLoggerConfig.getLevel();
+		cacheLoggerConfig.setLevel( Level.TRACE );
 	}
 
 	@AfterAll
 	public void resetLogger() {
-		resultsLogger.setLevel( originalResultsLevel );
-		execLogger.setLevel( originalExecLevel );
-		cacheLogger.setLevel( originalCacheLevel );
+		resultsLoggerConfig.setLevel( originalResultsLevel );
+		execLoggerConfig.setLevel( originalExecLevel );
+		cacheLoggerConfig.setLevel( originalCacheLevel );
 	}
 
 	@Test
@@ -173,11 +181,11 @@ public class QueryResultCacheTests {
 		assertThat( rootEntity.getValue1(), notNullValue() );
 		assertTrue( Hibernate.isInitialized( rootEntity.getValue1() ) );
 		assertThat( rootEntity.getValue1().getId(), is( 1 ) );
-		assertThat( rootEntity.getValue1().getName(), is("first" ) );
+		assertThat( rootEntity.getValue1().getName(), is( "first" ) );
 		assertThat( rootEntity.getValue2(), notNullValue() );
 		assertTrue( Hibernate.isInitialized( rootEntity.getValue2() ) );
 		assertThat( rootEntity.getValue2().getId(), is( 2 ) );
-		assertThat( rootEntity.getValue2().getName(), is("second" ) );
+		assertThat( rootEntity.getValue2().getName(), is( "second" ) );
 	}
 
 	@BeforeEach

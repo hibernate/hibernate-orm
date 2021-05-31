@@ -150,10 +150,13 @@ task copyBundleResources (type: Copy) {
 		bundleTokens = dbBundle[db]
 		ext.bundleTokens['buildDirName'] = buildDir.absolutePath
 	}
-
 	from file("${buildDir}/unpacked/${unpackedDir.name}/templates")
 	into ext.bundlesTargetDir
-	filter( ReplaceTokens, tokens: ext.bundleTokens)
+	// There are persistence.xml files referencing jar files through their absolute path so we
+	// have to replace 'hibernate-core/hibernate-core' in the path with 'hibernate-core/hibernate-core-jakarta'
+	filter { line ->
+		line.replaceAll( 'hibernate-core/hibernate-core', 'hibernate-core/hibernate-core-jakarta' )
+	}
 	doFirst {
 		ext.bundlesTargetDir.mkdirs()
 	}

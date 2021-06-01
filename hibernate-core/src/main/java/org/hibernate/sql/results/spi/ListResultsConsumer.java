@@ -6,10 +6,10 @@
  */
 package org.hibernate.sql.results.spi;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -17,6 +17,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -25,18 +26,28 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	/**
 	 * Singleton access
 	 */
-	private static final ListResultsConsumer UNIQUE_FILTER_INSTANCE = new ListResultsConsumer(true);
-	private static final ListResultsConsumer NORMAL_INSTANCE = new ListResultsConsumer(false);
+	private static final ListResultsConsumer UNIQUE_FILTER_INSTANCE = new ListResultsConsumer( UniqueSemantic.FILTER );
+	private static final ListResultsConsumer NORMAL_INSTANCE = new ListResultsConsumer( UniqueSemantic.NONE );
+	private static final ListResultsConsumer UNIQUE_INSTANCE = new ListResultsConsumer( UniqueSemantic.ASSERT );
 
 	@SuppressWarnings("unchecked")
-	public static <R> ListResultsConsumer<R> instance(boolean uniqueFilter) {
+	public static <R> ListResultsConsumer<R> instance(boolean uniqueFilter, boolean singleResultExpected) {
+		if ( singleResultExpected ) {
+			return UNIQUE_INSTANCE;
+		}
 		return uniqueFilter ? UNIQUE_FILTER_INSTANCE : NORMAL_INSTANCE;
 	}
 
-	private final boolean uniqueFilter;
+	public enum UniqueSemantic {
+		NONE,
+		FILTER,
+		ASSERT;
+	}
 
-	public ListResultsConsumer(boolean uniqueFilter) {
-		this.uniqueFilter = uniqueFilter;
+	private final UniqueSemantic uniqueSemantic;
+
+	public ListResultsConsumer(UniqueSemantic uniqueSemantic) {
+		this.uniqueSemantic = uniqueSemantic;
 	}
 
 	@Override
@@ -51,35 +62,49 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 
-			boolean uniqueRows = false;
-			final Class<R> resultJavaType = rowReader.getResultJavaType();
-			if ( uniqueFilter && resultJavaType != null && ! resultJavaType.isArray() ) {
-				final EntityPersister entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor( resultJavaType );
-				if ( entityDescriptor != null ) {
-					uniqueRows = true;
-				}
-			}
-
 			final List<R> results = new ArrayList<>();
 
-			while ( rowProcessingState.next() ) {
-				final R row = rowReader.readRow( rowProcessingState, processingOptions );
-
-				boolean add = true;
-				if ( uniqueRows ) {
-					if ( results.contains( row ) ) {
-						add = false;
+			if ( uniqueSemantic == UniqueSemantic.NONE ) {
+				while ( rowProcessingState.next() ) {
+					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+					rowProcessingState.finishRowProcessing();
+				}
+			}
+			else {
+				boolean uniqueRows = false;
+				final Class<R> resultJavaType = rowReader.getResultJavaType();
+				if ( resultJavaType != null && !resultJavaType.isArray() ) {
+					final EntityPersister entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor(
+							resultJavaType );
+					if ( entityDescriptor != null ) {
+						uniqueRows = true;
 					}
 				}
-
-				if ( add ) {
-					results.add( row );
+				while ( rowProcessingState.next() ) {
+					final R row = rowReader.readRow( rowProcessingState, processingOptions );
+					boolean add = true;
+					if ( uniqueRows ) {
+						if ( results.contains( row ) ) {
+							if ( uniqueSemantic == UniqueSemantic.ASSERT && !rowProcessingState.hasCollectionInitializers() ) {
+								throw new HibernateException(
+										"More than one row with the given identifier was found: " +
+												jdbcValuesSourceProcessingState.getExecutionContext()
+														.getEntityId() +
+												", for class: " +
+												resultJavaType.getName()
+								);
+							}
+							add = false;
+						}
+					}
+					if ( add ) {
+						results.add( row );
+					}
+					rowProcessingState.finishRowProcessing();
 				}
-
-				rowProcessingState.finishRowProcessing();
 			}
 			persistenceContext.initializeNonLazyCollections();
-			jdbcValuesSourceProcessingState.finishUp( );
+			jdbcValuesSourceProcessingState.finishUp();
 			return results;
 		}
 		finally {

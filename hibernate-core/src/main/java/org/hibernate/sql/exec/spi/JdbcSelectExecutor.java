@@ -30,6 +30,14 @@ public interface JdbcSelectExecutor {
 		RowTransformer<R> rowTransformer,
 		boolean uniqueFilter);
 
+	<R> List<R> list(
+			JdbcSelect jdbcSelect,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext,
+			RowTransformer<R> rowTransformer,
+			boolean uniqueFilter,
+			boolean onlyOne);
+
 	<R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,
 			ScrollMode scrollMode,

@@ -68,7 +68,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				session.getFactory()
 		);
 
-		return loadPlan.load( key, lockOptions, readOnly, session );
+		return loadPlan.load( key, lockOptions, null, readOnly,true, session );
 	}
 
 	@Override
@@ -93,7 +93,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		else {
 			lockOptionsToUse = lockOptions;
 		}
-		return loadPlan.load( key, lockOptionsToUse, entityInstance, readOnly, session );
+		return loadPlan.load( key, lockOptionsToUse, entityInstance, readOnly, false, session );
 	}
 
 	@Internal

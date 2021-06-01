@@ -87,7 +87,7 @@ ext {
             jakarta_interceptor:    'jakarta.interceptor:jakarta.interceptor-api:2.0.0',
             jakarta_activation:     'jakarta.activation:jakarta.activation-api:2.0.1',
             jakarta_resource:       'jakarta.resource:jakarta.resource-api:2.0.0',
-            jakarta_jaxb_api:       'jakarta.xml.bind:jakarta.xml.bind-api:3.0.0',
+            jakarta_jaxb_api:       'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1',
             jakarta_jaxb_runtime:   "org.glassfish.jaxb:jaxb-runtime:${jakartaJaxbRuntimeVersion}",
             jakarta_cdi:            'jakarta.enterprise:jakarta.enterprise.cdi-api:3.0.0',
 

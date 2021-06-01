@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.query;
+package org.hibernate.orm.test.jpa.query;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.Id;
 import javax.persistence.Query;
 import javax.persistence.Table;
@@ -24,87 +23,86 @@ import javax.persistence.TypedQuery;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.TypedParameterValue;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
-public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Document.class };
+@Jpa(annotatedClasses = {
+		TypedValueParametersTest.Document.class
+})
+public class TypedValueParametersTest {
+
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) throws Exception {
+		scope.inTransaction(
+				entityManager -> {
+					Document a = new Document();
+					a.getTags().add("important");
+					a.getTags().add("business");
+					entityManager.persist(a);
+				}
+		);
 	}
 
-	private int docId;
-
-	@Before
-	public void init() throws Exception {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-
-		Document a = new Document();
-		a.getTags().add("important");
-		a.getTags().add("business");
-		em.persist(a);
-		docId = a.getId();
-
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test
-	public void testNative() {
-		test(new Binder() {
-
-			public void bind(Query q) {
-				final CustomType customType = new CustomType(
-						TagUserType.INSTANCE,
-						entityManagerFactory().getTypeConfiguration()
-				);
-
-				org.hibernate.query.Query hibernateQuery = q.unwrap(org.hibernate.query.Query.class);
-				hibernateQuery.setParameter( "tags", Arrays.asList("important","business"), customType );
-			}
-		});
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> entityManager.createQuery( "delete from Document" ).executeUpdate()
+		);
 	}
 
 	@Test
-	public void testJpa() {
-		test(new Binder() {
+	public void testNative(EntityManagerFactoryScope scope) {
+		test(scope,
+			 q -> {
+				  final CustomType customType = new CustomType(
+						  TagUserType.INSTANCE,
+						  scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
+				  );
 
-			public void bind(Query q) {
+				  org.hibernate.query.Query hibernateQuery = q.unwrap( org.hibernate.query.Query.class );
+				  hibernateQuery.setParameter( "tags", Arrays.asList( "important", "business" ), customType );
+			  }
+		);
+	}
+
+	@Test
+	public void testJpa(EntityManagerFactoryScope scope) {
+		test(scope,
+			 q -> {
 				final CustomType customType = new CustomType(
 						TagUserType.INSTANCE,
-						entityManagerFactory().getTypeConfiguration()
+						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
 				);
 				q.setParameter("tags", new TypedParameterValue( customType, Arrays.asList("important","business")));
 			}
-		});
-
+		);
 	}
 
-	private void test(Binder b) {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
+	private void test(EntityManagerFactoryScope scope, Binder b) {
+		scope.inTransaction(
+				entityManager -> {
+					TypedQuery<Long> q = entityManager.createQuery( "select count(*) from Document d where d.tags = :tags", Long.class );
+					b.bind( q );
 
-		TypedQuery<Long> q = em.createQuery( "select count(*) from Document d where d.tags = :tags", Long.class );
-		b.bind( q );
-
-		Long count = q.getSingleResult();
-
-		em.getTransaction().commit();
-		em.close();
-
-		assertEquals( 1, count.intValue() );
+					Long count = q.getSingleResult();
+					assertEquals( 1, count.intValue() );
+				}
+		);
 	}
 
 	private interface Binder {
@@ -121,7 +119,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 
 		@Type(type = "tagList")
 		@Column(name = "tags")
-		private List<String> tags = new ArrayList<String>();
+		private List<String> tags = new ArrayList<>();
 
 		public int getId() {
 			return id;
@@ -207,7 +205,7 @@ public class TypedValueParametersTest extends BaseEntityManagerFunctionalTestCas
 		@Override
 		@SuppressWarnings("unchecked")
 		public Object deepCopy(final Object o) throws HibernateException {
-			return o == null ? null : new ArrayList<String>((List<String>) o);
+			return o == null ? null : new ArrayList<>((List<String>) o);
 		}
 
 		@Override

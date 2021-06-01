@@ -1,0 +1,13 @@
+{
+  "catalogs": {},
+  "aliases": {
+    "standalone-test": {
+      "script-ref": "tooling/jbang/ORMStandaloneTestCase.java",
+      "description": "A test case for the Hibernate ORM session factory"
+    },
+    "jpa-test": {
+      "script-ref": "tooling/jbang/JPAUnitTestCase.java",
+      "description": "A test case for JPA entity manager"
+    }
+   }
+}

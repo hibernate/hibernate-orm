@@ -16,7 +16,6 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -39,7 +38,7 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 	public DerbyConcatFunction() {
 		super(
 				"concat",
-				StandardArgumentsValidators.min( 1 ),
+				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
 	}
@@ -59,43 +58,33 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
-		assert arguments.size() > 0;
-
-		boolean hasJdbcParameter = false;
-		for (SqlAstNode argument : arguments) {
-			if ( argument instanceof SqmParameterInterpretation || argument instanceof JdbcParameter ) {
-				hasJdbcParameter = true;
-				break;
-			}
-		}
-
+		final SqlAstNode leftOperand = arguments.get( 0 );
+		final SqlAstNode rightOperand = arguments.get( 1 );
+		final boolean hasJdbcParameter = leftOperand instanceof SqmParameterInterpretation || rightOperand instanceof SqmParameterInterpretation;
 		if ( hasJdbcParameter ) {
-			sqlAppender.appendSql( "varchar" );
+			sqlAppender.appendSql( "varchar( ");
+			renderOperandInCastingMode( leftOperand, sqlAppender, walker );
+			sqlAppender.appendSql( " || " );
+			renderOperandInCastingMode( rightOperand, sqlAppender, walker );
+			sqlAppender.appendSql( " )" );
 		}
-		sqlAppender.appendSql( "( ");
-		for ( int i = 0; i < arguments.size(); i++ ) {
-			if ( i > 0 ) {
-				sqlAppender.appendSql( " || " );
-			}
-			renderOperand( arguments.get( i ), sqlAppender, walker, hasJdbcParameter );
+		else {
+			sqlAppender.appendSql( "( " );
+			walker.render( leftOperand, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			sqlAppender.appendSql( " || " );
+			walker.render( rightOperand, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			sqlAppender.appendSql( " )" );
 		}
-		sqlAppender.appendSql( " )" );
 	}
 
-	private void renderOperand(SqlAstNode operand, SqlAppender sqlAppender, SqlAstTranslator<?> walker, boolean castRequired) {
-		if ( castRequired ) {
-			sqlAppender.appendSql( "cast" );
-		}
-		sqlAppender.appendSql( "( " );
-		walker.render( operand, SqlAstNodeRenderingMode.DEFAULT );
-		if ( castRequired ) {
-			sqlAppender.appendSql( " as varchar(32672)" );
-		}
-		sqlAppender.appendSql( " )" );
+	private void renderOperandInCastingMode(SqlAstNode operand, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
+		sqlAppender.appendSql( "cast( " );
+		walker.render( operand, operand instanceof SqmParameterInterpretation ? SqlAstNodeRenderingMode.DEFAULT : SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		sqlAppender.appendSql( " as varchar(32672) )" );
 	}
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(arg0[ ,arg1[ ,arg2[...]]])";
+		return "(string, string)";
 	}
 }

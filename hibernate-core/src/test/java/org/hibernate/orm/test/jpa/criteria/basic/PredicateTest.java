@@ -9,13 +9,16 @@ package org.hibernate.orm.test.jpa.criteria.basic;
 import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.jpa.test.metamodel.CreditCard;
 import org.hibernate.jpa.test.metamodel.CreditCard_;
+import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
 import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
@@ -53,9 +56,7 @@ public class PredicateTest extends AbstractCriteriaTest {
 
 	@AfterEach
 	void tearDown(EntityManagerFactoryScope scope) {
-		scope.inTransaction( em -> {
-			em.createQuery( "delete Order" ).executeUpdate();
-		} );
+		scope.inTransaction( em -> em.createQuery( "delete Order" ).executeUpdate() );
 	}
 
 	@Test
@@ -267,4 +268,31 @@ public class PredicateTest extends AbstractCriteriaTest {
 			assertThat( orders, empty() );
 		} );
 	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-5803" )
+	@SkipForDialect( value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
+	void testQuotientConversion(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaBuilder builder = em.getCriteriaBuilder();
+
+			CriteriaQuery<Order> orderCriteria = builder.createQuery( Order.class );
+			Root<Order> orderRoot = orderCriteria.from( Order.class );
+
+			Long longValue = 999999999L;
+			Path<Double> doublePath = orderRoot.get( Order_.totalPrice );
+			Path<Integer> integerPath = orderRoot.get( Order_.customer ).get( Customer_.age );
+
+			orderCriteria.select( orderRoot );
+			Predicate p = builder.ge(
+					builder.quot( integerPath, doublePath ),
+					longValue
+			);
+			orderCriteria.where( p );
+
+			List<Order> orders = em.createQuery( orderCriteria ).getResultList();
+			assertThat( orders, empty() );
+		} );
+	}
+
 }

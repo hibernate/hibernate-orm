@@ -2360,16 +2360,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			expressable = localExpressable;
 		}
 
-		final BasicValuedMapping basicValuedMapping;
-		if ( expressable instanceof PluralAttributeMapping ) {
-			basicValuedMapping = (BasicValuedMapping) ( ( PluralAttributeMapping ) expressable ).getElementDescriptor();
-		}
-		else {
-			basicValuedMapping = (BasicValuedMapping) expressable;
-		}
 		return new QueryLiteral<>(
 				literal.getLiteralValue(),
-				basicValuedMapping
+				(BasicValuedMapping) expressable
 		);
 	}
 
@@ -3223,8 +3216,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic expression) {
-		final SqmExpressable leftHandOperandExpressable = getSqmExpressableForArithmeticOperand( expression.getLeftHandOperand() );
-		final SqmExpressable rightHandOperandExpressable = getSqmExpressableForArithmeticOperand( expression.getRightHandOperand() );
+		final SqmExpressable leftHandOperandExpressable = doGetExpressable( expression.getLeftHandOperand() );
+		final SqmExpressable rightHandOperandExpressable = doGetExpressable( expression.getRightHandOperand() );
 		final SqmExpressable sqmExpressable = getTypeConfiguration().resolveArithmeticType( leftHandOperandExpressable, rightHandOperandExpressable, expression.getOperator() );
 		if ( sqmExpressable == null ) {
 			if ( leftHandOperandExpressable instanceof BasicValuedMapping)  {
@@ -3239,9 +3232,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return (BasicValuedMapping) mappingModelExpressable;
 	}
 
-	private SqmExpressable<?> getSqmExpressableForArithmeticOperand(SqmExpression operand) {
-		if ( operand instanceof SqmBinaryArithmetic ) {
-			BasicValuedMapping basicValuedMapping = getExpressionType( (SqmBinaryArithmetic) operand );
+	private SqmExpressable<?> doGetExpressable(SqmExpression sqmExpression) {
+		if ( sqmExpression instanceof SqmBinaryArithmetic ) {
+			BasicValuedMapping basicValuedMapping = getExpressionType( (SqmBinaryArithmetic) sqmExpression );
 			if ( basicValuedMapping instanceof BasicType ) {
 				return (BasicType) basicValuedMapping;
 			}
@@ -3251,7 +3244,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			throw new NotYetImplementedFor6Exception( BaseSqmToSqlAstConverter.class );
 		}
 		else {
-			return operand.getNodeType();
+			return sqmExpression.getNodeType();
 		}
 	}
 

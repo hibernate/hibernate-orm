@@ -55,7 +55,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -725,20 +724,9 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
-		if ( sqmExpressable == null ) {
-			throw new IllegalArgumentException( "'sqmExpressable' param cannot be null" );
+		if (sqmExpressable == null) {
+			throw new IllegalArgumentException("sqmExpressable cannot be null");
 		}
-
-		if ( sqmExpressable instanceof PluralPersistentAttribute ) {
-			final ManagedDomainType declaringType = ( (PluralPersistentAttribute) sqmExpressable ).getDeclaringType();
-			final EntityPersister entityDescriptor = getEntityDescriptor( declaringType.getTypeName() );
-			return entityDescriptor.findSubPart( ( (PluralPersistentAttribute<?, ?, ?>) sqmExpressable ).getPathName(), entityDescriptor );
-		}
-
-		if ( sqmExpressable instanceof MappingModelExpressable ) {
-			return (MappingModelExpressable) sqmExpressable;
-		}
-
 		if ( sqmExpressable instanceof SqmPath ) {
 			final SqmPath sqmPath = (SqmPath) sqmExpressable;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();
@@ -747,6 +735,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 				return parentTableGroup.getModelPart().findSubPart( navigablePath.getLocalName(), null );
 			}
 			return tableGroupLocator.apply( navigablePath.getParent() ).getModelPart();
+		}
+
+		if ( sqmExpressable instanceof BasicType<?> ) {
+			return (BasicType) sqmExpressable;
 		}
 
 		if ( sqmExpressable instanceof BasicSqmPathSource<?> ) {

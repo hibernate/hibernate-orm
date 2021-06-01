@@ -3216,12 +3216,35 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private BasicValuedMapping getExpressionType(SqmBinaryArithmetic expression) {
-		SqmExpressable leftHandOperandType = expression.getLeftHandOperand().getNodeType();
-		if ( leftHandOperandType instanceof BasicValuedMapping ) {
-			return (BasicValuedMapping) leftHandOperandType;
+		final SqmExpressable leftHandOperandExpressable = doGetExpressable( expression.getLeftHandOperand() );
+		final SqmExpressable rightHandOperandExpressable = doGetExpressable( expression.getRightHandOperand() );
+		final SqmExpressable sqmExpressable = getTypeConfiguration().resolveArithmeticType( leftHandOperandExpressable, rightHandOperandExpressable, expression.getOperator() );
+		if ( sqmExpressable == null ) {
+			if ( leftHandOperandExpressable instanceof BasicValuedMapping)  {
+				return (BasicValuedMapping) leftHandOperandExpressable;
+			}
+			if ( rightHandOperandExpressable instanceof BasicValuedMapping ) {
+				return (BasicValuedMapping) rightHandOperandExpressable;
+			}
+			throw new NotYetImplementedFor6Exception( BaseSqmToSqlAstConverter.class );
+		}
+		final MappingModelExpressable mappingModelExpressable = getCreationContext().getDomainModel().resolveMappingExpressable( sqmExpressable, this::findTableGroupByPath );
+		return (BasicValuedMapping) mappingModelExpressable;
+	}
+
+	private SqmExpressable<?> doGetExpressable(SqmExpression sqmExpression) {
+		if ( sqmExpression instanceof SqmBinaryArithmetic ) {
+			BasicValuedMapping basicValuedMapping = getExpressionType( (SqmBinaryArithmetic) sqmExpression );
+			if ( basicValuedMapping instanceof BasicType ) {
+				return (BasicType) basicValuedMapping;
+			}
+			if ( basicValuedMapping instanceof SqmExpression ) {
+				return ( (SqmExpression) basicValuedMapping ).getNodeType();
+			}
+			throw new NotYetImplementedFor6Exception( BaseSqmToSqlAstConverter.class );
 		}
 		else {
-			return (BasicValuedMapping) expression.getRightHandOperand().getNodeType();
+			return sqmExpression.getNodeType();
 		}
 	}
 

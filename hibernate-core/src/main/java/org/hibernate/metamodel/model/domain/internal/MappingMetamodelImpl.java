@@ -710,6 +710,9 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public MappingModelExpressable lenientlyResolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if ( sqmExpressable == null ) {
+			return null;
+		}
 		try {
 			return resolveMappingExpressable( sqmExpressable, tableGroupLocator );
 		}
@@ -721,6 +724,9 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public MappingModelExpressable resolveMappingExpressable(SqmExpressable<?> sqmExpressable, Function<NavigablePath, TableGroup> tableGroupLocator) {
+		if (sqmExpressable == null) {
+			throw new IllegalArgumentException("sqmExpressable cannot be null");
+		}
 		if ( sqmExpressable instanceof SqmPath ) {
 			final SqmPath sqmPath = (SqmPath) sqmExpressable;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();

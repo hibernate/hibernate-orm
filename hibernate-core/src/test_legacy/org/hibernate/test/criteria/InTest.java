@@ -52,8 +52,6 @@ public class InTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-8901" )
-	@RequiresDialectFeature(DialectChecks.NotSupportsEmptyInListCheck.class)
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
 	public void testEmptyInListForDialectNotSupportsEmptyInList() {
 		Session session = openSession();
 		Transaction tx = session.beginTransaction();

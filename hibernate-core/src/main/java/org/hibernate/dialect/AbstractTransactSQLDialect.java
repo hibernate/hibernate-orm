@@ -271,11 +271,6 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}

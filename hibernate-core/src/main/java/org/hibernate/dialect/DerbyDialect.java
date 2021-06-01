@@ -489,12 +489,6 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		//checked on Derby 10.14
-		return false;
-	}
-
-	@Override
 	public boolean supportsTupleDistinctCounts() {
 		//checked on Derby 10.14
 		return false;

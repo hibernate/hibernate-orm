@@ -3588,9 +3588,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		if ( inListPredicate.getListExpressions().isEmpty() ) {
-			// trick to simulate empty in list expression
-			// many a DBMS refuses SQL like 'x in ()'
-			appendSql( "( 1 = 0 )" );
+			appendSql( "(1=0)" );
 			return;
 		}
 		final SqlTuple lhsTuple;

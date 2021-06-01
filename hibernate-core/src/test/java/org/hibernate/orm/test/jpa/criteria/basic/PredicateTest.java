@@ -14,7 +14,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.jpa.test.metamodel.CreditCard;
 import org.hibernate.jpa.test.metamodel.CreditCard_;
@@ -23,8 +22,6 @@ import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
 import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -253,8 +250,6 @@ public class PredicateTest extends AbstractCriteriaTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-8901" )
-	@RequiresDialectFeature( DialectChecks.NotSupportsEmptyInListCheck.class )
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't like `x in (null)`")
 	void testEmptyInPredicate(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			CriteriaBuilder builder = em.getCriteriaBuilder();

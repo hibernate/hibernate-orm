@@ -6,15 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
-import java.math.BigDecimal;
-import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.ParameterExpression;
@@ -37,7 +28,7 @@ import static org.hamcrest.Matchers.nullValue;
 /**
  * @author Steve Ebersole
  */
-@Jpa( annotatedClasses = { BasicCriteriaUsageTest.Wall.class, BasicCriteriaUsageTest.Payment.class } )
+@Jpa( annotatedClasses = { Wall.class, Payment.class } )
 public class BasicCriteriaUsageTest {
 
 	@AfterEach
@@ -140,107 +131,6 @@ public class BasicCriteriaUsageTest {
 			assertThat( result, notNullValue() );
 			assertThat( result.getColor(), is( "yellow" ) );
 		} );
-	}
-
-	@Entity( name = "Payment" )
-	@Table( name = "crit_basic_payment" )
-	static class Payment {
-
-		private Long id;
-		private BigDecimal amount;
-		private Date date;
-
-		@Id
-		@GeneratedValue
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
-
-		public BigDecimal getAmount() {
-			return amount;
-		}
-
-		public void setAmount(BigDecimal amount) {
-			this.amount = amount;
-		}
-
-		@Column( name = "payment_date" )
-		public Date getDate() {
-			return date;
-		}
-
-		public void setDate(Date date) {
-			this.date = date;
-		}
-	}
-
-	@Entity( name = "Wall" )
-	@Table( name = "crit_basic_wall" )
-	static class Wall {
-		private Long id;
-		private long width;
-		private long height;
-		private String color;
-		private Wall left;
-		private Wall right;
-
-		@Id
-		@GeneratedValue
-		public Long getId() {
-			return id;
-		}
-
-		public void setId(Long id) {
-			this.id = id;
-		}
-
-		public long getWidth() {
-			return width;
-		}
-
-		public void setWidth(long width) {
-			this.width = width;
-		}
-
-		public long getHeight() {
-			return height;
-		}
-
-		public void setHeight(long height) {
-			this.height = height;
-		}
-
-		public String getColor() {
-			return color;
-		}
-
-		public void setColor(String color) {
-			this.color = color;
-		}
-
-		@ManyToOne
-		@JoinColumn(name = "left_id")
-		public Wall getLeft() {
-			return left;
-		}
-
-		public void setLeft(Wall left) {
-			this.left = left;
-		}
-
-		@ManyToOne
-		@JoinColumn(name = "right_id")
-		public Wall getRight() {
-			return right;
-		}
-
-		public void setRight(Wall right) {
-			this.right = right;
-		}
 	}
 
 }

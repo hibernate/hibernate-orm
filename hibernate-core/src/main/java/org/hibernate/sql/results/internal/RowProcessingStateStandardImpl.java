@@ -16,6 +16,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -36,6 +37,7 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 	private final RowReader<?> rowReader;
 	private final JdbcValues jdbcValues;
 	private final ExecutionContext executionContext;
+	public final boolean hasCollectionInitializers;
 
 	public RowProcessingStateStandardImpl(
 			JdbcValuesSourceProcessingStateStandardImpl resultSetProcessingState,
@@ -50,11 +52,26 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 		final List<Initializer> initializers = rowReader.getInitializers();
 		if ( initializers == null || initializers.isEmpty() ) {
 			this.initializers = NO_INITIALIZERS;
+			hasCollectionInitializers = false;
 		}
 		else {
 			//noinspection ToArrayCallWithZeroLengthArrayArgument
 			this.initializers = initializers.toArray( new Initializer[initializers.size()] );
+			hasCollectionInitializers = hasCollectionInitializers(this.initializers);
 		}
+	}
+
+	private static boolean hasCollectionInitializers(Initializer[] initializers) {
+		for ( int i = 0; i < initializers.length; i++ ) {
+			if ( initializers[i] instanceof CollectionInitializer ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasCollectionInitializers(){
+		return this.hasCollectionInitializers;
 	}
 
 	@Override

@@ -73,14 +73,14 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		return load( restrictedValue, lockOptions, null, readOnly, session );
+		return load( restrictedValue, lockOptions, null, readOnly,false, session );
 	}
 
 	T load(
 			Object restrictedValue,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		return load( restrictedValue, lockOptions, null, null, session );
+		return load( restrictedValue, lockOptions, null, null,false, session );
 	}
 
 	T load(
@@ -88,6 +88,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			LockOptions lockOptions,
 			Object entityInstance,
 			Boolean readOnly,
+			Boolean singleResultExpected,
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
@@ -155,7 +156,8 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
-				true
+				true,
+				singleResultExpected
 		);
 
 		if ( list.isEmpty() ) {

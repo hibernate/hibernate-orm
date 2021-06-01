@@ -39,10 +39,9 @@ public class WhereJoinedSubclassTest extends BaseCoreFunctionalTestCase {
 
 		final AbstractEntityPersister persister = (AbstractEntityPersister) sessionFactory().getEntityPersister(
 				className );
-		assertEquals( persister.getSQLWhereString( "alias" ), "( alias.id = 1) " );
-		assertEquals( persister.getSqlJoinedSubclassWhereString( "alias" ), "( alias.age = 1) " );
-		assertEquals( persister.filterFragment( "alias" ), " and ( alias_1_.id = 1)  and ( alias.age = 1) " );
-		persister.getAttributes();
+		assertEquals( "( alias.id = 1) ", persister.getSQLWhereString( "alias" ) );
+		assertEquals( "( alias.age = 1) ", persister.getSqlJoinedSubclassWhereString( "alias" ) );
+		assertEquals( " and ( alias_1_.id = 1)  and ( alias.age = 1) ", persister.filterFragment( "alias" ) );
 
 	}
 

@@ -3,6 +3,23 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.0.Final (June 01, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31946
+
+** Bug
+    * [HHH-14139] - BasicBinder Trace Logging Causes Duplicated Message
+
+** Improvement
+    * [HHH-14632] - Call statistics.queryPlanCacheHit and statistics.queryPlanCacheMiss for FilterQueryPlan and NativeSQLQueryPlan
+    * [HHH-14624] - Oracle from version 12 started supporting the `offset ? rows fetch next ? rows only`syntax for pagination
+    * [HHH-14240] - Stop generating fragments of SQL as uppercase
+
+** Task
+    * [HHH-14635] - Upgrade to latest JUnit and to Log4j 2
+
+
 Changes in 5.5.0.CR1 (May 24, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

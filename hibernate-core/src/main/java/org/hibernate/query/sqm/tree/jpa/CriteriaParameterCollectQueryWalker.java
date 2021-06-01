@@ -14,9 +14,6 @@ import java.util.function.Consumer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
-import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
-import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -95,42 +92,6 @@ public class CriteriaParameterCollectQueryWalker extends BaseSemanticQueryWalker
 		consumer.accept( param );
 
 		return param;
-	}
-
-	@Override
-	public Object visitFunction(SqmFunction sqmFunction) {
-		for ( Object argument : sqmFunction.getArguments() ) {
-			if ( argument instanceof SqmFunction) {
-				visitFunction( (SqmFunction) argument );
-			}
-			else if ( argument instanceof JpaCriteriaParameter ) {
-				visitJpaCriteriaParameter( (JpaCriteriaParameter<?>) argument );
-			}
-			else if ( argument instanceof SqmPositionalParameter ) {
-				visitPositionalParameterExpression( (SqmPositionalParameter) argument );
-			}
-			else if ( argument instanceof SqmNamedParameter ) {
-				visitNamedParameterExpression( ( SqmNamedParameter ) argument );
-			}
-		}
-		return sqmFunction;
-	}
-
-	@Override
-	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
-		expression.getWhenFragments().forEach( whenFragment -> {
-			whenFragment.getPredicate().accept( this );
-			whenFragment.getResult().accept( this );
-		} );
-		expression.getOtherwise().accept( this );
-		return expression;
-	}
-
-	@Override
-	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
-		expression.getLeftHandOperand().accept( this );
-		expression.getRightHandOperand().accept( this );
-		return expression;
 	}
 
 }

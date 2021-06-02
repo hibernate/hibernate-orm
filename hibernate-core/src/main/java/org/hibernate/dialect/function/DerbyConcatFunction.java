@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -16,6 +17,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -38,7 +40,7 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 	public DerbyConcatFunction() {
 		super(
 				"concat",
-				StandardArgumentsValidators.exactly( 2 ),
+				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
 	}
@@ -58,33 +60,44 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
-		final SqlAstNode leftOperand = arguments.get( 0 );
-		final SqlAstNode rightOperand = arguments.get( 1 );
-		final boolean hasJdbcParameter = leftOperand instanceof SqmParameterInterpretation || rightOperand instanceof SqmParameterInterpretation;
+		assert arguments.size() > 1;
+
+		boolean hasJdbcParameter = false;
+		for (SqlAstNode argument : arguments) {
+			if ( argument instanceof SqmParameterInterpretation || argument instanceof JdbcParameter ) {
+				hasJdbcParameter = true;
+				break;
+			}
+		}
+
 		if ( hasJdbcParameter ) {
-			sqlAppender.appendSql( "varchar( ");
-			renderOperandInCastingMode( leftOperand, sqlAppender, walker );
-			sqlAppender.appendSql( " || " );
-			renderOperandInCastingMode( rightOperand, sqlAppender, walker );
-			sqlAppender.appendSql( " )" );
+			sqlAppender.appendSql( "varchar" );
 		}
-		else {
-			sqlAppender.appendSql( "( " );
-			walker.render( leftOperand, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			sqlAppender.appendSql( " || " );
-			walker.render( rightOperand, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-			sqlAppender.appendSql( " )" );
-		}
+		sqlAppender.appendSql( "( ");
+		final Iterator<SqlAstNode> iter = arguments.iterator();
+		do {
+			renderOperand( iter.next(), sqlAppender, walker, hasJdbcParameter );
+			if ( iter.hasNext() ) {
+				sqlAppender.appendSql( " || " );
+			}
+		} while ( iter.hasNext() );
+		sqlAppender.appendSql( " )" );
 	}
 
-	private void renderOperandInCastingMode(SqlAstNode operand, SqlAppender sqlAppender, SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql( "cast( " );
-		walker.render( operand, operand instanceof SqmParameterInterpretation ? SqlAstNodeRenderingMode.DEFAULT : SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-		sqlAppender.appendSql( " as varchar(32672) )" );
+	private void renderOperand(SqlAstNode operand, SqlAppender sqlAppender, SqlAstTranslator<?> walker, boolean castRequired) {
+		if ( castRequired ) {
+			sqlAppender.appendSql( "cast" );
+		}
+		sqlAppender.appendSql( "( " );
+		walker.render( operand, SqlAstNodeRenderingMode.DEFAULT );
+		if ( castRequired ) {
+			sqlAppender.appendSql( " as varchar(32672)" );
+		}
+		sqlAppender.appendSql( " )" );
 	}
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(string, string)";
+		return "(arg0[ ,arg1[ ,arg2[...]]])";
 	}
 }

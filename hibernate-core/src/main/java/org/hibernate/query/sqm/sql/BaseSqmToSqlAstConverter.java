@@ -2360,9 +2360,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			expressable = localExpressable;
 		}
 
+		final BasicValuedMapping basicValuedMapping;
+		if ( expressable instanceof PluralAttributeMapping ) {
+			basicValuedMapping = (BasicValuedMapping) ( ( PluralAttributeMapping ) expressable ).getElementDescriptor();
+		}
+		else {
+			basicValuedMapping = (BasicValuedMapping) expressable;
+		}
 		return new QueryLiteral<>(
 				literal.getLiteralValue(),
-				(BasicValuedMapping) expressable
+				basicValuedMapping
 		);
 	}
 

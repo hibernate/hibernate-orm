@@ -18,6 +18,7 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 import org.hibernate.orm.test.jpa.criteria.AbstractCriteriaTest;
@@ -246,6 +247,19 @@ public class ExpressionsTest extends AbstractCriteriaTest {
 			criteria.where( from.get( Product_.PART_NUMBER ).in( from.get( Product_.PART_NUMBER ) ) );
 			List<Product> result = em.createQuery( criteria ).getResultList();
 			assertThat( result, hasSize( 1 ) );
+		} );
+	}
+
+	@Test
+	void testJoinedElementCollectionValuesInTupleList(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaQuery<Phone> criteria = em.getCriteriaBuilder().createQuery( Phone.class );
+			Root<Phone> from = criteria.from( Phone.class );
+			criteria.where(
+					from.join( "types" )
+							.in( Collections.singletonList( Phone.Type.WORK ) )
+			);
+			em.createQuery( criteria ).getResultList();
 		} );
 	}
 }

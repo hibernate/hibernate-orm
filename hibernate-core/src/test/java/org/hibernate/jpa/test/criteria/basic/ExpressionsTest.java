@@ -8,14 +8,11 @@ package org.hibernate.jpa.test.criteria.basic;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Collections;
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
-import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 
 import org.junit.After;
@@ -90,21 +87,6 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		result = em.createQuery( criteria ).getSingleResult();
 		assertEquals(4.0d, result.doubleValue(), 0.1d);
 
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test
-	public void testJoinedElementCollectionValuesInTupleList() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		CriteriaQuery<Phone> criteria = builder.createQuery( Phone.class );
-		Root<Phone> from = criteria.from( Phone.class );
-		criteria.where(
-				from.join( "types" )
-						.in( Collections.singletonList( Phone.Type.WORK ) )
-		);
-		em.createQuery( criteria ).getResultList();
 		em.getTransaction().commit();
 		em.close();
 	}

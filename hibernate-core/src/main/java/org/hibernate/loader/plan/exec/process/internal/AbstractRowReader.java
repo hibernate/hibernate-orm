@@ -46,7 +46,9 @@ import org.jboss.logging.Logger;
 public abstract class AbstractRowReader implements RowReader {
 	private static final Logger log = CoreLogging.logger( AbstractRowReader.class );
 
-	private final List<EntityReferenceInitializer> entityReferenceInitializers;
+	private static final EntityReferenceInitializer[] EMPTY_REFERENCE_INITIALIZERS = new EntityReferenceInitializer[0];
+
+	private final EntityReferenceInitializer[] entityReferenceInitializers;
 	private final List<CollectionReferenceInitializer> arrayReferenceInitializers;
 	private final List<CollectionReferenceInitializer> collectionReferenceInitializers;
 
@@ -56,11 +58,9 @@ public abstract class AbstractRowReader implements RowReader {
 
 	public AbstractRowReader(ReaderCollector readerCollector) {
 		if ( CollectionHelper.isNotEmpty( readerCollector.getEntityReferenceInitializers() ) ) {
-			entityReferenceInitializers = new ArrayList<EntityReferenceInitializer>(
-					readerCollector.getEntityReferenceInitializers()
-			);
+			entityReferenceInitializers = readerCollector.getEntityReferenceInitializers().toArray( EMPTY_REFERENCE_INITIALIZERS );
 			entityInitializerByEntityReference =
-					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.size() );
+					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.length );
 			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
 				entityInitializerByEntityReference.put(
 						entityReferenceInitializer.getEntityReference(),
@@ -69,7 +69,7 @@ public abstract class AbstractRowReader implements RowReader {
 			}
 		}
 		else {
-			entityReferenceInitializers = Collections.<EntityReferenceInitializer>emptyList();
+			entityReferenceInitializers = EMPTY_REFERENCE_INITIALIZERS;
 			entityInitializerByEntityReference = Collections.<EntityReference,EntityReferenceInitializer>emptyMap();
 		}
 		this.arrayReferenceInitializers = readerCollector.getArrayReferenceInitializers();
@@ -82,7 +82,7 @@ public abstract class AbstractRowReader implements RowReader {
 	@Override
 	public Object readRow(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException {
 
-		final boolean hasEntityReferenceInitializers = CollectionHelper.isNotEmpty( entityReferenceInitializers );
+		final boolean hasEntityReferenceInitializers = entityReferenceInitializers.length != 0;
 
 		if ( hasEntityReferenceInitializers ) {
 			// 	1) allow entity references to resolve identifiers (in 2 steps)

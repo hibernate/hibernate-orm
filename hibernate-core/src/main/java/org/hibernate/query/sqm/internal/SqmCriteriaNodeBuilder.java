@@ -2078,9 +2078,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 		final SqmExpression<T> sqmExpression = (SqmExpression<T>) expression;
 		final SqmInListPredicate<T> predicate = new SqmInListPredicate<>( sqmExpression, this );
 		for ( T value : values ) {
-			predicate.addExpression(
-					new SqmLiteral<>( value, sqmExpression.getNodeType(), this )
-			);
+			final SqmExpression valueSqmExpression;
+			if ( value instanceof SqmExpression ) {
+				valueSqmExpression = ( SqmExpression ) value;
+			}
+			else {
+				valueSqmExpression = new SqmLiteral<>( value, sqmExpression.getNodeType(), this );
+			}
+			predicate.addExpression( valueSqmExpression );
 		}
 		return predicate;
 	}

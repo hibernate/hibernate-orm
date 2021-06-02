@@ -4,14 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.criteria.basic;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+package org.hibernate.orm.test.jpa.criteria.basic;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -22,25 +19,31 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.testing.RequiresDialect;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 
 /**
  * @author Jeremy Carnus
  * @author Guillaume Smet
  */
 @TestForIssue(jiraKey = "HHH-12989")
-public class InWithHeterogeneousCollectionTest extends BaseCoreFunctionalTestCase {
+@Jpa( annotatedClasses = InWithHeterogeneousCollectionTest.Event.class )
+public class InWithHeterogeneousCollectionTest {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	public void testCaseClause() {
-		doInHibernate( this::sessionFactory, session -> {
-			CriteriaBuilder cb = session.getCriteriaBuilder();
+	void testCaseClause(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaBuilder cb = em.getCriteriaBuilder();
 
 			CriteriaQuery<Event> criteria = cb.createQuery( Event.class );
 
@@ -55,27 +58,29 @@ public class InWithHeterogeneousCollectionTest extends BaseCoreFunctionalTestCas
 
 			criteria.select( eventRoot );
 			criteria.where( tagPath.in( Arrays.asList( expression, "my-tag" ) ) );
-			List<Event> resultList = session.createQuery( criteria ).getResultList();
+			List<Event> resultList = em.createQuery( criteria ).getResultList();
 
-			Assert.assertEquals( 2, resultList.size() );
+			assertThat( resultList, hasSize( 2 ) );
 		} );
 	}
 
-	@Before
-	public void setup() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.save( new Event( 1L, "EventName1", "EventName1".toLowerCase( Locale.ROOT ) ) );
-			session.save( new Event( 2L, "EventName2", "my-tag" ) );
+	@BeforeEach
+	void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			em.persist( new Event( 1L, "EventName1", "EventName1".toLowerCase( Locale.ROOT ) ) );
+			em.persist( new Event( 2L, "EventName2", "my-tag" ) );
 		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[]{ Event.class };
+	@AfterEach
+	void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			em.createQuery( "delete Event" ).executeUpdate();
+		} );
 	}
 
 	@Entity(name = "Event")
-	public static class Event {
+	static class Event {
 
 		@Id
 		private Long id;

@@ -1,3 +1,4 @@
+org.hibernate.test.id.SequenceGeneratorTest
 NoPackageTest
 org.hibernate.boot.model.naming.ImplicitIndexColumnNameSourceTest
 org.hibernate.boot.model.naming.NamingHelperTest
@@ -913,3 +914,14 @@ org.hibernate.test.where.hbm.WhereTest
 org.hibernate.type.descriptor.java.BooleanTypeDescriptorTest
 org.hibernate.type.descriptor.sql.JdbcTypeJavaClassMappingsTest
 org.hibernate.type.JavaTypeDescriptorRegistryTest
+org.hibernate.id.hhh12973.SequenceMismatchStrategyWithoutSequenceGeneratorTest
+org.hibernate.test.annotations.id.sequences.IdTest
+org.hibernate.test.id.PooledHiLoSequenceIdentifierTest
+org.hibernate.test.id.sequence.LegacySequenceExportTest
+org.hibernate.test.id.sequence.OptimizerTest
+org.hibernate.test.id.sequence.SequenceExportTest
+org.hibernate.test.idgen.biginteger.sequence.BigIntegerSequenceGeneratorTest
+org.hibernate.test.idgen.biginteger.sequence.BigIntegerSequenceGeneratorZeroScaleTest
+org.hibernate.test.idgen.enhanced.sequence.BasicSequenceTest
+org.hibernate.test.idgen.enhanced.sequence.HiLoSequenceMismatchStrategyTest
+org.hibernate.test.idgen.enhanced.sequence.HiLoSequenceTest

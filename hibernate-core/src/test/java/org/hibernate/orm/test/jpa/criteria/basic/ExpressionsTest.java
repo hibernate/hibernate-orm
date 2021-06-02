@@ -275,7 +275,7 @@ public class ExpressionsTest extends AbstractCriteriaTest {
 									builder.literal( BigDecimal.valueOf( 10.0 ) ),
 									builder.literal( BigDecimal.valueOf( 5.0 ) )
 							),
-							BigDecimal.valueOf( 2.0 )
+							builder.literal( BigDecimal.valueOf( 2.0 ) )
 					)
 			);
 			Number result = em.createQuery( criteria ).getSingleResult();

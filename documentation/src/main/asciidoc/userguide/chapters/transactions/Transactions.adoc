@@ -40,7 +40,7 @@ or provide a custom `org.hibernate.resource.transaction.TransactionCoordinatorBu
 [NOTE]
 ====
 For details on implementing a custom `TransactionCoordinatorBuilder`, or simply better understanding how it works, see the
-http://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/integrationguide/html_single/Hibernate_Integration_Guide.html[Integration Guide] .
 ====
 
 Hibernate uses JDBC connections and JTA resources directly, without adding any additional locking behavior.

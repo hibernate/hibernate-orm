@@ -489,7 +489,7 @@ However, this strategy requires the IN-clause row value expression for composite
 If you can use temporary tables, that's probably the best choice.
 However, if you are not allowed to create temporary tables, you must pick one of these four strategies that works with your underlying database.
 Before making up your mind, you should benchmark which one works best for your current workload.
-For instance, http://blog.2ndquadrant.com/postgresql-ctes-are-optimization-fences/[CTE are optimization fences in PostgreSQL], so make sure you measure before making a decision.
+For instance, https://blog.2ndquadrant.com/postgresql-ctes-are-optimization-fences/[CTE are optimization fences in PostgreSQL], so make sure you measure before making a decision.
 
 If you're using Oracle or MySQL 5.7, you can choose either `InlineIdsOrClauseBulkIdStrategy` or `InlineIdsInClauseBulkIdStrategy`.
 For older version of MySQL, then you can only use `InlineIdsOrClauseBulkIdStrategy`.

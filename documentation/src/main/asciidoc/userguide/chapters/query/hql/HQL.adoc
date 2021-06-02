@@ -909,7 +909,7 @@ include::{extrasdir}/hql-distinct-entity-query-example.sql[]
 ----
 ====
 
-In this case, the `DISTINCT` SQL keyword is undesirable since it does a redundant result set sorting, as explained http://in.relation.to/2016/08/04/introducing-distinct-pass-through-query-hint/[in this blog post].
+In this case, the `DISTINCT` SQL keyword is undesirable since it does a redundant result set sorting, as explained https://in.relation.to/2016/08/04/introducing-distinct-pass-through-query-hint/[in this blog post].
 To fix this issue, Hibernate 5.2.2 added support for the `HINT_PASS_DISTINCT_THROUGH` entity query hint:
 
 [[hql-distinct-entity-query-hint-example]]

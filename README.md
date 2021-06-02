@@ -1,4 +1,4 @@
-<img src="http://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />
+<img src="https://static.jboss.org/hibernate/images/hibernate_logo_whitebkg_200px.png" />
 
 
 Hibernate ORM is a library providing Object/Relational Mapping (ORM) support
@@ -6,9 +6,9 @@ to applications, libraries, and frameworks.
 
 It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
 
-This is the repository of its source code: see [Hibernate.org](http://hibernate.org/orm/) for additional information.
+This is the repository of its source code: see [Hibernate.org](https://hibernate.org/orm/) for additional information.
 
-[![Build Status](http://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon)](http://ci.hibernate.org/job/hibernate-orm-main-h2-main/)
+[![Build Status](https://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon)](https://ci.hibernate.org/job/hibernate-orm-main-h2-main/)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java)
 
 Building from sources
@@ -23,7 +23,7 @@ Gradle.
 
 Contributors should read the [Contributing Guide](CONTRIBUTING.md).
 
-See the guides for setting up [IntelliJ](http://hibernate.org/community/contribute/intellij-idea/) or
+See the guides for setting up [IntelliJ](https://hibernate.org/community/contribute/intellij-idea/) or
 [Eclipse](https://hibernate.org/community/contribute/eclipse-ide/) as your development environment.
 
 Check out the _Getting Started_ section in CONTRIBUTING.md for getting started working on Hibernate source.
@@ -32,9 +32,9 @@ Check out the _Getting Started_ section in CONTRIBUTING.md for getting started w
 Continuous Integration
 =========
 
-Hibernate makes use of [Jenkins](http://jenkins-ci.org) for its CI needs.  The project is built continuous on each 
+Hibernate makes use of [Jenkins](https://jenkins-ci.org) for its CI needs.  The project is built continuous on each 
 push to the upstream repository.   Overall there are a few different jobs, all of which can be seen at 
-[http://ci.hibernate.org/view/ORM/](http://ci.hibernate.org/view/ORM/)
+[https://ci.hibernate.org/view/ORM/](https://ci.hibernate.org/view/ORM/)
 
 
 Gradle primer

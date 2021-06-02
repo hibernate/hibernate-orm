@@ -15,13 +15,13 @@ It supports most of the functions described by the OGC Simple Feature Specificat
 PostgreSQL/PostGIS, MySQL, Microsoft SQL Server and H2/GeoDB.
 
 Spatial data types are not part of the Java standard library, and they are absent from the JDBC specification.
-Over the years http://tsusiatsoftware.net/jts/main.html[JTS] has emerged the _de facto_ standard to fill this gap. JTS is
+Over the years https://tsusiatsoftware.net/jts/main.html[JTS] has emerged the _de facto_ standard to fill this gap. JTS is
 an implementation of the https://portal.opengeospatial.org/files/?artifact_id=829[Simple Feature Specification (SFS)]. Many databases
 on the other hand implement the SQL/MM - Part 3: Spatial Data specification - a related, but broader specification. The biggest difference is that
 SFS is limited to 2D geometries in the projected plane (although JTS supports 3D coordinates), whereas
 SQL/MM supports 2-, 3- or 4-dimensional coordinate spaces.
 
-Hibernate Spatial supports two different geometry models: http://tsusiatsoftware.net/jts/main.html[JTS] and
+Hibernate Spatial supports two different geometry models: https://tsusiatsoftware.net/jts/main.html[JTS] and
 https://github.com/GeoLatte/geolatte-geom[geolatte-geom]. As already mentioned, JTS is the _de facto_
 standard. Geolatte-geom (also written by the lead developer of Hibernate Spatial) is a more recent library that
 supports many features specified in SQL/MM but not available in JTS (such as support for 4D geometries, and support for extended WKT/WKB formats).

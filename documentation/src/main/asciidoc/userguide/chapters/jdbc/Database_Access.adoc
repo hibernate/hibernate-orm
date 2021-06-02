@@ -55,20 +55,20 @@ NOTE: Not all properties apply to all situations. For example, if you are provid
 To use the c3p0 integration, the application must include the `hibernate-c3p0` module jar (as well as its dependencies) on the classpath.
 ====
 
-Hibernate also provides support for applications to use http://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
+Hibernate also provides support for applications to use https://www.mchange.com/projects/c3p0/[c3p0] connection pooling.
 When c3p0 support is enabled, a number of c3p0-specific configuration settings are recognized in addition to the general ones described in <<database-connectionprovider-driver>>.
 
 Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
 
-`hibernate.c3p0.min_size` or `c3p0.minPoolSize`:: The minimum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 minPoolSize]
-`hibernate.c3p0.max_size` or `c3p0.maxPoolSize`:: The maximum size of the c3p0 pool. See http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 maxPoolSize]
-`hibernate.c3p0.timeout` or `c3p0.maxIdleTime`:: The Connection idle time. See http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 maxIdleTime]
-`hibernate.c3p0.max_statements` or `c3p0.maxStatements`:: Controls the c3p0 PreparedStatement cache size (if using). See http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 maxStatements]
-`hibernate.c3p0.acquire_increment` or `c3p0.acquireIncrement`:: Number of connections c3p0 should acquire at a time when the pool is exhausted. See http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 acquireIncrement]
-`hibernate.c3p0.idle_test_period` or `c3p0.idleConnectionTestPeriod`:: Idle time before a c3p0 pooled connection is validated. See http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 idleConnectionTestPeriod]
-`hibernate.c3p0.initialPoolSize`:: The initial c3p0 pool size. If not specified, default is to use the min pool size. See http://www.mchange.com/projects/c3p0/#initialPoolSize[c3p0 initialPoolSize]
+`hibernate.c3p0.min_size` or `c3p0.minPoolSize`:: The minimum size of the c3p0 pool. See https://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 minPoolSize]
+`hibernate.c3p0.max_size` or `c3p0.maxPoolSize`:: The maximum size of the c3p0 pool. See https://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 maxPoolSize]
+`hibernate.c3p0.timeout` or `c3p0.maxIdleTime`:: The Connection idle time. See https://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 maxIdleTime]
+`hibernate.c3p0.max_statements` or `c3p0.maxStatements`:: Controls the c3p0 PreparedStatement cache size (if using). See https://www.mchange.com/projects/c3p0/#maxStatements[c3p0 maxStatements]
+`hibernate.c3p0.acquire_increment` or `c3p0.acquireIncrement`:: Number of connections c3p0 should acquire at a time when the pool is exhausted. See https://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 acquireIncrement]
+`hibernate.c3p0.idle_test_period` or `c3p0.idleConnectionTestPeriod`:: Idle time before a c3p0 pooled connection is validated. See https://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 idleConnectionTestPeriod]
+`hibernate.c3p0.initialPoolSize`:: The initial c3p0 pool size. If not specified, default is to use the min pool size. See https://www.mchange.com/projects/c3p0/#initialPoolSize[c3p0 initialPoolSize]
 Any other settings prefixed with `hibernate.c3p0.`:: Will have the `hibernate.` portion stripped and be passed to c3p0.
-Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See http://www.mchange.com/projects/c3p0/#configuration[c3p0 configuration]
+Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See https://www.mchange.com/projects/c3p0/#configuration[c3p0 configuration]
 
 [[database-connectionprovider-proxool]]
 === Using Proxool
@@ -78,7 +78,7 @@ Any other settings prefixed with `c3p0.`:: Get passed to c3p0 as is. See http://
 To use the Proxool integration, the application must include the `hibernate-proxool` module jar (as well as its dependencies) on the classpath.
 ====
 
-Hibernate also provides support for applications to use http://proxool.sourceforge.net/[Proxool] connection pooling.
+Hibernate also provides support for applications to use https://proxool.sourceforge.net/[Proxool] connection pooling.
 
 Transaction isolation of the Connections is managed by the `ConnectionProvider` itself. See <<database-connectionprovider-isolation>>.
 
@@ -92,14 +92,14 @@ If set to true, this ConnectionProvider will use an already existing Proxool poo
 ==== Configuring Proxool via XML
 
 The `hibernate.proxool.xml` setting names a Proxool configuration XML file to be loaded as a classpath resource and loaded by Proxool's JAXPConfigurator.
-See http://proxool.sourceforge.net/configure.html[proxool  configuration].
+See https://proxool.sourceforge.net/configure.html[proxool  configuration].
 `hibernate.proxool.pool_alias` must be set to indicate which pool to use.
 
 [[database-connectionprovider-proxool-properties]]
 ==== Configuring Proxool via Properties
 
 The `hibernate.proxool.properties` setting names a Proxool configuration properties file to be loaded as a classpath resource and loaded by Proxool's `PropertyConfigurator`.
-See http://proxool.sourceforge.net/configure.html[proxool  configuration].
+See https://proxool.sourceforge.net/configure.html[proxool  configuration].
 `hibernate.proxool.pool_alias` must be set to indicate which pool to use.
 
 [[database-connectionprovider-hikari]]
@@ -131,7 +131,7 @@ Note that Hikari only supports JDBC standard isolation levels (apparently).
 To use the Vibur DBCP integration, the application must include the `hibernate-vibur` module jar (as well as its dependencies) on the classpath.
 ====
 
-Hibernate also provides support for applications to use http://www.vibur.org/[Vibur DBCP] connection pool.
+Hibernate also provides support for applications to use https://www.vibur.org/[Vibur DBCP] connection pool.
 
 Set all of your Vibur settings in Hibernate prefixed by `hibernate.vibur.` and this `ConnectionProvider` will pick them up and pass them along to Vibur DBCP.
 Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Vibur ones (any `hibernate.vibur.` prefixed ones have precedence):
@@ -151,7 +151,7 @@ Additionally, this `ConnectionProvider` will pick up the following Hibernate-spe
 To use the Agroal integration, the application must include the `hibernate-agroal` module jar (as well as its dependencies) on the classpath.
 ====
 
-Hibernate also provides support for applications to use http://agroal.github.io/[Agroal] connection pool.
+Hibernate also provides support for applications to use https://agroal.github.io/[Agroal] connection pool.
 
 Set all of your Agroal settings in Hibernate prefixed by `hibernate.agroal.` and this `ConnectionProvider` will pick them up and pass them along to Agroal connection pool.
 Additionally, this `ConnectionProvider` will pick up the following Hibernate-specific properties and map them to the corresponding Agroal ones (any `hibernate.agroal.` prefixed ones have precedence):

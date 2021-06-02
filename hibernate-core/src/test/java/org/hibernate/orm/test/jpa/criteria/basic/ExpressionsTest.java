@@ -279,7 +279,7 @@ public class ExpressionsTest extends AbstractCriteriaTest {
 					)
 			);
 			Number result = em.createQuery( criteria ).getSingleResult();
-			assertThat( result.doubleValue(), closeTo( 25.0d, 0.1d) );
+			assertThat( result.doubleValue(), closeTo( 25.0d, 0.1d ) );
 
 			criteria.select(
 					builder.prod(
@@ -291,7 +291,7 @@ public class ExpressionsTest extends AbstractCriteriaTest {
 					)
 			);
 			result = em.createQuery( criteria ).getSingleResult();
-			assertThat( result.doubleValue(), closeTo( 4.0d, 0.1d) );
+			assertThat( result.doubleValue(), closeTo( 4.0d, 0.1d ) );
 
 		} );
 	}

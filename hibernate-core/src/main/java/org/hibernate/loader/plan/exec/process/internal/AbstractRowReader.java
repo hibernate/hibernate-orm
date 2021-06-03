@@ -8,7 +8,6 @@ package org.hibernate.loader.plan.exec.process.internal;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -16,12 +15,9 @@ import java.util.Map;
 
 import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.plan.exec.process.spi.CollectionReferenceInitializer;
@@ -54,24 +50,10 @@ public abstract class AbstractRowReader implements RowReader {
 
 	// cache map for looking up EntityReferenceInitializer by EntityReference to help with resolving
 	// bidirectional EntityReference and fetches.
-	private final Map<EntityReference,EntityReferenceInitializer> entityInitializerByEntityReference;
+	private Map<EntityReference,EntityReferenceInitializer> entityInitializerByEntityReference;
 
 	public AbstractRowReader(ReaderCollector readerCollector) {
-		if ( CollectionHelper.isNotEmpty( readerCollector.getEntityReferenceInitializers() ) ) {
-			entityReferenceInitializers = readerCollector.getEntityReferenceInitializers().toArray( EMPTY_REFERENCE_INITIALIZERS );
-			entityInitializerByEntityReference =
-					new HashMap<EntityReference, EntityReferenceInitializer>( entityReferenceInitializers.length );
-			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
-				entityInitializerByEntityReference.put(
-						entityReferenceInitializer.getEntityReference(),
-						entityReferenceInitializer
-				);
-			}
-		}
-		else {
-			entityReferenceInitializers = EMPTY_REFERENCE_INITIALIZERS;
-			entityInitializerByEntityReference = Collections.<EntityReference,EntityReferenceInitializer>emptyMap();
-		}
+		this.entityReferenceInitializers = readerCollector.getEntityReferenceInitializers().toArray( EMPTY_REFERENCE_INITIALIZERS );
 		this.arrayReferenceInitializers = readerCollector.getArrayReferenceInitializers();
 		this.collectionReferenceInitializers = readerCollector.getNonArrayCollectionReferenceInitializers();
 	}
@@ -148,9 +130,7 @@ public abstract class AbstractRowReader implements RowReader {
 			FetchSource fetchSource) throws SQLException {
 		// Resolve any bidirectional entity references first.
 		for ( BidirectionalEntityReference bidirectionalEntityReference : fetchSource.getBidirectionalEntityReferences() ) {
-			final EntityReferenceInitializer targetEntityReferenceInitializer = entityInitializerByEntityReference.get(
-					bidirectionalEntityReference.getTargetEntityReference()
-			);
+			final EntityReferenceInitializer targetEntityReferenceInitializer = getInitializerByEntityReference( bidirectionalEntityReference.getTargetEntityReference() );
 			resolveEntityKey(
 					resultSet,
 					context,
@@ -161,9 +141,7 @@ public abstract class AbstractRowReader implements RowReader {
 		for ( Fetch fetch : fetchSource.getFetches() ) {
 			if ( EntityFetch.class.isInstance( fetch ) ) {
 				final EntityFetch entityFetch = (EntityFetch) fetch;
-				final EntityReferenceInitializer  entityReferenceInitializer = entityInitializerByEntityReference.get(
-						entityFetch
-				);
+				final EntityReferenceInitializer  entityReferenceInitializer = getInitializerByEntityReference( entityFetch );
 				if ( entityReferenceInitializer != null ) {
 					resolveEntityKey(
 							resultSet,
@@ -181,6 +159,21 @@ public abstract class AbstractRowReader implements RowReader {
 				);
 			}
 		}
+	}
+
+	private EntityReferenceInitializer getInitializerByEntityReference(EntityReference targetEntityReference) {
+		if ( entityInitializerByEntityReference == null ) {
+			entityInitializerByEntityReference = new HashMap<>( entityReferenceInitializers.length );
+			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
+				entityInitializerByEntityReference.put(
+						entityReferenceInitializer.getEntityReference(),
+						entityReferenceInitializer
+				);
+			}
+		}
+		return entityInitializerByEntityReference.get(
+				targetEntityReference
+		);
 	}
 
 	@Override

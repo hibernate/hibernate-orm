@@ -87,12 +87,36 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 		return jdbcValues.getPosition();
 	}
 
+	public boolean isBeforeFirst() {
+		return jdbcValues.isBeforeFirst( this );
+	}
+
+	public void beforeFirst() {
+		jdbcValues.beforeFirst( this );
+	}
+
+	public boolean isFirst() {
+		return jdbcValues.isFirst( this );
+	}
+
 	public boolean first() {
 		return jdbcValues.first( this );
 	}
 
 	public boolean last() {
 		return jdbcValues.last( this );
+	}
+
+	public boolean isLast() {
+		return jdbcValues.isLast( this );
+	}
+
+	public void afterLast() {
+		jdbcValues.afterLast( this );
+	}
+
+	public boolean isAfterLast() {
+		return jdbcValues.isAfterLast( this );
 	}
 
 	@Override

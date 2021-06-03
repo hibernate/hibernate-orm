@@ -422,6 +422,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
+		predicate.getLeftHandExpression().accept( this );
 		predicate.getPluralPath().accept( this );
 		return predicate;
 	}

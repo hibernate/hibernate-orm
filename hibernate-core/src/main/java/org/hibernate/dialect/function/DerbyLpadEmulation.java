@@ -18,16 +18,16 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * A derby implementation for rpad.
+ * A derby implementation for lpad.
  *
  * @author Christian Beikov
  */
-public class DerbyRpadFunction
+public class DerbyLpadEmulation
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public DerbyRpadFunction() {
+	public DerbyLpadEmulation() {
 		super(
-				"rpad",
+				"lpad",
 				StandardArgumentsValidators.exactly( 2 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
@@ -44,15 +44,15 @@ public class DerbyRpadFunction
 		walker.render( string, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.appendSql( ")<" );
 		walker.render( length, SqlAstNodeRenderingMode.DEFAULT );
-		sqlAppender.appendSql( " then substr(" );
-		walker.render( string, SqlAstNodeRenderingMode.DEFAULT );
-		sqlAppender.appendSql( "||char(''," );
+		sqlAppender.appendSql( " then substr(char(''," );
 		// The char function for Derby always needs a literal value
 		walker.render( length, SqlAstNodeRenderingMode.INLINE_PARAMETERS );
-		sqlAppender.appendSql( "),1," );
-		walker.render( length, SqlAstNodeRenderingMode.DEFAULT );
-		sqlAppender.appendSql( ") else " );
+		sqlAppender.appendSql( ")||" );
 		walker.render( string, SqlAstNodeRenderingMode.DEFAULT );
+		sqlAppender.appendSql( ",length(" );
+		walker.render( string, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		sqlAppender.appendSql( ")+1) else " );
+		walker.render( string, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 		sqlAppender.appendSql( " end" );
 	}
 

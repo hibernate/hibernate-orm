@@ -89,8 +89,7 @@ task release {
 			"the fact that subprojects will appropriately define a release task " +
 			"themselves if they have any release-related activities to perform"
 
-	// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module,
-	// but this limitation might be resolved now that this module has been deleted?
+	// Force to release with JDK 8. It used to not work on JDK11 because of the hibernate-orm-modules module.
 	doFirst {
 		if ( !JavaVersion.current().isJava8() || !gradle.ext.testedJavaVersionAsEnum.isJava8() ) {
 			throw new IllegalStateException( "Please use JDK 8 to perform the release." )

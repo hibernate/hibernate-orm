@@ -52,6 +52,7 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		if ( !hasMaxRows ) {
 			return sql;
 		}
+		sql = sql.trim();
 
 		final LockOptions lockOptions = queryParameters.getLockOptions();
 		if ( lockOptions != null ) {
@@ -83,7 +84,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		bindLimitParametersInReverseOrder = false;
 		useMaxForLimit = false;
 
-		sql = normalizeStatement( sql );
 		final int offsetFetchLength;
 		final String offsetFetchString;
 		if ( hasFirstRow ) {
@@ -100,7 +100,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	private String processSql(String sql, int forUpdateIndex, boolean hasFirstRow) {
 		bindLimitParametersInReverseOrder = true;
 		useMaxForLimit = true;
-		sql = normalizeStatement( sql );
 
 		String forUpdateClause = null;
 		boolean isForUpdate = false;
@@ -140,10 +139,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 		}
 
 		return pagingSelect.toString();
-	}
-
-	private String normalizeStatement(String sql) {
-		return sql.trim().replaceAll( "\\s+", " " );
 	}
 
 	private int getForUpdateIndex(String sql) {

@@ -26,11 +26,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Christian Beikov
  */
-public class SQLServerFormatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final SQLServerDialect dialect;
 
-	public SQLServerFormatFunction(SQLServerDialect dialect) {
+	public SQLServerFormatEmulation(SQLServerDialect dialect) {
 		super(
 				"format",
 				StandardArgumentsValidators.exactly( 2 ),

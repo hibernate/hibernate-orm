@@ -8,8 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.CurrentFunction;
-import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
+import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.InformixIdentityColumnSupport;
 import org.hibernate.dialect.pagination.FirstLimitHandler;
@@ -162,8 +161,8 @@ public class InformixDialect extends Dialect {
 
 		//coalesce() and nullif() both supported since Informix 12
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new IndividualLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new IndividualLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 	}
 
 	@Override

@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.SQLServerFormatFunction;
+import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.SQLServerIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -149,7 +149,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		if ( getVersion() >= 11 ) {
-			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatFunction( this ) );
+			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatEmulation( this ) );
 
 			//actually translate() was added in 2017 but
 			//it's not worth adding a new dialect for that!

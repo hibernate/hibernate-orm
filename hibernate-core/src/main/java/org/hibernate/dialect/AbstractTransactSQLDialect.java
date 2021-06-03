@@ -12,7 +12,7 @@ import org.hibernate.query.NullOrdering;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
+import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -113,8 +113,8 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		CommonFunctionFactory.datepartDatename( queryEngine );
 		CommonFunctionFactory.lastDay_eomonth( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().register( "least", new IndividualLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new IndividualLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 	}
 
 	@Override

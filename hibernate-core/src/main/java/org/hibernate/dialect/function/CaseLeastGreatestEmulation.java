@@ -19,12 +19,12 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  *
  * @author Christian Beikov
  */
-public class IndividualLeastGreatestEmulation
+public class CaseLeastGreatestEmulation
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final String operator;
 
-	public IndividualLeastGreatestEmulation(boolean least) {
+	public CaseLeastGreatestEmulation(boolean least) {
 		super(
 				least ? "least" : "greatest",
 				StandardArgumentsValidators.min( 2 ),

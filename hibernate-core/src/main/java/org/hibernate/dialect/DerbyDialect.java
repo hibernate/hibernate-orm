@@ -11,9 +11,9 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
-import org.hibernate.dialect.function.DerbyLpadFunction;
-import org.hibernate.dialect.function.DerbyRpadFunction;
-import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
+import org.hibernate.dialect.function.DerbyLpadEmulation;
+import org.hibernate.dialect.function.DerbyRpadEmulation;
+import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.function.InsertSubstringOverlayEmulation;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -207,10 +207,10 @@ public class DerbyDialect extends Dialect {
 				.register();
 
 		//no way I can see to pad with anything other than spaces
-		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadFunction() );
-		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadFunction() );
-		queryEngine.getSqmFunctionRegistry().register( "least", new IndividualLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new IndividualLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
 		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( true ) );
 	}
 

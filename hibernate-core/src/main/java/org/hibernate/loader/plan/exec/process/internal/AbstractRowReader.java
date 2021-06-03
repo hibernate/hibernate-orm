@@ -97,15 +97,11 @@ public abstract class AbstractRowReader implements RowReader {
 				entityReferenceInitializer.finishUpRow( resultSet, context );
 			}
 		}
-		if ( collectionReferenceInitializers != null ) {
-			for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
-				collectionReferenceInitializer.finishUpRow( resultSet, context );
-			}
+		for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
+			collectionReferenceInitializer.finishUpRow( resultSet, context );
 		}
-		if ( arrayReferenceInitializers != null ) {
-			for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
-				arrayReferenceInitializer.finishUpRow( resultSet, context );
-			}
+		for ( CollectionReferenceInitializer arrayReferenceInitializer : arrayReferenceInitializers ) {
+			arrayReferenceInitializer.finishUpRow( resultSet, context );
 		}
 
 		return logicalRow;

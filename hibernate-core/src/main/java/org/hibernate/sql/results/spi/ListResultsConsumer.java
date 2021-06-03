@@ -80,21 +80,29 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 						uniqueRows = true;
 					}
 				}
+
+				final List<JavaTypeDescriptor> resultJavaTypeDescriptors = rowReader.getResultJavaTypeDescriptors();
+				final JavaTypeDescriptor<R> resultJavaTypeDescriptor = resultJavaTypeDescriptors.get( 0 );
+
 				while ( rowProcessingState.next() ) {
 					final R row = rowReader.readRow( rowProcessingState, processingOptions );
 					boolean add = true;
 					if ( uniqueRows ) {
-						if ( results.contains( row ) ) {
-							if ( uniqueSemantic == UniqueSemantic.ASSERT && !rowProcessingState.hasCollectionInitializers() ) {
-								throw new HibernateException(
-										"More than one row with the given identifier was found: " +
-												jdbcValuesSourceProcessingState.getExecutionContext()
-														.getEntityId() +
-												", for class: " +
-												resultJavaType.getName()
-								);
+						assert resultJavaTypeDescriptors.size() == 1;
+						for ( R existingRow : results ) {
+							if ( resultJavaTypeDescriptor.areEqual( existingRow, row ) ) {
+								if ( uniqueSemantic == UniqueSemantic.ASSERT && !rowProcessingState.hasCollectionInitializers() ) {
+									throw new HibernateException(
+											"More than one row with the given identifier was found: " +
+													jdbcValuesSourceProcessingState.getExecutionContext()
+															.getEntityId() +
+													", for class: " +
+													resultJavaType.getName()
+									);
+								}
+								add = false;
+								break;
 							}
-							add = false;
 						}
 					}
 					if ( add ) {

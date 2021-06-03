@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +23,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -69,6 +71,15 @@ public class StandardRowReader<T> implements RowReader<T> {
 		}
 
 		return (Class<T>) Object[].class;
+	}
+
+	@Override
+	public List<JavaTypeDescriptor> getResultJavaTypeDescriptors() {
+		List<JavaTypeDescriptor> javaTypeDescriptors = new ArrayList<>( resultAssemblers.size() );
+		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
+			javaTypeDescriptors.add( resultAssembler.getAssembledJavaTypeDescriptor() );
+		}
+		return javaTypeDescriptors;
 	}
 
 	@Override

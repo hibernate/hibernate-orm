@@ -15,6 +15,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.query.named.RowReaderMemento;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Coordinates the process of reading a single result values row
@@ -28,6 +29,11 @@ public interface RowReader<R> {
 	 * results (domain selections).
 	 */
 	Class<R> getResultJavaType();
+
+	/**
+	 *  The JavaTypeDescriptors of the result
+	 */
+	List<JavaTypeDescriptor> getResultJavaTypeDescriptors();
 
 	/**
 	 * The initializers associated with this reader

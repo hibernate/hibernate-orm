@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.function;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -60,7 +59,7 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
-		assert arguments.size() > 1;
+		assert arguments.size() > 0;
 
 		boolean hasJdbcParameter = false;
 		for (SqlAstNode argument : arguments) {
@@ -74,13 +73,12 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 			sqlAppender.appendSql( "varchar" );
 		}
 		sqlAppender.appendSql( "( ");
-		final Iterator<SqlAstNode> iter = arguments.iterator();
-		do {
-			renderOperand( iter.next(), sqlAppender, walker, hasJdbcParameter );
-			if ( iter.hasNext() ) {
+		for ( int i = 0; i < arguments.size(); i++ ) {
+			if ( i > 0 ) {
 				sqlAppender.appendSql( " || " );
 			}
-		} while ( iter.hasNext() );
+			renderOperand( arguments.get( i ), sqlAppender, walker, hasJdbcParameter );
+		}
 		sqlAppender.appendSql( " )" );
 	}
 

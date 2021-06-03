@@ -11,6 +11,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.function.DerbyLpadFunction;
 import org.hibernate.dialect.function.DerbyRpadFunction;
 import org.hibernate.dialect.function.IndividualLeastGreatestEmulation;
@@ -209,6 +210,7 @@ public class DerbyDialect extends Dialect {
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadFunction() );
 		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadFunction() );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction() );
 		queryEngine.getSqmFunctionRegistry().register( "least", new IndividualLeastGreatestEmulation( true ) );
 		queryEngine.getSqmFunctionRegistry().register( "greatest", new IndividualLeastGreatestEmulation( false ) );
 		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( true ) );

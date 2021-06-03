@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -79,6 +80,25 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 						expression.nodeBuilder()
 				)
 		);
+	}
+
+	@Override
+	public Object visitFunction(SqmFunction sqmFunction) {
+		for ( Object argument : sqmFunction.getArguments() ) {
+			if ( argument instanceof SqmFunction) {
+				visitFunction( (SqmFunction) argument );
+			}
+			else if ( argument instanceof JpaCriteriaParameter ) {
+				visitJpaCriteriaParameter( (JpaCriteriaParameter<?>) argument );
+			}
+			else if ( argument instanceof SqmPositionalParameter ) {
+				visitPositionalParameterExpression( (SqmPositionalParameter) argument );
+			}
+			else if ( argument instanceof SqmNamedParameter ) {
+				visitNamedParameterExpression( ( SqmNamedParameter ) argument );
+			}
+		}
+		return sqmFunction;
 	}
 
 	private SqmParameter<?> visitParameter(SqmParameter<?> param) {

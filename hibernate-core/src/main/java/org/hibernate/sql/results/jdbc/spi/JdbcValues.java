@@ -54,9 +54,15 @@ public interface JdbcValues {
 	int getPosition();
 
 	boolean isBeforeFirst(RowProcessingState rowProcessingState);
+	void beforeFirst(RowProcessingState rowProcessingState);
+
+	boolean isFirst(RowProcessingState rowProcessingState);
 	boolean first(RowProcessingState rowProcessingState);
 
 	boolean isAfterLast(RowProcessingState rowProcessingState);
+	void afterLast(RowProcessingState rowProcessingState);
+
+	boolean isLast(RowProcessingState rowProcessingState);
 	boolean last(RowProcessingState rowProcessingState);
 
 	/**

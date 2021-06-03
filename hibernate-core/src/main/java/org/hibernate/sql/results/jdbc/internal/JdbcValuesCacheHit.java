@@ -152,6 +152,16 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	}
 
 	@Override
+	public void beforeFirst(RowProcessingState rowProcessingState) {
+		position = -1;
+	}
+
+	@Override
+	public boolean isFirst(RowProcessingState rowProcessingState) {
+		return position == 0;
+	}
+
+	@Override
 	public boolean first(RowProcessingState rowProcessingState) {
 		position = 0;
 		return numberOfRows > 0;
@@ -160,6 +170,21 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	public boolean isAfterLast(RowProcessingState rowProcessingState) {
 		return position >= numberOfRows;
+	}
+
+	@Override
+	public void afterLast(RowProcessingState rowProcessingState) {
+		position = numberOfRows;
+	}
+
+	@Override
+	public boolean isLast(RowProcessingState rowProcessingState) {
+		if ( numberOfRows == 0 ) {
+			return position == 0;
+		}
+		else {
+			return position == numberOfRows - 1;
+		}
 	}
 
 	@Override

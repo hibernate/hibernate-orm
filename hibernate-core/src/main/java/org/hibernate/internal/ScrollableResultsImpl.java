@@ -7,7 +7,6 @@
 package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
@@ -85,73 +84,26 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 		final boolean hasResult = getRowProcessingState().last();
 		prepareCurrentRow( hasResult );
 		return hasResult;
-
-		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
-
-//		try {
-//			final boolean result = getResultSet().last();
-//			prepareCurrentRow( result );
-//			return result;
-//		}
-//		catch (SQLException sqle) {
-//			throw convert( sqle, "could not advance using last()" );
-//		}
 	}
 
 	@Override
 	public void afterLast() {
-		throw new NotYetImplementedFor6Exception();
-
-		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
-
-//		try {
-//			getResultSet().afterLast();
-//		}
-//		catch (SQLException sqle) {
-//			throw convert( sqle, "exception calling afterLast()" );
-//		}
+		getRowProcessingState().afterLast();
 	}
 
 	@Override
 	public void beforeFirst() {
-		throw new NotYetImplementedFor6Exception();
-
-		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
-
-//		try {
-//			getResultSet().beforeFirst();
-//		}
-//		catch (SQLException sqle) {
-//			throw convert( sqle, "exception calling beforeFirst()" );
-//		}
+		getRowProcessingState().beforeFirst();
 	}
 
 	@Override
 	public boolean isFirst() {
-		throw new NotYetImplementedFor6Exception();
-
-		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
-
-//		try {
-//			return getResultSet().isFirst();
-//		}
-//		catch (SQLException sqle) {
-//			throw convert( sqle, "exception calling isFirst()" );
-//		}
+		return getRowProcessingState().isFirst();
 	}
 
 	@Override
 	public boolean isLast() {
-		throw new NotYetImplementedFor6Exception();
-
-		// todo (6.0) : need these scrollable ResultSet "re-positioning"-style methods on the JdbcValues stuff
-
-//		try {
-//			return getResultSet().isLast();
-//		}
-//		catch (SQLException sqle) {
-//			throw convert( sqle, "exception calling isLast()" );
-//		}
+		return getRowProcessingState().isLast();
 	}
 
 	@Override

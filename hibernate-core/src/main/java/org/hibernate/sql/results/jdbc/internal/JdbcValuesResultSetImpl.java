@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.jdbc.internal;
 
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import org.hibernate.CacheMode;
 import org.hibernate.HibernateException;
@@ -165,7 +166,28 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			return resultSetAccess.getResultSet().isBeforeFirst();
 		}
 		catch (SQLException e) {
-			throw makeExecutionException( "Error calling ResultSet#isBeforeFirst", e );
+			throw makeExecutionException( "Error calling ResultSet#isBeforeFirst()", e );
+		}
+	}
+
+	@Override
+	public void beforeFirst(RowProcessingState rowProcessingState) {
+		try {
+			resultSetAccess.getResultSet().beforeFirst();
+			Arrays.fill( currentRowJdbcValues, null );
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#beforeFirst()", e );
+		}
+	}
+
+	@Override
+	public boolean isFirst(RowProcessingState rowProcessingState) {
+		try {
+			return resultSetAccess.getResultSet().isFirst();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#isFirst()", e );
 		}
 	}
 
@@ -194,7 +216,28 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			return resultSetAccess.getResultSet().isAfterLast();
 		}
 		catch (SQLException e) {
-			throw makeExecutionException( "Error calling ResultSet#isAfterLast", e );
+			throw makeExecutionException( "Error calling ResultSet#isAfterLast()", e );
+		}
+	}
+
+	@Override
+	public void afterLast(RowProcessingState rowProcessingState) {
+		try {
+			resultSetAccess.getResultSet().afterLast();
+			Arrays.fill( currentRowJdbcValues, null );
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#afterLast()", e );
+		}
+	}
+
+	@Override
+	public boolean isLast(RowProcessingState rowProcessingState) {
+		try {
+			return resultSetAccess.getResultSet().isLast();
+		}
+		catch (SQLException e) {
+			throw makeExecutionException( "Error calling ResultSet#isLast()", e );
 		}
 	}
 

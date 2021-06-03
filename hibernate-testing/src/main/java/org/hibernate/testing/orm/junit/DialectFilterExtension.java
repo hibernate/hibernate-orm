@@ -46,14 +46,30 @@ public class DialectFilterExtension implements ExecutionCondition {
 			for ( RequiresDialect requiresDialect : effectiveRequiresDialects ) {
 				requiredDialects.append(requiresDialect.value()  );
 				requiredDialects.append( " " );
-				if ( requiresDialect.matchSubTypes() ) {
+				final int requiredVersion = requiresDialect.version();
+				if ( requiredVersion > -1 ) {
+					requiredDialects.append( ", version = " );
+					requiredDialects.append( requiredVersion );
+					requiredDialects.append( " " );
 					if ( requiresDialect.value().isInstance( dialect ) ) {
-						return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+						if ( requiredVersion == dialect.getVersion() ) {
+							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+						}
+						if ( requiresDialect.matchSubTypes() && dialect.getVersion() > requiredVersion ) {
+							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+						}
 					}
 				}
 				else {
-					if ( requiresDialect.value().equals( dialect.getClass() ) ) {
-						return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+					if ( requiresDialect.matchSubTypes() ) {
+						if ( requiresDialect.value().isInstance( dialect ) ) {
+							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+						}
+					}
+					else {
+						if ( requiresDialect.value().equals( dialect.getClass() ) ) {
+							return ConditionEvaluationResult.enabled( "Matched @RequiresDialect" );
+						}
 					}
 				}
 			}
@@ -61,9 +77,10 @@ public class DialectFilterExtension implements ExecutionCondition {
 			return ConditionEvaluationResult.disabled(
 					String.format(
 							Locale.ROOT,
-							"Failed @RequiresDialect(dialect=%s) check - found %s]",
-							requiredDialects.toString(),
-							dialect.getClass().getName()
+							"Failed @RequiresDialect(dialect=%s) check - found %s version %s]",
+							requiredDialects,
+							dialect.getClass().getName(),
+							dialect.getVersion()
 					)
 			);
 		}
@@ -75,14 +92,27 @@ public class DialectFilterExtension implements ExecutionCondition {
 		);
 
 		for ( SkipForDialect effectiveSkipForDialect : effectiveSkips ) {
-			if ( effectiveSkipForDialect.matchSubTypes() ) {
+			final int skipForVersion = effectiveSkipForDialect.version();
+			if ( skipForVersion > -1 ) {
 				if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
-					return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+					if ( skipForVersion == dialect.getVersion() ) {
+						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+					}
+					if ( effectiveSkipForDialect.matchSubTypes() && dialect.getVersion() > skipForVersion ) {
+						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+					}
 				}
 			}
 			else {
-				if ( effectiveSkipForDialect.dialectClass().equals( dialect.getClass() ) ) {
-					return ConditionEvaluationResult.disabled( "Matched @SkipForDialect" );
+				if ( effectiveSkipForDialect.matchSubTypes() ) {
+					if ( effectiveSkipForDialect.dialectClass().isInstance( dialect ) ) {
+						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect(group)" );
+					}
+				}
+				else {
+					if ( effectiveSkipForDialect.dialectClass().equals( dialect.getClass() ) ) {
+						return ConditionEvaluationResult.disabled( "Matched @SkipForDialect" );
+					}
 				}
 			}
 		}

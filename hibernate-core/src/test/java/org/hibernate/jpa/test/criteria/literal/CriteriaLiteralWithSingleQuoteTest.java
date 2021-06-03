@@ -1,9 +1,3 @@
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
 package org.hibernate.jpa.test.criteria.literal;
 
 import javax.persistence.Column;
@@ -14,44 +8,38 @@ import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
-import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
-import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
 
-@TestForIssue( jiraKey = "HHH-14077")
-public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				CriteriaLiteralWithSingleQuoteTest.Student.class
+		}
+)
+public class CriteriaLiteralWithSingleQuoteTest {
 
 	@Test
-	public void literalSingleQuoteTest() throws Exception {
-
-		doInJPA(
-				this::entityManagerFactory,
+	public void literalSingleQuoteTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 					CriteriaQuery<Object> query = cb.createQuery();
 					query.select( cb.literal( '\'' ) ).from( Student.class );
 					Object object = entityManager.createQuery( query ).getSingleResult();
-					assertEquals( "'", object );
+					assertEquals( '\'', object );
 				}
 		);
 	}
 
 	@Test
-	public void literalProjectionTest() throws Exception {
-
-		doInJPA(
-				this::entityManagerFactory,
+	public void literalProjectionTest(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 					CriteriaQuery<Object> query = cb.createQuery();
@@ -63,16 +51,8 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 	}
 
 	@Test
-	@SkipForDialects(
-			value = {
-					@SkipForDialect(value = SQLServerDialect.class, comment = "SQLServer does not support literals in group by statement"),
-					@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL does not support literals in group by statement"),
-					@SkipForDialect( value = CockroachDialect.class, comment = "CockroachDB does not support literals in group by statement")
-			}
-	)
-	public void testLiteralProjectionAndGroupBy() throws Exception {
-		doInJPA(
-				this::entityManagerFactory,
+	public void testLiteralProjectionAndGroupBy(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 
 					final String literal = "' || aValue || '";
@@ -89,10 +69,9 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 		);
 	}
 
-	@Before
-	public void setupData() {
-		doInJPA(
-				this::entityManagerFactory,
+	@BeforeEach
+	public void setupData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					Student student = new Student();
 					student.setAValue( "A Value" );
@@ -101,19 +80,13 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 		);
 	}
 
-	@After
-	public void cleanupData() {
-		doInJPA(
-				this::entityManagerFactory,
+	@AfterEach
+	public void cleanupData(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
-					entityManager.createQuery( "delete from Student" );
+					entityManager.createQuery( "delete from Student" ).executeUpdate();
 				}
 		);
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Student.class };
 	}
 
 	@Entity(name = "Student")
@@ -132,7 +105,6 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 		}
 
 		public void setId(Long id) {
-			this.id = id;
 			this.id = id;
 		}
 

@@ -63,39 +63,29 @@ public abstract class AbstractRowReader implements RowReader {
 
 	@Override
 	public Object readRow(ResultSet resultSet, ResultSetProcessingContextImpl context) throws SQLException {
-
-		final boolean hasEntityReferenceInitializers = entityReferenceInitializers.length != 0;
-
-		if ( hasEntityReferenceInitializers ) {
-			// 	1) allow entity references to resolve identifiers (in 2 steps)
-			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
-				entityReferenceInitializer.hydrateIdentifier( resultSet, context );
-			}
-			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
-				resolveEntityKey(
-						resultSet,
-						context,
-						entityReferenceInitializer
-				);
-			}
-
-			// 2) allow entity references to resolve their non-identifier hydrated state and entity instance
-			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
-				entityReferenceInitializer.hydrateEntityState( resultSet, context );
-			}
+		// 	1) allow entity references to resolve identifiers (in 2 steps)
+		for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
+			entityReferenceInitializer.hydrateIdentifier( resultSet, context );
+		}
+		for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
+			resolveEntityKey(
+					resultSet,
+					context,
+					entityReferenceInitializer
+			);
 		}
 
+		// 2) allow entity references to resolve their non-identifier hydrated state and entity instance
+		for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
+			entityReferenceInitializer.hydrateEntityState( resultSet, context );
+		}
 
 		// 3) read the logical row
-
 		Object logicalRow = readLogicalRow( resultSet, context );
 
-
 		// 4) allow arrays, entities and collections after row callbacks
-		if ( hasEntityReferenceInitializers ) {
-			for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
-				entityReferenceInitializer.finishUpRow( resultSet, context );
-			}
+		for ( EntityReferenceInitializer entityReferenceInitializer : entityReferenceInitializers ) {
+			entityReferenceInitializer.finishUpRow( resultSet, context );
 		}
 		for ( CollectionReferenceInitializer collectionReferenceInitializer : collectionReferenceInitializers ) {
 			collectionReferenceInitializer.finishUpRow( resultSet, context );

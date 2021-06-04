@@ -1,5 +1,5 @@
 
-package org.hibernate.jpa.test.criteria.fetchscroll;
+package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import javax.persistence.*;
 

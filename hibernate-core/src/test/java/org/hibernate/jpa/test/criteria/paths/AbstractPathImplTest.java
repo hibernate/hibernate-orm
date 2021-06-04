@@ -18,7 +18,6 @@ import org.junit.Test;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Order_;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 

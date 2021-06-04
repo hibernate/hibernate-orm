@@ -41,6 +41,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * NaturalIdLoader for simple natural-ids
@@ -182,7 +183,7 @@ public class SimpleNaturalIdLoader<T> extends AbstractNaturalIdLoader<T> {
 					}
 				},
 				row -> row[0],
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		if ( results.size() > 1 ) {

@@ -34,6 +34,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * @author Steve Ebersole
@@ -128,7 +129,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					}
 				},
 				row -> row[0],
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		switch ( list.size() ) {
@@ -206,7 +207,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					}
 				},
 				row -> row[0],
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		assert list.size() == 1;

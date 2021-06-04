@@ -25,6 +25,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * A one-time use CollectionLoader for applying a sub-select fetch
@@ -96,7 +97,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), triggerKey );

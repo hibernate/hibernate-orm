@@ -32,6 +32,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import org.jboss.logging.Logger;
 
@@ -202,7 +203,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						}
 					},
 					RowTransformerPassThruImpl.instance(),
-					true
+					ListResultsConsumer.UniqueSemantic.FILTER
 			);
 
 

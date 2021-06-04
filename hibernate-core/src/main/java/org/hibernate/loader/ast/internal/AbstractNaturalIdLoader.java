@@ -53,6 +53,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
@@ -236,7 +237,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					}
 				},
 				row -> (L) row[0],
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		if ( results.size() > 1 ) {
@@ -419,7 +420,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					assert row.length == 1;
 					return row[0];
 				},
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		if ( results.isEmpty() ) {

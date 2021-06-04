@@ -35,6 +35,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * @author Andrea Boriero
@@ -165,7 +166,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		if ( list.isEmpty() ) {

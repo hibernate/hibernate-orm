@@ -20,23 +20,12 @@ import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * A specialized concat() function definition in which:<ol>
- *     <li>we translate to use the concat operator ('||')</li>
- *     <li>wrap dynamic parameters in CASTs to VARCHAR</li>
- * </ol>
- * <p/>
- * This last spec is to deal with a limitation on DB2 and variants (e.g. Derby)
- * where dynamic parameters cannot be used in concatenation unless they are being
- * concatenated with at least one non-dynamic operand.  And even then, the rules
- * are so convoluted as to what is allowed and when the CAST is needed and when
- * it is not that we just go ahead and do the CASTing.
- *
  * @author Steve Ebersole
  * @author Nathan Xu
  */
-public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class DerbyConcatEmulation extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public DerbyConcatFunction() {
+	public DerbyConcatEmulation() {
 		super(
 				"concat",
 				StandardArgumentsValidators.min( 1 ),
@@ -44,16 +33,6 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 		);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * Here's the meat..  The whole reason we have a separate impl for this for Derby is to re-define
-	 * this method.  The logic here says that if all incoming args are not dynamic parameters
-	 * (i.e. <tt>?</tt>) then we simply use the Derby concat operator (<tt>||</tt>) on the unchanged
-	 * arg elements.  However, if any arg is dynamic parameters, then we need to wrap the individual
-	 * arg elements in <tt>cast</tt> function calls, use the concatenation operator on the <tt>cast</tt>
-	 * returns, and then wrap that whole thing in a call to the Derby <tt>varchar</tt> function.
-	 */
 	@Override
 	public void render(
 			SqlAppender sqlAppender,

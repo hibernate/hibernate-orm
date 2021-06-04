@@ -29,7 +29,7 @@ public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralForma
 			return (X) value;
 		}
 
-		if ( value.getClass().isEnum() ) {
+		if ( value instanceof Enum<?> ) {
 			if ( unwrapType == String.class ) {
 				value = ( ( Enum ) value ).name();
 			}

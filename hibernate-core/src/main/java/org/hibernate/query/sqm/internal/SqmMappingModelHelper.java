@@ -62,6 +62,7 @@ public class SqmMappingModelHelper {
 			CollectionPart.Nature nature,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
+		// todo (6.0): the key path source must create a special path for the key
 		return resolveSqmPathSource( nature.getName(), valueDomainType, jpaBindableType );
 	}
 

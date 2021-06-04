@@ -36,7 +36,7 @@ pipeline {
 				dir('tck') {
 					checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/hibernate/jakarta-tck-runner.git']]]
 					sh """ \
-						cd jpa-3.0; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg JDK_IMAGE=${params.BASE_IMAGE} --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg TCK_SHA=${params.TCK_SHA} .
+						cd jpa-3.0; docker build -f Dockerfile.${params.IMAGE_JDK} -t jakarta-tck-runner --build-arg TCK_VERSION=${params.TCK_VERSION} --build-arg TCK_SHA=${params.TCK_SHA} .
 					"""
 				}
 			}

@@ -69,7 +69,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
-			boolean uniqueFilter) {
+			ListResultsConsumer.UniqueSemantic uniqueSemantic) {
 		// Only do auto flushing for top level queries
 		return executeQuery(
 				jdbcSelect,
@@ -80,29 +80,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						.getJdbcCoordinator()
 						.getStatementPreparer()
 						.prepareStatement( sql ),
-				ListResultsConsumer.instance( uniqueFilter, false )
-		);
-	}
-
-	@Override
-	public <R> List<R> list(
-			JdbcSelect jdbcSelect,
-			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext,
-			RowTransformer<R> rowTransformer,
-			boolean uniqueFilter,
-			boolean singleResultExpected) {
-		// Only do auto flushing for top level queries
-		return executeQuery(
-				jdbcSelect,
-				jdbcParameterBindings,
-				executionContext,
-				rowTransformer,
-				(sql) -> executionContext.getSession()
-						.getJdbcCoordinator()
-						.getStatementPreparer()
-						.prepareStatement( sql ),
-				ListResultsConsumer.instance( uniqueFilter, singleResultExpected )
+				ListResultsConsumer.instance( uniqueSemantic )
 		);
 	}
 

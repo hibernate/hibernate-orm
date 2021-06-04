@@ -35,6 +35,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -135,7 +136,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 				jdbcParameterBindings,
 				executionContext,
 				rowTransformer,
-				false
+				ListResultsConsumer.UniqueSemantic.NONE
 		);
 	}
 

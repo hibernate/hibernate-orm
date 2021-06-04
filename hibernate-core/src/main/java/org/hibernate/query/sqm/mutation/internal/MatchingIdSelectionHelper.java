@@ -45,6 +45,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import org.jboss.logging.Logger;
 
@@ -276,7 +277,7 @@ public class MatchingIdSelectionHelper {
 				jdbcParameterBindings,
 				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext, idSelectJdbcOperation ),
 				row -> row,
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 	}
 }

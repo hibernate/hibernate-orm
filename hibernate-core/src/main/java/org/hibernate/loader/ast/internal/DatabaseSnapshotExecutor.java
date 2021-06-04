@@ -46,6 +46,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.RowTransformerDatabaseSnapshotImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.IntegerType;
 
 import org.jboss.logging.Logger;
@@ -229,7 +230,7 @@ class DatabaseSnapshotExecutor {
 					}
 				},
 				RowTransformerDatabaseSnapshotImpl.instance(),
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		final int size = list.size();

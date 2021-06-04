@@ -34,6 +34,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * Batch support for natural-id multi loading
@@ -190,7 +191,7 @@ public class MultiNaturalIdLoadingBatcher {
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
-				true
+				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 	}
 }

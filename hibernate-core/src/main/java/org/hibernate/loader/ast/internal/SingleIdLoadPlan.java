@@ -31,6 +31,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 /**
  * todo (6.0) : this can generically define a load-by-uk as well.  only the SQL AST and `restrictivePart` vary and they are passed as ctor args
@@ -154,8 +155,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
-				true,
-				singleResultExpected
+				singleResultExpected ? ListResultsConsumer.UniqueSemantic.ASSERT : ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
 		if ( list.isEmpty() ) {

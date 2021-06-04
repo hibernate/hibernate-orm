@@ -47,6 +47,7 @@ import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.internal.RowTransformerSingularReturnImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -85,7 +86,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 						jdbcParameterBindings,
 						SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext, jdbcSelect ),
 						rowTransformer,
-						true
+						ListResultsConsumer.UniqueSemantic.FILTER
 				);
 			}
 			finally {

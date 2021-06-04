@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
@@ -24,19 +25,11 @@ public interface JdbcSelectExecutor {
 	// todo (6.0) : Ideally we'd have a singular place (JdbcServices? ServiceRegistry?) to obtain these executors
 
 	<R> List<R> list(
-		JdbcSelect jdbcSelect,
-		JdbcParameterBindings jdbcParameterBindings,
-		ExecutionContext executionContext,
-		RowTransformer<R> rowTransformer,
-		boolean uniqueFilter);
-
-	<R> List<R> list(
 			JdbcSelect jdbcSelect,
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext,
 			RowTransformer<R> rowTransformer,
-			boolean uniqueFilter,
-			boolean onlyOne);
+			ListResultsConsumer.UniqueSemantic uniqueSemantic);
 
 	<R> ScrollableResultsImplementor<R> scroll(
 			JdbcSelect jdbcSelect,

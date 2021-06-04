@@ -58,6 +58,7 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -207,7 +208,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				jdbcParameterBindings,
 				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext, select ),
 				row -> row[0],
-				false
+				ListResultsConsumer.UniqueSemantic.NONE
 		);
 		return ( (Number) list.get( 0 ) ).intValue();
 	}

@@ -30,12 +30,15 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 	private static final ListResultsConsumer NORMAL_INSTANCE = new ListResultsConsumer( UniqueSemantic.NONE );
 	private static final ListResultsConsumer UNIQUE_INSTANCE = new ListResultsConsumer( UniqueSemantic.ASSERT );
 
-	@SuppressWarnings("unchecked")
-	public static <R> ListResultsConsumer<R> instance(boolean uniqueFilter, boolean singleResultExpected) {
-		if ( singleResultExpected ) {
-			return UNIQUE_INSTANCE;
+	public static <R> ListResultsConsumer<R> instance(UniqueSemantic uniqueSemantic) {
+		switch ( uniqueSemantic ) {
+			case ASSERT:
+				return UNIQUE_INSTANCE;
+			case FILTER:
+				return UNIQUE_FILTER_INSTANCE;
+			default:
+				return NORMAL_INSTANCE;
 		}
-		return uniqueFilter ? UNIQUE_FILTER_INSTANCE : NORMAL_INSTANCE;
 	}
 
 	public enum UniqueSemantic {
@@ -64,14 +67,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 			final List<R> results = new ArrayList<>();
 
-			if ( uniqueSemantic == UniqueSemantic.NONE ) {
-				while ( rowProcessingState.next() ) {
-					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
-					rowProcessingState.finishRowProcessing();
-				}
-			}
-			else {
-				boolean uniqueRows = false;
+			boolean uniqueRows = false;
+
+			if ( uniqueSemantic != UniqueSemantic.NONE ) {
 				final Class<R> resultJavaType = rowReader.getResultJavaType();
 				if ( resultJavaType != null && !resultJavaType.isArray() ) {
 					final EntityPersister entityDescriptor = session.getFactory().getMetamodel().findEntityDescriptor(
@@ -80,34 +78,39 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 						uniqueRows = true;
 					}
 				}
+			}
 
+			if ( uniqueRows ) {
 				final List<JavaTypeDescriptor> resultJavaTypeDescriptors = rowReader.getResultJavaTypeDescriptors();
+				assert resultJavaTypeDescriptors.size() == 1;
 				final JavaTypeDescriptor<R> resultJavaTypeDescriptor = resultJavaTypeDescriptors.get( 0 );
-
 				while ( rowProcessingState.next() ) {
 					final R row = rowReader.readRow( rowProcessingState, processingOptions );
 					boolean add = true;
-					if ( uniqueRows ) {
-						assert resultJavaTypeDescriptors.size() == 1;
-						for ( R existingRow : results ) {
-							if ( resultJavaTypeDescriptor.areEqual( existingRow, row ) ) {
-								if ( uniqueSemantic == UniqueSemantic.ASSERT && !rowProcessingState.hasCollectionInitializers() ) {
-									throw new HibernateException(
-											"More than one row with the given identifier was found: " +
-													jdbcValuesSourceProcessingState.getExecutionContext()
-															.getEntityId() +
-													", for class: " +
-													resultJavaType.getName()
-									);
-								}
-								add = false;
-								break;
+					for ( R existingRow : results ) {
+						if ( resultJavaTypeDescriptor.areEqual( existingRow, row ) ) {
+							if ( uniqueSemantic == UniqueSemantic.ASSERT && !rowProcessingState.hasCollectionInitializers() ) {
+								throw new HibernateException(
+										"More than one row with the given identifier was found: " +
+												jdbcValuesSourceProcessingState.getExecutionContext()
+														.getEntityId() +
+												", for class: " +
+												rowReader.getResultJavaType().getName()
+								);
 							}
+							add = false;
+							break;
 						}
 					}
 					if ( add ) {
 						results.add( row );
 					}
+					rowProcessingState.finishRowProcessing();
+				}
+			}
+			else {
+				while ( rowProcessingState.next() ) {
+					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
 					rowProcessingState.finishRowProcessing();
 				}
 			}

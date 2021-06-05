@@ -8,7 +8,9 @@ package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaSelection;
@@ -25,6 +27,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpressionContainer<SqmSelection>, JpaSelection<Object> {
 	private boolean distinct;
 	private List<SqmSelection<?>> selections;
+	private Set<String> aliases;
 
 	public SqmSelectClause(
 			boolean distinct,
@@ -40,6 +43,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 		super( nodeBuilder );
 		this.distinct = distinct;
 		this.selections = CollectionHelper.arrayList( expectedNumberOfSelections );
+		this.aliases = CollectionHelper.setOfSize( expectedNumberOfSelections );
 	}
 
 	public boolean isDistinct() {
@@ -62,6 +66,11 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	public void addSelection(SqmSelection selection) {
 		if ( selections == null ) {
 			selections = new ArrayList<>();
+			aliases = new HashSet<>();
+		}
+		final String alias = selection.getAlias();
+		if ( alias != null && ! aliases.add( alias )) {
+			throw new IllegalArgumentException( "Multi-select expressions defined duplicate alias : " + alias );
 		}
 		selections.add( selection );
 	}
@@ -81,6 +90,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	public void setSelection(SqmSelection sqmSelection) {
 		if ( selections != null ) {
 			selections.clear();
+			aliases.clear();
 		}
 
 		addSelection( sqmSelection );

@@ -1534,19 +1534,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Void visitSelection(SqmSelection<?> sqmSelection) {
-		final Map<String, DomainResultProducer<?>> resultProducers;
+		// the two list below are synced up and are of the same size
+		final List<String> domainResultAliases;
+		final List<DomainResultProducer<?>> domainResultProducers;
 
 		if ( sqmSelection.getSelectableNode() instanceof SqmJpaCompoundSelection<?> ) {
 			SqmJpaCompoundSelection<?> selectableNode = (SqmJpaCompoundSelection<?>) sqmSelection.getSelectableNode();
-			resultProducers = new HashMap<>( selectableNode.getSelectionItems().size() );
+			final int size = selectableNode.getSelectionItems().size();
+			domainResultAliases = new ArrayList<>( size );
+			domainResultProducers = new ArrayList<>( size );
 			for ( SqmSelectableNode<?> selectionItem : selectableNode.getSelectionItems() ) {
 				currentSqlSelectionCollector().next();
-				resultProducers.put(
-						selectionItem.getAlias(),
-						(DomainResultProducer<?>) selectionItem.accept( this )
-				);
+				domainResultAliases.add( selectionItem.getAlias() );
+				domainResultProducers.add( (DomainResultProducer<?>) selectionItem.accept( this ) );
 			}
-
 		}
 		else {
 			//noinspection StatementWithEmptyBody
@@ -1561,10 +1562,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// otherwise, position the collector at the next index in prep for visitation
 				currentSqlSelectionCollector().next();
 			}
-			resultProducers = Collections.singletonMap(
-					sqmSelection.getAlias(),
-					(DomainResultProducer<?>) sqmSelection.getSelectableNode().accept( this )
-			);
+			domainResultAliases = Collections.singletonList( sqmSelection.getAlias() );
+			domainResultProducers = Collections.singletonList( (DomainResultProducer<?>) sqmSelection.getSelectableNode().accept( this ) );
 		}
 
 		final Stack<SqlAstProcessingState> processingStateStack = getProcessingStateStack();
@@ -1597,10 +1596,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			) == null;
 		}
 		if ( collectDomainResults ) {
-			resultProducers.forEach( (alias, r) -> domainResults.add( r.createDomainResult( alias, this ) ) );
+			for (int i = 0; i < domainResultAliases.size(); i++) {
+				final String alias = domainResultAliases.get( i );
+				final DomainResultProducer<?> domainResultProducer = domainResultProducers.get( i );
+				domainResults.add( domainResultProducer.createDomainResult( alias, this ) );
+			}
 		}
 		else {
-			resultProducers.forEach( (alias, r) -> r.applySqlSelections( this ) );
+			domainResultProducers.forEach( producer -> producer.applySqlSelections( this ) );
 		}
 		return null;
 	}

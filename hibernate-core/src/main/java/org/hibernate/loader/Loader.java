@@ -65,7 +65,6 @@ import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
-import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.hql.internal.HolderInstantiator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -136,11 +135,24 @@ public abstract class Loader {
 
 	/**
 	 * An array indicating whether the entities have eager property fetching
-	 * enabled.
+	 * enabled for all of their properties.
+	 * <p>
+	 * Supersedes {@link #getEntityEagerPerPropertyFetches()}.
 	 *
 	 * @return Eager property fetching indicators.
 	 */
 	protected boolean[] getEntityEagerPropertyFetches() {
+		return null;
+	}
+
+	/**
+	 * An array indicating for each entity which specific properties must have eager fetching enabled.
+	 * <p>
+	 * Superseded by {@link #getEntityEagerPropertyFetches()}.
+	 *
+	 * @return Eager property fetching indicators.
+	 */
+	protected boolean[][] getEntityEagerPerPropertyFetches() {
 		return null;
 	}
 
@@ -1799,11 +1811,15 @@ public abstract class Loader {
 		hydratedObjects.add( object );
 	}
 
-	private boolean isEagerPropertyFetchEnabled(int i) {
+	private boolean isAllPropertyEagerFetchEnabled(int i) {
 		boolean[] array = getEntityEagerPropertyFetches();
 		return array != null && array[i];
 	}
 
+	private boolean[] getPerPropertyEagerFetchEnabled(int i) {
+		boolean[][] array = getEntityEagerPerPropertyFetches();
+		return array != null ? array[i] : null;
+	}
 
 	/**
 	 * Hydrate the state an object from the SQL <tt>ResultSet</tt>, into
@@ -1837,7 +1853,7 @@ public abstract class Loader {
 			);
 		}
 
-		boolean fetchAllPropertiesRequested = isEagerPropertyFetchEnabled( i );
+		boolean fetchAllPropertiesRequested = isAllPropertyEagerFetchEnabled( i );
 
 		// add temp entry so that the next step is circular-reference
 		// safe - only needed because some types don't take proper
@@ -1862,6 +1878,7 @@ public abstract class Loader {
 				rootPersister,
 				cols,
 				fetchAllPropertiesRequested,
+				getPerPropertyEagerFetchEnabled( i ),
 				session
 		);
 

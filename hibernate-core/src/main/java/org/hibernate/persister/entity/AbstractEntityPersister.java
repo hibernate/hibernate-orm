@@ -3127,13 +3127,15 @@ public abstract class AbstractEntityPersister
 	 * without resolving associations or collections. Question: should
 	 * this really be here, or should it be sent back to Loader?
 	 */
+	@Override
 	public Object[] hydrate(
 			final ResultSet rs,
 			final Serializable id,
 			final Object object,
 			final Loadable rootLoadable,
 			final String[][] suffixedPropertyColumns,
-			final boolean allProperties,
+			final boolean forceEager,
+			final boolean[] propertiesForceEager,
 			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
 
 		if ( LOG.isTraceEnabled() ) {
@@ -3195,7 +3197,7 @@ public abstract class AbstractEntityPersister
 				if ( !propertySelectable[i] ) {
 					values[i] = PropertyAccessStrategyBackRefImpl.UNKNOWN;
 				}
-				else if ( allProperties || !laziness[i] ) {
+				else if ( forceEager || !laziness[i] || propertiesForceEager != null && propertiesForceEager[i] ) {
 					//decide which ResultSet to get the property value from:
 					final boolean propertyIsDeferred = hasDeferred &&
 							rootPersister.isSubclassPropertyDeferred( propNames[i], propSubclassNames[i] );

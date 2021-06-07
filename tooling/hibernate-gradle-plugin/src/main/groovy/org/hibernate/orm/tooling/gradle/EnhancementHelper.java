@@ -37,7 +37,7 @@ import org.hibernate.cfg.Environment;
  */
 public class EnhancementHelper {
 	static void enhance(SourceSet sourceSet, EnhanceExtension options, Project project) {
-		final ClassLoader classLoader = toClassLoader( sourceSet.getRuntimeClasspath() );
+		final ClassLoader classLoader = toClassLoader( sourceSet.getCompileClasspath(), sourceSet.getOutput().getClassesDirs() );
 
 		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {
 			@Override
@@ -96,14 +96,16 @@ public class EnhancementHelper {
 		}
 	}
 
-	public static ClassLoader toClassLoader(FileCollection runtimeClasspath) {
+	public static ClassLoader toClassLoader(FileCollection... classpaths) {
 		List<URL> urls = new ArrayList<>();
-		for ( File file : runtimeClasspath ) {
-			try {
-				urls.add( file.toURI().toURL() );
-			}
-			catch (MalformedURLException e) {
-				throw new GradleException( "Unable to resolve classpath entry to URL : " + file.getAbsolutePath(), e );
+		for ( FileCollection classpath : classpaths ) {
+			for ( File file : classpath ) {
+				try {
+					urls.add( file.toURI().toURL() );
+				}
+				catch (MalformedURLException e) {
+					throw new GradleException( "Unable to resolve classpath entry to URL : " + file.getAbsolutePath(), e );
+				}
 			}
 		}
 		return new URLClassLoader( urls.toArray( new URL[0] ), Enhancer.class.getClassLoader() );

@@ -37,6 +37,11 @@ import org.hibernate.cfg.Environment;
  */
 public class EnhancementHelper {
 	static void enhance(SourceSet sourceSet, EnhanceExtension options, Project project) {
+		// The compile classpath contains the jar dependencies and
+		// the output directories with the compiled classes of project dependencies in a multi-project build.
+		// The classes directories contain the compiled classes of this project.
+		// The runtime classpath cannot be used for this purpose
+		// because it contains the jars of project dependencies which are not yet built.
 		final ClassLoader classLoader = toClassLoader( sourceSet.getCompileClasspath(), sourceSet.getOutput().getClassesDirs() );
 
 		final EnhancementContext enhancementContext = new DefaultEnhancementContext() {

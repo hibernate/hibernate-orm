@@ -27,13 +27,13 @@ javadoc {
 //		doclet = 'org.asciidoctor.Asciidoclet'
         windowTitle = "$project.name JavaDocs"
         docTitle = "$project.name JavaDocs ($project.version)"
-        bottom = "Copyright &copy; 2001-$currentYear <a href=\"http://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+        bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
         use = true
         encoding = 'UTF-8'
         links += [
                 'https://docs.oracle.com/javase/8/docs/api/',
-                'http://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-                'http://docs.jboss.org/cdi/api/2.0/',
+                'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+                'https://docs.jboss.org/cdi/api/2.0/',
                 'https://javaee.github.io/javaee-spec/javadocs/'
         ]
         tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]

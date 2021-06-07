@@ -11,6 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -21,6 +22,7 @@ import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -37,6 +39,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.annotations.FetchMode.JOIN;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -62,8 +65,6 @@ public class JoinFetchedInverseToOneAllowProxyTests extends BaseNonConfigCoreFun
 
 	@Test
 	public void testOwnerIsProxy() {
-		sqlStatementInterceptor.clear();
-
 		final EntityPersister supplementalInfoDescriptor = sessionFactory().getMetamodel().entityPersister( SupplementalInfo.class );
 		final BytecodeEnhancementMetadata supplementalInfoEnhancementMetadata = supplementalInfoDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( supplementalInfoEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
@@ -110,6 +111,27 @@ public class JoinFetchedInverseToOneAllowProxyTests extends BaseNonConfigCoreFun
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-14659")
+	public void testQueryJoinFetch() {
+		SupplementalInfo info = fromTransaction( (session) -> {
+			final SupplementalInfo result = session.createQuery(
+							"select s from SupplementalInfo s join fetch s.customer",
+							SupplementalInfo.class )
+					.uniqueResult();
+			assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+			return result;
+		} );
+
+		// The "join fetch" should have already initialized the property,
+		// so that the getter can safely be called outside of a session.
+		assertTrue( Hibernate.isPropertyInitialized( info, "customer" ) );
+		// The "join fetch" should have already initialized the associated entity.
+		Customer customer = info.getCustomer();
+		assertTrue( Hibernate.isInitialized( customer ) );
+		assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+	}
+
 	@Before
 	public void createTestData() {
 		inTransaction(
@@ -120,6 +142,7 @@ public class JoinFetchedInverseToOneAllowProxyTests extends BaseNonConfigCoreFun
 					session.persist( supplementalInfo );
 				}
 		);
+		sqlStatementInterceptor.clear();
 	}
 
 	@After

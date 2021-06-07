@@ -20,6 +20,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -68,6 +69,21 @@ public class JoinFetchedPolymorphicToOneTests extends BaseNonConfigCoreFunctiona
 					customer.getName();
 					// customer base fetch state should also have been loaded above
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( 1 ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14659")
+	public void testQueryJoinFetch() {
+		inTransaction(
+				(session) -> {
+					final Order order = session.createQuery( "select o from Order o join fetch o.customer", Order.class )
+							.uniqueResult();
+
+					assertTrue( Hibernate.isPropertyInitialized( order, "customer" ) );
+					Customer customer = order.getCustomer();
+					assertTrue( Hibernate.isInitialized( customer ) );
 				}
 		);
 	}

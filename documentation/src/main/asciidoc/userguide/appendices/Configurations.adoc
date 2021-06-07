@@ -207,22 +207,22 @@ The number of seconds between two consecutive pool validations. During validatio
 === c3p0 properties
 
 `*hibernate.c3p0.min_size*` (e.g. 1)::
- Minimum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
+ Minimum size of C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#minPoolSize[c3p0 `minPoolSize` setting].
 
 `*hibernate.c3p0.max_size*` (e.g. 5)::
- Maximum size of C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
+ Maximum size of C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#maxPoolSize[c3p0 `maxPoolSize` setting].
 
 `*hibernate.c3p0.timeout*` (e.g. 30)::
- Maximum idle time for C3P0 connection pool. Refers to http://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
+ Maximum idle time for C3P0 connection pool. Refers to https://www.mchange.com/projects/c3p0/#maxIdleTime[c3p0 `maxIdleTime` setting].
 
 `*hibernate.c3p0.max_statements*` (e.g. 5)::
- Maximum size of C3P0 statement cache. Refers to http://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
+ Maximum size of C3P0 statement cache. Refers to https://www.mchange.com/projects/c3p0/#maxStatements[c3p0 `maxStatements` setting].
 
 `*hibernate.c3p0.acquire_increment*` (e.g. 2)::
- The number of connections acquired at a time when there's no connection available in the pool. Refers to http://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
+ The number of connections acquired at a time when there's no connection available in the pool. Refers to https://www.mchange.com/projects/c3p0/#acquireIncrement[c3p0 `acquireIncrement` setting].
 
 `*hibernate.c3p0.idle_test_period*` (e.g. 5)::
- Idle time before a C3P0 pooled connection is validated. Refers to http://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
+ Idle time before a C3P0 pooled connection is validated. Refers to https://www.mchange.com/projects/c3p0/#idleConnectionTestPeriod[c3p0 `idleConnectionTestPeriod` setting].
 
 `*hibernate.c3p0*`::
  A setting prefix used to indicate additional c3p0 properties that need to be passed to the underlying c3p0 connection pool.

@@ -7,6 +7,9 @@ pipeline {
     tools {
         jdk 'OpenJDK 8 Latest'
     }
+    parameters {
+        booleanParam(name: 'NO_SLEEP', defaultValue: true, description: 'Whether the NO_SLEEP patch should be applied to speed up the TCK execution')
+	}
     stages {
         stage('Build') {
         	steps {
@@ -39,18 +42,21 @@ pipeline {
 			steps {
 				sh """ \
 					docker rm -f tck || true
-					docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z -e NO_SLEEP=true -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
-					docker cp tck:/tck/persistence-tck/tmp/JTreport/ ./JTreport
+                    docker rm -f tck-vol || true
+                    docker volume create tck-vol
+					docker run -v ~/.m2/repository/org/hibernate:/root/.m2/repository/org/hibernate:z -v tck-vol:/tck/persistence-tck/tmp/:z -e NO_SLEEP=${params.NO_SLEEP} -e HIBERNATE_VERSION=$HIBERNATE_VERSION --name tck jakarta-tck-runner
+					docker cp tck:/tck/persistence-tck/tmp/ ./results
 				"""
-				archiveArtifacts artifacts: 'JTreport/**'
+				archiveArtifacts artifacts: 'results/**'
 				script {
 					failures = sh (
 						script: """ \
+						    set +x
 							while read line; do
 							  if [[ "\$line" != *"Passed." ]]; then
 								echo "\$line"
 							  fi
-							done <JTreport/text/summary.txt
+							done <results/JTreport/text/summary.txt
 						""",
 						returnStdout: true
 					).trim()

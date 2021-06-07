@@ -9,6 +9,7 @@ package org.hibernate.dialect.pagination;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
+import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
@@ -43,6 +44,18 @@ public interface LimitHandler {
 	boolean supportsLimitOffset();
 
 	default String processSql(String sql, Limit limit) {
+		return processSql(
+				sql,
+				limit == null ? null : new RowSelection(
+						limit.getFirstRow(),
+						limit.getMaxRows(),
+						null,
+						null
+				)
+		);
+	}
+
+	default String processSql(String sql, Limit limit, QueryOptions queryOptions) {
 		return processSql(
 				sql,
 				limit == null ? null : new RowSelection(
@@ -97,7 +110,7 @@ public interface LimitHandler {
 	/**
 	 * Return processed SQL query.
 	 *
-     * @param sql       the SQL query to process.
+     * @param sql the SQL query to process.
      * @param selection the selection criteria for rows.
      *
 	 * @return Query statement with LIMIT clause applied.
@@ -105,6 +118,21 @@ public interface LimitHandler {
 	 */
 	@Deprecated
 	String processSql(String sql, RowSelection selection);
+
+	/**
+	 * Return processed SQL query.
+	 *
+	 * @param sql the SQL query to process.
+	 * @param queryParameters the queryParameters.
+	 *
+	 * @return Query statement with LIMIT clause applied.
+	 * @deprecated Use {@link #processSql(String, Limit, QueryOptions)}
+	 * todo (6.0): remove in favor of Limit version?
+	 */
+	@Deprecated
+	default String processSql(String sql, QueryParameters queryParameters ){
+		return processSql( sql, queryParameters.getRowSelection() );
+	}
 
 	/**
 	 * Bind parameter values needed by the limit and offset clauses

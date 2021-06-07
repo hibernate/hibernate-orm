@@ -3,17 +3,17 @@ to applications, libraries, and frameworks.
 
 It also provides an implementation of the JPA specification, which is the standard Java specification for ORM.
 
-This is the repository of its source code; see http://hibernate.org/orm/[Hibernate.org] for additional information.
+This is the repository of its source code; see https://hibernate.org/orm/[Hibernate.org] for additional information.
 
-image:http://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon[Build Status,link=http://ci.hibernate.org/job/hibernate-orm-main-h2-main/]
+image:https://ci.hibernate.org/job/hibernate-orm-main-h2-main/badge/icon[Build Status,link=https://ci.hibernate.org/job/hibernate-orm-main-h2-main/]
 image:https://img.shields.io/lgtm/grade/java/g/hibernate/hibernate-orm.svg?logo=lgtm&logoWidth=18[Language grade: Java,link=https://lgtm.com/projects/g/hibernate/hibernate-orm/context:java]
 
 == Continuous Integration
 
-Hibernate uses both http://jenkins-ci.org[Jenkins] and https://github.com/features/actions[GitHub Actions]
+Hibernate uses both https://jenkins-ci.org[Jenkins] and https://github.com/features/actions[GitHub Actions]
 for its CI needs. See
 
-* http://ci.hibernate.org/view/ORM/[Jenkins Jobs]
+* https://ci.hibernate.org/view/ORM/[Jenkins Jobs]
 * https://github.com/hibernate/hibernate-orm/actions[GitHub Actions Jobs]
 
 == Building from sources
@@ -25,7 +25,7 @@ Gradle.
 
 Contributors should read the link:CONTRIBUTING.md[Contributing Guide].
 
-See the guides for setting up http://hibernate.org/community/contribute/intellij-idea/[IntelliJ] or
+See the guides for setting up https://hibernate.org/community/contribute/intellij-idea/[IntelliJ] or
 https://hibernate.org/community/contribute/eclipse-ide/[Eclipse] as your development environment.
 
 == Gradle Primer

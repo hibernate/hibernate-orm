@@ -94,7 +94,8 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				limitHandler = dialect.getLimitHandler();
 				sql = limitHandler.processSql(
 						jdbcSelect.getSql(),
-						limit
+						limit,
+						queryOptions
 				);
 			}
 

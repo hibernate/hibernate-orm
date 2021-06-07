@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -36,6 +37,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -96,6 +98,21 @@ public class PolymorphicToOneExplicitOptionTests extends BaseNonConfigCoreFuncti
 					// but again that is not the case
 					expectedCount++;
 					assertThat( sqlStatementInterceptor.getQueryCount(), is( expectedCount ) );
+				}
+		);
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14659")
+	public void testQueryJoinFetch() {
+		inTransaction(
+				(session) -> {
+					final Order order = session.createQuery( "select o from Order o join fetch o.customer", Order.class )
+							.uniqueResult();
+
+					assertTrue( Hibernate.isPropertyInitialized( order, "customer" ) );
+					Customer customer = order.getCustomer();
+					assertTrue( Hibernate.isInitialized( customer ) );
 				}
 		);
 	}

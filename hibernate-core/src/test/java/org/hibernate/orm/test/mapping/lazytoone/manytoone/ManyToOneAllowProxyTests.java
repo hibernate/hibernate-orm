@@ -12,6 +12,7 @@ import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
+import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -19,8 +20,10 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -36,6 +39,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test for lazy uni-directional to-one (with SELECT fetching) when enhanced proxies are allowed
@@ -61,8 +65,6 @@ public class ManyToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCas
 
 	@Test
 	public void testOwnerIsProxy() {
-		sqlStatementInterceptor.clear();
-
 		final EntityPersister orderDescriptor = sessionFactory().getMetamodel().entityPersister( Order.class );
 		final BytecodeEnhancementMetadata orderEnhancementMetadata = orderDescriptor.getBytecodeEnhancementMetadata();
 		assertThat( orderEnhancementMetadata.isEnhancedForLazyLoading(), is( true ) );
@@ -115,6 +117,27 @@ public class ManyToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCas
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-14659")
+	public void testQueryJoinFetch() {
+		Order order = fromTransaction( (session) -> {
+			final Order result = session.createQuery(
+							"select o from Order o join fetch o.customer",
+							Order.class )
+					.uniqueResult();
+			assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+			return result;
+		} );
+
+		// The "join fetch" should have already initialized the property,
+		// so that the getter can safely be called outside of a session.
+		assertTrue( Hibernate.isPropertyInitialized( order, "customer" ) );
+		// The "join fetch" should have already initialized the associated entity.
+		Customer customer = order.getCustomer();
+		assertTrue( Hibernate.isInitialized( customer ) );
+		assertThat( sqlStatementInterceptor.getSqlQueries().size(), is( 1 ) );
+	}
+
 	@Before
 	public void createTestData() {
 		inTransaction(
@@ -125,6 +148,7 @@ public class ManyToOneAllowProxyTests extends BaseNonConfigCoreFunctionalTestCas
 					session.persist( order );
 				}
 		);
+		sqlStatementInterceptor.clear();
 	}
 
 	@After

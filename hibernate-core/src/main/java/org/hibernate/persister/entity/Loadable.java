@@ -83,13 +83,28 @@ public interface Loadable extends EntityPersister {
 	/**
 	 * Retrieve property values from one row of a result set
 	 */
+	default Object[] hydrate(
+			ResultSet rs,
+			Serializable id,
+			Object object,
+			Loadable rootLoadable,
+			String[][] suffixedPropertyColumns,
+			boolean forceEager,
+			SharedSessionContractImplementor session) throws SQLException, HibernateException {
+		return hydrate( rs, id, object, rootLoadable, suffixedPropertyColumns, forceEager, null, session );
+	}
+
+	/**
+	 * Retrieve property values from one row of a result set
+	 */
 	Object[] hydrate(
 			ResultSet rs,
 			Serializable id,
 			Object object,
 			Loadable rootLoadable,
 			String[][] suffixedPropertyColumns,
-			boolean allProperties,
+			boolean forceEager,
+			boolean[] propertiesForceEager,
 			SharedSessionContractImplementor session) throws SQLException, HibernateException;
 
 	boolean isAbstract();

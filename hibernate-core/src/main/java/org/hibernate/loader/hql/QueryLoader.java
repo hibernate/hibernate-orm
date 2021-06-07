@@ -32,7 +32,6 @@ import org.hibernate.hql.internal.ast.tree.AggregatedSelectExpression;
 import org.hibernate.hql.internal.ast.tree.FromElement;
 import org.hibernate.hql.internal.ast.tree.QueryNode;
 import org.hibernate.hql.internal.ast.tree.SelectClause;
-import org.hibernate.hql.spi.NamedParameterInformation;
 import org.hibernate.hql.spi.ParameterInformation;
 import org.hibernate.internal.IteratorImpl;
 import org.hibernate.internal.util.collections.ArrayHelper;
@@ -81,6 +80,7 @@ public class QueryLoader extends BasicLoader {
 	private EntityType[] ownerAssociationTypes;
 	private int[] owners;
 	private boolean[] entityEagerPropertyFetches;
+	private boolean[][] entityEagerPerPropertyFetches;
 
 	private int[] collectionOwners;
 	private QueryableCollection[] collectionPersisters;
@@ -141,6 +141,7 @@ public class QueryLoader extends BasicLoader {
 		int size = fromElementList.size();
 		entityPersisters = new Queryable[size];
 		entityEagerPropertyFetches = new boolean[size];
+		entityEagerPerPropertyFetches = new boolean[size][];
 		entityAliases = new String[size];
 		sqlAliases = new String[size];
 		sqlAliasSuffixes = new String[size];
@@ -157,6 +158,7 @@ public class QueryLoader extends BasicLoader {
 			}
 
 			entityEagerPropertyFetches[i] = element.isAllPropertyFetch();
+			entityEagerPerPropertyFetches[i] = null;
 			sqlAliases[i] = element.getTableAlias();
 			entityAliases[i] = element.getClassAlias();
 			sqlAliasByEntityAlias.put( entityAliases[i], sqlAliases[i] );
@@ -177,7 +179,19 @@ public class QueryLoader extends BasicLoader {
 				else if ( element.getDataType().isEntityType() ) {
 					EntityType entityType = (EntityType) element.getDataType();
 					if ( entityType.isOneToOne() ) {
-						owners[i] = fromElementList.indexOf( element.getOrigin() );
+						int originIndex = fromElementList.indexOf( element.getOrigin() );
+						owners[i] = originIndex;
+
+						// HHH-14659: remember that this association is loaded eagerly in this query (even if it's usually lazy)
+						Integer propertyIndex = propertyIndexInOrigin( element, entityPersisters[originIndex] );
+						// This should always be true, but let's be extra cautious to avoid introducing regressions...
+						if ( propertyIndex != null ) {
+							if ( entityEagerPerPropertyFetches[originIndex] == null ) {
+								entityEagerPerPropertyFetches[originIndex] =
+										new boolean[entityPersisters[originIndex].getPropertyNames().length];
+							}
+							entityEagerPerPropertyFetches[originIndex][propertyIndex] = true;
+						}
 					}
 					ownerAssociationTypes[i] = entityType;
 				}
@@ -186,6 +200,21 @@ public class QueryLoader extends BasicLoader {
 
 		//NONE, because its the requested lock mode, not the actual! 
 		defaultLockModes = ArrayHelper.fillArray( LockMode.NONE, size );
+	}
+
+	private static Integer propertyIndexInOrigin(FromElement element, Queryable originPersister) {
+		// This is the only way I found to retrieve a reference to the property corresponding to this join...
+		// A better solution would require changes in FromElement, and I'd rather avoid that code,
+		// which is being rewritten in ORM 6 anyway.
+		int attributeStartIndex = element.getOrigin().getClassName().length() + 1;
+		String role = element.getRole();
+		if ( attributeStartIndex >= role.length() ) {
+			// Should not happen, but let's be safe...
+			return null;
+		}
+		String propertyName = role.substring( attributeStartIndex );
+
+		return originPersister.getEntityMetamodel().getPropertyIndexOrNull( propertyName );
 	}
 
 	public AggregatedSelectExpression getAggregatedSelectExpression() {
@@ -258,6 +287,11 @@ public class QueryLoader extends BasicLoader {
 	@Override
 	protected boolean[] getEntityEagerPropertyFetches() {
 		return entityEagerPropertyFetches;
+	}
+
+	@Override
+	public boolean[][] getEntityEagerPerPropertyFetches() {
+		return entityEagerPerPropertyFetches;
 	}
 
 	/**

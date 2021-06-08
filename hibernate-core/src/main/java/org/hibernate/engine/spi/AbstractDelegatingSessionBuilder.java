@@ -25,17 +25,12 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Gunnar Morling
  * @author Guillaume Smet
  */
-public abstract class AbstractDelegatingSessionBuilder<T extends SessionBuilder> implements SessionBuilder<T> {
+public abstract class AbstractDelegatingSessionBuilder<T extends AbstractDelegatingSessionBuilder<T>> implements SessionBuilder<T> {
 
 	private final SessionBuilder delegate;
 
 	public AbstractDelegatingSessionBuilder(SessionBuilder delegate) {
 		this.delegate = delegate;
-	}
-
-	@SuppressWarnings("unchecked")
-	protected T getThis() {
-		return (T) this;
 	}
 
 	protected SessionBuilder delegate() {

@@ -20,9 +20,4 @@ public class TestDelegatingSessionBuilderImplementor extends AbstractDelegatingS
 	public TestDelegatingSessionBuilderImplementor(SessionBuilderImplementor<TestDelegatingSessionBuilderImplementor> delegate) {
 		super( delegate );
 	}
-
-	@Override
-	protected TestDelegatingSessionBuilderImplementor getThis() {
-		return this;
-	}
 }

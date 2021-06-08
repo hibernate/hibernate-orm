@@ -12,7 +12,7 @@ package org.hibernate.engine.spi;
  *
  * @author Gunnar Morling
  */
-public abstract class AbstractDelegatingSessionBuilderImplementor<T extends SessionBuilderImplementor>
+public abstract class AbstractDelegatingSessionBuilderImplementor<T extends AbstractDelegatingSessionBuilderImplementor<T>>
 		extends AbstractDelegatingSessionBuilder<T>
 		implements SessionBuilderImplementor<T> {
 
@@ -24,10 +24,10 @@ public abstract class AbstractDelegatingSessionBuilderImplementor<T extends Sess
 		return (SessionBuilderImplementor) super.delegate();
 	}
 
-	@SuppressWarnings({ "unchecked", "deprecation" })
+	@SuppressWarnings("deprecation")
 	@Override
 	public T owner(SessionOwner sessionOwner) {
 		delegate().owner( sessionOwner );
-		return (T) this;
+		return getThis();
 	}
 }

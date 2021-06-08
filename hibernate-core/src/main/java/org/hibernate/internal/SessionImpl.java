@@ -1958,9 +1958,9 @@ public class SessionImpl
 		}
 	}
 
-	private static class SharedSessionBuilderImpl<T extends SharedSessionBuilder>
-			extends SessionFactoryImpl.SessionBuilderImpl<T>
-			implements SharedSessionBuilder<T>, SharedSessionCreationOptions {
+	private static class SharedSessionBuilderImpl
+			extends SessionFactoryImpl.SessionBuilderImpl<SharedSessionBuilderImpl>
+			implements SharedSessionBuilder<SharedSessionBuilderImpl>, SharedSessionCreationOptions {
 		private final SessionImpl session;
 		private boolean shareTransactionContext;
 
@@ -1975,45 +1975,44 @@ public class SessionImpl
 
 
 		@Override
-		public T tenantIdentifier(String tenantIdentifier) {
+		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
 			// todo : is this always true?  Or just in the case of sharing JDBC resources?
 			throw new SessionException( "Cannot redefine tenant identifier on child session" );
 		}
 
 		@Override
-		public T interceptor() {
+		public SharedSessionBuilderImpl interceptor() {
 			return interceptor( session.getInterceptor() );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public T connection() {
+		public SharedSessionBuilderImpl connection() {
 			this.shareTransactionContext = true;
-			return (T) this;
+			return getThis();
 		}
 
 		@Override
-		public T connectionReleaseMode() {
+		public SharedSessionBuilderImpl connectionReleaseMode() {
 			return connectionReleaseMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode().getReleaseMode() );
 		}
 
 		@Override
-		public T connectionHandlingMode() {
+		public SharedSessionBuilderImpl connectionHandlingMode() {
 			return connectionHandlingMode( session.getJdbcCoordinator().getLogicalConnection().getConnectionHandlingMode() );
 		}
 
 		@Override
-		public T autoJoinTransactions() {
+		public SharedSessionBuilderImpl autoJoinTransactions() {
 			return autoJoinTransactions( session.isAutoCloseSessionEnabled() );
 		}
 
 		@Override
-		public T flushMode() {
+		public SharedSessionBuilderImpl flushMode() {
 			return flushMode( session.getHibernateFlushMode() );
 		}
 
 		@Override
-		public T autoClose() {
+		public SharedSessionBuilderImpl autoClose() {
 			return autoClose( session.autoClose );
 		}
 

@@ -18,7 +18,7 @@ import org.hibernate.resource.jdbc.spi.StatementInspector;
  * @author Steve Ebersole
  */
 @SuppressWarnings("UnusedReturnValue")
-public interface SessionBuilder<T extends SessionBuilder> {
+public interface SessionBuilder<T extends SessionBuilder<T>> {
 	/**
 	 * Opens a session with the specified options.
 	 *
@@ -145,10 +145,13 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 */
 	default T setQueryParameterValidation(boolean enabled) {
-		return (T) this;
+		return getThis();
 	}
 
-
+	@SuppressWarnings("unchecked")
+	default T getThis() {
+		return (T) this;
+	}
 
 	/**
 	 * Should the session be automatically closed after transaction completion?
@@ -187,7 +190,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @deprecated (since 5.2) use {@link #flushMode(FlushMode)} instead.
 	 */
 	@Deprecated
-	@SuppressWarnings("unchecked")
 	default T flushBeforeCompletion(boolean flushBeforeCompletion) {
 		if ( flushBeforeCompletion ) {
 			flushMode( FlushMode.ALWAYS );
@@ -195,6 +197,6 @@ public interface SessionBuilder<T extends SessionBuilder> {
 		else {
 			flushMode( FlushMode.MANUAL );
 		}
-		return (T) this;
+		return getThis();
 	}
 }

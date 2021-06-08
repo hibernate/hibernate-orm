@@ -16,7 +16,7 @@ import org.hibernate.SessionBuilder;
  *
  * @author Gail Badner
  */
-public interface SessionBuilderImplementor<T extends SessionBuilder> extends SessionBuilder<T> {
+public interface SessionBuilderImplementor<T extends SessionBuilderImplementor<T>> extends SessionBuilder<T> {
 	/**
 	 * Adds the session owner to the session options
 	 *

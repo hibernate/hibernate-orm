@@ -11,6 +11,7 @@ import java.lang.reflect.Executable;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.internal.util.ReflectHelper;
 
 import com.oracle.svm.core.annotate.AutomaticFeature;
@@ -50,6 +51,7 @@ public final class QueryParsingSupport implements Feature {
 		access.registerReachabilityHandler(this::enableHQLSupport, parserClazz);
 	}
 
+	@AllowSysOut
 	private void enableHQLSupport(DuringAnalysisAccess duringAnalysisAccess) {
 		final boolean needsEnablingYet = triggered.compareAndSet( false, true );
 		if ( needsEnablingYet ) {

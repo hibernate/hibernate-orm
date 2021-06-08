@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.hibernate.cache.cfg.spi.DomainDataRegionConfig;
 import org.hibernate.cache.spi.CacheImplementor;
+import org.hibernate.cache.spi.DomainDataRegion;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.RegionFactory;
@@ -183,7 +184,26 @@ public class DisabledCaching implements CacheImplementor {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public Set<String> getCacheRegionNames() {
+		return Collections.EMPTY_SET;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Set<String> getDomainDataRegionNames() {
+		return Collections.EMPTY_SET;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public Set<String> getQueryCacheRegionNames() {
+		return Collections.EMPTY_SET;
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public DomainDataRegion getDomainDataRegion(String regionName) {
 		return null;
 	}
 

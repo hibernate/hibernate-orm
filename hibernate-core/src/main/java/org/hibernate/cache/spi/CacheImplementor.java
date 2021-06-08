@@ -7,6 +7,7 @@
 package org.hibernate.cache.spi;
 
 import java.io.Serializable;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 
@@ -28,6 +29,7 @@ import org.hibernate.service.Service;
  *
  * @author Strong Liu
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 @SuppressWarnings("unused")
 public interface CacheImplementor extends Service, Cache, org.hibernate.engine.spi.CacheImplementor, Serializable {
@@ -55,20 +57,99 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 * Get a cache Region by name. If there is both a {@link DomainDataRegion}
 	 * and a {@link QueryResultsRegion} with the specified name, then the
 	 * {@link DomainDataRegion} will be returned.
+	 * <p/>
+	 * If Hibernate is configured for query result caching, and the {@code regionName}
+	 * is the name of the default {@link QueryResultsRegion}, then the default {@link QueryResultsRegion}
+	 * will be returned.
+	 * <p/>
+	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * been performed
+	 *
+	 * @since 5.3
+	 *
+	 * @return the {@link Region} or {@code null} if there is none with the specified name.
+	 *
+	 * @deprecated to access a {@link DomainDataRegion}, use {@link #getDomainDataRegion(String)};
+	 * to access the default {@link QueryResultsRegion}, use {@link #getDefaultQueryResultsCache}.getRegion();
+	 * to access a named (non-default) {@link QueryResultsRegion}, use
+	 * {@link #getQueryResultsCacheStrictly(String)}.getRegion().
+	 */
+	@Deprecated
+	Region getRegion(String regionName);
+
+	/**
+	 * The unqualified name of all regions.  Intended for use with {@link #getRegion}
+	 * <p/>
+	 * If Hibernate is configured for query result caching, then the name of the
+	 * default {@link QueryResultsRegion} will be included in the returned Set.
+	 *
+	 * @since 5.3
+	 * @deprecated Use {@link #getDomainDataRegionNames} to get all {@link DomainDataRegion} names;
+	 * use {@link #getQueryCacheRegionNames()} to get all named (non-default) {@link DomainDataRegion}
+	 * names; use {@link #getDefaultQueryResultsCache()}.getRegion().getName() to get the name of
+	 * the default {@link QueryResultsRegion}.
+	 */
+	@Deprecated
+	Set<String> getCacheRegionNames();
+
+	/**
+	 * The unqualified names of all {@link DomainDataRegion} regions. Intended for use with
+	 * {@link #getDomainDataRegion(String)}.
 	 *
 	 * @apiNote It is only valid to call this method after {@link #prime} has
 	 * been performed
 	 *
 	 * @since 5.3
 	 */
-	Region getRegion(String regionName);
+	default Set<String> getDomainDataRegionNames() {
+		final Set<String> domainDataRegionNames = new HashSet<>();
+		for ( String regionName : getCacheRegionNames() ) {
+			final Region region = getRegion( regionName );
+			if ( DomainDataRegion.class.isInstance( region ) ) {
+				domainDataRegionNames.add( regionName );
+			}
+		}
+		return domainDataRegionNames;
+	}
 
 	/**
-	 * The unqualified name of all regions.  Intended for use with {@link #getRegion}
+	 * The unqualified names of all named (non-default) {@link QueryResultsRegion} regions. Intended for use with
+	 * {@link #getQueryResultsCacheStrictly(String)}.
+	 * <p/>
+	 * The name of the default {@link QueryResultsRegion} will not be included in the returned Set.
+	 * {@link #getDefaultQueryResultsCache()} should be used to get access to the default
+	 * {@link QueryResultsCache}.
 	 *
 	 * @since 5.3
 	 */
-	Set<String> getCacheRegionNames();
+	default Set<String> getQueryCacheRegionNames() {
+		final Set<String> queryCacheRegionNames = new HashSet<>();
+		for ( String regionName : getCacheRegionNames() ) {
+			final QueryResultsCache queryResultsCache = getQueryResultsCacheStrictly( regionName );
+			if ( queryResultsCache != null ) {
+				queryCacheRegionNames.add( queryResultsCache.getRegion().getName() );
+			}
+		}
+		return queryCacheRegionNames;
+	}
+
+	/**
+	 * Get a {@link DomainDataRegion} by name.
+	 *
+	 * @apiNote It is only valid to call this method after {@link #prime} has
+	 * been performed
+	 *
+	 * @return the {@link DomainDataRegion} with the specified name, or {@code null}
+	 * if there is no {@link DomainDataRegion} with that name.
+	 *
+	 * @since 5.3
+	 */
+	default DomainDataRegion getDomainDataRegion(String regionName) {
+		final Region region = getRegion( regionName );
+		return DomainDataRegion.class.isInstance( region )
+				? (DomainDataRegion) region
+				: null;
+	}
 
 	/**
 	 * Find the cache data access strategy for Hibernate's timestamps cache.
@@ -97,9 +178,13 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	/**
 	 * Get the named QueryResultRegionAccess but not creating one if it
 	 * does not already exist.  This is intended for use by statistics.
-	 *
+	 * <p/>
 	 * Will return {@code null} if Hibernate is not configured for query result
-	 * caching or if no such region (yet) exists
+	 * caching, if no such region (yet) exists, or if {@code regionName} is the
+	 * name of the default {@link QueryResultsRegion}.
+	 * <p/>
+	 * {@link #getDefaultQueryResultsCache()} should be used to get access to the default
+	 * {@link QueryResultsCache}.
 	 *
 	 * @since 5.3
 	 */
@@ -129,7 +214,10 @@ public interface CacheImplementor extends Service, Cache, org.hibernate.engine.s
 	 *
 	 * @return All cache region names
 	 *
-	 * @deprecated (since 5.3) Use {@link CacheImplementor#getCacheRegionNames()} instead
+	 * @deprecated (since 5.3) Use {@link #getDomainDataRegionNames} to get all {@link DomainDataRegion} names;
+	 * use {@link #getQueryCacheRegionNames()} to get all named (non-default) {@link DomainDataRegion}
+	 * names; use {@link #getDefaultQueryResultsCache()}.getRegion().getName() to get the name of
+	 * the default {@link QueryResultsRegion}.
 	 */
 	@Deprecated
 	String[] getSecondLevelCacheRegionNames();

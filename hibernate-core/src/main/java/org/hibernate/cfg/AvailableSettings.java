@@ -1859,7 +1859,8 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY = "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy";
 
 	/**
-	 * Identifies the delimiter to use to separate schema management statements in script outputs
+	 * Identifies the delimiter to use to separate schema management statements in script outputs.
+	 * The default value is <code>;</code>.
 	 */
 	String HBM2DDL_DELIMITER = "hibernate.hbm2ddl.delimiter";
 

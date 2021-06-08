@@ -16,6 +16,7 @@ import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -138,6 +139,38 @@ public class AggregationResultTest {
 			criteria.select( builder.sum( productRoot.get( Product_.SOME_BIG_DECIMAL ) ) );
 			Object sumResult = entityManager.createQuery( criteria ).getSingleResult();
 			assertReturnType( BigDecimal.class, sumResult );
+		} );
+	}
+
+	/**
+	 * Sum of Integers should return an Integer; note that this is distinctly different than JPAQL
+	 */
+	@Test
+	@FailureExpected(reason = "we switched to strict JPA Spec")
+	void testSumOfIntegersReturningInteger(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
+			Root<Product> productRoot = criteria.from( Product.class );
+			criteria.select( builder.sum( productRoot.get( Product_.quantity ) ) );
+			Object sumResult = em.createQuery( criteria ).getSingleResult();
+			assertReturnType( Integer.class, sumResult );
+		} );
+	}
+
+	/**
+	 * Sum of Floats should return a Float; note that this is distinctly different than JPAQL
+	 */
+	@Test
+	@FailureExpected(reason = "we switched to strict JPA Spec")
+	void testSumOfFloatsReturningFloats(EntityManagerFactoryScope scope) {
+		scope.inTransaction( em -> {
+			CriteriaBuilder builder = em.getCriteriaBuilder();
+			CriteriaQuery<Float> criteria = builder.createQuery( Float.class );
+			Root<Product> productRoot = criteria.from( Product.class );
+			criteria.select( builder.sum( productRoot.get( Product_.rating ) ) );
+			Object sumResult = em.createQuery( criteria ).getSingleResult();
+			assertReturnType( Float.class, sumResult );
 		} );
 	}
 

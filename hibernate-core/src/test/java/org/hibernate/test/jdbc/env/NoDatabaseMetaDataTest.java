@@ -38,7 +38,6 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 
 		assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 		assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
-		assertTrue( extractedDatabaseMetaData.getExtraKeywords().isEmpty() );
 		assertFalse( extractedDatabaseMetaData.supportsNamedParameters() );
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );
@@ -63,7 +62,6 @@ public class NoDatabaseMetaDataTest extends BaseUnitTestCase {
 
 		assertNull( extractedDatabaseMetaData.getConnectionCatalogName() );
 		assertNull( extractedDatabaseMetaData.getConnectionSchemaName() );
-		assertTrue( extractedDatabaseMetaData.getExtraKeywords().isEmpty() );
 		assertTrue( extractedDatabaseMetaData.supportsNamedParameters() );
 		assertFalse( extractedDatabaseMetaData.supportsRefCursors() );
 		assertFalse( extractedDatabaseMetaData.supportsScrollableResults() );

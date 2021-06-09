@@ -10,7 +10,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -41,14 +40,12 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean doesDataDefinitionCauseTransactionCommit;
 	private final SQLStateType sqlStateType;
 
-	private final Set<String> extraKeywords;
 	private final List<SequenceInformation> sequenceInformationList;
 
 	private ExtractedDatabaseMetaDataImpl(
 			JdbcEnvironment jdbcEnvironment,
 			String connectionCatalogName,
 			String connectionSchemaName,
-			Set<String> extraKeywords,
 			boolean supportsRefCursors,
 			boolean supportsNamedParameters,
 			boolean supportsScrollableResults,
@@ -59,14 +56,8 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			SQLStateType sqlStateType,
 			List<SequenceInformation> sequenceInformationList) {
 		this.jdbcEnvironment = jdbcEnvironment;
-
 		this.connectionCatalogName = connectionCatalogName;
 		this.connectionSchemaName = connectionSchemaName;
-
-		this.extraKeywords = extraKeywords != null
-				? extraKeywords
-				: Collections.<String>emptySet();
-
 		this.supportsRefCursors = supportsRefCursors;
 		this.supportsNamedParameters = supportsNamedParameters;
 		this.supportsScrollableResults = supportsScrollableResults;
@@ -119,11 +110,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
-	public Set<String> getExtraKeywords() {
-		return extraKeywords;
-	}
-
-	@Override
 	public SQLStateType getSqlStateType() {
 		return sqlStateType;
 	}
@@ -149,8 +135,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private String connectionSchemaName;
 		private String connectionCatalogName;
 
-		private Set<String> extraKeywords;
-
 		private boolean supportsRefCursors;
 		private boolean supportsNamedParameters;
 		private boolean supportsScrollableResults;
@@ -175,7 +159,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			supportsBatchUpdates = databaseMetaData.supportsBatchUpdates();
 			supportsDataDefinitionInTransaction = !databaseMetaData.dataDefinitionIgnoredInTransactions();
 			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
-			extraKeywords = parseKeywords( databaseMetaData.getSQLKeywords() );
 			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
 			return this;
 		}
@@ -191,24 +174,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 
 		public Builder setConnectionCatalogName(String connectionCatalogName) {
 			this.connectionCatalogName = connectionCatalogName;
-			return this;
-		}
-
-		public Builder setExtraKeywords(Set<String> extraKeywords) {
-			if ( this.extraKeywords == null ) {
-				this.extraKeywords = extraKeywords;
-			}
-			else {
-				this.extraKeywords.addAll( extraKeywords );
-			}
-			return this;
-		}
-
-		public Builder addExtraKeyword(String keyword) {
-			if ( this.extraKeywords == null ) {
-				this.extraKeywords = new HashSet<String>();
-			}
-			this.extraKeywords.add( keyword );
 			return this;
 		}
 
@@ -262,7 +227,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					jdbcEnvironment,
 					connectionCatalogName,
 					connectionSchemaName,
-					extraKeywords,
 					supportsRefCursors,
 					supportsNamedParameters,
 					supportsScrollableResults,

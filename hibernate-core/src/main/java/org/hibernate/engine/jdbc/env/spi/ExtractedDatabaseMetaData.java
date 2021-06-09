@@ -46,15 +46,6 @@ public interface ExtractedDatabaseMetaData {
 	String getConnectionSchemaName();
 
 	/**
-	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
-	 *
-	 * @return The extra keywords used by this database.
-	 *
-	 * @see java.sql.DatabaseMetaData#getSQLKeywords()
-	 */
-	Set<String> getExtraKeywords();
-
-	/**
 	 * Does the driver report supporting named parameters?
 	 *
 	 * @return {@code true} indicates the driver reported true; {@code false} indicates the driver reported false

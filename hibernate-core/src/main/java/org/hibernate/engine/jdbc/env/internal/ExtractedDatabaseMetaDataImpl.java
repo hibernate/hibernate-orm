@@ -40,7 +40,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean supportsDataDefinitionInTransaction;
 	private final boolean doesDataDefinitionCauseTransactionCommit;
 	private final SQLStateType sqlStateType;
-	private final boolean lobLocatorUpdateCopy;
 
 	private final Set<String> extraKeywords;
 	private final List<SequenceInformation> sequenceInformationList;
@@ -58,7 +57,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			boolean supportsDataDefinitionInTransaction,
 			boolean doesDataDefinitionCauseTransactionCommit,
 			SQLStateType sqlStateType,
-			boolean lobLocatorUpdateCopy,
 			List<SequenceInformation> sequenceInformationList) {
 		this.jdbcEnvironment = jdbcEnvironment;
 
@@ -77,7 +75,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
 		this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
 		this.sqlStateType = sqlStateType;
-		this.lobLocatorUpdateCopy = lobLocatorUpdateCopy;
 		this.sequenceInformationList = sequenceInformationList;
 	}
 
@@ -132,11 +129,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
-	public boolean doesLobLocatorUpdateCopy() {
-		return lobLocatorUpdateCopy;
-	}
-
-	@Override
 	public String getConnectionCatalogName() {
 		return connectionCatalogName;
 	}
@@ -167,7 +159,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private boolean supportsDataDefinitionInTransaction;
 		private boolean doesDataDefinitionCauseTransactionCommit;
 		private SQLStateType sqlStateType;
-		private boolean lobLocatorUpdateCopy;
 		private List<SequenceInformation> sequenceInformationList = Collections.emptyList();
 
 		public Builder(JdbcEnvironment jdbcEnvironment) {
@@ -186,7 +177,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			doesDataDefinitionCauseTransactionCommit = databaseMetaData.dataDefinitionCausesTransactionCommit();
 			extraKeywords = parseKeywords( databaseMetaData.getSQLKeywords() );
 			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
-			lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
 			return this;
 		}
 
@@ -262,11 +252,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			return this;
 		}
 
-		public Builder setLobLocatorUpdateCopy(boolean lobLocatorUpdateCopy) {
-			this.lobLocatorUpdateCopy = lobLocatorUpdateCopy;
-			return this;
-		}
-
 		public Builder setSequenceInformationList(List<SequenceInformation> sequenceInformationList) {
 			this.sequenceInformationList = sequenceInformationList;
 			return this;
@@ -286,7 +271,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					supportsDataDefinitionInTransaction,
 					doesDataDefinitionCauseTransactionCommit,
 					sqlStateType,
-					lobLocatorUpdateCopy,
 					sequenceInformationList
 			);
 		}

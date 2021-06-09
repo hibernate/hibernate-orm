@@ -15,7 +15,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -110,7 +109,11 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 		ModelPartContainer modelPart = tableGroup.getModelPart();
 		if ( modelPart instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttribute = (PluralAttributeMapping) modelPart;
-			final MappingType elementMappingType = (pluralAttribute).getElementDescriptor().getPartMappingType();
+			if ( !pluralAttribute.getCollectionDescriptor().hasManyToManyOrdering() ) {
+				return tableGroup.getPrimaryTableReference();
+			}
+
+			final MappingType elementMappingType = pluralAttribute.getElementDescriptor().getPartMappingType();
 
 			if ( elementMappingType instanceof AbstractEntityPersister ) {
 				final AbstractEntityPersister abstractEntityPersister = (AbstractEntityPersister) elementMappingType;

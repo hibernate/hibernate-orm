@@ -60,7 +60,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final QualifiedObjectNameFormatter qualifiedObjectNameFormatter;
 	private final LobCreatorBuilderImpl lobCreatorBuilder;
 
-	private final LinkedHashSet<TypeInfo> typeInfoSet = new LinkedHashSet<TypeInfo>();
 	private final NameQualifierSupport nameQualifierSupport;
 
 	/**
@@ -277,8 +276,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 				databaseMetaData
 		);
 
-		this.typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
-
 		this.lobCreatorBuilder = LobCreatorBuilderImpl.makeLobCreatorBuilder(
 				dialect,
 				cfgService.getSettings(),
@@ -379,14 +376,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		return lobCreatorBuilder;
 	}
 
-	@Override
 	public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
-		for ( TypeInfo typeInfo : typeInfoSet ) {
-			if ( typeInfo.getJdbcTypeCode() == jdbcTypeCode ) {
-				return typeInfo;
-			}
-		}
-		return null;
+		throw new UnsupportedOperationException( "Support for getting TypeInfo from jdbcTypeCode has been disabled as it wasn't used." +
+													" Use org.hibernate.engine.jdbc.spi.TypeInfo.extractTypeInfo as alternative, or report an issue and explain." );
 	}
 
 	/**

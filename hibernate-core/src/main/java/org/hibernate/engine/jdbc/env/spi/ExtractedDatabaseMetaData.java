@@ -46,15 +46,6 @@ public interface ExtractedDatabaseMetaData {
 	String getConnectionSchemaName();
 
 	/**
-	 * Set of type info reported by the driver.
-	 *
-	 * @return The type information obtained from the driver.
-	 *
-	 * @see java.sql.DatabaseMetaData#getTypeInfo()
-	 */
-	LinkedHashSet<TypeInfo> getTypeInfoSet();
-
-	/**
 	 * Get the list of extra keywords (beyond standard SQL92 keywords) reported by the driver.
 	 *
 	 * @return The extra keywords used by this database.

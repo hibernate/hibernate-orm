@@ -9,10 +9,8 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -21,8 +19,6 @@ import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
-import org.hibernate.engine.jdbc.spi.TypeInfo;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
@@ -47,7 +43,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean lobLocatorUpdateCopy;
 
 	private final Set<String> extraKeywords;
-	private final LinkedHashSet<TypeInfo> typeInfoSet;
 	private final List<SequenceInformation> sequenceInformationList;
 
 	private ExtractedDatabaseMetaDataImpl(
@@ -55,7 +50,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			String connectionCatalogName,
 			String connectionSchemaName,
 			Set<String> extraKeywords,
-			LinkedHashSet<TypeInfo> typeInfoSet,
 			boolean supportsRefCursors,
 			boolean supportsNamedParameters,
 			boolean supportsScrollableResults,
@@ -74,9 +68,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.extraKeywords = extraKeywords != null
 				? extraKeywords
 				: Collections.<String>emptySet();
-		this.typeInfoSet = typeInfoSet != null
-				? typeInfoSet
-				: new LinkedHashSet<TypeInfo>();
 
 		this.supportsRefCursors = supportsRefCursors;
 		this.supportsNamedParameters = supportsNamedParameters;
@@ -156,11 +147,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
-	public LinkedHashSet<TypeInfo> getTypeInfoSet() {
-		return typeInfoSet;
-	}
-
-	@Override
 	public List<SequenceInformation> getSequenceInformationList() {
 		return sequenceInformationList;
 	}
@@ -172,7 +158,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private String connectionCatalogName;
 
 		private Set<String> extraKeywords;
-		private LinkedHashSet<TypeInfo> typeInfoSet;
 
 		private boolean supportsRefCursors;
 		private boolean supportsNamedParameters;
@@ -202,8 +187,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			extraKeywords = parseKeywords( databaseMetaData.getSQLKeywords() );
 			sqlStateType = SQLStateType.interpretReportedSQLStateType( databaseMetaData.getSQLStateType() );
 			lobLocatorUpdateCopy = databaseMetaData.locatorsUpdateCopy();
-			typeInfoSet = new LinkedHashSet<TypeInfo>();
-			typeInfoSet.addAll( TypeInfo.extractTypeInfo( databaseMetaData ) );
 			return this;
 		}
 
@@ -236,24 +219,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 				this.extraKeywords = new HashSet<String>();
 			}
 			this.extraKeywords.add( keyword );
-			return this;
-		}
-
-		public Builder setTypeInfoSet(LinkedHashSet<TypeInfo> typeInfoSet) {
-			if ( this.typeInfoSet == null ) {
-				this.typeInfoSet = typeInfoSet;
-			}
-			else {
-				this.typeInfoSet.addAll( typeInfoSet );
-			}
-			return this;
-		}
-
-		public Builder addTypeInfo(TypeInfo typeInfo) {
-			if ( this.typeInfoSet == null ) {
-				this.typeInfoSet = new LinkedHashSet<TypeInfo>();
-			}
-			typeInfoSet.add( typeInfo );
 			return this;
 		}
 
@@ -313,7 +278,6 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					connectionCatalogName,
 					connectionSchemaName,
 					extraKeywords,
-					typeInfoSet,
 					supportsRefCursors,
 					supportsNamedParameters,
 					supportsScrollableResults,

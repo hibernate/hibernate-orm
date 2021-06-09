@@ -17,20 +17,20 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.idbag">
+<hibernate-mapping package="org.hibernate.orm.test.idbag">
 	
 	<class name="User" table="`Users`">
 		<id name="name"/>
 		
-		<idbag name="groups" 
-				order-by="groupName asc" 
+		<idbag name="groups"
+				order-by="groupName asc"
 				table="`UserGroups`">
-			<collection-id column="userGroupId" 
+			<collection-id column="userGroupId"
 					type="long">
 				<generator class="increment"/>
 			</collection-id>
 			<key column="userName"/>
-			<many-to-many column="groupName" 
+			<many-to-many column="groupName"
 					class="Group"/>
 		</idbag>
 		

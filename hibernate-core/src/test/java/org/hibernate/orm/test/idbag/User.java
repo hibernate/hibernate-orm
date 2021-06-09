@@ -5,28 +5,40 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id: Group.java 6058 2005-03-11 17:05:19Z oneovthafew $
-package org.hibernate.test.idbag;
+//$Id: User.java 6058 2005-03-11 17:05:19Z oneovthafew $
+package org.hibernate.orm.test.idbag;
 
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Gavin King
  */
-public class Group {
+public class User {
 	private String name;
+	private List groups = new ArrayList();
 	
-	Group() {}
+	User() {}
 	
-	public Group(String name) {
+	public User(String name) {
 		this.name = name;
 	}
-	
+
 	public String getName() {
 		return name;
 	}
 	
+
 	void setName(String name) {
 		this.name = name;
+	}
+
+	public List getGroups() {
+		return groups;
+	}
+	
+	void setGroups(List groups) {
+		this.groups = groups;
 	}
 	
 }

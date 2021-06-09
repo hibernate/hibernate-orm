@@ -455,7 +455,7 @@ org.hibernate.test.collection.custom.parameterized.ParameterizedUserCollectionTy
 org.hibernate.test.collection.delayedOperation.ListAddTest
 org.hibernate.test.collection.idbag.PersistentIdBagTest
 org.hibernate.test.collection.list.PersistentListTest
-org.hibernate.test.component.basic.ComponentTest
+#org.hibernate.test.component.basic.ComponentTest # Uncomment this line when date functions have been restored
 org.hibernate.test.component.cascading.collection.CascadeToComponentCollectionTest
 org.hibernate.test.component.cascading.toone.CascadeToComponentAssociationTest
 org.hibernate.test.compositeusertype.CompositeUserTypeTest
@@ -572,7 +572,7 @@ org.hibernate.test.hql.EJBQLTest
 org.hibernate.test.hqlfetchscroll.HQLScrollFetchTest
 org.hibernate.test.hql.FunctionNameAsColumnTest
 org.hibernate.test.hql.HqlParserTest
-org.hibernate.test.hql.HQLTest
+#org.hibernate.test.hql.HQLTest # Uncomment this line when date functions have been restored
 org.hibernate.test.hql.InsertWithSubSelectTest
 org.hibernate.test.hql.QueryParametersValidationTest
 org.hibernate.test.hql.QuerySplitterTest

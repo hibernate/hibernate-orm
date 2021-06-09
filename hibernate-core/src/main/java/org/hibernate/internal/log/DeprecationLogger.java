@@ -250,4 +250,12 @@ public interface DeprecationLogger extends BasicLogger {
 					"5.3 in upgrading.  It will be removed in a later version."
 	)
 	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
+
+	@LogMessage(level = WARN)
+	@Message(
+		id = 90000025,
+		value = "Encountered multiple component mappings for the same java class [%s] with different property mappings. " +
+			"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
+	)
+	void deprecatedComponentMapping(String name);
 }

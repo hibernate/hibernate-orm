@@ -8,6 +8,7 @@ package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
@@ -42,6 +44,7 @@ import org.hibernate.metamodel.model.domain.spi.IdentifiableTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.ManagedTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.MappedSuperclassTypeDescriptor;
 import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
+import org.hibernate.type.CompositeType;
 
 /**
  * Defines a context for storing information during the building of the {@link MetamodelImpl}.
@@ -51,7 +54,7 @@ import org.hibernate.metamodel.model.domain.spi.SingularPersistentAttribute;
  * <p/>
  * At the end of the day, clients are interested in the {@link #getEntityTypeMap} and {@link #getEmbeddableTypeSet}
  * results, which represent all the registered {@linkplain #registerEntityType entities} and
- * {@linkplain #registerEmbeddedableType embeddables} respectively.
+ * {@linkplain #registerEmbeddableType embeddables} respectively.
  *
  * @author Steve Ebersole
  * @author Emmanuel Bernard
@@ -68,7 +71,8 @@ class MetadataContext {
 	private Map<String, EntityTypeDescriptor<?>> entityTypesByEntityName = new HashMap<>();
 	private Map<PersistentClass, EntityTypeDescriptor<?>> entityTypesByPersistentClass = new HashMap<>();
 
-	private Set<EmbeddedTypeDescriptor<?>> embeddables = new HashSet<>();
+	private Map<Class, List<EmbeddedTypeDescriptor<?>>> embeddablesToProcess = new HashMap<>();
+	private Map<EmbeddedTypeDescriptor<?>, CompositeType> componentByEmbeddable = new HashMap<>();
 
 	private Map<MappedSuperclass, MappedSuperclassTypeDescriptor<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	private Map<MappedSuperclassTypeDescriptor<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
@@ -108,7 +112,7 @@ class MetadataContext {
 	}
 
 	public Set<EmbeddedTypeDescriptor<?>> getEmbeddableTypeSet() {
-		return Collections.unmodifiableSet( embeddables );
+		return Collections.unmodifiableSet( componentByEmbeddable.keySet() );
 	}
 
 	public Map<Class<?>, MappedSuperclassType<?>> getMappedSuperclassTypeMap() {
@@ -141,9 +145,13 @@ class MetadataContext {
 		orderedMappings.add( persistentClass );
 	}
 
-	/*package*/ void registerEmbeddedableType(EmbeddedTypeDescriptor<?> embeddableType) {
+	/*package*/ void registerEmbeddableType(EmbeddedTypeDescriptor<?> embeddableType, CompositeType component) {
+		final List<EmbeddedTypeDescriptor<?>> existingEmbeddables = embeddablesToProcess.computeIfAbsent(
+			embeddableType.getJavaType(), k -> new ArrayList<>( 1 )
+		);
+		existingEmbeddables.add( embeddableType );
 		if ( !( ignoreUnsupported && embeddableType.getParent().getJavaType() == null ) ) {
-			embeddables.add( embeddableType );
+			componentByEmbeddable.put( embeddableType, component );
 		}
 	}
 
@@ -196,6 +204,24 @@ class MetadataContext {
 
 	public Map<String, EntityTypeDescriptor<?>> getEntityTypesByEntityName() {
 		return Collections.unmodifiableMap( entityTypesByEntityName );
+	}
+
+	public <J> EmbeddedTypeDescriptor<J> locateEmbeddable(Class<J> embeddableClass, CompositeType component) {
+		final List<EmbeddedTypeDescriptor<?>> embeddableDomainTypes = embeddablesToProcess.get( embeddableClass );
+		if ( embeddableDomainTypes != null ) {
+			for ( EmbeddedTypeDescriptor<?> embeddableDomainType : embeddableDomainTypes ) {
+				final CompositeType cachedComponent = componentByEmbeddable.get( embeddableDomainType );
+				if ( Arrays.equals( cachedComponent.getPropertyNames(), component.getPropertyNames() ) ) {
+					//noinspection unchecked
+					return (EmbeddedTypeDescriptor<J>) embeddableDomainType;
+				}
+				else {
+					// See HHH-14660
+					DeprecationLogger.DEPRECATION_LOGGER.deprecatedComponentMapping(embeddableClass.getName() );
+				}
+			}
+		}
+		return null;
 	}
 
 	@SuppressWarnings({"unchecked"})
@@ -294,7 +320,7 @@ class MetadataContext {
 		}
 
 		if ( staticMetamodelScanEnabled ) {
-			for ( EmbeddedTypeDescriptor embeddable : embeddables ) {
+			for ( EmbeddedTypeDescriptor embeddable : componentByEmbeddable.keySet() ) {
 				populateStaticMetamodel( embeddable );
 			}
 		}

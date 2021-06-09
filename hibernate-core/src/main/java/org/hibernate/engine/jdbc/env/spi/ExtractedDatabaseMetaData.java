@@ -128,15 +128,6 @@ public interface ExtractedDatabaseMetaData {
 	SQLStateType getSqlStateType();
 
 	/**
-	 * Did the driver report that updates to a LOB locator affect a copy of the LOB?
-	 *
-	 * @return True if updates to the state of a LOB locator update only a copy.
-	 *
-	 * @see java.sql.DatabaseMetaData#locatorsUpdateCopy()
-	 */
-	boolean doesLobLocatorUpdateCopy();
-
-	/**
 	 * Retrieve the list of {@code SequenceInformation} objects which describe the underlying database sequences.
 	 *
 	 * @return {@code SequenceInformation} objects.

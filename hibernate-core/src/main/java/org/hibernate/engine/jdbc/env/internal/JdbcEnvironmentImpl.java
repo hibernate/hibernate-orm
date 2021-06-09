@@ -9,12 +9,8 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -288,7 +284,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private String determineCurrentSchemaName(
 			DatabaseMetaData databaseMetaData,
 			ServiceRegistry serviceRegistry,
-			Dialect dialect) throws SQLException {
+			Dialect dialect) {
 		final SchemaNameResolver schemaNameResolver;
 
 		final Object setting = serviceRegistry.getService( ConfigurationService.class ).getSettings().get(
@@ -321,14 +317,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		// todo : vary this based on extractedMetaDataSupport.getSqlStateType()
 		sqlExceptionConverter.addDelegate( new SQLStateConversionDelegate( dialect ) );
 		return new SqlExceptionHelper( sqlExceptionConverter, logWarnings );
-	}
-
-	private Set<String> buildMergedReservedWords(Dialect dialect, DatabaseMetaData dbmd) throws SQLException {
-		Set<String> reservedWords = new HashSet<String>();
-		reservedWords.addAll( dialect.getKeywords() );
-		// todo : do we need to explicitly handle SQL:2003 keywords?
-		reservedWords.addAll( Arrays.asList( dbmd.getSQLKeywords().split( "," ) ) );
-		return reservedWords;
 	}
 
 	@Override

@@ -47,12 +47,18 @@ File versionFile = file( "${rootProject.projectDir}/gradle/version.properties" )
 ext {
     ormVersionFile = versionFile
     ormVersion = HibernateVersion.fromFile( versionFile, project )
+    
     // Override during releases
     if ( project.hasProperty( 'releaseVersion' ) ) {
         ormVersion = new HibernateVersion( project.releaseVersion, project )
     }
+    
     jpaVersion = new JpaVersion('2.2')
     jakartaJpaVersion = new JpaVersion('3.0.0')
+    
+
+    nuodbHibernateVersion = new NuodbHibernateVersion();
+    nuodbHibernateJarVersion = System.env['DIALECT_VERSION'] ?: nuodbHibernateVersion.latestVersion;
 }
 
 // The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
@@ -76,21 +82,16 @@ nexusPublishing {
 
 allprojects {
     repositories {
-        if (System.env['DIALECT_VERSION'] == null) {
-            println("DIALECT_VERSION environment variable must be set to 20.0.0 or later")
-            System.exit(-1);
-        }
-
-        ext.hibernateDialect = System.env['DIALECT_VERSION'];
+        //ext.nuodbHibernateJarVersion = System.env['DIALECT_VERSION'] ?: nuodbHibernateVersion.latestVersion;
 
         // Set SONATYPE_VERSION to pull our Jar from there
         if (System.env['SONATYPE_VERSION'] != null) {
-            println "hibernate-orm: Using https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5/"
+            println "hibernate-orm: Using https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/com/nuodb/hibernate/nuodb-hibernate/${nuodbHibernateJarVersion}-hib5/"
             ivy {
                 url "https://oss.sonatype.org/content/repositories/comnuodb-${System.env.SONATYPE_VERSION}/"
 
                 layout 'pattern', {
-                    artifact '/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5/nuodb-hibernate-${System.env.DIALECT_VERSION}-hib5.[ext]'
+                    artifact '/com/nuodb/hibernate/nuodb-hibernate/${nuodbHibernateJarVersion}-hib5/nuodb-hibernate-${nuodbHibernateJarVersion}-hib5.[ext]'
                 }
             }
         }
@@ -111,7 +112,7 @@ allprojects {
             flatDir {
 			    String mvnHome = "${System.properties.get('user.home').replace('\\', '/')}/.m2/repository";
 			    //println "Using default repository: ${mvnHome}"
-                dirs "${mvnHome}/com/nuodb/hibernate/nuodb-hibernate/${System.env.DIALECT_VERSION}-hib5"
+                dirs "${mvnHome}/com/nuodb/hibernate/nuodb-hibernate/${nuodbHibernateJarVersion}-hib5"
             }
         }
     }
@@ -239,6 +240,84 @@ class HibernateVersion {
 	String toString() {
 		return this.fullName
 	}
+}
+
+public class NuodbHibernateVersion {
+
+    public static final String unknownVersion = 'UNKNOWN';
+    public final String latestVersion
+    
+    public NuodbHibernateVersion() {
+        latestVersion = getLatestVersion();
+        println "Latest NuoDB Hibernate dialect found in ~/.m2 is ${latestVersion}"
+        
+        if (System.env['DIALECT_VERSION'] == null) {
+            println("DIALECT_VERSION environment variable should be set to 20.0.0 or later")
+            
+            if (isUnknown()) {
+                println()
+                println(">> ERROR: Unknown Dialect JAR version, unable to continue")
+                println()
+                System.exit(-1)
+            }
+
+            println("    Defaulting to ${latestVersion}")
+        }
+    }
+
+    public boolean isUnknown() {
+        return latestVersion.equals(unknownVersion);
+    }
+
+    private String getLatestVersion() {
+        String splitAtPeriod = '\\.';
+        String NO_VALUE = '0.0.0';
+        
+        File mavenHibDir = new File(System.getProperty('user.home'), '.m2/repository/com/nuodb/hibernate/nuodb-hibernate');
+        String latest = NO_VALUE;
+        String[] lbits = latest.split(splitAtPeriod);
+        
+        if (!mavenHibDir.exists())
+            return unknownVersion;
+            
+        for(File f : mavenHibDir.listFiles()) {
+            String dirName = f.name;
+            //println("dirName = ${dirName}");
+            
+            if (dirName.startsWith('.') || dirName.startsWith('3.') ||
+                    !dirName.endsWith('-hib5') || !Character.isDigit(dirName.charAt(0)))
+   				continue;
+   				
+            int ix = dirName.indexOf('-');
+
+            if (ix != -1)
+                dirName = dirName.substring(0, ix);
+            
+            String[] m = dirName.split(splitAtPeriod);
+            boolean later = false;
+            //println("  latest = ${Arrays.asList(lbits)}");
+            //println("  dirName = ${Arrays.asList(m)}");
+            
+            if (m[0] > lbits[0])
+                later = true;
+            else if (m[0] == lbits[0]) {
+                if (m[1] > lbits[1])
+                    later = true;
+                else if (m[1] == lbits[1] && m[2] > lbits[2])
+                    later = true;
+            }
+            
+            if (later) {
+                //println("  Change to ${dirName}")
+                latest = dirName;
+                lbits = latest.split(splitAtPeriod);
+            }
+            
+        }
+        
+        return latest.equals(NO_VALUE) ? unknownVersion : latest;
+    }
+
 }
 
 //idea {

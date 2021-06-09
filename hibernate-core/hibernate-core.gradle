@@ -30,13 +30,10 @@ sourceSets {
         }
     }
 }
-if (System.env['DIALECT_VERSION'] == null) {
-    println("DIALECT_VERSION environment variable must be set to 20.0.0 or later")
-    System.exit(-1);
-}
 
-ext.hibernateDialect = System.env['DIALECT_VERSION'];
-println "hibernate-core: Using NuoDB Dialect V${hibernateDialect}"
+// BEGIN: For NUODB
+println "hibernate-core: Using NuoDB Dialect V${nuodbHibernateJarVersion}"
+// END: For NUODB
 
 configurations {
     tests {
@@ -55,7 +52,7 @@ dependencies {
     compile( libraries.classmate )
     compile( libraries.activation )
 
-    implementation( "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5" )
+    implementation( "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}-hib5" )
 
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support
@@ -111,8 +108,8 @@ dependencies {
     testRuntime( libraries.atomikos_jta )
     testRuntime( libraries.wildfly_transaction_client )
 
-    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5" )
-    testRuntime( "com.nuodb.jdbc:nuodb-jdbc:20.0.0" )
+    testRuntime( "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}-hib5" )
+    testRuntime( "com.nuodb.jdbc:nuodb-jdbc:22.0.0" )
 
     testAnnotationProcessor( project( ':hibernate-jpamodelgen' ) )
 
@@ -125,7 +122,7 @@ dependencies {
     // Additional tests requiring Javassist
     // folder in src/javassist/java
     testJavassistCompile libraries.javassist
-    testCompile "com.nuodb.hibernate:nuodb-hibernate:${hibernateDialect}-hib5"
+    testCompile "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}-hib5"
 }
 
 jar {
@@ -301,8 +298,8 @@ test {
     // Dynamically retrieves the plan of tests to run. If not provided, all tests are included.
     // Pre-defined test plans are: green and red.
     // Custom plans can be created as long the .test-list file is added to hibernate-core and
-    // the environment variable is set to the name of the file without the extension section
-    //     ex.: TEST_PLAN=green ./gradlew clean :hibernate-core:test
+    // the environment variable is set to the name of the file without the file extension
+    //  Linux Example: TEST_PLAN=green ./gradlew clean :hibernate-core:test
     def testPlan = System.env['TEST_PLAN']
 
     if (testPlan != null) {
@@ -312,17 +309,28 @@ test {
             println "Using ${testPlan.toUpperCase()} test plan."
             filter {
                 testList.each { testName ->
-                    includeTestsMatching testName
+                    if ( testName.startsWith('#')) {
+                    }  // ignore
+                    else    
+                    	includeTestsMatching testName
                 }
             }
         } else {
-            println "Environment variable TEST_PLAN is set as ${testPlan} but no ${testPlan}.test-list file was found."
-            println "A .test-file contains a list of filtered tests to run. If you would like to have"
-            println "your own list just create a new file like `hibernate-core/my.test-list` and set the environment"
-            println "variable like so:"
-            println "  export TEST_PLAN=my"
-            println "Run the test command again."
-            System.exit(-1);
+            println ""
+            println "  Environment variable TEST_PLAN is set as ${testPlan} but no ${testPlan}.test-list file was found."
+            println ""
+            println "  A '.test-file' contains a list of just the tests you wish to run.  Each line contains"
+            println "  the fully qualified class name of a test to run.  Lines starting with # are ignored."
+            println ""
+            println "  To define your own list, create a new file, such as `hibernate-core/my.test-list`, and"
+            println "  set the environment variable like so:"
+            println "      export TEST_PLAN=my   (Linux, MacOS)"
+            println "      set    TEST_PLAN=my   (MS Windows)"
+            println "  Run the test command again."
+            println ""
+            ant.fail("File hibernate-core/${testPlan}.test-list not found")
+            //System.exit(-1);  // Gradle hates this, and generates unwanted output, 
+                                // but offers no way to abort a build quietly.
         }
     } else {
         println "Running all tests!"

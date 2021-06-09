@@ -100,8 +100,8 @@ This variable is used in three places and should get picked up by all of them:
 
 This must be changed manually in two places:
 
-1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:20.0.0"`
-2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:20.0.0" )`
+1. `databases/nuodb/matrix.gradle`: `jdbcDependency "com.nuodb.jdbc:nuodb-jdbc:22.0.0"`
+2. `hibernate-core/hibernate-core.gradle`:  `testRuntime( "com.nuodb.jdbc:nuodb-jdbc:22.0.0" )`
 
 ## Changes Made to Project
 
@@ -295,3 +295,4 @@ e.g. `pgsql_ci` for PostgreSQL. By using the system property `dbHost` you can co
 The command for running tests could look like the following:
 
     gradlew test -Pdb=pgsql_ci "-DdbHost=192.168.99.100"
+

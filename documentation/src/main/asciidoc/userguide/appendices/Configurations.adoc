@@ -926,6 +926,7 @@ Valid options are defined by the `strategy` value of the https://docs.jboss.org/
 
 `*hibernate.hbm2ddl.delimiter*` (e.g. `;`)::
 Identifies the delimiter to use to separate schema management statements in script outputs.
+The default value is `;`.
 
 `*hibernate.schema_management_tool*` (e.g. A schema name)::
 Used to specify the `SchemaManagementTool` to use for performing schema management. The default is to use `HibernateSchemaManagementTool`.

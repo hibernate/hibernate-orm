@@ -93,7 +93,7 @@ public class UniqueConstraintGenerationTest {
 
 	private boolean isUniqueConstraintGenerated(String tableName, String columnName) throws IOException {
 		boolean matches = false;
-		final String regex = getDialect().getAlterTableString( tableName ) + " add constraint uk_(.)* unique \\(" + columnName + "\\)";
+		final String regex = getDialect().getAlterTableString( tableName ) + " add constraint uk_(.)* unique \\(" + columnName + "\\);";
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );
@@ -109,7 +109,7 @@ public class UniqueConstraintGenerationTest {
 
 	private boolean isCreateUniqueIndexGenerated(String tableName, String columnName) throws IOException {
 		boolean matches = false;
-		String regex = "create unique index uk_(.)* on " + tableName + " \\(" + columnName + "\\)";
+		String regex = "create unique index uk_(.)* on " + tableName + " \\(" + columnName + "\\);";
 
 		final String fileContent = new String( Files.readAllBytes( output.toPath() ) ).toLowerCase();
 		final String[] split = fileContent.split( System.lineSeparator() );

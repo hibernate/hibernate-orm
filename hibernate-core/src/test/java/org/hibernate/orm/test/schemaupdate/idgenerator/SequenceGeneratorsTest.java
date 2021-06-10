@@ -70,12 +70,12 @@ public class SequenceGeneratorsTest extends BaseUnitTestCase {
 		List<String> commands = Files.readAllLines( output.toPath() );
 
 		assertThat(
-				isCommandGenerated( commands, "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\)" ),
+				isCommandGenerated( commands, "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\);" ),
 				is( true )
 		);
 
 		assertThat(
-				isCommandGenerated( commands, "CREATE SEQUENCE SEQUENCE_GENERATOR START WITH 5 INCREMENT BY 3" ),
+				isCommandGenerated( commands, "CREATE SEQUENCE SEQUENCE_GENERATOR START WITH 5 INCREMENT BY 3;" ),
 				is( true )
 		);
 	}

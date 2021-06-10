@@ -224,7 +224,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	public EntityStatisticsImpl getEntityStatistics(String entityName) {
 		return entityStatsMap.getOrCompute(
 				entityName,
-				s -> new EntityStatisticsImpl( metamodel.entityPersister( s ) )
+				this::instantiateEntityStatistics
 		);
 	}
 
@@ -328,7 +328,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	public CollectionStatisticsImpl getCollectionStatistics(String role) {
 		return collectionStatsMap.getOrCompute(
 				role,
-				s -> new CollectionStatisticsImpl( metamodel.collectionPersister( s ) )
+				this::instantiateCollectionStatistics
 		);
 	}
 
@@ -416,13 +416,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	public NaturalIdStatisticsImpl getNaturalIdStatistics(String rootEntityName) {
 		return naturalIdQueryStatsMap.getOrCompute(
 				rootEntityName,
-				s -> {
-					final EntityPersister entityDescriptor = metamodel.entityPersister( s );
-					if ( !entityDescriptor.hasNaturalIdentifier() ) {
-						throw new IllegalArgumentException( "Given entity [" + s + "] does not define natural-id" );
-					}
-					return new NaturalIdStatisticsImpl( entityDescriptor );
-				}
+				this::instantiateNaturalStatistics
 		);
 	}
 
@@ -431,10 +425,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		final String key = cache.unqualifyRegionName( regionName );
 		return deprecatedNaturalIdStatsMap.getOrCompute(
 				key,
-				unqualifiedRegionName -> new DeprecatedNaturalIdCacheStatisticsImpl(
-						unqualifiedRegionName,
-						cache.getNaturalIdAccessesInRegion( unqualifiedRegionName )
-				)
+				this::instantiateDeprecatedNaturalIdCacheStatistics
 		);
 	}
 
@@ -563,21 +554,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	public CacheRegionStatisticsImpl getDomainDataRegionStatistics(String regionName) {
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> {
-					final Region region = cache.getRegion( s );
-
-					if ( region == null ) {
-						throw new IllegalArgumentException( "Unknown cache region : " + s );
-					}
-
-					if ( region instanceof QueryResultsRegion ) {
-						throw new IllegalArgumentException(
-								"Region name [" + s + "] referred to a query result region, not a domain data region"
-						);
-					}
-
-					return new CacheRegionStatisticsImpl( region );
-				}
+				this::instantiateCacheRegionStatistics
 		);
 	}
 
@@ -608,22 +585,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> {
-					Region region = cache.getRegion( s );
-
-					if ( region == null ) {
-
-						if ( ! queryCacheEnabled ) {
-							return null;
-						}
-
-						// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
-						// NOTE that this method is deprecated
-						region = cache.getQueryResultsCache( s ).getRegion();
-					}
-
-					return new CacheRegionStatisticsImpl( region );
-				}
+				this::createCacheRegionStatistics
 		);
 	}
 
@@ -816,7 +778,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	private CacheRegionStatisticsImpl getQueryRegionStats(String regionName) {
 		return l2CacheStatsMap.getOrCompute(
 				regionName,
-				s -> new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() )
+				this::instantiateCacheRegionStatsForQueryResults
 		);
 	}
 
@@ -988,5 +950,65 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 				.append( ",query plan cache misses=" ).append( queryPlanCacheMissCount )
 				.append( ']' )
 				.toString();
+	}
+
+	private EntityStatisticsImpl instantiateEntityStatistics(final String entityName) {
+		return new EntityStatisticsImpl( metamodel.entityPersister( entityName ) );
+	}
+
+	private CollectionStatisticsImpl instantiateCollectionStatistics(final String role) {
+		return new CollectionStatisticsImpl( metamodel.collectionPersister( role ) );
+	}
+
+	private NaturalIdStatisticsImpl instantiateNaturalStatistics(final String entityName) {
+		final EntityPersister entityDescriptor = metamodel.entityPersister( entityName );
+		if ( !entityDescriptor.hasNaturalIdentifier() ) {
+			throw new IllegalArgumentException( "Given entity [" + entityName + "] does not define natural-id" );
+		}
+		return new NaturalIdStatisticsImpl( entityDescriptor );
+	}
+
+	private DeprecatedNaturalIdCacheStatisticsImpl instantiateDeprecatedNaturalIdCacheStatistics(final String unqualifiedRegionName) {
+		return new DeprecatedNaturalIdCacheStatisticsImpl(
+				unqualifiedRegionName,
+				cache.getNaturalIdAccessesInRegion( unqualifiedRegionName )
+		);
+	}
+
+	private CacheRegionStatisticsImpl instantiateCacheRegionStatistics(final String regionName) {
+		final Region region = cache.getRegion( regionName );
+
+		if ( region == null ) {
+			throw new IllegalArgumentException( "Unknown cache region : " + regionName );
+		}
+
+		if ( region instanceof QueryResultsRegion ) {
+			throw new IllegalArgumentException(
+					"Region name [" + regionName + "] referred to a query result region, not a domain data region"
+			);
+		}
+
+		return new CacheRegionStatisticsImpl( region );
+	}
+
+	private CacheRegionStatisticsImpl instantiateCacheRegionStatsForQueryResults(final String regionName) {
+		return new CacheRegionStatisticsImpl( cache.getQueryResultsCache( regionName ).getRegion() );
+	}
+
+	private CacheRegionStatisticsImpl createCacheRegionStatistics(final String regionName) {
+		Region region = cache.getRegion( regionName );
+
+		if ( region == null ) {
+
+			if ( !queryCacheEnabled ) {
+				return null;
+			}
+
+			// this is the pre-5.3 behavior.  and since this is a pre-5.3 method it should behave consistently
+			// NOTE that this method is deprecated
+			region = cache.getQueryResultsCache( regionName ).getRegion();
+		}
+
+		return new CacheRegionStatisticsImpl( region );
 	}
 }

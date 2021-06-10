@@ -72,13 +72,13 @@ public class TableGeneratorsTest extends BaseUnitTestCase {
 
 		final List<String> commands = Files.readAllLines( output.toPath() );
 
-		final String expectedTestEntityTableCreationCommand = "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\)";
+		final String expectedTestEntityTableCreationCommand = "CREATE TABLE TEST_ENTITY \\(ID .*, PRIMARY KEY \\(ID\\)\\);";
 		assertTrue(
 				"The command '" + expectedTestEntityTableCreationCommand + "' has not been correctly generated",
 				isCommandGenerated( commands, expectedTestEntityTableCreationCommand )
 		);
 
-		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(PK .*, VALUE .*, PRIMARY KEY \\(PK\\)\\)";
+		final String expectedIdTableGeneratorCreationCommand = "CREATE TABLE ID_TABLE_GENERATOR \\(PK .*, VALUE .*, PRIMARY KEY \\(PK\\)\\);";
 
 		assertTrue(
 				"The command '" + expectedIdTableGeneratorCreationCommand + "' has not been correctly generated",
@@ -89,7 +89,7 @@ public class TableGeneratorsTest extends BaseUnitTestCase {
 				)
 		);
 
-		final String expectedInsertIntoTableGeneratorCommand = "INSERT INTO ID_TABLE_GENERATOR\\(PK, VALUE\\) VALUES \\('TEST_ENTITY_ID'," + EXPECTED_DB_INSERTED_VALUE + "\\)";
+		final String expectedInsertIntoTableGeneratorCommand = "INSERT INTO ID_TABLE_GENERATOR\\(PK, VALUE\\) VALUES \\('TEST_ENTITY_ID'," + EXPECTED_DB_INSERTED_VALUE + "\\);";
 
 		assertTrue(
 				"The command '" + expectedInsertIntoTableGeneratorCommand + "' has not been correctly generated",

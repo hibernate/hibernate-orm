@@ -123,7 +123,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			JdbcContext jdbcContext,
 			Map options,
 			boolean needsAutoCommit) {
-		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
+		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
 
 		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 
@@ -156,7 +156,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			TargetDescriptor targetDescriptor,
 			DdlTransactionIsolator ddlTransactionIsolator,
 			Map options) {
-		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options );
+		final String scriptDelimiter = ConfigurationHelper.getString( HBM2DDL_DELIMITER, options, ";" );
 
 		final GenerationTarget[] targets = new GenerationTarget[ targetDescriptor.getTargetTypes().size() ];
 

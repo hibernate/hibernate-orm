@@ -4,106 +4,97 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.idprops;
+package org.hibernate.orm.test.idprops;
 
 import java.io.Serializable;
 import javax.persistence.Column;
+import javax.persistence.Embeddable;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 
 /**
  * @author Gail Badner
  */
-public class PropertyNamedIdOutOfIdClassTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
+@DomainModel(
+		annotatedClasses = PropertyNamedIdOutOfEmbeddedIdTest.Person.class
+)
+@SessionFactory
+public class PropertyNamedIdOutOfEmbeddedIdTest {
 
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( new Person( "John Doe", 0 ) );
-			session.persist( new Person( "John Doe", 1, 1 ) );
-			session.persist( new Person( "John Doe", 2, 2 ) );
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.persist( new Person( "John Doe", 0, 6 ) );
+			session.persist( new Person( "John Doe", 1, 6 ) );
+			session.persist( new Person( "Jane Doe", 0 ) );
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Person" ).executeUpdate()
+		);
+	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13084")
-	public void testHql() {
-		doInHibernate( this::sessionFactory, session -> {
-			assertEquals( 1, session.createQuery( "from Person p where p.id is null", Person.class ).list().size() );
-			assertEquals( 2, session.createQuery( "from Person p where p.id is not null", Person.class ).list().size() );
+	public void testHql(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			assertEquals(
+					2,
+					session.createQuery( "from Person p where p.id = :id", Person.class )
+							.setParameter( "id", 6 )
+							.list()
+							.size()
+			);
+
 			assertEquals( 3L, session.createQuery( "select count( p ) from Person p" ).uniqueResult() );
+
 		} );
 	}
 
 	@Entity(name = "Person")
-	@IdClass(PersonId.class)
 	public static class Person implements Serializable {
-		@Id
-		private String name;
-
-		@Id
-		@Column(name = "ind")
-		private int index;
+		@EmbeddedId
+		private PersonId personId;
 
 		private Integer id;
 
 		public Person(String name, int index) {
 			this();
-			setName( name );
-			setIndex( index );
+			personId = new PersonId( name, index );
 		}
 
-
-		public Person(String name, int index, int id) {
+		public Person(String name, int index, Integer id) {
 			this( name, index );
 			this.id = id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public int getIndex() {
-			return index;
-		}
-
-		public Integer getId() {
-			return id;
 		}
 
 		protected Person() {
 			// this form used by Hibernate
 		}
 
-		protected void setName(String name) {
-			this.name = name;
-		}
-
-		protected void setIndex(int index) {
-			this.index = index;
-		}
-
-		protected void setId(Integer id) {
-			this.id = id;
+		public PersonId getPersonId() {
+			return personId;
 		}
 	}
 
+	@Embeddable
 	public static class PersonId implements Serializable {
 		private String name;
+		@Column(name = "ind")
 		private int index;
 
 		public PersonId() {

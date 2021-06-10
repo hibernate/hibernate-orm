@@ -6726,13 +6726,23 @@ public abstract class AbstractEntityPersister
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		LOG.tracef( "#findSubPart(`%s`)", name );
 
+		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+
 		if ( isIdentifierReference( name ) ) {
 			return identifierMapping;
 		}
 
-		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
-		if ( declaredAttribute != null ) {
-			return declaredAttribute;
+		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
+			final ModelPart subPart = ( (NonAggregatedIdentifierMappingImpl) identifierMapping ).findSubPart(
+					name,
+					treatTargetType
+			);
+			if ( subPart != null ) {
+				return subPart;
+			}
 		}
 
 		if ( superMappingType != null ) {
@@ -6750,10 +6760,6 @@ public abstract class AbstractEntityPersister
 					return subDefinedAttribute;
 				}
 			}
-		}
-
-		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
-			return ( (NonAggregatedIdentifierMappingImpl) identifierMapping ).findSubPart( name, treatTargetType );
 		}
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {

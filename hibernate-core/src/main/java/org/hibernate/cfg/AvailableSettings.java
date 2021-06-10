@@ -2423,8 +2423,9 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * and its database sequence object counterpart.
 	 * </p>
 	 * Possible values are {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
-	 * {@link org.hibernate.id.SequenceMismatchStrategy#LOG}, and
-	 * {@link org.hibernate.id.SequenceMismatchStrategy#FIX}.
+	 * {@link org.hibernate.id.SequenceMismatchStrategy#LOG},
+	 * {@link org.hibernate.id.SequenceMismatchStrategy#FIX}
+	 * and {@link org.hibernate.id.SequenceMismatchStrategy#NONE}.
 	 * </p>
 	 * The default value is given by the {@link org.hibernate.id.SequenceMismatchStrategy#EXCEPTION},
 	 * meaning that an Exception is thrown when detecting such a conflict.

@@ -12,6 +12,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.QualifiedName;
@@ -242,18 +243,19 @@ public class SequenceStyleGenerator
 
 		final boolean isPooledOptimizer = OptimizerFactory.isPooledOptimizer( optimizationStrategy );
 
-		if ( isPooledOptimizer && isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
+
+		SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
+				AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
+				SequenceMismatchStrategy::interpret,
+				SequenceMismatchStrategy.EXCEPTION
+		);
+
+		if ( sequenceMismatchStrategy != SequenceMismatchStrategy.NONE && isPooledOptimizer && isPhysicalSequence( jdbcEnvironment, forceTableUse ) ) {
 			String databaseSequenceName = sequenceName.getObjectName().getText();
 			Long databaseIncrementValue = getSequenceIncrementValue( jdbcEnvironment, databaseSequenceName );
 
 			if ( databaseIncrementValue != null && !databaseIncrementValue.equals( (long) incrementSize ) ) {
 				int dbIncrementValue = databaseIncrementValue.intValue();
-
-				SequenceMismatchStrategy sequenceMismatchStrategy = configurationService.getSetting(
-						AvailableSettings.SEQUENCE_INCREMENT_SIZE_MISMATCH_STRATEGY,
-						SequenceMismatchStrategy::interpret,
-						SequenceMismatchStrategy.EXCEPTION
-				);
 
 				switch ( sequenceMismatchStrategy ) {
 					case EXCEPTION:

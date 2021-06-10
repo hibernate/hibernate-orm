@@ -6,18 +6,25 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
+import org.hibernate.HibernateException;
 import org.hibernate.boot.model.source.internal.hbm.CommaSeparatedStringHelper;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.cursor.internal.StandardRefCursorSupport;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.SQLStateType;
+import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 /**
@@ -26,7 +33,9 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
  * @author Steve Ebersole
  */
 public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData {
+
 	private final JdbcEnvironment jdbcEnvironment;
+	private final JdbcConnectionAccess connectionAccess;
 
 	private final String connectionCatalogName;
 	private final String connectionSchemaName;
@@ -39,11 +48,16 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	private final boolean supportsDataDefinitionInTransaction;
 	private final boolean doesDataDefinitionCauseTransactionCommit;
 	private final SQLStateType sqlStateType;
+	private final boolean jdbcMetadataAccessible;
 
-	private final List<SequenceInformation> sequenceInformationList;
+	//Lazily initialized: loading all sequence information upfront has been
+	//shown to be too slow in some cases. In this way we only load it
+	//when there is actual need for these details.
+	private List<SequenceInformation> sequenceInformationList;
 
 	private ExtractedDatabaseMetaDataImpl(
 			JdbcEnvironment jdbcEnvironment,
+			JdbcConnectionAccess connectionAccess,
 			String connectionCatalogName,
 			String connectionSchemaName,
 			boolean supportsRefCursors,
@@ -54,8 +68,9 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			boolean supportsDataDefinitionInTransaction,
 			boolean doesDataDefinitionCauseTransactionCommit,
 			SQLStateType sqlStateType,
-			List<SequenceInformation> sequenceInformationList) {
+			boolean jdbcMetadataIsAccessible) {
 		this.jdbcEnvironment = jdbcEnvironment;
+		this.connectionAccess = connectionAccess;
 		this.connectionCatalogName = connectionCatalogName;
 		this.connectionSchemaName = connectionSchemaName;
 		this.supportsRefCursors = supportsRefCursors;
@@ -66,7 +81,7 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		this.supportsDataDefinitionInTransaction = supportsDataDefinitionInTransaction;
 		this.doesDataDefinitionCauseTransactionCommit = doesDataDefinitionCauseTransactionCommit;
 		this.sqlStateType = sqlStateType;
-		this.sequenceInformationList = sequenceInformationList;
+		this.jdbcMetadataAccessible = jdbcMetadataIsAccessible;
 	}
 
 	@Override
@@ -125,12 +140,26 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 	}
 
 	@Override
-	public List<SequenceInformation> getSequenceInformationList() {
-		return sequenceInformationList;
+	public synchronized List<SequenceInformation> getSequenceInformationList() {
+		if ( jdbcMetadataAccessible ) {
+			//Loading the sequence information can take a while on large databases,
+			//even minutes in some cases.
+			//We trigger this lazily as only certain combinations of configurations,
+			//mappings and used features actually trigger any use of such details.
+			if ( sequenceInformationList == null ) {
+				sequenceInformationList = sequenceInformationList();
+			}
+			return sequenceInformationList;
+		}
+		else {
+			return Collections.emptyList();
+		}
 	}
 
 	public static class Builder {
 		private final JdbcEnvironment jdbcEnvironment;
+		private final boolean jdbcMetadataIsAccessible;
+		private final JdbcConnectionAccess connectionAccess;
 
 		private String connectionSchemaName;
 		private String connectionCatalogName;
@@ -143,10 +172,11 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 		private boolean supportsDataDefinitionInTransaction;
 		private boolean doesDataDefinitionCauseTransactionCommit;
 		private SQLStateType sqlStateType;
-		private List<SequenceInformation> sequenceInformationList = Collections.emptyList();
 
-		public Builder(JdbcEnvironment jdbcEnvironment) {
+		public Builder(JdbcEnvironment jdbcEnvironment, boolean jdbcMetadataIsAccessible, JdbcConnectionAccess connectionAccess) {
 			this.jdbcEnvironment = jdbcEnvironment;
+			this.jdbcMetadataIsAccessible = jdbcMetadataIsAccessible;
+			this.connectionAccess = connectionAccess;
 		}
 
 		public Builder apply(DatabaseMetaData databaseMetaData) throws SQLException {
@@ -217,14 +247,10 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 			return this;
 		}
 
-		public Builder setSequenceInformationList(List<SequenceInformation> sequenceInformationList) {
-			this.sequenceInformationList = sequenceInformationList;
-			return this;
-		}
-
 		public ExtractedDatabaseMetaDataImpl build() {
 			return new ExtractedDatabaseMetaDataImpl(
 					jdbcEnvironment,
+					connectionAccess,
 					connectionCatalogName,
 					connectionSchemaName,
 					supportsRefCursors,
@@ -235,8 +261,54 @@ public class ExtractedDatabaseMetaDataImpl implements ExtractedDatabaseMetaData 
 					supportsDataDefinitionInTransaction,
 					doesDataDefinitionCauseTransactionCommit,
 					sqlStateType,
-					sequenceInformationList
+					jdbcMetadataIsAccessible
 			);
 		}
 	}
+
+	/**
+	 * Get the sequence information List from the database.
+	 *
+	 * @return sequence information List
+	 */
+	private List<SequenceInformation> sequenceInformationList() {
+		final JdbcEnvironment jdbcEnvironment = this.jdbcEnvironment;
+		final Dialect dialect = this.jdbcEnvironment.getDialect();
+
+		Connection connection = null;
+		try {
+			connection = connectionAccess.obtainConnection();
+			final Connection c = connection;
+			Iterable<SequenceInformation> sequenceInformationIterable = dialect
+					.getSequenceInformationExtractor()
+					.extractMetadata( new ExtractionContext.EmptyExtractionContext() {
+										@Override
+										public Connection getJdbcConnection() {
+											return c;
+										}
+
+										@Override
+										public JdbcEnvironment getJdbcEnvironment() {
+											return jdbcEnvironment;
+										}
+									}
+					);
+			return StreamSupport.stream( sequenceInformationIterable.spliterator(), false )
+					.collect( Collectors.toList() );
+		}
+		catch (SQLException e) {
+			throw new HibernateException( "Could not fetch the SequenceInformation from the database", e );
+		}
+		finally {
+			if ( connection != null ) {
+				try {
+					connectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException throwables) {
+					//ignored
+				}
+			}
+		}
+	}
+
 }

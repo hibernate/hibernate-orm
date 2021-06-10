@@ -275,7 +275,7 @@ Please report your mapping that causes the problem to us so we can examine the d
 +
 The default value is `false` which means Hibernate will use an algorithm to determine if the insert can be delayed or if the insert should be performed immediately.
 
-`*hibernate.id.sequence.increment_size_mismatch_strategy*` (e.g. `LOG`, `FIX` or `EXCEPTION` (default value))::
+`*hibernate.id.sequence.increment_size_mismatch_strategy*` (e.g. `LOG`, `FIX`, `NONE` or `EXCEPTION` (default value))::
 This setting defines the `org.hibernate.id.SequenceMismatchStrategy` used when
 Hibernate detects a mismatch between a sequence configuration in an entity mapping
 and its database sequence object counterpart.

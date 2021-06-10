@@ -6,13 +6,8 @@
  */
 package org.hibernate.engine.jdbc.env.internal;
 
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -20,6 +15,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -35,8 +31,6 @@ import org.hibernate.exception.internal.SQLStateConversionDelegate;
 import org.hibernate.exception.internal.StandardSQLExceptionConverter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.extract.spi.ExtractionContext;
-import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 import org.jboss.logging.Logger;
 
@@ -64,7 +58,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 * @param serviceRegistry The service registry
 	 * @param dialect The resolved dialect.
 	 */
-	public JdbcEnvironmentImpl(final ServiceRegistryImplementor serviceRegistry, Dialect dialect) {
+	public JdbcEnvironmentImpl(final ServiceRegistryImplementor serviceRegistry, final Dialect dialect) {
 		this.dialect = dialect;
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
@@ -86,7 +80,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		identifierHelperBuilder.setNameQualifierSupport( nameQualifierSupport );
 
 		IdentifierHelper identifierHelper = null;
-		ExtractedDatabaseMetaDataImpl.Builder dbMetaDataBuilder = new ExtractedDatabaseMetaDataImpl.Builder( this );
+		ExtractedDatabaseMetaDataImpl.Builder dbMetaDataBuilder = new ExtractedDatabaseMetaDataImpl.Builder( this, false, null );
 		try {
 			identifierHelper = dialect.buildIdentifierHelper( identifierHelperBuilder, null );
 			dbMetaDataBuilder.setSupportsNamedParameters( dialect.supportsNamedParameters( null ) );
@@ -150,8 +144,12 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	 * Constructor form used from testing
 	 *
 	 * @param dialect The dialect
+	 * @param jdbcConnectionAccess
 	 */
-	public JdbcEnvironmentImpl(DatabaseMetaData databaseMetaData, Dialect dialect) throws SQLException {
+	public JdbcEnvironmentImpl(
+			DatabaseMetaData databaseMetaData,
+			Dialect dialect,
+			JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
 		this.dialect = dialect;
 
 		this.sqlExceptionHelper = buildSqlExceptionHelper( dialect, false );
@@ -177,10 +175,9 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		this.identifierHelper = identifierHelper;
 
-		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
+		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this, true, jdbcConnectionAccess )
 				.apply( databaseMetaData )
 				.setSupportsNamedParameters( databaseMetaData.supportsNamedParameters() )
-				.setSequenceInformationList( sequenceInformationList( databaseMetaData.getConnection() ) )
 				.build();
 
 		this.currentCatalog = null;
@@ -224,7 +221,8 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	public JdbcEnvironmentImpl(
 			ServiceRegistryImplementor serviceRegistry,
 			Dialect dialect,
-			DatabaseMetaData databaseMetaData) throws SQLException {
+			DatabaseMetaData databaseMetaData,
+			JdbcConnectionAccess jdbcConnectionAccess) throws SQLException {
 		this.dialect = dialect;
 
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
@@ -256,11 +254,10 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 		}
 		this.identifierHelper = identifierHelper;
 
-		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this )
+		this.extractedMetaDataSupport = new ExtractedDatabaseMetaDataImpl.Builder( this, true, jdbcConnectionAccess )
 				.apply( databaseMetaData )
 				.setConnectionSchemaName( determineCurrentSchemaName( databaseMetaData, serviceRegistry, dialect ) )
 				.setSupportsNamedParameters( dialect.supportsNamedParameters( databaseMetaData ) )
-				.setSequenceInformationList( sequenceInformationList( databaseMetaData.getConnection() ) )
 				.build();
 
 		// and that current-catalog and current-schema happen after it
@@ -369,37 +366,4 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 													" Use org.hibernate.engine.jdbc.spi.TypeInfo.extractTypeInfo as alternative, or report an issue and explain." );
 	}
 
-	/**
-	 * Get the sequence information List from the database.
-	 *
-	 * @param connection database connection
-	 * @return sequence information List
-	 */
-	private List<SequenceInformation> sequenceInformationList(final Connection connection) {
-		try {
-
-			Iterable<SequenceInformation> sequenceInformationIterable = dialect
-				.getSequenceInformationExtractor()
-				.extractMetadata( new ExtractionContext.EmptyExtractionContext() {
-					@Override
-					public Connection getJdbcConnection() {
-						return connection;
-					}
-
-					@Override
-					public JdbcEnvironment getJdbcEnvironment() {
-						return JdbcEnvironmentImpl.this;
-					}
-				}
-			);
-
-			return StreamSupport.stream( sequenceInformationIterable.spliterator(), false )
-					.collect( Collectors.toList() );
-		}
-		catch (SQLException e) {
-			log.error( "Could not fetch the SequenceInformation from the database", e );
-		}
-
-		return Collections.emptyList();
-	}
 }

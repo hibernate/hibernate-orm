@@ -62,6 +62,7 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 		Map settings = new HashMap();
 		settings.putAll( Environment.getProperties() );
 		settings.put( AvailableSettings.DIALECT, H2Dialect.class.getName() );
+		settings.put( "hibernate.temp.use_jdbc_metadata_defaults", "false" );
 		settings.put( AvailableSettings.FORMAT_SQL, false );
 
 		this.serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( settings );

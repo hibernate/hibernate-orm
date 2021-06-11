@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import org.hibernate.HibernateException;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.internal.QueryParameterNamedImpl;
 import org.hibernate.query.internal.QueryParameterPositionalImpl;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -87,9 +86,7 @@ public class DomainParameterXref {
 		final Map<QueryParameterImplementor<?>, List<SqmParameter>> sqmParamsByQueryParam = new IdentityHashMap<>();
 
 		final int sqmParamCount = parameterResolutions.getSqmParameters().size();
-		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>(
-				CollectionHelper.determineProperSizing( sqmParamCount )
-		);
+		final Map<SqmParameter, QueryParameterImplementor<?>> queryParamBySqmParam = new IdentityHashMap<>( sqmParamCount );
 
 		for ( SqmParameter<?> sqmParameter : parameterResolutions.getSqmParameters() ) {
 			if ( sqmParameter instanceof JpaCriteriaParameter ) {

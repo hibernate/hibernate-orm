@@ -219,6 +219,10 @@ public interface SessionFactoryOptions {
 
 	boolean isScrollableResultSetsEnabled();
 
+	/**
+	 * @deprecated (since 5.5) Scheduled for removal in 6.0 as ResultSet wrapping is no longer needed
+	 */
+	@Deprecated
 	boolean isWrapResultSetsEnabled();
 
 	boolean isGetGeneratedKeysEnabled();

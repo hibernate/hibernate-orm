@@ -85,28 +85,43 @@ public class CloseOnTerminalDecorator implements InvocationHandler {
 		return result;
 	}
 
+	private static final Class<?>[] STREAM = new Class<?>[] { Stream.class };
+
 	@SuppressWarnings("unchecked")
 	public static <T> Stream<T> decorate(Stream<T> delegate) {
-		return decorate( delegate, Stream.class );
+		return (Stream<T>) Proxy.newProxyInstance(
+				CloseOnTerminalDecorator.class.getClassLoader(),
+				STREAM,
+				new CloseOnTerminalDecorator( delegate )
+		);
 	}
+
+	private static final Class<?>[] INT_STREAM = new Class<?>[] { IntStream.class };
 
 	public static IntStream decorate(IntStream delegate) {
-		return decorate( delegate, IntStream.class );
+		return (IntStream) Proxy.newProxyInstance(
+				CloseOnTerminalDecorator.class.getClassLoader(),
+				INT_STREAM,
+				new CloseOnTerminalDecorator( delegate )
+		);
 	}
+
+	private static final Class<?>[] LONG_STREAM = new Class<?>[] { LongStream.class };
 
 	public static LongStream decorate(LongStream delegate) {
-		return decorate( delegate, LongStream.class );
+		return (LongStream) Proxy.newProxyInstance(
+				CloseOnTerminalDecorator.class.getClassLoader(),
+				LONG_STREAM,
+				new CloseOnTerminalDecorator( delegate )
+		);
 	}
+
+	private static final Class<?>[] DOUBLE_STREAM = new Class<?>[] { DoubleStream.class };
 
 	public static DoubleStream decorate(DoubleStream delegate) {
-		return decorate( delegate, DoubleStream.class );
-	}
-
-	@SuppressWarnings("unchecked")
-	private static <T, S extends BaseStream<T, ?>> S decorate(S delegate, Class<S> type) {
-		return (S) Proxy.newProxyInstance(
+		return (DoubleStream) Proxy.newProxyInstance(
 				CloseOnTerminalDecorator.class.getClassLoader(),
-				new Class<?>[] { type },
+				DOUBLE_STREAM,
 				new CloseOnTerminalDecorator( delegate )
 		);
 	}

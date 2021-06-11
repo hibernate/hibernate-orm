@@ -23,7 +23,7 @@ import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 /**
  * @author Steve Ebersole
@@ -31,7 +31,7 @@ import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
 public class DatabaseInformationImpl
 		implements DatabaseInformation, ExtractionContext.DatabaseObjectAccess {
 	private final JdbcEnvironment jdbcEnvironment;
-	private final ImprovedExtractionContextImpl extractionContext;
+	private final ExtractionContext extractionContext;
 	private final InformationExtractor extractor;
 
 	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
@@ -40,10 +40,10 @@ public class DatabaseInformationImpl
 			ServiceRegistry serviceRegistry,
 			JdbcEnvironment jdbcEnvironment,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace) throws SQLException {
+			Namespace.Name defaultNamespace,
+			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
-
-		this.extractionContext = new ImprovedExtractionContextImpl(
+		this.extractionContext = tool.createExtractionContext(
 				serviceRegistry,
 				jdbcEnvironment,
 				ddlTransactionIsolator,
@@ -53,7 +53,7 @@ public class DatabaseInformationImpl
 		);
 
 		// todo : make this pluggable
-		this.extractor = new InformationExtractorJdbcDatabaseMetaDataImpl( extractionContext );
+		this.extractor = tool.createInformationExtractor( extractionContext );
 
 		// because we do not have defined a way to locate sequence info by name
 		initializeSequences();

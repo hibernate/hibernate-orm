@@ -93,7 +93,7 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			return new IndividuallySchemaValidatorImpl( this, getSchemaFilterProvider( options ).getValidateFilter() );
 		}
 	}
-	
+
 	private SchemaFilterProvider getSchemaFilterProvider(Map options) {
 		final Object configuredOption = (options == null)
 				? null
@@ -176,7 +176,10 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		}
 
 		if ( targetDescriptor.getTargetTypes().contains( TargetType.DATABASE ) ) {
-			targets[index] = new GenerationTargetToDatabase( ddlTransactionIsolator, false );
+			targets[index] = customTarget == null
+					? new GenerationTargetToDatabase( ddlTransactionIsolator, false )
+					: customTarget;
+			index++;
 		}
 
 		return targets;

@@ -115,11 +115,16 @@ public class NamedSqmFunctionDescriptor
 			if ( !firstPass ) {
 				sqlAppender.appendSql( ", " );
 			}
-			if ( caseWrapper && !( arg instanceof Distinct ) && !( arg instanceof Star ) ) {
+			if ( caseWrapper && !( arg instanceof Distinct ) ) {
 				sqlAppender.appendSql( "case when " );
 				filter.accept( translator );
 				sqlAppender.appendSql( " then " );
-				translator.render( arg, argumentRenderingMode );
+				if ( ( arg instanceof Star ) ) {
+					sqlAppender.appendSql( "1" );
+				}
+				else {
+					translator.render( arg, argumentRenderingMode );
+				}
 				sqlAppender.appendSql( " else null end" );
 			}
 			else {

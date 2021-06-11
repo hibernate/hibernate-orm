@@ -3558,8 +3558,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitMaxFunction(HqlParser.MaxFunctionContext ctx) {
 		final SqmExpression<?> arg = (SqmExpression<?>) ctx.expression().accept( this );
 		//ignore DISTINCT
-		return getFunctionDescriptor("max").generateSqmExpression(
-				arg,
+		return getFunctionDescriptor("max").generateAggregateSqmExpression(
+				singletonList( arg ),
+				getFilterExpression( ctx.filterClause() ),
 				(AllowableFunctionReturnType<?>) arg.getNodeType(),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3570,8 +3571,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitMinFunction(HqlParser.MinFunctionContext ctx) {
 		final SqmExpression<?> arg = (SqmExpression<?>) ctx.expression().accept( this );
 		//ignore DISTINCT
-		return getFunctionDescriptor("min").generateSqmExpression(
-				arg,
+		return getFunctionDescriptor("min").generateAggregateSqmExpression(
+				singletonList( arg ),
+				getFilterExpression( ctx.filterClause() ),
 				(AllowableFunctionReturnType<?>) arg.getNodeType(),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3585,8 +3587,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				? new SqmDistinct<>(arg, getCreationContext().getNodeBuilder())
 				: arg;
 
-		return getFunctionDescriptor("sum").generateSqmExpression(
-				argument,
+		return getFunctionDescriptor("sum").generateAggregateSqmExpression(
+				singletonList( argument ),
+				getFilterExpression(ctx.filterClause()),
 				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3603,8 +3606,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmExpression<?> argument = (SqmExpression<?>) ctx.predicate().accept( this );
 
-		return getFunctionDescriptor("every").generateSqmExpression(
-				argument,
+		if ( argument instanceof SqmSubQuery<?> && ctx.filterClause() != null ) {
+			throw new SemanticException( "Quantified expression cannot have a filter clause!" );
+		}
+
+		return getFunctionDescriptor("every").generateAggregateSqmExpression(
+				singletonList( argument ),
+				getFilterExpression( ctx.filterClause() ),
 				resolveExpressableTypeBasic( Boolean.class ),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3621,8 +3629,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmExpression<?> argument = (SqmExpression<?>) ctx.predicate().accept( this );
 
-		return getFunctionDescriptor("any").generateSqmExpression(
-				argument,
+		if ( argument instanceof SqmSubQuery<?> && ctx.filterClause() != null ) {
+			throw new SemanticException( "Quantified expression cannot have a filter clause!" );
+		}
+
+		return getFunctionDescriptor("any").generateAggregateSqmExpression(
+				singletonList( argument ),
+				getFilterExpression( ctx.filterClause() ),
 				resolveExpressableTypeBasic( Boolean.class ),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3636,8 +3649,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				? new SqmDistinct<>( arg, getCreationContext().getNodeBuilder() )
 				: arg;
 
-		return getFunctionDescriptor("avg").generateSqmExpression(
-				argument,
+		return getFunctionDescriptor("avg").generateAggregateSqmExpression(
+				singletonList( argument ),
+				getFilterExpression( ctx.filterClause() ),
 				resolveExpressableTypeBasic( Double.class ),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3653,12 +3667,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				? new SqmDistinct<>( arg, getCreationContext().getNodeBuilder() )
 				: arg;
 
-		return getFunctionDescriptor("count").generateSqmExpression(
-				argument,
+		return getFunctionDescriptor("count").generateAggregateSqmExpression(
+				singletonList( argument ),
+				getFilterExpression( ctx.filterClause() ),
 				resolveExpressableTypeBasic( Long.class ),
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);
+	}
+
+	private SqmPredicate getFilterExpression(HqlParser.FilterClauseContext filterClauseCtx) {
+		if (filterClauseCtx == null) {
+			return null;
+		}
+		return (SqmPredicate) filterClauseCtx.whereClause().predicate().accept( this );
 	}
 
 	@Override

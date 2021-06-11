@@ -24,7 +24,7 @@ import java.util.List;
  * @author Gavin King
  */
 public abstract class AbstractSqmSelfRenderingFunctionDescriptor
-		extends AbstractSqmFunctionDescriptor {
+		extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
 
 	private final boolean isAggregate;
 
@@ -59,7 +59,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 	}
 
 	@Override
-	public <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
+	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
 			List<SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
@@ -70,7 +70,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		}
 		return new SelfRenderingSqmAggregateFunction<>(
 				this,
-				this::render,
+				this,
 				arguments,
 				filter,
 				impliedResultType,
@@ -95,5 +95,4 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			SqlAstTranslator<?> walker) {
 		render( sqlAppender, sqlAstArguments, walker );
 	}
-
 }

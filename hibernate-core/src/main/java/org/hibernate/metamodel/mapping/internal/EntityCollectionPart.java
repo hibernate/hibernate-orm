@@ -32,6 +32,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -241,8 +242,12 @@ public class EntityCollectionPart
 
 	@Override
 	public ForeignKeyDescriptor getForeignKeyDescriptor() {
-		// todo (6.0) : this will not strictly work - we'd want a new ForeignKeyDescriptor that points the other direction
-		return collectionDescriptor.getAttributeMapping().getKeyDescriptor();
+		if ( collectionDescriptor.isInverse() ) {
+			return collectionDescriptor.getAttributeMapping().getKeyDescriptor();
+		}
+		else {
+			return collectionDescriptor.getAttributeMapping().getKeyDescriptor( nature );
+		}
 	}
 
 	@Override
@@ -270,16 +275,35 @@ public class EntityCollectionPart
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		return collectionDescriptor.getAttributeMapping().createTableGroupJoin(
-				navigablePath,
-				lhs,
-				explicitSourceAlias,
-				sqlAstJoinType,
-				fetched,
-				aliasBaseGenerator,
-				sqlExpressionResolver,
-				creationContext
-		);
+		if ( collectionDescriptor.isInverse() ) {
+			return collectionDescriptor.getAttributeMapping().createTableGroupJoin(
+					navigablePath,
+					lhs,
+					explicitSourceAlias,
+					sqlAstJoinType,
+					fetched,
+					aliasBaseGenerator,
+					sqlExpressionResolver,
+					creationContext
+			);
+		}
+		else {
+			final ForeignKeyDescriptor foreignKeyDescriptor = collectionDescriptor.getAttributeMapping().getKeyDescriptor( nature );
+			final TableReference rhs = lhs.getTableReference( navigablePath, foreignKeyDescriptor.getTargetTable() );
+			assert rhs != null;
+			return new TableGroupJoin(
+					navigablePath,
+					sqlAstJoinType,
+					lhs,
+					foreignKeyDescriptor.generateJoinPredicate(
+							lhs.getPrimaryTableReference(),
+							rhs,
+							sqlAstJoinType,
+							sqlExpressionResolver,
+							creationContext
+					)
+			);
+		}
 	}
 
 	@Override

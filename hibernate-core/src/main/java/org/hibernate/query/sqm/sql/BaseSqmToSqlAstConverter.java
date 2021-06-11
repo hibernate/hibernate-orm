@@ -2101,9 +2101,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( log.isTraceEnabled() ) {
 						log.tracef( "Starting implicit join handling for `%s`", joinedPath.getNavigablePath() );
 					}
-					// No need to create a table group for this path if no sub-paths exist
 					if ( joinedPath.getReusablePaths().isEmpty() ) {
-						return;
+						final String localName = joinedPath.getNavigablePath().getUnaliasedLocalName();
+						if ( CollectionPart.Nature.fromNameStrictly( localName ) == null ) {
+							// No need to create a table group for this path if it is not special path and no sub-paths exist
+							return;
+						}
 					}
 
 					final SqmPath<?> lhsPath = joinedPath.getLhs();
@@ -2770,11 +2773,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final PluralAttributeMapping mapDescriptor = (PluralAttributeMapping) tableGroup.getModelPart();
 
-		final ForeignKeyDescriptor keyDescriptor = mapDescriptor.getKeyDescriptor();
-		final NavigablePath keyNavigablePath = mapNavigablePath.append( keyDescriptor.getPartName() );
-		final DomainResult keyResult = keyDescriptor.createKeyDomainResult(
+		final CollectionPart indexDescriptor = mapDescriptor.getIndexDescriptor();
+		final NavigablePath keyNavigablePath = mapNavigablePath.append( indexDescriptor.getPartName() );
+		final DomainResult keyResult = indexDescriptor.createDomainResult(
 				keyNavigablePath,
 				tableGroup,
+				null,
 				this
 		);
 

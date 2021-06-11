@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Map;
 import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -76,75 +75,81 @@ public class SqmMapJoin<O, K, V>
 		final SqmPathSource keyPathSource = getReferencedPathSource().getKeyPathSource();
 		final NavigablePath navigablePath = getNavigablePath().append( keyPathSource.getPathName() );
 
+		final SqmPath<K> sqmPath;
 		if ( keyPathSource.getSqmPathType() instanceof BasicDomainType ) {
-			return new SqmBasicValuedSimplePath(
+			sqmPath = new SqmBasicValuedSimplePath(
 					navigablePath,
 					keyPathSource,
 					this,
 					null
 			);
 		}
-
-		if ( keyPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
-			return new SqmEmbeddedValuedSimplePath(
+		else if ( keyPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
+			sqmPath = new SqmEmbeddedValuedSimplePath(
 					navigablePath,
 					keyPathSource,
 					this,
 					null
 			);
 		}
-
-		if ( keyPathSource.getSqmPathType() instanceof EntityDomainType ) {
-			return new SqmEntityValuedSimplePath(
+		else if ( keyPathSource.getSqmPathType() instanceof EntityDomainType ) {
+			sqmPath = new SqmEntityValuedSimplePath(
 					navigablePath,
 					keyPathSource,
 					this,
 					null
 			);
 		}
-
-		throw new UnsupportedOperationException( "Unrecognized Map key descriptor : " + keyPathSource );
+		else {
+			throw new UnsupportedOperationException( "Unrecognized Map key descriptor : " + keyPathSource );
+		}
+		registerReusablePath( sqmPath );
+		return sqmPath;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Path<V> value() {
+	public SqmPath<V> value() {
 		final SqmPathSource elementPathSource = getReferencedPathSource().getElementPathSource();
 		final NavigablePath navigablePath = getNavigablePath().append( elementPathSource.getPathName() );
 
+		final SqmPath<V> sqmPath;
 		if ( elementPathSource.getSqmPathType() instanceof BasicDomainType ) {
-			return new SqmBasicValuedSimplePath(
+			sqmPath = new SqmBasicValuedSimplePath(
 					navigablePath,
 					elementPathSource,
 					this,
 					null
 			);
 		}
-
-		if ( elementPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
-			return new SqmEmbeddedValuedSimplePath(
+		else if ( elementPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
+			sqmPath = new SqmEmbeddedValuedSimplePath(
 					navigablePath,
 					elementPathSource,
 					this,
 					null
 			);
 		}
-
-		if ( elementPathSource.getSqmPathType() instanceof EntityDomainType ) {
-			return new SqmEntityValuedSimplePath(
+		else if ( elementPathSource.getSqmPathType() instanceof EntityDomainType ) {
+			sqmPath = new SqmEntityValuedSimplePath(
 					navigablePath,
 					elementPathSource,
 					this,
 					null
 			);
 		}
-
-		throw new UnsupportedOperationException( "Unrecognized Map value descriptor : " + elementPathSource );
+		else {
+			throw new UnsupportedOperationException( "Unrecognized Map value descriptor : " + elementPathSource );
+		}
+		registerReusablePath( sqmPath );
+		return sqmPath;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public Expression<Map.Entry<K, V>> entry() {
+		key();
+		value();
 		return new SqmMapEntryReference( this, nodeBuilder() );
 	}
 

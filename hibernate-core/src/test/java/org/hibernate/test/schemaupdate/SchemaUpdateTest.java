@@ -21,6 +21,7 @@ import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.Inheritance;
@@ -163,6 +164,7 @@ public class SchemaUpdateTest {
 	@Table(name = "`testentity`")
 	public static class LowercaseTableNameEntity {
 		@Id
+				@GeneratedValue
 		long id;
 		String field1;
 
@@ -173,6 +175,7 @@ public class SchemaUpdateTest {
 	@Entity(name = "TestEntity1")
 	public static class TestEntity {
 		@Id
+		@GeneratedValue
 		@Column(name = "`Id`")
 		long id;
 		String field1;
@@ -192,6 +195,7 @@ public class SchemaUpdateTest {
 	@Table(name = "`TESTENTITY`")
 	public static class UppercaseTableNameEntity {
 		@Id
+		@GeneratedValue
 		long id;
 		String field1;
 
@@ -207,6 +211,7 @@ public class SchemaUpdateTest {
 	@Table(name = "`TESTentity`", indexes = {@Index(name = "index1", columnList = "`FieLd1`"), @Index(name = "Index2", columnList = "`FIELD_2`")})
 	public static class MixedCaseTableNameEntity {
 		@Id
+		@GeneratedValue
 		long id;
 		@Column(name = "`FieLd1`")
 		String field1;
@@ -224,6 +229,8 @@ public class SchemaUpdateTest {
 	@Entity(name = "Match")
 	public static class Match {
 		@Id
+		@GeneratedValue
+
 		long id;
 		String match;
 
@@ -236,6 +243,8 @@ public class SchemaUpdateTest {
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static class InheritanceRootEntity {
 		@Id
+		@GeneratedValue
+
 		protected Long id;
 	}
 

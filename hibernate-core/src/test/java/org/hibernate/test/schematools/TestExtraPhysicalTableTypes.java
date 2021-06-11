@@ -17,6 +17,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.extract.internal.DatabaseInformationImpl;
@@ -24,7 +25,9 @@ import org.hibernate.tool.schema.extract.internal.ExtractionContextImpl;
 import org.hibernate.tool.schema.extract.internal.InformationExtractorJdbcDatabaseMetaDataImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
+import org.hibernate.tool.schema.internal.exec.ImprovedExtractionContextImpl;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 
 import org.junit.After;
 import org.junit.Test;
@@ -122,8 +125,10 @@ public class TestExtraPhysicalTableTypes {
 				ssr,
 				database.getJdbcEnvironment(),
 				ddlTransactionIsolator,
-				database.getDefaultNamespace().getName()
+				database.getDefaultNamespace().getName(),
+				database.getServiceRegistry().getService( SchemaManagementTool.class )
 		);
+
 		ExtractionContextImpl extractionContext = new ExtractionContextImpl(
 				ssr,
 				database.getJdbcEnvironment(),

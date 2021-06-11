@@ -57,11 +57,11 @@ public abstract class AbstractSchemaValidator implements SchemaValidator {
 		final JdbcContext jdbcContext = tool.resolveJdbcContext( options.getConfigurationValues() );
 
 		final DdlTransactionIsolator isolator = tool.getDdlTransactionIsolator( jdbcContext );
-
 		final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 				tool.getServiceRegistry(),
 				isolator,
-				metadata.getDatabase().getDefaultNamespace().getName()
+				metadata.getDatabase().getDefaultNamespace().getName(),
+				tool
 		);
 
 		try {

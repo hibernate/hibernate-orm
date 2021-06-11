@@ -96,7 +96,8 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				final DatabaseInformation databaseInformation = Helper.buildDatabaseInformation(
 						tool.getServiceRegistry(),
 						ddlTransactionIsolator,
-						metadata.getDatabase().getDefaultNamespace().getName()
+						metadata.getDatabase().getDefaultNamespace().getName(),
+						tool
 				);
 
 				final GenerationTarget[] targets = tool.buildGenerationTargets(

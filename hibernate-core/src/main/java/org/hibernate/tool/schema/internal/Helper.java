@@ -32,6 +32,7 @@ import org.hibernate.tool.schema.internal.exec.ScriptSourceInputFromUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToFile;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToUrl;
 import org.hibernate.tool.schema.internal.exec.ScriptTargetOutputToWriter;
+import org.hibernate.tool.schema.spi.SchemaManagementTool;
 import org.hibernate.tool.schema.spi.ScriptSourceInput;
 import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 
@@ -175,14 +176,16 @@ public class Helper {
 	public static DatabaseInformation buildDatabaseInformation(
 			ServiceRegistry serviceRegistry,
 			DdlTransactionIsolator ddlTransactionIsolator,
-			Namespace.Name defaultNamespace) {
+			Namespace.Name defaultNamespace,
+			SchemaManagementTool tool) {
 		final JdbcEnvironment jdbcEnvironment = serviceRegistry.getService( JdbcEnvironment.class );
 		try {
 			return new DatabaseInformationImpl(
 					serviceRegistry,
 					jdbcEnvironment,
 					ddlTransactionIsolator,
-					defaultNamespace
+					defaultNamespace,
+					tool
 			);
 		}
 		catch (SQLException e) {

@@ -1397,12 +1397,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			return uniqueElement( list );
 		}
 		catch ( HibernateException e ) {
-			if ( getSession().getFactory().getSessionFactoryOptions().isJpaBootstrap() ) {
-				throw getSession().getExceptionConverter().convert( e, getLockOptions() );
-			}
-			else {
-				throw e;
-			}
+			throw getSession().getExceptionConverter().convert( e, getLockOptions() );
 		}
 	}
 
@@ -1445,14 +1440,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public int executeUpdate() throws HibernateException {
-		if ( !getSession().isTransactionInProgress() ) {
-			throw getSession().getExceptionConverter().convert(
-					new TransactionRequiredException(
-							"Executing an update/delete query"
-					)
-			);
-		}
-		beforeQuery( true );
+		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
+		beforeQuery( false );
 		try {
 			return doExecuteUpdate();
 		}

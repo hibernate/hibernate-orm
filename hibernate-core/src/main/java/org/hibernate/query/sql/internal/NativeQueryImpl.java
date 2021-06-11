@@ -402,7 +402,10 @@ public class NativeQueryImpl<R>
 		throw new IllegalStateException( "Illegal attempt to set lock mode on a native-query" );
 	}
 
-
+	@Override
+	public String getQueryIdentifier(String sql) {
+		return sql;
+	}
 
 	@Override
 	public Query<R> applyGraph(RootGraph graph, GraphSemantic semantic) {

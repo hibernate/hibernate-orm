@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.tuple.component.ComponentMetamodel;
@@ -43,6 +44,7 @@ import org.hibernate.type.Type;
  */
 public class Component extends SimpleValue implements MetaAttributable {
 	private ArrayList<Property> properties = new ArrayList<>();
+	private int[] originalPropertyOrder = ArrayHelper.EMPTY_INT_ARRAY;
 	private String componentClassName;
 	private boolean embedded;
 	private String parentProperty;
@@ -197,22 +199,6 @@ public class Component extends SimpleValue implements MetaAttributable {
 		if ( localType == null ) {
 			synchronized ( this ) {
 				if ( type == null ) {
-					final int[] originalPropertyOrder;
-					// We need to capture the original property order the source is a XML mapping
-					// because XML mappings might refer to this through the defined order
-					if ( getBuildingContext() instanceof MappingDocument ) {
-						final Object[] originalProperties = properties.toArray();
-						properties.sort( Comparator.comparing( Property::getName ) );
-						originalPropertyOrder = new int[originalProperties.length];
-						for ( int j = 0; j < originalPropertyOrder.length; j++ ) {
-							originalPropertyOrder[j] = properties.indexOf( originalProperties[j] );
-						}
-					}
-					else {
-						properties.sort( Comparator.comparing( Property::getName ) );
-						originalPropertyOrder = null;
-					}
-
 					// TODO : temporary initial step towards HHH-1907
 					final ComponentMetamodel metamodel = new ComponentMetamodel(
 							this,
@@ -540,6 +526,28 @@ public class Component extends SimpleValue implements MetaAttributable {
 	public void prepareForMappingModel() {
 		// This call will initialize the type properly
 		getType();
+	}
+
+	public void sortProperties() {
+		if ( this.originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
+			return;
+		}
+		final int[] originalPropertyOrder;
+		// We need to capture the original property order the source is a XML mapping
+		// because XML mappings might refer to this through the defined order
+		if ( getBuildingContext() instanceof MappingDocument ) {
+			final Object[] originalProperties = properties.toArray();
+			properties.sort( Comparator.comparing( Property::getName ) );
+			originalPropertyOrder = new int[originalProperties.length];
+			for ( int j = 0; j < originalPropertyOrder.length; j++ ) {
+				originalPropertyOrder[j] = properties.indexOf( originalProperties[j] );
+			}
+		}
+		else {
+			properties.sort( Comparator.comparing( Property::getName ) );
+			originalPropertyOrder = null;
+		}
+		this.originalPropertyOrder = originalPropertyOrder;
 	}
 
 }

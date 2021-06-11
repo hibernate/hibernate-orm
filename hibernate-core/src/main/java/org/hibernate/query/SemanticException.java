@@ -20,4 +20,8 @@ public class SemanticException extends org.hibernate.QueryException {
 	public SemanticException(String message, Exception cause) {
 		super( message, cause );
 	}
+
+	public SemanticException(String message, String queryString, Exception cause) {
+		super( message, queryString, cause );
+	}
 }

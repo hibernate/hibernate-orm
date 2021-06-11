@@ -487,10 +487,4 @@ public class SybaseASEDialect extends SybaseDialect {
 		}
 		return new TopLimitHandler(false);
 	}
-
-	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
-	}
 }

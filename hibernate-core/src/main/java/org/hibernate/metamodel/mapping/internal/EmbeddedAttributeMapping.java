@@ -197,6 +197,7 @@ public class EmbeddedAttributeMapping
 	public Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
+			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		// an embeddable can never be circular
 		return null;

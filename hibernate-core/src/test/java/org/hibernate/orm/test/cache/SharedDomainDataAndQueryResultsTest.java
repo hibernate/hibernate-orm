@@ -226,7 +226,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 					assertEquals( 2, dogs.size() );
 
 					// statistics.getSecondLevelCacheHitCount() only includes entity/collection hits
-					assertEquals( 6, statistics.getSecondLevelCacheHitCount() );
+					assertEquals( 4, statistics.getSecondLevelCacheHitCount() );
 					// statistics.getSecondLevelCachePutCount() only includes entity/collection puts
 					assertEquals( 4, statistics.getSecondLevelCachePutCount() );
 					// statistics.getSecondLevelCacheMissCount() only includes entity/collection misses
@@ -234,8 +234,7 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 
 					// regionStatistics includes hits/puts/misses for entities/collections/query results
 					// Query results will be found in the cache.
-					// The 2 Dog entities will be found in the cache.
-					assertEquals( 7, regionStatistics.getHitCount() );
+					assertEquals( 5, regionStatistics.getHitCount() );
 					assertEquals( 5, regionStatistics.getPutCount() );
 					assertEquals( 3, regionStatistics.getMissCount() );
 
@@ -255,14 +254,14 @@ public class SharedDomainDataAndQueryResultsTest extends BaseNonConfigCoreFuncti
 					// Both Dog.nickNames will be found in the cache as a cache hit.
 
 					// statistics.getSecondLevelCacheHitCount() only includes entity/collection hits
-					assertEquals( 8, statistics.getSecondLevelCacheHitCount() );
+					assertEquals( 6, statistics.getSecondLevelCacheHitCount() );
 					// statistics.getSecondLevelCachePutCount() only includes entity/collection puts
 					assertEquals( 4, statistics.getSecondLevelCachePutCount() );
 					// statistics.getSecondLevelCacheMissCount() only includes entity/collection misses
 					assertEquals( 2, statistics.getSecondLevelCacheMissCount() );
 
 					// regionStatistics includes hits/puts/misses for entities/collections/query results
-					assertEquals( 9, regionStatistics.getHitCount() );
+					assertEquals( 7, regionStatistics.getHitCount() );
 					// 2 Dog puts; 1 query put
 					assertEquals( 5, regionStatistics.getPutCount() );
 					// 1 query miss

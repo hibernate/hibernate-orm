@@ -246,9 +246,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		configureIdentifierGenerators( standardServiceRegistry );
 
 		final MetadataSources metadataSources = new MetadataSources( bsr );
+		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 		List<ConverterDescriptor> attributeConverterDefinitions = applyMappingResources( metadataSources );
 
-		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
 		applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
 
 		applyMetadataBuilderContributor();

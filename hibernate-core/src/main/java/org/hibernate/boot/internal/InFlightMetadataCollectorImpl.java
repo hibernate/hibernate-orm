@@ -1689,6 +1689,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			processSecondPasses( pkDrivenByDefaultMapsIdSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
 
+			composites.forEach( Component::sortProperties );
 			processCopyIdentifierSecondPassesInOrder();
 
 			processFkSecondPassesInOrder();

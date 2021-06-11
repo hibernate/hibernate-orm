@@ -793,7 +793,7 @@ public abstract class AbstractCollectionPersister
 			return subSelectLoader;
 		}
 
-		if ( ! session.getLoadQueryInfluencers().hasEnabledFilters() ) {
+		if ( ! session.getLoadQueryInfluencers().hasEnabledFilters() && ! isAffectedByEnabledFetchProfiles( session.getLoadQueryInfluencers() ) ) {
 			return getStandardCollectionLoader();
 		}
 
@@ -2420,8 +2420,8 @@ public abstract class AbstractCollectionPersister
 		if ( influencers.hasEnabledFetchProfiles() ) {
 			for ( String enabledFetchProfileName : influencers.getEnabledFetchProfileNames() ) {
 				final FetchProfile fetchProfile = getFactory().getFetchProfile( enabledFetchProfileName );
-				final Fetch fetchByRole = fetchProfile.getFetchByRole( getRole() );
-				if ( fetchByRole.getStyle() == Fetch.Style.JOIN ) {
+				final Fetch fetch = fetchProfile.getFetchByRole( getRole() );
+				if ( fetch != null && fetch.getStyle() == Fetch.Style.JOIN ) {
 					return true;
 				}
 			}

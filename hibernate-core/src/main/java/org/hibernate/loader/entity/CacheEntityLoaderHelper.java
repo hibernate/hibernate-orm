@@ -162,6 +162,7 @@ public class CacheEntityLoaderHelper {
 	 *
 	 * @param event The load event
 	 * @param persister The persister for the entity being requested for load
+	 * @param entityKey The entity key
 	 *
 	 * @return The entity from the second-level cache, or null.
 	 */
@@ -169,73 +170,74 @@ public class CacheEntityLoaderHelper {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey entityKey) {
+		final Object entity = loadFromSecondLevelCache(
+				event.getSession(),
+				event.getInstanceToLoad(),
+				event.getLockMode(),
+				persister,
+				entityKey
+		);
 
-		final SessionImplementor source = event.getSession();
+		if ( entity != null ) {
+			//PostLoad is needed for EJB3
+			final PostLoadEvent postLoadEvent = event.getPostLoadEvent()
+					.setEntity( entity )
+					.setId( event.getEntityId() )
+					.setPersister( persister );
+
+			event.getSession().getSessionFactory()
+					.getFastSessionServices()
+					.firePostLoadEvent( postLoadEvent );
+		}
+		return entity;
+	}
+
+	/**
+	 * Attempts to load the entity from the second-level cache.
+	 *
+	 * @param source The source
+	 * @param entity The entity
+	 * @param lockMode The lock mode
+	 * @param persister The persister for the entity being requested for load
+	 * @param entityKey The entity key
+	 *
+	 * @return The entity from the second-level cache, or null.
+	 */
+	public Object loadFromSecondLevelCache(
+			final EventSource source,
+			final Object entity,
+			final LockMode lockMode,
+			final EntityPersister persister,
+			final EntityKey entityKey) {
+
 		final boolean useCache = persister.canReadFromCache()
 				&& source.getCacheMode().isGetEnabled()
-				&& event.getLockMode().lessThan( LockMode.READ );
+				&& lockMode.lessThan( LockMode.READ );
 
 		if ( !useCache ) {
 			// we can't use cache here
 			return null;
 		}
 
-		final Object ce = getFromSharedCache( event, persister, source );
+		final Object ce = getFromSharedCache( entityKey.getIdentifier(), persister, source );
 
 		if ( ce == null ) {
 			// nothing was found in cache
 			return null;
 		}
 
-		return processCachedEntry( event, persister, ce, source, entityKey );
+		return processCachedEntry( entity, persister, ce, source, entityKey );
 	}
 
-
-	private Object processCachedEntry(
-			final LoadEvent event,
-			final EntityPersister persister,
-			final Object ce,
-			final SessionImplementor source,
-			final EntityKey entityKey) {
-
-		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
-		if ( entry.isReferenceEntry() ) {
-			if ( event.getInstanceToLoad() != null ) {
-				throw new HibernateException(
-						"Attempt to load entity from cache using provided object instance, but cache " +
-								"is storing references: " + event.getEntityId() );
-			}
-			else {
-				return convertCacheReferenceEntryToEntity(
-						(ReferenceCacheEntryImpl) entry,
-						event.getSession(),
-						entityKey
-				);
-			}
-		}
-		else {
-			Object entity = convertCacheEntryToEntity( entry, event.getEntityId(), persister, event, entityKey );
-
-			if ( !persister.isInstance( entity ) ) {
-				throw new WrongClassException(
-						"loaded object was of wrong class " + entity.getClass(),
-						event.getEntityId(),
-						persister.getEntityName()
-				);
-			}
-
-			return entity;
-		}
-	}
 
 	private Object getFromSharedCache(
-			final LoadEvent event,
+			final Object entityId,
 			final EntityPersister persister,
 			SessionImplementor source) {
 		final EntityDataAccess cache = persister.getCacheAccessStrategy();
 		final SessionFactoryImplementor factory = source.getFactory();
 		final Object ck = cache.generateCacheKey(
-				event.getEntityId(),
+				entityId,
 				persister,
 				factory,
 				source.getTenantIdentifier()
@@ -258,6 +260,43 @@ public class CacheEntityLoaderHelper {
 			}
 		}
 		return ce;
+	}
+
+	private Object processCachedEntry(
+			final Object instanceToLoad,
+			final EntityPersister persister,
+			final Object ce,
+			final EventSource source,
+			final EntityKey entityKey) {
+
+		CacheEntry entry = (CacheEntry) persister.getCacheEntryStructure().destructure( ce, source.getFactory() );
+		if ( entry.isReferenceEntry() ) {
+			if ( instanceToLoad != null ) {
+				throw new HibernateException(
+						"Attempt to load entity from cache using provided object instance, but cache " +
+								"is storing references: " + entityKey.getIdentifier() );
+			}
+			else {
+				return convertCacheReferenceEntryToEntity(
+						(ReferenceCacheEntryImpl) entry,
+						source,
+						entityKey
+				);
+			}
+		}
+		else {
+			Object entity = convertCacheEntryToEntity( entry, entityKey.getIdentifier(), source, persister, instanceToLoad, entityKey );
+
+			if ( !persister.isInstance( entity ) ) {
+				throw new WrongClassException(
+						"loaded object was of wrong class " + entity.getClass(),
+						entityKey.getIdentifier(),
+						persister.getEntityName()
+				);
+			}
+
+			return entity;
+		}
 	}
 
 	private Object convertCacheReferenceEntryToEntity(
@@ -307,12 +346,12 @@ public class CacheEntityLoaderHelper {
 	private Object convertCacheEntryToEntity(
 			CacheEntry entry,
 			Object entityId,
+			EventSource source,
 			EntityPersister persister,
-			LoadEvent event,
+			Object instanceToLoad,
 			EntityKey entityKey) {
 
-		final EventSource session = event.getSession();
-		final SessionFactoryImplementor factory = session.getFactory();
+		final SessionFactoryImplementor factory = source.getFactory();
 		final EntityPersister subclassPersister;
 
 		if ( LOG.isTraceEnabled() ) {
@@ -326,9 +365,9 @@ public class CacheEntityLoaderHelper {
 		final Object entity;
 
 		subclassPersister = factory.getEntityPersister( entry.getSubclass() );
-		final Object optionalObject = event.getInstanceToLoad();
+		final Object optionalObject = instanceToLoad;
 		entity = optionalObject == null
-				? session.instantiate( subclassPersister, entityId )
+				? source.instantiate( subclassPersister, entityId )
 				: optionalObject;
 
 		// make it circular-reference safe
@@ -338,10 +377,10 @@ public class CacheEntityLoaderHelper {
 				subclassPersister,
 				LockMode.NONE,
 				entry.getVersion(),
-				session
+				source
 		);
 
-		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final PersistenceContext persistenceContext = source.getPersistenceContext();
 		final Object[] values;
 		final Object version;
 		final boolean isReadOnly;
@@ -352,8 +391,8 @@ public class CacheEntityLoaderHelper {
 				entity,
 				entityId,
 				subclassPersister,
-				session.getInterceptor(),
-				session
+				source.getInterceptor(),
+				source
 		);
 		if ( ( (StandardCacheEntryImpl) entry ).isDeepCopyNeeded() ) {
 			TypeHelper.deepCopy(
@@ -361,7 +400,7 @@ public class CacheEntityLoaderHelper {
 					types,
 					subclassPersister.getPropertyUpdateability(),
 					values,
-					session
+					source
 			);
 		}
 		version = Versioning.getVersion( values, subclassPersister );
@@ -374,7 +413,7 @@ public class CacheEntityLoaderHelper {
 			isReadOnly = ( (HibernateProxy) proxy ).getHibernateLazyInitializer().isReadOnly();
 		}
 		else {
-			isReadOnly = session.isDefaultReadOnly();
+			isReadOnly = source.isDefaultReadOnly();
 		}
 
 		persistenceContext.addEntry(
@@ -389,18 +428,8 @@ public class CacheEntityLoaderHelper {
 				subclassPersister,
 				false
 		);
-		subclassPersister.afterInitialize( entity, session );
+		subclassPersister.afterInitialize( entity, source );
 		persistenceContext.initializeNonLazyCollections();
-
-		//PostLoad is needed for EJB3
-		PostLoadEvent postLoadEvent = event.getPostLoadEvent()
-				.setEntity( entity )
-				.setId( entityId )
-				.setPersister( persister );
-
-		session.getSessionFactory()
-				.getFastSessionServices()
-				.firePostLoadEvent( postLoadEvent );
 
 		return entity;
 	}

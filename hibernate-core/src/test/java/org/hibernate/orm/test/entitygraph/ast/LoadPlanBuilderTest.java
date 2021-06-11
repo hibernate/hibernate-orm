@@ -65,11 +65,17 @@ public class LoadPlanBuilderTest {
 		);
 
 		assertThat(
-				loadPlan.getSqlAst().getDomainResultDescriptors(),
+				loadPlan.getJdbcSelect()
+						.getJdbcValuesMappingProducer()
+						.resolve( null, sessionFactory )
+						.getDomainResults(),
 				hasSize( 1 )
 
 		);
-		final DomainResult domainResult = loadPlan.getSqlAst().getDomainResultDescriptors().get( 0 );
+		final DomainResult domainResult = loadPlan.getJdbcSelect().getJdbcValuesMappingProducer()
+				.resolve( null, sessionFactory )
+				.getDomainResults()
+				.get( 0 );
 		assertThat( domainResult, instanceOf( EntityResult.class ) );
 		final EntityResult entityResult = (EntityResult) domainResult;
 		assertThat( entityResult.getFetches(), hasSize( 2 ) );

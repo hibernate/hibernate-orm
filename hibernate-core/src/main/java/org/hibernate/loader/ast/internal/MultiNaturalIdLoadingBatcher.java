@@ -174,6 +174,11 @@ public class MultiNaturalIdLoadingBatcher {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}

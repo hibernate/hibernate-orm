@@ -492,10 +492,20 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	@Override
-	public Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session) {
+	public Object getAssociationKeyFromSide(
+			Object targetObject,
+			Nature nature,
+			SharedSessionContractImplementor session) {
+		final ModelPart modelPart;
+		if ( nature == Nature.KEY ) {
+			modelPart = keySide.getModelPart();
+		}
+		else {
+			modelPart = targetSide.getModelPart();
+		}
 		// If the mapping type has an identifier type, that identifier is the key
-		if ( targetSide.getModelPart() instanceof SingleAttributeIdentifierMapping ) {
-			return ( (SingleAttributeIdentifierMapping) targetSide.getModelPart() ).getIdentifier( targetObject, session );
+		if ( modelPart instanceof SingleAttributeIdentifierMapping ) {
+			return ( (SingleAttributeIdentifierMapping) modelPart ).getIdentifier( targetObject, session );
 		}
 		// Otherwise this is a key based on the target object i.e. without id-class
 		return targetObject;

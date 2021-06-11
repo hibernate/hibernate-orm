@@ -13,6 +13,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -56,7 +57,7 @@ public class BasicAttributeMapping
 	private final String customWriteExpression;
 
 	private final JdbcMapping jdbcMapping;
-	private final BasicValueConverter valueConverter;
+	private final BasicValueConverter<Object, ?> valueConverter;
 
 	private final JavaTypeDescriptor domainTypeDescriptor;
 
@@ -104,18 +105,17 @@ public class BasicAttributeMapping
 
 	public static BasicAttributeMapping withSelectableMapping(
 			BasicValuedModelPart original,
+			PropertyAccess propertyAccess,
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
 		int stateArrayPosition = 0;
 		StateArrayContributorMetadataAccess attributeMetadataAccess = null;
 		BasicValueConverter<?, ?> valueConverter = null;
-		PropertyAccess propertyAccess = null;
 		ManagedMappingType declaringType = null;
 		if ( original instanceof SingleAttributeIdentifierMapping ) {
 			final SingleAttributeIdentifierMapping mapping = (SingleAttributeIdentifierMapping) original;
 			attributeName = mapping.getAttributeName();
 			attributeMetadataAccess = null;
-			propertyAccess = mapping.getPropertyAccess();
 			declaringType = mapping.findContainingEntityMapping();
 		}
 		else if ( original instanceof SingularAttributeMapping ) {
@@ -123,7 +123,6 @@ public class BasicAttributeMapping
 			attributeName = mapping.getAttributeName();
 			stateArrayPosition = mapping.getStateArrayPosition();
 			attributeMetadataAccess = mapping.getAttributeMetadataAccess();
-			propertyAccess = mapping.getPropertyAccess();
 			declaringType = mapping.getDeclaringType();
 		}
 		if ( original instanceof ConvertibleModelPart ) {
@@ -271,22 +270,34 @@ public class BasicAttributeMapping
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
-				fetchParent.getNavigablePath()
-		);
+		final int valuesArrayPosition;
+		// Lazy property. A valuesArrayPosition of -1 will lead to
+		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
+		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		if ( fetchTiming == FetchTiming.DELAYED
+				&& fetchParent.getReferencedModePart() == containingEntityMapping
+				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
+			valuesArrayPosition = -1;
+		}
+		else {
+			final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+			final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup(
+					fetchParent.getNavigablePath()
+			);
 
-		assert tableGroup != null;
+			assert tableGroup != null;
 
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+			final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
+		}
 
-		return new BasicFetch(
-				sqlSelection.getValuesArrayPosition(),
+		return new BasicFetch<>(
+				valuesArrayPosition,
 				fetchParent,
 				fetchablePath,
 				this,
 				getAttributeMetadataAccess().resolveAttributeMetadata( null ).isNullable(),
-				getValueConverter(),
+				valueConverter,
 				fetchTiming,
 				creationState
 		);
@@ -295,7 +306,6 @@ public class BasicAttributeMapping
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		if ( valueConverter != null ) {
-			//noinspection unchecked
 			return valueConverter.toRelationalValue( value );
 		}
 		return value;

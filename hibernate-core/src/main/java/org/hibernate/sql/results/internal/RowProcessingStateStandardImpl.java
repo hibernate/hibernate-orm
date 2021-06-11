@@ -18,6 +18,7 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
@@ -143,6 +144,11 @@ public class RowProcessingStateStandardImpl implements RowProcessingState {
 
 	@Override
 	public void registerNonExists(EntityFetch fetch) {
+	}
+
+	@Override
+	public boolean isQueryCacheHit() {
+		return jdbcValues instanceof JdbcValuesCacheHit;
 	}
 
 	@Override

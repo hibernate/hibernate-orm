@@ -11,6 +11,7 @@ import java.util.BitSet;
 import org.hibernate.QueryException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.hql.HqlTranslator;
@@ -124,6 +125,8 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 			return hqlParser.statement();
 		}
-
+		catch ( ParsingException ex ) {
+			throw new SemanticException( "A query exception occurred", hql, ex );
+		}
 	}
 }

@@ -274,13 +274,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	@Override
 	public void setType(MappingModelExpressable type) {
 		this.type = type;
-		if ( type instanceof AllowableParameterType<?> ) {
-			this.bindType = (AllowableParameterType<T>) type;
-		}
-		else if ( type instanceof BasicValuedMapping ) {
-			final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type).getJdbcMapping();
-			if ( jdbcMapping instanceof AllowableParameterType<?> ) {
-				this.bindType = (AllowableParameterType<T>) jdbcMapping;
+		if ( bindType == null ) {
+			if ( type instanceof AllowableParameterType<?> ) {
+				this.bindType = (AllowableParameterType<T>) type;
+			}
+			else if ( type instanceof BasicValuedMapping ) {
+				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
+				if ( jdbcMapping instanceof AllowableParameterType<?> ) {
+					this.bindType = (AllowableParameterType<T>) jdbcMapping;
+				}
 			}
 		}
 	}

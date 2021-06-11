@@ -107,6 +107,11 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	}
 
 	@Override
+	public String getQueryString() {
+		return query;
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;

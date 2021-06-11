@@ -21,9 +21,12 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -56,30 +59,30 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 
 	private final boolean refersToPrimaryKey;
 
-	private final Function<Object,Object> disassemblyValueExtractor;
-
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
+			BasicValuedModelPart keyModelPart,
+			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
-			Function<Object, Object> disassemblyValueExtractor,
 			boolean refersToPrimaryKey) {
-		this( keySelectableMapping, targetModelPart, disassemblyValueExtractor, refersToPrimaryKey, false );
+		this( keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, false );
 	}
 
 	public SimpleForeignKeyDescriptor(
+			BasicValuedModelPart keyModelPart,
+			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
-			Function<Object, Object> disassemblyValueExtractor,
 			boolean refersToPrimaryKey,
 			boolean swapDirection) {
 		assert keySelectableMapping != null;
 		assert targetModelPart != null;
-		assert disassemblyValueExtractor != null;
 
-		final BasicValuedModelPart keyModelPart = BasicAttributeMapping.withSelectableMapping(
-				targetModelPart,
+		keyModelPart = BasicAttributeMapping.withSelectableMapping(
+				keyModelPart,
+				keyPropertyAccess,
 				keySelectableMapping
 		);
 		if ( swapDirection ) {
@@ -90,7 +93,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			this.keySide = new SimpleForeignKeyDescriptorSide( Nature.KEY, keyModelPart );
 			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
 		}
-		this.disassemblyValueExtractor = disassemblyValueExtractor;
 		this.refersToPrimaryKey = refersToPrimaryKey;
 	}
 
@@ -129,9 +131,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
 		return new SimpleForeignKeyDescriptor(
+				keySide.getModelPart(),
+				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
 				selectableMappingAccess.apply( 0 ),
 				targetSide.getModelPart(),
-				disassemblyValueExtractor,
 				refersToPrimaryKey
 		);
 	}
@@ -371,12 +374,28 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		if ( refersToPrimaryKey && value instanceof HibernateProxy ) {
 			return ( (HibernateProxy) value ).getHibernateLazyInitializer().getIdentifier();
 		}
-		return disassemblyValueExtractor.apply( value );
+		return ( (PropertyBasedMapping) targetSide.getModelPart() ).getPropertyAccess().getGetter().get( value );
 	}
 
 	@Override
-	public Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session) {
-		return disassemble( targetObject, session );
+	public Object getAssociationKeyFromSide(
+			Object targetObject,
+			Nature nature,
+			SharedSessionContractImplementor session) {
+		if ( targetObject == null ) {
+			return null;
+		}
+		if ( refersToPrimaryKey && targetObject instanceof HibernateProxy ) {
+			return ( (HibernateProxy) targetObject ).getHibernateLazyInitializer().getIdentifier();
+		}
+		final ModelPart modelPart;
+		if ( nature == Nature.KEY ) {
+			modelPart = keySide.getModelPart();
+		}
+		else {
+			modelPart = targetSide.getModelPart();
+		}
+		return ( (PropertyBasedMapping) modelPart ).getPropertyAccess().getGetter().get( targetObject );
 	}
 
 	@Override

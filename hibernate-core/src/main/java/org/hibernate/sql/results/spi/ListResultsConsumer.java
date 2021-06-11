@@ -61,8 +61,8 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState,
 			RowProcessingStateStandardImpl rowProcessingState,
 			RowReader<R> rowReader) {
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		try {
-			final PersistenceContext persistenceContext = session.getPersistenceContext();
 			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 
 			final List<R> results = new ArrayList<>();
@@ -114,13 +114,13 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 					rowProcessingState.finishRowProcessing();
 				}
 			}
-			persistenceContext.initializeNonLazyCollections();
 			jdbcValuesSourceProcessingState.finishUp();
 			return results;
 		}
 		finally {
 			rowReader.finishUp( jdbcValuesSourceProcessingState );
 			jdbcValues.finishUp( session );
+			persistenceContext.initializeNonLazyCollections();
 		}
 	}
 

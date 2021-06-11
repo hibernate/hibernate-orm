@@ -269,7 +269,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	@Override
 	public Object disassemble(CollectionPersister persister) {
 		final int length = bag.size();
-		final Object[] result = new Object[length];
+		final Serializable[] result = new Serializable[length];
 		for ( int i = 0; i < length; i++ ) {
 			result[i] = persister.getElementType().disassemble( bag.get( i ), getSession(), null );
 		}

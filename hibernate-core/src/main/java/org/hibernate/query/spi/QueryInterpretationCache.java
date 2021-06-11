@@ -27,6 +27,7 @@ public interface QueryInterpretationCache {
 		default Key prepareForStore() {
 			return this;
 		}
+		String getQueryString();
 	}
 
 	int getNumberOfCachedHqlInterpretations();

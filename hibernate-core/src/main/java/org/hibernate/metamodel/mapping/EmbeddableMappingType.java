@@ -172,7 +172,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 			SelectableMappings selectableMappings,
 			EmbeddableMappingType inverseMappingType,
 			MappingModelCreationProcess creationProcess) {
-		this.embeddableJtd = null;
+		this.embeddableJtd = inverseMappingType.embeddableJtd;
 		this.representationStrategy = inverseMappingType.representationStrategy;
 		this.sessionFactory = inverseMappingType.sessionFactory;
 		this.valueMapping = valueMapping;
@@ -190,7 +190,11 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 						if ( attributeMapping instanceof BasicAttributeMapping ) {
 							final BasicAttributeMapping original = (BasicAttributeMapping) attributeMapping;
 							final SelectableMapping selectableMapping = selectableMappings.getSelectable( currentIndex );
-							attributeMapping = BasicAttributeMapping.withSelectableMapping( original, selectableMapping );
+							attributeMapping = BasicAttributeMapping.withSelectableMapping(
+									original,
+									original.getPropertyAccess(),
+									selectableMapping
+							);
 							currentIndex++;
 						}
 						else if ( attributeMapping instanceof ToOneAttributeMapping ) {

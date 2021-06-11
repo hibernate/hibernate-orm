@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -557,13 +556,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			result += ( (Joinable) getElementPersister() ).oneToManyFilterFragment( alias, treatAsDeclarations );
 		}
 		return result;
-	}
-
-	@Override
-	public Object getElementByIndex(Object key, Object index, SharedSessionContractImplementor session, Object owner) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		return new org.hibernate.loader.entity.CollectionElementLoader( this, getFactory(), session.getLoadQueryInfluencers() )
-//				.loadElement( session, key, incrementIndexByBase( index ) );
 	}
 
 	@Override

@@ -18,7 +18,7 @@ public interface NaturalIdLoadOptions {
 	NaturalIdLoadOptions NONE = new NaturalIdLoadOptions() {
 		@Override
 		public LockOptions getLockOptions() {
-			return LockOptions.READ;
+			return null;
 		}
 
 		@Override

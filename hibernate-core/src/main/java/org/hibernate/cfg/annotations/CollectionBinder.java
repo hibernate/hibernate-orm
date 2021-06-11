@@ -1109,13 +1109,26 @@ public abstract class CollectionBinder {
 		if ( orderByFragment != null ) {
 			if ( orderByFragment.length() == 0 ) {
 				//order by id
-				return "id asc";
+				return buildOrderById( associatedClass, " asc" );
 			}
 			else if ( "desc".equals( orderByFragment ) ) {
-				return "id desc";
+				return buildOrderById( associatedClass, " desc" );
 			}
 		}
 		return orderByFragment;
+	}
+
+	private static String buildOrderById(PersistentClass associatedClass, String order) {
+		final StringBuilder sb = new StringBuilder();
+		final Iterator<Selectable> columnIterator = associatedClass.getIdentifier().getColumnIterator();
+		while ( columnIterator.hasNext() ) {
+			final Selectable selectable = columnIterator.next();
+			sb.append( selectable.getText() );
+			sb.append( order );
+			sb.append( ", " );
+		}
+		sb.setLength( sb.length() - 2 );
+		return sb.toString();
 	}
 
 	public static String adjustUserSuppliedValueCollectionOrderingFragment(String orderByFragment) {

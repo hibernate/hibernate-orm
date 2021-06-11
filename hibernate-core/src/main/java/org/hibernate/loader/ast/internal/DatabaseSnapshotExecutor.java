@@ -80,7 +80,7 @@ class DatabaseSnapshotExecutor {
 				rootQuerySpec,
 				sqlAliasBaseManager,
 				new FromClauseIndex( null ),
-				LockOptions.READ,
+				LockOptions.NONE,
 				(fetchParent, ast, creationState) -> Collections.emptyList(),
 				true,
 				sessionFactory
@@ -220,6 +220,11 @@ class DatabaseSnapshotExecutor {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -228,6 +233,7 @@ class DatabaseSnapshotExecutor {
 					public Callback getCallback() {
 						return null;
 					}
+
 				},
 				RowTransformerDatabaseSnapshotImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

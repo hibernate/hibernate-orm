@@ -52,7 +52,7 @@ public class BasicValuedCollectionPart
 	private final NavigableRole navigableRole;
 	private final CollectionPersister collectionDescriptor;
 	private final Nature nature;
-	private final BasicValueConverter valueConverter;
+	private final BasicValueConverter<Object, ?> valueConverter;
 
 	private final SelectableMapping selectableMapping;
 
@@ -225,7 +225,7 @@ public class BasicValuedCollectionPart
 				.findTableGroup( parentNavigablePath );
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
 
-		return new BasicFetch(
+		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,

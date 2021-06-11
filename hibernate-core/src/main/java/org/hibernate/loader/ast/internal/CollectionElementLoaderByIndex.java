@@ -86,7 +86,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 				null,
 				1,
 				influencers,
-				LockOptions.READ,
+				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory
 		);
@@ -156,6 +156,11 @@ public class CollectionElementLoaderByIndex implements Loader {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -164,6 +169,7 @@ public class CollectionElementLoaderByIndex implements Loader {
 					public Callback getCallback() {
 						return null;
 					}
+
 				},
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

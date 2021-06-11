@@ -46,6 +46,7 @@ import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.sql.results.spi.ScrollableResultsConsumer;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -173,6 +174,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				statementCreator
 		);
 		final JdbcValues jdbcValues = resolveJdbcValuesSource(
+				executionContext.getQueryIdentifier( deferredResultSetAccess.getFinalSql() ),
 				jdbcSelect,
 				resultsConsumer.canResultsBeCached(),
 				executionContext,
@@ -244,6 +246,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 	@SuppressWarnings("unchecked")
 	private JdbcValues resolveJdbcValuesSource(
+			String queryIdentifier,
 			JdbcSelect jdbcSelect,
 			boolean canBeCached,
 			ExecutionContext executionContext,
@@ -297,6 +300,16 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			//
 			// todo (6.0) : if we go this route (^^), still beneficial to have an abstraction over different UpdateTimestampsCache-based
 			//		invalidation strategies - QueryCacheInvalidationStrategy
+
+			final StatisticsImplementor statistics = factory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				if ( cachedResults == null ) {
+					statistics.queryCacheMiss( queryIdentifier, queryCache.getRegion().getName() );
+				}
+				else {
+					statistics.queryCacheHit( queryIdentifier, queryCache.getRegion().getName() );
+				}
+			}
 		}
 		else {
 			SqlExecLogger.INSTANCE.debugf( "Skipping reading Query result cache data: cache-enabled = %s, cache-mode = %s",
@@ -307,10 +320,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			queryResultsCacheKey = null;
 		}
 
-		if ( cachedResults == null || cachedResults.isEmpty() ) {
+		if ( cachedResults == null ) {
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
 					canBeCached ? queryResultsCacheKey : null,
+					queryIdentifier,
 					executionContext.getQueryOptions(),
 					jdbcValuesMapping,
 					executionContext

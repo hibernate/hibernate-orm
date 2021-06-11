@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -112,6 +113,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		apply(
 				getReferenceModelPart(),
@@ -120,6 +122,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 				collation,
 				modelPartName,
 				sortOrder,
+				nullPrecedence,
 				creationState
 		);
 	}
@@ -131,6 +134,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
 			addSortSpecification(
@@ -139,6 +143,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					tableGroup,
 					collation,
 					sortOrder,
+					nullPrecedence,
 					creationState
 			);
 		}
@@ -157,6 +162,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					collation,
 					modelPartName,
 					sortOrder,
+					nullPrecedence,
 					creationState
 			);
 		}
@@ -168,6 +174,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					collation,
 					modelPartName,
 					sortOrder,
+					nullPrecedence,
 					creationState
 			);
 		}
@@ -184,6 +191,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		if ( embeddableValuedModelPart.getFetchableName()
 				.equals( modelPartName ) || ELEMENT_TOKEN.equals( modelPartName ) ) {
@@ -195,6 +203,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 								tableGroup,
 								collation,
 								sortOrder,
+								nullPrecedence,
 								creationState
 						);
 					}
@@ -209,6 +218,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 					tableGroup,
 					collation,
 					sortOrder,
+					nullPrecedence,
 					creationState
 			);
 		}
@@ -220,6 +230,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String collation,
 			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
@@ -242,6 +253,6 @@ public abstract class AbstractDomainPath implements DomainPath {
 				}
 			}
 		}
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder ) );
+		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
 	}
 }

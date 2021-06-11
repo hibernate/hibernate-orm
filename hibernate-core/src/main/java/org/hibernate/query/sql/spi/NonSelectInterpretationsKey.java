@@ -23,4 +23,9 @@ public class NonSelectInterpretationsKey implements QueryInterpretationCache.Key
 		this.sql = sql;
 		this.querySpaces = querySpaces;
 	}
+
+	@Override
+	public String getQueryString() {
+		return sql;
+	}
 }

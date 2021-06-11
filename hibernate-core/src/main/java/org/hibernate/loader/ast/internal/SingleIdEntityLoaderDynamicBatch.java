@@ -105,16 +105,18 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 				getLoadable().getIdentifierMapping().getJdbcTypeCount()
 		);
 
+		int offset = 0;
 		for ( int i = 0; i < numberOfIds; i++ ) {
-			int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
+			offset += jdbcParameterBindings.registerParametersForEachJdbcValue(
 					idsToLoad[i],
 					Clause.WHERE,
+					offset,
 					getLoadable().getIdentifierMapping(),
 					jdbcParameters,
 					session
 			);
-			assert offset == jdbcParameters.size();
 		}
+		assert offset == jdbcParameters.size();
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
@@ -138,6 +140,11 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -146,6 +153,7 @@ public class SingleIdEntityLoaderDynamicBatch<T> extends SingleIdEntityLoaderSup
 					public Callback getCallback() {
 						return null;
 					}
+
 				},
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

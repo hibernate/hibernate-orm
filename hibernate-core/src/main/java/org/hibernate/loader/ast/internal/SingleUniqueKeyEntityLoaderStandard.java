@@ -77,7 +77,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				null,
 				1,
 				LoadQueryInfluencers.NONE,
-				LockOptions.READ,
+				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory
 		);
@@ -118,6 +118,11 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -126,6 +131,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					public Callback getCallback() {
 						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
+
 				},
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
@@ -159,7 +165,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 				null,
 				1,
 				LoadQueryInfluencers.NONE,
-				LockOptions.READ,
+				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory
 		);
@@ -195,6 +201,11 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -203,6 +214,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 					public Callback getCallback() {
 						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
+
 				},
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER

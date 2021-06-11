@@ -103,6 +103,7 @@ public class ToOneAttributeMapping
 	private ForeignKeyDescriptor foreignKeyDescriptor;
 	private ForeignKeyDescriptor.Nature sideNature;
 	private String identifyingColumnsTableExpression;
+	private boolean canUseParentTableGroup;
 
 	public ToOneAttributeMapping(
 			String name,
@@ -318,6 +319,30 @@ public class ToOneAttributeMapping
 		this.sideNature = foreignKeyDescriptor.getAssociationKey().getTable().equals( identifyingColumnsTableExpression )
 				? ForeignKeyDescriptor.Nature.KEY
 				: ForeignKeyDescriptor.Nature.TARGET;
+
+		// Determine if the FK maps the id of the owner entity
+		final boolean[] mapsId = new boolean[1];
+		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		foreignKeyDescriptor.getKeyPart().forEachSelectable(
+				(fkIndex, fkMapping) -> {
+					if ( !mapsId[0] ) {
+						containingEntityMapping.getEntityPersister().getIdentifierMapping().forEachSelectable(
+								(idIndex, idMapping) -> {
+									if ( fkMapping.getContainingTableExpression()
+											.equals( idMapping.getContainingTableExpression() )
+											&& fkMapping.getSelectionExpression()
+											.equals( idMapping.getSelectionExpression() ) ) {
+										mapsId[0] = true;
+									}
+								}
+						);
+					}
+				}
+		);
+		// We can only use the parent table group if the FK is located there
+		// If this is not the case, the FK is on a join/secondary table, so we need a join
+		this.canUseParentTableGroup = !mapsId[0] && sideNature == ForeignKeyDescriptor.Nature.KEY
+				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 	}
 
 	public void setIdentifyingColumnsTableExpression(String tableExpression) {
@@ -374,7 +399,7 @@ public class ToOneAttributeMapping
 	public ModelPart findSubPart(String name, EntityMappingType targetType) {
 		// Prefer resolving the key part of the foreign key rather than the target part if possible
 		// This way, we don't have to register table groups the target entity type
-		if ( name.equals( targetKeyPropertyName ) ) {
+		if ( canUseParentTableGroup && name.equals( targetKeyPropertyName ) ) {
 			return foreignKeyDescriptor.getKeyPart();
 		}
 		return EntityValuedFetchable.super.findSubPart( name, targetType );
@@ -384,6 +409,7 @@ public class ToOneAttributeMapping
 	public Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
+			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		final AssociationKey associationKey = foreignKeyDescriptor.getAssociationKey();
 
@@ -525,7 +551,7 @@ public class ToOneAttributeMapping
 				return new CircularFetchImpl(
 						this,
 						getEntityMappingType(),
-						getTiming(),
+						fetchTiming,
 						fetchablePath,
 						fetchParent,
 						this,
@@ -822,10 +848,6 @@ public class ToOneAttributeMapping
 			SqlAstCreationContext creationContext) {
 		final String aliasRoot = explicitSourceAlias == null ? sqlAliasStem : explicitSourceAlias;
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( aliasRoot );
-		// We can only use the parent table group if the FK is located there
-		// If this is false, the FK is on a join table
-		final boolean canUseParentTableGroup = sideNature == ForeignKeyDescriptor.Nature.KEY
-				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				navigablePath,
 				() -> createTableGroupJoinInternal(

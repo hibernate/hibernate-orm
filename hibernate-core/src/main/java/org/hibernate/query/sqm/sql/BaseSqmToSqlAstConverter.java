@@ -47,11 +47,12 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -59,6 +60,7 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
@@ -291,7 +293,6 @@ import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiation;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
@@ -1636,7 +1637,35 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new SqlTuple( expressions, null );
 		}
 
-		return (Expression) groupByClauseExpression.accept( this );
+		final Expression expression = (Expression) groupByClauseExpression.accept( this );
+		// When a join alias is put into the GROUP BY or ORDER BY clause, we have to transform this to interpretations
+		if ( expression instanceof TableGroup ) {
+			final TableGroup tableGroup = (TableGroup) expression;
+			if ( tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
+				final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart();
+				return new EmbeddableValuedPathInterpretation<>(
+						mapping.toSqlExpression(
+								tableGroup,
+								getCurrentClauseStack().getCurrent(),
+								this,
+								this
+						),
+						tableGroup.getNavigablePath(),
+						mapping,
+						tableGroup
+				);
+			}
+			else if ( tableGroup.getModelPart() instanceof EntityValuedModelPart ) {
+				final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup.getModelPart();
+				return EntityValuedPathInterpretation.from(
+						tableGroup.getNavigablePath(),
+						tableGroup,
+						mapping,
+						this
+				);
+			}
+		}
+		return expression;
 	}
 
 	@Override
@@ -2270,7 +2299,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public SqmPathInterpretation<?> visitPluralValuedPath(SqmPluralValuedSimplePath sqmPath) {
+	public SqmPathInterpretation<?> visitPluralValuedPath(SqmPluralValuedSimplePath<?> sqmPath) {
 		return PluralValuedSimplePathInterpretation.from( sqmPath, this );
 	}
 
@@ -2653,8 +2682,36 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<SqmExpression<?>> groupedExpressions = sqmTuple.getGroupedExpressions();
 		final int size = groupedExpressions.size();
 		final List<Expression> expressions = new ArrayList<>( size );
-		for ( int i = 0; i < size; i++ ) {
-			expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
+		final MappingModelExpressable<?> mappingModelExpressable = inferrableTypeAccessStack.getCurrent().get();
+		final EmbeddableMappingType embeddableMappingType;
+		if ( mappingModelExpressable instanceof ValueMapping ) {
+			embeddableMappingType = (EmbeddableMappingType) ( (ValueMapping) mappingModelExpressable ).getMappedType();
+		}
+		else {
+			embeddableMappingType = null;
+		}
+		if ( embeddableMappingType == null ) {
+			try {
+				inferrableTypeAccessStack.push( () -> null );
+				for ( int i = 0; i < size; i++ ) {
+					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
+				}
+			}
+			finally {
+				inferrableTypeAccessStack.pop();
+			}
+		}
+		else {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = embeddableMappingType.getAttributeMappings().get( i );
+				inferrableTypeAccessStack.push( () -> attributeMapping );
+				try {
+					expressions.add( (Expression) groupedExpressions.get( i ).accept( this ) );
+				}
+				finally {
+					inferrableTypeAccessStack.pop();
+				}
+			}
 		}
 		return new SqlTuple( expressions, null );
 	}
@@ -4051,13 +4108,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			subQuerySpec.getFromClause().addRoot( tableGroup );
 
 			final CollectionPart elementDescriptor = mappingModelExpressable.getElementDescriptor();
-
-			elementDescriptor.createDomainResult(
-					pluralPath.getNavigablePath(),
-					tableGroup,
-					null,
-					this
-			);
+			if ( elementDescriptor instanceof EntityCollectionPart ) {
+				( (EntityCollectionPart) elementDescriptor ).getKeyTargetMatchPart()
+						.createDomainResult(
+								pluralPath.getNavigablePath(),
+								tableGroup,
+								null,
+								this
+						);
+			}
+			else {
+				elementDescriptor.createDomainResult(
+						pluralPath.getNavigablePath(),
+						tableGroup,
+						null,
+						this
+				);
+			}
 
 			subQuerySpec.applyPredicate(
 					mappingModelExpressable.getKeyDescriptor().generateJoinPredicate(
@@ -4457,16 +4524,93 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
 			final NavigablePath fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 
-			if ( !isResolvingCircularFetch() ) {
-				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
-						fetchablePath,
-						fetchParent,
-						this
-				);
+			final String alias;
+			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+			boolean joined = false;
 
-				if ( biDirectionalFetch != null ) {
-					fetches.add( biDirectionalFetch );
-					return;
+			EntityGraphTraversalState.TraversalResult traversalResult = null;
+			final FromClauseIndex fromClauseIndex = getFromClauseIndex();
+			final SqmAttributeJoin fetchedJoin = fromClauseIndex.findFetchedJoinByPath( fetchablePath );
+
+			if ( fetchedJoin != null ) {
+				// there was an explicit fetch in the SQM
+				//		there should be a TableGroupJoin registered for this `fetchablePath` already
+				//		because it
+				assert fromClauseIndex.getTableGroup( fetchablePath ) != null;
+
+//
+				if ( fetchedJoin.isFetched() ) {
+					fetchTiming = FetchTiming.IMMEDIATE;
+				}
+				joined = true;
+				alias = fetchedJoin.getExplicitAlias();
+			}
+			else {
+				// there was not an explicit fetch in the SQM
+				alias = null;
+
+				if ( !( fetchable instanceof CollectionPart ) ) {
+					if ( entityGraphTraversalState != null ) {
+						traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
+						fetchTiming = traversalResult.getFetchTiming();
+						joined = traversalResult.isJoined();
+					}
+					else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
+						// There is no point in checking the fetch profile if it can't affect this fetchable
+						if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
+							final String fetchableRole = fetchable.getNavigableRole().getFullPath();
+
+							for ( String enabledFetchProfileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
+								final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory()
+										.getFetchProfile( enabledFetchProfileName );
+								final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
+										fetchableRole );
+
+								if ( profileFetch != null ) {
+									fetchTiming = FetchTiming.IMMEDIATE;
+									joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+								}
+							}
+						}
+					}
+				}
+
+				final TableGroup existingJoinedGroup = fromClauseIndex.findTableGroup( fetchablePath );
+				if ( existingJoinedGroup !=  null ) {
+					// we can use this to trigger the fetch from the joined group.
+
+					// todo (6.0) : do we want to do this though?
+					//  	On the positive side it would allow EntityGraph to use the existing TableGroup.  But that ties in
+					//  	to the discussion above regarding how to handle eager and EntityGraph (JOIN versus SELECT).
+					//		Can be problematic if the existing one is restricted
+					//fetchTiming = FetchTiming.IMMEDIATE;
+				}
+
+				// lastly, account for any app-defined max-fetch-depth
+				final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
+				if ( maxDepth != null ) {
+					if ( fetchDepth >= maxDepth ) {
+						joined = false;
+					}
+				}
+
+				if ( joined && fetchable instanceof TableGroupJoinProducer ) {
+					fromClauseIndex.resolveTableGroup(
+							fetchablePath,
+							np -> {
+								// generate the join
+								final TableGroup lhs = fromClauseIndex.getTableGroup( fetchParent.getNavigablePath() );
+								final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
+										fetchablePath,
+										lhs,
+										alias,
+										SqlAstJoinType.LEFT,
+										true,
+										this
+								);
+								return tableGroupJoin.getJoinedGroup();
+							}
+					);
 				}
 			}
 
@@ -4475,7 +4619,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( incrementFetchDepth ) {
 					fetchDepth++;
 				}
-				final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, isKeyFetchable );
+				// There is no need to check for circular fetches if this is a fetch join
+				if ( fetchedJoin == null && !isResolvingCircularFetch() ) {
+					final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+							fetchablePath,
+							fetchParent,
+							fetchTiming,
+							this
+					);
+
+					if ( biDirectionalFetch != null ) {
+						fetches.add( biDirectionalFetch );
+						return;
+					}
+				}
+				final Fetch fetch = buildFetch( fetchablePath, fetchParent, fetchable, fetchTiming, joined, alias );
 
 				if ( fetch != null ) {
 					if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
@@ -4495,6 +4653,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( incrementFetchDepth ) {
 					fetchDepth--;
 				}
+				if ( entityGraphTraversalState != null && traversalResult != null ) {
+					entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
+				}
 			}
 		};
 
@@ -4509,104 +4670,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return fetches;
 	}
 
-	private Fetch buildFetch(NavigablePath fetchablePath, FetchParent fetchParent, Fetchable fetchable, boolean isKeyFetchable) {
+	private Fetch buildFetch(
+			NavigablePath fetchablePath,
+			FetchParent fetchParent,
+			Fetchable fetchable,
+			FetchTiming fetchTiming,
+			boolean joined,
+			String alias) {
 		// fetch has access to its parent in addition to the parent having its fetches.
 		//
 		// we could sever the parent -> fetch link ... it would not be "seen" while walking
 		// but it would still have access to its parent info - and be able to access its
 		// "initializing" state as part of AfterLoadAction
-
-		final String alias;
-		FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-		boolean joined = false;
-
-		EntityGraphTraversalState.TraversalResult traversalResult = null;
-		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-		final SqmAttributeJoin fetchedJoin = fromClauseIndex.findFetchedJoinByPath( fetchablePath );
-
-		if ( fetchedJoin != null ) {
-			// there was an explicit fetch in the SQM
-			//		there should be a TableGroupJoin registered for this `fetchablePath` already
-			//		because it
-			assert fromClauseIndex.getTableGroup( fetchablePath ) != null;
-
-//
-			if ( fetchedJoin.isFetched() ) {
-				fetchTiming = FetchTiming.IMMEDIATE;
-			}
-			joined = true;
-			alias = fetchedJoin.getExplicitAlias();
-		}
-		else {
-			// there was not an explicit fetch in the SQM
-			alias = null;
-
-			if ( !( fetchable instanceof CollectionPart ) ) {
-				if ( entityGraphTraversalState != null ) {
-					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
-					fetchTiming = traversalResult.getFetchTiming();
-					joined = traversalResult.isJoined();
-				}
-				else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
-					if ( fetchParent instanceof EntityResultGraphNode ) {
-						final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-						final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart()
-								.getEntityMappingType();
-						final String fetchParentEntityName = entityMappingType.getEntityName();
-						final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
-
-						for ( String enabledFetchProfileName : getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
-							final FetchProfile enabledFetchProfile = getCreationContext().getSessionFactory()
-									.getFetchProfile( enabledFetchProfileName );
-							final org.hibernate.engine.profile.Fetch profileFetch = enabledFetchProfile.getFetchByRole(
-									fetchableRole );
-
-							fetchTiming = FetchTiming.IMMEDIATE;
-							joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
-						}
-					}
-				}
-			}
-
-			final TableGroup existingJoinedGroup = fromClauseIndex.findTableGroup( fetchablePath );
-			if ( existingJoinedGroup !=  null ) {
-				// we can use this to trigger the fetch from the joined group.
-
-				// todo (6.0) : do we want to do this though?
-				//  	On the positive side it would allow EntityGraph to use the existing TableGroup.  But that ties in
-				//  	to the discussion above regarding how to handle eager and EntityGraph (JOIN versus SELECT).
-				//		Can be problematic if the existing one is restricted
-				//fetchTiming = FetchTiming.IMMEDIATE;
-			}
-
-			// lastly, account for any app-defined max-fetch-depth
-			final Integer maxDepth = getCreationContext().getMaximumFetchDepth();
-			if ( maxDepth != null ) {
-				if ( fetchDepth >= maxDepth ) {
-					joined = false;
-				}
-			}
-
-			if ( joined && fetchable instanceof TableGroupJoinProducer ) {
-				fromClauseIndex.resolveTableGroup(
-						fetchablePath,
-						np -> {
-							// generate the join
-							final TableGroup lhs = fromClauseIndex.getTableGroup( fetchParent.getNavigablePath() );
-							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
-									fetchablePath,
-									lhs,
-									alias,
-									SqlAstJoinType.LEFT,
-									true,
-									this
-							);
-							return tableGroupJoin.getJoinedGroup();
-						}
-				);
-
-			}
-		}
 
 		try {
 			final Fetch fetch = fetchParent.generateFetchableFetch(
@@ -4625,7 +4700,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.getCollectionDescriptor()
 						.getCollectionType()
 						.getAssociatedJoinable( getCreationContext().getSessionFactory() );
-				final TableGroup tableGroup = fromClauseIndex.getTableGroup( fetchablePath );
+				final TableGroup tableGroup = getFromClauseIndex().getTableGroup( fetchablePath );
 				final FilterPredicate collectionFieldFilterPredicate = FilterHelper.createFilterPredicate(
 						getLoadQueryInfluencers(),
 						joinable,
@@ -4676,11 +4751,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					),
 					e
 			);
-		}
-		finally {
-			if ( entityGraphTraversalState != null && traversalResult != null ) {
-				entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );
-			}
 		}
 	}
 

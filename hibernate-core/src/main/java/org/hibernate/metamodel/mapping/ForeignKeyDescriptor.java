@@ -28,6 +28,10 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 	enum Nature {
 		KEY,
 		TARGET;
+
+		public Nature inverse() {
+			return this == KEY ? TARGET : KEY;
+		}
 	}
 
 	interface Side {
@@ -106,7 +110,10 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 		return visitKeySelectables( offset, consumer );
 	}
 
-	Object getAssociationKeyFromTarget(Object targetObject, SharedSessionContractImplementor session);
+	Object getAssociationKeyFromSide(
+			Object targetObject,
+			Nature nature,
+			SharedSessionContractImplementor session);
 
 	int visitKeySelectables(int offset, SelectableConsumer consumer);
 

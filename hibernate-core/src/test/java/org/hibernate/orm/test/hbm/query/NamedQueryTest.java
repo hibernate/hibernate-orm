@@ -21,7 +21,8 @@ public class NamedQueryTest extends BaseUnitTestCase {
 		"		<id name='id'>                                  "+
 	    "			<generator class='sequence'/>               "+
 	    "		</id>                                           "+
-	    "		<query name='findByFoo'>                       "+
+		"       <property name='foo'/>                          "+
+	    "		<query name='findByFoo'>                        "+
 	    "			<query-param name='foo' type='string'/>     "+
 	    "			from NamedQueryTest$Bar where foo like :foo "+
 	    "		</query>                                        "+    	
@@ -30,9 +31,10 @@ public class NamedQueryTest extends BaseUnitTestCase {
 
 	@Test
 	public void testQuery() {
-		Configuration cfg = new Configuration();		
-		cfg.setProperty("hibernate.dialect", "org.hibernate.dialect.HSQLDialect");
-		cfg.addInputStream(new ReaderInputStream(new StringReader(NAMED_QUERY_HBM_XML)));
+		Configuration cfg = new Configuration();
+		cfg.setProperty( "hibernate.dialect", "org.hibernate.dialect.HSQLDialect" );
+		cfg.setProperty( "hibernate.temp.use_jdbc_metadata_defaults", "false" );
+		cfg.addInputStream( new ReaderInputStream( new StringReader( NAMED_QUERY_HBM_XML ) ) );
 		SessionFactory sessionFactory = cfg.buildSessionFactory();
 		sessionFactory.close();
 	}

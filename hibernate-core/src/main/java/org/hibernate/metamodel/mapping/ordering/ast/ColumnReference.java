@@ -12,6 +12,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -90,6 +91,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );
 		// It makes no sense to order by an expression multiple times
@@ -102,7 +104,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			}
 		}
 
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder ) );
+		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
 	}
 
 	TableReference getTableReference(TableGroup tableGroup) {

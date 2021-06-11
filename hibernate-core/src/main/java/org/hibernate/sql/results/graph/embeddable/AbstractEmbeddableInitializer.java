@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.StateArrayContributorMapping;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -26,6 +28,7 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+import org.hibernate.tuple.IdentifierAttribute;
 
 /**
  * @author Steve Ebersole
@@ -61,15 +64,18 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				stateArrayContributor -> {
 					final Fetch fetch = resultDescriptor.findFetch( stateArrayContributor );
 
-					final DomainResultAssembler stateAssembler = fetch == null
-							? new NullValueAssembler( stateArrayContributor.getJavaTypeDescriptor() )
+					final DomainResultAssembler<?> stateAssembler = fetch == null
+							? new NullValueAssembler<>( stateArrayContributor.getJavaTypeDescriptor() )
 							: fetch.createAssembler( this, creationState );
 
 					assemblerMap.put( stateArrayContributor, stateAssembler );
 				}
 		);
 
-		createEmptyCompositesEnabled = embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
+		// We never want to create empty composites for the FK target or PK, otherwise collections would break
+		createEmptyCompositesEnabled = !ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+				&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( navigablePath.getLocalName() )
+				&& embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
 	}
 
@@ -125,9 +131,13 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			return;
 		}
 
+		// Special handling for non-aggregated attribute _identifierMapper
+		// The _identifierMapper attribute uses the actual entity instance as container, so we use the fetch parent
+		// The identifier domain result on the other hand for that attribute has no fetch parent,
+		// but that's no issue because that attribute uses the id class as container class
 		final EmbeddableMappingType embeddableTypeDescriptor = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor();
-		if ( fetchParentAccess != null && embeddableTypeDescriptor.getMappedJavaTypeDescriptor()
-				.getJavaType() == fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaType() ) {
+		if ( fetchParentAccess != null && embeddableTypeDescriptor.getMappedJavaTypeDescriptor().getJavaTypeClass()
+				.isAssignableFrom( fetchParentAccess.getInitializedPart().getJavaTypeDescriptor().getJavaTypeClass() ) ) {
 			fetchParentAccess.resolveInstance( rowProcessingState );
 			compositeInstance = fetchParentAccess.getInitializedInstance();
 		}
@@ -208,7 +218,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				);
 				( (HibernateProxy) compositeInstance ).getHibernateLazyInitializer().setImplementation( target );
 			}
-			else {
+			// At this point, createEmptyCompositesEnabled is always true.
+			// We can only set the property values on the compositeInstance though if there is at least one non null value.
+			// If the values are all null, we would normally not create a composite instance at all because no values exist.
+			// Setting all properties to null could cause IllegalArgumentExceptions though when the component has primitive properties.
+			// To avoid this exception and align with what Hibernate 5 did, we skip setting properties if all values are null.
+			// A possible alternative could be to initialize the resolved values for primitive fields to their default value,
+			// but that might cause unexpected outcomes for Hibernate 5 users that use createEmptyCompositesEnabled when updating.
+			// You can see the need for this by running EmptyCompositeEquivalentToNullTest
+			else if ( !areAllValuesNull ) {
 				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
 						compositeInstance,
 						resolvedValues

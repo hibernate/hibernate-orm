@@ -210,8 +210,13 @@ public abstract class AbstractCompositeIdentifierMapping
 			final AttributeMapping attributeMapping = attributeMappings.get( i );
 			final Object o = attributeMapping.getPropertyAccess().getGetter().get( value );
 			if ( attributeMapping instanceof ToOneAttributeMapping ) {
-				final ForeignKeyDescriptor fkDescriptor = ( (ToOneAttributeMapping) attributeMapping ).getForeignKeyDescriptor();
-				final Object identifier = fkDescriptor.getAssociationKeyFromTarget( o, session );
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+				final ForeignKeyDescriptor fkDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+				final Object identifier = fkDescriptor.getAssociationKeyFromSide(
+						o,
+						toOneAttributeMapping.getSideNature().inverse(),
+						session
+				);
 				span += fkDescriptor.forEachJdbcValue(
 						identifier,
 						clause,

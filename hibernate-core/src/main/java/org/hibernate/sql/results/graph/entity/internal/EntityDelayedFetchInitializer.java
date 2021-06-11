@@ -8,10 +8,13 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -90,19 +93,37 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 					if ( loadingEntityLocally != null ) {
 						entityInstance = loadingEntityLocally.getEntityInstance();
 					}
-					else if ( concreteDescriptor.hasProxy() ) {
-						entityInstance = concreteDescriptor.createProxy(
-								identifier,
-								rowProcessingState.getSession()
-						);
-						persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-						persistenceContext.addProxy( entityKey, entityInstance );
-					}
-					else if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
-						entityInstance = concreteDescriptor.instantiate(
-								identifier,
-								rowProcessingState.getSession()
-						);
+					else {
+						// Look into the second level cache if the descriptor is polymorphic
+						final Object cachedEntity;
+						if ( concreteDescriptor.getEntityMetamodel().hasSubclasses() ) {
+							cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+									(EventSource) rowProcessingState.getSession(),
+									null,
+									LockMode.NONE,
+									concreteDescriptor,
+									entityKey
+							);
+						}
+						else {
+							cachedEntity = null;
+						}
+
+						if ( cachedEntity != null ) {
+							entityInstance = cachedEntity;
+						}
+						else if ( concreteDescriptor.hasProxy() ) {
+							entityInstance = concreteDescriptor.createProxy(
+									identifier,
+									rowProcessingState.getSession()
+							);
+							persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+							persistenceContext.addProxy( entityKey, entityInstance );
+						}
+						else if ( concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading() ) {
+							entityInstance = concreteDescriptor.getBytecodeEnhancementMetadata()
+									.createEnhancedProxy( entityKey, true, rowProcessingState.getSession() );
+						}
 					}
 				}
 			}

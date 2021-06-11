@@ -98,6 +98,39 @@ public class FromClause implements SqlAstNode {
 		}
 	}
 
+	public <T> T queryTableJoins(Function<TableJoin, T> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			final T result = queryTableJoins( roots.get( i ), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private <T> T queryTableJoins(TableGroup tableGroup, Function<TableJoin, T> action) {
+		for ( TableReferenceJoin tableReferenceJoin : tableGroup.getTableReferenceJoins() ) {
+			final T result = action.apply( tableReferenceJoin );
+			if ( result != null ) {
+				return result;
+			}
+		}
+
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
+			T result = action.apply( tableGroupJoin );
+			if ( result != null ) {
+				return result;
+			}
+			result = queryTableJoins( tableGroupJoin.getJoinedGroup(), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
 	public void visitTableGroupJoins(Consumer<TableGroupJoin> action) {
 		for ( int i = 0; i < roots.size(); i++ ) {
 			visitTableGroupJoins( roots.get( i ), action );
@@ -111,6 +144,32 @@ public class FromClause implements SqlAstNode {
 			action.accept( tableGroupJoin );
 			visitTableGroupJoins( tableGroupJoin.getJoinedGroup(), action );
 		}
+	}
+
+	public <T> T queryTableGroupJoins(Function<TableGroupJoin, T> action) {
+		for ( int i = 0; i < roots.size(); i++ ) {
+			final T result = queryTableGroupJoins( roots.get( i ), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
+	}
+
+	private <T> T queryTableGroupJoins(TableGroup tableGroup, Function<TableGroupJoin, T> action) {
+		final List<TableGroupJoin> tableGroupJoins = tableGroup.getTableGroupJoins();
+		for ( int i = 0; i < tableGroupJoins.size(); i++ ) {
+			final TableGroupJoin tableGroupJoin = tableGroupJoins.get( i );
+			T result = action.apply( tableGroupJoin );
+			if ( result != null ) {
+				return result;
+			}
+			result = queryTableGroupJoins( tableGroupJoin.getJoinedGroup(), action );
+			if ( result != null ) {
+				return result;
+			}
+		}
+		return null;
 	}
 
 	@Override

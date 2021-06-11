@@ -10,20 +10,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 
@@ -98,9 +95,10 @@ public class FunctionExpression implements OrderingExpression, FunctionRendering
 			String collation,
 			String modelPartName,
 			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final SelfRenderingFunctionSqlAstExpression expression = resolve( ast, tableGroup, modelPartName, creationState );
-		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder ) );
+		ast.addSortSpecification( new SortSpecification( expression, collation, sortOrder, nullPrecedence ) );
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
@@ -108,17 +109,17 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			throw new UnsupportedOperationException( "Unsupported basic-valued path expression : " + expression );
 		}
 
-		return new BasicValuedPathInterpretation<>( columnReference, sqmPath, mapping, tableGroup );
+		return new BasicValuedPathInterpretation<>( columnReference, sqmPath.getNavigablePath(), mapping, tableGroup );
 	}
 
 	private final ColumnReference columnReference;
 
 	private BasicValuedPathInterpretation(
 			ColumnReference columnReference,
-			SqmBasicValuedSimplePath<T> sqmPath,
+			NavigablePath navigablePath,
 			BasicValuedModelPart mapping,
 			TableGroup tableGroup) {
-		super(sqmPath,mapping,tableGroup);
+		super( navigablePath, mapping, tableGroup );
 		assert columnReference != null;
 		this.columnReference = columnReference;
 	}

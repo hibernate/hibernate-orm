@@ -30,6 +30,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
@@ -119,17 +120,20 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				},
 				(statsEnabled) -> {
 //					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-//					return statsEnabled ? System.nanoTime() : -1;
-					return -1L;
+					return statsEnabled ? System.nanoTime() : -1;
 				},
 				(result,startToken) -> {
 //					entityDescriptor().getPostLoadListener().completedLoad( result, entityDescriptor(), naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-//					if ( startToken > 0 ) {
+					if ( startToken > 0 ) {
+						session.getFactory().getStatistics().naturalIdQueryExecuted(
+								entityDescriptor().getEntityPersister().getRootEntityName(),
+								System.nanoTime() - startToken
+						);
 //						// todo (6.0) : need a "load-by-natural-id" stat
 //						//		e.g.,
 //						// final Object identifier = entityDescriptor().getIdentifierMapping().getIdentifier( result, session );
 //						// session.getFactory().getStatistics().entityLoadedByNaturalId( entityDescriptor(), identifier );
-//					}
+					}
 				},
 				session
 		);
@@ -156,7 +160,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			lockOptions = options.getLockOptions();
 		}
 		else {
-			lockOptions = LockOptions.READ;
+			lockOptions = LockOptions.NONE;
 		}
 
 		final NavigablePath entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
@@ -202,8 +206,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session
 		);
 
+		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
 		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( jdbcParamBindings, QueryOptions.NONE );
+				.translate( jdbcParamBindings, queryOptions );
 
 		final StatisticsImplementor statistics = sessionFactory.getStatistics();
 		final Long startToken = statementStartHandler.apply( statistics.isStatisticsEnabled() );
@@ -220,7 +225,12 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 					@Override
 					public QueryOptions getQueryOptions() {
-						return QueryOptions.NONE;
+						return queryOptions;
+					}
+
+					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
 					}
 
 					@Override
@@ -232,6 +242,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					public Callback getCallback() {
 						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
+
 				},
 				row -> (L) row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
@@ -246,11 +257,13 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			);
 		}
 
+		final L result;
 		if ( results.isEmpty() ) {
-			return null;
+			result = null;
 		}
-
-		final L result = results.get( 0 );
+		else {
+			result = results.get( 0 );
+		}
 
 		statementCompletionHandler.accept( result, startToken );
 
@@ -337,17 +350,20 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				},
 				(statsEnabled) -> {
 //					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-//					return statsEnabled ? System.nanoTime() : -1;
-					return -1L;
+					return statsEnabled ? System.nanoTime() : -1L;
 				},
-				(result,startToken) -> {
+				(result, startToken) -> {
 //					entityDescriptor().getPostLoadListener().completedLoad( result, entityDescriptor(), naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-//					if ( startToken > 0 ) {
+					if ( startToken > 0 ) {
+						session.getFactory().getStatistics().naturalIdQueryExecuted(
+								entityDescriptor().getEntityPersister().getRootEntityName(),
+								System.nanoTime() - startToken
+						);
 //						// todo (6.0) : need a "load-by-natural-id" stat
 //						//		e.g.,
 //						// final Object identifier = entityDescriptor().getIdentifierMapping().getIdentifier( result, session );
 //						// session.getFactory().getStatistics().entityLoadedByNaturalId( entityDescriptor(), identifier );
-//					}
+					}
 				},
 				session
 		);
@@ -365,7 +381,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				null,
 				1,
 				session.getLoadQueryInfluencers(),
-				LockOptions.READ,
+				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory
 		);
@@ -401,6 +417,11 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -409,6 +430,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 					public Callback getCallback() {
 						throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
 					}
+
 				},
 				(row) -> {
 					// because we select the natural-id we want to "reduce" the result

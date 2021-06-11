@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.UnfetchedResultAssembler;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -30,7 +31,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	private final BasicValuedModelPart valuedMapping;
 	private final boolean nullable;
 
-	private final BasicResultAssembler<T> assembler;
+	private final DomainResultAssembler<T> assembler;
 
 	private final FetchTiming fetchTiming;
 
@@ -40,7 +41,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			NavigablePath fetchablePath,
 			BasicValuedModelPart valuedMapping,
 			boolean nullable,
-			BasicValueConverter valueConverter,
+			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		this.nullable = nullable;
@@ -49,16 +50,19 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 		this.fetchParent = fetchParent;
 		this.valuedMapping = valuedMapping;
 		this.fetchTiming = fetchTiming;
-
-		// todo (6.0) : account for lazy basic attributes (bytecode)
-
-		//noinspection unchecked
-		this.assembler = new BasicResultAssembler(
-				valuesArrayPosition,
-				valuedMapping.getJavaTypeDescriptor(),
-				valueConverter
-		);
-
+		@SuppressWarnings("unchecked")
+		final JavaTypeDescriptor<T> javaTypeDescriptor = (JavaTypeDescriptor<T>) valuedMapping.getJavaTypeDescriptor();
+		// lazy basic attribute
+		if ( fetchTiming == FetchTiming.DELAYED && valuesArrayPosition == -1 ) {
+			this.assembler = new UnfetchedResultAssembler<>( javaTypeDescriptor );
+		}
+		else {
+			this.assembler = new BasicResultAssembler<>(
+					valuesArrayPosition,
+					javaTypeDescriptor,
+					valueConverter
+			);
+		}
 	}
 
 	@Override

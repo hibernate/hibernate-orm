@@ -74,7 +74,7 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 						.getTypeConfiguration()
 		);
 
-		final BasicValueConverter valueConverter;
+		final BasicValueConverter<?, ?> valueConverter;
 		if ( fetchable instanceof ConvertibleModelPart ) {
 			valueConverter = ( (ConvertibleModelPart) fetchable ).getValueConverter();
 		}

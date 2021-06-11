@@ -99,7 +99,8 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 					source.getPersistenceContext(),
 					ceLoadedPersister,
 					collection,
-					ce.getLoadedKey()
+					ce.getLoadedKey(),
+					true
 			);
 		}
 	}

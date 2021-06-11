@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -40,7 +41,7 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 						converter,
 						converter
 				),
-				sqmPath,
+				sqmPath.getNavigablePath(),
 				mapping,
 				tableGroup
 		);
@@ -48,12 +49,12 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 
 	private final SqlTuple sqlExpression;
 
-	public NonAggregatedCompositeValuedPathInterpretation(
+	private NonAggregatedCompositeValuedPathInterpretation(
 			SqlTuple sqlExpression,
-			SqmPath<T> sqmPath,
+			NavigablePath navigablePath,
 			ModelPart mapping,
 			TableGroup tableGroup) {
-		super( sqmPath, mapping, tableGroup );
+		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 	}
 

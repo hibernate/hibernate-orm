@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
@@ -70,7 +71,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 				null,
 				batchSize,
 				influencers,
-				LockOptions.READ,
+				LockOptions.NONE,
 				batchSizeJdbcParameters::add,
 				sessionFactory
 		);
@@ -100,12 +101,19 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 					null,
 					batchSize,
 					session.getLoadQueryInfluencers(),
-					LockOptions.READ,
+					LockOptions.NONE,
 					jdbcParameters::add,
 					session.getFactory()
 			);
 
-			new SingleIdLoadPlan( attributeMapping.getKeyDescriptor(), sqlAst, jdbcParameters ).load( key, LockOptions.READ, session );
+			new SingleIdLoadPlan(
+					null,
+					attributeMapping.getKeyDescriptor(),
+					sqlAst,
+					jdbcParameters,
+					LockOptions.NONE,
+					session.getFactory()
+			).load( key, session );
 		}
 		else {
 			batchLoad( batchIds, numberOfIds , session );
@@ -148,7 +156,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						null,
 						numberOfIds,
 						session.getLoadQueryInfluencers(),
-						LockOptions.READ,
+						LockOptions.NONE,
 						jdbcParameters::add,
 						session.getFactory()
 				);
@@ -193,6 +201,11 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						}
 
 						@Override
+						public String getQueryIdentifier(String sql) {
+							return sql;
+						}
+
+						@Override
 						public QueryParameterBindings getQueryParameterBindings() {
 							return QueryParameterBindings.NO_PARAM_BINDINGS;
 						}
@@ -201,6 +214,7 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						public Callback getCallback() {
 							return null;
 						}
+
 					},
 					RowTransformerPassThruImpl.instance(),
 					ListResultsConsumer.UniqueSemantic.FILTER

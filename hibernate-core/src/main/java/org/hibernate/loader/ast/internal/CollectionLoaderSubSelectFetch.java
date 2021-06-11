@@ -51,7 +51,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				subselect,
 				cachedDomainResult,
 				session.getLoadQueryInfluencers(),
-				LockOptions.READ,
+				LockOptions.NONE,
 				jdbcParameter -> {},
 				session.getFactory()
 		);
@@ -87,6 +87,11 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -95,6 +100,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 					public Callback getCallback() {
 						return null;
 					}
+
 				},
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

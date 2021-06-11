@@ -142,7 +142,8 @@ public final class FetchOptionsHelper {
 			return false;
 		}
 		else if ( type.isEntityType() ) {
-			return ( (EntityPersister) type.getAssociatedJoinable( sessionFactory ) ).hasProxy();
+			final EntityPersister entityPersister = (EntityPersister) type.getAssociatedJoinable( sessionFactory );
+			return entityPersister.getEntityMetamodel().isLazy();
 		}
 		else {
 			final CollectionPersister cp = ( (CollectionPersister) type.getAssociatedJoinable( sessionFactory ) );

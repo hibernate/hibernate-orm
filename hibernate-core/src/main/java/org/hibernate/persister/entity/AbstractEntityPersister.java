@@ -114,9 +114,10 @@ import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
-import org.hibernate.loader.PropertyPath;
+import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.MultiIdLoaderStandard;
 import org.hibernate.loader.ast.internal.Preparable;
+import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderDynamicBatch;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderProvidedQueryImpl;
 import org.hibernate.loader.ast.internal.SingleIdEntityLoaderStandardImpl;
@@ -213,6 +214,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -220,6 +222,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -364,7 +367,7 @@ public abstract class AbstractEntityPersister
 	// SQL strings
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
-	private Map<String,String> sqlLazySelectStringsByFetchGroup;
+	private Map<String, SingleIdArrayLoadPlan> sqlLazySelectStringsByFetchGroup;
 
 	private String sqlIdentityInsertString;
 	private String sqlUpdateByRowIdString;
@@ -548,6 +551,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String getSQLLazySelectString(String fetchGroup) {
+		final SingleIdArrayLoadPlan singleIdLoadPlan = sqlLazySelectStringsByFetchGroup.get( fetchGroup );
+		return singleIdLoadPlan == null ? null : singleIdLoadPlan.getJdbcSelect().getSql();
+	}
+
+	public SingleIdArrayLoadPlan getSQLLazySelectLoadPlan(String fetchGroup) {
 		return sqlLazySelectStringsByFetchGroup.get( fetchGroup );
 	}
 
@@ -1178,57 +1186,56 @@ public abstract class AbstractEntityPersister
 				Template.renderWhereStringTemplate( string, factory.getJdbcServices().getDialect(), factory.getQueryEngine().getSqmFunctionRegistry() );
 	}
 
-	protected Map<String,String> generateLazySelectStringsByFetchGroup() {
+	protected Map<String, SingleIdArrayLoadPlan> generateLazySelectStringsByFetchGroup() {
 		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 		if ( !enhancementMetadata.isEnhancedForLazyLoading()
 				|| !enhancementMetadata.getLazyAttributesMetadata().hasLazyAttributes() ) {
 			return Collections.emptyMap();
 		}
 
-		Map<String,String> result = new HashMap<>();
+		Map<String, SingleIdArrayLoadPlan> result = new HashMap<>();
 
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 		for ( String groupName : lazyAttributesMetadata.getFetchGroupNames() ) {
-			HashSet<Integer> tableNumbers = new HashSet<>();
-			ArrayList<Integer> columnNumbers = new ArrayList<>();
-			ArrayList<Integer> formulaNumbers = new ArrayList<>();
+			final List<LazyAttributeDescriptor> fetchGroupAttributeDescriptors = lazyAttributesMetadata.getFetchGroupAttributeDescriptors(
+					groupName
+			);
+			final List<ModelPart> partsToSelect = new ArrayList<>( fetchGroupAttributeDescriptors.size() );
 
-			for ( LazyAttributeDescriptor lazyAttributeDescriptor :
-					lazyAttributesMetadata.getFetchGroupAttributeDescriptors( groupName ) ) {
+			for ( LazyAttributeDescriptor lazyAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 				// all this only really needs to consider properties
 				// of this class, not its subclasses, but since we
 				// are reusing code used for sequential selects, we
 				// use the subclass closure
-				int propertyNumber = getSubclassPropertyIndex( lazyAttributeDescriptor.getName() );
-
-				int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
-				tableNumbers.add( tableNumber );
-
-				int[] colNumbers = subclassPropertyColumnNumberClosure[propertyNumber];
-				for ( int colNumber : colNumbers ) {
-					if ( colNumber != -1 ) {
-						columnNumbers.add( colNumber );
-					}
-				}
-				int[] formNumbers = subclassPropertyFormulaNumberClosure[propertyNumber];
-				for ( int formNumber : formNumbers ) {
-					if ( formNumber != -1 ) {
-						formulaNumbers.add( formNumber );
-					}
-				}
+				partsToSelect.add( getAttributeMappings().get( getSubclassPropertyIndex( lazyAttributeDescriptor.getName() ) ) );
 			}
 
-			if ( columnNumbers.size() == 0 && formulaNumbers.size() == 0 ) {
+			if ( partsToSelect.isEmpty() ) {
 				// only one-to-one is lazily fetched
 				continue;
 			}
+			final List<JdbcParameter> jdbcParameters = new ArrayList<>();
+
+			final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
+					this,
+					partsToSelect,
+					getIdentifierMapping(),
+					null,
+					1,
+					LoadQueryInfluencers.NONE,
+					LockOptions.NONE,
+					jdbcParameters::add,
+					factory
+			);
 
 			result.put(
 					groupName,
-					renderSelect(
-							ArrayHelper.toIntArray( tableNumbers ),
-							ArrayHelper.toIntArray( columnNumbers ),
-							ArrayHelper.toIntArray( formulaNumbers )
+					new SingleIdArrayLoadPlan(
+							getIdentifierMapping(),
+							sqlAst,
+							jdbcParameters,
+							LockOptions.NONE,
+							factory
 					)
 			);
 		}
@@ -1694,89 +1701,56 @@ public abstract class AbstractEntityPersister
 
 		final Set<String> initializedLazyAttributeNames = interceptor.getInitializedLazyAttributeNames();
 
-		final String lazySelect = getSQLLazySelectString( fetchGroup );
+		final SingleIdArrayLoadPlan lazySelect = getSQLLazySelectLoadPlan( fetchGroup );
 
 		try {
 			Object result = null;
-			PreparedStatement ps = null;
-			try {
-				ResultSet rs = null;
-				try {
-					if ( lazySelect != null ) {
-						// null sql means that the only lazy properties
-						// are shared PK one-to-one associations which are
-						// handled differently in the Type#nullSafeGet code...
-						ps = session.getJdbcCoordinator()
-								.getStatementPreparer()
-								.prepareStatement( lazySelect );
-						getIdentifierType().nullSafeSet( ps, id, 1, session );
-						rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
-						rs.next();
-					}
-					for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
-						final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
+			final Object[] values = lazySelect.load( id, session );
+			for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
+				final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
 
-						if ( previousInitialized ) {
-							// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
-							// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
-							// 		we know the selected value (see selectedValue below)
-							//		we can use the attribute Type to tell us if they are the same
-							//
-							//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
-							//			currently considered dirty, and if really not dirty we would do the un-marking
-							//
-							//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
+				if ( previousInitialized ) {
+					// todo : one thing we should consider here is potentially un-marking an attribute as dirty based on the selected value
+					// 		we know the current value - getPropertyValue( entity, fetchGroupAttributeDescriptor.getAttributeIndex() );
+					// 		we know the selected value (see selectedValue below)
+					//		we can use the attribute Type to tell us if they are the same
+					//
+					//		assuming entity is a SelfDirtinessTracker we can also know if the attribute is
+					//			currently considered dirty, and if really not dirty we would do the un-marking
+					//
+					//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
 
-							// its already been initialized (e.g. by a write) so we don't want to overwrite
-							continue;
-						}
-
-
-						final Object selectedValue = fetchGroupAttributeDescriptor.getType().nullSafeGet(
-								rs,
-								lazyPropertyColumnAliases[fetchGroupAttributeDescriptor.getLazyIndex()],
-								session,
-								entity
-						);
-
-						final boolean set = initializeLazyProperty(
-								fieldName,
-								entity,
-								session,
-								entry,
-								fetchGroupAttributeDescriptor.getLazyIndex(),
-								selectedValue
-						);
-						if ( set ) {
-							result = selectedValue;
-							interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
-						}
-
-					}
+					// its already been initialized (e.g. by a write) so we don't want to overwrite
+					continue;
 				}
-				finally {
-					if ( rs != null ) {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-					}
+
+
+				final Object selectedValue = values[fetchGroupAttributeDescriptor.getLazyIndex()];
+
+				final boolean set = initializeLazyProperty(
+						fieldName,
+						entity,
+						session,
+						entry,
+						fetchGroupAttributeDescriptor.getLazyIndex(),
+						selectedValue
+				);
+				if ( set ) {
+					result = selectedValue;
+					interceptor.attributeInitialized( fetchGroupAttributeDescriptor.getName() );
 				}
-			}
-			finally {
-				if ( ps != null ) {
-					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
-					session.getJdbcCoordinator().afterStatementExecution();
-				}
+
 			}
 
 			LOG.trace( "Done initializing lazy properties" );
 
 			return result;
-
 		}
-		catch (SQLException sqle) {
+		catch (JDBCException ex) {
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-					sqle,
+					ex.getSQLException(),
 					"could not initialize lazy properties: " + MessageHelper.infoString( this, id, getFactory() ),
-					lazySelect
+					lazySelect.getJdbcSelect().getSql()
 			);
 		}
 	}
@@ -2785,7 +2759,7 @@ public abstract class AbstractEntityPersister
 			Object uniqueKey,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) throws HibernateException {
-		return getUniqueKeyLoader( propertyName ).load( uniqueKey, LockOptions.READ, readOnly, session );
+		return getUniqueKeyLoader( propertyName ).load( uniqueKey, LockOptions.NONE, readOnly, session );
 	}
 
 	private Map<SingularAttributeMapping, SingleUniqueKeyEntityLoader<?>> uniqueKeyLoadersNew;
@@ -4170,8 +4144,8 @@ public abstract class AbstractEntityPersister
 	protected void logStaticSQL() {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Static SQL for entity: %s", getEntityName() );
-			for ( Map.Entry<String, String> entry : sqlLazySelectStringsByFetchGroup.entrySet() ) {
-				LOG.debugf( " Lazy select (%s) : %s", entry.getKey(), entry.getValue() );
+			for ( Map.Entry<String, SingleIdArrayLoadPlan> entry : sqlLazySelectStringsByFetchGroup.entrySet() ) {
+				LOG.debugf( " Lazy select (%s) : %s", entry.getKey(), entry.getValue().getJdbcSelect().getSql() );
 			}
 			if ( sqlVersionSelectString != null ) {
 				LOG.debugf( " Version select: %s", sqlVersionSelectString );
@@ -4695,7 +4669,7 @@ public abstract class AbstractEntityPersister
 				loaded = singleIdEntityLoader.load(
 						identifier,
 						entity,
-						LockOptions.READ,
+						LockOptions.NONE,
 						session
 				);
 			}
@@ -5423,15 +5397,23 @@ public abstract class AbstractEntityPersister
 			return accessOptimizer.getPropertyValues( object );
 		}
 		else {
+			final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
+			final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 			final Object[] values = new Object[ getNumberOfAttributeMappings() ];
 			for ( int i = 0; i < attributeMappings.size(); i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				final AttributeMetadataAccess attributeMetadataAccess = attributeMapping.getAttributeMetadataAccess();
-				values[ i ] = attributeMetadataAccess
-						.resolveAttributeMetadata( this )
-						.getPropertyAccess()
-						.getGetter()
-						.get( object );
+				if ( ! lazyAttributesMetadata.isLazyAttribute( attributeMapping.getAttributeName() )
+						|| enhancementMetadata.isAttributeLoaded( object, attributeMapping.getAttributeName() ) ) {
+					values[i] = attributeMetadataAccess
+							.resolveAttributeMetadata( this )
+							.getPropertyAccess()
+							.getGetter()
+							.get( object );
+				}
+				else {
+					values[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+				}
 			}
 
 			return values;
@@ -5449,27 +5431,24 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getPropertyValue(Object object, String propertyName) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			final String attributeName = attributeMapping.getAttributeName();
-			if ( attributeName.equals( propertyName ) ) {
-				return attributeMapping.getAttributeMetadataAccess()
+		final AttributeMapping attributeMapping = findAttributeMapping( propertyName );
+		if ( attributeMapping != null ) {
+			return attributeMapping.getAttributeMetadataAccess()
+					.resolveAttributeMetadata( this )
+					.getPropertyAccess()
+					.getGetter()
+					.get( object );
+		}
+		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
+			final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) findAttributeMapping( NavigableRole.IDENTIFIER_MAPPER_PROPERTY );
+			final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
+					.findAttributeMapping( propertyName );
+			if ( mapping != null ) {
+				return mapping.getAttributeMetadataAccess()
 						.resolveAttributeMetadata( this )
 						.getPropertyAccess()
 						.getGetter()
 						.get( object );
-			}
-			else if ( attributeName.equals( PropertyPath.IDENTIFIER_MAPPER_PROPERTY ) && attributeMapping instanceof EmbeddedAttributeMapping ) {
-				final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) attributeMapping;
-				final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
-						.findAttributeMapping( propertyName );
-				if ( mapping != null ) {
-					return mapping.getAttributeMetadataAccess()
-							.resolveAttributeMetadata( this )
-							.getPropertyAccess()
-							.getGetter()
-							.get( object );
-				}
 			}
 		}
 		return null;
@@ -5502,10 +5481,23 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Object instantiate(Object id, SharedSessionContractImplementor session) {
 		final Object instance = getRepresentationStrategy().getInstantiator().instantiate( session.getFactory() );
+		linkToSession( instance, session );
 		if ( id != null ) {
 			setIdentifier( instance, id, session );
 		}
 		return instance;
+	}
+
+	protected void linkToSession(Object entity, SharedSessionContractImplementor session) {
+		if ( session == null ) {
+			return;
+		}
+		if ( entity instanceof PersistentAttributeInterceptable ) {
+			final BytecodeLazyAttributeInterceptor interceptor = getEntityMetamodel().getBytecodeEnhancementMetadata().extractLazyInterceptor( entity );
+			if ( interceptor != null ) {
+				interceptor.setSession( session );
+			}
+		}
 	}
 
 	@Override
@@ -6331,7 +6323,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitDeclaredAttributeMappings(Consumer<AttributeMapping> action) {
+	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
 		declaredAttributeMappings.forEach( (key,value) -> action.accept( value ) );
 	}
 
@@ -6872,7 +6864,7 @@ public abstract class AbstractEntityPersister
 		attributeMappings.forEach( fetchableConsumer );
 
 		if ( treatTargetType.isTypeOrSuperType( this ) ) {
-			visitSubTypeAttributeMappings( fetchableConsumer::accept );
+			visitSubTypeAttributeMappings( fetchableConsumer );
 		}
 	}
 
@@ -6882,15 +6874,13 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public void visitAttributeMappings(
-			Consumer<AttributeMapping> action,
+			Consumer<? super AttributeMapping> action,
 			EntityMappingType targetType) {
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			action.accept( attributeMappings.get( i ) );
-		}
+		attributeMappings.forEach( action );
 	}
 
 	@Override
-	public void visitSuperTypeAttributeMappings(Consumer<AttributeMapping> action) {
+	public void visitSuperTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		if ( superMappingType != null ) {
 			superMappingType.visitSuperTypeAttributeMappings( action );
 		}
@@ -6907,7 +6897,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public void visitSubTypeAttributeMappings(Consumer<AttributeMapping> action) {
+	public void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		if ( subclassMappingTypes != null ) {
 			subclassMappingTypes.forEach(
 					(s, subType) -> {

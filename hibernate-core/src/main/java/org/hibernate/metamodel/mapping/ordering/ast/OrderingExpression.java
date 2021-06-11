@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -24,5 +25,12 @@ public interface OrderingExpression extends Node {
 	/**
 	 * Apply the SQL AST sort-specifications associated with this ordering-expression
 	 */
-	void apply(QuerySpec ast, TableGroup tableGroup, String collation, String modelPartName, SortOrder sortOrder, SqlAstCreationState creationState);
+	void apply(
+			QuerySpec ast,
+			TableGroup tableGroup,
+			String collation,
+			String modelPartName,
+			SortOrder sortOrder,
+			NullPrecedence nullPrecedence,
+			SqlAstCreationState creationState);
 }

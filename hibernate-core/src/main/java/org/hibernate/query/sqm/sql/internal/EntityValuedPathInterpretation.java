@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -48,16 +49,32 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter sqlAstCreationState) {
-		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
-
+		final SqmPath<?> realPath;
+		if ( CollectionPart.Nature.ELEMENT.getName().equals( sqmPath.getNavigablePath().getUnaliasedLocalName() ) ) {
+			realPath = sqmPath.getLhs();
+		}
+		else {
+			realPath = sqmPath;
+		}
 		final TableGroup tableGroup = sqlAstCreationState
 				.getFromClauseAccess()
-				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
+				.findTableGroup( realPath.getLhs().getNavigablePath() );
 
-		final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup.getModelPart()
+		final EntityValuedModelPart mapping = (EntityValuedModelPart) sqlAstCreationState
+				.getFromClauseAccess()
+				.findTableGroup( sqmPath.getLhs().getNavigablePath() )
+				.getModelPart()
 				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
+		return from( sqmPath.getNavigablePath(), tableGroup, mapping, sqlAstCreationState );
+	}
 
+	public static <T> EntityValuedPathInterpretation<T> from(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			EntityValuedModelPart mapping,
+			SqmToSqlAstConverter sqlAstCreationState) {
+		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
+		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final Expression sqlExpression;
 
 		if ( mapping instanceof EntityAssociationMapping ) {
@@ -74,7 +91,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				lhsPart = fkDescriptor.getTargetPart();
 			}
 			final TableReference tableReference = tableGroup.resolveTableReference(
-					sqmPath.getNavigablePath(),
+					navigablePath,
 					lhsTable
 			);
 
@@ -119,7 +136,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				final BasicEntityIdentifierMapping simpleIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
 
 				final TableReference tableReference = tableGroup.resolveTableReference(
-						sqmPath.getNavigablePath(),
+						navigablePath,
 						simpleIdMapping.getContainingTableExpression()
 				);
 				assert tableReference != null : "Could not resolve table-group : " + simpleIdMapping.getContainingTableExpression();
@@ -137,7 +154,22 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				final List<Expression> expressions = new ArrayList<>();
 				identifierMapping.forEachSelectable(
 						(selectionIndex, selectableMapping) -> {
+							final TableReference tableReference = tableGroup.resolveTableReference(
+									navigablePath, selectableMapping.getContainingTableExpression() );
 
+							expressions.add(
+									sqlExprResolver.resolveSqlExpression(
+											createColumnReferenceKey(
+													tableReference,
+													selectableMapping.getSelectionExpression()
+											),
+											processingState -> new ColumnReference(
+													tableReference,
+													selectableMapping,
+													sessionFactory
+											)
+									)
+							);
 						}
 				);
 				sqlExpression = new SqlTuple( expressions, identifierMapping );
@@ -146,7 +178,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 		return new EntityValuedPathInterpretation<>(
 				sqlExpression,
-				sqmPath,
+				navigablePath,
 				tableGroup,
 				mapping
 		);
@@ -154,13 +186,12 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 
 	private final Expression sqlExpression;
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-	private EntityValuedPathInterpretation(
+	public EntityValuedPathInterpretation(
 			Expression sqlExpression,
-			SqmEntityValuedSimplePath sqmPath,
+			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping) {
-		super( sqmPath, mapping, tableGroup );
+		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 	}
 

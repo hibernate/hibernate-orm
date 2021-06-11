@@ -12,15 +12,26 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import org.hibernate.CacheMode;
+import org.hibernate.HibernateException;
+import org.hibernate.cache.spi.access.CollectionDataAccess;
+import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.CollectionEntry;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.pretty.MessageHelper;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.exec.spi.Callback;
@@ -38,6 +49,9 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * @author Steve Ebersole
  */
 public class ResultsHelper {
+
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( ResultsHelper.class );
+
 	public static <R> RowReader<R> createRowReader(
 			ExecutionContext executionContext,
 			LockOptions lockOptions,
@@ -102,7 +116,8 @@ public class ResultsHelper {
 			PersistenceContext persistenceContext,
 			CollectionPersister collectionDescriptor,
 			PersistentCollection collectionInstance,
-			Object key) {
+			Object key,
+			boolean hasNoQueuedAdds) {
 		CollectionEntry collectionEntry = persistenceContext.getCollectionEntry( collectionInstance );
 		if ( collectionEntry == null ) {
 			collectionEntry = persistenceContext.addInitializedCollection(
@@ -122,12 +137,141 @@ public class ResultsHelper {
 		final BatchFetchQueue batchFetchQueue = persistenceContext.getBatchFetchQueue();
 		batchFetchQueue.removeBatchLoadableCollection( collectionEntry );
 
-		final StatisticsImplementor statistics = persistenceContext.getSession().getFactory().getStatistics();
+		final SharedSessionContractImplementor session = persistenceContext.getSession();
+		// add to cache if:
+		final boolean addToCache =
+				// there were no queued additions
+				hasNoQueuedAdds
+						// and the role has a cache
+						&& collectionDescriptor.hasCache()
+						// and this is not a forced initialization during flush
+						&& session.getCacheMode().isPutEnabled() && !collectionEntry.isDoremove();
+		if ( addToCache ) {
+			addCollectionToCache( persistenceContext, collectionDescriptor, collectionInstance, key );
+		}
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"Collection fully initialized: %s",
+					MessageHelper.collectionInfoString(
+							collectionDescriptor,
+							collectionInstance,
+							key,
+							session
+					)
+			);
+		}
+
+		final StatisticsImplementor statistics = session.getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.loadCollection( collectionDescriptor.getRole() );
 		}
 
 		// todo (6.0) : there is other logic still needing to be implemented here.  caching, etc
 		// 		see org.hibernate.engine.loading.internal.CollectionLoadContext#endLoadingCollection in 5.x
+	}
+
+	/**
+	 * Add the collection to the second-level cache
+	 */
+	private static void addCollectionToCache(
+			PersistenceContext persistenceContext,
+			CollectionPersister collectionDescriptor,
+			PersistentCollection collectionInstance,
+			Object key) {
+		final SharedSessionContractImplementor session = persistenceContext.getSession();
+		final SessionFactoryImplementor factory = session.getFactory();
+
+		if ( LOG.isDebugEnabled() ) {
+			LOG.debugf( "Caching collection: %s", MessageHelper.collectionInfoString( collectionDescriptor, collectionInstance, key, session ) );
+		}
+
+		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
+			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debug( "Refusing to add to cache due to enabled filters" );
+			}
+			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
+			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
+			//      cache with enabled filters).
+			// EARLY EXIT!!!!!
+			return;
+		}
+
+		final Object version;
+		if ( collectionDescriptor.isVersioned() ) {
+			Object collectionOwner = persistenceContext.getCollectionOwner( key, collectionDescriptor );
+			if ( collectionOwner == null ) {
+				// generally speaking this would be caused by the collection key being defined by a property-ref, thus
+				// the collection key and the owner key would not match up.  In this case, try to use the key of the
+				// owner instance associated with the collection itself, if one.  If the collection does already know
+				// about its owner, that owner should be the same instance as associated with the PC, but we do the
+				// resolution against the PC anyway just to be safe since the lookup should not be costly.
+				if ( collectionInstance != null ) {
+					final Object linkedOwner = collectionInstance.getOwner();
+					if ( linkedOwner != null ) {
+						final Object ownerKey = collectionDescriptor.getOwnerEntityPersister().getIdentifier( linkedOwner, session );
+						collectionOwner = persistenceContext.getCollectionOwner( ownerKey, collectionDescriptor );
+					}
+				}
+				if ( collectionOwner == null ) {
+					throw new HibernateException(
+							"Unable to resolve owner of loading collection [" +
+									MessageHelper.collectionInfoString( collectionDescriptor, collectionInstance, key, session ) +
+									"] for second level caching"
+					);
+				}
+			}
+			version = persistenceContext.getEntry( collectionOwner ).getVersion();
+		}
+		else {
+			version = null;
+		}
+
+		final CollectionCacheEntry entry = new CollectionCacheEntry( collectionInstance, collectionDescriptor );
+		final CollectionDataAccess cacheAccess = collectionDescriptor.getCacheAccessStrategy();
+		final Object cacheKey = cacheAccess.generateCacheKey(
+				key,
+				collectionDescriptor,
+				session.getFactory(),
+				session.getTenantIdentifier()
+		);
+
+		boolean isPutFromLoad = true;
+		if ( collectionDescriptor.getElementType().isAssociationType() ) {
+			final EntityPersister entityPersister = ( (QueryableCollection) collectionDescriptor ).getElementPersister();
+			for ( Object id : entry.getState() ) {
+				if ( persistenceContext.wasInsertedDuringTransaction( entityPersister, id ) ) {
+					isPutFromLoad = false;
+					break;
+				}
+			}
+		}
+
+		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
+		if ( isPutFromLoad ) {
+			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			try {
+				eventListenerManager.cachePutStart();
+				final boolean put = cacheAccess.putFromLoad(
+						session,
+						cacheKey,
+						collectionDescriptor.getCacheEntryStructure().structure( entry ),
+						version,
+						factory.getSessionFactoryOptions().isMinimalPutsEnabled() && session.getCacheMode()!= CacheMode.REFRESH
+				);
+
+				final StatisticsImplementor statistics = factory.getStatistics();
+				if ( put && statistics.isStatisticsEnabled() ) {
+					statistics.collectionCachePut(
+							collectionDescriptor.getNavigableRole(),
+							collectionDescriptor.getCacheAccessStrategy().getRegion().getName()
+					);
+				}
+			}
+			finally {
+				eventListenerManager.cachePutEnd();
+			}
+		}
 	}
 }

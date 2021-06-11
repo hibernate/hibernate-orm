@@ -34,6 +34,11 @@ public class SelectInterpretationsKey implements QueryInterpretationCache.Key {
 	}
 
 	@Override
+	public String getQueryString() {
+		return sql;
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		if ( this == o ) {
 			return true;

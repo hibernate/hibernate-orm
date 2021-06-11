@@ -115,7 +115,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	/**
 	 * Visit attributes defined on this class - do not visit attributes defined on the super
 	 */
-	default void visitDeclaredAttributeMappings(Consumer<AttributeMapping> action) {
+	default void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
@@ -161,21 +161,21 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	 * @apiNote Passing {@code null} indicates that subclasses should be included.  This
 	 * matches legacy non-TREAT behavior and meets the need for EntityGraph processing
 	 */
-	default void visitAttributeMappings(Consumer<AttributeMapping> action, EntityMappingType targetType) {
+	default void visitAttributeMappings(Consumer<? super AttributeMapping> action, EntityMappingType targetType) {
 		getAttributeMappings().forEach( action );
 	}
 
 	/**
 	 * Walk this type's attributes as well as its sub-type's
 	 */
-	default void visitSubTypeAttributeMappings(Consumer<AttributeMapping> action) {
+	default void visitSubTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		// by default do nothing
 	}
 
 	/**
 	 * Walk this type's attributes as well as its super-type's
 	 */
-	default void visitSuperTypeAttributeMappings(Consumer<AttributeMapping> action) {
+	default void visitSuperTypeAttributeMappings(Consumer<? super AttributeMapping> action) {
 		// by default do nothing
 	}
 
@@ -216,7 +216,13 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		visitStateArrayContributors(
 				attribute -> {
 					final DomainResultAssembler assembler = assemblerMapping.get( attribute );
-					final Object value = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
+					final Object value;
+					if ( assembler == null ) {
+						value = UNFETCHED_PROPERTY;
+					}
+					else {
+						value = assembler.assemble( rowProcessingState );
+					}
 
 					values[attribute.getStateArrayPosition()] = value;
 				}

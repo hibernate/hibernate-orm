@@ -1588,8 +1588,9 @@ public class CommonFunctionFactory {
 
 	public static void math(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "round" )
+				// To avoid truncating to a specific data type, we default to using the argument type
+				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount(2)
-				.setInvariantType( StandardBasicTypes.DOUBLE )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("floor")

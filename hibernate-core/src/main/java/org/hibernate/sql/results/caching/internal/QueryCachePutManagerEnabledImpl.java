@@ -14,6 +14,7 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * QueryCachePutManager implementation for cases where we will be putting
@@ -23,13 +24,20 @@ import org.hibernate.sql.results.caching.QueryCachePutManager;
  */
 public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 	private final QueryResultsCache queryCache;
+	private final StatisticsImplementor statistics;
 	private final QueryKey queryKey;
-
+	private final String queryIdentifier;
 	private final List<Object[]> dataToCache = new ArrayList<>();
 
-	public QueryCachePutManagerEnabledImpl(QueryResultsCache queryCache, QueryKey queryKey) {
+	public QueryCachePutManagerEnabledImpl(
+			QueryResultsCache queryCache,
+			StatisticsImplementor statistics,
+			QueryKey queryKey,
+			String queryIdentifier) {
 		this.queryCache = queryCache;
+		this.statistics = statistics;
 		this.queryKey = queryKey;
+		this.queryIdentifier = queryIdentifier;
 	}
 
 	@Override
@@ -44,11 +52,13 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 
 	@Override
 	public void finishUp(SharedSessionContractImplementor session) {
-		// todo (
-		queryCache.put(
+		final boolean put = queryCache.put(
 				queryKey,
 				dataToCache,
 				session
 		);
+		if ( put && statistics.isStatisticsEnabled() ) {
+			statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
+		}
 	}
 }

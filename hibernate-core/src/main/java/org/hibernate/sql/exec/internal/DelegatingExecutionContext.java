@@ -29,6 +29,11 @@ public class DelegatingExecutionContext implements ExecutionContext {
 	}
 
 	@Override
+	public String getQueryIdentifier(String sql) {
+		return executionContext.getQueryIdentifier( sql );
+	}
+
+	@Override
 	public SharedSessionContractImplementor getSession() {
 		return executionContext.getSession();
 	}
@@ -79,4 +84,5 @@ public class DelegatingExecutionContext implements ExecutionContext {
 	public void afterStatement(LogicalConnectionImplementor logicalConnection) {
 		executionContext.afterStatement( logicalConnection );
 	}
+
 }

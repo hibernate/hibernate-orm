@@ -19,6 +19,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 
@@ -68,7 +69,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				session.getFactory()
 		);
 
-		return loadPlan.load( key, lockOptions, null, readOnly,true, session );
+		return loadPlan.load( key, readOnly, true, session );
 	}
 
 	@Override
@@ -84,16 +85,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 				session.getFactory()
 		);
 
-		// It seems lock options were ignored in Hibernate 5.x
-		final LockOptions lockOptionsToUse;
-		if ( session.getLoadQueryInfluencers().getEnabledCascadingFetchProfile() != null
-		&& LockMode.UPGRADE.greaterThan( lockOptions.getLockMode() ) ) {
-			lockOptionsToUse = lockOptions.makeCopy().setLockMode( LockMode.NONE );
-		}
-		else {
-			lockOptionsToUse = lockOptions;
-		}
-		return loadPlan.load( key, lockOptionsToUse, entityInstance, readOnly, false, session );
+		return loadPlan.load( key, entityInstance, readOnly, false, session );
 	}
 
 	@Internal
@@ -199,9 +191,12 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		);
 
 		return new SingleIdLoadPlan<>(
+				(Loadable) getLoadable(),
 				getLoadable().getIdentifierMapping(),
 				sqlAst,
-				jdbcParameters
+				jdbcParameters,
+				lockOptions,
+				sessionFactory
 		);
 	}
 }

@@ -57,12 +57,16 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 		}
 		else {
 			try {
-				return (J) constructor.newInstance( (Object[]) null );
+				return (J) applyInterception( constructor.newInstance( (Object[]) null ) );
 			}
 			catch ( Exception e ) {
 				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
 			}
 		}
+	}
+
+	protected Object applyInterception(Object entity) {
+		return entity;
 	}
 
 }

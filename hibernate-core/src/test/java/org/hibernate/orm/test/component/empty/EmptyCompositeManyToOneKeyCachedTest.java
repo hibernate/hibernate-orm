@@ -158,7 +158,7 @@ public class EmptyCompositeManyToOneKeyCachedTest extends BaseCoreFunctionalTest
 		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getPutCount() );
 		assertEquals( 0, getEntity2LCStatistics( OtherEntity.class ).getPutCount() );
 
-		assertEquals( 1, getEntity2LCStatistics( AnEntity.class ).getHitCount() );
+		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getHitCount() );
 		assertEquals( 0, getEntity2LCStatistics( OtherEntity.class ).getHitCount() );
 
 		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getMissCount() );
@@ -303,7 +303,7 @@ public class EmptyCompositeManyToOneKeyCachedTest extends BaseCoreFunctionalTest
 		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getPutCount() );
 		assertEquals( 0, getEntity2LCStatistics( OtherEntity.class ).getPutCount() );
 
-		assertEquals( 1, getEntity2LCStatistics( AnEntity.class ).getHitCount() );
+		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getHitCount() );
 		assertEquals( 0, getEntity2LCStatistics( OtherEntity.class ).getHitCount() );
 
 		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getMissCount() );
@@ -380,7 +380,7 @@ public class EmptyCompositeManyToOneKeyCachedTest extends BaseCoreFunctionalTest
 		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getPutCount() );
 		assertEquals( 0, getEntity2LCStatistics( OtherEntity.class ).getPutCount() );
 
-		assertEquals( 1, getEntity2LCStatistics( AnEntity.class ).getHitCount() );
+		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getHitCount() );
 		assertEquals( 0, getEntity2LCStatistics( OtherEntity.class ).getHitCount() );
 
 		assertEquals( 0, getEntity2LCStatistics( AnEntity.class ).getMissCount() );

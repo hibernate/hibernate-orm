@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.sql.internal;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -19,7 +20,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
  */
 public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInterpretation<T> {
 
-	public static SqmPathInterpretation<?> from(SqmPluralValuedSimplePath sqmPath, SqmToSqlAstConverter converter) {
+	public static SqmPathInterpretation<?> from(SqmPluralValuedSimplePath<?> sqmPath, SqmToSqlAstConverter converter) {
 		final TableGroup tableGroup = converter.getFromClauseAccess()
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
 
@@ -30,7 +31,7 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 
 		return new PluralValuedSimplePathInterpretation<>(
 				null,
-				sqmPath,
+				sqmPath.getNavigablePath(),
 				mapping,
 				tableGroup
 		);
@@ -40,10 +41,10 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 
 	private PluralValuedSimplePathInterpretation(
 			Expression sqlExpression,
-			SqmPluralValuedSimplePath sqmPath,
+			NavigablePath navigablePath,
 			PluralAttributeMapping mapping,
 			TableGroup tableGroup) {
-		super(sqmPath, mapping, tableGroup);
+		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 	}
 

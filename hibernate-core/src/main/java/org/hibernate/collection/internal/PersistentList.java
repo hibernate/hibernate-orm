@@ -414,7 +414,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	@Override
 	public Object disassemble(CollectionPersister persister) throws HibernateException {
 		final int length = list.size();
-		final Object[] result = new Object[length];
+		final Serializable[] result = new Serializable[length];
 		for ( int i=0; i<length; i++ ) {
 			result[i] = persister.getElementType().disassemble( list.get( i ), getSession(), null );
 		}

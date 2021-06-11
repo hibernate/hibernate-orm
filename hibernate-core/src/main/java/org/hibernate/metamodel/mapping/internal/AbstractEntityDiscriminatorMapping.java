@@ -147,7 +147,7 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 
 		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, true, creationState );
 
-		return new BasicFetch(
+		return new BasicFetch<>(
 				sqlSelection.getValuesArrayPosition(),
 				fetchParent,
 				fetchablePath,

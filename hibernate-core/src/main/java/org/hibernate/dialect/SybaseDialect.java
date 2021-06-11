@@ -10,6 +10,7 @@ import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.TemporalUnit;
+import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -148,6 +149,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		//TODO!!
 		return "datediff(?1, ?2, ?3)";
+	}
+
+	@Override
+	public String trimPattern(TrimSpec specification, char character) {
+		return super.trimPattern(specification, character)
+				.replace("replace", "str_replace");
 	}
 
 }

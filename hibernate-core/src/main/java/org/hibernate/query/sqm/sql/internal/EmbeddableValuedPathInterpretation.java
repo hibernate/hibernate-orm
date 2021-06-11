@@ -14,6 +14,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
@@ -68,7 +69,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 						converter,
 						converter
 				),
-				sqmPath,
+				sqmPath.getNavigablePath(),
 				mapping,
 				tableGroup
 		);
@@ -78,10 +79,10 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 
 	public EmbeddableValuedPathInterpretation(
 			SqlTuple sqlExpression,
-			SqmEmbeddedValuedSimplePath<T> sqmPath,
+			NavigablePath navigablePath,
 			EmbeddableValuedModelPart mapping,
 			TableGroup tableGroup) {
-		super( sqmPath, mapping, tableGroup );
+		super( navigablePath, mapping, tableGroup );
 		this.sqlExpression = sqlExpression;
 	}
 

@@ -133,6 +133,7 @@ public class EntityCollectionPart
 	public Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
+			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		return null;
 	}
@@ -173,109 +174,24 @@ public class EntityCollectionPart
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		return fkTargetModelPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
-	}
+		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
+		final TableGroup partTableGroup = fromClauseAccess.resolveTableGroup(
+				navigablePath,
+				np -> {
+					// We need to create one.  The Result will be able to find it later by path
 
-//	@Override
-//	public <T> DomainResult<T> createDomainResult(
-//			NavigablePath navigablePath,
-//			TableGroup tableGroup,
-//			String resultVariable,
-//			DomainResultCreationState creationState) {
-//		final TableGroup partTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
-//				navigablePath,
-//				(np) -> {
-//					assert navigablePath.getParent() != null;
-//					final TableGroup parentTableGroup = creationState.getSqlAstCreationState()
-//							.getFromClauseAccess()
-//							.getTableGroup( navigablePath.getParent() );
-//					final TableGroupJoin join = createTableGroupJoin(
-//							navigablePath,
-//							parentTableGroup,
-//							this,
-//							creationState
-//					);
-//					return join.getJoinedGroup();
-//				}
-//		);
-//
-//		return entityMappingType.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
-//	}
-//
-//	private TableGroupJoin createTableGroupJoin(
-//			NavigablePath navigablePath,
-//			TableGroup parentTableGroup,
-//			EntityCollectionPart collectionPart,
-//			DomainResultCreationState creationState) {
-//		final ForeignKeyDescriptor foreignKeyDescriptor = getForeignKeyDescriptor();
-//
-//		// create a TableGroup that contains the following tables:
-//		//		1) the fk referring columns from the parentTableGroup
-//		//		2) the associated entity tables
-//		final TableGroup entityTableGroup = entityMappingType.createRootTableGroup(
-//				navigablePath,
-//				null,
-//				false,
-//				LockMode.READ,
-//				() -> (predicate) -> {
-//				},
-//				creationState.getSqlAstCreationState(),
-//				creationState.getSqlAstCreationState().getCreationContext()
-//		);
-//
-//		// todo (6.0) : do we need to make the FK table/columns available as well from this table group?
-//
-//		final TableReference fkReferringTable;
-//		try {
-//			fkReferringTable = parentTableGroup.resolveTableReference( foreignKeyDescriptor.getKeyTable() );
-//		}
-//		catch (HibernateException e) {
-//			throw e;
-//		}
-//		catch (Exception e) {
-//			throw new SqlTreeCreationException(
-//					String.format(
-//							Locale.ROOT,
-//							"Unable to locate `%s` as foreign-key referring table for entity collection part `%s` relative to parent TableGroup : %s",
-//							foreignKeyDescriptor.getKeyTable(),
-//							navigableRole.getFullPath(),
-//							parentTableGroup
-//					)
-//			);
-//		}
-//
-//		final TableReference fkTargetTable;
-//		try {
-//			fkTargetTable = entityTableGroup.resolveTableReference( foreignKeyDescriptor.getTargetTable() );
-//		}
-//		catch (HibernateException e) {
-//			throw e;
-//		}
-//		catch (Exception e) {
-//			throw new SqlTreeCreationException(
-//					String.format(
-//							Locale.ROOT,
-//							"Unable to locate `%s` as foreign-key target table for entity collection part `%s` relative to rhs TableGroup : %s",
-//							foreignKeyDescriptor.getTargetTable(),
-//							navigableRole.getFullPath(),
-//							entityTableGroup
-//					)
-//			);
-//		}
-//
-//		return new TableGroupJoin(
-//				navigablePath,
-//				SqlAstJoinType.INNER,
-//				entityTableGroup,
-//				foreignKeyDescriptor.generateJoinPredicate(
-//						fkTargetTable,
-//						fkReferringTable,
-//						SqlAstJoinType.LEFT,
-//						creationState.getSqlAstCreationState().getSqlExpressionResolver(),
-//						creationState.getSqlAstCreationState().getCreationContext()
-//				)
-//		);
-//	}
+					// first, find the collection's TableGroup
+					final TableGroup collectionTableGroup = fromClauseAccess.getTableGroup( np.getParent() );
+
+					assert collectionTableGroup != null;
+
+					// create a "wrapper" around the collection TableGroup adding in the entity's table references
+					return new EntityCollectionPartTableGroup( np, collectionTableGroup, this );
+				}
+		);
+
+		return entityMappingType.createDomainResult( navigablePath, partTableGroup, resultVariable, creationState );
+	}
 
 	@Override
 	public int forEachSelectable(int offset, SelectableConsumer consumer) {

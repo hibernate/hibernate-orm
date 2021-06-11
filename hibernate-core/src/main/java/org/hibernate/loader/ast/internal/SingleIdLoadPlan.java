@@ -32,6 +32,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
  * todo (6.0) : this can generically define a load-by-uk as well.  only the SQL AST and `restrictivePart` vary and they are passed as ctor args
@@ -43,22 +44,41 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
  * @author Steve Ebersole
  */
 public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
+	private final org.hibernate.persister.entity.Loadable persister;
 	private final ModelPart restrictivePart;
-	private final SelectStatement sqlAst;
+	private final LockOptions lockOptions;
+	private final JdbcSelect jdbcSelect;
 	private final List<JdbcParameter> jdbcParameters;
 
 	public SingleIdLoadPlan(
+			org.hibernate.persister.entity.Loadable persister,
 			ModelPart restrictivePart,
 			SelectStatement sqlAst,
-			List<JdbcParameter> jdbcParameters) {
+			List<JdbcParameter> jdbcParameters,
+			LockOptions lockOptions,
+			SessionFactoryImplementor sessionFactory) {
+		this.persister = persister;
 		this.restrictivePart = restrictivePart;
-		this.sqlAst = sqlAst;
+		this.lockOptions = lockOptions.makeCopy();
 		this.jdbcParameters = jdbcParameters;
+		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
+		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		this.jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate(
+						null,
+						new QueryOptionsAdapter() {
+							@Override
+							public LockOptions getLockOptions() {
+								return lockOptions;
+							}
+						}
+				);
 	}
 
 	@Override
 	public Loadable getLoadable() {
-		return null;
+		return persister;
 	}
 
 	@Override
@@ -67,41 +87,41 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	}
 
 	@Override
-	public SelectStatement getSqlAst() {
-		return sqlAst;
+	public JdbcSelect getJdbcSelect() {
+		return jdbcSelect;
 	}
 
-	T load(
+	protected RowTransformer<T> getRowTransformer() {
+		return RowTransformerPassThruImpl.instance();
+	}
+
+	public T load(Object restrictedValue, SharedSessionContractImplementor session) {
+		return load( restrictedValue, null, null, false, session );
+	}
+
+	public T load(Object restrictedValue, Boolean readOnly, SharedSessionContractImplementor session) {
+		return load( restrictedValue, null, readOnly, false, session );
+	}
+
+	public T load(
 			Object restrictedValue,
-			LockOptions lockOptions,
 			Boolean readOnly,
+			Boolean singleResultExpected,
 			SharedSessionContractImplementor session) {
-		return load( restrictedValue, lockOptions, null, readOnly,false, session );
+		return load( restrictedValue, null, readOnly, singleResultExpected, session );
 	}
 
-	T load(
+	public T load(
 			Object restrictedValue,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
-		return load( restrictedValue, lockOptions, null, null,false, session );
-	}
-
-	T load(
-			Object restrictedValue,
-			LockOptions lockOptions,
 			Object entityInstance,
 			Boolean readOnly,
 			Boolean singleResultExpected,
 			SharedSessionContractImplementor session) {
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
-
 		final int jdbcTypeCount = restrictivePart.getJdbcTypeCount();
 		assert jdbcParameters.size() % jdbcTypeCount == 0;
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcTypeCount );
+		jdbcSelect.bindFilterJdbcParameters( jdbcParameterBindings );
 
 		int offset = 0;
 		while ( offset < jdbcParameters.size() ) {
@@ -117,8 +137,6 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		assert offset == jdbcParameters.size();
 		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, readOnly );
 		final Callback callback = new CallbackImpl();
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( jdbcParameterBindings, queryOptions );
 
 		final List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
@@ -145,6 +163,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -153,8 +176,9 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 					public Callback getCallback() {
 						return callback;
 					}
+
 				},
-				RowTransformerPassThruImpl.instance(),
+				getRowTransformer(),
 				singleResultExpected ? ListResultsConsumer.UniqueSemantic.ASSERT : ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
@@ -162,6 +186,10 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 			return null;
 		}
 
-		return list.get( 0 );
+		final T entity = list.get( 0 );
+		if ( persister != null ) {
+			callback.invokeAfterLoadActions( session, entity, persister );
+		}
+		return entity;
 	}
 }

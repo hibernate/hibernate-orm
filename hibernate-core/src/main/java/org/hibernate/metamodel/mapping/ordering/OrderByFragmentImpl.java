@@ -38,6 +38,7 @@ public class OrderByFragmentImpl implements OrderByFragment {
 					orderingSpec.getCollation(),
 					orderingSpec.getOrderByValue(),
 					orderingSpec.getSortOrder(),
+					orderingSpec.getNullPrecedence(),
 					creationState
 			);
 		}

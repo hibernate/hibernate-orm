@@ -22,6 +22,7 @@ public interface Fetchable extends ModelPart {
 	default Fetch resolveCircularFetch(
 			NavigablePath fetchablePath,
 			FetchParent fetchParent,
+			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
 		return null;
 	}

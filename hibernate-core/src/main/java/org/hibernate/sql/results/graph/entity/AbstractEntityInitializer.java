@@ -30,6 +30,7 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -46,7 +47,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableAssembler;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -205,9 +205,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 					final Fetch fetch = resultDescriptor.findFetch( fetchable );
 
-					final DomainResultAssembler stateAssembler;
+					final DomainResultAssembler<?> stateAssembler;
 					if ( fetch == null ) {
-						stateAssembler = new NullValueAssembler(
+						stateAssembler = new NullValueAssembler<>(
 								attributeMapping.getMappedType().getMappedJavaTypeDescriptor()
 						);
 					}
@@ -588,6 +588,22 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 
+		// We have to query the second level cache if reference cache entries are used
+		if ( instance == null && entityDescriptor.canUseReferenceCacheEntries() ) {
+			instance = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
+					(EventSource) rowProcessingState.getSession(),
+					null,
+					lockMode,
+					entityDescriptor,
+					entityKey
+			);
+
+			if ( instance != null ) {
+				// EARLY EXIT!!!
+				return instance;
+			}
+		}
+
 		if ( instance == null ) {
 			instance = session.instantiate(
 					concreteDescriptor.getEntityName(),
@@ -652,7 +668,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final EntityEntry entry = persistenceContext.getEntry( toInitialize );
 		if ( entry != null ) {
 			if ( entry.getStatus() != Status.LOADING ) {
-				return;
+				final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
+						.getProcessingOptions()
+						.getEffectiveOptionalObject();
+				// If the instance to initialize is the main entity, we can't skip this
+				// This can happen if we initialize an enhanced proxy
+				if ( !isEntityReturn() || toInitialize != optionalEntityInstance ) {
+					return;
+				}
 			}
 		}
 
@@ -731,7 +754,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		final EntityDataAccess cacheAccess = concreteDescriptor.getCacheAccessStrategy();
-		if ( cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
+		final StatisticsImplementor statistics = factory.getStatistics();
+		// No need to put into the entity cache is this is coming from the query cache already
+		if ( !rowProcessingState.isQueryCacheHit() && cacheAccess != null && session.getCacheMode().isPutEnabled() ) {
 
 			if ( EntityLoadingLogger.DEBUG_ENABLED ) {
 				EntityLoadingLogger.LOGGER.debugf(
@@ -777,8 +802,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 							false
 					);
 
-					if ( put && factory.getStatistics().isStatisticsEnabled() ) {
-						factory.getStatistics().entityCachePut( rootEntityDescriptor.getNavigableRole(), cacheAccess.getRegion().getName() );
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.entityCachePut( rootEntityDescriptor.getNavigableRole(), cacheAccess.getRegion().getName() );
 					}
 				}
 				finally {
@@ -833,9 +858,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					toLoggableString( getNavigablePath(), entityIdentifier )
 			);
 		}
-
-		if ( factory.getStatistics().isStatisticsEnabled() ) {
-			factory.getStatistics().loadEntity( concreteDescriptor.getEntityName() );
+		if ( statistics.isStatisticsEnabled() ) {
+			statistics.loadEntity( concreteDescriptor.getEntityName() );
 		}
 	}
 

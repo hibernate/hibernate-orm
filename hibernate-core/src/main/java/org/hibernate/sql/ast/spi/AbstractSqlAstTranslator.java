@@ -931,14 +931,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				else {
 					forUpdate.merge( getLockOptions() );
 					forUpdate.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
-					final LockStrategy lockStrategy = determineLockingStrategy( querySpec, forUpdate, followOnLocking );
-					switch ( lockStrategy ) {
-						case CLAUSE:
-							renderForUpdateClause( querySpec, forUpdate );
-							break;
-						case FOLLOW_ON:
-							lockOptions = null;
-							break;
+					if ( LockMode.READ.lessThan( forUpdate.getLockMode() ) ) {
+						final LockStrategy lockStrategy = determineLockingStrategy(
+								querySpec,
+								forUpdate,
+								followOnLocking
+						);
+						switch ( lockStrategy ) {
+							case CLAUSE:
+								renderForUpdateClause( querySpec, forUpdate );
+								break;
+							case FOLLOW_ON:
+								lockOptions = null;
+								break;
+						}
 					}
 				}
 				forUpdate = null;
@@ -948,31 +954,33 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// We only apply locking on the root query though if there is a global lock mode
 				final LockOptions lockOptions = getLockOptions();
 				final Boolean followOnLocking = lockOptions.getFollowOnLocking();
-				if ( Boolean.TRUE.equals( followOnLocking )) {
+				if ( Boolean.TRUE.equals( followOnLocking ) ) {
 					this.lockOptions = null;
 				}
 				else if ( lockOptions.getLockMode() != LockMode.NONE ) {
 					final ForUpdateClause forUpdateClause = new ForUpdateClause();
 					forUpdateClause.merge( getLockOptions() );
 					forUpdateClause.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
-					final LockStrategy lockStrategy = determineLockingStrategy(
-							querySpec,
-							forUpdateClause,
-							followOnLocking
-					);
-					switch ( lockStrategy ) {
-						case CLAUSE:
-							renderForUpdateClause(
-									querySpec,
-									forUpdateClause
-							);
-							break;
-						case FOLLOW_ON:
-							if ( Boolean.FALSE.equals( followOnLocking ) ) {
-								throw new UnsupportedOperationException( "" );
-							}
-							this.lockOptions = null;
-							break;
+					if ( LockMode.READ.lessThan( forUpdateClause.getLockMode() ) ) {
+						final LockStrategy lockStrategy = determineLockingStrategy(
+								querySpec,
+								forUpdateClause,
+								followOnLocking
+						);
+						switch ( lockStrategy ) {
+							case CLAUSE:
+								renderForUpdateClause(
+										querySpec,
+										forUpdateClause
+								);
+								break;
+							case FOLLOW_ON:
+								if ( Boolean.FALSE.equals( followOnLocking ) ) {
+									throw new UnsupportedOperationException( "" );
+								}
+								this.lockOptions = null;
+								break;
+						}
 					}
 				}
 			}
@@ -980,13 +988,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else if ( forUpdate != null ) {
 			forUpdate.merge( getLockOptions() );
 			forUpdate.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
-			final LockStrategy lockStrategy = determineLockingStrategy( querySpec, forUpdate, null );
-			switch ( lockStrategy ) {
-				case CLAUSE:
-					renderForUpdateClause( querySpec, forUpdate );
-					break;
-				case FOLLOW_ON:
-					throw new UnsupportedOperationException( "Follow-on locking for subqueries is not supported" );
+			if ( LockMode.READ.lessThan( forUpdate.getLockMode() ) ) {
+				final LockStrategy lockStrategy = determineLockingStrategy( querySpec, forUpdate, null );
+				switch ( lockStrategy ) {
+					case CLAUSE:
+						renderForUpdateClause( querySpec, forUpdate );
+						break;
+					case FOLLOW_ON:
+						throw new UnsupportedOperationException( "Follow-on locking for subqueries is not supported" );
+				}
 			}
 			forUpdate = null;
 		}
@@ -1146,26 +1156,40 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( !getDialect().supportsOuterJoinForUpdate() ) {
 			if ( forUpdateClause.hasAliases() ) {
 				// Only need to visit the TableGroupJoins for which the alias is registered
-				querySpec.getFromClause().visitTableGroupJoins(
+				if ( querySpec.getFromClause().queryTableGroupJoins(
 						tableGroupJoin -> {
 							final TableGroup group = tableGroupJoin.getJoinedGroup();
 							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
 								if ( tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
-									throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported!" );
+									if ( Boolean.FALSE.equals( followOnLocking ) ) {
+										throw new IllegalQueryOperationException(
+												"Locking with OUTER joins is not supported!" );
+									}
+									return Boolean.TRUE;
 								}
 							}
+							return null;
 						}
-				);
+				) != null ) {
+					strategy = LockStrategy.FOLLOW_ON;
+				}
 			}
 			else {
 				// Visit TableReferenceJoin and TableGroupJoin to see if all use INNER
-				querySpec.getFromClause().visitTableJoins(
+				if ( querySpec.getFromClause().queryTableJoins(
 						tableJoin -> {
 							if ( tableJoin.getJoinType() != SqlAstJoinType.INNER && !( tableJoin.getJoinedNode() instanceof VirtualTableGroup ) ) {
-								throw new IllegalQueryOperationException( "Locking with OUTER joins is not supported!" );
+								if ( Boolean.FALSE.equals( followOnLocking ) ) {
+									throw new IllegalQueryOperationException(
+											"Locking with OUTER joins is not supported!" );
+								}
+								return Boolean.TRUE;
 							}
+							return null;
 						}
-				);
+				) != null ) {
+					strategy = LockStrategy.FOLLOW_ON;
+				}
 			}
 		}
 		if ( hasAggregateFunctions( querySpec ) ) {
@@ -1878,6 +1902,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	public void visitSortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
+		}
 		final boolean renderNullPrecedence = nullPrecedence != null &&
 				!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
 		if ( renderNullPrecedence && !dialect.supportsNullPrecedence() ) {

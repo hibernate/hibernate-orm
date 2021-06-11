@@ -253,7 +253,7 @@ public class AttributeFactory {
 					assert component.getComponentClassName() != null;
 					final Class<Y> embeddableClass = component.getComponentClass();
 
-					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass );
+					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
 					if ( cached != null ) {
 						return cached;
 					}

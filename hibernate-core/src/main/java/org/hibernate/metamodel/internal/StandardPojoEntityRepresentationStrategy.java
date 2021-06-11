@@ -156,14 +156,19 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 		if ( reflectionOptimizer != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
 			if ( instantiationOptimizer != null ) {
-				this.instantiator = new OptimizedPojoInstantiatorImpl<>( mappedJtd, instantiationOptimizer );
+				this.instantiator = new OptimizedPojoEntityInstantiatorImpl<>(
+						entityMetamodel,
+						bootDescriptor,
+						mappedJtd,
+						instantiationOptimizer
+				);
 			}
 			else {
-				this.instantiator = new PojoInstantiatorImpl<>( mappedJtd );
+				this.instantiator = new PojoEntityInstantiatorImpl<>( entityMetamodel, bootDescriptor, mappedJtd );
 			}
 		}
 		else {
-			this.instantiator = new PojoInstantiatorImpl<>( mappedJtd );
+			this.instantiator = new PojoEntityInstantiatorImpl<>( entityMetamodel, bootDescriptor, mappedJtd );
 		}
 	}
 

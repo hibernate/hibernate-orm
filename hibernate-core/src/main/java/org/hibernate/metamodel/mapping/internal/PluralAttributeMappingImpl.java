@@ -24,6 +24,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
+import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -337,9 +338,10 @@ public class PluralAttributeMappingImpl
 					creationProcess.getSqmFunctionRegistry()
 			);
 			return new SimpleForeignKeyDescriptor(
+					basicFkTargetPart,
+					null,
 					keySelectableMapping,
 					basicFkTargetPart,
-					(owner) -> ( (PropertyBasedMapping) basicFkTargetPart ).getPropertyAccess().getGetter().get( owner ),
 					entityType.isReferenceToPrimaryKey()
 			);
 		}
@@ -523,16 +525,26 @@ public class PluralAttributeMappingImpl
 		return createDelayedCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
 	}
 
-	private DelayedCollectionFetch createDelayedCollectionFetch(
+	private Fetch createDelayedCollectionFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState,
 			SqlAstCreationState sqlAstCreationState) {
-		final DomainResult<?> foreignKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
-				fetchablePath,
-				sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
-				creationState
-		);
+		final DomainResult<?> foreignKeyDomainResult;
+		// Lazy property. A null foreign key domain result will lead to
+		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
+		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		if ( fetchParent.getReferencedModePart() == containingEntityMapping
+				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
+			foreignKeyDomainResult = null;
+		}
+		else {
+			foreignKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
+					fetchablePath,
+					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+					creationState
+			);
+		}
 		return new DelayedCollectionFetch(
 				fetchablePath,
 				this,
@@ -631,24 +643,112 @@ public class PluralAttributeMappingImpl
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final EntityCollectionPart entityPartDescriptor;
+		final EntityMappingType elementDescriptorEntityMappingType;
 		if ( elementDescriptor instanceof EntityCollectionPart ) {
-			entityPartDescriptor = (EntityCollectionPart) elementDescriptor;
+			elementDescriptorEntityMappingType = ( (EntityCollectionPart) elementDescriptor ).getEntityMappingType();
 		}
 		else {
 			assert indexDescriptor instanceof EntityCollectionPart;
-			entityPartDescriptor = (EntityCollectionPart) indexDescriptor;
+			elementDescriptorEntityMappingType = null;
+		}
+
+		final EntityMappingType indexDescriptorEntityMappingType;
+		if ( indexDescriptor instanceof EntityCollectionPart ) {
+			indexDescriptorEntityMappingType = ( (EntityCollectionPart) indexDescriptor ).getEntityMappingType();
+		}
+		else {
+			indexDescriptorEntityMappingType = null;
 		}
 
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
-		final EntityMappingType entityMappingType = entityPartDescriptor.getEntityMappingType();
-		final TableReference primaryTableReference = entityMappingType
+		if ( indexDescriptorEntityMappingType == null || elementDescriptorEntityMappingType == null ) {
+			final EntityMappingType entityMappingType;
+			if ( indexDescriptorEntityMappingType == null ) {
+				entityMappingType = elementDescriptorEntityMappingType.getEntityMappingType();
+			}
+			else {
+				entityMappingType = indexDescriptorEntityMappingType.getEntityMappingType();
+			}
+			final TableReference primaryTableReference = entityMappingType
+					.createPrimaryTableReference(
+							sqlAliasBase,
+							sqlExpressionResolver,
+							creationContext
+					);
+
+			return new StandardTableGroup(
+					navigablePath,
+					this,
+					fetched,
+					sourceAlias,
+					primaryTableReference,
+					true,
+					sqlAliasBase,
+					entityMappingType::containsTableReference,
+					(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
+							tableExpression,
+							sqlAliasBase,
+							primaryTableReference,
+							sqlExpressionResolver,
+							creationContext
+					),
+					creationContext.getSessionFactory()
+			);
+		}
+		final TableReference primaryTableReference = elementDescriptorEntityMappingType
 				.createPrimaryTableReference(
 						sqlAliasBase,
 						sqlExpressionResolver,
 						creationContext
 				);
+
+		final BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator;
+
+		final java.util.function.Predicate<String> tableReferenceJoinNameChecker = createTableReferenceJoinNameChecker(
+				elementDescriptorEntityMappingType,
+				indexDescriptorEntityMappingType
+		);
+
+		final TableReference indexAssociatedPrimaryTable = indexDescriptorEntityMappingType.createPrimaryTableReference(
+				sqlAliasBase,
+				sqlExpressionResolver,
+				creationContext
+		);
+
+		final Function<TableGroup, TableReferenceJoin> indexTableGroupFinalizer = createTableGroupFinalizer(
+				sqlExpressionResolver,
+				creationContext,
+				primaryTableReference,
+				indexAssociatedPrimaryTable,
+				SqlAstJoinType.INNER,
+				indexFkDescriptor
+		);
+
+		tableReferenceJoinCreator = (tableExpression, tableGroup) -> {
+			if ( elementDescriptorEntityMappingType.containsTableReference( tableExpression ) ) {
+				return elementDescriptorEntityMappingType.createTableReferenceJoin(
+						tableExpression,
+						sqlAliasBase,
+						primaryTableReference,
+						sqlExpressionResolver,
+						creationContext
+				);
+			}
+			else if ( indexDescriptorEntityMappingType.containsTableReference( tableExpression ) ) {
+				return createTableReferenceJoin(
+						sqlExpressionResolver,
+						creationContext,
+						sqlAliasBase,
+						indexDescriptorEntityMappingType,
+						indexAssociatedPrimaryTable,
+						indexTableGroupFinalizer,
+						tableExpression,
+						tableGroup
+				);
+			}
+			throw new IllegalStateException( "could not create join for table `" + tableExpression + "`" );
+		};
 
 		return new StandardTableGroup(
 				navigablePath,
@@ -658,14 +758,8 @@ public class PluralAttributeMappingImpl
 				primaryTableReference,
 				true,
 				sqlAliasBase,
-				entityMappingType::containsTableReference,
-				(tableExpression, tg) -> entityMappingType.createTableReferenceJoin(
-						tableExpression,
-						sqlAliasBase,
-						primaryTableReference,
-						sqlExpressionResolver,
-						creationContext
-				),
+				tableReferenceJoinNameChecker,
+				tableReferenceJoinCreator,
 				creationContext.getSessionFactory()
 		);
 	}

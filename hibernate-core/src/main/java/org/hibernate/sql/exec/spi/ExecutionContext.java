@@ -37,6 +37,10 @@ public interface ExecutionContext {
 		// No-op because by default there is callback
 	}
 
+	default String getQueryIdentifier(String sql) {
+		return null;
+	}
+
 	/**
 	 * Get the collection key for the collection which is to be loaded immediately.
 	 */

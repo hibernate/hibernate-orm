@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -57,7 +58,7 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 		);
 
 		return new DiscriminatedAssociationPathInterpretation<T>(
-				sqmPath,
+				sqmPath.getNavigablePath(),
 				mapping,
 				tableGroup,
 				new SqlTuple( tupleExpressions, mapping )
@@ -67,8 +68,12 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 
 	private final SqlTuple sqlTuple;
 
-	public DiscriminatedAssociationPathInterpretation(SqmPath<T> sqmPath, ModelPart mapping, TableGroup tableGroup, SqlTuple sqlTuple) {
-		super( sqmPath, mapping, tableGroup );
+	private DiscriminatedAssociationPathInterpretation(
+			NavigablePath navigablePath,
+			ModelPart mapping,
+			TableGroup tableGroup,
+			SqlTuple sqlTuple) {
+		super( navigablePath, mapping, tableGroup );
 		this.sqlTuple = sqlTuple;
 	}
 

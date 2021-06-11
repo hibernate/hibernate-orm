@@ -735,6 +735,14 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public String getQueryIdentifier(String sql) {
+		if ( CRITERIA_HQL_STRING.equals( hqlString ) ) {
+			return "[CRITERIA] " + sql;
+		}
+		return hqlString;
+	}
+
+	@Override
 	public NamedHqlQueryMemento toMemento(String name) {
 		return new NamedHqlQueryMementoImpl(
 				name,

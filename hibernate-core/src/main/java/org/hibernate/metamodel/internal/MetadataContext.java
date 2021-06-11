@@ -86,8 +86,8 @@ public class MetadataContext {
 	private Map<PersistentClass, EntityDomainType<?>> entityTypesByPersistentClass = new HashMap<>();
 
 	private Map<Class, EmbeddableDomainType<?>> embeddables = new HashMap<>();
-	private Map<Class, EmbeddableDomainType<?>> embeddablesToProcess = new HashMap<>();
-	private Map<EmbeddableDomainType<?>,Component> componentByEmbeddable = new HashMap<>();
+	private Map<Class, List<EmbeddableDomainType<?>>> embeddablesToProcess = new HashMap<>();
+	private Map<EmbeddableDomainType<?>, Component> componentByEmbeddable = new HashMap<>();
 
 	private Map<MappedSuperclass, MappedSuperclassDomainType<?>> mappedSuperclassByMappedSuperclassMapping = new HashMap<>();
 	private Map<MappedSuperclassDomainType<?>, PersistentClass> mappedSuperClassTypeToPersistentClass = new HashMap<>();
@@ -179,7 +179,8 @@ public class MetadataContext {
 		assert embeddableType.getJavaType() != null;
 		assert ! Map.class.isAssignableFrom( embeddableType.getJavaType() );
 
-		embeddablesToProcess.put( embeddableType.getJavaType(), embeddableType );
+		embeddablesToProcess.computeIfAbsent( embeddableType.getJavaType(), k -> new ArrayList<>( 1 ) )
+			.add( embeddableType );
 		componentByEmbeddable.put( embeddableType, bootDescriptor );
 	}
 
@@ -334,7 +335,11 @@ public class MetadataContext {
 
 
 		while ( ! embeddablesToProcess.isEmpty() ) {
-			final ArrayList<EmbeddableDomainType<?>> processingEmbeddables = new ArrayList<>( embeddablesToProcess.values() );
+			final ArrayList<EmbeddableDomainType<?>> processingEmbeddables = new ArrayList<>( embeddablesToProcess.size() );
+			for ( List<EmbeddableDomainType<?>> embeddableDomainTypes : embeddablesToProcess.values() ) {
+				processingEmbeddables.addAll( embeddableDomainTypes );
+			}
+
 			embeddablesToProcess.clear();
 
 			for ( EmbeddableDomainType<?> embeddable : processingEmbeddables ) {
@@ -660,12 +665,25 @@ public class MetadataContext {
 		);
 	}
 
-	public <J> EmbeddableDomainType<J> locateEmbeddable(Class<J> embeddableClass) {
+	public <J> EmbeddableDomainType<J> locateEmbeddable(Class<J> embeddableClass, Component component) {
 		//noinspection unchecked
 		EmbeddableDomainType<J> domainType = (EmbeddableDomainType<J>) embeddables.get( embeddableClass );
 		if ( domainType == null ) {
-			//noinspection unchecked
-			domainType = (EmbeddableDomainType) embeddablesToProcess.get( embeddableClass );
+			final List<EmbeddableDomainType<?>> embeddableDomainTypes = embeddablesToProcess.get( embeddableClass );
+			if ( embeddableDomainTypes != null ) {
+				for ( EmbeddableDomainType<?> embeddableDomainType : embeddableDomainTypes ) {
+					final Component cachedComponent = componentByEmbeddable.get( embeddableDomainType );
+					if ( cachedComponent.isSame( component ) ) {
+						//noinspection unchecked
+						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
+						break;
+					}
+					else {
+						// See HHH-14660
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedComponentMapping( embeddableClass.getName() );
+					}
+				}
+			}
 		}
 		return domainType;
 	}

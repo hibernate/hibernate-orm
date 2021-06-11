@@ -338,7 +338,11 @@ public class SqmUtil {
 		}
 		else if ( parameterType instanceof ToOneAttributeMapping ) {
 			ToOneAttributeMapping association = (ToOneAttributeMapping) parameterType;
-			bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromTarget( bindValue, session );
+			bindValue = association.getForeignKeyDescriptor().getAssociationKeyFromSide(
+					bindValue,
+					association.getSideNature().inverse(),
+					session
+			);
 			parameterType = association.getForeignKeyDescriptor();
 		}
 		else if ( parameterType instanceof PluralAttributeMapping ) {

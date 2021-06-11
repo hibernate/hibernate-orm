@@ -252,13 +252,20 @@ public interface DeprecationLogger extends BasicLogger {
 	void logUseOfDeprecatedZeroBasedJdbcStyleParams();
 
 	@LogMessage(level = WARN)
+	@Message(
+			id = 90000025,
+			value = "Encountered multiple component mappings for the same java class [%s] with different property mappings. " +
+					"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
+	)
+	void deprecatedComponentMapping(String name);
+
+	@LogMessage(level = WARN)
 	@Message(value = "%s has been deprecated",
-			id = 90000025)
+			id = 90000026)
 	void deprecatedDialect(String dialect);
 
 	@LogMessage(level = WARN)
 	@Message(value = "%s has been deprecated; use %s instead",
-			id = 90000025)
+			id = 90000026)
 	void deprecatedDialect(String dialect, String replacement);
-
 }

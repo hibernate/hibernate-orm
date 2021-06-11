@@ -18,26 +18,26 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
  */
 public abstract class AbstractSqmPathInterpretation<T> implements SqmPathInterpretation<T> {
 
-	private final SqmPath<T> sqmPath;
+	private final NavigablePath navigablePath;
 	private final ModelPart mapping;
 	private final TableGroup tableGroup;
 
 	public AbstractSqmPathInterpretation(
-			SqmPath<T> sqmPath,
+			NavigablePath navigablePath,
 			ModelPart mapping,
 			TableGroup tableGroup) {
-		assert sqmPath != null;
+		assert navigablePath != null;
 		assert mapping != null;
 		assert tableGroup != null;
 
-		this.sqmPath = sqmPath;
+		this.navigablePath = navigablePath;
 		this.mapping = mapping;
 		this.tableGroup = tableGroup;
 	}
 
 	@Override
 	public NavigablePath getNavigablePath() {
-		return sqmPath.getNavigablePath();
+		return navigablePath;
 	}
 
 	@Override

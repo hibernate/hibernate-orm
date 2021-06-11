@@ -53,6 +53,8 @@ public interface RowProcessingState extends ExecutionContext {
 
 	void registerNonExists(EntityFetch fetch);
 
+	boolean isQueryCacheHit();
+
 	/**
 	 * Callback at the end of processing the current "row"
 	 */

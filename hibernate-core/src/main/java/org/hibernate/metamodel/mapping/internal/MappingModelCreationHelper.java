@@ -79,6 +79,7 @@ import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.walking.internal.FetchOptionsHelper;
+import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
@@ -927,9 +928,10 @@ public class MappingModelCreationHelper {
 			);
 			attributeMapping.setForeignKeyDescriptor(
 					new SimpleForeignKeyDescriptor(
+							simpleFkTarget,
+							null,
 							keySelectableMapping,
 							simpleFkTarget,
-							(owner) -> ( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess().getGetter().get( owner ),
 							isReferenceToPrimaryKey
 					)
 			);
@@ -956,6 +958,7 @@ public class MappingModelCreationHelper {
 			ToOneAttributeMapping attributeMapping,
 			Property bootProperty,
 			ToOne bootValueMapping,
+			PropertyAccess inversePropertyAccess,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
 		if ( attributeMapping.getForeignKeyDescriptor() != null ) {
@@ -1033,6 +1036,25 @@ public class MappingModelCreationHelper {
 			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
+			final BasicValuedModelPart declaringKeyPart;
+			final PropertyAccess declaringKeyPropertyAccess;
+			if ( inversePropertyAccess == null ) {
+				// So far, OneToOne mappings are only supported based on the owner's PK
+				if ( bootValueMapping instanceof OneToOne ) {
+					declaringKeyPart = (BasicValuedModelPart) attributeMapping.findContainingEntityMapping().getIdentifierMapping();
+				}
+				else {
+					declaringKeyPart = simpleFkTarget;
+				}
+				declaringKeyPropertyAccess = ( (PropertyBasedMapping) declaringKeyPart ).getPropertyAccess();
+			}
+			else {
+				declaringKeyPart = simpleFkTarget;
+				declaringKeyPropertyAccess = new ChainedPropertyAccessImpl(
+						inversePropertyAccess,
+						( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess()
+				);
+			}
 			final SelectableMapping keySelectableMapping;
 			if ( columnIterator.hasNext() ) {
 				keySelectableMapping = SelectableMappingImpl.from(
@@ -1055,9 +1077,10 @@ public class MappingModelCreationHelper {
 			}
 
 			final ForeignKeyDescriptor foreignKeyDescriptor = new SimpleForeignKeyDescriptor(
+					declaringKeyPart,
+					declaringKeyPropertyAccess,
 					keySelectableMapping,
 					simpleFkTarget,
-					(owner) -> ( (PropertyBasedMapping) simpleFkTarget ).getPropertyAccess().getGetter().get( owner ),
 					bootValueMapping.isReferenceToPrimaryKey(),
 					swapDirection
 			);
@@ -1218,6 +1241,7 @@ public class MappingModelCreationHelper {
 					referencedAttributeMapping,
 					property,
 					(ToOne) property.getValue(),
+					referencedAttributeMapping.getPropertyAccess(),
 					dialect,
 					creationProcess
 			);
@@ -1533,6 +1557,7 @@ public class MappingModelCreationHelper {
 								attributeMapping,
 								bootProperty,
 								(ToOne) bootProperty.getValue(),
+								null,
 								dialect,
 								creationProcess
 						);

@@ -62,7 +62,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				null,
 				1,
 				influencers,
-				LockOptions.READ,
+				LockOptions.NONE,
 				jdbcParameters::add,
 				sessionFactory
 		);
@@ -126,6 +126,11 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 					}
 
 					@Override
+					public String getQueryIdentifier(String sql) {
+						return sql;
+					}
+
+					@Override
 					public QueryParameterBindings getQueryParameterBindings() {
 						return QueryParameterBindings.NO_PARAM_BINDINGS;
 					}
@@ -134,6 +139,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 					public Callback getCallback() {
 						return null;
 					}
+
 				},
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER

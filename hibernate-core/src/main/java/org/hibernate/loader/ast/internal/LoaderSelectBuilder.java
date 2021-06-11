@@ -31,14 +31,12 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -47,12 +45,14 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.NonAggregatedIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -61,7 +61,9 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
@@ -79,7 +81,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.internal.CollectionDomainResult;
-import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
@@ -252,6 +253,7 @@ public class LoaderSelectBuilder {
 	private int fetchDepth;
 	private Map<OrderByFragment, TableGroup> orderByFragments;
 	private boolean hasCollectionJoinFetches;
+	private String currentBagRole;
 
 	private LoaderSelectBuilder(
 			SqlAstCreationContext creationContext,
@@ -362,6 +364,12 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect() {
+		if ( loadable instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) loadable;
+			if ( pluralAttributeMapping.getMappedType().getCollectionSemantics() instanceof BagSemantics ) {
+				currentBagRole = pluralAttributeMapping.getNavigableRole().getNavigableName();
+			}
+		}
 		final NavigablePath rootNavigablePath = new NavigablePath( loadable.getRootPathName() );
 
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
@@ -392,10 +400,43 @@ public class LoaderSelectBuilder {
 			domainResults = new ArrayList<>( partsToSelect.size() );
 			for ( ModelPart part : partsToSelect ) {
 				final NavigablePath navigablePath = rootNavigablePath.append( part.getPartName() );
+				final TableGroup tableGroup;
+				if ( part instanceof RootTableGroupProducer ) {
+					tableGroup = ( (RootTableGroupProducer) part ).createRootTableGroup(
+							navigablePath,
+							null,
+							() -> rootQuerySpec::applyPredicate,
+							sqlAstCreationState,
+							creationContext
+					);
+					rootQuerySpec.getFromClause().addRoot( tableGroup );
+					sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+				}
+				else if ( part instanceof ToOneAttributeMapping ) {
+					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) part;
+					if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+						final TableGroupJoin tableGroupJoin = toOneAttributeMapping.createTableGroupJoin(
+								navigablePath,
+								rootTableGroup,
+								null,
+								SqlAstJoinType.LEFT,
+								true,
+								sqlAstCreationState
+						);
+						tableGroup = tableGroupJoin.getJoinedGroup();
+						sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
+					}
+					else {
+						tableGroup = rootTableGroup;
+					}
+				}
+				else {
+					tableGroup = rootTableGroup;
+				}
 				domainResults.add(
 						part.createDomainResult(
 								navigablePath,
-								rootTableGroup,
+								tableGroup,
 								null,
 								sqlAstCreationState
 						)
@@ -621,13 +662,11 @@ public class LoaderSelectBuilder {
 		}
 
 		final List<Fetch> fetches = new ArrayList<>();
-		final List<String> bagRoles = new ArrayList<>();
 		final BiConsumer<Fetchable, Boolean> processor = createFetchableBiConsumer(
 				fetchParent,
 				querySpec,
 				creationState,
-				fetches,
-				bagRoles
+				fetches
 		);
 
 		final FetchableContainer referencedMappingContainer = fetchParent.getReferencedMappingContainer();
@@ -637,9 +676,6 @@ public class LoaderSelectBuilder {
 		}
 		referencedMappingContainer.visitFetchables(
 				fetchable -> processor.accept( fetchable, false ), null );
-		if ( bagRoles.size() > 1 ) {
-			throw new MultipleBagFetchException( bagRoles );
-		}
 		return fetches;
 	}
 
@@ -647,8 +683,7 @@ public class LoaderSelectBuilder {
 			FetchParent fetchParent,
 			QuerySpec querySpec,
 			LoaderSqlAstCreationState creationState,
-			List<Fetch> fetches,
-			List<String> bagRoles) {
+			List<Fetch> fetches) {
 		return (fetchable, isKeyFetchable) -> {
 			final NavigablePath fetchablePath;
 
@@ -691,19 +726,6 @@ public class LoaderSelectBuilder {
 				fetchablePath = fetchParent.resolveNavigablePath( fetchable );
 			}
 
-			if ( !creationState.isResolvingCircularFetch() ) {
-				final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
-						fetchablePath,
-						fetchParent,
-						creationState
-				);
-
-				if ( biDirectionalFetch != null ) {
-					fetches.add( biDirectionalFetch );
-					return;
-				}
-			}
-
 			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 			boolean joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
 
@@ -717,12 +739,9 @@ public class LoaderSelectBuilder {
 					joined = traversalResult.isJoined();
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
-					if ( fetchParent instanceof EntityResultGraphNode ) {
-						final EntityResultGraphNode entityFetchParent = (EntityResultGraphNode) fetchParent;
-						final EntityMappingType entityMappingType = entityFetchParent.getEntityValuedModelPart()
-								.getEntityMappingType();
-						final String fetchParentEntityName = entityMappingType.getEntityName();
-						final String fetchableRole = fetchParentEntityName + "." + fetchable.getFetchableName();
+					// There is no point in checking the fetch profile if it can't affect this fetchable
+					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
+						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
 						for ( String enabledFetchProfileName : loadQueryInfluencers.getEnabledFetchProfileNames() ) {
 							final FetchProfile enabledFetchProfile = creationContext.getSessionFactory()
@@ -751,17 +770,20 @@ public class LoaderSelectBuilder {
 				}
 			}
 
-			final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
+			final String previousBagRole = currentBagRole;
+			final String bagRole;
+			if ( fetchable instanceof PluralAttributeMapping
+					&& ( (PluralAttributeMapping) fetchable ).getMappedType()
+					.getCollectionSemantics() instanceof BagSemantics ) {
+				bagRole = fetchable.getNavigableRole().getNavigableName();
+			}
+			else {
+				bagRole = null;
+			}
 
-			if ( maximumFetchDepth != null ) {
-				if ( fetchDepth == maximumFetchDepth ) {
-					joined = false;
-				}
-				else if ( fetchDepth > maximumFetchDepth ) {
-					if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
-						return;
-					}
-				}
+			if ( joined && previousBagRole != null && bagRole != null ) {
+				// Avoid join fetching multiple bags
+				joined = false;
 			}
 
 			boolean changeFetchDepth = !( fetchable instanceof BasicValuedModelPart )
@@ -771,6 +793,43 @@ public class LoaderSelectBuilder {
 			try {
 				if ( changeFetchDepth ) {
 					fetchDepth++;
+				}
+
+				if ( !creationState.isResolvingCircularFetch() ) {
+					final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
+							fetchablePath,
+							fetchParent,
+							fetchTiming,
+							creationState
+					);
+
+					if ( biDirectionalFetch != null ) {
+						fetches.add( biDirectionalFetch );
+						return;
+					}
+				}
+
+				final Integer maximumFetchDepth = creationContext.getMaximumFetchDepth();
+
+				if ( maximumFetchDepth != null ) {
+					if ( fetchDepth == maximumFetchDepth + 1 ) {
+						joined = false;
+					}
+					else if ( fetchDepth > maximumFetchDepth + 1 ) {
+						if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
+							return;
+						}
+					}
+				}
+				if ( joined ) {
+					// For join fetches we remember the currentBagRole so that we can avoid multiple bag fetches
+					if ( bagRole != null ) {
+						currentBagRole = bagRole;
+					}
+				}
+				else {
+					// For non-join fetches, we reset the currentBagRole and set it to the previous value in the finally block
+					currentBagRole = null;
 				}
 				final Fetch fetch = fetchParent.generateFetchableFetch(
 						fetchable,
@@ -783,10 +842,6 @@ public class LoaderSelectBuilder {
 
 				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
 					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-					if ( pluralAttributeMapping.getMappedType()
-							.getCollectionSemantics() instanceof BagSemantics ) {
-						bagRoles.add( fetchable.getNavigableRole().getNavigableName() );
-					}
 					if ( joined ) {
 						hasCollectionJoinFetches = true;
 						final TableGroup joinTableGroup = creationState.getFromClauseAccess()
@@ -810,6 +865,11 @@ public class LoaderSelectBuilder {
 			finally {
 				if ( changeFetchDepth ) {
 					fetchDepth--;
+				}
+				// Only set the currentBagRole to the previous value for non-join fetches,
+				// otherwise we could run into a multiple bag fetch situation
+				if ( !joined ) {
+					currentBagRole = previousBagRole;
 				}
 				if ( entityGraphTraversalState != null && traversalResult != null ) {
 					entityGraphTraversalState.backtrack( traversalResult.getPreviousContext() );

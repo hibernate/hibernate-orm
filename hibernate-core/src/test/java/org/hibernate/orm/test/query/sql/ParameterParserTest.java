@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.engine.query;
+package org.hibernate.orm.test.query.sql;
 
 import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
@@ -12,11 +12,12 @@ import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * Unit tests of the ParameterParser class
@@ -47,6 +48,9 @@ public class ParameterParserTest {
 				recognizer
 		);
 
+		recognizer.complete();
+		recognizer.validate();
+
 		assertTrue( recognizer.getNamedParameterDescriptionMap().containsKey("param"));
 	}
 
@@ -58,6 +62,9 @@ public class ParameterParserTest {
 				"select coalesce(i.name, '--NONE--') as itname  from Item i where i.intVal=? ",
 				recognizer
 		);
+
+		recognizer.complete();
+		recognizer.validate();
 
 		assertEquals( 1, recognizer.getOrdinalParameterDescriptionMap().size() );
 	}
@@ -71,6 +78,9 @@ public class ParameterParserTest {
 				recognizer
 		);
 
+		recognizer.complete();
+		recognizer.validate();
+
 		assertEquals( 1, recognizer.getOrdinalParameterDescriptionMap().size() );
 	}
 
@@ -83,6 +93,9 @@ public class ParameterParserTest {
 				recognizer
 		);
 
+		recognizer.complete();
+		recognizer.validate();
+
 		assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("param"));
 	}
 	
@@ -91,7 +104,8 @@ public class ParameterParserTest {
     public void testParseColonCharacterEscaped() {
         final StringBuilder captured = new StringBuilder();
         ParameterRecognizer recognizer = new ParameterRecognizer() {
-            @Override
+            @SuppressWarnings("deprecation")
+			@Override
             public void outParameter(int position) {
                 fail();
             }
@@ -121,6 +135,7 @@ public class ParameterParserTest {
 			}
 		};
         ParameterParser.parse("SELECT @a,(@a::=20) FROM tbl_name", recognizer);
+		recognizer.complete();
         assertEquals("SELECT @a,(@a:=20) FROM tbl_name", captured.toString());
     }
     
@@ -128,6 +143,9 @@ public class ParameterParserTest {
     public void testParseNamedParameter() {
         ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
 		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters("from Stock s where s.stockCode = :stockCode and s.xyz = :pxyz", recognizer);
+		recognizer.complete();
+		recognizer.validate();
+
         assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("stockCode"));
         assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("pxyz"));
         assertEquals( 2, recognizer.getNamedParameterDescriptionMap().size() );
@@ -137,9 +155,15 @@ public class ParameterParserTest {
     public void testParseJPAPositionalParameter() {
         ParamLocationRecognizer recognizer = new ParamLocationRecognizer( 0 );
 		NativeQueryInterpreterStandardImpl.INSTANCE.recognizeParameters("from Stock s where s.stockCode = ?1 and s.xyz = ?1", recognizer);
+		recognizer.complete();
+		recognizer.validate();
+
         assertEquals( 1, recognizer.getOrdinalParameterDescriptionMap().size() );
         
         ParameterParser.parse("from Stock s where s.stockCode = ?1 and s.xyz = ?2", recognizer);
+		recognizer.complete();
+		recognizer.validate();
+
         assertEquals( 2, recognizer.getOrdinalParameterDescriptionMap().size() );
     }
 

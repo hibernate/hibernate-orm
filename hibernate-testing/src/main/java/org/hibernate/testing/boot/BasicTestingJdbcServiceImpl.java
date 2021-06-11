@@ -17,9 +17,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.internal.ResultSetWrapperImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.service.ServiceRegistry;
@@ -96,10 +94,6 @@ public class BasicTestingJdbcServiceImpl implements JdbcServices, ServiceRegistr
 
 	public LobCreator getLobCreator(LobCreationContext lobCreationContext) {
 		return jdbcEnvironment.getLobCreatorBuilder().buildLobCreator( lobCreationContext );
-	}
-
-	public ResultSetWrapper getResultSetWrapper() {
-		return new ResultSetWrapperImpl( serviceRegistry );
 	}
 
 	public SqlStatementLogger getSqlStatementLogger() {

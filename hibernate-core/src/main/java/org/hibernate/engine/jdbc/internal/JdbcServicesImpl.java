@@ -18,7 +18,6 @@ import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.ResultSetWrapper;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -39,8 +38,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 
 	private SqlStatementLogger sqlStatementLogger;
 
-	private ResultSetWrapperImpl resultSetWrapper;
-
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
 		this.serviceRegistry = serviceRegistry;
@@ -59,8 +56,6 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		final long logSlowQuery = ConfigurationHelper.getLong( Environment.LOG_SLOW_QUERY, configValues, 0 );
 
 		this.sqlStatementLogger = new SqlStatementLogger( showSQL, formatSQL, highlightSQL, logSlowQuery );
-
-		resultSetWrapper = new ResultSetWrapperImpl( serviceRegistry );
 	}
 
 	@Override
@@ -110,8 +105,4 @@ public class JdbcServicesImpl implements JdbcServices, ServiceRegistryAwareServi
 		return null;
 	}
 
-	@Override
-	public ResultSetWrapper getResultSetWrapper() {
-		return resultSetWrapper;
-	}
 }

@@ -4,6 +4,19 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+
+// BEGIN: For NUODB
+// Can't think of a way to make this generic, and we only test NuoDB
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'com.nuodb.jdbc:nuodb-jdbc:22.0.0'
+    }
+}
+// END: For NUODB
+
 import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.api.tasks.testing.TestResult.ResultType
 
@@ -53,7 +66,7 @@ dependencies {
     compile( libraries.activation )
 
     implementation( "com.nuodb.hibernate:nuodb-hibernate:${nuodbHibernateJarVersion}-hib5" )
-
+    
     // We need dom4j for a number of things temporarily:
     //      1) (unsupported) EntityMode.DOM4J support
     //      2) Envers
@@ -295,6 +308,9 @@ test {
     //     println "Starting test: " + descriptor
     // }
 
+    // Is there a database running?
+    CheckDatabase.isAvailable("${projectDir}/src/test/resources/hibernate.properties")
+    
     // Dynamically retrieves the plan of tests to run. If not provided, all tests are included.
     // Pre-defined test plans are: green and red.
     // Custom plans can be created as long the .test-list file is added to hibernate-core and
@@ -344,3 +360,74 @@ test {
     }
 }
 
+//Create the task that runs the integration tests found from the
+//configured source directory and uses the correct classpath.
+task testJavassist(type: Test) {
+    testClassesDirs = sourceSets.testJavassist.output.classesDirs
+    classpath = sourceSets.testJavassist.runtimeClasspath
+    //If you want to ensure that integration tests are run every time when you invoke
+    //this task, uncomment the following line.
+    //outputs.upToDateWhen { false }
+
+    if ( gradle.ext.javaToolchainEnabled ) {
+        // Configure version of Java tools
+        javaLauncher = javaToolchains.launcherFor {
+            languageVersion = gradle.ext.javaVersions.test.launcher
+        }
+
+        //  Configure JVM Options
+        jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
+
+        // Display version of Java tools
+        doFirst {
+            logger.lifecycle "Testing javassist with '${javaLauncher.get().metadata.installationPath}'"
+        }
+    }
+
+    if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+        // Javassist needs this to generate proxies
+        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+    }
+}
+
+check.dependsOn testJavassist
+testJavassist.mustRunAfter test
+
+// BEGIN: For NUODB
+/**
+ * Is the test database available? Can't think of a way to make this generic, and we
+ * only test NuoDB.
+ */
+public class CheckDatabase {
+
+    public static boolean isAvailable(String hibernatePropertiesFile) {
+        try {
+            java.util.Properties props = new java.util.Properties();
+            props.load(new java.io.FileReader(hibernatePropertiesFile));
+
+            System.out.println('Testing using these properties:');
+            Set entries = props.entrySet();
+            
+            for (Map.Entry e: entries) {
+                if (((String) e.getKey()).startsWith("hibernate.connection"))
+                    System.out.println(e.getKey() + "=" + e.getValue());
+            }
+
+            com.nuodb.jdbc.DataSource dataSource = new com.nuodb.jdbc.DataSource();
+            //dataSource.setDriverClassName(props.getProperty("hibernate.connection.driver_class"));
+            dataSource.setUrl(props.getProperty("hibernate.connection.url").replace('.hib', ''));
+            dataSource.setUsername(props.getProperty("hibernate.connection.username"));
+            dataSource.setPassword(props.getProperty("hibernate.connection.password"));
+
+            java.sql.Connection conn = dataSource.getConnection();
+            conn.close();
+            dataSource.close();
+        } catch (Exception e) {
+            System.err.println(">> Failed attempting to check for database: " + e);
+            throw new GradleException("Unable to access database for tests: ${e.localizedMessage}");
+        }
+
+        return true;
+    }
+}
+// END: For NUODB

@@ -182,6 +182,7 @@ EXISTS				: [eE] [xX] [iI] [sS] [tT] [sS];
 EXP	 				: [eE] [xX] [pP];
 EXTRACT				: [eE] [xX] [tT] [rR] [aA] [cC] [tT];
 FETCH				: [fF] [eE] [tT] [cC] [hH];
+FILTER				: [fF] [iI] [lL] [tT] [eE] [rR];
 FIRST				: [fF] [iI] [rR] [sS] [tT];
 FLOOR				: [fF] [lL] [oO] [oO] [rR];
 FROM				: [fF] [rR] [oO] [mM];

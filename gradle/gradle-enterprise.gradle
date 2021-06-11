@@ -13,23 +13,16 @@ gradleEnterprise {
     server = 'https://ge.hibernate.org'
 
     buildScan {
-        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
-        termsOfServiceAgree = 'yes'
-
         captureTaskInputFiles = true
-//        publishAlways()
+        publishAlways()
+        publishIfAuthenticated()
 
-        if ( System.getenv("CI") == null && System.getProperty("CI") == null ) {
-            // not a CI job..
-            uploadInBackground = true
-        }
-        else {
-            // is  CI job
-            publishAlways()
-            uploadInBackground = false
+        def isCi = System.getenv("CI") != null || System.getProperty("CI") != null
+        uploadInBackground = !isCi
+
+        if ( isCi ) {
             tag "JOB ${System.getenv('JOB_NAME')}"
         }
-
         tag "JDK ${JavaVersion.current().toString()}"
         value 'database', rootProject.hasProperty( 'db' ) ? rootProject.properties.db : 'h2'
     }

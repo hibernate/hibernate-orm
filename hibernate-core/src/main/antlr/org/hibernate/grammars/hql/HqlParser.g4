@@ -690,31 +690,35 @@ aggregateFunction
 	;
 
 avgFunction
-	: AVG LEFT_PAREN DISTINCT? expression RIGHT_PAREN
+	: AVG LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
 	;
 
 sumFunction
-	: SUM LEFT_PAREN DISTINCT? expression RIGHT_PAREN
+	: SUM LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
 	;
 
 minFunction
-	: MIN LEFT_PAREN DISTINCT? expression RIGHT_PAREN
+	: MIN LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
 	;
 
 maxFunction
-	: MAX LEFT_PAREN DISTINCT? expression RIGHT_PAREN
+	: MAX LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
 	;
 
 countFunction
-	: COUNT LEFT_PAREN DISTINCT? (expression | ASTERISK) RIGHT_PAREN
+	: COUNT LEFT_PAREN DISTINCT? (expression | ASTERISK) RIGHT_PAREN filterClause?
 	;
 
 everyFunction
-	: (EVERY|ALL) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN
+	: (EVERY|ALL) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN filterClause?
 	;
 
 anyFunction
-	: (ANY|SOME) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN
+	: (ANY|SOME) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN filterClause?
+	;
+
+filterClause
+	: FILTER LEFT_PAREN whereClause RIGHT_PAREN
 	;
 
 standardFunction
@@ -1102,7 +1106,7 @@ rollup
  * The lexer hands us recognized keywords using their specific tokens.  This is important
  * for the recognition of sqm structure, especially in terms of performance!
  *
- * However we want to continue to allow users to use mopst keywords as identifiers (e.g., attribute names).
+ * However we want to continue to allow users to use most keywords as identifiers (e.g., attribute names).
  * This parser rule helps with that.  Here we expect that the caller already understands their
  * context enough to know that keywords-as-identifiers are allowed.
  */
@@ -1149,6 +1153,7 @@ identifier
 	| EXP
 	| EXTRACT
 	| FETCH
+	| FILTER
 	| FLOOR
 	| FROM
 	| FOR

@@ -108,6 +108,24 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 		);
 	}
 
+	@Override
+	public final <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
+			List<SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		argumentsValidator.validate( arguments );
+
+		return generateSqmAggregateFunctionExpression(
+				arguments,
+				filter,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
 	/**
 	 * Return an SQM node or subtree representing an invocation of this function
 	 * with the given arguments. This method may be overridden in the case of

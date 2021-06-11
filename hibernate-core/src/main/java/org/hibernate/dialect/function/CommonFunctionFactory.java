@@ -647,7 +647,7 @@ public class CommonFunctionFactory {
 				.register();
 
 		//MySQL has it but how is that even useful?
-//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_xor" )
+	//		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "bit_xor" )
 //				.setExactArgumentCount( 1 )
 //				.register();
 	}
@@ -689,26 +689,14 @@ public class CommonFunctionFactory {
 				.register();
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "any", "bool_or" );
 	}
-
 	/**
 	 * These are aggregate functions taking one argument,
 	 * for databases that have to emulate the boolean
 	 * aggregation functions using sum() and case.
 	 */
 	public static void everyAny_sumCase(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "every",
-				"(sum(case when ?1 then 0 else 1 end)=0)" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
-				.setArgumentListSignature("(predicate)")
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "any",
-				"(sum(case when ?1 then 1 else 0 end)>0)" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
-				.setArgumentListSignature("(predicate)")
-				.register();
+		queryEngine.getSqmFunctionRegistry().register( "every", new EveryAnyEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "any", new EveryAnyEmulation( false ) );
 	}
 
 	/**
@@ -716,39 +704,18 @@ public class CommonFunctionFactory {
 	 * for SQL Server.
 	 */
 	public static void everyAny_sumIif(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "every",
-				"min(iif(?1,1,0))" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
-				.setArgumentListSignature("(predicate)")
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "any",
-				"max(iif(?1,1,0))" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
-				.setArgumentListSignature("(predicate)")
-				.register();
+		queryEngine.getSqmFunctionRegistry().register( "every", new SQLServerEveryAnyEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "any", new SQLServerEveryAnyEmulation( false ) );
 	}
+
 
 	/**
 	 * These are aggregate functions taking one argument,
 	 * for Oracle.
 	 */
 	public static void everyAny_sumCaseCase(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "every",
-				"min(case when ?1 then 1 else 0 end)" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
-				.setArgumentListSignature("(predicate)")
-				.register();
-
-		queryEngine.getSqmFunctionRegistry().patternAggregateDescriptorBuilder( "any",
-				"max(case when ?1 then 1 else 0 end)" )
-				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
-				.setArgumentListSignature("(predicate)")
-				.register();
+		queryEngine.getSqmFunctionRegistry().register( "every", new CaseWhenEveryAnyEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "any", new CaseWhenEveryAnyEmulation( false ) );
 	}
 
 	public static void yearMonthDay(QueryEngine queryEngine) {

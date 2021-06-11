@@ -17,7 +17,7 @@ gradleEnterprise {
         termsOfServiceAgree = 'yes'
 
         captureTaskInputFiles = true
-        publishAlways()
+//        publishAlways()
 
         if ( System.getenv("CI") == null && System.getProperty("CI") == null ) {
             // not a CI job..
@@ -25,6 +25,7 @@ gradleEnterprise {
         }
         else {
             // is  CI job
+            publishAlways()
             uploadInBackground = false
             tag "JOB ${System.getenv('JOB_NAME')}"
         }

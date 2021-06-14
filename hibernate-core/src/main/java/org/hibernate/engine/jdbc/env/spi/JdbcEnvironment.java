@@ -9,6 +9,7 @@ package org.hibernate.engine.jdbc.env.spi;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.engine.jdbc.spi.TypeInfo;
 import org.hibernate.service.Service;
 
 /**
@@ -87,5 +88,14 @@ public interface JdbcEnvironment extends Service {
 	 * @return The LobCreator builder.
 	 */
 	LobCreatorBuilder getLobCreatorBuilder();
+
+	/**
+	 * @deprecated This is currently not implemented an will likely be removed
+	 * (A default method is provided to facilitate removal from implementors)
+	 */
+	@Deprecated
+	default TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
+		throw new UnsupportedOperationException( "Support for getting TypeInfo from jdbcTypeCode has been disabled as it wasn't used. Use org.hibernate.engine.jdbc.spi.TypeInfo.extractTypeInfo as alternative, or report an issue and explain." );
+	}
 
 }

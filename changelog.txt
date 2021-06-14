@@ -3,6 +3,19 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.2.Final (June 14, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31957
+
+** Bug
+    * [HHH-14609] - Fetch join association within fetched element collection fails
+    * [HHH-14608] - Merge causes StackOverflow when JPA proxy compliance is enabled
+
+** Task
+    * [HHH-14599] - Upgrade to Gradle 7 in support of Java 17
+
+
 Changes in 5.5.0.Final (June 01, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

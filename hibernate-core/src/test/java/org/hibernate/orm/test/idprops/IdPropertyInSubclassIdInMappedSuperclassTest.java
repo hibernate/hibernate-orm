@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.idprops;
+package org.hibernate.orm.test.idprops;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -16,44 +16,59 @@ import javax.persistence.InheritanceType;
 import javax.persistence.MappedSuperclass;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gail Badner
  */
-public class IdPropertyInSubclassIdInMappedSuperclassTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Human.class, Genius.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				IdPropertyInSubclassIdInMappedSuperclassTest.Human.class,
+				IdPropertyInSubclassIdInMappedSuperclassTest.Genius.class
+		}
+)
+@SessionFactory
+public class IdPropertyInSubclassIdInMappedSuperclassTest {
 
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.persist( new Genius() );
 			session.persist( new Genius( 1L ) );
 			session.persist( new Genius( 1L ) );
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Genius" ).executeUpdate()
+		);
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13114")
-	public void testHql() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testHql(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			assertEquals(
-					2, session.createQuery( "from Genius g where g.id = :id", Genius.class )
+					2,
+					session.createQuery( "from Genius g where g.id = :id", Genius.class )
 							.setParameter( "id", 1L )
 							.list()
 							.size()
 			);
 
 			assertEquals(
-					1, session.createQuery( "from Genius g where g.id is null", Genius.class )
+					1,
+					session.createQuery( "from Genius g where g.id is null", Genius.class )
 							.list()
 							.size()
 			);
@@ -61,14 +76,16 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest extends BaseCoreFuncti
 			assertEquals( 3L, session.createQuery( "select count( g ) from Genius g" ).uniqueResult() );
 
 			assertEquals(
-					2, session.createQuery( "from Human h where h.id = :id", Human.class )
+					2,
+					session.createQuery( "from Human h where h.id = :id", Human.class )
 							.setParameter( "id", 1L )
 							.list()
 							.size()
 			);
 
 			assertEquals(
-					1, session.createQuery( "from Human h where h.id is null", Human.class )
+					1,
+					session.createQuery( "from Human h where h.id is null", Human.class )
 							.list()
 							.size()
 			);
@@ -82,6 +99,8 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest extends BaseCoreFuncti
 	public static class Animal {
 
 		private Long realId;
+
+		private String description;
 
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
@@ -98,11 +117,14 @@ public class IdPropertyInSubclassIdInMappedSuperclassTest extends BaseCoreFuncti
 	@Entity(name = "Human")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 	public static class Human extends Animal {
+		private String name;
 	}
 
 	@Entity(name = "Genius")
 	public static class Genius extends Human {
 		private Long id;
+
+		private int age;
 
 		public Genius() {
 		}

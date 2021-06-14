@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Andrea Boriero
  */
-@NotImplementedYet( reason = "non-aggregated composite-id not yet implemented" )
 @DomainModel(
 		annotatedClasses = {
 				OneToOneWithDerivedIdentityTest.Person.class,
@@ -32,7 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class OneToOneWithDerivedIdentityTest {
 
-	private static final Integer PERSON_ID = 1;
+	private static final Integer PERSON_ID = 0;
 
 	@Test
 	public void testGet(SessionFactoryScope scope) {
@@ -57,7 +56,7 @@ public class OneToOneWithDerivedIdentityTest {
 				} );
 	}
 
-	@Entity
+	@Entity(name="Person")
 	public static class Person {
 		@Id
 		private Integer id;
@@ -93,8 +92,8 @@ public class OneToOneWithDerivedIdentityTest {
 		}
 	}
 
-	@Entity
-	public class PersonInfo {
+	@Entity(name="PersonInfo")
+	public static class PersonInfo {
 		@Id
 		@OneToOne
 		private Person id;

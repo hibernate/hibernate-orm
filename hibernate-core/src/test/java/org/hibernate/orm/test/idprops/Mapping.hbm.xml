@@ -8,7 +8,7 @@
   -->
 <!DOCTYPE hibernate-mapping SYSTEM "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
 
-<hibernate-mapping package="org.hibernate.test.idprops">
+<hibernate-mapping package="org.hibernate.orm.test.idprops">
 
     <!--
         Person has an identitifer property named something other than 'id';

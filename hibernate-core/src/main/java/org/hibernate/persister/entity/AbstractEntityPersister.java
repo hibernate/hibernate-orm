@@ -6726,15 +6726,57 @@ public abstract class AbstractEntityPersister
 	public ModelPart findSubPart(String name, EntityMappingType treatTargetType) {
 		LOG.tracef( "#findSubPart(`%s`)", name );
 
+		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
+			return discriminatorMapping;
+		}
+
 		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
 		if ( declaredAttribute != null ) {
 			return declaredAttribute;
 		}
 
-		if ( isIdentifierReference( name ) ) {
-			return identifierMapping;
+		if ( superMappingType != null ) {
+			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name, superMappingType );
+			if ( superDefinedAttribute != null ) {
+				return superDefinedAttribute;
+			}
+		}
+		else {
+			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
+				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
+					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
+
+					if ( subDefinedAttribute != null ) {
+						return subDefinedAttribute;
+					}
+				}
+			}
 		}
 
+		return getIdentifierModelPart( name, treatTargetType );
+	}
+
+	@Override
+	public ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
+		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
+		if ( declaredAttribute != null ) {
+			return declaredAttribute;
+		}
+
+		if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
+			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
+				final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
+
+				if ( subDefinedAttribute != null ) {
+					return subDefinedAttribute;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	private ModelPart getIdentifierModelPart(String name, EntityMappingType treatTargetType) {
 		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
 			final ModelPart subPart = ( (NonAggregatedIdentifierMappingImpl) identifierMapping ).findSubPart(
 					name,
@@ -6745,49 +6787,8 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		if ( superMappingType != null ) {
-			final ModelPart superDefinedAttribute = superMappingType.findSubPart( name, superMappingType );
-			if ( superDefinedAttribute != null ) {
-				return superDefinedAttribute;
-			}
-		}
-
-		if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
-			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-				final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
-
-				if ( subDefinedAttribute != null ) {
-					return subDefinedAttribute;
-				}
-			}
-		}
-
-		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
-			return discriminatorMapping;
-		}
-
-		return null;
-	}
-
-	@Override
-	public ModelPart findSubTypesSubPart(String name, EntityMappingType treatTargetType) {
 		if ( isIdentifierReference( name ) ) {
 			return identifierMapping;
-		}
-
-		final AttributeMapping declaredAttribute = declaredAttributeMappings.get( name );
-		if ( declaredAttribute != null ) {
-			return declaredAttribute;
-		}
-
-		if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
-			for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
-				final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
-
-				if ( subDefinedAttribute != null ) {
-					return subDefinedAttribute;
-				}
-			}
 		}
 
 		return null;
@@ -6798,12 +6799,12 @@ public abstract class AbstractEntityPersister
 			return true;
 		}
 
-		if ( entityMetamodel.hasNonIdentifierPropertyNamedId() ) {
-			return "id".equals( name );
+		if ( hasIdentifierProperty() && getIdentifierPropertyName().equals( name ) ) {
+			return true;
 		}
 
-		if ( hasIdentifierProperty() ) {
-			return getIdentifierPropertyName().equals( name );
+		if ( !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name ) ) {
+			return true;
 		}
 
 		return false;

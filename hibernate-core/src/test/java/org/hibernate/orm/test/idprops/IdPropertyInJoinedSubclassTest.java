@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.idprops;
+package org.hibernate.orm.test.idprops;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,35 +15,47 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Gail Badner
  */
-public class IdPropertyInJoinedSubclassTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Human.class, Genius.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				IdPropertyInJoinedSubclassTest.Human.class,
+				IdPropertyInJoinedSubclassTest.Genius.class
+		}
+)
+@SessionFactory
+public class IdPropertyInJoinedSubclassTest {
 
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
 			session.persist( new Genius() );
 			session.persist( new Genius( 1L ) );
 			session.persist( new Genius( 1L ) );
 		} );
 	}
 
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
+			session.createQuery( "delete from Genius" ).executeUpdate();
+		} );
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13114")
-	public void testHql() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testHql(SessionFactoryScope scope) {
+		scope.inTransaction(  session -> {
 			assertEquals(
 					2, session.createQuery( "from Genius g where g.id = :id", Genius.class )
 							.setParameter( "id", 1L )
@@ -82,6 +94,8 @@ public class IdPropertyInJoinedSubclassTest extends BaseCoreFunctionalTestCase {
 
 		private Long realId;
 
+		private String name;
+
 		@Id
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		@Column(name = "realId")
@@ -97,6 +111,8 @@ public class IdPropertyInJoinedSubclassTest extends BaseCoreFunctionalTestCase {
 	@Entity(name = "Genius")
 	public static class Genius extends Human {
 		private Long id;
+
+		private int age;
 
 		public Genius() {
 		}

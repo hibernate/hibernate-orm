@@ -210,6 +210,20 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	}
 
 	/**
+	 * @deprecated currently used by Hibernate Reactive
+	 * This version of the constructor should handle the case in which we do actually have the option to access the DatabaseMetaData,
+	 * but since Hibernate Reactive is currently not making use of it we take a shortcut.
+	 */
+	@Deprecated
+	public JdbcEnvironmentImpl(
+			ServiceRegistryImplementor serviceRegistry,
+			Dialect dialect,
+			DatabaseMetaData databaseMetaData
+			/*JdbcConnectionAccess jdbcConnectionAccess*/) throws SQLException {
+		this(serviceRegistry, dialect);
+	}
+
+	/**
 	 * The main constructor form.  Builds a JdbcEnvironment using the available DatabaseMetaData
 	 *
 	 * @param serviceRegistry The service registry
@@ -359,11 +373,6 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	@Override
 	public LobCreatorBuilder getLobCreatorBuilder() {
 		return lobCreatorBuilder;
-	}
-
-	public TypeInfo getTypeInfoForJdbcCode(int jdbcTypeCode) {
-		throw new UnsupportedOperationException( "Support for getting TypeInfo from jdbcTypeCode has been disabled as it wasn't used." +
-													" Use org.hibernate.engine.jdbc.spi.TypeInfo.extractTypeInfo as alternative, or report an issue and explain." );
 	}
 
 }

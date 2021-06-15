@@ -45,6 +45,7 @@ public class CloseOnTerminalDecorator implements InvocationHandler {
 			case "noneMatch":
 			case "findFirst":
 			case "findAny":
+			case "toList":
 				terminal = true;
 				break;
 			default:

@@ -32,7 +32,13 @@ public enum SequenceMismatchStrategy {
 	 * When detecting a mismatch, Hibernate tries to fix it by overriding the entity sequence mapping using the one
 	 * found in the database.
 	 */
-	FIX;
+	FIX,
+
+	/**
+	 * Don't perform any check. This is useful to speedup bootstrap as it won't query the sequences on the DB,
+	 * at cost of not validating the sequences.
+	 */
+	NONE;
 
 	/**
 	 * Interpret the configured SequenceMismatchStrategy value.

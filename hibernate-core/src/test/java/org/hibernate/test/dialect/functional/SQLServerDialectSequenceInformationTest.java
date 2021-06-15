@@ -22,6 +22,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -82,15 +83,16 @@ public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 		ssrb.applySettings( Collections.singletonMap( AvailableSettings.URL, newUrl ) );
 		StandardServiceRegistry ssr = ssrb.build();
 
-		try ( Connection connection = ssr.getService( JdbcServices.class )
-				.getBootstrapJdbcConnectionAccess()
-				.obtainConnection() ) {
+		final JdbcConnectionAccess bootstrapJdbcConnectionAccess = ssr.getService( JdbcServices.class )
+				.getBootstrapJdbcConnectionAccess();
+
+		try ( Connection connection = bootstrapJdbcConnectionAccess.obtainConnection() ) {
 
 			try (Statement statement = connection.createStatement()) {
 				statement.execute( "CREATE SEQUENCE ITEM_SEQ START WITH 100 INCREMENT BY 10" );
 			}
 
-			JdbcEnvironment jdbcEnvironment = new JdbcEnvironmentImpl( connection.getMetaData(), dialect );
+			JdbcEnvironment jdbcEnvironment = new JdbcEnvironmentImpl( connection.getMetaData(), dialect, bootstrapJdbcConnectionAccess );
 			Iterable<SequenceInformation> sequenceInformations = SequenceInformationExtractorLegacyImpl.INSTANCE.extractMetadata(
 					new ExtractionContext.EmptyExtractionContext() {
 						@Override

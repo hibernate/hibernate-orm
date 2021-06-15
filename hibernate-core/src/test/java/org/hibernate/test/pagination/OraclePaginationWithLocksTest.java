@@ -94,6 +94,30 @@ public class OraclePaginationWithLocksTest {
 	}
 
 	@Test
+	public void testNativeQueryWithSpaces(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Person> people = session.createNativeQuery(
+					"select  p.name from Person p where p.id = 1 for update" )
+					.setMaxResults( 10 )
+					.list();
+		} );
+
+		scope.inTransaction( session -> {
+			Person p = new Person();
+			p.setName( " this is a  string with spaces  " );
+			session.persist( p );
+		} );
+
+		scope.inTransaction( session -> {
+			final List<Person> people = session.createNativeQuery(
+					"select p.name from Person p where p.name =  ' this is a  string with spaces  ' for update" )
+					.setMaxResults( 10 )
+					.list();
+			assertEquals( 1, people.size() );
+		} );
+	}
+
+	@Test
 	public void testCriteriaQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -149,7 +149,12 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 								}
 							}
 					);
-					return new JdbcEnvironmentImpl( registry, dialect, dbmd );
+					return new JdbcEnvironmentImpl(
+							registry,
+							dialect,
+							dbmd,
+							jdbcConnectionAccess
+					);
 				}
 				catch (SQLException e) {
 					log.unableToObtainConnectionMetadata( e );

@@ -1389,6 +1389,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.scrollableResultSetsEnabled = enabled;
 	}
 
+	@Deprecated
 	public void enableResultSetWrappingSupport(boolean enabled) {
 		this.wrapResultSetsEnabled = enabled;
 	}

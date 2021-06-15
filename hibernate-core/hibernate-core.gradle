@@ -263,26 +263,31 @@ task generateEnversStaticMetamodel(
     destinationDir = new File( "${projectDir}/src/main/java" )
 }
 
-test {
-    systemProperty 'file.encoding', 'utf-8'
+tasks.withType( Test.class ).each { test ->
+    test.systemProperty 'file.encoding', 'utf-8'
 
     if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
         // See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
-        jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+        test.jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
         // Weld needs this to generate proxies
-        jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
-        jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+        test.jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+        test.jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
     }
 
-    beforeTest { descriptor ->
+    test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
+
     // Allow to exclude specific tests
     if (project.hasProperty('excludeTests')) {
-        filter {
+        test.filter {
             excludeTestsMatching project.property('excludeTests').toString()
         }
     }
+
+    // widen the overall 6.0 filter to include various package-protected tests
+    test.include 'org/hibernate/bytecode/internal/bytebuddy/**'
+    test.include 'org/hibernate/event/service/internal/**'
 }
 
 

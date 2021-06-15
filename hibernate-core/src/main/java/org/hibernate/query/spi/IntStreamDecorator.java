@@ -109,134 +109,183 @@ public class IntStreamDecorator implements IntStream {
 
 	@Override
 	public void forEach(IntConsumer action) {
-		delegate.forEach( action );
-		close();
+		try {
+			delegate.forEach( action );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public void forEachOrdered(IntConsumer action) {
-		delegate.forEachOrdered( action );
-		close();
+		try {
+			delegate.forEachOrdered( action );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public int[] toArray() {
-		int[] result = delegate.toArray();
-		close();
-		return result;
+		try {
+			return delegate.toArray();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public int reduce(int identity, IntBinaryOperator op) {
-		int result = delegate.reduce( identity, op );
-		close();
-		return result;
+		try {
+			return delegate.reduce( identity, op );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt reduce(IntBinaryOperator op) {
-		OptionalInt result = delegate.reduce( op );
-		close();
-		return result;
+		try {
+			return delegate.reduce( op );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <R> R collect(
 			Supplier<R> supplier, ObjIntConsumer<R> accumulator, BiConsumer<R, R> combiner) {
-		R result = delegate.collect( supplier, accumulator, combiner );
-		close();
-		return result;
+		try {
+			return delegate.collect( supplier, accumulator, combiner );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public int sum() {
-		int result = delegate.sum();
-		close();
-		return result;
+		try {
+			return delegate.sum();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt min() {
-		OptionalInt result = delegate.min();
-		close();
-		return result;
+		try {
+			return delegate.min();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt max() {
-		OptionalInt result = delegate.max();
-		close();
-		return result;
+		try {
+			return delegate.max();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public long count() {
-		long result = delegate.count();
-		close();
-		return result;
+		try {
+			return delegate.count();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalDouble average() {
-		OptionalDouble result = delegate.average();
-		close();
-		return result;
+		try {
+			return delegate.average();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public IntSummaryStatistics summaryStatistics() {
-		IntSummaryStatistics result = delegate.summaryStatistics();
-		close();
-		return result;
+		try {
+			return delegate.summaryStatistics();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean anyMatch(IntPredicate predicate) {
-		boolean result = delegate.anyMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.anyMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean allMatch(IntPredicate predicate) {
-		boolean result = delegate.allMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.allMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean noneMatch(IntPredicate predicate) {
-		boolean result = delegate.noneMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.noneMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt findFirst() {
-		OptionalInt result = delegate.findFirst();
-		close();
-		return result;
+		try {
+			return delegate.findFirst();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt findAny() {
-		OptionalInt result = delegate.findAny();
-		close();
-		return result;
+		try {
+			return delegate.findAny();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public LongStream asLongStream() {
-		LongStream result = delegate.asLongStream();
-		close();
-		return result;
+		return new LongStreamDecorator( delegate.asLongStream() );
 	}
 
 	@Override
 	public DoubleStream asDoubleStream() {
-		DoubleStream result = delegate.asDoubleStream();
-		close();
-		return result;
+		return new DoubleStreamDecorator( delegate.asDoubleStream() );
 	}
 
 	@Override

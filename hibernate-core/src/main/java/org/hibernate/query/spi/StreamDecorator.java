@@ -131,121 +131,174 @@ public class StreamDecorator<R> implements Stream<R> {
 
 	@Override
 	public void forEach(Consumer<? super R> action) {
-		delegate.forEach( action );
-		close();
+		try {
+			delegate.forEach(action);
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public void forEachOrdered(Consumer<? super R> action) {
-		delegate.forEachOrdered( action );
-		close();
+		try {
+			delegate.forEachOrdered( action );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Object[] toArray() {
-		Object[] result = delegate.toArray();
-		close();
-		return result;
+		try {
+			return delegate.toArray();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <A> A[] toArray(IntFunction<A[]> generator) {
-		A[] result = delegate.toArray( generator );
-		close();
-		return result;
+		try {
+			return delegate.toArray( generator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public R reduce(R identity, BinaryOperator<R> accumulator) {
-		R result = delegate.reduce( identity, accumulator );
-		close();
-		return result;
+		try {
+			return delegate.reduce( identity, accumulator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> reduce(BinaryOperator<R> accumulator) {
-		Optional<R> result = delegate.reduce( accumulator );
-		close();
-		return result;
+		try {
+			return delegate.reduce( accumulator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <U> U reduce(
 			U identity, BiFunction<U, ? super R, U> accumulator, BinaryOperator<U> combiner) {
-		U result = delegate.reduce( identity, accumulator, combiner );
-		close();
-		return result;
+		try {
+			return delegate.reduce( identity, accumulator, combiner );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <R1> R1 collect(
 			Supplier<R1> supplier, BiConsumer<R1, ? super R> accumulator, BiConsumer<R1, R1> combiner) {
-		R1 result = delegate.collect( supplier, accumulator, combiner );
-		close();
-		return result;
+		try {
+			return delegate.collect( supplier, accumulator, combiner );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <R1, A> R1 collect(Collector<? super R, A, R1> collector) {
-		R1 result = delegate.collect( collector );
-		close();
-		return result;
+		try {
+			return delegate.collect( collector );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> min(Comparator<? super R> comparator) {
-		Optional<R> result = delegate.min( comparator );
-		close();
-		return result;
+		try {
+			return delegate.min( comparator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> max(Comparator<? super R> comparator) {
-		Optional<R> result = delegate.max( comparator );
-		close();
-		return result;
+		try {
+			return delegate.max( comparator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public long count() {
-		long result = delegate.count();
-		close();
-		return result;
+		try {
+			return delegate.count();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean anyMatch(Predicate<? super R> predicate) {
-		boolean result = delegate.anyMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.anyMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean allMatch(Predicate<? super R> predicate) {
-		boolean result = delegate.allMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.allMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean noneMatch(Predicate<? super R> predicate) {
-		boolean result = delegate.noneMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.noneMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> findFirst() {
-		Optional<R> result = delegate.findFirst();
-		close();
-		return result;
+		try {
+			return delegate.findFirst();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> findAny() {
-		Optional<R> result = delegate.findAny();
-		close();
-		return result;
+		try {
+			return delegate.findAny();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override

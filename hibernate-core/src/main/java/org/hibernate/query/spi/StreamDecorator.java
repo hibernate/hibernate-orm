@@ -9,14 +9,18 @@ package org.hibernate.query.spi;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
@@ -366,6 +370,72 @@ public class StreamDecorator<R> implements Stream<R> {
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			throw new HibernateException( e );
+		}
+	}
+
+	//Methods added to JDK 16
+
+	public <T> Stream<T> mapMulti(BiConsumer<? super R, ? super Consumer<T>> mapper) {
+		try {
+			@SuppressWarnings("unchecked")
+			Stream<T> result = (Stream<T>)
+					ReflectHelper.getMethod( Stream.class, "mapMulti", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public IntStream mapMultiToInt(BiConsumer<? super R, ? super IntConsumer> mapper) {
+		try {
+			IntStream result = (IntStream)
+					ReflectHelper.getMethod( Stream.class, "mapMultiToInt", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return new IntStreamDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public LongStream mapMultiToLong(BiConsumer<? super R, ? super LongConsumer> mapper) {
+		try {
+			LongStream result = (LongStream)
+					ReflectHelper.getMethod( Stream.class, "mapMultiToLong", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return new LongStreamDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public DoubleStream mapMultiToDouble(BiConsumer<? super R, ? super DoubleConsumer> mapper) {
+		try {
+			DoubleStream result = (DoubleStream)
+					ReflectHelper.getMethod( Stream.class, "mapMultiToDouble", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return new DoubleStreamDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<R> toList() {
+		try {
+			return (List<R>)
+					ReflectHelper.getMethod( Stream.class, "toList", BiConsumer.class )
+							.invoke( delegate );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+		finally {
+			close();
 		}
 	}
 }

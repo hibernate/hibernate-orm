@@ -347,4 +347,7 @@ public class DoubleStreamDecorator implements DoubleStream {
 			throw new HibernateException( e );
 		}
 	}
+
+	//Methods added to JDK 16
+	//TODO: Find a way to support mapMulti(IntMapMultiConsumer)
 }

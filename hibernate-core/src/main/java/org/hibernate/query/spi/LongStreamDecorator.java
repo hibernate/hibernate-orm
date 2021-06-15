@@ -353,4 +353,7 @@ public class LongStreamDecorator implements LongStream {
 			throw new HibernateException( e );
 		}
 	}
+
+	//Methods added to JDK 16
+	//TODO: Find a way to support mapMulti(LongMapMultiConsumer)
 }

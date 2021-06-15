@@ -4112,8 +4112,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPath<?> visitTreatedNavigablePath(HqlParser.TreatedNavigablePathContext ctx) {
 		final SqmPath<?> sqmPath = consumeManagedTypeReference( ctx.path() );
+
 		final String treatTargetName = ctx.dotIdentifierSequence().getText();
-		final EntityDomainType<?> treatTarget = getCreationContext().getJpaMetamodel().entity( treatTargetName );
+		final String treatTargetEntityName = getCreationContext().getJpaMetamodel().qualifyImportableName( treatTargetName );
+		final EntityDomainType<?> treatTarget = getCreationContext().getJpaMetamodel().entity( treatTargetEntityName );
 
 		SqmPath<?> result = resolveTreatedPath( sqmPath, treatTarget );
 

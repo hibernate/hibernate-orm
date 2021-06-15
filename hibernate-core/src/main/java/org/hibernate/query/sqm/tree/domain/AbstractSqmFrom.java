@@ -88,6 +88,19 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	/**
+	 * Intended for use with {@link SqmTreatedRoot} -> {@link SqmRoot}
+	 */
+	protected AbstractSqmFrom(
+			NavigablePath navigablePath,
+			EntityDomainType<T> entityType,
+			String alias,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, entityType, null, nodeBuilder );
+
+		this.alias = alias;
+	}
+
+	/**
 	 * Intended for use with {@link SqmCorrelatedRootJoin} through {@link SqmRoot}
 	 */
 	protected AbstractSqmFrom(

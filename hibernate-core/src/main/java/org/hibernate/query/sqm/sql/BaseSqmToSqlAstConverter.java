@@ -324,6 +324,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private static final Logger log = Logger.getLogger( BaseSqmToSqlAstConverter.class );
 
 	private final SqlAstCreationContext creationContext;
+	private final boolean jpaQueryComplianceEnabled;
 	private final SqmStatement<?> statement;
 
 	private final QueryOptions queryOptions;
@@ -369,6 +370,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		super( creationContext.getServiceRegistry() );
 
 		this.creationContext = creationContext;
+		this.jpaQueryComplianceEnabled = creationContext
+				.getSessionFactory()
+				.getSessionFactoryOptions()
+				.getJpaCompliance()
+				.isJpaQueryComplianceEnabled();
+
 		this.statement = statement;
 
 		if ( statement instanceof SqmSelectStatement<?> ) {
@@ -681,8 +688,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.getRoot()
 						.get( versionMapping.getPartName() ),
 				this,
-				this
-		).getColumnReferences();
+				this,
+				jpaQueryComplianceEnabled ).getColumnReferences();
 		assert targetColumnReferences.size() == 1;
 
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
@@ -959,8 +966,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							(SqmBasicValuedSimplePath<?>) sqmStatement.getTarget()
 									.get( versionAttributeName ),
 							this,
-							this
-					).getColumnReferences();
+							this,
+							jpaQueryComplianceEnabled ).getColumnReferences();
 					assert targetColumnReferences.size() == 1;
 
 					insertStatement.addTargetColumnReferences( targetColumnReferences );
@@ -2181,7 +2188,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Expression visitBasicValuedPath(SqmBasicValuedSimplePath<?> sqmPath) {
-		BasicValuedPathInterpretation<?> path = BasicValuedPathInterpretation.from( sqmPath, this, this );
+		BasicValuedPathInterpretation<?> path = BasicValuedPathInterpretation.from( sqmPath, this, this, jpaQueryComplianceEnabled );
 
 		if ( isDuration( sqmPath.getNodeType() ) ) {
 
@@ -2244,7 +2251,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SqmPathInterpretation<?> visitEmbeddableValuedPath(SqmEmbeddedValuedSimplePath<?> sqmPath) {
-		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this );
+		return EmbeddableValuedPathInterpretation.from( sqmPath, this, this, jpaQueryComplianceEnabled );
 	}
 
 	@Override

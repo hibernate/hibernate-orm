@@ -6741,6 +6741,26 @@ public abstract class AbstractEntityPersister
 				return superDefinedAttribute;
 			}
 		}
+
+		if ( treatTargetType != null ) {
+			if ( ! treatTargetType.isTypeOrSuperType( this ) ) {
+				return null;
+			}
+
+			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
+				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {
+					if ( ! treatTargetType.isTypeOrSuperType( subMappingType ) ) {
+						continue;
+					}
+
+					final ModelPart subDefinedAttribute = subMappingType.findSubTypesSubPart( name, treatTargetType );
+
+					if ( subDefinedAttribute != null ) {
+						return subDefinedAttribute;
+					}
+				}
+			}
+		}
 		else {
 			if ( subclassMappingTypes != null && !subclassMappingTypes.isEmpty() ) {
 				for ( EntityMappingType subMappingType : subclassMappingTypes.values() ) {

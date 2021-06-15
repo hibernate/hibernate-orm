@@ -7,8 +7,13 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.hql.spi.SemanticPathPart;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -18,12 +23,13 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	private final SqmRoot<T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmTreatedRoot(
 			SqmRoot<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		super(
+				wrappedPath.getNavigablePath(),
 				(EntityDomainType) wrappedPath.getReferencedPathSource(),
 				null,
 				nodeBuilder
@@ -49,17 +55,42 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
-		//noinspection unchecked
-		return (EntityDomainType) wrappedPath.getReferencedPathSource();
+		return getManagedType();
 	}
 
 	@Override
-	public SqmPath getLhs() {
+	public SqmPath<?> getLhs() {
 		return wrappedPath.getLhs();
 	}
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitTreatedPath( this );
+	}
+
+	@Override
+	public SemanticPathPart resolvePathPart(
+			String name,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		final NavigablePath subNavPath = getNavigablePath().append( name );
+		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
+				subNavPath,
+				snp -> {
+					final SqmPathSource<?> subSource;
+					if ( creationState.getCreationOptions().useStrictJpaCompliance() ) {
+						subSource = getManagedType().findSubPathSource( name );
+					}
+					else {
+						subSource = treatTarget.findSubPathSource( name );
+					}
+
+					if ( subSource == null ) {
+						throw UnknownPathException.unknownSubPath( this, name );
+					}
+
+					return subSource.createSqmPath( this );
+				}
+		);
 	}
 }

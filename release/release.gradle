@@ -12,6 +12,7 @@ apply from: rootProject.file( 'gradle/base-information.gradle' )
 
 apply plugin: 'idea'
 apply plugin: 'distribution'
+//apply plugin: 'java-library-distribution'
 
 
 idea.module {
@@ -20,6 +21,47 @@ idea.module {
 final File documentationDir = mkdir( "${project.buildDir}/documentation" )
 final File projectTemplateStagingDir = mkdir( "${project.buildDir}/projectTemplate" )
 
+
+configurations {
+    core
+//    testing
+
+    envers
+
+    agroal
+    c3p0
+    hikaricp
+    proxool
+    vibur
+
+    jcache
+
+    jpamodelgen
+
+    coreJakarta
+//    testingJakarta
+    enversJakarta
+    jpamodelgenJakarta
+}
+
+dependencies {
+    core project( ':hibernate-core' )
+//    testing project( ':hibernate-testing' )
+    envers project( ':hibernate-envers' )
+    agroal project( ':hibernate-agroal' )
+    c3p0 project( ':hibernate-c3p0' )
+    hikaricp project( ':hibernate-hikaricp' )
+    proxool project( ':hibernate-proxool' )
+    vibur project( ':hibernate-vibur' )
+    jcache project( ':hibernate-jcache' )
+
+    jpamodelgen project( ':hibernate-jpamodelgen' )
+
+    coreJakarta project( ':hibernate-core-jakarta' )
+//    testingJakarta project( ':hibernate-testing-jakarta' )
+    enversJakarta project( ':hibernate-envers-jakarta' )
+    jpamodelgenJakarta project( ':hibernate-jpamodelgen-jakarta' )
+}
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
@@ -116,8 +158,7 @@ distributions {
             from rootProject.file( 'hibernate_logo.gif' )
 
             into('lib/required') {
-                from ( parent.project( 'hibernate-core' ).configurations.default +
-                        parent.project( 'hibernate-core' ).configurations.default.allArtifacts.files )
+                from configurations.core
             }
 
             // todo (6.0) - add back
@@ -137,29 +178,50 @@ distributions {
 //            }
 
             into( 'lib/jpa-metamodel-generator' ) {
-                from ( parent.project( 'hibernate-jpamodelgen' ).configurations.default +
-                        parent.project( 'hibernate-jpamodelgen' ).configurations.default.allArtifacts.files )
+                from( configurations.jpamodelgen - configurations.core )
             }
 
             into( 'lib/envers' ) {
-                from(
-                        ( parent.project( 'hibernate-envers' ).configurations.default.allArtifacts.files +
-                                parent.project( 'hibernate-envers' ).configurations.default ) -
-                                ( parent.project( 'hibernate-core' ).configurations.default.allArtifacts.files +
-                                        parent.project( 'hibernate-core' ).configurations.default )
-                )
+                from( configurations.envers - configurations.core )
             }
 
+//            into( 'lib/testing' ) {
+//                from( configurations.testing - configurations.core )
+//            }
 
-            [ 'hibernate-agroal', 'hibernate-c3p0', 'hibernate-hikaricp', 'hibernate-jcache', 'hibernate-proxool', 'hibernate-vibur' ].each { feature ->
-                final String shortName = feature.substring( 'hibernate-'.length() )
-                owner.into('lib/optional/' + shortName) {
-                    from(
-                            ( parent.project( feature ).configurations.default.files +
-                                    parent.project( feature ).configurations.default.allArtifacts.files ) -
-                                    ( parent.project( 'hibernate-core' ).configurations.default.files +
-                                            parent.project( 'hibernate-core' ).configurations.default.allArtifacts.files )
-                    )
+            into( 'lib/optional' ) {
+                into( 'agroal' ) {
+                    from( configurations.agroal - configurations.core )
+                }
+                into( 'c3p0' ) {
+                    from( configurations.c3p0 - configurations.core )
+                }
+                into( 'hikaricp' ) {
+                    from( configurations.hikaricp - configurations.core )
+                }
+                into( 'jcache' ) {
+                    from( configurations.jcache - configurations.core )
+                }
+                into( 'proxool' ) {
+                    from( configurations.proxool - configurations.core )
+                }
+                into( 'vibur' ) {
+                    from( configurations.vibur - configurations.core )
+                }
+            }
+
+            into( 'lib/jakarta' ) {
+                into( 'required' ) {
+                    from configurations.coreJakarta
+                }
+//                into( 'testing' ) {
+//                   from( configurations.testingJakarta - configurations.coreJakarta )
+//                }
+                into( 'envers' ) {
+                    from( configurations.enversJakarta - configurations.coreJakarta )
+                }
+                into( 'jpa-metamodel-generator' ) {
+                    from( configurations.jpamodelgenJakarta - configurations.coreJakarta )
                 }
             }
 

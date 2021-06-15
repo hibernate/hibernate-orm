@@ -44,6 +44,15 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 		super( navigablePath, referencedNavigable, nodeBuilder );
 	}
 
+	public SqmRoot(
+			NavigablePath navigablePath,
+			EntityDomainType<E> entityType,
+			String alias,
+			NodeBuilder nodeBuilder) {
+		super( navigablePath, entityType, alias, nodeBuilder );
+
+	}
+
 	@Override
 	public SqmPath<?> getLhs() {
 		// a root has no LHS

@@ -10,10 +10,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -33,13 +37,28 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 	public static <T> EmbeddableValuedPathInterpretation<T> from(
 			SqmEmbeddedValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter converter,
-			SemanticQueryWalker sqmWalker) {
-		TableGroup tableGroup = converter.getFromClauseAccess()
-				.findTableGroup( sqmPath.getLhs().getNavigablePath() );
+			SemanticQueryWalker sqmWalker,
+			boolean jpaQueryComplianceEnabled) {
+		TableGroup tableGroup = converter.getFromClauseAccess().findTableGroup( sqmPath.getLhs().getNavigablePath() );
+
+		EntityMappingType treatTarget = null;
+		if ( jpaQueryComplianceEnabled ) {
+			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
+				final EntityDomainType treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
+				final MappingMetamodel domainModel = converter.getCreationContext().getDomainModel();
+				treatTarget = domainModel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+			}
+			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
+				final EntityDomainType entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
+				final MappingMetamodel domainModel = converter.getCreationContext().getDomainModel();
+				treatTarget = domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+
+			}
+		}
 
 		final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),
-				null
+				treatTarget
 		);
 
 		return new EmbeddableValuedPathInterpretation<>(

@@ -10,10 +10,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -34,15 +40,41 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 	public static <T> BasicValuedPathInterpretation<T> from(
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqlAstCreationState sqlAstCreationState,
-			SemanticQueryWalker sqmWalker) {
+			SemanticQueryWalker sqmWalker,
+			boolean jpaQueryComplianceEnabled) {
 		TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( sqmPath.getLhs().getNavigablePath() );
+
+		EntityMappingType treatTarget = null;
+		if ( jpaQueryComplianceEnabled ) {
+			if ( sqmPath.getLhs() instanceof SqmTreatedPath ) {
+				final EntityDomainType treatTargetDomainType = ( (SqmTreatedPath) sqmPath.getLhs() ).getTreatTarget();
+				final MappingMetamodel domainModel = sqlAstCreationState.getCreationContext().getDomainModel();
+				treatTarget = domainModel.findEntityDescriptor( treatTargetDomainType.getHibernateEntityName() );
+			}
+			else if ( sqmPath.getLhs().getNodeType() instanceof EntityDomainType ) {
+				final EntityDomainType entityDomainType = (EntityDomainType) sqmPath.getLhs().getNodeType();
+				final MappingMetamodel domainModel = sqlAstCreationState.getCreationContext().getDomainModel();
+				treatTarget = domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+			}
+		}
 
 		final BasicValuedModelPart mapping = (BasicValuedModelPart) tableGroup.getModelPart().findSubPart(
 				sqmPath.getReferencedPathSource().getPathName(),
-				null
+				treatTarget
 		);
 
 		if ( mapping == null ) {
+			if ( jpaQueryComplianceEnabled ) {
+				// to get the better error, see if we got nothing because of treat handling
+				final ModelPart subPart = tableGroup.getModelPart().findSubPart(
+						sqmPath.getReferencedPathSource().getPathName(),
+						null
+				);
+				if ( subPart != null ) {
+					throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.IMPLICIT_TREAT );
+				}
+			}
+
 			throw new SemanticException( "`" + sqmPath.getNavigablePath().getFullPath() + "` did not reference a known model part" );
 		}
 

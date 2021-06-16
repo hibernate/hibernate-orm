@@ -155,7 +155,7 @@ task copyBundleResources (type: Copy) {
 	// There are persistence.xml files referencing jar files through their absolute path so we
 	// have to replace 'hibernate-core/hibernate-core' in the path with 'hibernate-core/hibernate-core-jakarta'
 	filter { line ->
-		line.replaceAll( 'hibernate-core/', 'hibernate-core-jakarta/' )
+		line.replaceAll( 'hibernate-core/hibernate-core', 'hibernate-core/hibernate-core-jakarta' )
 	}
 	doFirst {
 		ext.bundlesTargetDir.mkdirs()

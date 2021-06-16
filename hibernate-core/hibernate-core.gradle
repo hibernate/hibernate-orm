@@ -229,6 +229,10 @@ task copyBundleResources (type: Copy) {
 }
 processTestResources.dependsOn copyBundleResources
 
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 task testJar(type: Jar, dependsOn: testClasses) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )

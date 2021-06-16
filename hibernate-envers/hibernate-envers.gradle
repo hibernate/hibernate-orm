@@ -71,6 +71,10 @@ jar {
     }
 }
 
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 task testJar(type: Jar, dependsOn: testClasses) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )

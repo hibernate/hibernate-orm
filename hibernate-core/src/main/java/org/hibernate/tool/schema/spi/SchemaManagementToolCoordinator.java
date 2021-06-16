@@ -77,7 +77,7 @@ public class SchemaManagementToolCoordinator {
 						ExceptionHandlerLoggedImpl.INSTANCE
 		);
 
-		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions );
+		performScriptAction( actions.getScriptAction(), metadata, tool, serviceRegistry, executionOptions, configService );
 		performDatabaseAction( actions.getDatabaseAction(), metadata, tool, serviceRegistry, executionOptions );
 
 		if ( actions.getDatabaseAction() == Action.CREATE_DROP ) {
@@ -260,13 +260,15 @@ public class SchemaManagementToolCoordinator {
 			Metadata metadata,
 			SchemaManagementTool tool,
 			ServiceRegistry serviceRegistry,
-			ExecutionOptions executionOptions) {
+			ExecutionOptions executionOptions,
+			ConfigurationService configurationService) {
 		switch ( scriptAction ) {
 			case CREATE_ONLY: {
 				final JpaTargetAndSourceDescriptor createDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						CreateSettingSelector.INSTANCE,
-						serviceRegistry
+						serviceRegistry,
+						configurationService
 				);
 				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
 						metadata,
@@ -281,7 +283,8 @@ public class SchemaManagementToolCoordinator {
 				final JpaTargetAndSourceDescriptor dropDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						DropSettingSelector.INSTANCE,
-						serviceRegistry
+						serviceRegistry,
+						configurationService
 				);
 				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
 						metadata,
@@ -292,7 +295,8 @@ public class SchemaManagementToolCoordinator {
 				final JpaTargetAndSourceDescriptor createDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						CreateSettingSelector.INSTANCE,
-						serviceRegistry
+						serviceRegistry,
+						configurationService
 				);
 				tool.getSchemaCreator( executionOptions.getConfigurationValues() ).doCreation(
 						metadata,
@@ -306,7 +310,8 @@ public class SchemaManagementToolCoordinator {
 				final JpaTargetAndSourceDescriptor dropDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						DropSettingSelector.INSTANCE,
-						serviceRegistry
+						serviceRegistry,
+						configurationService
 				);
 				tool.getSchemaDropper( executionOptions.getConfigurationValues() ).doDrop(
 						metadata,
@@ -320,7 +325,8 @@ public class SchemaManagementToolCoordinator {
 				final JpaTargetAndSourceDescriptor migrateDescriptor = buildScriptTargetDescriptor(
 						executionOptions.getConfigurationValues(),
 						MigrateSettingSelector.INSTANCE,
-						serviceRegistry
+						serviceRegistry,
+						configurationService
 				);
 				tool.getSchemaMigrator( executionOptions.getConfigurationValues() ).doMigration(
 						metadata,
@@ -338,7 +344,8 @@ public class SchemaManagementToolCoordinator {
 	private static JpaTargetAndSourceDescriptor buildScriptTargetDescriptor(
 			Map configurationValues,
 			SettingSelector settingSelector,
-			ServiceRegistry serviceRegistry) {
+			ServiceRegistry serviceRegistry,
+			ConfigurationService configurationService) {
 		final Object scriptSourceSetting = settingSelector.getScriptSourceSetting( configurationValues );
 		final SourceType sourceType = SourceType.interpret(
 				settingSelector.getSourceTypeSetting( configurationValues ),
@@ -358,10 +365,13 @@ public class SchemaManagementToolCoordinator {
 				? Helper.interpretScriptSourceSetting( scriptSourceSetting, serviceRegistry.getService( ClassLoaderService.class ), charsetName )
 				: null;
 
+
+		boolean append = configurationService.getSetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_APPEND, StandardConverters.BOOLEAN, true );
 		final ScriptTargetOutput scriptTargetOutput = Helper.interpretScriptTargetSetting(
 				settingSelector.getScriptTargetSetting( configurationValues ),
 				serviceRegistry.getService( ClassLoaderService.class ),
-				charsetName
+				charsetName,
+				append
 		);
 
 		return new JpaTargetAndSourceDescriptor() {

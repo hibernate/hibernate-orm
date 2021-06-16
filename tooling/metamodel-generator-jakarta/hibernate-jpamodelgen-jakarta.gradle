@@ -7,7 +7,7 @@
 
 description = 'Annotation Processor to generate JPA 3 static metamodel classes'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
 
 configurations {
 	jakartaeeTransformJars

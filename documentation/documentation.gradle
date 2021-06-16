@@ -18,6 +18,10 @@ ext {
 			'hibernate-ehcache',
 			'hibernate-java8',
 			'hibernate-integrationtest-java-modules',
+			'hibernate-core-jakarta',
+			'hibernate-testing-jakarta',
+			'hibernate-envers-jakarta',
+			'hibernate-jpamodelgen-jakarta',
 			'release'
 	]
 }

@@ -9,7 +9,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 description = 'Hibernate\'s entity version (audit/history) support Jakarta edition'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
 
 configurations {
 	jakartaeeTransformJars

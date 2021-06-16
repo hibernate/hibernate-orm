@@ -9,7 +9,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 description = 'Hibernate O/RM implementation of the Jakarta Persistence specification'
 
-apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
 
 configurations {
 	tests {
@@ -96,10 +96,13 @@ jar {
 	mustRunAfter project(':hibernate-core').tasks.testJar
 	dependsOn project(':hibernate-core').tasks.jar
 	dependsOn project(':hibernate-core').tasks.testJar
+
 	def baseDir = project(':hibernate-core').buildDir
 	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
+
 	inputs.files(baseJars).skipWhenEmpty()
 	outputs.dir project.buildDir
+
 	doLast {
 		new File(project.buildDir, "libs").mkdirs()
 		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
@@ -155,7 +158,7 @@ task copyBundleResources (type: Copy) {
 	// There are persistence.xml files referencing jar files through their absolute path so we
 	// have to replace 'hibernate-core/hibernate-core' in the path with 'hibernate-core/hibernate-core-jakarta'
 	filter { line ->
-		line.replaceAll( 'hibernate-core/hibernate-core', 'hibernate-core/hibernate-core-jakarta' )
+		line.replaceAll( 'hibernate-core/target', 'hibernate-core-jakarta/target' )
 	}
 	doFirst {
 		ext.bundlesTargetDir.mkdirs()

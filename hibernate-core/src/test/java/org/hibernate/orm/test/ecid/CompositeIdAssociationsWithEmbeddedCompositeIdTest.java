@@ -4,12 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.ecid;
+package org.hibernate.orm.test.ecid;
 
 import java.io.Serializable;
 import java.util.Iterator;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -17,31 +16,45 @@ import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Gail Badner
  */
-public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				CompositeIdAssociationsWithEmbeddedCompositeIdTest.Parent.class,
+				CompositeIdAssociationsWithEmbeddedCompositeIdTest.Person.class
+		}
+)
+@SessionFactory
+public class CompositeIdAssociationsWithEmbeddedCompositeIdTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Person.class };
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Person" ).executeUpdate();
+					session.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-13114")
-	public void testQueries() {
+	@TestForIssue(jiraKey = "HHH-13114")
+	public void testQueries(SessionFactoryScope scope) {
 		Parent parent1 = new Parent( "Jane", 0 );
 		Parent parent2 = new Parent( "Jim", 1 );
-		Person person = doInHibernate(
-				this::sessionFactory, session -> {
+		Person person = scope.fromTransaction(
+				session -> {
 					Person p = new Person();
 					p.setParent1( parent1 );
 					p.setParent2( parent2 );
@@ -50,27 +63,27 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 					session.persist( parent2 );
 					session.persist( p );
 					return p;
-		});
+				} );
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					checkResult( session.get( Person.class, person ) );
-		});
+		scope.inTransaction(
+				session ->
+						checkResult( session.get( Person.class, person ) )
+		);
 
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					checkResult( session.createQuery( "from Person p", Person.class ).getSingleResult() );
-		});
+		scope.inTransaction(
+				session ->
+						checkResult( session.createQuery( "from Person p", Person.class ).getSingleResult() )
+		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					Iterator<Person> iterator = session.createQuery( "from Person p", Person.class ).list().iterator();
 					assertTrue( iterator.hasNext() );
 					Person p = iterator.next();
 					checkResult( p );
 					assertFalse( iterator.hasNext() );
-		});
+				} );
 	}
 
 	private void checkResult(Person p) {
@@ -83,7 +96,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 	@Entity(name = "Person")
 	public static class Person implements Serializable {
 		@Id
-		@JoinColumns( value = {
+		@JoinColumns(value = {
 				@JoinColumn(name = "p1Name"),
 				@JoinColumn(name = "p1Index")
 		})
@@ -91,7 +104,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		private Parent parent1;
 
 		@Id
-		@JoinColumns( value = {
+		@JoinColumns(value = {
 				@JoinColumn(name = "p2Name"),
 				@JoinColumn(name = "p2Index")
 		})
@@ -116,6 +129,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
@@ -123,6 +137,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		public Parent getParent1() {
 			return parent1;
 		}
+
 		public void setParent1(Parent parent1) {
 			this.parent1 = parent1;
 		}
@@ -130,6 +145,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		public Parent getParent2() {
 			return parent2;
 		}
+
 		public void setParent2(Parent parent2) {
 			this.parent2 = parent2;
 		}
@@ -137,6 +153,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		public int getBirthOrder() {
 			return birthOrder;
 		}
+
 		public void setBirthOrder(int birthOrder) {
 			this.birthOrder = birthOrder;
 		}
@@ -148,7 +165,7 @@ public class CompositeIdAssociationsWithEmbeddedCompositeIdTest extends BaseCore
 		private String name;
 
 		@Id
-		@Column(name="ind")
+		@Column(name = "ind")
 		private int index;
 
 		public Parent() {

@@ -6,7 +6,7 @@
  */
 
 //$Id: UniversityCourse.java 6913 2005-05-25 17:37:51Z oneovthafew $
-package org.hibernate.test.ecid;
+package org.hibernate.orm.test.ecid;
 
 
 /**

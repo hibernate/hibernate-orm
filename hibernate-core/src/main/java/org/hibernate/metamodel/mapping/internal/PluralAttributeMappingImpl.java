@@ -253,6 +253,7 @@ public class PluralAttributeMappingImpl
 					"To-many key - " + getNavigableRole(),
 					() -> {
 						elementFkDescriptor = createForeignKeyDescriptor(
+								bootDescriptor,
 								bootDescriptor.getElement(),
 								(EntityType) collectionDescriptor.getElementType(),
 								creationProcess,
@@ -267,6 +268,7 @@ public class PluralAttributeMappingImpl
 					"To-many index - " + getNavigableRole(),
 					() -> {
 						indexFkDescriptor = createForeignKeyDescriptor(
+								bootDescriptor,
 								( (IndexedCollection) bootDescriptor ).getIndex(),
 								(EntityType) collectionDescriptor.getIndexType(),
 								creationProcess,
@@ -317,6 +319,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	private ForeignKeyDescriptor createForeignKeyDescriptor(
+			Collection collectionBootDescriptor,
 			Value fkBootDescriptorSource,
 			EntityType entityType,
 			MappingModelCreationProcess creationProcess,
@@ -346,7 +349,7 @@ public class PluralAttributeMappingImpl
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {
 			return MappingModelCreationHelper.buildEmbeddableForeignKeyDescriptor(
 					(EmbeddableValuedModelPart) fkTargetPart,
-					fkBootDescriptorSource,
+					collectionBootDescriptor,
 					dialect,
 					creationProcess
 			);

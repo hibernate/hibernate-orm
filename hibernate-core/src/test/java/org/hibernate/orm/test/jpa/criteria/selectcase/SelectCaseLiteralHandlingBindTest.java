@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.criteria.selectcase;
+package org.hibernate.orm.test.jpa.criteria.selectcase;
 
 import java.util.List;
 import java.util.Map;
@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests query rendering and execution
  * when {@link CriteriaBuilder.Case} is present in the criteria
- * and the {@code hibernate.criteria.literal_handling_mode} is set to {@literal bind}.
+ * and the {@code hibernate.criteria.value_handling_mode} is set to {@literal BIND}.
  *
  * In both cases we expect that between predicate parameter will be bound,
  * but right hand literals of case expression will not.
@@ -130,10 +130,8 @@ public class SelectCaseLiteralHandlingBindTest extends BaseEntityManagerFunction
 	}
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
-		config.put( AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, ValueHandlingMode.BIND );
-		return config;
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.CRITERIA_VALUE_HANDLING_MODE, ValueHandlingMode.BIND );
 	}
 
 	@Entity(name = "Programmer")

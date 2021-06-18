@@ -21,7 +21,7 @@
  * 51 Franklin Street, Fifth Floor
  * Boston, MA  02110-1301  USA
  */
-package org.hibernate.jpa.test.criteria.selectcase;
+package org.hibernate.orm.test.jpa.criteria.selectcase;
 
 import java.util.List;
 import javax.persistence.EntityManager;
@@ -36,10 +36,8 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -103,7 +101,7 @@ public class SelectCaseTest extends BaseEntityManagerFunctionalTestCase {
 		Root<Entity> from = query.from( Entity.class );
 		query.select( from ).where( cb.equal( from.get( "value" ), selectCase ) );
 
-		List<?> result = entityManager.createQuery( query ).getResultList();
+		entityManager.createQuery( query ).getResultList();
 	}
 
 	@Test

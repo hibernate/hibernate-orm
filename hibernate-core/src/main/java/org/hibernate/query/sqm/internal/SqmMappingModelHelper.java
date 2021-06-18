@@ -34,8 +34,12 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmSpecificPluralPartPath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.CustomType;
+import org.hibernate.type.EnumType;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 
 /**
  * Helper for dealing with Hibernate's "mapping model" while processing an SQM which is defined
@@ -114,6 +118,9 @@ public class SqmMappingModelHelper {
 			SqmTypedNode<?> sqmNode,
 			MappingMetamodel domainModel,
 			Function<NavigablePath,TableGroup> tableGroupLocator) {
+		if ( sqmNode instanceof MappingModelExpressable ) {
+			return (MappingModelExpressable) sqmNode;
+		}
 		if ( sqmNode instanceof SqmPath ) {
 			return resolveSqmPath( (SqmPath) sqmNode, domainModel, tableGroupLocator );
 		}
@@ -121,6 +128,15 @@ public class SqmMappingModelHelper {
 		final SqmExpressable<?> nodeType = sqmNode.getNodeType();
 		if ( nodeType instanceof BasicType ) {
 			return ( (BasicType) nodeType );
+		}
+		else if ( nodeType instanceof SqmEnumLiteral ) {
+			final EnumJavaTypeDescriptor enumJavaTypeDescriptor = (EnumJavaTypeDescriptor) ( (SqmEnumLiteral) nodeType ).getJavaTypeDescriptor();
+			final EnumType enumType = new EnumType(
+					enumJavaTypeDescriptor.getJavaTypeClass(),
+					null,
+					domainModel.getTypeConfiguration()
+			);
+			return new CustomType( enumType, domainModel.getTypeConfiguration() );
 		}
 
 		throw new NotYetImplementedFor6Exception( DomainModelHelper.class );

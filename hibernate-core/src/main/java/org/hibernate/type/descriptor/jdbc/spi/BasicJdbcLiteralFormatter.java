@@ -6,7 +6,8 @@
  */
 package org.hibernate.type.descriptor.jdbc.spi;
 
-
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
+import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -27,6 +28,18 @@ public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralForma
 		// for performance reasons, avoid conversions if we can
 		if ( unwrapType.isInstance( value ) ) {
 			return (X) value;
+		}
+
+		if ( value instanceof SqmLiteral && ( (SqmLiteral<?>) value ).getNodeType() instanceof SqmEnumLiteral ) {
+			value = ( (SqmEnumLiteral) ( (SqmLiteral) value ).getNodeType() ).getEnumValue();
+			assert value != null;
+
+			if ( unwrapType == String.class ) {
+				value = ( ( Enum ) value ).name();
+			}
+			else {
+				value = ( ( Enum ) value ).ordinal();
+			}
 		}
 
 		return (X) getJavaTypeDescriptor().unwrap( value, unwrapType, wrapperOptions );

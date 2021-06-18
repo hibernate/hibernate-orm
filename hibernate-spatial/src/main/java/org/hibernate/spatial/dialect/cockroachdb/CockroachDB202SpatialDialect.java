@@ -42,4 +42,9 @@ public class CockroachDB202SpatialDialect extends CockroachDB201Dialect implemen
 		delegateContributeTypes( typeContributions, serviceRegistry );
 	}
 
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return super.equivalentTypes( typeCode1, typeCode2 ) ||
+				( isSpatial( typeCode1 ) && isSpatial( typeCode2 ) );
+	}
 }

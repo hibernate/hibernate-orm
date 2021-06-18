@@ -74,4 +74,9 @@ public interface CockroachSpatialDialectTrait extends SpatialDialect {
 		return DELEGATE.supports( function );
 	}
 
+
+	default boolean isSpatial(int typeCode) {
+		return DELEGATE.isSpatial( typeCode );
+	}
+
 }

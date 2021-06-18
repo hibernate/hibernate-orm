@@ -42,4 +42,9 @@ public class PostgisPG95Dialect extends PostgreSQL95Dialect implements PGSpatial
 		support.contributeTypes( typeContributions, serviceRegistry );
 	}
 
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return super.equivalentTypes( typeCode1, typeCode2 ) ||
+				( isSpatial( typeCode1 ) && isSpatial( typeCode2 ) );
+	}
 }

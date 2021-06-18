@@ -3933,7 +3933,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitInListPredicate(InListPredicate inListPredicate) {
-		if ( inListPredicate.getListExpressions().isEmpty() ) {
+		final List<Expression> listExpressions = inListPredicate.getListExpressions();
+		if ( listExpressions.isEmpty() ) {
 			appendSql( "false" );
 			return;
 		}
@@ -3947,7 +3948,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				appendSql( " in (" );
 				String separator = NO_SEPARATOR;
-				for ( Expression expression : inListPredicate.getListExpressions() ) {
+				for ( Expression expression : listExpressions ) {
 					appendSql( separator );
 					getTuple( expression ).getExpressions().get( 0 ).accept( this );
 					separator = COMA_SEPARATOR;
@@ -3966,7 +3967,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					}
 					appendSql( " in (" );
 					String separator = NO_SEPARATOR;
-					for ( Expression expression : inListPredicate.getListExpressions() ) {
+					for ( Expression expression : listExpressions ) {
 						appendSql( separator );
 						renderExpressionsAsSubquery(
 								getTuple( expression ).getExpressions()
@@ -3977,7 +3978,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					String separator = NO_SEPARATOR;
-					for ( Expression expression : inListPredicate.getListExpressions() ) {
+					for ( Expression expression : listExpressions ) {
 						appendSql( separator );
 						emulateTupleComparison(
 								lhsTuple.getExpressions(),
@@ -3995,7 +3996,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( " not" );
 				}
 				appendSql( " in (" );
-				renderCommaSeparated( inListPredicate.getListExpressions() );
+				renderCommaSeparated( listExpressions );
 				appendSql( CLOSE_PARENTHESIS );
 			}
 		}
@@ -4005,7 +4006,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( " not" );
 			}
 			appendSql( " in (" );
-			renderCommaSeparated( inListPredicate.getListExpressions() );
+			renderCommaSeparated( listExpressions );
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
@@ -4218,14 +4219,26 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return;
 		}
 
-		final String separator = junction.getNature() == Junction.Nature.CONJUNCTION
-						? " and "
-						: " or ";
+		final Junction.Nature nature = junction.getNature();
+		final String separator = nature == Junction.Nature.CONJUNCTION
+				? " and "
+				: " or ";
 		final List<Predicate> predicates = junction.getPredicates();
-		predicates.get( 0 ).accept( this );
+		visitJunctionPredicate( nature, predicates.get( 0 ) );
 		for ( int i = 1; i < predicates.size(); i++ ) {
 			appendSql( separator );
-			predicates.get( i ).accept( this );
+			visitJunctionPredicate( nature, predicates.get( i ) );
+		}
+	}
+
+	private void visitJunctionPredicate(Junction.Nature nature, Predicate p) {
+		if ( p instanceof Junction && nature != ( (Junction) p ).getNature() ) {
+			appendSql( '(' );
+			p.accept( this );
+			appendSql( ')' );
+		}
+		else {
+			p.accept( this );
 		}
 	}
 

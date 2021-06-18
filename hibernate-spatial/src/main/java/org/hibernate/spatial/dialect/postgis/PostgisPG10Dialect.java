@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
+import java.sql.Types;
 import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
@@ -35,5 +36,12 @@ public class PostgisPG10Dialect extends PostgreSQL10Dialect implements PGSpatial
 		);
 		support.contributeTypes( typeContributions, serviceRegistry );
 	}
+
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return super.equivalentTypes( typeCode1, typeCode2 ) ||
+				( isSpatial( typeCode1 ) && isSpatial( typeCode2 ) );
+	}
+
 
 }

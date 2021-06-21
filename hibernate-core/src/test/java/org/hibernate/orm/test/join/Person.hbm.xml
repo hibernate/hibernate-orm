@@ -29,7 +29,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.join" default-access="field">
+<hibernate-mapping package="org.hibernate.orm.test.join" default-access="field">
 
     <class name="Person" table="person" lazy="true" discriminator-value="null">
 

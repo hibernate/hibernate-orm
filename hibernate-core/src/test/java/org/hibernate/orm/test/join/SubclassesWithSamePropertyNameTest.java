@@ -4,21 +4,21 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.join;
+package org.hibernate.orm.test.join;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.junit.Test;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Two subclasses of Reportable each have a property with the same name:
@@ -29,18 +29,17 @@ import static org.junit.Assert.assertEquals;
  * @author Gail Badner
  */
 @TestForIssue(jiraKey = "HHH-11241")
-public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/join/Reportable.hbm.xml"
+)
+@SessionFactory
+public class SubclassesWithSamePropertyNameTest {
 	private Long blogEntryId;
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "join/Reportable.hbm.xml" };
-	}
-
-	@Override
-	protected void prepareTest() {
+	@BeforeEach
+	public void prepareTest(SessionFactoryScope scope) {
 		BlogEntry blogEntry = new BlogEntry();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					blogEntry.setDetail( "detail" );
 					blogEntry.setReportedBy( "John Doe" );
@@ -50,17 +49,17 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 		blogEntryId = blogEntry.getId();
 	}
 
-	@Override
-	protected void cleanupTest() {
-		inTransaction(
+	@AfterEach
+	public void cleanupTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> s.createQuery( "delete from BlogEntry" ).executeUpdate()
 		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11241")
-	public void testGetSuperclass() {
-		inTransaction(
+	public void testGetSuperclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Reportable reportable = s.get( Reportable.class, blogEntryId );
 					assertEquals( "John Doe", reportable.getReportedBy() );
@@ -71,8 +70,8 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11241")
-	public void testQuerySuperclass() {
-		inTransaction(
+	public void testQuerySuperclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Reportable reportable = (Reportable) s.createQuery(
 							"from Reportable where reportedBy='John Doe'"
@@ -86,13 +85,13 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11241")
-	public void testCriteriaSuperclass() {
-		inTransaction(
+	public void testCriteriaSuperclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Reportable> criteria = criteriaBuilder.createQuery( Reportable.class );
 					Root<Reportable> root = criteria.from( Reportable.class );
-					criteria.where( criteriaBuilder.equal( root.get( "reportedBy" ),"John Doe" ) );
+					criteria.where( criteriaBuilder.equal( root.get( "reportedBy" ), "John Doe" ) );
 					Reportable reportable = s.createQuery( criteria ).uniqueResult();
 //					Reportable reportable =
 //							(Reportable) s.createCriteria( Reportable.class, "r" )
@@ -107,8 +106,8 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11241")
-	public void testQuerySubclass() {
-		inTransaction(
+	public void testQuerySubclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					BlogEntry blogEntry = (BlogEntry) s.createQuery(
 							"from BlogEntry where reportedBy='John Doe'"
@@ -122,13 +121,13 @@ public class SubclassesWithSamePropertyNameTest extends BaseCoreFunctionalTestCa
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11241")
-	public void testCriteriaSubclass() {
-		inTransaction(
+	public void testCriteriaSubclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<BlogEntry> criteria = criteriaBuilder.createQuery( BlogEntry.class );
 					Root<BlogEntry> root = criteria.from( BlogEntry.class );
-					criteria.where( criteriaBuilder.equal( root.get( "reportedBy" ),"John Doe" ) );
+					criteria.where( criteriaBuilder.equal( root.get( "reportedBy" ), "John Doe" ) );
 					BlogEntry blogEntry = s.createQuery( criteria ).uniqueResult();
 //					BlogEntry blogEntry =
 //							(BlogEntry) s.createCriteria( BlogEntry.class, "r" )

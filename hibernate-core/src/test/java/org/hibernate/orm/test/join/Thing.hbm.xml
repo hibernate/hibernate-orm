@@ -13,7 +13,7 @@
   This mapping demonstrates optional joined properties
 -->
 
-<hibernate-mapping package="org.hibernate.test.join" default-access="field">
+<hibernate-mapping package="org.hibernate.orm.test.join" default-access="field">
 
 	<class name="Thing" table="thing">
 

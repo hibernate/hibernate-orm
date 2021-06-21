@@ -603,7 +603,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmInPredicate<T> in(Expression<? extends T> expression, T... values);
 
 	@Override
-	<T> SqmInPredicate<T> in(Expression<? extends T> expression, List<T> values);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression, Collection<T> values);
 
 	<T> SqmInPredicate<T> in(Expression<? extends T> expression, SqmSubQuery<T> subQuery);
 

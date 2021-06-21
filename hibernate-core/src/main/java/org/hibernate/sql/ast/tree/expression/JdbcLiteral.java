@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 
 /**
  * Represents a literal in the SQL AST.  This form accepts a {@link JdbcMapping} and acts
- * as its own MappingModelExpressable.
+ * as its own {@link MappingModelExpressable}.
  *
  * @see QueryLiteral
  *

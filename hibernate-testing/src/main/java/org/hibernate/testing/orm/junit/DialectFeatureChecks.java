@@ -81,12 +81,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsEmptyInListCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsEmptyInList();
-		}
-	}
-
 	public static class CaseSensitiveCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.areStringComparisonsCaseInsensitive();

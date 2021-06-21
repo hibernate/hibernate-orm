@@ -499,11 +499,6 @@ public class DB2Dialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsLobValueChangePropagation() {
 		return false;
 	}

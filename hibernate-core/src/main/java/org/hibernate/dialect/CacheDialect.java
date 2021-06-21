@@ -391,11 +391,6 @@ public class CacheDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean areStringComparisonsCaseInsensitive() {
 		return true;
 	}

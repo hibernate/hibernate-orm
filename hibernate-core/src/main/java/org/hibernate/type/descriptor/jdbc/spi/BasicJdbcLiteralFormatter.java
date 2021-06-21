@@ -29,6 +29,15 @@ public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralForma
 			return (X) value;
 		}
 
+		if ( value instanceof Enum<?> ) {
+			if ( unwrapType == String.class ) {
+				value = ( ( Enum ) value ).name();
+			}
+			else {
+				value = ( ( Enum ) value ).ordinal();
+			}
+		}
+
 		return (X) getJavaTypeDescriptor().unwrap( value, unwrapType, wrapperOptions );
 	}
 }

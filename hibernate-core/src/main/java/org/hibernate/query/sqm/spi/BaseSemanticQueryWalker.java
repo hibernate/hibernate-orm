@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -39,10 +40,12 @@ import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollate;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
@@ -52,14 +55,12 @@ import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameterizedEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
 import org.hibernate.query.sqm.tree.expression.SqmRestrictedSubQueryExpression;
+import org.hibernate.query.sqm.tree.expression.SqmStar;
 import org.hibernate.query.sqm.tree.expression.SqmSummarization;
 import org.hibernate.query.sqm.tree.expression.SqmToDuration;
+import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
-import org.hibernate.query.sqm.tree.expression.SqmDistinct;
-import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
-import org.hibernate.query.sqm.tree.expression.SqmStar;
-import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
@@ -421,6 +422,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
+		predicate.getLeftHandExpression().accept( this );
 		predicate.getPluralPath().accept( this );
 		return predicate;
 	}
@@ -546,6 +548,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitFunction(SqmFunction sqmFunction) {
+		for ( Object argument : sqmFunction.getArguments() ) {
+			if ( argument instanceof SqmVisitableNode ) {
+				( (SqmVisitableNode) argument ).accept( this );
+			}
+		}
 		return sqmFunction;
 	}
 
@@ -633,6 +640,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
+		expression.getLeftHandOperand().accept( this );
+		expression.getRightHandOperand().accept( this );
 		return expression;
 	}
 
@@ -672,6 +681,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
+		expression.getWhenFragments().forEach( whenFragment -> {
+			whenFragment.getPredicate().accept( this );
+			whenFragment.getResult().accept( this );
+		} );
+		expression.getOtherwise().accept( this );
 		return expression;
 	}
 

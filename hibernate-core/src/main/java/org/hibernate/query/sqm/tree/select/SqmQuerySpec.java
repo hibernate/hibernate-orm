@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -240,7 +241,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		if ( getWhereClause() == null ) {
 			setWhereClause( new SqmWhereClause( nodeBuilder() ) );
 		}
-		getWhereClause().applyPredicates( (SqmPredicate[]) restrictions );
+		getWhereClause().applyPredicates( Arrays.copyOf( restrictions, restrictions.length, SqmPredicate[].class ) );
 		return null;
 	}
 

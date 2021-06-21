@@ -505,11 +505,6 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean requiresCastingOfParametersInSelectClause() {
 		return true;
 	}

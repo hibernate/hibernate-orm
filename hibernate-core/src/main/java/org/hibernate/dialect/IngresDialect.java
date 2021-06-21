@@ -418,11 +418,6 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExpectedLobUsagePattern() {
 		return false;
 	}

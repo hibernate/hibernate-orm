@@ -2816,21 +2816,6 @@ public abstract class Dialect implements ConversionContext {
 		return ColumnAliasExtractor.COLUMN_LABEL_EXTRACTOR;
 	}
 
-
-	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Does this dialect support empty IN lists?
-	 * <p/>
-	 * For example, is [where XYZ in ()] a supported construct?
-	 *
-	 * @return True if empty in lists are supported; false otherwise.
-	 * @since 3.2
-	 */
-	public boolean supportsEmptyInList() {
-		return true;
-	}
-
 	/**
 	 * Are string comparisons implicitly case insensitive.
 	 * <p/>

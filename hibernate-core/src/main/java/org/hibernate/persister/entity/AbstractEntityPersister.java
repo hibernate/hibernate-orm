@@ -1405,7 +1405,6 @@ public abstract class AbstractEntityPersister
 							return new TableReferenceJoin(
 									determineSubclassTableJoinType(
 											i,
-											true,
 											Collections.emptySet()
 									),
 									joinedTableReference,
@@ -1448,7 +1447,7 @@ public abstract class AbstractEntityPersister
 						lhs,
 						joinTableExpression,
 						sqlAliasBase,
-						determineSubclassTableJoinType( i, true, Collections.emptySet() ),
+						determineSubclassTableJoinType( i, Collections.emptySet() ),
 						getSubclassTableKeyColumns( i ),
 						sqlExpressionResolver
 				);
@@ -4328,9 +4327,8 @@ public abstract class AbstractEntityPersister
 
 	protected SqlAstJoinType determineSubclassTableJoinType(
 			int subclassTableNumber,
-			boolean includeSubclasses,
 			Set<String> treatAsDeclarations) {
-		if ( isClassOrSuperclassTable( subclassTableNumber ) ) {
+		if ( isClassOrSuperclassJoin( subclassTableNumber ) ) {
 			final boolean shouldInnerJoin = !isInverseTable( subclassTableNumber )
 					&& !isNullableTable( subclassTableNumber );
 			// the table is either this persister's driving table or (one of) its super class persister's driving
@@ -4348,12 +4346,7 @@ public abstract class AbstractEntityPersister
 			return SqlAstJoinType.INNER;
 		}
 
-		if ( includeSubclasses
-				&& !isSubclassTableSequentialSelect( subclassTableNumber )
-				&& !isSubclassTableLazy( subclassTableNumber ) ) {
-			return SqlAstJoinType.LEFT;
-		}
-		return SqlAstJoinType.INNER;
+		return SqlAstJoinType.LEFT;
 	}
 
 	protected JoinType determineSubclassTableJoinType(

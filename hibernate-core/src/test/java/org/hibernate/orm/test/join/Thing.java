@@ -6,7 +6,7 @@
  */
 
 //$Id: $
-package org.hibernate.test.join;
+package org.hibernate.orm.test.join;
 
 
 /**

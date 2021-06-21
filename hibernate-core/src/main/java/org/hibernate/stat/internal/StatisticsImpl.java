@@ -122,7 +122,7 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 					Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE,
 				20
 		);
-		clear();
+		resetStartTime();
 		metamodel = sessionFactory.getMetamodel();
 		cache = sessionFactory.getCache();
 		cacheRegionPrefix = sessionFactoryOptions.getCacheRegionPrefix();
@@ -192,6 +192,10 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 		queryPlanCacheHitCount.reset();
 		queryPlanCacheMissCount.reset();
 
+		resetStartTime();
+	}
+
+	private void resetStartTime() {
 		startTime = System.currentTimeMillis();
 	}
 

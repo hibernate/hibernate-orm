@@ -36,7 +36,6 @@ public class SqmDeleteStatement<T>
 	public SqmDeleteStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 		this.querySource = SqmQuerySource.HQL;
-
 	}
 
 	public SqmDeleteStatement(Class<T> targetEntity, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
@@ -121,5 +120,18 @@ public class SqmDeleteStatement<T>
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitDeleteStatement( this );
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "delete from " );
+		sb.append( getTarget().getEntityName() );
+		if ( getTarget().getExplicitAlias() != null ) {
+			sb.append( ' ' ).append( getTarget().getExplicitAlias() );
+		}
+		if ( whereClause != null && whereClause.getPredicate() != null ) {
+			sb.append( " where " );
+			whereClause.getPredicate().appendHqlString( sb );
+		}
 	}
 }

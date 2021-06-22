@@ -41,4 +41,11 @@ public class SqmParameterizedEntityType<T> extends AbstractSqmExpression<T> impl
 		return walker.visitParameterizedEntityTypeExpression( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "type(" );
+		discriminatorSource.appendHqlString( sb );
+		sb.append( ')' );
+	}
+
 }

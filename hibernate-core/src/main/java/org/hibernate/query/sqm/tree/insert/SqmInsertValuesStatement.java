@@ -10,6 +10,7 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import java.util.ArrayList;
@@ -37,5 +38,28 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> {
 	@Override
 	public JpaPredicate getRestriction() {
 		return null;
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		super.appendHqlString( sb );
+		sb.append( " values (" );
+		appendValues( valuesList.get( 0 ), sb );
+		for ( int i = 1; i < valuesList.size(); i++ ) {
+			sb.append( ", " );
+			appendValues( valuesList.get( i ), sb );
+		}
+		sb.append( ')' );
+	}
+
+	private static void appendValues(SqmValues sqmValues, StringBuilder sb) {
+		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
+		sb.append( '(' );
+		expressions.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < expressions.size(); i++ ) {
+			sb.append( ", " );
+			expressions.get( i ).appendHqlString( sb );
+		}
+		sb.append( ')' );
 	}
 }

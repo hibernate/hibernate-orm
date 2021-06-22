@@ -106,4 +106,13 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 		return getOperator().toLoggableText( lhsOperand.asLoggableText(), rhsOperand.asLoggableText() );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		lhsOperand.appendHqlString( sb );
+		sb.append( ' ' );
+		sb.append( operator.getOperatorSqlText() );
+		sb.append( ' ' );
+		rhsOperand.appendHqlString( sb );
+	}
+
 }

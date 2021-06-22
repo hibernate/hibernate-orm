@@ -32,4 +32,9 @@ public class SqmSelfRenderingExpression<T> extends AbstractSqmExpression<T> {
 		//noinspection unchecked
 		return (X) renderer.apply( walker );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		throw new UnsupportedOperationException();
+	}
 }

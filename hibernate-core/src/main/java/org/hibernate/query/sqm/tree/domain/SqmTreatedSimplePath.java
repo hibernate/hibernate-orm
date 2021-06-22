@@ -70,4 +70,13 @@ public class SqmTreatedSimplePath<T, S extends T>
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitTreatedPath( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

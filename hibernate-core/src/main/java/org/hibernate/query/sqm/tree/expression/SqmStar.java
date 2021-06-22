@@ -22,5 +22,9 @@ public class SqmStar extends AbstractSqmExpression<Object> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitStar( this );
 	}
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "*" );
+	}
 
 }

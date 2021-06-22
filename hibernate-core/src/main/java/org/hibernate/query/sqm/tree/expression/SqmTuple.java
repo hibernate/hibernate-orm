@@ -83,6 +83,17 @@ public class SqmTuple<T>
 	}
 
 	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( '(' );
+		groupedExpressions.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < groupedExpressions.size(); i++ ) {
+			sb.append(", ");
+			groupedExpressions.get( i ).appendHqlString( sb );
+		}
+		sb.append( ')' );
+	}
+
+	@Override
 	public String asLoggableText() {
 		return toString();
 	}

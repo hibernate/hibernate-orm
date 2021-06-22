@@ -47,4 +47,11 @@ public class SqmBasicValuedEntityTypePath<T> extends SqmBasicValuedSimplePath<T>
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitEntityTypeLiteralExpression( literal );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "type(" );
+		super.appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

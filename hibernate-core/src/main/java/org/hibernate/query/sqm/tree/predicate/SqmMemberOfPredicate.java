@@ -46,4 +46,14 @@ public class SqmMemberOfPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitMemberOfPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		leftHandExpression.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " not" );
+		}
+		sb.append( " member of " );
+		pluralPath.appendHqlString( sb );
+	}
 }

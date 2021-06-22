@@ -123,4 +123,19 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitInListPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		testExpression.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " not" );
+		}
+		sb.append( " in (" );
+		listExpressions.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < listExpressions.size(); i++ ) {
+			sb.append( ", " );
+			listExpressions.get( i ).appendHqlString( sb );
+		}
+		sb.append( ')' );
+	}
 }

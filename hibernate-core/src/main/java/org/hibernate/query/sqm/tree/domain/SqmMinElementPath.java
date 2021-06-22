@@ -52,4 +52,11 @@ public class SqmMinElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMinElementPath( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "minelement(" );
+		getLhs().appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

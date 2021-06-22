@@ -39,4 +39,9 @@ public class SqmDistinct<T> extends AbstractSqmNode implements SqmTypedNode<T>, 
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitDistinct(this);
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "distinct" );
+	}
 }

@@ -55,4 +55,10 @@ public class SqmNamedParameter<T> extends AbstractSqmParameter<T> {
 	public SqmParameter<T> copy() {
 		return new SqmNamedParameter<>( getName(), allowMultiValuedBinding(), this.getNodeType(), nodeBuilder() );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( ':' );
+		sb.append( getName() );
+	}
 }

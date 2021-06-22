@@ -135,4 +135,15 @@ public class JpaCriteriaParameter<T>
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		throw new UnsupportedOperationException( "ParameterMemento cannot be extracted from Criteria query parameter" );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( getName() == null ) {
+			sb.append( value );
+		}
+		else {
+			sb.append( ':' );
+			sb.append( getName() );
+		}
+	}
 }

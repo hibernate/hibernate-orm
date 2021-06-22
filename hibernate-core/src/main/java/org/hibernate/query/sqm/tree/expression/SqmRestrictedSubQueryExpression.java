@@ -61,4 +61,12 @@ public class SqmRestrictedSubQueryExpression<T> extends AbstractSqmExpression<T>
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitRestrictedSubQueryExpression( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( modifier );
+		sb.append( " (" );
+		subQuery.appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

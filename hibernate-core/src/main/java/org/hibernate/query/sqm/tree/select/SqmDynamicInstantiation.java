@@ -171,6 +171,28 @@ public class SqmDynamicInstantiation<T>
 		return walker.visitDynamicInstantiation( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "new " );
+		if ( instantiationTarget.getNature() == LIST ) {
+			sb.append( "list" );
+		}
+		else if ( instantiationTarget.getNature() == MAP ) {
+			sb.append( "map" );
+		}
+		else {
+			sb.append( instantiationTarget.getTargetTypeDescriptor().getJavaTypeClass().getTypeName() );
+		}
+		sb.append( '(' );
+		( (SqmSelectableNode<?>) arguments.get( 0 ) ).appendHqlString( sb );
+		for ( int i = 1; i < arguments.size(); i++ ) {
+			sb.append(", ");
+			( (SqmSelectableNode<?>) arguments.get( i ) ).appendHqlString( sb );
+		}
+
+		sb.append( ')' );
+	}
+
 	@SuppressWarnings("unused")
 	public SqmDynamicInstantiation<T> makeShallowCopy() {
 		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );

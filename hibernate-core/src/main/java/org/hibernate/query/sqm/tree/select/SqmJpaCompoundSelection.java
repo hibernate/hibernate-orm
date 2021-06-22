@@ -109,4 +109,14 @@ public class SqmJpaCompoundSelection<T>
 		return walker.visitJpaCompoundSelection( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		selectableNodes.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < selectableNodes.size(); i++ ) {
+			sb.append(", ");
+			selectableNodes.get( i ).appendHqlString( sb );
+		}
+
+	}
+
 }

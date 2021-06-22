@@ -66,4 +66,13 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		//noinspection unchecked
 		return new SqmTreatedListJoin( wrappedPath, treatTarget, getAlias() );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

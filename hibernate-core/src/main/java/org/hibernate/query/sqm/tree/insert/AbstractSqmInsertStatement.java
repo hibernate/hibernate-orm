@@ -57,4 +57,19 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			insertionTargetPaths.forEach( consumer );
 		}
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "insert into " );
+		sb.append( getTarget().getEntityName() );
+		if ( insertionTargetPaths != null && !insertionTargetPaths.isEmpty() ) {
+			sb.append( '(' );
+			insertionTargetPaths.get( 0 ).appendHqlString( sb );
+			for ( int i = 1; i < insertionTargetPaths.size(); i++ ) {
+				sb.append( ", " );
+				insertionTargetPaths.get( i ).appendHqlString( sb );
+			}
+			sb.append( ')' );
+		}
+	}
 }

@@ -64,6 +64,17 @@ public class SqmCoalesce<T> extends AbstractSqmExpression<T> implements JpaCoale
 		return "coalesce(...)";
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "coalesce(" );
+		arguments.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < arguments.size(); i++ ) {
+			sb.append(", ");
+			arguments.get( i ).appendHqlString( sb );
+		}
+		sb.append( ')' );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

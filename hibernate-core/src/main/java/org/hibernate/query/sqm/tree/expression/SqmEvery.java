@@ -31,5 +31,10 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitEvery( this );
 	}
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "all " );
+		subquery.appendHqlString( sb );
+	}
 
 }

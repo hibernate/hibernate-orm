@@ -35,4 +35,11 @@ public class SqmCollate<T> extends AbstractSqmExpression<T> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCollate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		expression.appendHqlString( sb );
+		sb.append( " collate " );
+		sb.append( collation );
+	}
 }

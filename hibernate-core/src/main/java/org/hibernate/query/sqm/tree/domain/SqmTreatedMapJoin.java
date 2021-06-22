@@ -60,4 +60,13 @@ public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> imp
 				getAlias()
 		);
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

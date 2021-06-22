@@ -147,4 +147,41 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
 		return this;
 	}
+
+	public void appendHqlString(StringBuilder sb) {
+		if ( orderByClause == null ) {
+			return;
+		}
+		sb.append( " order by " );
+		final List<SqmSortSpecification> sortSpecifications = orderByClause.getSortSpecifications();
+		sortSpecifications.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < sortSpecifications.size(); i++ ) {
+			sb.append( ", " );
+			sortSpecifications.get( i ).appendHqlString( sb );
+		}
+
+		if ( offsetExpression != null ) {
+			sb.append( " offset " );
+			offsetExpression.appendHqlString( sb );
+			sb.append( " rows " );
+		}
+		if ( fetchExpression != null ) {
+			sb.append( " fetch first " );
+			fetchExpression.appendHqlString( sb );
+			switch ( fetchClauseType ) {
+				case ROWS_ONLY:
+					sb.append( " rows only" );
+					break;
+				case ROWS_WITH_TIES:
+					sb.append( " rows with ties" );
+					break;
+				case PERCENT_ONLY:
+					sb.append( " percent only" );
+					break;
+				case PERCENT_WITH_TIES:
+					sb.append( " percent with ties" );
+					break;
+			}
+		}
+	}
 }

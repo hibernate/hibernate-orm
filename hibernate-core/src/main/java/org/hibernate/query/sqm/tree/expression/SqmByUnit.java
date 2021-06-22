@@ -39,4 +39,10 @@ public class SqmByUnit extends AbstractSqmExpression<Long> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitByUnit( this );
 	}
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		duration.appendHqlString( sb );
+		sb.append( " by " );
+		sb.append( unit.getUnit() );
+	}
 }

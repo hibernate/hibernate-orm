@@ -107,6 +107,12 @@ public class SqmMapEntryReference<K,V>
 		return nodeBuilder;
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "entry(" );
+		mapPath.appendHqlString( sb );
+		sb.append( ')' );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA (ugh)

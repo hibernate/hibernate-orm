@@ -50,4 +50,13 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 		//noinspection unchecked
 		return (EntityDomainType) wrappedPath.getReferencedPathSource();
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

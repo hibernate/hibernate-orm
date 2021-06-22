@@ -19,8 +19,8 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  * @author Gavin King
  */
 public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
-	private TemporalUnit unit;
-	private AllowableFunctionReturnType<T> type;
+	private final TemporalUnit unit;
+	private final AllowableFunctionReturnType<T> type;
 
 	public SqmDurationUnit(TemporalUnit unit, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
@@ -34,7 +34,7 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 
 	@Override
 	public <T> T accept(SemanticQueryWalker<T> walker) {
-		return walker.visitDurationUnit(this);
+		return walker.visitDurationUnit( this );
 	}
 
 	public TemporalUnit getUnit() {
@@ -44,6 +44,11 @@ public class SqmDurationUnit<T> extends AbstractSqmNode implements SqmTypedNode<
 	@Override
 	public SqmExpressable<T> getNodeType() {
 		return type;
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( unit );
 	}
 }
 

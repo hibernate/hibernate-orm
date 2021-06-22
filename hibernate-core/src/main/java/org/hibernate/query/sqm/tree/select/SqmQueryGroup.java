@@ -103,4 +103,27 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	public SqmQueryGroup<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
 		return (SqmQueryGroup<T>) super.setFetch( fetch, fetchClauseType );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		appendQueryPart( queryParts.get( 0 ), sb );
+		for ( int i = 1; i < queryParts.size(); i++ ) {
+			sb.append( ' ' );
+			sb.append( setOperator.sqlString() );
+			sb.append( ' ' );
+			appendQueryPart( queryParts.get( i ), sb );
+		}
+		super.appendHqlString( sb );
+	}
+
+	private static void appendQueryPart(SqmQueryPart<?> queryPart, StringBuilder sb) {
+		final boolean needsParenthesis = !queryPart.isSimpleQueryPart();
+		if ( needsParenthesis ) {
+			sb.append( '(' );
+		}
+		queryPart.appendHqlString( sb );
+		if ( needsParenthesis ) {
+			sb.append( ')' );
+		}
+	}
 }

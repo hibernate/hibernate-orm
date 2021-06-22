@@ -57,4 +57,11 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 		// insert has no predicate
 		return null;
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		super.appendHqlString( sb );
+		sb.append( ' ' );
+		selectQueryPart.appendHqlString( sb );
+	}
 }

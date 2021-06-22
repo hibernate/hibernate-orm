@@ -597,4 +597,15 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 				nodeBuilder()
 		);
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( alias == null ) {
+			// If we don't have an alias, this is the best we can do to at least ensure uniqueness
+			sb.append( "alias_" ).append( System.identityHashCode( this ) );
+		}
+		else {
+			sb.append( alias );
+		}
+	}
 }

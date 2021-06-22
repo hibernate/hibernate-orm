@@ -37,4 +37,11 @@ public class SqmNegatedPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitNegatedPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "not (" );
+		wrappedPredicate.appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

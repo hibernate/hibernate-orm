@@ -28,7 +28,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			SqmExpression<?> selectorExpression) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), "[]" ),
+				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), selectorExpression.toHqlString() ),
 				(PluralPersistentAttribute) pluralDomainPath.getReferencedPathSource(),
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
@@ -82,5 +82,13 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 		}
 
 		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		getLhs().appendHqlString( sb );
+		sb.append( '[' );
+		selectorExpression.appendHqlString( sb );
+		sb.append( ']' );
 	}
 }

@@ -45,6 +45,11 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 	public SqmExpressable<T> getNodeType() {
 		return type;
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( unit );
+	}
 }
 
 

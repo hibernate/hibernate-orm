@@ -14,11 +14,11 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
  * @author Steve Ebersole
  */
 public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> implements SqmTreatedPath<T,S> {
-	private final SqmEntityJoin<T> wrapped;
+	private final SqmEntityJoin<T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
 	public SqmTreatedEntityJoin(
-			SqmEntityJoin<T> wrapped,
+			SqmEntityJoin<T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias,
 			SqmJoinType joinType) {
@@ -26,9 +26,9 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 				treatTarget,
 				alias,
 				joinType,
-				wrapped.getRoot()
+				wrappedPath.getRoot()
 		);
-		this.wrapped = wrapped;
+		this.wrappedPath = wrappedPath;
 		this.treatTarget = treatTarget;
 	}
 
@@ -39,12 +39,21 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 
 	@Override
 	public SqmPath<T> getWrappedPath() {
-		return wrapped;
+		return wrappedPath;
 	}
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
 		//noinspection unchecked
-		return (EntityDomainType<S>) wrapped.getReferencedPathSource();
+		return (EntityDomainType<S>) wrappedPath.getReferencedPathSource();
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
 	}
 }

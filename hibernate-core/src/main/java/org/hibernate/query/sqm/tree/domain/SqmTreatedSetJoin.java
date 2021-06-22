@@ -68,4 +68,13 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 		//noinspection unchecked
 		return new SqmTreatedSetJoin( wrappedPath, treatTarget, getAlias() );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

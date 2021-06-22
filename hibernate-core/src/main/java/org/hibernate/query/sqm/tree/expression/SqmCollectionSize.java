@@ -45,6 +45,13 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 		return "SIZE(" + pluralPath.asLoggableText() + ")";
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "size(" );
+		pluralPath.appendHqlString( sb );
+		sb.append( ')' );
+	}
+
 	//	@Override
 //	public DomainResult createDomainResult(
 //			String resultVariable,

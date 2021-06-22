@@ -236,4 +236,20 @@ public abstract class AbstractSqmSelectQuery<T>
 //		this.offset = (ExpressionImplementor) offset;
 //		return this;
 //	}
+
+	public void appendHqlString(StringBuilder sb) {
+		if ( !cteStatements.isEmpty() ) {
+			sb.append( "with " );
+			if ( withRecursive ) {
+				sb.append( "recursive " );
+			}
+			for ( SqmCteStatement<?> value : cteStatements.values() ) {
+				value.appendHqlString( sb );
+				sb.append( ", " );
+			}
+			sb.setLength( sb.length() - 2 );
+		}
+		sqmQueryPart.appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

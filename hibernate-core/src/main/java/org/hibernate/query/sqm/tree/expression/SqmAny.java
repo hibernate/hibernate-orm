@@ -32,4 +32,10 @@ public class SqmAny<T> extends AbstractSqmExpression<T> {
 		return walker.visitAny( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "any " );
+		subquery.appendHqlString( sb );
+	}
+
 }

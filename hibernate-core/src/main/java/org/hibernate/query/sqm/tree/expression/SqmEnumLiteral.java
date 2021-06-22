@@ -128,4 +128,11 @@ public class SqmEnumLiteral<E extends Enum<E>> extends AbstractSqmExpression<E> 
 		return walker.visitEnumLiteral( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( enumValue.getDeclaringClass().getTypeName() );
+		sb.append( '.' );
+		sb.append( enumValueName );
+	}
+
 }

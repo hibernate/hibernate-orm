@@ -145,6 +145,13 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( getParent().getFullPath() );
+		sb.append( '.' );
+		sb.append( getLocalName() );
+	}
+
+	@Override
 	public SqmExpression<Long> asLong() {
 		return null;
 	}

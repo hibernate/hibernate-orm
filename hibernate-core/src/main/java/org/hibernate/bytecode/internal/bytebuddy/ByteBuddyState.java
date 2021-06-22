@@ -68,8 +68,8 @@ public final class ByteBuddyState {
 	 * Opted for WEAK keys to avoid leaking the classloader in case the SessionFactory isn't closed.
 	 * Avoiding Soft keys as they are prone to cause issues with unstable performance.
 	 */
-	private final TypeCache<TypeCache.SimpleKey> proxyCache;
-	private final TypeCache<TypeCache.SimpleKey> basicProxyCache;
+	private static final TypeCache<TypeCache.SimpleKey> proxyCache = new TypeCache<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
+	private static final TypeCache<TypeCache.SimpleKey> basicProxyCache = new TypeCache<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
 
 	ByteBuddyState() {
 		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V8 ) );
@@ -77,9 +77,6 @@ public final class ByteBuddyState {
 
 	ByteBuddyState(ClassFileVersion classFileVersion) {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
-
-		this.proxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
-		this.basicProxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
 
 		if ( System.getSecurityManager() != null ) {
 			this.classRewriter = new SecurityManagerClassRewriter();
@@ -171,8 +168,8 @@ public final class ByteBuddyState {
 	 * of re-creating the small helpers should be negligible.
 	 */
 	void clearState() {
-		proxyCache.clear();
-		basicProxyCache.clear();
+		proxyCache.expungeStaleEntries();
+		basicProxyCache.expungeStaleEntries();
 	}
 
 	private Class<?> load(Class<?> referenceClass, TypeCache<TypeCache.SimpleKey> cache,

@@ -38,7 +38,7 @@ public class IdentifierHelperBuilder {
 	private boolean globallyQuoteIdentifiers = false;
 	private boolean skipGlobalQuotingForColumnDefinitions = false;
 	private boolean autoQuoteKeywords = true;
-	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.MIXED;
+	private IdentifierCaseStrategy unquotedCaseStrategy = IdentifierCaseStrategy.UPPER;
 	private IdentifierCaseStrategy quotedCaseStrategy = IdentifierCaseStrategy.MIXED;
 
 	public static IdentifierHelperBuilder from(JdbcEnvironment jdbcEnvironment) {

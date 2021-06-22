@@ -36,6 +36,9 @@ import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -46,6 +49,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
+@SuppressWarnings( { "deprecation" ,"rawtypes" ,"serial" } )
 public class DefaultIdentifierGeneratorFactory
 		implements MutableIdentifierGeneratorFactory, Serializable, ServiceRegistryAwareService {
 
@@ -59,7 +63,6 @@ public class DefaultIdentifierGeneratorFactory
 	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
 	 */
-	@SuppressWarnings("deprecation")
 	public DefaultIdentifierGeneratorFactory() {
 		register( "uuid2", UUIDGenerator.class );
 		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
@@ -109,11 +112,35 @@ public class DefaultIdentifierGeneratorFactory
 //		}
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config) {
 		try {
 			Class clazz = getIdentifierGeneratorClass( strategy );
-			IdentifierGenerator identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
+			BeanContainer beanContainer = serviceRegistry.getService(ManagedBeanRegistry.class).getBeanContainer();
+			IdentifierGenerator identifierGenerator;
+			if ( generatorStrategyToClassNameMap.containsKey(strategy) || beanContainer == null ) {
+				identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
+			}
+			else {
+				identifierGenerator = ( IdentifierGenerator ) beanContainer.getBean(
+						clazz,
+						new BeanContainer.LifecycleOptions() {
+
+							@Override
+							public boolean canUseCachedReferences() {
+								return false;
+							}
+
+							@Override
+							public boolean useJpaCompliantCreation() {
+								return true;
+							}
+
+						},
+						FallbackBeanInstanceProducer.INSTANCE
+				).getBeanInstance();
+			}
 			if ( identifierGenerator instanceof Configurable ) {
 				( ( Configurable ) identifierGenerator ).configure( type, config, serviceRegistry );
 			}

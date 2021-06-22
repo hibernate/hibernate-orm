@@ -3,6 +3,25 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.3.Final (June 22, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31957
+
+** Bug
+    * [HHH-14654] - geolatte-geom Geometry types no longer works with geography column types
+    * [HHH-14597] - Regression bug: could not resolve property: null of:
+    * [HHH-13788] - Schema update try to recreate existing tables
+    * [HHH-4808] - SessionImpl.initializeCollection() does not release JDBC connection (if outside of a transaction)
+
+** Improvement
+    * [HHH-14691] - Small optimisation for updating Query Cache Statistics
+    * [HHH-14690] - Avoid fully resetting StatisticsImpl just after its constructor
+
+** New Feature
+    * [HHH-11817] - Allow schema-export commands written to file to truncate in addition to current appending
+
+
 Changes in 5.5.2.Final (June 14, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -147,6 +147,8 @@ project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir
 include 'hibernate-enhance-maven-plugin'
 project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
 
+includeBuild('database-service-plugin')
+
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()

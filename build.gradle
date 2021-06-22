@@ -19,6 +19,7 @@ buildscript {
 		classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
 		classpath 'de.thetaphi:forbiddenapis:3.0.1'
 		classpath 'org.junit.platform:junit-platform-gradle-plugin:1.0.1'
+		classpath 'org.hibernate.build:hibernate-build-plugin:1.0.0-SNAPSHOT'
 	}
 }
 
@@ -26,6 +27,7 @@ buildscript {
 plugins {
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 	id 'nu.studer.credentials' version '2.1'
+	id 'org.hibernate.build.plugin' version '1.0.0-SNAPSHOT'
 
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '0.5'

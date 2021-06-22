@@ -15,6 +15,7 @@ buildscript {
 	}
 	dependencies {
 		classpath 'de.thetaphi:forbiddenapis:3.0.1'
+		classpath 'org.hibernate.build:hibernate-build-plugin:1.0.0-SNAPSHOT'
 	}
 }
 
@@ -25,6 +26,7 @@ apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java'
+apply plugin: 'org.hibernate.build.plugin'
 apply plugin: 'java-library'
 apply plugin: 'biz.aQute.bnd.builder'
 

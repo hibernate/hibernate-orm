@@ -232,10 +232,12 @@ public final class Cascade {
 				}
 			}
 			else if ( type.isComponentType() ) {
-				if ( componentPath == null ) {
+				if ( componentPath == null && propertyName != null ) {
 					componentPath = new ArrayList<>();
 				}
-				componentPath.add( propertyName );
+				if ( componentPath != null ) {
+					componentPath.add( propertyName );
+				}
 				cascadeComponent(
 						action,
 						cascadePoint,
@@ -246,7 +248,9 @@ public final class Cascade {
 						(CompositeType) type,
 						anything
 				);
-				componentPath.remove( componentPath.size() - 1 );
+				if ( componentPath != null ) {
+					componentPath.remove( componentPath.size() - 1 );
+				}
 			}
 		}
 
@@ -293,17 +297,24 @@ public final class Cascade {
 						// Since the loadedState in the EntityEntry is a flat domain type array
 						// We first have to extract the component object and then ask the component type
 						// recursively to give us the value of the sub-property of that object
-						loadedValue = entry.getLoadedValue( componentPath.get( 0 ) );
-						ComponentType componentType = (ComponentType) entry.getPersister().getPropertyType( componentPath.get( 0 ) );
-						if ( componentPath.size() != 1 ) {
-							for ( int i = 1; i < componentPath.size(); i++ ) {
-								final int subPropertyIndex = componentType.getPropertyIndex( componentPath.get( i ) );
-								loadedValue = componentType.getPropertyValue( loadedValue, subPropertyIndex );
-								componentType = (ComponentType) componentType.getSubtypes()[subPropertyIndex];
+						final Type propertyType = entry.getPersister().getPropertyType( componentPath.get(0) );
+						if ( propertyType instanceof ComponentType ) {
+							loadedValue = entry.getLoadedValue( componentPath.get( 0 ) );
+							ComponentType componentType = (ComponentType) propertyType;
+							if ( componentPath.size() != 1 ) {
+								for ( int i = 1; i < componentPath.size(); i++ ) {
+									final int subPropertyIndex = componentType.getPropertyIndex( componentPath.get( i ) );
+									loadedValue = componentType.getPropertyValue( loadedValue, subPropertyIndex );
+									componentType = (ComponentType) componentType.getSubtypes()[subPropertyIndex];
+								}
 							}
-						}
 
-						loadedValue = componentType.getPropertyValue( loadedValue, componentType.getPropertyIndex( propertyName ) );
+							loadedValue = componentType.getPropertyValue( loadedValue, componentType.getPropertyIndex( propertyName ) );
+						}
+						else {
+							// Association is probably defined in an element collection, so we can't do orphan removals
+							loadedValue = null;
+						}
 					}
 
 					// orphaned if the association was nulled (child == null) or receives a new value while the
@@ -538,7 +549,7 @@ public final class Cascade {
 						itr.next(),
 						elemType,
 						style,
-						null,
+						collectionType.getRole().substring( collectionType.getRole().lastIndexOf('.') + 1 ),
 						anything,
 						isCascadeDeleteEnabled
 				);

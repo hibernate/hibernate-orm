@@ -260,6 +260,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 		finally {
 			if ( tempSession != null ) {
+
 				// make sure the just opened temp session gets closed!
 				isTempSession = false;
 				session = originalSession;
@@ -272,6 +273,11 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 				}
 				catch (Exception e) {
 					LOG.warn( "Unable to close temporary session used to load lazy collection associated to no session" );
+				}
+			}
+			else {
+				if ( !session.isTransactionInProgress() ) {
+					session.getJdbcCoordinator().afterTransaction();
 				}
 			}
 		}

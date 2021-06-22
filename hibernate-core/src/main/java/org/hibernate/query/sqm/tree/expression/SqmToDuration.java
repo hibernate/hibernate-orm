@@ -44,6 +44,13 @@ public class SqmToDuration<T> extends AbstractSqmExpression<T> {
 	public String asLoggableText() {
 		return magnitude.asLoggableText() + " " + unit.getUnit();
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		magnitude.appendHqlString( sb );
+		sb.append( ' ' );
+		sb.append( unit.getUnit() );
+	}
 }
 
 

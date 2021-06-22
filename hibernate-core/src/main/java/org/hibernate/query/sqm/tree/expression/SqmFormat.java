@@ -27,4 +27,9 @@ public class SqmFormat extends SqmLiteral<String> {
 	public <R> R accept(SemanticQueryWalker<R> walker) {
 		return walker.visitFormat( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( getLiteralValue() );
+	}
 }

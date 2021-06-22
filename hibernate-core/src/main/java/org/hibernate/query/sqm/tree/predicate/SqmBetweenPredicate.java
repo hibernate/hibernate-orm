@@ -58,4 +58,16 @@ public class SqmBetweenPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitBetweenPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		expression.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " not" );
+		}
+		sb.append( " between " );
+		lowerBound.appendHqlString( sb );
+		sb.append( " and " );
+		upperBound.appendHqlString( sb );
+	}
 }

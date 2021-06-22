@@ -36,4 +36,9 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	}
 
 	private static SqmExpressable NULL_TYPE = () -> null;
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "null" );
+	}
 }

@@ -27,6 +27,8 @@ import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmFromClauseContainer;
@@ -324,5 +326,138 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	public SqmQuerySpec<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
 		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
 		return this;
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( selectClause != null ) {
+			sb.append( "select " );
+			if ( selectClause.isDistinct() ) {
+				sb.append( "distinct " );
+			}
+			final List<SqmSelection> selections = selectClause.getSelections();
+			selections.get( 0 ).appendHqlString( sb );
+			for ( int i = 1; i < selections.size(); i++ ) {
+				sb.append( ", " );
+				selections.get( i ).appendHqlString( sb );
+			}
+		}
+		if ( fromClause != null ) {
+			sb.append( " from " );
+			String separator = "";
+			for ( SqmRoot<?> root : fromClause.getRoots() ) {
+				sb.append( separator );
+				if ( root.isCorrelated() ) {
+					if ( root.containsOnlyInnerJoins() ) {
+						appendJoins( root, root.getCorrelationParent().getExplicitAlias(), sb );
+					}
+					else {
+						sb.append( root.getCorrelationParent().getExplicitAlias() );
+						if ( root.getExplicitAlias() != null ) {
+							sb.append( ' ' ).append( root.getExplicitAlias() );
+						}
+						appendJoins( root, sb );
+					}
+				}
+				else {
+					sb.append( root.getEntityName() );
+					if ( root.getExplicitAlias() != null ) {
+						sb.append( ' ' ).append( root.getExplicitAlias() );
+					}
+					appendJoins( root, sb );
+				}
+				separator = ", ";
+			}
+		}
+		if ( whereClause != null && whereClause.getPredicate() != null ) {
+			sb.append( " where " );
+			whereClause.getPredicate().appendHqlString( sb );
+		}
+		if ( !groupByClauseExpressions.isEmpty() ) {
+			sb.append( " group by " );
+			groupByClauseExpressions.get( 0 ).appendHqlString( sb );
+			for ( int i = 1; i < groupByClauseExpressions.size(); i++ ) {
+				sb.append( ", " );
+				groupByClauseExpressions.get( i ).appendHqlString( sb );
+			}
+		}
+		if ( havingClausePredicate != null ) {
+			sb.append( " having " );
+			havingClausePredicate.appendHqlString( sb );
+		}
+
+		super.appendHqlString( sb );
+	}
+
+	private void appendJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb) {
+		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
+			switch ( sqmJoin.getSqmJoinType() ) {
+				case LEFT:
+					sb.append( " left join " );
+					break;
+				case RIGHT:
+					sb.append( " right join " );
+					break;
+				case INNER:
+					sb.append( " join " );
+					break;
+				case FULL:
+					sb.append( " full join " );
+					break;
+				case CROSS:
+					sb.append( " cross join " );
+					break;
+			}
+			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
+				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
+				sb.append( sqmFrom.getExplicitAlias() ).append( '.' );
+				sb.append( (attributeJoin).getAttribute().getName() );
+				if ( sqmJoin.getExplicitAlias() != null ) {
+					sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
+				}
+				if ( attributeJoin.getJoinPredicate() != null ) {
+					sb.append( " on " );
+					attributeJoin.getJoinPredicate().appendHqlString( sb );
+				}
+				appendJoins( sqmJoin, sb );
+			}
+			else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
+				sb.append( ( (SqmCrossJoin<?>) sqmJoin ).getEntityName() );
+				if ( sqmJoin.getExplicitAlias() != null ) {
+					sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
+				}
+				appendJoins( sqmJoin, sb );
+			}
+			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
+				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
+				sb.append( (sqmEntityJoin).getEntityName() );
+				if ( sqmJoin.getExplicitAlias() != null ) {
+					sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
+				}
+				if ( sqmEntityJoin.getJoinPredicate() != null ) {
+					sb.append( " on " );
+					sqmEntityJoin.getJoinPredicate().appendHqlString( sb );
+				}
+				appendJoins( sqmJoin, sb );
+			}
+			else {
+				throw new UnsupportedOperationException( "Unsupported join: " + sqmJoin );
+			}
+		}
+	}
+
+	private void appendJoins(SqmFrom<?, ?> sqmFrom, String correlationPrefix, StringBuilder sb) {
+		String separator = "";
+		for ( SqmJoin<?, ?> sqmJoin : sqmFrom.getSqmJoins() ) {
+			assert sqmJoin instanceof SqmAttributeJoin<?, ?>;
+			sb.append( separator );
+			sb.append( correlationPrefix ).append( '.' );
+			sb.append( ( (SqmAttributeJoin<?, ?>) sqmJoin ).getAttribute().getName() );
+			if ( sqmJoin.getExplicitAlias() != null ) {
+				sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
+			}
+			appendJoins( sqmJoin, sb );
+			separator = ", ";
+		}
 	}
 }

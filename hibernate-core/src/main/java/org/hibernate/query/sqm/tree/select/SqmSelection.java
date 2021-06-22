@@ -54,4 +54,12 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSelection( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		selectableNode.appendHqlString( sb );
+		if ( selectableNode.getAlias() != null ) {
+			sb.append( " as " ).append( selectableNode.getAlias() );
+		}
+	}
 }

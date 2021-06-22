@@ -33,4 +33,15 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitIsNullPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		expression.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " is not null" );
+		}
+		else {
+			sb.append( " is null" );
+		}
+	}
 }

@@ -66,4 +66,13 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitComparisonPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		leftHandExpression.appendHqlString( sb );
+		sb.append( ' ' );
+		sb.append( operator.sqlText() );
+		sb.append( ' ' );
+		rightHandExpression.appendHqlString( sb );
+	}
 }

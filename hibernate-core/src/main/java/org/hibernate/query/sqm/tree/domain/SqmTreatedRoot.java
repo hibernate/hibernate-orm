@@ -93,4 +93,13 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 				}
 		);
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

@@ -407,4 +407,11 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		return walker.visitSubQueryExpression( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( '(' );
+		super.appendHqlString( sb );
+		sb.append( ')' );
+	}
+
 }

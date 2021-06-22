@@ -52,4 +52,11 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMaxElementPath( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "maxelement(" );
+		getLhs().appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

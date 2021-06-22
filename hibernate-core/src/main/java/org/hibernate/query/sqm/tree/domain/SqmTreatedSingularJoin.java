@@ -63,4 +63,13 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		//noinspection unchecked
 		return new SqmTreatedSingularJoin( wrappedPath, treatTarget, getAlias() );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

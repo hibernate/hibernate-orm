@@ -85,4 +85,9 @@ public class SqmLiteralEntityType<T>
 		throw new HqlInterpretationException( "Cannot dereference an entity name" );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( entityType.getName() );
+	}
+
 }

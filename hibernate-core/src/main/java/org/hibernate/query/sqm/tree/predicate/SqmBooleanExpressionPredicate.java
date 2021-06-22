@@ -46,4 +46,9 @@ public class SqmBooleanExpressionPredicate extends AbstractNegatableSqmPredicate
 	public List<Expression<Boolean>> getExpressions() {
 		return Collections.singletonList( booleanExpression );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		booleanExpression.appendHqlString( sb );
+	}
 }

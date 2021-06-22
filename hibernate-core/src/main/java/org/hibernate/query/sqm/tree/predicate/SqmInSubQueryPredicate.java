@@ -82,4 +82,14 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	public SqmInPredicate<T> value(JpaExpression value) {
 		throw new UnsupportedOperationException(  );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		testExpression.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " not" );
+		}
+		sb.append( " in " );
+		subQueryExpression.appendHqlString( sb );
+	}
 }

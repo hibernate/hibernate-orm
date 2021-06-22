@@ -46,4 +46,9 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	public SqmExpressable getNodeType() {
 		return null;
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( specification );
+	}
 }

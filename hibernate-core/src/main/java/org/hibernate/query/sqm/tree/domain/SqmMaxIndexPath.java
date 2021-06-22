@@ -60,4 +60,11 @@ public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMaxIndexPath( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "maxindex(" );
+		getLhs().appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

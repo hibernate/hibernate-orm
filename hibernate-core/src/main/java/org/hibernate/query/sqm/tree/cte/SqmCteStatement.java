@@ -8,6 +8,10 @@ package org.hibernate.query.sqm.tree.cte;
 
 import java.util.List;
 
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -15,6 +19,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
+import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
 
 /**
  * @author Steve Ebersole
@@ -111,5 +116,75 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCteStatement( this );
+	}
+
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( cteTable.getCteName() );
+		sb.append( " (" );
+		final List<SqmCteTableColumn> columns = cteTable.getColumns();
+		sb.append( columns.get( 0 ).getColumnName() );
+		for ( int i = 1; i < columns.size(); i++ ) {
+			sb.append( ", " );
+			sb.append( columns.get( i ).getColumnName() );
+		}
+
+		sb.append( ") as " );
+
+		if ( getMaterialization() != CteMaterialization.UNDEFINED ) {
+			sb.append( getMaterialization() ).append( ' ' );
+		}
+		sb.append( '(' );
+		getCteDefinition().appendHqlString( sb );
+		sb.append( ')' );
+
+		String separator;
+		if ( getSearchClauseKind() != null ) {
+			sb.append( " search " );
+			if ( getSearchClauseKind() == CteSearchClauseKind.DEPTH_FIRST ) {
+				sb.append( " depth " );
+			}
+			else {
+				sb.append( " breadth " );
+			}
+			sb.append( " first by " );
+			separator = "";
+			for ( SqmSearchClauseSpecification searchBySpecification : getSearchBySpecifications() ) {
+				sb.append( separator );
+				sb.append( searchBySpecification.getCteColumn().getColumnName() );
+				if ( searchBySpecification.getSortOrder() != null ) {
+					if ( searchBySpecification.getSortOrder() == SortOrder.ASCENDING ) {
+						sb.append( " asc" );
+					}
+					else {
+						sb.append( " desc" );
+					}
+					if ( searchBySpecification.getNullPrecedence() != null ) {
+						if ( searchBySpecification.getNullPrecedence() == NullPrecedence.FIRST ) {
+							sb.append( " nulls first" );
+						}
+						else {
+							sb.append( " nulls last" );
+						}
+					}
+				}
+				separator = ", ";
+			}
+		}
+		if ( getCycleMarkColumn() != null ) {
+			sb.append( " cycle " );
+			separator = "";
+			for ( SqmCteTableColumn cycleColumn : getCycleColumns() ) {
+				sb.append( separator );
+				sb.append( cycleColumn.getColumnName() );
+				separator = ", ";
+			}
+			sb.append( " set " );
+			sb.append( getCycleMarkColumn().getColumnName() );
+			sb.append( " to '" );
+			sb.append( getCycleValue() );
+			sb.append( "' default '" );
+			sb.append( getNoCycleValue() );
+			sb.append( "'" );
+		}
 	}
 }

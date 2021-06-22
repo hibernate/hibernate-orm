@@ -47,4 +47,10 @@ public class SqmGroupedPredicate extends AbstractSqmPredicate {
 	public SqmPredicate not() {
 		return new SqmNegatedPredicate( this, nodeBuilder() );
 	}
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( '(' );
+		subPredicate.appendHqlString( sb );
+		sb.append( ')' );
+	}
 }

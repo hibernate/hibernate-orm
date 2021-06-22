@@ -33,4 +33,15 @@ public class SqmExistsPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitExistsPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( isNegated() ) {
+			sb.append( "not exists " );
+		}
+		else {
+			sb.append( "exists " );
+		}
+		expression.appendHqlString( sb );
+	}
 }

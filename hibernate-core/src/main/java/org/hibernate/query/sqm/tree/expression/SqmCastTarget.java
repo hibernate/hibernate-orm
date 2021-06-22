@@ -83,4 +83,23 @@ public class SqmCastTarget<T> extends AbstractSqmNode implements SqmTypedNode<T>
 	public SqmExpressable getNodeType() {
 		return type;
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( type.getTypeName() );
+		if ( length != null ) {
+			sb.append( '(' );
+			sb.append( length );
+			sb.append( ')' );
+		}
+		else if ( precision != null ) {
+			sb.append( '(' );
+			sb.append( precision );
+			if ( scale != null ) {
+				sb.append( ", " );
+				sb.append( scale );
+			}
+			sb.append( ')' );
+		}
+	}
 }

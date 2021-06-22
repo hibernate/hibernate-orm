@@ -33,4 +33,8 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 		// `BaseSqmToSqlAstConverter#resolveGroupOrOrderByExpression`
 		throw new UnsupportedOperationException();
 	}
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( position );
+	}
 }

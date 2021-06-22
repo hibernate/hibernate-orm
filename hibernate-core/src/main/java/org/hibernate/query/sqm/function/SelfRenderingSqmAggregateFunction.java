@@ -13,7 +13,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -50,5 +52,30 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				resultType,
 				getMappingModelExpressable( walker, resultType )
 		);
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		final List<SqmTypedNode<?>> arguments = getArguments();
+		sb.append( getFunctionName() );
+		sb.append( '(' );
+		int i = 1;
+		if ( arguments.get( 0 ) instanceof SqmDistinct<?> ) {
+			( (SqmSelectableNode<?>) arguments.get( 0 ) ).appendHqlString( sb );
+			sb.append( ' ' );
+			( (SqmSelectableNode<?>) arguments.get( 1 ) ).appendHqlString( sb );
+			i = 2;
+		}
+		for ( ; i < arguments.size(); i++ ) {
+			sb.append(", ");
+			( (SqmSelectableNode<?>) arguments.get( i ) ).appendHqlString( sb );
+		}
+
+		sb.append( ')' );
+		if ( filter != null ) {
+			sb.append( " filter (where " );
+			filter.appendHqlString( sb );
+			sb.append( ')' );
+		}
 	}
 }

@@ -110,6 +110,23 @@ public class SqmCaseSearched<R>
 		}
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "case" );
+		for ( WhenFragment<R> whenFragment : whenFragments ) {
+			sb.append( " when " );
+			whenFragment.predicate.appendHqlString( sb );
+			sb.append( " then " );
+			whenFragment.result.appendHqlString( sb );
+		}
+
+		if ( otherwise != null ) {
+			sb.append( " else " );
+			otherwise.appendHqlString( sb );
+		}
+		sb.append( " end" );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

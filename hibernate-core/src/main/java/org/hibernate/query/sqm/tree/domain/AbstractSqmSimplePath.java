@@ -42,4 +42,13 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( getLhs() != null ) {
+			getLhs().appendHqlString( sb );
+			sb.append( '.' );
+		}
+		sb.append( getReferencedPathSource().getPathName() );
+	}
 }

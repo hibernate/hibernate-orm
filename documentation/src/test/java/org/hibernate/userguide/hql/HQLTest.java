@@ -1566,7 +1566,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 				"where current_date() > key( p.callHistory )", Phone.class )
 			.getResultList();
 			//end::hql-collection-expressions-example[]
-			assertEquals(2, phones.size());
+			assertEquals( 1, phones.size() );
 		});
 	}
 

@@ -61,4 +61,11 @@ public class SqmMinIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 		return walker.visitMinIndexPath( this );
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "minindex(" );
+		getLhs().appendHqlString( sb );
+		sb.append( ')' );
+	}
+
 }

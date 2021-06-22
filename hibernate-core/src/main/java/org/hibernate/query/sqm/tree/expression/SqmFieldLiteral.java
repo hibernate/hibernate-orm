@@ -120,6 +120,11 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	}
 
 	@Override
+	public void appendHqlString(StringBuilder sb) {
+		SqmLiteral.appendHqlString( sb, getJavaTypeDescriptor(), getValue() );
+	}
+
+	@Override
 	public NodeBuilder nodeBuilder() {
 		return nodeBuilder;
 	}

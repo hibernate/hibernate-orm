@@ -70,4 +70,18 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitLikePredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		matchExpression.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " not" );
+		}
+		sb.append( " like " );
+		pattern.appendHqlString( sb );
+		if ( escapeCharacter != null ) {
+			sb.append( " escape " );
+			escapeCharacter.appendHqlString( sb );
+		}
+	}
 }

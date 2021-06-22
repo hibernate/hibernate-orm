@@ -76,4 +76,28 @@ public class SqmSortSpecification implements JpaOrder {
 	public boolean isAscending() {
 		return sortOrder == SortOrder.ASCENDING;
 	}
+
+	public void appendHqlString(StringBuilder sb) {
+		sortExpression.appendHqlString( sb );
+		if ( sortOrder == SortOrder.DESCENDING ) {
+			sb.append( " desc" );
+			if ( nullPrecedence != null ) {
+				if ( nullPrecedence == NullPrecedence.FIRST ) {
+					sb.append( " nulls first" );
+				}
+				else {
+					sb.append( " nulls last" );
+				}
+			}
+		}
+		else if ( nullPrecedence != null ) {
+			sb.append( " asc" );
+			if ( nullPrecedence == NullPrecedence.FIRST ) {
+				sb.append( " nulls first" );
+			}
+			else {
+				sb.append( " nulls last" );
+			}
+		}
+	}
 }

@@ -32,4 +32,15 @@ public class SqmEmptinessPredicate extends AbstractNegatableSqmPredicate {
 	public <T> T accept(SemanticQueryWalker<T> walker) {
 		return walker.visitIsEmptyPredicate( this );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		pluralPath.appendHqlString( sb );
+		if ( isNegated() ) {
+			sb.append( " is not empty" );
+		}
+		else {
+			sb.append( " is empty" );
+		}
+	}
 }

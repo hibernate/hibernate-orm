@@ -51,4 +51,13 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		//noinspection unchecked
 		return new SqmTreatedBagJoin( wrappedPath, treatTarget, getAlias() );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "treat(" );
+		wrappedPath.appendHqlString( sb );
+		sb.append( " as " );
+		sb.append( treatTarget.getName() );
+		sb.append( ')' );
+	}
 }

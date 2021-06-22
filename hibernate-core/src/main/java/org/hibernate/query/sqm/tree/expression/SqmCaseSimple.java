@@ -118,6 +118,24 @@ public class SqmCaseSimple<T,R>
 		}
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "case " );
+		fixture.appendHqlString( sb );
+		for ( WhenFragment<T, R> whenFragment : whenFragments ) {
+			sb.append( " when " );
+			whenFragment.checkValue.appendHqlString( sb );
+			sb.append( " then " );
+			whenFragment.result.appendHqlString( sb );
+		}
+
+		if ( otherwise != null ) {
+			sb.append( " else " );
+			otherwise.appendHqlString( sb );
+		}
+		sb.append( " end" );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA

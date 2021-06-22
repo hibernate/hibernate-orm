@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
+import java.util.List;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
@@ -181,5 +182,35 @@ public class SqmUpdateStatement<T>
 			setClause = new SqmSetClause();
 		}
 		setClause.addAssignment( new SqmAssignment( targetPath, value ) );
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( "update " );
+		if ( versioned ) {
+			sb.append( "versioned " );
+		}
+		sb.append( getTarget().getEntityName() );
+		if ( getTarget().getExplicitAlias() != null ) {
+			sb.append( ' ' ).append( getTarget().getExplicitAlias() );
+		}
+		sb.append( " set " );
+		final List<SqmAssignment> assignments = setClause.getAssignments();
+		appendAssignment( assignments.get( 0 ), sb );
+		for ( int i = 1; i < assignments.size(); i++ ) {
+			sb.append( ", " );
+			appendAssignment( assignments.get( i ), sb );
+		}
+
+		if ( whereClause != null && whereClause.getPredicate() != null ) {
+			sb.append( " where " );
+			whereClause.getPredicate().appendHqlString( sb );
+		}
+	}
+
+	private static void appendAssignment(SqmAssignment sqmAssignment, StringBuilder sb) {
+		sqmAssignment.getTargetPath().appendHqlString( sb );
+		sb.append( " = " );
+		sqmAssignment.getValue().appendHqlString( sb );
 	}
 }

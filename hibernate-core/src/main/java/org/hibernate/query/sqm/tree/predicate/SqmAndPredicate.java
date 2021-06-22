@@ -63,4 +63,25 @@ public class SqmAndPredicate extends AbstractSqmPredicate implements SqmJunctive
 	public SqmPredicate not() {
 		return new SqmNegatedPredicate( this, nodeBuilder() );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( leftHandPredicate instanceof SqmOrPredicate ) {
+			sb.append( '(' );
+			leftHandPredicate.appendHqlString( sb );
+			sb.append( ')' );
+		}
+		else {
+			leftHandPredicate.appendHqlString( sb );
+		}
+		sb.append( " and " );
+		if ( rightHandPredicate instanceof SqmOrPredicate ) {
+			sb.append( '(' );
+			rightHandPredicate.appendHqlString( sb );
+			sb.append( ')' );
+		}
+		else {
+			rightHandPredicate.appendHqlString( sb );
+		}
+	}
 }

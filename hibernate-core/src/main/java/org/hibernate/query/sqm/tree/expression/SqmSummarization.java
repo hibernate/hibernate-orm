@@ -43,5 +43,16 @@ public class SqmSummarization<T> extends AbstractSqmExpression<T> {
 		ROLLUP,
 		CUBE
 	}
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( kind );
+		sb.append( " (" );
+		groupings.get( 0 ).appendHqlString( sb );
+		for ( int i = 1; i < groupings.size(); i++ ) {
+			sb.append(", ");
+			groupings.get( i ).appendHqlString( sb );
+		}
+		sb.append( ')' );
+	}
 
 }

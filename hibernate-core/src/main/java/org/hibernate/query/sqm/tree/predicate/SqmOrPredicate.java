@@ -64,4 +64,25 @@ public class SqmOrPredicate extends AbstractSqmExpression<Boolean> implements Sq
 	public List<Expression<Boolean>> getExpressions() {
 		return Arrays.asList( leftHandPredicate, rightHandPredicate );
 	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		if ( leftHandPredicate instanceof SqmAndPredicate ) {
+			sb.append( '(' );
+			leftHandPredicate.appendHqlString( sb );
+			sb.append( ')' );
+		}
+		else {
+			leftHandPredicate.appendHqlString( sb );
+		}
+		sb.append( " or " );
+		if ( rightHandPredicate instanceof SqmAndPredicate ) {
+			sb.append( '(' );
+			rightHandPredicate.appendHqlString( sb );
+			sb.append( ')' );
+		}
+		else {
+			rightHandPredicate.appendHqlString( sb );
+		}
+	}
 }

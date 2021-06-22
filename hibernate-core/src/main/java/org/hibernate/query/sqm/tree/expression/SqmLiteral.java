@@ -10,6 +10,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -43,6 +44,29 @@ public class SqmLiteral<T>
 	@Override
 	public String asLoggableText() {
 		return "Literal( " + value + ")";
+	}
+
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		appendHqlString( sb, getJavaTypeDescriptor(), value );
+	}
+
+	public static <T> void appendHqlString(StringBuilder sb, JavaTypeDescriptor<T> javaTypeDescriptor, T value) {
+		final String string = javaTypeDescriptor.toString( value );
+		if ( javaTypeDescriptor.getJavaTypeClass() == String.class ) {
+			sb.append( '\'' );
+			for ( int i = 0; i < string.length(); i++ ) {
+				final char c = string.charAt( i );
+				if ( c == '\'' ) {
+					sb.append( '\'' );
+				}
+				sb.append( c );
+			}
+			sb.append( '\'' );
+		}
+		else {
+			sb.append( string );
+		}
 	}
 
 }

@@ -110,6 +110,11 @@ public class SqmJpaCriteriaParameterWrapper<T>
 		// nothing to do
 	}
 
+	@Override
+	public void appendHqlString(StringBuilder sb) {
+		jpaCriteriaParameter.appendHqlString( sb );
+	}
+
 //	@Override
 //	public Expression toSqlExpression(
 //			Clause clause,

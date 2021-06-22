@@ -25,7 +25,8 @@ import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
  */
 final class StatsNamedContainer<V> {
 
-	private final ConcurrentMap<String,V> map;
+	private final ConcurrentMap<String,Object> map;
+	private final static Object NULL_TOKEN = new Object();
 
 	/**
 	 * Creates a bounded container - based on BoundedConcurrentHashMap
@@ -63,33 +64,39 @@ final class StatsNamedContainer<V> {
 	 * sure the function is invoked at most once: we don't need this guarantee, and prefer to reduce risk of blocking.
 	 */
 	public V getOrCompute(final String key, final Function<String, V> function) {
-		final V v1 = map.get( key );
+		final Object v1 = map.get( key );
 		if ( v1 != null ) {
-			return v1;
+			if ( v1 == NULL_TOKEN ) {
+				return null;
+			}
+			return (V) v1;
 		}
 		else {
 			final V v2 = function.apply( key );
-			//Occasionally a function might return null. We can't store a null in the CHM,
-			// so a placeholder would be required to implement that, but we prefer to just keep this
-			// situation as slightly sub-optimal so to not make the code more complex just to handle the exceptional case:
-			// null values are assumed to be rare enough for this not being worth it.
 			if ( v2 == null ) {
+				map.put( key, NULL_TOKEN );
 				return null;
 			}
 			else {
-				final V v3 = map.putIfAbsent( key, v2 );
+				final Object v3 = map.putIfAbsent( key, v2 );
 				if ( v3 == null ) {
 					return v2;
 				}
 				else {
-					return v3;
+					return (V) v3;
 				}
 			}
 		}
 	}
 
 	public V get(final String key) {
-		return map.get( key );
+		final Object o = map.get( key );
+		if ( o == NULL_TOKEN) {
+			return null;
+		}
+		else {
+			return (V) o;
+		}
 	}
 
 }

@@ -563,23 +563,20 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	}
 
 	@Override
-	public CacheRegionStatisticsImpl getQueryRegionStatistics(String regionName) {
-		final CacheRegionStatisticsImpl existing = l2CacheStatsMap.get( regionName );
-		if ( existing != null ) {
-			return existing;
-		}
-
-		final QueryResultsCache regionAccess = cache
-				.getQueryResultsCacheStrictly( regionName );
-		if ( regionAccess == null ) {
-			return null;
-		}
-
-		return l2CacheStatsMap.getOrCompute(
-				regionName,
-				s -> new CacheRegionStatisticsImpl( regionAccess.getRegion() )
-		);
+	public CacheRegionStatisticsImpl getQueryRegionStatistics(final String regionName) {
+		return l2CacheStatsMap.getOrCompute( regionName, this::computeQueryRegionStatistics );
 	}
+
+	private CacheRegionStatisticsImpl computeQueryRegionStatistics(final String regionName) {
+		final QueryResultsCache regionAccess = cache.getQueryResultsCacheStrictly( regionName );
+		if ( regionAccess == null ) {
+			return null; //this null value will be cached
+		}
+		else {
+			return new CacheRegionStatisticsImpl( regionAccess.getRegion() );
+		}
+	}
+
 
 	@Override
 	public CacheRegionStatisticsImpl getCacheRegionStatistics(String regionName) {

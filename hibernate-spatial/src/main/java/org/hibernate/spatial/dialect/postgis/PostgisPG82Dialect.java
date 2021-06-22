@@ -48,6 +48,11 @@ public class PostgisPG82Dialect extends PostgreSQL82Dialect implements SpatialDi
 		support.contributeTypes( typeContributions, serviceRegistry );
 	}
 
+	@Override
+	public boolean equivalentTypes(int typeCode1, int typeCode2) {
+		return super.equivalentTypes( typeCode1, typeCode2 ) ||
+				( support.isSpatial( typeCode1 ) && support.isSpatial( typeCode2 ) );
+	}
 
 	@Override
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {

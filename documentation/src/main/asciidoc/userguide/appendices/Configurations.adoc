@@ -884,6 +884,10 @@ For cases where the `javax.persistence.schema-generation.scripts.action` value i
 `*javax.persistence.schema-generation.scripts.drop-target*`::
 For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema dropping commands should be written to DDL script file, `javax.persistence.schema-generation.scripts.drop-target` specifies either a `java.io.Writer` configured for output of the DDL script or a string specifying the file URL for the DDL script.
 
+`*hibernate.hbm2ddl.schema-generation.script.append*` (e.g. `true` (default value) or `false`)::
+For cases where the `javax.persistence.schema-generation.scripts.action` value indicates that schema commands should be written to DDL script file, `hibernate.hbm2ddl.schema-generation.script.append` specifies if schema commands should be appended to the end of the file rather than written at the beginning of the file.
+Values are `true` for appending schema commands to the end of the file, `false` for writing achema commands at the beginning of the file.
+
 `*javax.persistence.hibernate.hbm2ddl.import_files*` (e.g. `import.sql` (default value))::
 Comma-separated names of the optional files containing SQL DML statements executed during the `SessionFactory` creation.
 File order matters, the statements of a given file are executed before the statements of the following one.

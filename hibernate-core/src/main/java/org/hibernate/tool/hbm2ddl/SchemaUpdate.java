@@ -56,6 +56,7 @@ public class SchemaUpdate {
 	boolean haltOnError = false;
 
 	private String outputFile;
+	private boolean append = true;
 	private String delimiter;
 	private boolean format;
 
@@ -88,7 +89,7 @@ public class SchemaUpdate {
 				exceptionHandler
 		);
 
-		final TargetDescriptor targetDescriptor = SchemaExport.buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
+		final TargetDescriptor targetDescriptor = SchemaExport.buildTargetDescriptor( targetTypes, outputFile, append, serviceRegistry );
 
 		try {
 			tool.getSchemaMigrator( config ).doMigration( metadata, executionOptions, ContributableMatcher.ALL, targetDescriptor );
@@ -121,6 +122,18 @@ public class SchemaUpdate {
 
 	public SchemaUpdate setOutputFile(String outputFile) {
 		this.outputFile = outputFile;
+		return this;
+	}
+
+	/**
+	 * For generating a export script file, by default the content will be appended at the begin or end of the file.
+	 *
+	 * The sql will be written at the beginning of the file rather append to the end.
+	 *
+	 * @return this
+	 */
+	public SchemaUpdate setOverrideOutputFileContent() {
+		append = false;
 		return this;
 	}
 

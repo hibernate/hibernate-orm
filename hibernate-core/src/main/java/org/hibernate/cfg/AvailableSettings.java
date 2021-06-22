@@ -1684,6 +1684,16 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**
+	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema commands should
+	 * be written to DDL script file, specifies if schema commands should be appended to the end of the file rather than written at the beginning of the file.
+	 *
+	 * Values are: {@code true} for appending schema commands to the end of the file, {@code false} for writing schema commands at the beginning.
+	 *
+	 * The default value is {@code true}
+	 */
+	String HBM2DDL_SCRIPTS_CREATE_APPEND = "hibernate.hbm2ddl.schema-generation.script.append";
+
+	/**
 	 * For cases where the {@value #HBM2DDL_SCRIPTS_ACTION} value indicates that schema drop commands should
 	 * be written to DDL script file, {@value #HBM2DDL_SCRIPTS_DROP_TARGET} specifies either a
 	 * {@link java.io.Writer} configured for output of the DDL script or a string specifying the file URL for the DDL

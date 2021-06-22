@@ -136,6 +136,7 @@ public class SchemaExport {
 		}
 	}
 
+	boolean append = true;
 	boolean haltOnError = false;
 	boolean format = false;
 	boolean manageNamespaces = false;
@@ -157,6 +158,18 @@ public class SchemaExport {
 	 */
 	public SchemaExport setOutputFile(String filename) {
 		outputFile = filename;
+		return this;
+	}
+
+	/**
+	 * For generating a export script file, by default the content will be appended at the begin or end of the file.
+	 *
+	 * The sql will be written at the beginning of the file rather append to the end.
+	 *
+	 * @return this
+	 */
+	public SchemaExport setOverrideOutputFileContent() {
+		append = false;
 		return this;
 	}
 
@@ -244,7 +257,12 @@ public class SchemaExport {
 
 		LOG.runningHbm2ddlSchemaExport();
 
-		final TargetDescriptor targetDescriptor = buildTargetDescriptor( targetTypes, outputFile, serviceRegistry );
+		final TargetDescriptor targetDescriptor = buildTargetDescriptor(
+				targetTypes,
+				outputFile,
+				append,
+				serviceRegistry
+		);
 
 		doExecution( action, needsJdbcConnection( targetTypes ), metadata, serviceRegistry, targetDescriptor );
 	}
@@ -318,6 +336,14 @@ public class SchemaExport {
 			EnumSet<TargetType> targetTypes,
 			String outputFile,
 			ServiceRegistry serviceRegistry) {
+		return buildTargetDescriptor( targetTypes, outputFile, true, serviceRegistry );
+	}
+
+	public static TargetDescriptor buildTargetDescriptor(
+			EnumSet<TargetType> targetTypes,
+			String outputFile,
+			boolean append,
+			ServiceRegistry serviceRegistry) {
 		final ScriptTargetOutput scriptTarget;
 		if ( targetTypes.contains( TargetType.SCRIPT ) ) {
 			if ( outputFile == null ) {
@@ -326,7 +352,8 @@ public class SchemaExport {
 			scriptTarget = Helper.interpretScriptTargetSetting(
 					outputFile,
 					serviceRegistry.getService( ClassLoaderService.class ),
-					(String) serviceRegistry.getService( ConfigurationService.class ).getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME )
+					(String) serviceRegistry.getService( ConfigurationService.class ).getSettings().get( AvailableSettings.HBM2DDL_CHARSET_NAME ),
+					append
 			);
 		}
 		else {

@@ -94,7 +94,8 @@ public class Helper {
 	public static ScriptTargetOutput interpretScriptTargetSetting(
 			Object scriptTargetSetting,
 			ClassLoaderService classLoaderService,
-			String charsetName ) {
+			String charsetName,
+			boolean append) {
 		if ( scriptTargetSetting == null ) {
 			return null;
 		}
@@ -119,7 +120,7 @@ public class Helper {
 
 			// assume it is a File path
 			final File file = new File( scriptTargetSettingString );
-			return new ScriptTargetOutputToFile( file, charsetName );
+			return new ScriptTargetOutputToFile( file, charsetName, append );
 		}
 	}
 

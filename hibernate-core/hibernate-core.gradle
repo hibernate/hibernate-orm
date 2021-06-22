@@ -231,6 +231,10 @@ task copyBundleResources (type: Copy) {
 // we will end up a test JAR with bundle files that where variables are replaced
 processTestResources.finalizedBy copyBundleResources
 
+sourcesJar {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 task testJar(type: Jar, dependsOn: testClasses) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveClassifier.set( 'test' )

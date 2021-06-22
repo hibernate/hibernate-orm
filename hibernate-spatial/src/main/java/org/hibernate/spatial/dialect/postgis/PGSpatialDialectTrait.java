@@ -7,6 +7,8 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
+import java.sql.Types;
+
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
@@ -124,5 +126,14 @@ interface PGSpatialDialectTrait extends SpatialDialect {
 	@Override
 	default boolean supports(SpatialFunction function) {
 		return support.supports( function );
+	}
+
+	/**
+	 * Checks whether the typeCode is (potentially) the code for a spatial type
+	 * @param typeCode the JDBC type code
+	 * @return if the typecode corresponds with a spatialt type
+	 */
+	default boolean isSpatial(int typeCode){
+		return support.isSpatial( typeCode );
 	}
 }

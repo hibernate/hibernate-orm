@@ -10,6 +10,7 @@ import java.sql.Timestamp;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.HashSet;
@@ -319,7 +320,7 @@ public class EntityResultTests extends AbstractUsageTest {
 		);
 	}
 
-	private static final Instant THEN = Instant.now( Clock.systemUTC() );
+	private static final Instant THEN = ZonedDateTime.of( 2020, 1, 1, 12, 0, 0, 100_000_000, ZoneOffset.UTC ).toInstant();
 	private static final Date THEN_TIMESTAMP = Timestamp.from( THEN );
 	private static final Date THEN_DATE = java.sql.Date.from( THEN  );
 	private static final Date THEN_TIME = java.sql.Time.from( THEN );

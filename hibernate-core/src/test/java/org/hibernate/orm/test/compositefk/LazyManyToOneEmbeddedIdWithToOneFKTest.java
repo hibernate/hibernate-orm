@@ -14,6 +14,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 
@@ -218,6 +219,7 @@ public class LazyManyToOneEmbeddedIdWithToOneFKTest {
 	}
 
 	@Entity(name = "System")
+	@Table( name = "systems" )
 	public static class System {
 		@Id
 		private Integer id;

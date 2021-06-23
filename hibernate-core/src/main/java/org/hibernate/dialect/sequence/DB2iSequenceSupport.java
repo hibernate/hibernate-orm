@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.sequence;
 
+import org.hibernate.MappingException;
+
 /**
  * Sequence support for {@link org.hibernate.dialect.DB2iDialect}.
  *
@@ -21,8 +23,18 @@ public class DB2iSequenceSupport implements SequenceSupport {
 	}
 
 	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		return "prevval for " + sequenceName;
+	}
+
+	@Override
 	public String getSequenceNextValString(String sequenceName) {
 		return "values " + getSelectSequenceNextValString( sequenceName );
+	}
+
+	@Override
+	public String getSequencePreviousValString(String sequenceName) throws MappingException {
+		return "values " + getSelectSequencePreviousValString( sequenceName );
 	}
 
 	@Override

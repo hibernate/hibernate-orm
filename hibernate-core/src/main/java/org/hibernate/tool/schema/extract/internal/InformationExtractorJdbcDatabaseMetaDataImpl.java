@@ -192,6 +192,39 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				}
 			}
 		}
+		catch (AbstractMethodError error) {
+			// The jTDS driver doesn't implement the getSchemas(String, String)
+			try {
+				final String catalogFilter = determineCatalogFilter( catalog );
+				final String schemaFilter = determineSchemaFilter( schema );
+
+				final ResultSet resultSet = extractionContext.getJdbcDatabaseMetaData().getSchemas();
+
+				try {
+					while ( resultSet.next() ) {
+						final String schemaName = resultSet.getString( 1 );
+						final String catalogName = resultSet.getString( 2 );
+						if ( catalogFilter != null && !catalogFilter.isEmpty() && !catalogFilter.equals( catalogName ) ) {
+							continue;
+						}
+						if ( schemaFilter.equals( schemaName ) ) {
+							return true;
+						}
+					}
+					return false;
+				}
+				finally {
+					try {
+						resultSet.close();
+					}
+					catch (SQLException ignore) {
+					}
+				}
+			}
+			catch (SQLException sqlException) {
+				throw convertSQLException( sqlException, "Unable to query DatabaseMetaData for existing schemas" );
+			}
+		}
 		catch (SQLException sqlException) {
 			throw convertSQLException( sqlException, "Unable to query DatabaseMetaData for existing schemas" );
 		}

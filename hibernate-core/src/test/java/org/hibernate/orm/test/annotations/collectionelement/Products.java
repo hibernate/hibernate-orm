@@ -12,8 +12,6 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.OrderBy;
 
-@SuppressWarnings({"unchecked", "serial"})
-
 @Entity
 public class Products {
 	@Id

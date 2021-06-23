@@ -1465,19 +1465,28 @@ public class CommonFunctionFactory {
 
 	public static void leastGreatest(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "least" )
-				.setMinArgumentCount( 1 )
+				.setMinArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "greatest" )
-				.setMinArgumentCount( 1 )
+				.setMinArgumentCount( 2 )
+				.register();
+	}
+
+	public static void leastGreatest_minMax(QueryEngine queryEngine) {
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "least", "min" )
+				.setMinArgumentCount( 2 )
+				.register();
+		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "greatest", "max" )
+				.setMinArgumentCount( 2 )
 				.register();
 	}
 
 	public static void leastGreatest_minMaxValue(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "least", "minvalue" )
-				.setMinArgumentCount( 1 )
+				.setMinArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "greatest", "maxvalue" )
-				.setMinArgumentCount( 1 )
+				.setMinArgumentCount( 2 )
 				.register();
 	}
 
@@ -1844,7 +1853,6 @@ public class CommonFunctionFactory {
 	 * Usually Oracle-style (except for Informix which quite close to MySQL-style)
 	 *
 	 * @see org.hibernate.dialect.OracleDialect#datetimeFormat
-	 * @see org.hibernate.dialect.InformixDialect#datetimeFormat
 	 */
 	public static void format_toChar(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "to_char")
@@ -1861,19 +1869,6 @@ public class CommonFunctionFactory {
 	 */
 	public static void format_dateFormat(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "date_format")
-				.setInvariantType( StandardBasicTypes.STRING )
-				.setExactArgumentCount(2)
-				.setArgumentListSignature("(datetime as pattern)")
-				.register();
-	}
-
-	/**
-	 * SQL Server-style
-	 *
-	 * @see org.hibernate.dialect.SQLServerDialect#datetimeFormat
-	 */
-	public static void format_format(QueryEngine queryEngine) {
-		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "format")
 				.setInvariantType( StandardBasicTypes.STRING )
 				.setExactArgumentCount(2)
 				.setArgumentListSignature("(datetime as pattern)")

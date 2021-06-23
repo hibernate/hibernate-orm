@@ -18,4 +18,6 @@ elif [ "$RDBMS" == 'mssql' ]; then
   bash $DIR/../docker_db.sh mssql
 elif [ "$RDBMS" == 'hana' ]; then
   bash $DIR/../docker_db.sh hana
+elif [ "$RDBMS" == 'sybase' ]; then
+  bash $DIR/../docker_db.sh sybase
 fi

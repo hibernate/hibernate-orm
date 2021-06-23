@@ -21,6 +21,7 @@ import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.DB2SequenceSupport;
+import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -358,7 +359,7 @@ public class DerbyDialect extends Dialect {
 	public SequenceSupport getSequenceSupport() {
 		return getVersion() < 1060
 				? super.getSequenceSupport()
-				: DB2SequenceSupport.INSTANCE;
+				: DerbySequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -440,7 +441,8 @@ public class DerbyDialect extends Dialect {
 
 	@Override
 	public boolean supportsLockTimeouts() {
-		//as far as I know, Derby doesn't support this
+		// To enable the lock timeout, we need a dedicated call
+		// 'call SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY('derby.locks.waitTimeout', '3')'
 		return false;
 	}
 
@@ -502,6 +504,11 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		//checked on Derby 10.14
+		return false;
+	}
+
+	@Override
+	public boolean supportsOrderByInSubquery() {
 		return false;
 	}
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.List;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -21,8 +23,6 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import java.util.List;
-
 import static java.util.Arrays.asList;
 
 /**
@@ -31,7 +31,7 @@ import static java.util.Arrays.asList;
 public class TimestampdiffFunction
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private Dialect dialect;
+	private final Dialect dialect;
 
 	public TimestampdiffFunction(Dialect dialect) {
 		super(
@@ -48,11 +48,10 @@ public class TimestampdiffFunction
 			List<SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 
-		DurationUnit field = (DurationUnit) arguments.get(0);
-		Expression from = (Expression) arguments.get(1);
-		Expression to = (Expression) arguments.get(2);
-
-		String pattern = dialect.timestampdiffPattern(
+		final DurationUnit field = (DurationUnit) arguments.get( 0 );
+		final Expression from = (Expression) arguments.get( 1 );
+		final Expression to = (Expression) arguments.get( 2 );
+		final String pattern = dialect.timestampdiffPattern(
 				field.getUnit(),
 				TypeConfiguration.getSqlTemporalType( from.getExpressionType() ),
 				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )

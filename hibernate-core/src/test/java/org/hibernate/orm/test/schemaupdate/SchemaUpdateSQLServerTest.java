@@ -52,6 +52,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -86,7 +87,7 @@ public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 
 	@Before
 	public void setUp() throws IOException {
-		if(!SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if(!SQLServerDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() )) {
 			return;
 		}
 
@@ -131,7 +132,7 @@ public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 
 	@After
 	public void tearsDown() {
-		if(!SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if(!SQLServerDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() )) {
 			return;
 		}
 
@@ -144,7 +145,7 @@ public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSchemaUpdateAndValidation() throws Exception {
-		if(!SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )) {
+		if(!SQLServerDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() )) {
 			return;
 		}
 

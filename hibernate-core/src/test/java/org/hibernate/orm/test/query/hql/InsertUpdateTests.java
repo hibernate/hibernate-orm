@@ -9,17 +9,16 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.Contact.Name;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
-
-import org.hibernate.dialect.FirebirdDialect;
 
 /**
  * @author Gavin King
@@ -94,7 +93,7 @@ public class InsertUpdateTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support values list in insert" )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsValuesListForInsert.class)
 	public void testInsertMultipleValues(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

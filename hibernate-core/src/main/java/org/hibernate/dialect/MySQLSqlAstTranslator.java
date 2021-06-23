@@ -38,7 +38,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
 		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
-				&& supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -117,9 +117,5 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	protected String getFromDual() {
 		return " from dual";
-	}
-
-	private boolean supportsWindowFunctions() {
-		return getDialect().getVersion() >= 802;
 	}
 }

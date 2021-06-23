@@ -13,10 +13,10 @@ import java.util.List;
  * @author Gavin King
  */
 public class Replacer {
-	private String[] chunks;
-	private String quote;
-	private String delimiter;
-	private List<Replacement> replacements = new ArrayList<>();
+	private final String[] chunks;
+	private final String quote;
+	private final String delimiter;
+	private final List<Replacement> replacements = new ArrayList<>();
 
 	static class Replacement {
 		String placeholder;
@@ -45,7 +45,7 @@ public class Replacer {
 		}
 	}
 
-	Replacer(String format, String quote, String delimiter) {
+	public Replacer(String format, String quote, String delimiter) {
 		this.delimiter = delimiter;
 		this.chunks = format.split( quote );
 		this.quote = quote;

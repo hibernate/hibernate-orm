@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.sequence;
 
+import org.hibernate.MappingException;
+
 /**
  * Sequence support for {@link org.hibernate.dialect.PostgreSQLDialect}.
  *
@@ -25,6 +27,11 @@ public class PostgreSQLSequenceSupport implements SequenceSupport {
 	@Override
 	public String getSelectSequenceNextValString(String sequenceName) {
 		return "nextval('" + sequenceName + "')";
+	}
+
+	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		return "currval('" + sequenceName + "')";
 	}
 
 	@Override

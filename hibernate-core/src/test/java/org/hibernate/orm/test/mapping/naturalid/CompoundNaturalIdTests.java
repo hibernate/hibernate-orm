@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -212,6 +213,7 @@ public class CompoundNaturalIdTests {
 		@NaturalId
 		private String username;
 		@NaturalId
+		@Column(name = "system_name")
 		private String system;
 		private String emailAddress;
 

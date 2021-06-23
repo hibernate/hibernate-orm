@@ -489,8 +489,9 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				StringBuilder alter = new StringBuilder( root.toString() )
 						.append( ' ' )
 						.append( column.getQuotedName( dialect ) )
-						.append( ' ' )
-						.append( column.getSqlType( dialect, metadata ) );
+						.append( ' ' );
+				final String columnType = column.getSqlType( dialect, metadata );
+				alter.append( columnType );
 
 				String defaultValue = column.getDefaultValue();
 				if ( defaultValue != null ) {
@@ -498,7 +499,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				}
 
 				if ( column.isNullable() ) {
-					alter.append( dialect.getNullColumnString() );
+					alter.append( dialect.getNullColumnString( columnType ) );
 				}
 				else {
 					alter.append( " not null" );
@@ -570,8 +571,8 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 						.append( dialect.getIdentityColumnSupport().getIdentityColumnString( col.getSqlTypeCode( p ) ) );
 			}
 			else {
-
-				buf.append( col.getSqlType( dialect, p ) );
+				final String columnType = col.getSqlType( dialect, p );
+				buf.append( columnType );
 
 				String defaultValue = col.getDefaultValue();
 				if ( defaultValue != null ) {
@@ -579,7 +580,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 				}
 
 				if ( col.isNullable() ) {
-					buf.append( dialect.getNullColumnString() );
+					buf.append( dialect.getNullColumnString( columnType ) );
 				}
 				else {
 					buf.append( " not null" );

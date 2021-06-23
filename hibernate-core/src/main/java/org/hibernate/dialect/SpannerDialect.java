@@ -769,6 +769,11 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
 	public char openQuote() {
 		return '`';
 	}

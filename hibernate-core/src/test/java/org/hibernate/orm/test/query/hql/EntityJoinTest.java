@@ -112,7 +112,7 @@ public class EntityJoinTest {
 
     @Test
     @TestForIssue(jiraKey = "HHH-11337")
-    @SkipForDialect( dialectClass = SybaseDialect.class )
+    @SkipForDialect(dialectClass = SybaseDialect.class)
     public void testLeftOuterEntityJoinsWithImplicitInnerJoinInSelectClause(SessionFactoryScope scope) {
         scope.inTransaction(
                 (session) -> {

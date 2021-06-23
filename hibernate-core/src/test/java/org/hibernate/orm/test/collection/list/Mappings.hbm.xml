@@ -15,7 +15,7 @@
     <class name="ListOwner">
         <id name="name" column="NAME" type="string" />
 
-        <many-to-one name="parent" class="ListOwner" cascade="none" />
+        <many-to-one name="parent" column="PARENT" class="ListOwner" cascade="none" />
 
         <list name="children" inverse="true" cascade="all">
             <key column="PARENT" />

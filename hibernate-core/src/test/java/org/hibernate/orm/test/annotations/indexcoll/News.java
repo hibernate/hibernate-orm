@@ -32,6 +32,7 @@ public class News {
 		this.id = id;
 	}
 
+	@Column(name = "news_title")
 	public String getTitle() {
 		return title;
 	}

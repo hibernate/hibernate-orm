@@ -18,7 +18,7 @@
         </set>
 
         <bag name="mediumOrHighRatingsFromCombined" lazy="true" mutable="false"
-             where="name = 'high' or name = 'medium'">
+             where="NAME = 'high' or NAME = 'medium'">
             <key column="MATERIAL_OWNER_ID"/>
             <one-to-many class="LazyOneToManyNonUniqueIdWhereTest$Rating"/>
         </bag>

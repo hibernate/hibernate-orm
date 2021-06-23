@@ -8,9 +8,7 @@ package org.hibernate.boot.registry.selector.internal;
 
 import java.util.Objects;
 
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.dialect.Cache71Dialect;
-import org.hibernate.dialect.CacheDialect;
+import org.hibernate.boot.registry.selector.spi.DialectSelector;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2390Dialect;
 import org.hibernate.dialect.DB2390V8Dialect;
@@ -25,24 +23,16 @@ import org.hibernate.dialect.DerbyTenFiveDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.dialect.DerbyTenSixDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.FirebirdDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.Informix10Dialect;
-import org.hibernate.dialect.InformixDialect;
-import org.hibernate.dialect.Ingres10Dialect;
-import org.hibernate.dialect.Ingres9Dialect;
-import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MariaDB102Dialect;
 import org.hibernate.dialect.MariaDB103Dialect;
 import org.hibernate.dialect.MariaDB10Dialect;
 import org.hibernate.dialect.MariaDB53Dialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MaxDBDialect;
-import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQL55Dialect;
 import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.dialect.MySQL5Dialect;
@@ -63,8 +53,6 @@ import org.hibernate.dialect.PostgreSQL95Dialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.RDMSOS2200Dialect;
-import org.hibernate.dialect.SAPDBDialect;
 import org.hibernate.dialect.SQLServer2005Dialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
@@ -74,29 +62,19 @@ import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE157Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseASEDialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.Teradata14Dialect;
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.dialect.TimesTenDialect;
 
-public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
+public class DefaultDialectSelector implements DialectSelector {
 
 	@Override
 	public Class<? extends Dialect> resolve(final String name) {
-		Objects.requireNonNull( name);
+		Objects.requireNonNull( name );
 		if ( name.isEmpty() ) {
 			return null;
 		}
 		switch ( name ) {
-			case "Cache":
-				return CacheDialect.class;
-			case "Cache71":
-				return Cache71Dialect.class;
 			case "Cockroach":
 				return CockroachDialect.class;
-			case "CUBRID":
-				return CUBRIDDialect.class;
 			case "DB2":
 				return DB2Dialect.class;
 			case "DB2i":
@@ -121,8 +99,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 				return DerbyTenSixDialect.class;
 			case "DerbyTenSeven":
 				return DerbyTenSevenDialect.class;
-			case "Firebird":
-				return FirebirdDialect.class;
 			case "H2":
 				return H2Dialect.class;
 			case "HANACloudColumnStore":
@@ -133,16 +109,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 				return HANARowStoreDialect.class;
 			case "HSQL":
 				return HSQLDialect.class;
-			case "Informix":
-				return InformixDialect.class;
-			case "Informix10":
-				return Informix10Dialect.class;
-			case "Ingres":
-				return IngresDialect.class;
-			case "Ingres9":
-				return Ingres9Dialect.class;
-			case "Ingres10":
-				return Ingres10Dialect.class;
 			case "MariaDB":
 				return MariaDBDialect.class;
 			case "MariaDB53":
@@ -153,10 +119,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 				return MariaDB102Dialect.class;
 			case "MariaDB103":
 				return MariaDB103Dialect.class;
-			case "MaxDB":
-				return MaxDBDialect.class;
-			case "MimerSQL":
-				return MimerSQLDialect.class;
 			case "MySQL":
 				return MySQLDialect.class;
 			case "MySQL5":
@@ -197,10 +159,6 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 				return PostgreSQL94Dialect.class;
 			case "PostgreSQL95":
 				return PostgreSQL95Dialect.class;
-			case "RDMSOS2200":
-				return RDMSOS2200Dialect.class;
-			case "SAPDB":
-				return SAPDBDialect.class;
 			case "Spanner":
 				return SpannerDialect.class;
 			case "SQLServer":
@@ -215,20 +173,12 @@ public class DefaultDialectSelector implements LazyServiceResolver<Dialect> {
 				return SybaseDialect.class;
 			case "Sybase11":
 				return Sybase11Dialect.class;
-			case "SybaseAnywhere":
-				return SybaseAnywhereDialect.class;
 			case "SybaseASE":
 				return SybaseASEDialect.class;
 			case "SybaseASE15":
 				return SybaseASE15Dialect.class;
 			case "SybaseASE157":
 				return SybaseASE157Dialect.class;
-			case "Teradata":
-				return TeradataDialect.class;
-			case "Teradata14":
-				return Teradata14Dialect.class;
-			case "TimesTen":
-				return TimesTenDialect.class;
 		}
 		return null;
 	}

@@ -14,6 +14,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -36,7 +37,7 @@ public class MultiLineImportWithSpacesAfterTheLastStatementTest {
 		try (final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE )) {
 			assertThat( stream, notNullValue() );
 			try (final InputStreamReader reader = new InputStreamReader( stream )) {
-				final List<String> commands = extractor.extractCommands( reader, Dialect.getDialect() );
+				final List<String> commands = extractor.extractCommands( reader, DialectContext.getDialect() );
 				assertThat( commands, notNullValue() );
 				assertThat( commands.size(), is( 3 ) );
 			}

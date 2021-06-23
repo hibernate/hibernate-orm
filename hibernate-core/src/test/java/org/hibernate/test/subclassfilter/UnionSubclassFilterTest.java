@@ -11,8 +11,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -30,11 +28,6 @@ public class UnionSubclassFilterTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-8190",
-			comment = "uses Teradata reserved word - title"
-	)
 	@SuppressWarnings( {"unchecked"})
 	public void testFiltersWithUnionSubclass() {
 		Session s = openSession();

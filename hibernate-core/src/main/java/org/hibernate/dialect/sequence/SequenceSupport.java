@@ -51,6 +51,21 @@ public interface SequenceSupport {
 	String getSelectSequenceNextValString(String sequenceName) throws MappingException;
 
 	/**
+	 * Generate the select expression fragment that will retrieve the previous
+	 * value of a sequence as part of another (typically DML) statement.
+	 * <p/>
+	 * This differs from {@link #getSequencePreviousValString(String)} in that
+	 * it must return an expression usable within another statement.
+	 *
+	 * @param sequenceName the name of the sequence
+	 * @return The "previous value" fragment.
+	 * @throws MappingException If sequences are not supported.
+	 */
+	default String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		throw new UnsupportedOperationException( "No support for retrieving previous value" );
+	}
+
+	/**
 	 * Generate the appropriate select statement to to retrieve the next value
 	 * of a sequence.
 	 * <p/>
@@ -62,6 +77,20 @@ public interface SequenceSupport {
 	 */
 	default String getSequenceNextValString(String sequenceName) throws MappingException {
 		return "select " + getSelectSequenceNextValString( sequenceName ) + getFromDual();
+	}
+
+	/**
+	 * Generate the appropriate select statement to to retrieve the previous value
+	 * of a sequence.
+	 * <p/>
+	 * This should be a stand alone select statement.
+	 *
+	 * @param sequenceName the name of the sequence
+	 * @return String The select "previous value" statement.
+	 * @throws MappingException If sequences are not supported.
+	 */
+	default String getSequencePreviousValString(String sequenceName) throws MappingException {
+		return "select " + getSelectSequencePreviousValString( sequenceName ) + getFromDual();
 	}
 
 	default String getFromDual() {

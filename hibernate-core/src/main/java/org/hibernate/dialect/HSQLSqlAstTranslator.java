@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -89,6 +90,23 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
+	}
+
+	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		switch ( operator ) {
+			case DISTINCT_FROM:
+			case NOT_DISTINCT_FROM:
+				// HSQL does not like parameters in the distinct from predicate
+				render( lhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+				appendSql( " " );
+				appendSql( operator.sqlText() );
+				appendSql( " " );
+				render( rhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+				break;
+			default:
+				renderComparisonStandard( lhs, operator, rhs );
+				break;
+		}
 	}
 
 	@Override

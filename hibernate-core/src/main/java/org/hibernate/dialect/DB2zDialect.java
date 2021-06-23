@@ -10,12 +10,11 @@ import java.sql.Types;
 
 import javax.persistence.TemporalType;
 
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.FetchLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.DB2390SequenceSupport;
+import org.hibernate.dialect.sequence.DB2zSequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -67,7 +66,7 @@ public class DB2zDialect extends DB2Dialect {
 	public SequenceSupport getSequenceSupport() {
 		return getZVersion() < 800
 				? NoSequenceSupport.INSTANCE
-				: DB2390SequenceSupport.INSTANCE;
+				: DB2zSequenceSupport.INSTANCE;
 	}
 
 	@Override

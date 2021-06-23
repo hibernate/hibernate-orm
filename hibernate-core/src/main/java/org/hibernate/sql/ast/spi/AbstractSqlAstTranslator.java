@@ -331,6 +331,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return affectedTableNames;
 	}
 
+	protected String getDmlTargetTableAlias() {
+		return dmlTargetTableAlias;
+	}
+
+	protected Statement getStatement() {
+		return statement;
+	}
+
 	@Override
 	public boolean supportsFilterClause() {
 		// By default we report false because not many dialects support this
@@ -1328,6 +1336,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitQueryGroup(QueryGroup queryGroup) {
+		renderQueryGroup( queryGroup, true );
+	}
+
+	protected void renderQueryGroup(QueryGroup queryGroup, boolean renderOrderByAndOffsetFetchClause) {
 		final QueryPart queryPartForRowNumbering = this.queryPartForRowNumbering;
 		final boolean needsSelectAliases = this.needsSelectAliases;
 		try {
@@ -1356,8 +1368,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = setOperatorString;
 			}
 
-			visitOrderBy( queryGroup.getSortSpecifications() );
-			visitOffsetFetchClause( queryGroup );
+			if ( renderOrderByAndOffsetFetchClause ) {
+				visitOrderBy( queryGroup.getSortSpecifications() );
+				visitOffsetFetchClause( queryGroup );
+			}
 			if ( queryGroupAlias != null ) {
 				appendSql( ") " );
 				appendSql( queryGroupAlias );
@@ -1621,13 +1635,34 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case DISTINCT_FROM:
 				appendSql( "not " );
 			case NOT_DISTINCT_FROM: {
-				appendSql( "exists (select " );
-				renderCommaSeparatedSelectExpression( lhsExpressions );
-				appendSql( getFromDualForSelectOnly() );
-				appendSql( " intersect select " );
-				renderCommaSeparatedSelectExpression( rhsExpressions );
-				appendSql( getFromDualForSelectOnly() );
-				appendSql( ")" );
+				if ( supportsIntersect() ) {
+					appendSql( "exists (select " );
+					renderCommaSeparatedSelectExpression( lhsExpressions );
+					appendSql( getFromDualForSelectOnly() );
+					appendSql( " intersect select " );
+					renderCommaSeparatedSelectExpression( rhsExpressions );
+					appendSql( getFromDualForSelectOnly() );
+					appendSql( ")" );
+				}
+				else {
+					appendSql( "exists (select 1" );
+					appendSql( getFromDual() );
+					appendSql( " where (" );
+					String separator = NO_SEPARATOR;
+					for ( int i = 0; i < size; i++ ) {
+						appendSql( separator );
+						lhsExpressions.get( i ).accept( this );
+						appendSql( " = " );
+						rhsExpressions.get( i ).accept( this );
+						appendSql( " or " );
+						lhsExpressions.get( i ).accept( this );
+						appendSql( " is null and " );
+						rhsExpressions.get( i ).accept( this );
+						appendSql( " is null" );
+						separator = ") and (";
+					}
+					appendSql( "))" );
+				}
 				break;
 			}
 			case EQUAL:
@@ -1685,6 +1720,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		if ( isCurrentWhereClause ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected boolean supportsIntersect() {
+		return true;
 	}
 
 	protected void renderExpressionsAsSubquery(final List<? extends Expression> expressions) {
@@ -1758,6 +1797,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		for ( i = optimized ? 1 : 0; i < lastIndex; i++ ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	protected void renderSelectSimpleComparison(final List<SqlSelection> lhsExpressions, Expression expression, ComparisonOperator operator) {
+		renderComparison( lhsExpressions.get( 0 ).getExpression(), operator, expression );
 	}
 
 	protected void renderSelectTupleComparison(final List<SqlSelection> lhsExpressions, SqlTuple tuple, ComparisonOperator operator) {
@@ -2047,14 +2090,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		fetchExpression.accept( this );
 	}
 
-	protected void renderTopClause(QuerySpec querySpec, boolean addOffset) {
+	protected void renderTopClause(QuerySpec querySpec, boolean addOffset, boolean needsParenthesis) {
 		if ( querySpec.isRoot() && hasLimit() ) {
 			prepareLimitOffsetParameters();
 			renderTopClause(
 					getOffsetParameter(),
 					getLimitParameter(),
 					FetchClauseType.ROWS_ONLY,
-					addOffset
+					addOffset,
+					needsParenthesis
 			);
 		}
 		else {
@@ -2062,7 +2106,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					querySpec.getOffsetClauseExpression(),
 					querySpec.getFetchClauseExpression(),
 					querySpec.getFetchClauseType(),
-					addOffset
+					addOffset,
+					needsParenthesis
 			);
 		}
 	}
@@ -2071,9 +2116,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Expression offsetExpression,
 			Expression fetchExpression,
 			FetchClauseType fetchClauseType,
-			boolean addOffset) {
+			boolean addOffset,
+			boolean needsParenthesis) {
 		if ( fetchExpression != null ) {
-			appendSql( "top (" );
+			appendSql( "top " );
+			if ( needsParenthesis ) {
+				appendSql( '(' );
+			}
 			final Stack<Clause> clauseStack = getClauseStack();
 			clauseStack.push( Clause.FETCH );
 			try {
@@ -2087,7 +2136,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			finally {
 				clauseStack.pop();
 			}
-			appendSql( ") " );
+			if ( needsParenthesis ) {
+				appendSql( ')' );
+			}
+			appendSql( ' ' );
 			switch ( fetchClauseType ) {
 				case ROWS_WITH_TIES:
 					appendSql( "with ties " );
@@ -2205,6 +2257,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void renderFetchPlusOffsetExpressionAsLiteral(
+			Expression fetchClauseExpression,
+			Expression offsetClauseExpression,
+			int offset) {
+		final Number offsetCount = interpretExpression( offsetClauseExpression, jdbcParameterBindings );
+		final Number fetchCount = interpretExpression( fetchClauseExpression, jdbcParameterBindings );
+		appendSql( Integer.toString( fetchCount.intValue() + offsetCount.intValue() + offset ) );
+	}
+
 	protected void renderFetchPlusOffsetExpressionAsSingleParameter(
 			Expression fetchClauseExpression,
 			Expression offsetClauseExpression,
@@ -2242,31 +2303,41 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final JdbcParameter offsetParameter = (JdbcParameter) offsetClauseExpression;
 			final JdbcParameter fetchParameter = (JdbcParameter) fetchClauseExpression;
 			final OffsetReceivingParameterBinder fetchBinder = new OffsetReceivingParameterBinder(
+					offsetParameter,
 					fetchParameter,
 					offset
 			);
+			// We don't register and bind the special OffsetJdbcParameter as that comes from the query options
+			// And in this case, we only want to bind a single JDBC parameter
+			if ( !( offsetParameter instanceof OffsetJdbcParameter ) ) {
+				jdbcParameters.addParameter( offsetParameter );
+				parameterBinders.add(
+						(statement, startPosition, jdbcParameterBindings, executionContext) -> {
+							final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
+							if ( binding == null ) {
+								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
+							}
+							fetchBinder.dynamicOffset = (Number) binding.getBindValue();
+						}
+				);
+			}
 			jdbcParameters.addParameter( fetchParameter );
 			parameterBinders.add( fetchBinder );
-			jdbcParameters.addParameter( offsetParameter );
-			parameterBinders.add(
-					(statement, startPosition, jdbcParameterBindings, executionContext) -> {
-						final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( offsetParameter );
-						if ( binding == null ) {
-							throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
-						}
-						fetchBinder.dynamicOffset = (Number) binding.getBindValue();
-					}
-			);
 		}
 	}
 
 	private static class OffsetReceivingParameterBinder implements JdbcParameterBinder {
 
+		private final JdbcParameter offsetParameter;
 		private final JdbcParameter fetchParameter;
 		private final int staticOffset;
 		private Number dynamicOffset;
 
-		public OffsetReceivingParameterBinder(JdbcParameter fetchParameter, int staticOffset) {
+		public OffsetReceivingParameterBinder(
+				JdbcParameter offsetParameter,
+				JdbcParameter fetchParameter,
+				int staticOffset) {
+			this.offsetParameter = offsetParameter;
 			this.fetchParameter = fetchParameter;
 			this.staticOffset = staticOffset;
 		}
@@ -2277,13 +2348,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				int startPosition,
 				JdbcParameterBindings jdbcParameterBindings,
 				ExecutionContext executionContext) throws SQLException {
-			final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( fetchParameter );
-			if ( binding == null ) {
-				throw new ExecutionException( "JDBC parameter value not bound - " + fetchParameter );
+			final Number bindValue;
+			if ( fetchParameter instanceof LimitJdbcParameter ) {
+				bindValue = executionContext.getQueryOptions().getEffectiveLimit().getMaxRows();
 			}
-			final Number bindValue = (Number) binding.getBindValue();
-			final int offsetValue = dynamicOffset.intValue() + staticOffset;
-			dynamicOffset = null;
+			else {
+				final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( fetchParameter );
+				if ( binding == null ) {
+					throw new ExecutionException( "JDBC parameter value not bound - " + fetchParameter );
+				}
+				bindValue = (Number) binding.getBindValue();
+			}
+			final int offsetValue;
+			if ( offsetParameter instanceof OffsetJdbcParameter ) {
+				offsetValue = executionContext.getQueryOptions().getEffectiveLimit().getFirstRow();
+			}
+			else {
+				offsetValue = dynamicOffset.intValue() + staticOffset;
+				dynamicOffset = null;
+			}
 			fetchParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
 					statement,
 					bindValue.intValue() + offsetValue,
@@ -3045,8 +3128,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		for ( TableReferenceJoin tableJoin : joins ) {
 			appendSql( EMPTY_STRING );
-			appendSql( tableJoin.getJoinType().getText() );
-			appendSql( " join " );
+			renderJoinType( tableJoin.getJoinType() );
 
 			renderTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
 
@@ -3075,8 +3157,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !joinedGroup.isRealTableGroup() && joinType == SqlAstJoinType.INNER && !joinedGroup.getTableReferenceJoins().isEmpty() ) {
 				joinType = SqlAstJoinType.LEFT;
 			}
-			appendSql( joinType.getText() );
-			appendSql( " join " );
+			renderJoinType( joinType );
 
 			if ( tableGroupJoin.getPredicate() != null && !tableGroupJoin.getPredicate().isEmpty() ) {
 				renderTableGroup( joinedGroup, tableGroupJoin.getPredicate() );
@@ -3085,6 +3166,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderTableGroup( joinedGroup );
 			}
 		}
+	}
+
+	protected void renderJoinType(SqlAstJoinType joinType) {
+		appendSql( joinType.getText() );
+		appendSql( " join " );
 	}
 
 	@Override
@@ -4033,11 +4119,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				inSubQueryPredicate.getSubQuery().accept( this );
 			}
 			else if ( !supportsRowValueConstructorSyntaxInInSubQuery() ) {
-				emulateTupleSubQueryPredicate(
+				emulateSubQueryRelationalRestrictionPredicate(
 						inSubQueryPredicate,
 						inSubQueryPredicate.isNegated(),
 						inSubQueryPredicate.getSubQuery(),
 						lhsTuple,
+						this::renderSelectTupleComparison,
 						ComparisonOperator.EQUAL
 				);
 			}
@@ -4060,11 +4147,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void emulateTupleSubQueryPredicate(
+	protected <X extends Expression> void emulateSubQueryRelationalRestrictionPredicate(
 			Predicate predicate,
 			boolean negated,
 			QueryPart queryPart,
-			SqlTuple lhsTuple,
+			X lhsTuple,
+			SubQueryRelationalRestrictionEmulationRenderer<X> renderer,
 			ComparisonOperator tupleComparisonOperator) {
 		final QuerySpec subQuery;
 		if ( queryPart instanceof QuerySpec && queryPart.getFetchClauseExpression() == null && queryPart.getOffsetClauseExpression() == null ) {
@@ -4092,7 +4180,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( " having " );
 					clauseStack.push( Clause.HAVING );
 					try {
-						renderSelectTupleComparison(
+						renderer.renderComparison(
 								subQuery.getSelectClause().getSqlSelections(),
 								lhsTuple,
 								tupleComparisonOperator
@@ -4113,7 +4201,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( " where " );
 					clauseStack.push( Clause.WHERE );
 					try {
-						renderSelectTupleComparison(
+						renderer.renderComparison(
 								subQuery.getSelectClause().getSqlSelections(),
 								lhsTuple,
 								tupleComparisonOperator
@@ -4142,6 +4230,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			// TODO: We could use nested queries and use row numbers to emulate this
 			throw new IllegalArgumentException( "Can't emulate in predicate with tuples and limit/offset or set operations: " + predicate );
 		}
+	}
+
+	protected static interface SubQueryRelationalRestrictionEmulationRenderer<X extends Expression> {
+		void renderComparison(final List<SqlSelection> lhsExpressions, X rhsExpression, ComparisonOperator operator);
 	}
 
 	/**
@@ -4362,11 +4454,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						}
 					}
 				}
-				emulateTupleSubQueryPredicate(
+				emulateSubQueryRelationalRestrictionPredicate(
 						comparisonPredicate,
 						all,
 						subquery,
 						lhsTuple,
+						this::renderSelectTupleComparison,
 						all ? operator.negated() : operator
 				);
 			}
@@ -4418,11 +4511,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					);
 				}
 				else {
-					emulateTupleSubQueryPredicate(
+					emulateSubQueryRelationalRestrictionPredicate(
 							comparisonPredicate,
 							false,
 							subquery,
 							rhsTuple,
+							this::renderSelectTupleComparison,
 							// Since we switch the order of operands, we have to invert the operator
 							comparisonPredicate.getOperator().invert()
 					);
@@ -4440,6 +4534,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					comparisonPredicate.getRightHandExpression()
 			);
 		}
+	}
+
+	/**
+	 * Is this dialect known to support quantified predicates.
+	 * <p/>
+	 * Basically, does it support syntax like
+	 * "... where FIRST_NAME > ALL (select ...) ...".
+	 *
+	 * @return True if this SQL dialect is known to support quantified predicates; false otherwise.
+	 */
+	protected boolean supportsQuantifiedPredicates() {
+		return true;
 	}
 
 	/**

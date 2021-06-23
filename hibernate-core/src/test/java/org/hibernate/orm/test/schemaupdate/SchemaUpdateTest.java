@@ -50,6 +50,7 @@ import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.SkipLog;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -83,8 +84,8 @@ public class SchemaUpdateTest {
 
 	@Before
 	public void setUp() throws IOException {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )
-				|| SybaseDialect.class.isAssignableFrom(Dialect.getDialect().getClass())) {
+		if(SQLServerDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() )
+				|| SybaseDialect.class.isAssignableFrom( DialectContext.getDialect().getClass() ) ) {
 			// SQLServerDialect and SybaseDialect stores case-insensitive quoted identifiers in mixed case,
 			// so the checks at the end of this method won't work.
 			skipTest = true;

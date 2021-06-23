@@ -15,6 +15,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
@@ -158,7 +159,7 @@ public class BasicCriteriaExecutionTests {
 
 					final JpaCriteriaQuery<Object> criteria = criteriaBuilder.createQuery();
 					final JpaRoot<BasicEntity> root = criteria.from( BasicEntity.class );
-					root.join( BasicEntity.class );
+					root.join( BasicEntity.class, SqmJoinType.CROSS );
 					criteria.select( root );
 
 					session.createQuery( criteria ).list();

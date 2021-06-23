@@ -16,6 +16,7 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -37,6 +38,7 @@ import static org.junit.Assert.assertEquals;
 		}
 )
 @SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby doesn't support a CONCAT function" )
+@SkipForDialect( dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support a CONCAT function" )
 public class SubselectTest {
 
 	@Test

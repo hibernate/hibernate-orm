@@ -35,7 +35,7 @@ import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTyp
 public class ExtractFunction
 		extends AbstractSqmFunctionDescriptor {
 
-	private Dialect dialect;
+	private final Dialect dialect;
 
 	public ExtractFunction(Dialect dialect) {
 		super(
@@ -102,13 +102,13 @@ public class ExtractFunction
 			TemporalUnit dayOf,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		NodeBuilder builder = field.nodeBuilder();
+		final NodeBuilder builder = field.nodeBuilder();
 
-		BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
-		BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType( Float.class );
+		final BasicType<Integer> intType = typeConfiguration.getBasicTypeForJavaType( Integer.class );
+		final BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType( Float.class );
 
-		SqmExtractUnit<Integer> dayOfUnit = new SqmExtractUnit<>( dayOf, intType, builder );
-		SqmExpression<Integer> extractDayOf
+		final SqmExtractUnit<Integer> dayOfUnit = new SqmExtractUnit<>( dayOf, intType, builder );
+		final SqmExpression<Integer> extractDayOf
 				= queryEngine.getSqmFunctionRegistry()
 						.findFunctionDescriptor("extract")
 						.generateSqmExpression(
@@ -118,8 +118,8 @@ public class ExtractFunction
 								typeConfiguration
 						);
 
-		SqmExtractUnit<Integer> dayOfWeekUnit = new SqmExtractUnit<>( DAY_OF_WEEK, intType, builder );
-		SqmExpression<Integer> extractDayOfWeek
+		final SqmExtractUnit<Integer> dayOfWeekUnit = new SqmExtractUnit<>( DAY_OF_WEEK, intType, builder );
+		final SqmExpression<Integer> extractDayOfWeek
 				= queryEngine.getSqmFunctionRegistry()
 						.findFunctionDescriptor("extract")
 						.generateSqmExpression(
@@ -129,9 +129,29 @@ public class ExtractFunction
 								typeConfiguration
 						);
 
-		SqmLiteral<Float> seven = new SqmLiteral<>( 7.0f, floatType, builder );
-		SqmLiteral<Integer> one = new SqmLiteral<>( 1, intType, builder );
-
+		final SqmLiteral<Float> seven = new SqmLiteral<>( 7.0f, floatType, builder );
+		final SqmLiteral<Integer> one = new SqmLiteral<>( 1, intType, builder );
+		final SqmBinaryArithmetic<Integer> daySubtractionInt = new SqmBinaryArithmetic<>(
+				SUBTRACT,
+				extractDayOf,
+				extractDayOfWeek,
+				intType,
+				builder
+		);
+		final SqmExpression<?> daySubtraction;
+		if ( dialect.requiresFloatCastingOfIntegerDivision() ) {
+			daySubtraction = queryEngine.getSqmFunctionRegistry()
+					.findFunctionDescriptor("cast")
+					.generateSqmExpression(
+							asList( daySubtractionInt, new SqmCastTarget<>( floatType, builder ) ),
+							floatType,
+							queryEngine,
+							typeConfiguration
+					);
+		}
+		else {
+			daySubtraction = daySubtractionInt;
+		}
 		return queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor("ceiling")
 				.generateSqmExpression(
@@ -139,13 +159,7 @@ public class ExtractFunction
 								ADD,
 								new SqmBinaryArithmetic<>(
 										DIVIDE,
-										new SqmBinaryArithmetic<>(
-												SUBTRACT,
-												extractDayOf,
-												extractDayOfWeek,
-												intType,
-												builder
-										),
+										daySubtraction,
 										seven,
 										floatType,
 										builder
@@ -187,12 +201,12 @@ public class ExtractFunction
 			SqmExpression<?> expressionToExtract,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		NodeBuilder builder = expressionToExtract.nodeBuilder();
+		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
-		BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType(Float.class);
+		final BasicType<Float> floatType = typeConfiguration.getBasicTypeForJavaType(Float.class);
 
-		SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
-		SqmLiteral<Float> billion = new SqmLiteral<>( 1e9f, floatType, builder );
+		final SqmExtractUnit<Float> extractSeconds = new SqmExtractUnit<>( SECOND, floatType, builder );
+		final SqmLiteral<Float> billion = new SqmLiteral<>( 1e9f, floatType, builder );
 		return toLong(
 				new SqmBinaryArithmetic<>(
 						MULTIPLY,
@@ -215,12 +229,12 @@ public class ExtractFunction
 			SqmExpression<?> expressionToExtract,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		NodeBuilder builder = expressionToExtract.nodeBuilder();
+		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
-		BasicType<ZoneOffset> offsetType = typeConfiguration.getBasicTypeForJavaType(ZoneOffset.class);
-		BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType(String.class);
+		final BasicType<ZoneOffset> offsetType = typeConfiguration.getBasicTypeForJavaType(ZoneOffset.class);
+		final BasicType<String> stringType = typeConfiguration.getBasicTypeForJavaType(String.class);
 
-		SqmFormat offsetFormat = new SqmFormat(
+		final SqmFormat offsetFormat = new SqmFormat(
 				"xxx", //pattern for timezone offset
 				stringType,
 				builder
@@ -240,9 +254,9 @@ public class ExtractFunction
 			AllowableFunctionReturnType<?> type,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		NodeBuilder builder = expressionToExtract.nodeBuilder();
+		final NodeBuilder builder = expressionToExtract.nodeBuilder();
 
-		SqmCastTarget<?> target = new SqmCastTarget<>( type, builder );
+		final SqmCastTarget<?> target = new SqmCastTarget<>( type, builder );
 		return queryEngine.getSqmFunctionRegistry()
 				.findFunctionDescriptor("cast")
 				.generateSqmExpression(

@@ -155,7 +155,7 @@ public class UniqueConstraintDropTest {
 		boolean matches = false;
 		String regex = "alter table ";
 
-		if ( getDialect().supportsIfExistsBeforeTableName() ) {
+		if ( getDialect().supportsIfExistsAfterAlterTable() ) {
 			regex += "if exists ";
 		}
 		regex += tableName;

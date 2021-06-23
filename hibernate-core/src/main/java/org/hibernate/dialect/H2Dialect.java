@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import javax.persistence.TemporalType;
 
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -430,6 +431,16 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsSelectAliasInGroupByClause() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsFetchClause(FetchClauseType type) {
+		return getVersion() >= 104198;
 	}
 
 	@Override

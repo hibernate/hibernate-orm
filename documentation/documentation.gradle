@@ -59,14 +59,6 @@ dependencies {
 	testImplementation libraries.mockito_inline
 
 	testRuntimeOnly libraries.wildfly_transaction_client
-	testRuntimeOnly libraries.h2
-	testRuntimeOnly libraries.hsqldb
-	testRuntimeOnly libraries.postgresql
-	testRuntimeOnly libraries.mysql
-	testRuntimeOnly libraries.mariadb
-	testRuntimeOnly libraries.mssql
-	testRuntimeOnly libraries.hana
-	testRuntimeOnly libraries.cockroachdb
 	testRuntimeOnly libraries.ehcache3
 }
 

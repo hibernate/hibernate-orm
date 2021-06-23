@@ -8,6 +8,7 @@ package org.hibernate.orm.test.id;
 
 import java.util.Properties;
 
+import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -18,15 +19,16 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,7 +46,6 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceStyleGenerator generator;
-	private SessionImplementor sessionImpl;
 	private SequenceValueExtractor sequenceValueExtractor;
 
 	@BeforeEach
@@ -81,9 +82,6 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 
 	@AfterEach
 	public void tearDown() {
-		if ( sessionImpl != null && !sessionImpl.isClosed() ) {
-			sessionImpl.close();
-		}
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
 		}
@@ -94,36 +92,34 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 
 	@Test
 	public void testHiLoAlgorithm() {
-		sessionImpl = (SessionImpl) sessionFactory.openSession();
+		TransactionUtil.doInHibernate(
+				() -> sessionFactory,
+				session -> {
+					assertEquals( 1L, generateValue( session ) );
 
-		assertEquals( 1L, generateValue() );
+					assertEquals( 1L, extractSequenceValue( session ) );
 
-		assertEquals( 1L, extractSequenceValue() );
+					assertEquals( 2L, generateValue( session ) );
+					assertEquals( 2L, extractSequenceValue( session ) );
 
-		assertEquals( 2L, generateValue() );
-		assertEquals( 2L, extractSequenceValue() );
+					assertEquals( 3L, generateValue( session ) );
+					assertEquals( 3L, extractSequenceValue( session ) );
 
-		assertEquals( 3L, generateValue() );
-		assertEquals( 3L, extractSequenceValue() );
+					assertEquals( 4L, generateValue( session ) );
+					assertEquals( 4L, extractSequenceValue( session ) );
 
-		assertEquals( 4L, generateValue() );
-		assertEquals( 4L, extractSequenceValue() );
+					assertEquals( 5L, generateValue( session ) );
+					assertEquals( 5L, extractSequenceValue( session ) );
 
-		assertEquals( 5L, generateValue() );
-		assertEquals( 5L, extractSequenceValue() );
-
-		sessionImpl.close();
+				}
+		);
 	}
 
-	private long extractSequenceValue() {
-		return sequenceValueExtractor.extractSequenceValue( sessionImpl );
+	private long extractSequenceValue(Session session) {
+		return sequenceValueExtractor.extractSequenceValue( (SessionImplementor) session );
 	}
 
-	private long generateValue() {
-		Long generatedValue;
-		Transaction transaction = sessionImpl.beginTransaction();
-		generatedValue = (Long) generator.generate( sessionImpl, null );
-		transaction.commit();
-		return generatedValue.longValue();
+	private long generateValue(Session session) {
+		return (Long) generator.generate( (SharedSessionContractImplementor) session, null );
 	}
 }

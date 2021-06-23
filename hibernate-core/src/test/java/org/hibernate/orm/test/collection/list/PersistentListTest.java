@@ -133,7 +133,7 @@ public class PersistentListTest {
 								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
 								SimpleSelect select = new SimpleSelect( sessionFactory.getDialect() )
 										.setTableName( queryableCollection.getTableName() )
-										.addColumn( "ORDER_ID" )
+										.addColumn( "order_id" )
 										.addColumn( "INDX" )
 										.addColumn( "PRD_CODE" );
 								PreparedStatement preparedStatement = ( (SessionImplementor) session2 ).getJdbcCoordinator()

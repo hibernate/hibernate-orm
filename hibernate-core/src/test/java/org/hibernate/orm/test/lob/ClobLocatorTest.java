@@ -10,13 +10,11 @@ import java.sql.Clob;
 
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.dialect.SybaseASE157Dialect;
-import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -31,7 +29,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(
-		value = DialectChecks.SupportsExpectedLobUsagePattern.class,
+		value = { DialectChecks.SupportsExpectedLobUsagePattern.class, DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class },
 		comment = "database/driver does not support expected LOB usage pattern"
 )
 public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
@@ -47,11 +45,6 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-6637",
-			comment = "Teradata requires locator to be used in same session where it was created/retrieved"
-	)
 	public void testBoundedClobLocatorAccess() throws Throwable {
 		String original = buildString( CLOB_SIZE, 'x' );
 		String changed = buildString( CLOB_SIZE, 'y' );
@@ -107,7 +100,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		// test empty clob
-		if ( !(getDialect() instanceof SybaseASE157Dialect) ) { // Skip for Sybase. HHH-6425
+		if ( !(getDialect() instanceof SybaseASEDialect ) ) { // Skip for Sybase. HHH-6425
 			s = openSession();
 			s.beginTransaction();
 			entity = s.get( LobHolder.class, entity.getId() );
@@ -132,10 +125,6 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature(
-			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
-			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
-	)
 	public void testUnboundedClobLocatorAccess() throws Throwable {
 		// Note: unbounded mutation of the underlying lob data is completely
 		// unsupported; most databases would not allow such a construct anyway.

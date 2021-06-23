@@ -7,24 +7,17 @@
 package org.hibernate.testing.orm.junit;
 
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.FirebirdDialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MaxDBDialect;
-import org.hibernate.dialect.MimerSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SpannerDialect;
-import org.hibernate.dialect.TimesTenDialect;
+import org.hibernate.query.FetchClauseType;
 
 /**
  * Container class for different implementation of the {@link DialectFeatureCheck} interface.
@@ -300,37 +293,14 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsOffsetInSubquery implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect instanceof AbstractHANADialect
-					|| dialect instanceof CockroachDialect
-					|| dialect instanceof CUBRIDDialect
-					|| dialect instanceof DB2Dialect
-					|| dialect instanceof FirebirdDialect
-					|| dialect instanceof H2Dialect
-					|| dialect instanceof HSQLDialect
-					|| dialect instanceof MaxDBDialect
-					|| dialect instanceof MimerSQLDialect
-					|| dialect instanceof MySQLDialect
-					|| dialect instanceof OracleDialect
-					|| dialect instanceof PostgreSQLDialect
-					|| dialect instanceof SpannerDialect
-					|| dialect instanceof SQLServerDialect
-					|| dialect instanceof TimesTenDialect
-					;
+			return dialect.supportsOffsetInSubquery();
 		}
 	}
 
 	public static class SupportsWithTies implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect instanceof AbstractHANADialect
-					|| dialect instanceof CockroachDialect
-					|| dialect instanceof DB2Dialect
-					|| dialect instanceof FirebirdDialect && dialect.getVersion() >= 300
-					|| dialect instanceof H2Dialect && dialect.getVersion() >= 104198
-					|| dialect instanceof MariaDBDialect && dialect.getVersion() >= 1020
-					|| dialect instanceof MySQLDialect && dialect.getVersion() >= 802
-					|| dialect instanceof OracleDialect
-					|| dialect instanceof PostgreSQLDialect
-					|| dialect instanceof SQLServerDialect
+			return dialect.supportsFetchClause( FetchClauseType.ROWS_WITH_TIES )
+					|| dialect.supportsWindowFunctions()
 					;
 		}
 	}
@@ -352,6 +322,48 @@ abstract public class DialectFeatureChecks {
 		public boolean apply(Dialect dialect) {
 			// Derby doesn't support the `REPLACE` function
 			return !( dialect instanceof DerbyDialect );
+		}
+	}
+
+	public static class SupportsTemporaryTable implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsTemporaryTables();
+		}
+	}
+
+	public static class SupportsValuesListForInsert implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsValuesListForInsert();
+		}
+	}
+
+	public static class SupportsFormat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				dialect.translateDatetimeFormat( "" );
+				return true;
+			}
+			catch (Exception ex) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsTruncateThroughCast implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			try {
+				dialect.translateDatetimeFormat( "" );
+				return true;
+			}
+			catch (Exception ex) {
+				return false;
+			}
+		}
+	}
+
+	public static class SupportsOrderByInSubquery implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsOrderByInSubquery();
 		}
 	}
 

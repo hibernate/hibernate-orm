@@ -75,6 +75,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.CastType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.NavigablePath;
@@ -3572,7 +3573,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							adjustmentScale,
 							MULTIPLY,
 							magnitude,
-							(BasicValuedMapping) magnitude.getExpressionType()
+							widestNumeric(
+									(BasicValuedMapping) adjustmentScale.getExpressionType(),
+									(BasicValuedMapping) magnitude.getExpressionType()
+							)
 					);
 				}
 			}
@@ -3648,6 +3652,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		finally {
 			appliedByUnit = outer;
 		}
+	}
+
+	private BasicValuedMapping widestNumeric(BasicValuedMapping lhs, BasicValuedMapping rhs) {
+		final CastType lhsCastType = lhs.getJdbcMapping().getJdbcTypeDescriptor().getCastType();
+		final CastType rhsCastType = rhs.getJdbcMapping().getJdbcTypeDescriptor().getCastType();
+		if ( lhsCastType == CastType.FIXED ) {
+			return lhs;
+		}
+		if ( rhsCastType == CastType.FIXED ) {
+			return rhs;
+		}
+		if ( lhsCastType == CastType.DOUBLE ) {
+			return lhs;
+		}
+		if ( rhsCastType == CastType.DOUBLE ) {
+			return rhs;
+		}
+		if ( lhsCastType == CastType.FLOAT ) {
+			return lhs;
+		}
+		if ( rhsCastType == CastType.FLOAT ) {
+			return rhs;
+		}
+		return lhs;
 	}
 
 	@Override

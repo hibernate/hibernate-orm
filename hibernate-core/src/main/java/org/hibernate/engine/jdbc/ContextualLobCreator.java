@@ -24,7 +24,7 @@ import org.hibernate.JDBCException;
  * @author Gail Badner
  */
 public class ContextualLobCreator extends AbstractLobCreator implements LobCreator {
-	private LobCreationContext lobCreationContext;
+	private final LobCreationContext lobCreationContext;
 
 	/**
 	 * Constructs a ContextualLobCreator

@@ -20,6 +20,8 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.dialect.CockroachDialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -64,6 +66,8 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
+	@SkipForDialect(value = HSQLDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
 	public void testDelete() throws InterruptedException {
 		bookId = 1L;
 
@@ -141,6 +145,8 @@ public class ReadWriteCacheTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
+	@SkipForDialect(value = HSQLDialect.class, comment = "HSQLDB seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
+	@SkipForDialect(value = SybaseASEDialect.class, comment = "Sybase seems to block on acquiring a SHARE lock when a different TX upgraded a SHARE to EXCLUSIVE lock, maybe the upgrade caused a table lock?")
 	public void testUpdate() throws InterruptedException {
 		bookId = 4L;
 

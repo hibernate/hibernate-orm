@@ -65,6 +65,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
@@ -90,7 +91,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 @RunWith(CustomRunner.class)
 public class NativeQueryResultTypeAutoDiscoveryTest {
 
-	private static final Dialect DIALECT = Dialect.getDialect();
+	private static final Dialect DIALECT = DialectContext.getDialect();
 
 	private SessionFactoryImplementor entityManagerFactory;
 

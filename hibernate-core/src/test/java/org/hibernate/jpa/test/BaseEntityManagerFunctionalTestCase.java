@@ -35,6 +35,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStra
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.After;
 import org.junit.Before;
 
@@ -49,7 +50,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in
 	// BaseCoreFunctionalTestCase) because the old HEM test methodology was to create an EMF for each test method.
 
-	private static final Dialect dialect = Dialect.getDialect();
+	private static final Dialect dialect = DialectContext.getDialect();
 
 	private StandardServiceRegistryImpl serviceRegistry;
 	private SessionFactoryImplementor entityManagerFactory;

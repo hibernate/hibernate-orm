@@ -14,8 +14,6 @@ import java.sql.Statement;
 import org.hibernate.engine.jdbc.dialect.spi.BasicSQLExceptionConverter;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
-import static org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo.NO_VERSION;
-
 /**
  * A list of relational database systems for which Hibernate can resolve a {@link Dialect}.
  *
@@ -26,32 +24,6 @@ import static org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo.NO_VER
  * @author Vlad Mihalcea
  */
 public enum Database {
-
-	CACHE {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new CacheDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.startsWith( "Cache" );
-		}
-	},
-
-	CUBRID {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new CUBRIDDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return "CUBRID".equalsIgnoreCase( databaseName );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "cubrid.jdbc.driver.CUBRIDDriver";
-		}
-	},
 
 	DB2 {
 		@Override
@@ -123,25 +95,6 @@ public enum Database {
 		}
 	},
 
-	FIREBIRD {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new FirebirdDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.startsWith( "Firebird" );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "org.firebirdsql.jdbc.FBDriver";
-		}
-		@Override
-		public String getUrlPrefix() {
-			return "jdbc:firebirdsql:";
-		}
-	},
-
 	H2 {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
@@ -154,25 +107,6 @@ public enum Database {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.h2.Driver";
-		}
-	},
-
-	HANA {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new HANAColumnStoreDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return "HDB".equals( databaseName );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.sap.db.jdbc.Driver";
-		}
-		@Override
-		public String getUrlPrefix() {
-			return "jdbc:sap:";
 		}
 	},
 
@@ -195,38 +129,22 @@ public enum Database {
 		}
 	},
 
-	INFORMIX {
+	HANA {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new InformixDialect( info );
+			return new HANAColumnStoreDialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {
-			//usually "Informix Dynamic Server"
-			return databaseName.toLowerCase().startsWith( "informix" );
+			return "HDB".equals( databaseName );
 		}
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
-			return "com.informix.jdbc.IfxDriver" ;
+			return "com.sap.db.jdbc.Driver";
 		}
 		@Override
 		public String getUrlPrefix() {
-			return "jdbc:informix-";
-		}
-	},
-
-	INGRES {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new IngresDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith( "ingres" );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.ingres.jdbc.IngresDriver";
+			return "jdbc:sap:";
 		}
 	},
 
@@ -253,41 +171,6 @@ public enum Database {
 		@Override
 		public String getDriverClassName(String jdbcUrl) {
 			return "org.mariadb.jdbc.Driver";
-		}
-	},
-
-	MAXDB {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MaxDBDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith( "sap db" )
-					|| databaseName.toLowerCase().startsWith( "maxdb" );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return  "com.sap.dbtech.jdbc.DriverSapDB";
-		}
-		@Override
-		public String getUrlPrefix() {
-			return "jdbc:sapdb:";
-		}
-	},
-
-	MIMER {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new MimerSQLDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.startsWith( "Mimer SQL" );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.mimer.jdbc.Driver";
 		}
 	},
 
@@ -392,14 +275,7 @@ public enum Database {
 			if ( isASE( databaseName ) ) {
 				return new SybaseASEDialect( info );
 			}
-			if ( isASA( databaseName ) ) {
-				return new SybaseAnywhereDialect();
-			}
-			return null; //impossible
-		}
-		private boolean isASA(String databaseName) {
-			return databaseName.startsWith( "Adaptive Server Anywhere" )
-				|| "SQL Anywhere".equals( databaseName );
+			return null;
 		}
 		private boolean isASE(String databaseName) {
 			return "Sybase SQL Server".equals( databaseName )
@@ -407,38 +283,12 @@ public enum Database {
 		}
 		@Override
 		public boolean productNameMatches(String productName) {
-			return isASA( productName ) || isASE( productName );
+			return isASE( productName );
 		}
 		@Override
 		public boolean matchesUrl(String jdbcUrl) {
 			return jdbcUrl.startsWith( "jdbc:sybase:" )
 					|| jdbcUrl.startsWith( "jdbc:sqlanywhere:" );
-		}
-	},
-
-	TERADATA {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new TeradataDialect( info );
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return "Teradata".equals( databaseName );
-		}
-		@Override
-		public String getDriverClassName(String jdbcUrl) {
-			return "com.teradata.jdbc.TeraDriver";
-		}
-	},
-
-	TIMESTEN {
-		@Override
-		public Dialect createDialect(DialectResolutionInfo info) {
-			return new TimesTenDialect();
-		}
-		@Override
-		public boolean productNameMatches(String databaseName) {
-			return databaseName.toLowerCase().startsWith( "timesten" );
 		}
 	};
 

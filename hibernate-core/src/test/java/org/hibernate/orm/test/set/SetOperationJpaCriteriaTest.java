@@ -106,6 +106,7 @@ public class SetOperationJpaCriteriaTest {
 
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
     public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {
@@ -133,6 +134,7 @@ public class SetOperationJpaCriteriaTest {
 
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
     public void testUnionAllLimitNested(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {

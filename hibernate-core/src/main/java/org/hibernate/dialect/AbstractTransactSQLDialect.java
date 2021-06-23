@@ -24,6 +24,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
@@ -39,7 +40,7 @@ import java.util.Map;
  *
  * @author Gavin King
  */
-abstract class AbstractTransactSQLDialect extends Dialect {
+public abstract class AbstractTransactSQLDialect extends Dialect {
 	public AbstractTransactSQLDialect() {
 		super();
 
@@ -122,7 +123,7 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 		return replaceLtrimRtrim(specification, character);
 	}
 
-	static String replaceLtrimRtrim(TrimSpec specification, char character) {
+	public static String replaceLtrimRtrim(TrimSpec specification, char character) {
 		boolean blank = character == ' ';
 		switch ( specification ) {
 			case LEADING:
@@ -313,5 +314,10 @@ abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public boolean supportsPartitionBy() {
 		return true;
+	}
+
+	@Override
+	public String formatBinaryLiteral(byte[] bytes) {
+		return "0x" + StandardBasicTypes.BINARY.toString( bytes );
 	}
 }

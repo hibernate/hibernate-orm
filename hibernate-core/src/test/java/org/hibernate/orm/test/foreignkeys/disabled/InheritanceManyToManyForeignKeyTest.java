@@ -21,7 +21,9 @@ import javax.persistence.MappedSuperclass;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.dialect.SybaseDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -44,6 +46,7 @@ public class InheritanceManyToManyForeignKeyTest extends BaseNonConfigCoreFuncti
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "Only dates between January 1, 1753 and December 31, 9999 are accepted.")
 	public void testForeignKeyNameUnicity() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();

@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import org.hibernate.LockOptions;
 import org.hibernate.dialect.identity.DB2390IdentityColumnSupport;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;

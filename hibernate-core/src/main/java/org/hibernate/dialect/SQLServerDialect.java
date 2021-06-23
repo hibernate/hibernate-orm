@@ -17,6 +17,7 @@ import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.ANSISequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
@@ -27,6 +28,7 @@ import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.CastType;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -64,7 +66,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	public SQLServerDialect() {
-		this(8);
+		this( 8 );
 	}
 
 	public SQLServerDialect(int version) {
@@ -425,7 +427,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public SequenceSupport getSequenceSupport() {
 		return getVersion() < 11
 				? NoSequenceSupport.INSTANCE
-				: ANSISequenceSupport.INSTANCE;
+				: SQLServerSequenceSupport.INSTANCE;
 	}
 
 	@Override
@@ -465,6 +467,21 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsNullPrecedence() {
 		return getVersion() < 10;
+	}
+
+	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsFetchClause(FetchClauseType type) {
+		return getVersion() >= 11;
 	}
 
 	@Override

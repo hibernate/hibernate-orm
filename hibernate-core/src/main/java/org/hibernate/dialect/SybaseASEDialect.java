@@ -6,17 +6,25 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.Types;
+import java.util.Map;
+
+import javax.persistence.TemporalType;
+
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.QuantifiedLeastGreatestEmulation;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
-import org.hibernate.query.TrimSpec;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
@@ -26,11 +34,12 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 
-import java.sql.Types;
-import java.util.Map;
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
 /**
  * Dialect for Sybase Adaptive Server Enterprise for
@@ -38,16 +47,21 @@ import java.util.Map;
  */
 public class SybaseASEDialect extends SybaseDialect {
 
-	public SybaseASEDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
-	}
+	private final SizeStrategy sizeStrategy;
 
 	public SybaseASEDialect() {
-		this(1100);
+		this( 1100, false );
 	}
 
-	public SybaseASEDialect(int version) {
-		super( version );
+	public SybaseASEDialect(DialectResolutionInfo info) {
+		this(
+				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
+		);
+	}
+
+	public SybaseASEDialect(int version, boolean jtdsDriver) {
+		super( version, jtdsDriver );
 
 		//On Sybase ASE, the 'bit' type cannot be null,
 		//and cannot have indexes (while we don't use
@@ -56,15 +70,27 @@ public class SybaseASEDialect extends SybaseDialect {
 		registerColumnType( Types.BOOLEAN, "tinyint" );
 
 
-		if ( getVersion() >= 1500 ) {
-			//bigint was added in version 15
-			registerColumnType( Types.BIGINT, "bigint" );
-		}
-
 		if ( getVersion() >= 1200 ) {
 			//date / date were introduced in version 12
 			registerColumnType( Types.DATE, "date" );
 			registerColumnType( Types.TIME, "time" );
+			if ( getVersion() >= 1500 ) {
+				//bigint was added in version 15
+				registerColumnType( Types.BIGINT, "bigint" );
+
+				if ( getVersion() >= 1550 && !jtdsDriver ) {
+					//According to Wikipedia bigdatetime and bigtime were added in 15.5
+					//But with jTDS we can't use them as the driver can't handle the types
+					registerColumnType( Types.DATE, "bigdatetime" );
+					registerColumnType( Types.DATE, 3, "datetime" );
+					registerColumnType( Types.TIME, "bigtime" );
+					registerColumnType( Types.TIME, 3, "datetime" );
+					registerColumnType( Types.TIMESTAMP, "bigdatetime" );
+					registerColumnType( Types.TIMESTAMP, 3, "datetime" );
+					registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "bigdatetime" );
+					registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, 3, "datetime" );
+				}
+			}
 		}
 
 		// the maximum length of a VARCHAR or VARBINARY
@@ -75,6 +101,35 @@ public class SybaseASEDialect extends SybaseDialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 
 		registerSybaseKeywords();
+		sizeStrategy = new SizeStrategyImpl() {
+			@Override
+			public Size resolveSize(
+					JdbcTypeDescriptor jdbcType,
+					JavaTypeDescriptor javaType,
+					Integer precision,
+					Integer scale,
+					Long length) {
+				final int jdbcTypeCode = jdbcType.getJdbcType();
+				switch ( jdbcTypeCode ) {
+					case Types.FLOAT:
+						// Sybase ASE allows FLOAT with a precision up to 48
+						if ( precision != null ) {
+							return Size.precision( Math.min( Math.max( precision, 1 ), 48 ) );
+						}
+				}
+				return super.resolveSize( jdbcType, javaType, precision, scale, length );
+			}
+		};
+	}
+
+	@Override
+	public int getDoublePrecision() {
+		return 48;
+	}
+
+	@Override
+	public SizeStrategy getSizeStrategy() {
+		return sizeStrategy;
 	}
 
 	@Override
@@ -101,9 +156,17 @@ public class SybaseASEDialect extends SybaseDialect {
 
 	@Override
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.BOOLEAN
-				? TinyIntTypeDescriptor.INSTANCE
-				: super.getSqlTypeDescriptorOverride( sqlCode );
+		switch ( sqlCode ) {
+			case Types.BOOLEAN:
+				return TinyIntTypeDescriptor.INSTANCE;
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				// At least the jTDS driver does not support this type code
+				if ( jtdsDriver ) {
+					return TimestampTypeDescriptor.INSTANCE;
+				}
+			default:
+				return super.getSqlTypeDescriptorOverride( sqlCode );
+		}
 	}
 
 	@Override
@@ -119,6 +182,37 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public String currentTimestamp() {
 		return "current_bigdatetime()";
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+		//TODO!!
+		switch ( unit ) {
+			case NANOSECOND:
+			case NATIVE:
+				// If the driver or database do not support bigdatetime and bigtime types,
+				// we try to operate on milliseconds instead
+				if ( getVersion() < 1550 || jtdsDriver ) {
+					return "dateadd(millisecond, ?2/1000000, ?3)";
+				}
+				else {
+					return "dateadd(mcs, ?2/1000, ?3)";
+				}
+			default:
+				return "dateadd(?1, ?2, ?3)";
+		}
+	}
+
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		//TODO!!
+		switch ( unit ) {
+			case NANOSECOND:
+			case NATIVE:
+				return "(datediff(mcs, ?2, ?3)*1000)";
+			default:
+				return "datediff(?1, ?2, ?3)";
+		}
 	}
 
 	private void registerSybaseKeywords() {
@@ -341,13 +435,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		registerKeyword( "xmlvalidate" );
 	}
 
-	@Override
-	public void initializeFunctionRegistry(QueryEngine queryEngine) {
-		super.initializeFunctionRegistry( queryEngine );
-
-		queryEngine.getSqmFunctionRegistry().register( "least", new QuantifiedLeastGreatestEmulation( true ) );
-		queryEngine.getSqmFunctionRegistry().register( "greatest", new QuantifiedLeastGreatestEmulation( false ) );
-	}
 // Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -394,7 +481,28 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public boolean supportsValuesListForInsert() {
+		return false;
+	}
+
+	@Override
 	public boolean supportsLockTimeouts() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsOrderByInSubquery() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsUnionInSubquery() {
+		// At least not according to HHH-3637
+		return false;
+	}
+
+	@Override
+	public boolean supportsPartitionBy() {
 		return false;
 	}
 
@@ -453,6 +561,46 @@ public class SybaseASEDialect extends SybaseDialect {
 				: sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
+	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return EXTRACTOR;
+	}
+
+	/**
+	 * Constraint-name extractor for Sybase ASE constraint violation exceptions.
+	 * Orginally contributed by Denny Bartelt.
+	 */
+	private static final ViolatedConstraintNameExtractor EXTRACTOR =
+			new TemplatedViolatedConstraintNameExtractor( sqle -> {
+				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqle );
+				switch ( JdbcExceptionHelper.extractSqlState( sqle ) ) {
+					// UNIQUE VIOLATION
+					case "S1000":
+						if (2601 == errorCode) {
+							return extractUsingTemplate( "with unique index '", "'", sqle.getMessage() );
+						}
+						break;
+					case "23000":
+						if (546 == errorCode) {
+							// Foreign key violation
+							return extractUsingTemplate( "constraint name = '", "'", sqle.getMessage() );
+						}
+						break;
+//					// FOREIGN KEY VIOLATION
+//					case 23503:
+//						return extractUsingTemplate( "violates foreign key constraint \"","\"", sqle.getMessage() );
+//					// NOT NULL VIOLATION
+//					case 23502:
+//						return extractUsingTemplate( "null value in column \"","\" violates not-null constraint", sqle.getMessage() );
+//					// TODO: RESTRICT VIOLATION
+//					case 23001:
+//						return null;
+					// ALL OTHER
+					default:
+						return null;
+				}
+				return null;
+			} );
 
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
@@ -467,9 +615,26 @@ public class SybaseASEDialect extends SybaseDialect {
 				case "JZ0TO":
 				case "JZ006":
 					throw new LockTimeoutException( message, sqlException, sql );
+				case "S1000":
+					switch ( errorCode ) {
+						case 515:
+							// Attempt to insert NULL value into column; column does not allow nulls.
+						case 2601:
+							// Unique constraint violation
+							final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+							return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					}
+					break;
 				case "ZZZZZ":
 					if (515 == errorCode) {
 						// Attempt to insert NULL value into column; column does not allow nulls.
+						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+						return new ConstraintViolationException( message, sqlException, sql, constraintName );
+					}
+					break;
+				case "23000":
+					if (546 == errorCode) {
+						// Foreign key violation
 						final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
 						return new ConstraintViolationException( message, sqlException, sql, constraintName );
 					}

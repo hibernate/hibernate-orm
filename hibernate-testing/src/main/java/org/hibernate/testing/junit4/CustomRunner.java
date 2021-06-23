@@ -24,6 +24,7 @@ import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.Skip;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipForDialects;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -226,7 +227,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 
 	private static Dialect determineDialect() {
 		try {
-			return Dialect.getDialect();
+			return DialectContext.getDialect();
 		}
 		catch (Exception e) {
 			return new Dialect() {

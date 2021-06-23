@@ -103,6 +103,7 @@ include 'hibernate-transaction-client'
 include 'hibernate-envers'
 include 'hibernate-envers-jakarta'
 
+include 'hibernate-community-dialects'
 // todo (6.0): re-enable hibernate-spatial
 //include 'hibernate-spatial'
 

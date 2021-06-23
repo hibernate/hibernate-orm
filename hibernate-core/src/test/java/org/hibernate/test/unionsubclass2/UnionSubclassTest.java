@@ -14,9 +14,7 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.TeradataDialect;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -34,11 +32,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-8190",
-			comment = "SQL uses Teradata reserved word: title"
-	)
 	public void testUnionSubclass() {
 
 		inTransaction(
@@ -133,11 +126,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-8190",
-			comment = "SQL uses Teradata reserved word: title"
-	)
 	public void testQuerySubclassAttribute() {
 		if ( getDialect() instanceof HSQLDialect ) {
 			return; // TODO : why??
@@ -187,11 +175,6 @@ public class UnionSubclassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-8190",
-			comment = "SQL uses Teradata reserved word: title"
-	)
 	public void testCustomColumnReadAndWrite() {
 		inTransaction(
 				s -> {

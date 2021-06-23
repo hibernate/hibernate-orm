@@ -11,17 +11,12 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -32,23 +27,21 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
  * @author Frank Doherty
  */
-@RequiresDialect(value = { SQLServer2012Dialect.class })
+@RequiresDialect(value = { SQLServerDialect.class })
 @TestForIssue(jiraKey = "HHH-13141")
 public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 
@@ -77,7 +70,7 @@ public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 		String[] tokens = url.split( databaseNameToken );
 		String newUrl = tokens[0] + databaseNameToken + DATABASE_NAME;
 
-		Dialect dialect = Dialect.getDialect();
+		Dialect dialect = DialectContext.getDialect();
 
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		ssrb.applySettings( Collections.singletonMap( AvailableSettings.URL, newUrl ) );

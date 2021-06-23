@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.query.hql;
 
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.FirebirdDialect;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -50,7 +49,7 @@ public class FunctionTests {
 					EntityOfBasics entity = new EntityOfBasics();
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
-					entity.setTheTime( new Time( 23, 10, 8 ) );
+					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
 					em.persist(entity);
 				}
@@ -442,7 +441,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird cast to string types doesn't truncate")
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateThroughCast.class)
 	public void testCastFunction_withTruncation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -877,7 +876,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
@@ -989,8 +988,7 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support formatting temporal types to strings")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1007,7 +1005,7 @@ public class FunctionTests {
 					);
 					assertThat(
 							session.createQuery("select format(theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics where id=123").getResultList().get(0),
-							is("Hello, 11:10:08 PM")
+							is("Hello, 08:10:08 PM")
 					);
 				}
 		);

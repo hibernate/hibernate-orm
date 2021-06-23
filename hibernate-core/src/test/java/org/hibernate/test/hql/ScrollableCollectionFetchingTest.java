@@ -13,7 +13,6 @@ import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
 
 import org.hibernate.testing.DialectChecks;
@@ -21,7 +20,6 @@ import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -131,8 +129,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	@SkipForDialect(value = CUBRIDDialect.class, comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with"
-			+ "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables")
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
 	public void testScrollingJoinFetchesSingleRowResultSet() {
 		Session s = openSession();
@@ -285,8 +282,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	@SkipForDialect(value = CUBRIDDialect.class, comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with"
-			+ "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables")
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesReverse() {
 		TestData data = new TestData();
@@ -316,8 +312,7 @@ public class ScrollableCollectionFetchingTest extends BaseCoreFunctionalTestCase
 	}
 
 	@Test
-	@SkipForDialect(value = CUBRIDDialect.class, comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with"
-			+ "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables")
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors.")
 	public void testScrollingJoinFetchesPositioning() {
 		TestData data = new TestData();

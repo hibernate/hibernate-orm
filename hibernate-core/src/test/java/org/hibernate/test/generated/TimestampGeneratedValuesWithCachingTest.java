@@ -7,9 +7,6 @@
 package org.hibernate.test.generated;
 
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.testing.RequiresDialect;
 
@@ -18,8 +15,7 @@ import org.hibernate.testing.RequiresDialect;
  */
 @RequiresDialect(
 		value = {
-				SybaseDialect.class, Sybase11Dialect.class, SybaseAnywhereDialect.class,
-				SybaseASE15Dialect.class, SQLServerDialect.class
+				SybaseDialect.class, SQLServerDialect.class
 		}
 )
 public class TimestampGeneratedValuesWithCachingTest extends AbstractGeneratedPropertyTest {

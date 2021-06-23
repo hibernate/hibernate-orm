@@ -12,9 +12,6 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.FirebirdDialect;
-
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -23,7 +20,6 @@ import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +43,7 @@ public class StandardFunctionTests {
 					EntityOfBasics entity = new EntityOfBasics();
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
-					entity.setTheTime( new Time( 23, 10, 8 ) );
+					entity.setTheTime( new Time( 20, 10, 8 ) );
 					entity.setTheTimestamp( new Timestamp( 121, 4, 27, 13, 22, 50, 123456789 ) );
 					em.persist(entity);
 				}
@@ -646,7 +642,7 @@ public class StandardFunctionTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsTimezoneTypes.class)
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class, comment = "We extract the offset with a format function")
 	public void testExtractFunctionTimeZoneOffset(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createQuery( "select extract(offset from e.theZonedDateTime) from EntityOfBasics e")
@@ -895,8 +891,7 @@ public class StandardFunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support formatting temporal types to strings")
-	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird doesn't support formatting temporal types to strings")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
 	public void testFormat(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -921,7 +916,7 @@ public class StandardFunctionTests {
 									"select format(e.theTime as '''Hello'', hh:mm:ss aa') from EntityOfBasics e" )
 									.getResultList()
 									.get( 0 ),
-							is( "Hello, 11:10:08 PM" )
+							is( "Hello, 08:10:08 PM" )
 					);
 				}
 		);

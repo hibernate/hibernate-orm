@@ -15,6 +15,7 @@ import java.util.List;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -39,7 +40,7 @@ public class MultiLineImportExtractorTest {
 		try (final InputStream stream = classLoader.getResourceAsStream( IMPORT_FILE )) {
 			assertThat( stream, notNullValue() );
 			try (final InputStreamReader reader = new InputStreamReader( stream )) {
-				final List<String> commands = extractor.extractCommands( reader, Dialect.getDialect() );
+				final List<String> commands = extractor.extractCommands( reader, DialectContext.getDialect() );
 				assertThat( commands, notNullValue() );
 				assertThat( commands.size(), is( 6 ) );
 
@@ -63,7 +64,7 @@ public class MultiLineImportExtractorTest {
 	@Test
 	public void testExtractionFromEmptyScript() {
 		StringReader reader = new StringReader( "" );
-		final List<String> commands = extractor.extractCommands( reader, Dialect.getDialect() );
+		final List<String> commands = extractor.extractCommands( reader, DialectContext.getDialect() );
 		assertThat( commands, notNullValue() );
 		assertThat( commands.size(), is( 0 ) );
 	}

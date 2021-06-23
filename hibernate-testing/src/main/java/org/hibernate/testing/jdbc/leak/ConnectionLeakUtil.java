@@ -15,6 +15,7 @@ import java.util.List;
 import org.hibernate.dialect.Dialect;
 
 import org.hibernate.testing.jdbc.JdbcProperties;
+import org.hibernate.testing.orm.junit.DialectContext;
 
 /**
  * @author Vlad Mihalcea
@@ -36,7 +37,7 @@ public class ConnectionLeakUtil {
 
 	public ConnectionLeakUtil() {
 		for ( IdleConnectionCounter connectionCounter : idleConnectionCounters ) {
-			if ( connectionCounter.appliesTo( Dialect.getDialect().getClass() ) ) {
+			if ( connectionCounter.appliesTo( DialectContext.getDialect().getClass() ) ) {
 				this.connectionCounter = connectionCounter;
 				break;
 			}

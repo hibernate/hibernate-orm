@@ -6,11 +6,15 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -157,4 +161,15 @@ public class MariaDBDialect extends MySQLDialect {
 		return false;
 	}
 
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+
+		// some MariaDB drivers does not return case strategy info
+		builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+
+		return super.buildIdentifierHelper( builder, dbMetaData );
+	}
 }

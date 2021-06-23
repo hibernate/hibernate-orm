@@ -29,6 +29,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
@@ -59,11 +61,25 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 
 	private final ExtractionContext extractionContext;
 
+	private final boolean useJdbcMetadataDefaultsSetting;
+
+	private Identifier currentCatalog;
+	private Identifier currentSchema;
+
+	private String currentCatalogFilter;
+	private String currentSchemaFilter;
+
 	public InformationExtractorJdbcDatabaseMetaDataImpl(ExtractionContext extractionContext) {
 		this.extractionContext = extractionContext;
 
 		ConfigurationService configService = extractionContext.getServiceRegistry()
 				.getService( ConfigurationService.class );
+
+		useJdbcMetadataDefaultsSetting = configService.getSetting(
+				"hibernate.temp.use_jdbc_metadata_defaults",
+				StandardConverters.BOOLEAN,
+				Boolean.TRUE
+		);
 
 		final String extraPhysycalTableTypesConfig = configService.getSetting(
 				AvailableSettings.EXTRA_PHYSICAL_TABLE_TYPES,
@@ -229,11 +245,14 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			TableInformation tableInfo = null;
 
 			// 1) look in current namespace
-			if ( extractionContext.getJdbcEnvironment().getCurrentCatalog() != null
-					|| extractionContext.getJdbcEnvironment().getCurrentSchema() != null ) {
+			final JdbcEnvironment jdbcEnvironment = extractionContext.getJdbcEnvironment();
+			final Identifier currentSchema = getCurrentSchema( jdbcEnvironment );
+			final Identifier currentCatalog = getCurrentCatalog( jdbcEnvironment );
+			if ( currentCatalog != null
+					|| currentSchema != null ) {
 				tableInfo = locateTableInNamespace(
-						extractionContext.getJdbcEnvironment().getCurrentCatalog(),
-						extractionContext.getJdbcEnvironment().getCurrentSchema(),
+						currentCatalog,
+						currentSchema,
 						tableName
 				);
 
@@ -288,23 +307,106 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 		}
 	}
 
+	private Identifier getCurrentSchema(JdbcEnvironment jdbcEnvironment) {
+		if ( currentSchema != null ) {
+			return currentSchema;
+		}
+		final Identifier schema = jdbcEnvironment.getCurrentSchema();
+		if ( schema != null ) {
+			currentSchema = schema;
+		}
+		if ( !useJdbcMetadataDefaultsSetting ) {
+			try {
+				currentSchema = extractionContext.getJdbcEnvironment()
+						.getIdentifierHelper()
+						.toIdentifier( extractionContext.getJdbcConnection().getSchema() );
+			}
+			catch (SQLException ignore) {
+				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			}
+		}
+		return currentCatalog;
+	}
+
+	private Identifier getCurrentCatalog(JdbcEnvironment jdbcEnvironment) {
+		if ( currentCatalog != null ) {
+			return currentCatalog;
+		}
+		final Identifier catalog = jdbcEnvironment.getCurrentCatalog();
+		if ( catalog != null ) {
+			currentCatalog = catalog;
+		}
+		if ( !useJdbcMetadataDefaultsSetting ) {
+			try {
+				currentCatalog = extractionContext.getJdbcEnvironment()
+						.getIdentifierHelper()
+						.toIdentifier( extractionContext.getJdbcConnection().getCatalog() );
+			}
+			catch (SQLException ignore) {
+				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			}
+		}
+		return currentCatalog;
+	}
+
+	private String getCurrentCatalogFilter(JdbcEnvironment jdbcEnvironment) {
+		if ( currentCatalogFilter != null ) {
+			return currentCatalogFilter;
+		}
+		final Identifier currentCatalog = jdbcEnvironment.getCurrentCatalog();
+		if ( currentCatalog != null ) {
+			currentCatalogFilter = toMetaDataObjectName( currentCatalog );
+		}
+		if ( !useJdbcMetadataDefaultsSetting ) {
+			try {
+				currentCatalogFilter = extractionContext.getJdbcConnection().getCatalog();
+			}
+			catch (SQLException ignore) {
+				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			}
+		}
+		return currentCatalogFilter;
+	}
+
+	private String getCurrentSchemaFilter(JdbcEnvironment jdbcEnvironment) {
+		if ( currentSchemaFilter != null ) {
+			return currentSchemaFilter;
+		}
+		final Identifier currentSchema = jdbcEnvironment.getCurrentSchema();
+		if ( currentSchema != null ) {
+			currentSchemaFilter = toMetaDataObjectName( currentSchema );
+		}
+
+		if ( !useJdbcMetadataDefaultsSetting ) {
+			try {
+				currentSchemaFilter = extractionContext.getJdbcConnection().getSchema();
+			}
+			catch (SQLException ignore) {
+				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
+			}
+		}
+		return currentSchemaFilter;
+	}
+
 	public NameSpaceTablesInformation getTables(Identifier catalog, Identifier schema) {
 
 		String catalogFilter = null;
 		String schemaFilter = null;
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsCatalogs() ) {
+		final JdbcEnvironment jdbcEnvironment = extractionContext.getJdbcEnvironment();
+		final NameQualifierSupport nameQualifierSupport = jdbcEnvironment.getNameQualifierSupport();
+		if ( nameQualifierSupport.supportsCatalogs() ) {
 			if ( catalog == null ) {
-				if ( extractionContext.getJdbcEnvironment().getCurrentCatalog() != null ) {
-					// 1) look in current namespace
-					catalogFilter = toMetaDataObjectName( extractionContext.getJdbcEnvironment().getCurrentCatalog() );
-				}
-				else if ( extractionContext.getDefaultCatalog() != null ) {
-					// 2) look in default namespace
-					catalogFilter = toMetaDataObjectName( extractionContext.getDefaultCatalog() );
-				}
-				else {
-					catalogFilter = "";
+				// look in the current namespace
+				catalogFilter = getCurrentCatalogFilter(jdbcEnvironment);
+				if ( catalogFilter == null ) {
+					if ( extractionContext.getDefaultCatalog() != null ) {
+						// 2) look in default namespace
+						catalogFilter = toMetaDataObjectName( extractionContext.getDefaultCatalog() );
+					}
+					else {
+						catalogFilter = "";
+					}
 				}
 			}
 			else {
@@ -312,18 +414,18 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			}
 		}
 
-		if ( extractionContext.getJdbcEnvironment().getNameQualifierSupport().supportsSchemas() ) {
+		if ( nameQualifierSupport.supportsSchemas() ) {
 			if ( schema == null ) {
-				if ( extractionContext.getJdbcEnvironment().getCurrentSchema() != null ) {
-					// 1) look in current namespace
-					schemaFilter = toMetaDataObjectName( extractionContext.getJdbcEnvironment().getCurrentSchema() );
-				}
-				else if ( extractionContext.getDefaultSchema() != null ) {
-					// 2) look in default namespace
-					schemaFilter = toMetaDataObjectName( extractionContext.getDefaultSchema() );
-				}
-				else {
-					schemaFilter = "";
+				// 1) look in current namespace
+				schemaFilter = getCurrentSchemaFilter( jdbcEnvironment );
+				if ( schemaFilter == null ) {
+					if ( extractionContext.getDefaultSchema() != null ) {
+						// 2) look in default namespace
+						schemaFilter = toMetaDataObjectName( extractionContext.getDefaultSchema() );
+					}
+					else {
+						schemaFilter = "";
+					}
 				}
 			}
 			else {

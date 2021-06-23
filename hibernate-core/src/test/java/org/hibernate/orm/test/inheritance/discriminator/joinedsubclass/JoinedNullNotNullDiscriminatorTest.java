@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance.discriminator.joinedsubclass;
+package org.hibernate.orm.test.inheritance.discriminator.joinedsubclass;
 
 import java.sql.Statement;
 import java.util.Map;
@@ -18,27 +18,28 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @TestForIssue(jiraKey = "HHH-12445")
-public class JoinedNullNotNullDiscriminatorTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				RootEntity.class,
-				Val1Entity.class,
-				Val2Entity.class,
-				NotNullEntity.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				JoinedNullNotNullDiscriminatorTest.RootEntity.class,
+				JoinedNullNotNullDiscriminatorTest.Val1Entity.class,
+				JoinedNullNotNullDiscriminatorTest.Val2Entity.class,
+				JoinedNullNotNullDiscriminatorTest.NotNullEntity.class
+		}
+)
+@SessionFactory
+public class JoinedNullNotNullDiscriminatorTest {
 
 	@Test
-	public void test() {
-		inTransaction( session -> {
+	public void test(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			Val1Entity val1 = new Val1Entity();
 			val1.setId( 1L );
 
@@ -62,7 +63,7 @@ public class JoinedNullNotNullDiscriminatorTest extends BaseCoreFunctionalTestCa
 			} );
 		} );
 
-		inTransaction( session -> {
+		scope.inTransaction( session -> {
 			Map<Long, RootEntity> entities = session.createQuery(
 					"select e from root_ent e", RootEntity.class )
 					.getResultList()
@@ -84,6 +85,8 @@ public class JoinedNullNotNullDiscriminatorTest extends BaseCoreFunctionalTestCa
 
 		@Id
 		private Long id;
+
+		private String name;
 
 		public Long getId() {
 			return id;

@@ -41,6 +41,7 @@ public class TimePropertyTest extends BaseCoreFunctionalTestCase {
 		// See javadoc for java.sql.Time: 'The date components should be set to the "zero epoch" value of January 1, 1970 and should not be accessed'
 		// Other dates can potentially lead to errors in JDBC drivers, in particular MySQL ConnectorJ 8.x.
 		calendar.set( 1970, Calendar.JANUARY, 1 );
+		calendar.set( Calendar.MILLISECOND, 0 );
 		eOrig.tAsDate = new Time( calendar.getTimeInMillis() );
 
 		Session s = openSession();

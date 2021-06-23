@@ -30,6 +30,9 @@ import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -516,6 +519,18 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public String toBooleanValueString(boolean bool) {
 		return String.valueOf( bool );
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+
+		if ( dbMetaData == null ) {
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
+			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		}
+
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 	@Override

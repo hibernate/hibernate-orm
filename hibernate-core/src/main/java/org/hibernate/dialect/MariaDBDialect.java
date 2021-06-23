@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
@@ -160,7 +161,6 @@ public class MariaDBDialect extends MySQLDialect {
 		//only supported on MySQL
 		return false;
 	}
-
 
 	@Override
 	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)

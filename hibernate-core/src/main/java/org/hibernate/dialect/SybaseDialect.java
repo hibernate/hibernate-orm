@@ -6,20 +6,35 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.CastType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryParameterBindings;
+import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.sql.SqmTranslator;
+import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
+import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.Types;
@@ -34,21 +49,26 @@ import javax.persistence.TemporalType;
 public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	private final int version;
+	protected final boolean jtdsDriver;
 
 	//All Sybase dialects share an IN list size limit.
 	private static final int PARAM_LIST_SIZE_LIMIT = 250000;
 
 	public SybaseDialect(){
-		this( 1100 );
+		this( 1100, false );
 	}
 
 	public SybaseDialect(DialectResolutionInfo info){
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this(
+				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
+		);
 	}
 
-	public SybaseDialect(int version) {
+	public SybaseDialect(int version, boolean jtdsDriver) {
 		super();
 		this.version = version;
+		this.jtdsDriver = jtdsDriver;
 		//Sybase ASE didn't introduce bigint until version 15.0
 		registerColumnType( Types.BIGINT, "numeric(19,0)" );
 	}
@@ -70,6 +90,29 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public SqmTranslatorFactory getSqmTranslatorFactory() {
+		return new StandardSqmTranslatorFactory() {
+			@Override
+			public SqmTranslator<SelectStatement> createSelectTranslator(
+					SqmSelectStatement<?> sqmSelectStatement,
+					QueryOptions queryOptions,
+					DomainParameterXref domainParameterXref,
+					QueryParameterBindings domainParameterBindings,
+					LoadQueryInfluencers loadQueryInfluencers,
+					SqlAstCreationContext creationContext) {
+				return new SybaseSqmToSqlAstConverter<>(
+						sqmSelectStatement,
+						queryOptions,
+						domainParameterXref,
+						domainParameterBindings,
+						loadQueryInfluencers,
+						creationContext
+				);
+			}
+		};
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
@@ -86,10 +129,38 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean supportsNullPrecedence() {
+		return false;
+	}
+
+	@Override
 	public int getInExpressionCountLimit() {
 		return PARAM_LIST_SIZE_LIMIT;
 	}
-	
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(typeContributions, serviceRegistry);
+
+		if ( jtdsDriver ) {
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					Types.NCLOB,
+					ClobTypeDescriptor.CLOB_BINDING
+			);
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					Types.NVARCHAR,
+					ClobTypeDescriptor.CLOB_BINDING
+			);
+			typeContributions.contributeJdbcTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING );
+		}
+	}
+
+	@Override
+	public NationalizationSupport getNationalizationSupport() {
+		// At least the jTDS driver doesn't support this
+		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
+	}
+
 	@Override
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		switch (sqlCode) {
@@ -97,7 +168,18 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			return BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
 		case Types.CLOB:
 			// Some Sybase drivers cannot support getClob.  See HHH-7889
-			return ClobTypeDescriptor.STREAM_BINDING_EXTRACTING;
+			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
+			return jtdsDriver ? ClobTypeDescriptor.CLOB_BINDING : ClobTypeDescriptor.STREAM_BINDING_EXTRACTING;
+		case Types.NCLOB:
+			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
+			if ( jtdsDriver ) {
+				return NClobTypeDescriptor.NCLOB_BINDING;
+			}
+		case Types.NVARCHAR:
+			// The jTDS driver doesn't support the JDBC4 setNString method
+			if ( jtdsDriver ) {
+				return NClobTypeDescriptor.NCLOB_BINDING;
+			}
 		default:
 			return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
@@ -113,6 +195,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		CommonFunctionFactory.locate_charindex( queryEngine );
 
 		CommonFunctionFactory.replace_strReplace( queryEngine );
+		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
 	}
 
 	@Override
@@ -121,8 +204,29 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean canCreateSchema() {
+		// As far as I can tell, it does not
+		return false;
+	}
+
+	@Override
 	public String getCurrentSchemaCommand() {
 		return "select db_name()";
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( to == CastType.STRING ) {
+			switch ( from ) {
+				case DATE:
+					return "str_replace(convert(varchar, ?1, 102), '.', '-')";
+				case TIME:
+					return "convert(varchar, ?1, 108)";
+				case TIMESTAMP:
+					return "str_replace(convert(varchar, ?1, 23), 'T', ' ')";
+			}
+		}
+		return super.castPattern( from, to );
 	}
 
 	@Override
@@ -137,6 +241,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public String extractPattern(TemporalUnit unit) {
 		//TODO!!
 		return "datepart(?1, ?2)";
+	}
+
+	@Override
+	public boolean supportsFractionalTimestampArithmetic() {
+		return false;
 	}
 
 	@Override
@@ -155,6 +264,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public String trimPattern(TrimSpec specification, char character) {
 		return super.trimPattern(specification, character)
 				.replace("replace", "str_replace");
+	}
+
+	@Override
+	public String translateDatetimeFormat(String format) {
+		throw new NotYetImplementedFor6Exception( "format() function not supported on Sybase");
 	}
 
 }

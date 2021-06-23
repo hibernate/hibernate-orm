@@ -29,18 +29,24 @@ jobs:
         include:
           - rdbms: h2
             experimental: false
+          - rdbms: hsqldb
+            experimental: false
           - rdbms: derby
-            experimental: true
+            experimental: false
+          - rdbms: mysql
+            experimental: false
           - rdbms: mariadb
-            experimental: true
+            experimental: false
           - rdbms: postgresql
-            experimental: true
+            experimental: false
           - rdbms: oracle
-            experimental: true
+            experimental: false
           - rdbms: db2
-            experimental: true
+            experimental: false
           - rdbms: mssql
-            experimental: true
+            experimental: false
+          - rdbms: sybase
+            experimental: false
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
 #            experimental: true

@@ -39,6 +39,7 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.After;
 
 /**
@@ -46,7 +47,7 @@ import org.junit.After;
  */
 public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest {
 
-	private static final Dialect dialect = Dialect.getDialect();
+	private static final Dialect dialect = DialectContext.getDialect();
 
 	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
 	private StandardServiceRegistryImpl serviceRegistry;

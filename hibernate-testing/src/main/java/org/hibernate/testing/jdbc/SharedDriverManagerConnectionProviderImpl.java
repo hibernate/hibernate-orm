@@ -31,6 +31,7 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 	}
 
 	private Config config;
+	private Boolean supportsIsValid;
 
 	@Override
 	public void configure(Map configurationValues) {
@@ -46,8 +47,23 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 
 	@Override
 	public boolean isValid(Connection connection) throws SQLException {
-		// Wait at most 5 seconds to validate a connection is still valid
-		return connection.isValid( 5 );
+		if ( supportsIsValid == Boolean.FALSE  ) {
+			// Assume is valid if the driver doesn't support the check
+			return true;
+		}
+		Boolean supportsIsValid = Boolean.FALSE;
+		try {
+			// Wait at most 5 seconds to validate a connection is still valid
+			boolean valid = connection.isValid( 5 );
+			supportsIsValid = Boolean.TRUE;
+			return valid;
+		}
+		catch (AbstractMethodError e) {
+			return true;
+		}
+		finally {
+			this.supportsIsValid = supportsIsValid;
+		}
 	}
 
 	@Override

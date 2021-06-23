@@ -42,6 +42,7 @@ import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.After;
 
 import static org.junit.Assert.fail;
@@ -54,7 +55,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	// IMPL NOTE : Here we use @Before and @After (instead of @BeforeClassOnce and @AfterClassOnce like we do in
 	// BaseCoreFunctionalTestCase) because the old HEM test methodology was to create an EMF for each test method.
 
-	private static final Dialect dialect = Dialect.getDialect();
+	private static final Dialect dialect = DialectContext.getDialect();
 
 	public enum BootstrapMethod {
 		JPA,

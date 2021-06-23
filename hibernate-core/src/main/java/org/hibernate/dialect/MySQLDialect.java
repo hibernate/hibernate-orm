@@ -55,6 +55,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
+import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -74,10 +75,14 @@ public class MySQLDialect extends Dialect {
 	private final UniqueDelegate uniqueDelegate;
 	private final MySQLStorageEngine storageEngine;
 	private final int version;
+	private final int characterSetBytesPerCharacter;
 	private final SizeStrategy sizeStrategy;
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this(
+				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
+		);
 	}
 
 	public MySQLDialect() {
@@ -85,8 +90,14 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(int version) {
+		// Let's be conservative and assume people use a 4 byte character set
+		this( version, 4 );
+	}
+
+	public MySQLDialect(int version, int characterSetBytesPerCharacter) {
 		super();
 		this.version = version;
+		this.characterSetBytesPerCharacter = characterSetBytesPerCharacter;
 
 		String storageEngine = Environment.getProperties().getProperty( Environment.STORAGE_ENGINE );
 		if (storageEngine == null) {
@@ -153,6 +164,7 @@ public class MySQLDialect extends Dialect {
 		registerColumnType( Types.CLOB, maxLobLen, "text" );
 		registerColumnType( Types.CLOB, maxTinyLobLen, "tinytext" );
 
+		registerColumnType( Types.NCLOB, "longtext" );
 		registerColumnType( Types.NCLOB, maxLongLobLen, "longtext" );
 		registerColumnType( Types.NCLOB, maxMediumLobLen, "mediumtext" );
 		registerColumnType( Types.NCLOB, maxLobLen, "text" );
@@ -191,8 +203,73 @@ public class MySQLDialect extends Dialect {
 		};
 	}
 
+	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {
+		if ( databaseMetaData != null ) {
+			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = s.executeQuery( "SELECT @@character_set_database" );
+				if ( rs.next() ) {
+					final String characterSet = rs.getString( 1 );
+					final int collationIndex = characterSet.indexOf( '_' );
+					// According to https://dev.mysql.com/doc/refman/8.0/en/charset-charsets.html
+					switch ( collationIndex == -1 ? characterSet : characterSet.substring( 0, collationIndex ) ) {
+						case "utf16":
+						case "utf16le":
+						case "utf32":
+						case "utf8mb4":
+						case "gb18030":
+							return 4;
+						case "utf8":
+						case "utf8mb3":
+						case "eucjpms":
+						case "ujis":
+							return 3;
+						case "ucs2":
+						case "cp932":
+						case "big5":
+						case "euckr":
+						case "gb2312":
+						case "gbk":
+						case "sjis":
+							return 2;
+						default:
+							return 1;
+					}
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		return 4;
+	}
+
 	protected int getMaxVarcharLen() {
-		return getMySQLVersion() < 500 ? 255 : 65_535;
+		if ( getMySQLVersion() < 500 ) {
+			return 255;
+		}
+		else {
+			switch ( characterSetBytesPerCharacter ) {
+				case 1:
+					return 65_535;
+				case 2:
+					return 32_767;
+				case 3:
+					return 21_844;
+				case 4:
+				default:
+					return 16_383;
+			}
+		}
+	}
+
+	@Override
+	public String getNullColumnString(String columnType) {
+		// Good job MySQL https://dev.mysql.com/doc/refman/8.0/en/timestamp-initialization.html
+		// If the explicit_defaults_for_timestamp system variable is enabled, TIMESTAMP columns permit NULL values only if declared with the NULL attribute.
+		if ( columnType.regionMatches( true, 0, "timestamp", 0, "timestamp".length() ) ) {
+			return " null";
+		}
+		return super.getNullColumnString( columnType );
 	}
 
 	@Override
@@ -965,6 +1042,16 @@ public class MySQLDialect extends Dialect {
 				? " for update of " + aliases
 				// fall back to locking all aliases
 				: getForUpdateString();
+	}
+
+	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return getMySQLVersion() >= 802;
 	}
 
 	@Override

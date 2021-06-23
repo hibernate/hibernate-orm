@@ -7,7 +7,11 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -16,10 +20,17 @@ import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
+import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import java.sql.Types;
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -30,7 +41,8 @@ import static java.util.Arrays.asList;
 public class TimestampaddFunction
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private Dialect dialect;
+	private final Dialect dialect;
+	private final CastFunction castFunction;
 
 	public TimestampaddFunction(Dialect dialect) {
 		super(
@@ -39,6 +51,7 @@ public class TimestampaddFunction
 				StandardFunctionReturnTypeResolvers.useArgType( 3 )
 		);
 		this.dialect = dialect;
+		this.castFunction = new CastFunction( dialect, Types.BOOLEAN );
 	}
 
 	@Override
@@ -47,15 +60,87 @@ public class TimestampaddFunction
 			List<SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
 
-		DurationUnit field = (DurationUnit) arguments.get(0);
-		Expression to = (Expression) arguments.get(2);
+		final DurationUnit field = (DurationUnit) arguments.get( 0 );
+		final Expression to = (Expression) arguments.get( 2 );
+		final TemporalUnit unit;
+		if ( dialect.supportsFractionalTimestampArithmetic() ) {
+			unit = field.getUnit();
+		}
+		else {
+			final Expression magnitude = (Expression) arguments.get( 1 );
+			final JdbcMapping magnitudeJdbcMapping = magnitude.getExpressionType().getJdbcMappings().get( 0 );
+			switch ( magnitudeJdbcMapping.getJdbcTypeDescriptor().getJdbcType() ) {
+				case Types.INTEGER:
+				case Types.TINYINT:
+				case Types.SMALLINT:
+				case Types.BIGINT:
+					unit = field.getUnit();
+					break;
+				default:
+					if ( magnitudeJdbcMapping.getMappedJavaTypeDescriptor().getJavaTypeClass() == Duration.class ) {
+						// Don't scale durations
+						unit = field.getUnit();
+					}
+					else {
+						// We need to multiply the magnitude by the conversion factor and cast to int
+						// Use second by default and nanosecond if we encounter fractional seconds
+						unit = field.getUnit() == TemporalUnit.SECOND
+								? TemporalUnit.NANOSECOND
+								: TemporalUnit.SECOND;
+					}
+					break;
+			}
+		}
 
-		String pattern = dialect.timestampaddPattern(
-				field.getUnit(),
+		final String pattern = dialect.timestampaddPattern(
+				unit,
 				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
 		);
 
-		new PatternRenderer( pattern ).render( sqlAppender, arguments, walker );
+		final PatternRenderer renderer = new PatternRenderer( pattern );
+		if ( unit != field.getUnit() ) {
+			final List<SqlAstNode> castArguments = new ArrayList<>( 2 );
+			final List<SqlAstNode> newArguments = new ArrayList<>( arguments );
+			final Expression magnitude = (Expression) arguments.get( 1 );
+			final BasicValuedMapping expressionType = (BasicValuedMapping) magnitude.getExpressionType();
+			final String conversionFactor = field.getUnit().conversionFactor( unit, dialect );
+			if ( conversionFactor.isEmpty() ) {
+				castArguments.add( magnitude );
+			}
+			else {
+				castArguments.add(
+						new BinaryArithmeticExpression(
+								magnitude,
+								conversionFactor.charAt( 0 ) == '*'
+										? BinaryArithmeticOperator.MULTIPLY
+										: BinaryArithmeticOperator.DIVIDE,
+								new QueryLiteral<>(
+										expressionType.getExpressableJavaTypeDescriptor()
+												.fromString( conversionFactor.substring( 1 ) ),
+										expressionType
+								),
+								expressionType
+						)
+				);
+			}
+			castArguments.add( new CastTarget( StandardBasicTypes.INTEGER ) );
+			newArguments.set( 0, new DurationUnit( unit, field.getExpressionType() ) );
+			newArguments.set(
+					1,
+					new SelfRenderingFunctionSqlAstExpression(
+							"cast",
+							castFunction::render,
+							castArguments,
+							StandardBasicTypes.INTEGER,
+							StandardBasicTypes.INTEGER
+					)
+
+			);
+			renderer.render( sqlAppender, newArguments, walker );
+		}
+		else {
+			renderer.render( sqlAppender, arguments, walker );
+		}
 	}
 
 //	@Override

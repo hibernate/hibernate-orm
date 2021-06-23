@@ -89,9 +89,9 @@ dependencies {
 	testRuntimeOnly libraries.mariadb
 	testRuntimeOnly libraries.mssql
 	testRuntimeOnly libraries.informix
-	testRuntimeOnly libraries.hana
 	testRuntimeOnly libraries.cockroachdb
 	testRuntimeOnly libraries.oracle
+	testRuntimeOnly libraries.sybase
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+

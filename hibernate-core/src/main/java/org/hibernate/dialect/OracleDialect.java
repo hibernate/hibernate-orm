@@ -36,6 +36,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.CastType;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -1041,6 +1042,21 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsFetchClause(FetchClauseType type) {
+		return getVersion() >= 1200;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
 	}
 
 	@Override

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.sequence;
 
+import org.hibernate.MappingException;
+
 /**
  * ANSI SQL compliant sequence support, for dialects which
  * support the ANSI SQL syntax {@code next value for seqname}.
@@ -19,5 +21,10 @@ public class ANSISequenceSupport implements SequenceSupport {
 	@Override
 	public final String getSelectSequenceNextValString(String sequenceName) {
 		return "next value for " + sequenceName;
+	}
+
+	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		return "current value for " + sequenceName;
 	}
 }

@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.hql.joinedSubclass;
 
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -17,11 +17,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(
-        value = CUBRIDDialect.class,
-        comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-)
+@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 public class JoinedSubclassBulkManipTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {

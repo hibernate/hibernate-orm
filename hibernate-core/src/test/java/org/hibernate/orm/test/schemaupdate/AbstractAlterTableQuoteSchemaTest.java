@@ -15,6 +15,7 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DialectContext;
 
 /**
  * @author Vlad Mihalcea
@@ -22,7 +23,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 @TestForIssue(jiraKey = "HHH-12939")
 public abstract class AbstractAlterTableQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 
-	private Dialect dialect = Dialect.getDialect();
+	private final Dialect dialect = DialectContext.getDialect();
 
 	protected String quote(String element) {
 		return dialect.quote( "`" + element + "`" );

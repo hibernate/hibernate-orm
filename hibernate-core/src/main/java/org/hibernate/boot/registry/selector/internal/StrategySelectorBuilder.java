@@ -18,6 +18,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.SimpleStrategyRegistrationImpl;
 import org.hibernate.boot.registry.selector.StrategyRegistration;
 import org.hibernate.boot.registry.selector.StrategyRegistrationProvider;
+import org.hibernate.boot.registry.selector.spi.DialectSelector;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cache.internal.DefaultCacheKeysFactory;
@@ -97,7 +98,10 @@ public class StrategySelectorBuilder {
 		final StrategySelectorImpl strategySelector = new StrategySelectorImpl( classLoaderService );
 
 		// build the baseline...
-		strategySelector.registerStrategyLazily( Dialect.class, new DefaultDialectSelector() );
+		strategySelector.registerStrategyLazily(
+				Dialect.class,
+				new AggregatedDialectSelector( classLoaderService.loadJavaServices( DialectSelector.class ) )
+		);
 		strategySelector.registerStrategyLazily( JtaPlatform.class, new DefaultJtaPlatformSelector() );
 		addTransactionCoordinatorBuilders( strategySelector );
 		addSqmMultiTableMutationStrategies( strategySelector );

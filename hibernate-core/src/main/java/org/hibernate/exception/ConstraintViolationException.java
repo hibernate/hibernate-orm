@@ -17,7 +17,7 @@ import org.hibernate.JDBCException;
  */
 public class ConstraintViolationException extends JDBCException {
 
-	private String constraintName;
+	private final String constraintName;
 
 	public ConstraintViolationException(String message, SQLException root, String constraintName) {
 		super( message, root );

@@ -11,15 +11,21 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -49,6 +55,16 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
+	protected void renderJoinType(SqlAstJoinType joinType) {
+		if ( joinType == SqlAstJoinType.CROSS ) {
+			appendSql( ", " );
+		}
+		else {
+			super.renderJoinType( joinType );
+		}
+	}
+
+	@Override
 	protected void renderForUpdateClause(QuerySpec querySpec, ForUpdateClause forUpdateClause) {
 		if ( getDialect().getVersion() < 1570 ) {
 			return;
@@ -69,7 +85,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void visitSqlSelections(SelectClause selectClause) {
 		if ( supportsTopClause() ) {
-			renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true );
+			renderTopClause( (QuerySpec) getQueryPartStack().getCurrent(), true, false );
 		}
 		super.visitSqlSelections( selectClause );
 	}
@@ -79,7 +95,28 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			Expression fetchClauseExpression,
 			Expression offsetClauseExpression,
 			int offset) {
-		renderFetchPlusOffsetExpressionAsSingleParameter( fetchClauseExpression, offsetClauseExpression, offset );
+		renderFetchPlusOffsetExpressionAsLiteral( fetchClauseExpression, offsetClauseExpression, offset );
+	}
+
+	@Override
+	public void visitQueryGroup(QueryGroup queryGroup) {
+		if ( queryGroup.hasSortSpecifications() || queryGroup.hasOffsetOrFetchClause() ) {
+			appendSql( "select " );
+			renderTopClause(
+					queryGroup.getOffsetClauseExpression(),
+					queryGroup.getFetchClauseExpression(),
+					queryGroup.getFetchClauseType(),
+					true,
+					false
+			);
+			appendSql( "* from (" );
+			renderQueryGroup( queryGroup, false );
+			appendSql( ") grp_" );
+			visitOrderBy( queryGroup.getSortSpecifications() );
+		}
+		else {
+			super.visitQueryGroup( queryGroup );
+		}
 	}
 
 	@Override
@@ -114,7 +151,31 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
-		renderComparisonEmulateIntersect( lhs, operator, rhs );
+		// I think intersect is only supported in 16.0 SP3
+//		renderComparisonEmulateIntersect( lhs, operator, rhs );
+
+		lhs.accept( this );
+		appendSql( " " );
+		// This relies on the fact that Sybase usually is configured with ANSINULLS OFF
+		switch ( operator ) {
+			case DISTINCT_FROM:
+				appendSql( "<>" );
+				break;
+			case NOT_DISTINCT_FROM:
+				appendSql( '=' );
+				break;
+			default:
+				appendSql( operator.sqlText() );
+				break;
+		}
+		appendSql( " " );
+		rhs.accept( this );
+	}
+
+	@Override
+	protected boolean supportsIntersect() {
+		// At least the version that
+		return false;
 	}
 
 	@Override
@@ -128,11 +189,8 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderPartitionItem(Expression expression) {
 		if ( expression instanceof Literal ) {
-			// todo (6.0): We need to introduce a dummy from clause item
-//			String fromItem = ", (select 1 x " + dialect.getFromDual() + ") dummy";
-//			sqlBuffer.insert( fromEndIndex, fromItem );
-//			appendSql( "dummy.x" );
-			throw new UnsupportedOperationException( "Column reference strategy is not yet implemented!" );
+			// Note that this depends on the SqmToSqlAstConverter to add a dummy table group
+			appendSql( "dummy_.x" );
 		}
 		else if ( expression instanceof Summarization ) {
 			// This could theoretically be emulated by rendering all grouping variations of the query and
@@ -142,6 +200,29 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 		}
 		else {
 			expression.accept( this );
+		}
+	}
+
+	@Override
+	public void visitColumnReference(ColumnReference columnReference) {
+		if ( getDmlTargetTableAlias() != null && getDmlTargetTableAlias().equals( columnReference.getQualifier() ) ) {
+			// Sybase needs a table name prefix
+			// but not if this is a restricted union table reference subquery
+			final QuerySpec currentQuerySpec = (QuerySpec) getQueryPartStack().getCurrent();
+			final List<TableGroup> roots;
+			if ( currentQuerySpec != null && !currentQuerySpec.isRoot()
+					&& (roots = currentQuerySpec.getFromClause().getRoots()).size() == 1
+					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
+				appendSql( columnReference.getExpressionText() );
+			}
+			else {
+				appendSql( ( (MutationStatement) getStatement() ).getTargetTable().getTableExpression() );
+				appendSql( '.' );
+				appendSql( columnReference.getColumnExpression() );
+			}
+		}
+		else {
+			appendSql( columnReference.getExpressionText() );
 		}
 	}
 
@@ -168,6 +249,11 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
+	}
+
+	@Override
+	protected String getFromDual() {
+		return " from (select 1) as dual(c1)";
 	}
 
 	private boolean supportsTopClause() {

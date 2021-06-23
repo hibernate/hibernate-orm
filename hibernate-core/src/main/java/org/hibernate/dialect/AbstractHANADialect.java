@@ -1524,6 +1524,16 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsNoWait() {
 		return true;
 	}

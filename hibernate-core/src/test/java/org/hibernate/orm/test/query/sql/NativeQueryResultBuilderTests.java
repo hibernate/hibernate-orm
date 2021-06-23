@@ -16,6 +16,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
@@ -81,12 +82,13 @@ public class NativeQueryResultBuilderTests {
 	public void fullyImplicitTest2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					// DB2, Derby and SQL Server return an Integer for count by default
+					// DB2, Derby, SQL Server and Sybase return an Integer for count by default
 					// Oracle returns a NUMERIC(39,0) i.e. a BigDecimal for count by default
 					Assumptions.assumeThat( session.getJdbcServices().getDialect() )
 							.isNotInstanceOf( DB2Dialect.class )
 							.isNotInstanceOf( DerbyDialect.class )
 							.isNotInstanceOf( SQLServerDialect.class )
+							.isNotInstanceOf( SybaseDialect.class )
 							.isNotInstanceOf( OracleDialect.class );
 					final String sql = "select count(theString) from EntityOfBasics";
 					final NativeQueryImplementor<?> query = session.createNativeQuery( sql );

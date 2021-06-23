@@ -83,11 +83,8 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected void renderPartitionItem(Expression expression) {
 		if ( expression instanceof Literal ) {
-			// todo (6.0): We need to introduce a dummy from clause item
-//			String fromItem = ", (select 1 x " + dialect.getFromDual() + ") dummy";
-//			sqlBuffer.insert( fromEndIndex, fromItem );
-//			appendSql( "dummy.x" );
-			throw new UnsupportedOperationException( "Column reference strategy is not yet implemented!" );
+			// Note that this depends on the SqmToSqlAstConverter to add a dummy table group
+			appendSql( "dummy_.x" );
 		}
 		else if ( expression instanceof Summarization ) {
 			// This could theoretically be emulated by rendering all grouping variations of the query and

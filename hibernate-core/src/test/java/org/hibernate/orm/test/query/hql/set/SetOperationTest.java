@@ -59,6 +59,8 @@ public class SetOperationTest {
     public void dropTestData(SessionFactoryScope scope) {
         scope.inTransaction(
                 session -> {
+                    // Because, why not MySQL/MariaDB... https://bugs.mysql.com/bug.php?id=7412
+                    session.createQuery( "update EntityWithManyToOneSelfReference set other = null" ).executeUpdate();
                     session.createQuery( "delete from EntityWithManyToOneSelfReference" ).executeUpdate();
                     session.createQuery( "delete from EntityOfLists" ).executeUpdate();
                     session.createQuery( "delete from SimpleEntity" ).executeUpdate();
@@ -201,6 +203,7 @@ public class SetOperationTest {
 
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
     public void testUnionAllLimitSubquery(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {
@@ -218,6 +221,7 @@ public class SetOperationTest {
 
     @Test
     @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsUnion.class)
+    @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
     public void testUnionAllLimitNested(SessionFactoryScope scope) {
         scope.inSession(
                 session -> {

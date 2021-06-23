@@ -120,7 +120,17 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 
 	@Override
 	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity) {
-		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, SqmJoinType.CROSS, this );
+		return join( entity, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+		return join( nodeBuilder().getDomainModel().entity( entityJavaType ), joinType );
+	}
+
+	@Override
+	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType) {
+		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, joinType, this );
 		//noinspection unchecked
 		addSqmJoin( (SqmEntityJoin) join );
 		return join;

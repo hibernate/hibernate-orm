@@ -14,8 +14,10 @@ import javax.persistence.Id;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -33,6 +35,7 @@ public class DateWithTemporalTimeTest extends BaseEntityManagerFunctionalTestCas
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "The jTDS driver doesn't allow setting a timestamp through setTime")
 	public void testLifecycle() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			DateEvent dateEvent = new DateEvent( new Date() );

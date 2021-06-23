@@ -20,7 +20,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 
 	public static final OffsetFetchLimitHandler INSTANCE = new OffsetFetchLimitHandler(true);
 
-	private boolean variableLimit;
+	private final boolean variableLimit;
 
 	public OffsetFetchLimitHandler(boolean variableLimit) {
 		this.variableLimit = variableLimit;
@@ -48,7 +48,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			else {
 				offsetFetch.append( selection.getFirstRow() );
 			}
-			if ( !isIngres() ) {
+			if ( renderOffsetRowsKeyword() ) {
 				offsetFetch.append( " rows" );
 			}
 
@@ -94,7 +94,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 			else {
 				offsetFetch.append( limit.getFirstRow() );
 			}
-			if ( !isIngres() ) {
+			if ( renderOffsetRowsKeyword() ) {
 				offsetFetch.append( " rows" );
 			}
 
@@ -139,7 +139,7 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 		return variableLimit;
 	}
 
-	boolean isIngres() {
-		return false;
+	protected boolean renderOffsetRowsKeyword() {
+		return true;
 	}
 }

@@ -27,6 +27,7 @@ import org.hibernate.jpa.test.Item;
 import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 import org.hibernate.jpa.test.SettingsGenerator;
 
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 
@@ -275,7 +276,7 @@ public class InterceptorTest {
 		return SettingsGenerator.generateSettings(
 				Environment.HBM2DDL_AUTO, "create-drop",
 				Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true",
-				Environment.DIALECT, Dialect.getDialect().getClass().getName(),
+				Environment.DIALECT, DialectContext.getDialect().getClass().getName(),
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() )
 		);
     }

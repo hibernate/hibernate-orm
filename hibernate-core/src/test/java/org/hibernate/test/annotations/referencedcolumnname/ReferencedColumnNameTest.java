@@ -10,8 +10,6 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.TeradataDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -83,11 +81,6 @@ public class ReferencedColumnNameTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-		@SkipForDialect(
-						value = TeradataDialect.class,
-						jiraKey = "HHH-8190",
-						comment = "uses Teradata reserved word - type"
-				)
 	public void testUnidirectionalOneToMany() {
 		inTransaction(
 				s -> {

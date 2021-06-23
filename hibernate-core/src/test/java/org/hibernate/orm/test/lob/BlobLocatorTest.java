@@ -12,11 +12,10 @@ import java.util.Arrays;
 import org.hibernate.Hibernate;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
-import org.hibernate.dialect.TeradataDialect;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
@@ -45,10 +44,9 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-6637",
-			comment = "Teradata requires locator to be used in same session where it was created/retrieved"
+	@RequiresDialectFeature(
+			value = DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+			comment = "database/driver does not support materializing a LOB locator outside the owning transaction"
 	)
 	public void testBoundedBlobLocatorAccess() throws Throwable {
 		byte[] original = buildByteArray( BLOB_SIZE, true );
@@ -117,7 +115,8 @@ public class BlobLocatorTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.beginTransaction();
 		entity = s.get( LobHolder.class, entity.getId() );
-		if ( entity.getBlobLocator() != null) {
+		// Seems ASE does not support empty BLOBs
+		if ( entity.getBlobLocator() != null && !(sessionFactory().getJdbcServices().getDialect() instanceof SybaseDialect) ) {
 			Assert.assertEquals( empty.length, entity.getBlobLocator().length() );
 			assertEquals( empty, extractData( entity.getBlobLocator() ) );
 		}

@@ -359,7 +359,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	protected String updateStatement() {
-		if( SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() ) ) {
+		if( SQLServerDialect.class.isAssignableFrom( getDialect().getClass() ) ) {
 			return "UPDATE Lock_ WITH(NOWAIT) SET name = :name where id = :id";
 		}
 		return "UPDATE Lock_ SET name = :name where id = :id";

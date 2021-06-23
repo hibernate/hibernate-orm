@@ -97,7 +97,8 @@ public class StandardTableExporter implements Exporter<Table> {
 									.getIdentityColumnString( col.getSqlTypeCode( metadata ) ) );
 				}
 				else {
-					buf.append( col.getSqlType( dialect, metadata ) );
+					final String columnType = col.getSqlType( dialect, metadata );
+					buf.append( columnType );
 
 					String defaultValue = col.getDefaultValue();
 					if ( defaultValue != null ) {
@@ -105,7 +106,7 @@ public class StandardTableExporter implements Exporter<Table> {
 					}
 
 					if ( col.isNullable() ) {
-						buf.append( dialect.getNullColumnString() );
+						buf.append( dialect.getNullColumnString( columnType ) );
 					}
 					else {
 						buf.append( " not null" );

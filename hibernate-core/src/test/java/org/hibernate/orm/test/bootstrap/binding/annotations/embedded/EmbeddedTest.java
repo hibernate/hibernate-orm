@@ -21,14 +21,14 @@ import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.Ra
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
 import org.hibernate.query.Query;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
 import org.hibernate.orm.test.util.SchemaUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -142,12 +142,14 @@ public class EmbeddedTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
-	@FailureExpected(jiraKey = "HHH-8172")
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Null == null on Sybase", matchSubTypes = true)
 	public void testQueryWithEmbeddedParameterAllNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
 		Country c = new Country();
 		Country bornCountry = new Country();
+		c.setIso2( "DM" );
+		c.setName( "Matt Damon Land" );
 		assertNull( bornCountry.getIso2() );
 		assertNull( bornCountry.getName() );
 
@@ -161,7 +163,7 @@ public class EmbeddedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		scope.inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p where p.bornIn = :b" )
+			Person p = (Person) session.createQuery( "from Person p where p.bornIn is not distinct from :b" )
 					.setParameter( "b", person.bornIn )
 					.uniqueResult();
 			assertNotNull( p );
@@ -175,8 +177,6 @@ public class EmbeddedTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
-	@SkipForDialect(value = SybaseDialect.class, comment = "skip for Sybase because (null = null) evaluates to true")
-	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();
@@ -197,7 +197,7 @@ public class EmbeddedTest {
 		scope.inTransaction( session -> session.persist( person ) );
 
 		scope.inTransaction( session -> {
-			Person p = (Person) session.createQuery( "from Person p where p.bornIn = :b" )
+			Person p = (Person) session.createQuery( "from Person p where p.bornIn is not distinct from :b" )
 					.setParameter( "b", person.bornIn )
 					.uniqueResult();
 			assertNotNull( p );

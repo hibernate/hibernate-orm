@@ -82,7 +82,7 @@ class SpannerDialectTableExporter implements Exporter<Table> {
 			String columnDeclaration =
 					col.getName()
 							+ " " + col.getSqlType()
-							+ ( col.isNullable() ? this.spannerDialect.getNullColumnString() : " not null" );
+							+ ( col.isNullable() ? this.spannerDialect.getNullColumnString( col.getSqlType() ) : " not null" );
 			colsAndTypes.add( columnDeclaration );
 		}
 

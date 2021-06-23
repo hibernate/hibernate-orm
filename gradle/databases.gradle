@@ -57,16 +57,39 @@ ext {
                         // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
                         'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0'
                 ],
+                edb_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.PostgresPlusDialect',
+                        'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        // Disable prepared statement caching due to https://www.postgresql.org/message-id/CAEcMXhmmRd4-%2BNQbnjDT26XNdUoXdmntV9zdr8%3DTu8PL9aVCYg%40mail.gmail.com
+                        'jdbc.url'   : 'jdbc:postgresql://' + dbHost + '/hibernate_orm_test?preparedStatementCacheQueries=0'
+                ],
+                sybase_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.SybaseASEDialect',
+                        'jdbc.driver': 'net.sourceforge.jtds.jdbc.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        // Disable prepared statement caching to avoid issues with changing schemas
+                        'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':5000/hibernate_orm_test;maxStatements=0;cacheMetaData=false'
+                ],
                 mysql : [
                         'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
-                        'jdbc.driver': 'com.mysql.jdbc.Driver',
+                        'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                         'jdbc.user'  : 'hibernateormtest',
                         'jdbc.pass'  : 'hibernateormtest',
                         'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test'
                 ],
                 mysql_docker : [
                         'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
-                        'jdbc.driver': 'com.mysql.jdbc.Driver',
+                        'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?useSSL=false'
+                ],
+                mysql_ci : [
+                        'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
+                        'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?useSSL=false'
@@ -77,7 +100,7 @@ ext {
                         'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true&useSSL=false'
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?useSSL=false'
                 ],
                 mariadb : [
                         'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',

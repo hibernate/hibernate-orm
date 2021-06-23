@@ -17,7 +17,6 @@ import java.util.TreeSet;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.exception.ConstraintViolationException;
@@ -29,7 +28,6 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -125,11 +123,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = CUBRIDDialect.class,
-			comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-					"HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-	)
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	public void testTempTableGenerationIsolation() throws Throwable {
 		Session s = openSession();
 		s.beginTransaction();
@@ -707,11 +701,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = CUBRIDDialect.class,
-			comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-					"HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-	)
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	public void testInsertWithSelectListUsingJoins() {
 		// this is just checking parsing and syntax...
 		Session s = openSession();
@@ -922,11 +912,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = CUBRIDDialect.class,
-			comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-					"HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-	)
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	public void testUpdateOnManyToOne() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -1352,11 +1338,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = CUBRIDDialect.class,
-			comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-					"HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-	)
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	public void testDeleteWithMetadataWhereFragments() {
 		inTransaction(
 				s -> {

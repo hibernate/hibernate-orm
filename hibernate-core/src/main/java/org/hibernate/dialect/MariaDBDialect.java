@@ -42,11 +42,19 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this(
+				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				getCharacterSetBytesPerCharacter( info.unwrap( DatabaseMetaData.class ) )
+		);
 	}
 
 	public MariaDBDialect(int version) {
-		super( version < 530 ? 500 : 570 );
+		// Let's be conservative and assume people use a 4 byte character set
+		this( version, 4 );
+	}
+
+	public MariaDBDialect(int version, int characterSetBytesPerCharacter) {
+		super( version < 530 ? 500 : 570, characterSetBytesPerCharacter );
 		this.version = version;
 	}
 
@@ -86,6 +94,11 @@ public class MariaDBDialect extends MySQLDialect {
 
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return getVersion() >= 1020;
 	}
 
 	@Override

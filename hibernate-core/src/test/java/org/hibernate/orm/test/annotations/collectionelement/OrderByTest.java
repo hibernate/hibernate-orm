@@ -9,12 +9,9 @@ package org.hibernate.orm.test.annotations.collectionelement;
 import java.util.HashSet;
 import java.util.Iterator;
 
-import org.hibernate.dialect.TeradataDialect;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -72,11 +69,6 @@ public class OrderByTest {
 	}
 
 	@Test
-	@SkipForDialect(
-			dialectClass = TeradataDialect.class,
-			matchSubTypes = true,
-			reason = "HHH-8190, uses Teradata reserved word - summary"
-	)
 	public void testOrderByWithDottedNotation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

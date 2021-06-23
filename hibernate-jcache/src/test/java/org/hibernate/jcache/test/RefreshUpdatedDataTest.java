@@ -29,6 +29,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.DialectContext;
+
 import org.hibernate.tool.schema.Action;
 import org.junit.After;
 import org.junit.Before;
@@ -51,7 +53,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
 				.configure( "hibernate-config/hibernate.cfg.xml" );
 
-		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
+		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {
 			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );

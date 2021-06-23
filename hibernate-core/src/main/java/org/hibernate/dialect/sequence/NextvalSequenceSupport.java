@@ -17,4 +17,9 @@ public class NextvalSequenceSupport implements SequenceSupport {
 		return sequenceName + ".nextval";
 	}
 
+	@Override
+	public final String getSelectSequencePreviousValString(String sequenceName) {
+		return sequenceName + ".currval";
+	}
+
 }

@@ -690,6 +690,16 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
 	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
 		return GroupBySummarizationRenderingStrategy.FUNCTION;
 	}

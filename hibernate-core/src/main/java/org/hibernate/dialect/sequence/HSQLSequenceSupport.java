@@ -43,4 +43,9 @@ public final class HSQLSequenceSupport extends ANSISequenceSupport {
 	public String getSequenceNextValString(String sequenceName) {
 		return "call " + getSelectSequenceNextValString( sequenceName );
 	}
+
+	@Override
+	public String getSequencePreviousValString(String sequenceName) {
+		return "call " + getSelectSequencePreviousValString( sequenceName );
+	}
 }

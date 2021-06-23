@@ -15,6 +15,7 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -140,6 +141,7 @@ public class OneToManyEmbeddedIdFKTest {
 	}
 
 	@Entity(name = "System")
+	@Table( name = "systems" )
 	public static class System {
 		@Id
 		private Integer id;

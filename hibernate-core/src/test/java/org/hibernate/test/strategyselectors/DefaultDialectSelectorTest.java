@@ -14,12 +14,10 @@ import org.junit.Test;
 
 public class DefaultDialectSelectorTest {
 
-	private DefaultDialectSelector strategySelector = new DefaultDialectSelector();
+	private final DefaultDialectSelector strategySelector = new DefaultDialectSelector();
 
 	@Test
 	public void verifyAllDialectNamingResolve() {
-		testDialectNamingResolution( Cache71Dialect.class );
-		testDialectNamingResolution( CUBRIDDialect.class );
 		testDialectNamingResolution( DB2Dialect.class );
 		testDialectNamingResolution( DB2390Dialect.class );
 		testDialectNamingResolution( DB2390V8Dialect.class );
@@ -28,17 +26,11 @@ public class DefaultDialectSelectorTest {
 		testDialectNamingResolution( DerbyTenFiveDialect.class );
 		testDialectNamingResolution( DerbyTenSixDialect.class );
 		testDialectNamingResolution( DerbyTenSevenDialect.class );
-		testDialectNamingResolution( FirebirdDialect.class );
 		testDialectNamingResolution( H2Dialect.class );
 		testDialectNamingResolution( HANAColumnStoreDialect.class );
 		testDialectNamingResolution( HANARowStoreDialect.class );
 		testDialectNamingResolution( HSQLDialect.class );
-		testDialectNamingResolution( InformixDialect.class );
-		testDialectNamingResolution( IngresDialect.class );
-		testDialectNamingResolution( Ingres9Dialect.class );
-		testDialectNamingResolution( Ingres10Dialect.class );
 
-		testDialectNamingResolution( MimerSQLDialect.class );
 		testDialectNamingResolution( MySQL5Dialect.class );
 		testDialectNamingResolution( MySQL57Dialect.class );
 		testDialectNamingResolution( MySQL8Dialect.class );
@@ -51,16 +43,12 @@ public class DefaultDialectSelectorTest {
 		testDialectNamingResolution( PostgreSQL82Dialect.class );
 		testDialectNamingResolution( PostgreSQL9Dialect.class );
 
-		testDialectNamingResolution( SAPDBDialect.class );
 		testDialectNamingResolution( SQLServerDialect.class );
 		testDialectNamingResolution( SQLServer2005Dialect.class );
 		testDialectNamingResolution( SQLServer2008Dialect.class );
 		testDialectNamingResolution( Sybase11Dialect.class );
-		testDialectNamingResolution( SybaseAnywhereDialect.class );
 		testDialectNamingResolution( SybaseASE15Dialect.class );
 		testDialectNamingResolution( SybaseASE157Dialect.class );
-		testDialectNamingResolution( TeradataDialect.class );
-		testDialectNamingResolution( TimesTenDialect.class );
 	}
 
 	private void testDialectNamingResolution(final Class<?> dialectClass) {

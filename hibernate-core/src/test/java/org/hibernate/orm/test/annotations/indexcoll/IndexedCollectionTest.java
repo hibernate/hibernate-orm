@@ -19,12 +19,10 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -362,11 +360,6 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-8190",
-			comment = "uses Teradata reserved word - title"
-	)
 	public void testMapKeyOnManyToMany() throws Exception {
 		Session s;
 		s = openSession();
@@ -396,11 +389,6 @@ public class IndexedCollectionTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = TeradataDialect.class,
-			jiraKey = "HHH-8190",
-			comment = "uses Teradata reserved word - title"
-	)
 	public void testMapKeyOnManyToManyOnId() throws Exception {
 		Session s;
 		s = openSession();

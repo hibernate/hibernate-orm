@@ -28,6 +28,7 @@ import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Before;
 
 /**
@@ -35,7 +36,7 @@ import org.junit.Before;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public abstract class AbstractEntityManagerTest extends AbstractEnversTest {
-	public static final Dialect DIALECT = Dialect.getDialect();
+	public static final Dialect DIALECT = DialectContext.getDialect();
 
 	private EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder;
 	private StandardServiceRegistryImpl serviceRegistry;

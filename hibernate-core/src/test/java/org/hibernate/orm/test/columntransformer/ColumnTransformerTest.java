@@ -11,9 +11,12 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.MySQLDialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +34,7 @@ import static org.junit.Assert.assertThat;
  */
 @DomainModel( annotatedClasses = Staff.class )
 @SessionFactory
+@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL doesn't support casting to a VARCHAR(255)")
 public class ColumnTransformerTest {
 	public static final double ERROR = 0.01d;
 
@@ -142,7 +146,7 @@ public class ColumnTransformerTest {
 					final String sqlString =
 							// represents how each is mapped in the mappings - see their @ColumnTransformer#read
 							"select i.integer_val"
-							+ " from t_staff s inner join integers i on s.id = i.staff_id"
+							+ " from t_staff s inner join integers i on s.id = i.Staff_id"
 							+ " where s.id = 12";
 
 					final List<?> results = session

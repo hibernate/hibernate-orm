@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect.sequence;
 
+import org.hibernate.MappingException;
+
 /**
  * Sequence support for {@link org.hibernate.dialect.MariaDBDialect}.
  *
@@ -14,6 +16,11 @@ package org.hibernate.dialect.sequence;
 public final class MariaDBSequenceSupport extends ANSISequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new MariaDBSequenceSupport();
+
+	@Override
+	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
+		return "previous value for " + sequenceName;
+	}
 
 	@Override
 	public boolean sometimesNeedsStartingValue() {

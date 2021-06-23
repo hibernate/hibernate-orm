@@ -6,20 +6,16 @@
  */
 package org.hibernate.orm.test.immutable.entitywithmutablecollection.noninverse;
 
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.orm.test.immutable.entitywithmutablecollection.AbstractEntityWithOneToManyTest;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
 /**
  * @author Gail Badner
  */
-@SkipForDialect(
-		dialectClass = CUBRIDDialect.class,
-		reason = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-				"HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/immutable/entitywithmutablecollection/noninverse/ContractVariationVersionedOneToManyJoin.hbm.xml"
 )

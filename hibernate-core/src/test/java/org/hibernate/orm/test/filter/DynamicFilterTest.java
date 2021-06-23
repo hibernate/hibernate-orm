@@ -25,14 +25,13 @@ import org.hibernate.Session;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CollectionCacheEntry;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.IngresDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.Query;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 
+import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
@@ -51,7 +50,6 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-@SkipForDialect(value = SybaseASE15Dialect.class, jiraKey = "HHH-3637")
 public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
@@ -98,7 +96,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = { SybaseASE15Dialect.class, IngresDialect.class })
+	@RequiresDialectFeature(DialectChecks.SupportsUnionInSubquery.class)
 	public void testSqlSyntaxOfFiltersWithUnions() {
 		Session session = openSession();
 		session.enableFilter( "unioned" );

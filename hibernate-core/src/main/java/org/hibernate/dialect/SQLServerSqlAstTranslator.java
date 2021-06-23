@@ -219,10 +219,10 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
 		final OffsetFetchClauseMode offsetFetchClauseMode = getOffsetFetchClauseMode( querySpec );
 		if ( offsetFetchClauseMode == OffsetFetchClauseMode.TOP_ONLY ) {
-			renderTopClause( querySpec, true );
+			renderTopClause( querySpec, true, true );
 		}
 		else if ( offsetFetchClauseMode == OffsetFetchClauseMode.EMULATED ) {
-			renderTopClause( querySpec, isRowsOnlyFetchClauseType( querySpec ) );
+			renderTopClause( querySpec, isRowsOnlyFetchClauseType( querySpec ), true );
 		}
 		super.visitSqlSelections( selectClause );
 	}

@@ -10,8 +10,6 @@ import java.util.Arrays;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.RequiresDialect;
@@ -26,7 +24,7 @@ import junit.framework.AssertionFailedError;
  *
  * @author Gail Badner
  */
-@RequiresDialect( { SybaseASE15Dialect.class, SQLServerDialect.class, SybaseDialect.class, Sybase11Dialect.class })
+@RequiresDialect( { SQLServerDialect.class, SybaseDialect.class })
 public class ImageTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 

@@ -54,7 +54,8 @@
 		</component>
 		
 		<union-subclass name="Employee" table="UEmployee">
-				<property name="title" 
+				<property name="title"
+					column="emp_title"
 					not-null="true" 
 					length="20"/>
 				<property name="salary" 

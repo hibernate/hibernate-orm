@@ -218,7 +218,21 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 				rowsToSkip = jdbcSelect.getRowsToSkip();
 			}
 			if ( rowsToSkip != 0 ) {
-				resultSet.absolute( rowsToSkip );
+				try {
+					resultSet.absolute( rowsToSkip );
+				}
+				catch (SQLException ex) {
+					// This could happen with the jTDS driver which throws an exception on non-scrollable result sets
+					// To avoid throwing a wrong exception in case this was some other error, check if we can advance to next
+					try {
+						resultSet.next();
+					}
+					catch (SQLException ex2) {
+						throw ex;
+					}
+					// Traverse to the actual row
+					for (int i = 1; i < rowsToSkip && resultSet.next(); i++) {}
+				}
 			}
 			logicalConnection.getResourceRegistry().register( resultSet, preparedStatement );
 

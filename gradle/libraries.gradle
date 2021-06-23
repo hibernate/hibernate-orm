@@ -139,7 +139,7 @@ ext {
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
             h2:              "com.h2database:h2:${h2Version}",
-            hsqldb:          "org.hsqldb:hsqldb:2.3.2",
+            hsqldb:          "org.hsqldb:hsqldb:2.3.6",
             derby:           "org.apache.derby:derby:10.11.1.1",
             postgresql:      'org.postgresql:postgresql:42.2.16',
             mysql:           'mysql:mysql-connector-java:8.0.17',
@@ -150,6 +150,7 @@ ext {
             mssql:           'com.microsoft.sqlserver:mssql-jdbc:7.2.1.jre8',
             db2:             'com.ibm.db2:jcc:11.5.4.0',
             hana:            'com.sap.cloud.db.jdbc:ngdbc:2.4.59',
+            sybase:          'net.sourceforge.jtds:jtds:1.3.1',
 
             jodaTime:        "joda-time:joda-time:${jodaTimeVersion}",
 

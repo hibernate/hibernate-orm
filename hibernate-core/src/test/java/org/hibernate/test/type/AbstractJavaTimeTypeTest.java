@@ -29,6 +29,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +48,7 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 	private static Dialect determineDialect() {
 		try {
-			return Dialect.getDialect();
+			return DialectContext.getDialect();
 		}
 		catch (Exception e) {
 			return new Dialect() {

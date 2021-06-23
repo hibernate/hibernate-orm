@@ -29,30 +29,24 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.CUBRIDDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.IngresDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.Sybase11Dialect;
 import org.hibernate.dialect.SybaseASE15Dialect;
-import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.dialect.TeradataDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.MultipleBagFetchException;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
 import org.hibernate.orm.test.any.hbm.IntegerPropertyValue;
 import org.hibernate.orm.test.any.hbm.PropertySet;
@@ -78,6 +72,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
 import org.hibernate.orm.test.cid.Customer;
 import org.hibernate.orm.test.cid.LineItem;
 import org.hibernate.orm.test.cid.LineItem.Id;
@@ -116,11 +111,7 @@ import static org.junit.Assert.fail;
  *
  * @author Steve
  */
-@SkipForDialect(
-        value = CUBRIDDialect.class,
-        comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-)
+@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	private List<Long> createdAnimalIds = new ArrayList<>();
@@ -668,11 +659,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = IngresDialect.class,
-			jiraKey = "HHH-4961",
-			comment = "Ingres does not support this scoping in 9.3"
-	)
+	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
 	public void testPaginationWithPolymorphicQuery() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -1618,11 +1605,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-1774" )
-	@SkipForDialect(
-			value = IngresDialect.class,
-			comment = "Subselects are not supported within select target lists in Ingres",
-			jiraKey = "HHH-4970"
-	)
+	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
 	public void testComponentParameterBinding() {
 		Session s = openSession();
 		s.beginTransaction();
@@ -2109,11 +2092,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = IngresDialect.class,
-			jiraKey = "HHH-4973",
-			comment = "Ingres 9.3 does not support sub-selects in the select list"
-	)
+	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
 	@SuppressWarnings( {"unchecked"})
 	public void testSelectClauseSubselect() {
 		Session s = openSession();
@@ -2675,13 +2654,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-    @SkipForDialect(
-            value = CUBRIDDialect.class,
-            comment = "As of version 8.4.1 CUBRID does not support temporary tables." +
-                    " This test somehow calls MultiTableDeleteExecutor which raises an" +
-                    " exception saying 'cannot doAfterTransactionCompletion multi-table" +
-                    " deletes using dialect not supporting temp tables'."
-    )
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	public void testParameterMixing() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2815,11 +2788,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(
-			value = IngresDialect.class,
-			jiraKey = "HHH-4976",
-			comment = "Ingres 9.3 does not support sub-selects in the select list"
-	)
+	@RequiresDialectFeature( DialectChecks.SupportsSubqueryInSelect.class )
 	public void testImplicitPolymorphism() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -2864,11 +2833,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		an.setBodyWeight(123.45f);
 		session.persist( an );
 		String str = (String) session.createQuery("select str(an.bodyWeight) from Animal an where str(an.bodyWeight) like '%1%'").uniqueResult();
-		if ( (getDialect() instanceof DB2Dialect || getDialect() instanceof TeradataDialect) && !(getDialect() instanceof DerbyDialect) ) {
+		// No idea why teradata doesn't support this
+//		if ( (getDialect() instanceof DB2Dialect || getDialect() instanceof TeradataDialect) ) {
+		if ( getDialect() instanceof DB2Dialect ) {
 			assertTrue( str.startsWith( "1.234" ) );
 		}
-		else //noinspection deprecation
-			if ( getDialect() instanceof SybaseDialect || getDialect() instanceof Sybase11Dialect || getDialect() instanceof SybaseASE15Dialect || getDialect() instanceof SybaseAnywhereDialect || getDialect() instanceof SQLServerDialect ) {
+		else if ( getDialect() instanceof SybaseDialect || getDialect() instanceof SQLServerDialect ) {
 			// str(val) on sybase assumes a default of 10 characters with no decimal point or decimal values
 			// str(val) on sybase result is right-justified
 			assertEquals( str.length(), 10 );
@@ -2881,8 +2851,9 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			assertTrue( str.startsWith("123.4") );
 		}
 
-		//noinspection deprecation
-		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof Sybase11Dialect ) && ! ( getDialect() instanceof SybaseASE15Dialect ) && ! ( getDialect() instanceof SybaseAnywhereDialect ) && ! ( getDialect() instanceof SQLServerDialect || getDialect() instanceof TeradataDialect ) ) {
+		// No idea why teradata doesn't support this
+//		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof SQLServerDialect || getDialect() instanceof TeradataDialect ) ) {
+		if ( ! ( getDialect() instanceof SybaseDialect ) && ! ( getDialect() instanceof SQLServerDialect ) ) {
 			// In TransactSQL (the variant spoken by Sybase and SQLServer), the str() function
 			// is explicitly intended for numeric values only...
 			String dateStr1 = (String) session.createQuery("select str(current_date) from Animal").uniqueResult();

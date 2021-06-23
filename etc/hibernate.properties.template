@@ -80,7 +80,7 @@ hibernate.connection.url @DB_URL@
 
 ## TimesTen (not supported yet)
 
-#hibernate.dialect org.hibernate.dialect.TimesTenDialect
+#hibernate.dialect org.hibernate.community.dialect.TimesTenDialect
 #hibernate.connection.driver_class com.timesten.jdbc.TimesTenDriver
 #hibernate.connection.url jdbc:timesten:direct:test
 #hibernate.connection.username
@@ -121,7 +121,7 @@ hibernate.connection.url @DB_URL@
 
 ## SAP MaxDB
 
-#hibernate.dialect org.hibernate.dialect.MaxDBDialect
+#hibernate.dialect org.hibernate.community.dialect.MaxDBDialect
 #hibernate.connection.driver_class com.sap.dbtech.jdbc.DriverSapDB
 #hibernate.connection.url jdbc:sapdb://localhost/TST
 #hibernate.connection.username TEST
@@ -158,7 +158,7 @@ hibernate.connection.url @DB_URL@
 
 ## Ingres
 
-#hibernate.dialect org.hibernate.dialect.IngresDialect 
+#hibernate.dialect org.hibernate.community.dialect.IngresDialect
 #hibernate.connection.driver_class ca.edbc.jdbc.EdbcDriver 
 #hibernate.connection.url jdbc:edbc://localhost:II7/database 
 #hibernate.connection.username user 
@@ -167,7 +167,7 @@ hibernate.connection.url @DB_URL@
 
 ## Mimer SQL
 
-#hibernate.dialect org.hibernate.dialect.MimerSQLDialect
+#hibernate.dialect org.hibernate.community.dialect.MimerSQLDialect
 #hibernate.connection.driver_class com.mimer.jdbc.Driver
 #hibernate.connection.url jdbc:mimer:multi1
 #hibernate.connection.username hibernate

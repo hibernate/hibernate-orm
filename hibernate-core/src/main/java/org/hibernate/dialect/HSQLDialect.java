@@ -85,29 +85,27 @@ public class HSQLDialect extends Dialect {
 	private final int version;
 
 	public HSQLDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion()*100 + info.getDatabaseMinorVersion()*10 );
+		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
 	}
 
 	public HSQLDialect() {
-		this(180);
+		this( 180 );
 	}
 
 	public HSQLDialect(int version) {
 		super();
 
 		if ( version == 180 ) {
-			version = reflectedVersion(version);
+			version = reflectedVersion( version );
 		}
 
 		this.version = version;
 
 		//Note that all floating point types are synonyms for 'double'
 
-		//HSQL has actual types called 'longvarchar' and
-		//'longvarbinary', which one must suppose are meant
-		//to be used for this purpose
-		registerColumnType( Types.LONGVARCHAR, "longvarchar" ); //synonym for 'varchar(16M)'
-		registerColumnType( Types.LONGVARBINARY, "longvarbinary" ); //synonym for 'varbinary(16M)'
+		//Note that the HSQL type 'longvarchar' and 'longvarbinary'
+		//are synonyms for 'varchar(16M)' and 'varbinary(16M)' respectively.
+		//Using these types though results in schema validation issue like described in HHH-9693
 
 		//HSQL has no 'nclob' type, but 'clob' is Unicode
 		//(See HHH-10364)
@@ -272,7 +270,7 @@ public class HSQLDialect extends Dialect {
 			case STRING:
 				result = BooleanDecoder.toString( from );
 				if ( result != null ) {
-					return result;
+					return "trim(" + result + ')';
 				}
 				break;
 		}
@@ -286,12 +284,14 @@ public class HSQLDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				pattern.append("timestampadd(sql_tsi_frac_second"); //nanos
+				pattern.append("timestampadd(sql_tsi_frac_second, ?2, "); //nanos
+				break;
+			case WEEK:
+				pattern.append("dateadd('day', ?2*7, ");
 				break;
 			default:
-				pattern.append("dateadd(?1");
+				pattern.append("dateadd('?1', ?2, ");
 		}
-		pattern.append(", ?2, ");
 		if (castTo) {
 			pattern.append("cast(?3 as timestamp)");
 		}
@@ -312,8 +312,10 @@ public class HSQLDialect extends Dialect {
 			case NATIVE:
 				pattern.append("timestampdiff(sql_tsi_frac_second"); //nanos
 				break;
+			case WEEK:
+				pattern.append("(datediff('day'");
 			default:
-				pattern.append("datediff(?1");
+				pattern.append("datediff('?1'");
 		}
 		pattern.append(", ");
 		if (castFrom) {
@@ -330,6 +332,9 @@ public class HSQLDialect extends Dialect {
 			pattern.append("?3");
 		}
 		pattern.append(")");
+		if ( unit == TemporalUnit.WEEK ) {
+			pattern.append( "/7)" );
+		}
 		return pattern.toString();
 	}
 
@@ -652,6 +657,16 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean requiresFloatCastingOfIntegerDivision() {
+		return true;
+	}
+
+	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new HSQLIdentityColumnSupport( this.version);
 	}
@@ -680,6 +695,9 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		return OracleDialect.datetimeFormat( format, false, false )
+				// HSQL is case sensitive i.e. requires MONTH and DAY instead of Month and Day
+				.replace("MMMM", "MONTH")
+				.replace("EEEE", "DAY")
 				.replace("SSSSSS", "FF")
 				.replace("SSSSS", "FF")
 				.replace("SSSS", "FF")

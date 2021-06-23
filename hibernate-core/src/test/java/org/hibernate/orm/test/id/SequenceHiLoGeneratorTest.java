@@ -8,7 +8,7 @@ package org.hibernate.orm.test.id;
 
 import java.util.Properties;
 
-import org.hibernate.Transaction;
+import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -17,16 +17,17 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.SequenceGenerator;
 import org.hibernate.id.SequenceHiLoGenerator;
-import org.hibernate.internal.SessionImpl;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks.SupportsSequences;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,7 +49,6 @@ public class SequenceHiLoGeneratorTest {
 	private StandardServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 	private SequenceHiLoGenerator generator;
-	private SessionImplementor sessionImpl;
 	private SequenceValueExtractor sequenceValueExtractor;
 
 	@BeforeEach
@@ -90,49 +90,43 @@ public class SequenceHiLoGeneratorTest {
 
 	@Test
 	public void testHiLoAlgorithm() {
-		sessionImpl = (SessionImpl) sessionFactory.openSession();
-		try {
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			// historically the hilo generators skipped the initial block of values;
-			// so the first generated id value is maxlo + 1, here be 4
-			assertEquals(4L, generateValue());
-			// which should also perform the first read on the sequence which should set it to its "start with" value (1)
-			assertEquals(1L, extractSequenceValue());
+		TransactionUtil.doInHibernate(
+				() -> sessionFactory,
+				session -> {
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					// historically the hilo generators skipped the initial block of values;
+					// so the first generated id value is maxlo + 1, here be 4
+					assertEquals( 4L, generateValue( session ) );
+					// which should also perform the first read on the sequence which should set it to its "start with" value (1)
+					assertEquals( 1L, extractSequenceValue( session ) );
 
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			assertEquals(5L, generateValue());
-			assertEquals(1L, extractSequenceValue());
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					assertEquals( 5L, generateValue( session ) );
+					assertEquals( 1L, extractSequenceValue( session ) );
 
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			assertEquals(6L, generateValue());
-			assertEquals(1L, extractSequenceValue());
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					assertEquals( 6L, generateValue( session ) );
+					assertEquals( 1L, extractSequenceValue( session ) );
 
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			assertEquals(7L, generateValue());
-			// unlike the newer strategies, the db value will not get update here. It gets updated on the next invocation
-			// after a clock over
-			assertEquals(1L, extractSequenceValue());
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					assertEquals( 7L, generateValue( session ) );
+					// unlike the newer strategies, the db value will not get update here. It gets updated on the next invocation
+					// after a clock over
+					assertEquals( 1L, extractSequenceValue( session ) );
 
-			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-			assertEquals(8L, generateValue());
-			// this should force an increment in the sequence value
-			assertEquals(2L, extractSequenceValue());
-		} finally {
-			sessionImpl.close();
-		}
+					// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+					assertEquals( 8L, generateValue( session ) );
+					// this should force an increment in the sequence value
+					assertEquals( 2L, extractSequenceValue( session ) );
+				}
+		);
 	}
 
-	private long extractSequenceValue() {
-		return sequenceValueExtractor.extractSequenceValue( sessionImpl );
+	private long extractSequenceValue(Session session) {
+		return sequenceValueExtractor.extractSequenceValue( (SessionImplementor) session );
 	}
 
-	private long generateValue() {
-		Transaction transaction =  sessionImpl.beginTransaction();
-		try {
-			return  (Long) generator.generate( sessionImpl, null );
-		}
-		finally {
-			transaction.commit();
-		}
+	private long generateValue(Session session) {
+		return (Long) generator.generate( (SharedSessionContractImplementor) session, null );
 	}
 }

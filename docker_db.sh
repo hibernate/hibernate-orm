@@ -2,17 +2,17 @@
 
 mysql_5_7() {
     docker rm -f mysql || true
-    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
 }
 
 mysql_8_0() {
     docker rm -f mysql || true
-    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
 }
 
 mariadb() {
     docker rm -f mariadb || true
-    docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
 }
 
 postgresql_9_5() {
@@ -26,8 +26,14 @@ postgresql_13() {
 }
 
 postgis(){
-  docker rm -f postgis || true
-  docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgis/postgis:11-2.5
+    docker rm -f postgis || true
+    docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgis/postgis:11-2.5
+}
+
+edb() {
+    #docker login containers.enterprisedb.com
+    docker rm -f edb || true
+    docker run --name edb -e ACCEPT_EULA=Yes -e DATABASE_USER=hibernate_orm_test -e DATABASE_USER_PASSWORD=hibernate_orm_test -e ENTERPRISEDB_PASSWORD=hibernate_orm_test -e DATABASE_NAME=hibernate_orm_test -e PGPORT=5433 -p 5433:5433 --mount type=tmpfs,destination=/edbvolume -d containers.enterprisedb.com/edb/edb-as-lite:v11
 }
 
 db2() {
@@ -123,6 +129,126 @@ mssql() {
     fi
 }
 
+sybase() {
+    docker rm -f sybase || true
+    # Yup, that sucks, but on ubuntu we need to use -T11889 as per: https://github.com/DataGrip/docker-env/issues/12
+    docker run -d -p 5000:5000 -p 5001:5001 --name sybase --entrypoint /bin/bash nguoianphu/docker-sybase -c "source /opt/sybase/SYBASE.sh
+/opt/sybase/ASE-16_0/bin/dataserver \
+-d/opt/sybase/data/master.dat \
+-e/opt/sybase/ASE-16_0/install/MYSYBASE.log \
+-c/opt/sybase/ASE-16_0/MYSYBASE.cfg \
+-M/opt/sybase/ASE-16_0 \
+-N/opt/sybase/ASE-16_0/sysam/MYSYBASE.properties \
+-i/opt/sybase \
+-sMYSYBASE \
+-T11889
+RET=\$?
+exit 0
+"
+
+    sybase_check() {
+    docker exec sybase bash -c "source /opt/sybase/SYBASE.sh;
+/opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE <<EOF
+Select name from sysdatabases where status2 & 48 > 0
+go
+quit
+EOF
+"
+}
+    START_STATUS=0
+    j=1
+    while (( $j < 30 )); do
+      echo "Waiting for Sybase to start..."
+      sleep 1
+      j=$((j+1))
+      START_STATUS=$(sybase_check | grep '(0 rows affected)' | wc -c)
+      if (( $START_STATUS > 0 )); then
+        break
+      fi
+    done
+    if (( $j == 30 )); then
+      echo "Failed starting Sybase"
+      docker ps -a
+      docker logs sybase
+      sybase_check
+      exit 1
+    fi
+
+    export SYBASE_DB=hibernate_orm_test
+    export SYBASE_USER=hibernate_orm_test
+    export SYBASE_PASSWORD=hibernate_orm_test
+    docker exec sybase bash -c "source /opt/sybase/SYBASE.sh;
+cat <<-EOSQL > init1.sql
+use master
+go
+disk resize name='master', size='256m'
+go
+create database $SYBASE_DB on master = '96m'
+go
+sp_dboption $SYBASE_DB, \"single user\", true
+go
+alter database $SYBASE_DB log on master = '50m'
+go
+use $SYBASE_DB
+go
+exec sp_extendsegment logsegment, $SYBASE_DB, master
+go
+use master
+go
+sp_dboption $SYBASE_DB, \"single user\", false
+go
+use $SYBASE_DB
+go
+checkpoint
+go
+use master
+go
+create login $SYBASE_USER with password $SYBASE_PASSWORD
+go
+exec sp_dboption $SYBASE_DB, 'abort tran on log full', true
+go
+exec sp_dboption $SYBASE_DB, 'allow nulls by default', true
+go
+exec sp_dboption $SYBASE_DB, 'ddl in tran', true
+go
+exec sp_dboption $SYBASE_DB, 'trunc log on chkpt', true
+go
+exec sp_dboption $SYBASE_DB, 'full logging for select into', true
+go
+exec sp_dboption $SYBASE_DB, 'full logging for alter table', true
+go
+sp_dboption $SYBASE_DB, \"select into\", true
+go
+EOSQL
+
+/opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -i ./init1.sql
+
+echo =============== CREATING DB ==========================
+cat <<-EOSQL > init2.sql
+use $SYBASE_DB
+go
+sp_adduser '$SYBASE_USER', '$SYBASE_USER', null
+go
+grant create default to $SYBASE_USER
+go
+grant create table to $SYBASE_USER
+go
+grant create view to $SYBASE_USER
+go
+grant create rule to $SYBASE_USER
+go
+grant create function to $SYBASE_USER
+go
+grant create procedure to $SYBASE_USER
+go
+commit
+go
+EOSQL
+
+/opt/sybase/OCS-16_0/bin/isql -Usa -P myPassword -S MYSYBASE -i ./init2.sql"
+    echo "Sybase successfully started"
+}
+
 oracle() {
     docker rm -f oracle || true
     # We need to use the defaults
@@ -158,6 +284,7 @@ EOF\""
 }
 
 oracle_ee() {
+    #docker login
     docker rm -f oracle || true
     # We need to use the defaults
     # sys as sysdba/Oradoc_db1
@@ -244,18 +371,21 @@ EOF
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
+    echo -e "\tcockroachdb"
+    echo -e "\tdb2"
+    echo -e "\tdb2_spatial"
+    echo -e "\tedb"
+    echo -e "\thana"
+    echo -e "\tmariadb"
+    echo -e "\tmssql"
     echo -e "\tmysql_5_7"
     echo -e "\tmysql_8_0"
-    echo -e "\tmariadb"
-    echo -e "\tpostgresql_9_5"
-    echo -e "\tpostgresql_13"
-    echo -e "\tdb2"
-    echo -e "\tmssql"
     echo -e "\toracle"
+    echo -e "\toracle_ee"
     echo -e "\tpostgis"
-    echo -e "\tdb2_spatial"
-    echo -e "\thana"
-    echo -e "\tcockroachdb"
+    echo -e "\tpostgresql_13"
+    echo -e "\tpostgresql_9_5"
+    echo -e "\tsybase"
 else
     ${1}
 fi

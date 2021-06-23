@@ -10,7 +10,9 @@ import java.util.Calendar;
 import java.util.List;
 
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -25,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @DomainModel( annotatedClasses = SimpleEntity.class )
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsOrderByInSubquery.class)
 public class SubqueryLimitOffsetTest {
 	@Test
 	public void testSubqueryLimitOffset(SessionFactoryScope scope) {

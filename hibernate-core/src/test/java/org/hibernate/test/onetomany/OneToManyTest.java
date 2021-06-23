@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.onetomany;
 
-import org.hibernate.dialect.CUBRIDDialect;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.RequiresDialectFeature;
 import org.junit.Test;
 
 import org.hibernate.Session;
@@ -26,11 +26,7 @@ public class OneToManyTest extends BaseCoreFunctionalTestCase {
 
 	@SuppressWarnings( {"unchecked", "UnusedAssignment"})
 	@Test
-    @SkipForDialect(
-            value = CUBRIDDialect.class,
-            comment = "As of verion 8.4.1 CUBRID doesn't support temporary tables. This test fails with" +
-                    "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-    )
+	@RequiresDialectFeature(DialectChecks.SupportsTemporaryTable.class)
 	public void testOneToManyLinkTable() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

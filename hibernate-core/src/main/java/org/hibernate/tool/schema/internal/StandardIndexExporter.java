@@ -22,10 +22,15 @@ import org.hibernate.tool.schema.spi.Exporter;
  * @author Steve Ebersole
  */
 public class StandardIndexExporter implements Exporter<Index> {
+
 	private final Dialect dialect;
 
 	public StandardIndexExporter(Dialect dialect) {
 		this.dialect = dialect;
+	}
+
+	protected Dialect getDialect() {
+		return dialect;
 	}
 
 	@Override

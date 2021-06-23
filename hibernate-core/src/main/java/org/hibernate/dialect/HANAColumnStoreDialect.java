@@ -34,7 +34,7 @@ import org.hibernate.type.StandardBasicTypes;
  * @author <a href="mailto:jonathan.bregler@sap.com">Jonathan Bregler</a>
  */
 public class HANAColumnStoreDialect extends AbstractHANADialect {
-	private int version;
+	private final int version;
 
 	public HANAColumnStoreDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );

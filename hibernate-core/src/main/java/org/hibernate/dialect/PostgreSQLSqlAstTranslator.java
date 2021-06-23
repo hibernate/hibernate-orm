@@ -56,15 +56,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		if ( getQueryPartForRowNumbering() == queryPart || isRowsOnlyFetchClauseType( queryPart ) ) {
 			return false;
 		}
-		final FetchClauseType fetchClauseType = queryPart.getFetchClauseType();
-		switch ( fetchClauseType ) {
-			case PERCENT_ONLY:
-			case PERCENT_WITH_TIES:
-				return !supportsOffsetFetchClausePercent();
-			case ROWS_WITH_TIES:
-				return !supportsOffsetFetchClauseWithTies();
-		}
-		return false;
+		return !getDialect().supportsFetchClause( queryPart.getFetchClauseType() );
 	}
 
 	@Override
@@ -90,7 +82,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	@Override
 	public void visitOffsetFetchClause(QueryPart queryPart) {
 		if ( !isRowNumberingCurrentQueryPart() ) {
-			if ( supportsOffsetFetchClause() ) {
+			if ( getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY ) ) {
 				renderOffsetFetchClause( queryPart, true );
 			}
 			else {
@@ -143,16 +135,4 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		}
 	}
 
-	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 840;
-	}
-
-	private boolean supportsOffsetFetchClauseWithTies() {
-		return getDialect().getVersion() >= 1300;
-	}
-
-	private boolean supportsOffsetFetchClausePercent() {
-		// Currently, percent always has to be emulated
-		return false;
-	}
 }

@@ -43,6 +43,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -71,6 +72,8 @@ import static org.hibernate.type.descriptor.DateTimeUtils.wrapAsAnsiTimeLiteral;
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
+
+	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
 	private final int version;
 
@@ -671,7 +674,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return new PostgreSQLIdentityColumnSupport();
+		return IDENTITY_COLUMN_SUPPORT;
 	}
 
 	@Override
@@ -812,6 +815,30 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		return getVersion() >= 950;
+	}
+
+	@Override
+	public boolean supportsOffsetInSubquery() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsWindowFunctions() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsFetchClause(FetchClauseType type) {
+		switch ( type ) {
+			case ROWS_ONLY:
+				return getVersion() >= 840;
+			case PERCENT_ONLY:
+			case PERCENT_WITH_TIES:
+				return false;
+			case ROWS_WITH_TIES:
+				return getVersion() >= 1300;
+		}
+		return false;
 	}
 
 	@Override

@@ -137,15 +137,10 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		testDetermination( "Apache Derby", 10, 5, DerbyDialect.class, resolver );
 		testDetermination( "Apache Derby", 10, 6, DerbyDialect.class, resolver );
 		testDetermination( "Apache Derby", 11, 5, DerbyDialect.class, resolver );
-		testDetermination( "Ingres", IngresDialect.class, resolver );
-		testDetermination( "ingres", IngresDialect.class, resolver );
-		testDetermination( "INGRES", IngresDialect.class, resolver );
 		testDetermination( "Microsoft SQL Server Database", SQLServerDialect.class, resolver );
 		testDetermination( "Microsoft SQL Server", SQLServerDialect.class, resolver );
 		testDetermination( "Sybase SQL Server", SybaseASEDialect.class, resolver );
 		testDetermination( "Adaptive Server Enterprise", SybaseASEDialect.class, resolver );
-		testDetermination( "Adaptive Server Anywhere", SybaseAnywhereDialect.class, resolver );
-		testDetermination( "Informix Dynamic Server", InformixDialect.class, resolver );
 		testDetermination( "DB2/NT", DB2Dialect.class, resolver );
 		testDetermination( "DB2/LINUX", DB2Dialect.class, resolver );
 		testDetermination( "DB2/6000", DB2Dialect.class, resolver );

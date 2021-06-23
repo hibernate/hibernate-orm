@@ -11,6 +11,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.ScrollMode;
@@ -257,7 +258,7 @@ public abstract class Dialect implements ConversionContext {
 	 * precision of a float(p) using p expressed in decimal
 	 * digits instead of the usual (standard) binary digits.
 	 */
-	static Size binaryToDecimalPrecision(int code, Size size) {
+	protected static Size binaryToDecimalPrecision(int code, Size size) {
 		return code == Types.FLOAT
 				&& size != null
 				&& size.getPrecision() != null
@@ -474,68 +475,68 @@ public abstract class Dialect implements ConversionContext {
 
 		//aggregate functions, supported on every database
 
-		CommonFunctionFactory.aggregates(queryEngine);
+		CommonFunctionFactory.aggregates( queryEngine );
 
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,
 		//though there is a more natural mapping on some databases
 
-		CommonFunctionFactory.everyAny_sumCase(queryEngine);
+		CommonFunctionFactory.everyAny_sumCase( queryEngine );
 
 		//math functions supported on almost every database
 
-		CommonFunctionFactory.math(queryEngine);
+		CommonFunctionFactory.math( queryEngine );
 
 		//trig functions supported on almost every database
 
-		CommonFunctionFactory.trigonometry(queryEngine);
+		CommonFunctionFactory.trigonometry( queryEngine );
 
 		//coalesce() function, supported by most databases, must be emulated
 		//in terms of nvl() for platforms which don't support it natively
 
-		CommonFunctionFactory.coalesce(queryEngine);
+		CommonFunctionFactory.coalesce( queryEngine );
 
 		//nullif() function, supported on almost every database
 
-		CommonFunctionFactory.nullif(queryEngine);
+		CommonFunctionFactory.nullif( queryEngine );
 
 		//string functions, must be emulated where not supported
 
-		CommonFunctionFactory.leftRight(queryEngine);
-		CommonFunctionFactory.replace(queryEngine);
-		CommonFunctionFactory.concat(queryEngine);
-		CommonFunctionFactory.lowerUpper(queryEngine);
+		CommonFunctionFactory.leftRight( queryEngine );
+		CommonFunctionFactory.replace( queryEngine );
+		CommonFunctionFactory.concat( queryEngine );
+		CommonFunctionFactory.lowerUpper( queryEngine );
 
 		//there are two forms of substring(), the JPA standard syntax, which
 		//separates arguments using commas, and the ANSI SQL standard syntax
 		//with named arguments (we support both)
 
-		CommonFunctionFactory.substring(queryEngine);
+		CommonFunctionFactory.substring( queryEngine );
 
 		//the JPA locate() function is especially tricky to emulate, calling
 		//for lots of Dialect-specific customization
 
-		CommonFunctionFactory.locate(queryEngine);
+		CommonFunctionFactory.locate( queryEngine );
 
 		//JPA string length() function, a synonym for ANSI SQL character_length()
 
-		CommonFunctionFactory.length_characterLength(queryEngine);
+		CommonFunctionFactory.length_characterLength( queryEngine );
 
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
 
-		queryEngine.getSqmFunctionRegistry().register("position", new LocatePositionEmulation());
+		queryEngine.getSqmFunctionRegistry().register( "position", new LocatePositionEmulation() );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		queryEngine.getSqmFunctionRegistry().register("overlay", new InsertSubstringOverlayEmulation( false ));
+		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		queryEngine.getSqmFunctionRegistry().register("trim", new TrimFunction(this));
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TrimFunction( this ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
 		//about but in certain cases it doesn't allow some useful typecasts,
@@ -554,16 +555,16 @@ public abstract class Dialect implements ConversionContext {
 		//additional non-standard temporal field types, which must be emulated in
 		//a very dialect-specific way
 
-		queryEngine.getSqmFunctionRegistry().register("extract", new ExtractFunction(this));
+		queryEngine.getSqmFunctionRegistry().register( "extract", new ExtractFunction( this ) );
 
 		//comparison functions supported on every known database
 
-		CommonFunctionFactory.leastGreatest(queryEngine);
+		CommonFunctionFactory.leastGreatest( queryEngine );
 
 		//two-argument synonym for coalesce() supported on most but not every
 		//database, so define it here as an alias for coalesce(arg1,arg2)
 
-		queryEngine.getSqmFunctionRegistry().register("ifnull", new CoalesceIfnullEmulation());
+		queryEngine.getSqmFunctionRegistry().register( "ifnull", new CoalesceIfnullEmulation() );
 
 		//rpad() and pad() are supported on almost every database, and emulated
 		//where not supported, but they're not considered "standard" ... instead
@@ -573,48 +574,104 @@ public abstract class Dialect implements ConversionContext {
 
 		//pad() is a function we've designed to look like ANSI trim()
 
-		queryEngine.getSqmFunctionRegistry().register("pad", new LpadRpadPadEmulation());
+		queryEngine.getSqmFunctionRegistry().register( "pad", new LpadRpadPadEmulation() );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
-		queryEngine.getSqmFunctionRegistry().register("str", new CastStrEmulation());
+		queryEngine.getSqmFunctionRegistry().register( "str", new CastStrEmulation() );
 
 		//format() function for datetimes, emulated on many databases using the
 		//Oracle-style to_char() function, and on others using their native
 		//formatting functions
 
-		CommonFunctionFactory.format_toChar(queryEngine);
+		CommonFunctionFactory.format_toChar( queryEngine );
 
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
 
-		queryEngine.getSqmFunctionRegistry().register("timestampadd", new TimestampaddFunction(this) );
-		queryEngine.getSqmFunctionRegistry().register("timestampdiff", new TimestampdiffFunction(this) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TimestampaddFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TimestampdiffFunction( this ) );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 
 		//ANSI SQL (and JPA) current date/time/timestamp functions, supported
 		//natively on almost every database, delegated back to the Dialect
 
-		queryEngine.getSqmFunctionRegistry().register("current_date", new CurrentFunction("current_date", currentDate(), StandardBasicTypes.DATE) );
-		queryEngine.getSqmFunctionRegistry().register("current_time", new CurrentFunction("current_time", currentTime(), StandardBasicTypes.TIME) );
-		queryEngine.getSqmFunctionRegistry().register("current_timestamp", new CurrentFunction("current_timestamp", currentTimestamp(), StandardBasicTypes.TIMESTAMP) );
+		queryEngine.getSqmFunctionRegistry().register(
+				"current_date",
+				new CurrentFunction(
+						"current_date",
+						currentDate(),
+						StandardBasicTypes.DATE
+				)
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"current_time",
+				new CurrentFunction(
+						"current_time",
+						currentTime(),
+						StandardBasicTypes.TIME
+				)
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"current_timestamp",
+				new CurrentFunction(
+						"current_timestamp",
+						currentTimestamp(),
+						StandardBasicTypes.TIMESTAMP
+				)
+		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current date", "current_date" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current time", "current_time" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current timestamp", "current_timestamp" );
 		//HQL current instant/date/time/datetime functions, delegated back to the Dialect
 
-		queryEngine.getSqmFunctionRegistry().register("local_date", new CurrentFunction("local_date", currentDate(), StandardBasicTypes.LOCAL_DATE) );
-		queryEngine.getSqmFunctionRegistry().register("local_time", new CurrentFunction("local_time", currentLocalTime(), StandardBasicTypes.LOCAL_TIME) );
-		queryEngine.getSqmFunctionRegistry().register("local_datetime", new CurrentFunction("local_datetime", currentLocalTimestamp(), StandardBasicTypes.LOCAL_DATE_TIME) );
-		queryEngine.getSqmFunctionRegistry().register("offset_datetime", new CurrentFunction("offset_datetime", currentTimestampWithTimeZone(), StandardBasicTypes.OFFSET_DATE_TIME) );
+		queryEngine.getSqmFunctionRegistry().register(
+				"local_date",
+				new CurrentFunction(
+						"local_date",
+						currentDate(),
+						StandardBasicTypes.LOCAL_DATE
+				)
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"local_time",
+				new CurrentFunction(
+						"local_time",
+						currentLocalTime(),
+						StandardBasicTypes.LOCAL_TIME
+				)
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"local_datetime",
+				new CurrentFunction(
+						"local_datetime",
+						currentLocalTimestamp(),
+						StandardBasicTypes.LOCAL_DATE_TIME
+				)
+		);
+		queryEngine.getSqmFunctionRegistry().register(
+				"offset_datetime",
+				new CurrentFunction(
+						"offset_datetime",
+						currentTimestampWithTimeZone(),
+						StandardBasicTypes.OFFSET_DATE_TIME
+				)
+		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local date", "local_date" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local time", "local_time" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local datetime", "local_datetime" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "offset datetime", "offset_datetime" );
 
-		queryEngine.getSqmFunctionRegistry().register("instant", new CurrentFunction("instant", currentTimestamp(), StandardBasicTypes.INSTANT) );
+		queryEngine.getSqmFunctionRegistry().register(
+				"instant",
+				new CurrentFunction(
+						"instant",
+						currentTimestamp(),
+						StandardBasicTypes.INSTANT
+				)
+		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
 	}
 
@@ -825,6 +882,14 @@ public abstract class Dialect implements ConversionContext {
 		return character == ' '
 				? "trim(" + specification + " from ?1)"
 				: "trim(" + specification + " '" + character + "' from ?1)";
+	}
+
+	/**
+	 * Whether the database supports adding a fractional interval to a timestamp
+	 * e.g. `timestamp + 0.5 second`
+	 */
+	public boolean supportsFractionalTimestampArithmetic() {
+		return true;
 	}
 
 	/**
@@ -1542,6 +1607,11 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public boolean supportsTemporaryTables() {
+		// Most databases do
+		return true;
+	}
+
 	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
@@ -2184,6 +2254,15 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * Does this dialect support UNION in a subquery.
+	 *
+	 * @return True if UNION is supported ina subquery; false otherwise.
+	 */
+	public boolean supportsUnionInSubquery() {
+		return supportsUnionAll();
+	}
+
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
@@ -2258,6 +2337,16 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsCaseInsensitiveLike(){
 		return false;
+	}
+
+	/**
+	 * Does this dialect support truncation of values to a specified length through a cast?
+	 *
+	 * @return {@code true} if the underlying database supports truncation through a cast,
+	 * {@code false} otherwise.  The default is {@code true}.
+	 */
+	public boolean supportsTruncateWithCast(){
+		return true;
 	}
 
 	/**
@@ -2643,6 +2732,15 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public String getNullColumnString() {
 		return "";
+	}
+
+	/**
+	 * The keyword used to specify a nullable column.
+	 *
+	 * @return String
+	 */
+	public String getNullColumnString(String columnType) {
+		return getNullColumnString();
 	}
 
 	/**
@@ -3047,6 +3145,16 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * Does this dialect require that integer divisions be wrapped in <tt>cast()</tt>
+	 * calls to tell the db parser the expected type.
+	 *
+	 * @return True if integer divisions must be cast()ed to float
+	 */
+	public boolean requiresFloatCastingOfIntegerDivision() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support asking the result set its positioning
 	 * information on forward only cursors.  Specifically, in the case of
 	 * scrolling fetches, Hibernate needs to use
@@ -3406,6 +3514,57 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	/**
+	 * Does this dialect support offset in subqueries?  Ex:
+	 * select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1 offset 1)
+	 *
+	 * @return boolean
+	 */
+	public boolean supportsOffsetInSubquery() {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support the order by clause in subqueries?  Ex:
+	 * select * from Table1 where col1 in (select col1 from Table2 order by col2 limit 1)
+	 *
+	 * @return boolean
+	 */
+	public boolean supportsOrderByInSubquery() {
+		return true;
+	}
+
+	/**
+	 * Does this dialect support subqueries in the select clause?  Ex:
+	 * select col1, (select col2 from Table2 where ..) from Table1
+	 *
+	 * @return boolean
+	 */
+	public boolean supportsSubqueryInSelect() {
+		return true;
+	}
+
+	/**
+	 * Does this dialect support the given fetch clause type.
+	 *
+	 * @param type The fetch clause type
+	 * @return {@code true} if the underlying database supports the given fetch clause type,
+	 * {@code false} otherwise.  The default is {@code false}.
+	 */
+	public boolean supportsFetchClause(FetchClauseType type) {
+		return false;
+	}
+
+	/**
+	 * Does this dialect support window functions like `row_number() over (..)`
+	 *
+	 * @return {@code true} if the underlying database supports window functions,
+	 * {@code false} otherwise.  The default is {@code false}.
+	 */
+	public boolean supportsWindowFunctions() {
+		return false;
+	}
+
 	public CallableStatementSupport getCallableStatementSupport() {
 		// most databases do not support returning cursors (ref_cursor)...
 		return StandardCallableStatementSupport.NO_REF_CURSOR_INSTANCE;
@@ -3514,6 +3673,15 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsValuesList() {
 		return false;
+	}
+
+	/**
+	 * Does this dialect/database support VALUES list (e.g. VALUES (1), (2), (3) ) for insert statements.
+	 *
+	 * @return {@code true} if VALUES list are supported for insert statements
+	 */
+	public boolean supportsValuesListForInsert() {
+		return true;
 	}
 
 	/**

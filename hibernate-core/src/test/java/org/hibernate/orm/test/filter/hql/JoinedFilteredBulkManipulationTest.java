@@ -18,12 +18,12 @@ import javax.persistence.Table;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.dialect.CUBRIDDialect;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -34,11 +34,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(
-        dialectClass = CUBRIDDialect.class,
-        reason = "As of version 8.4.1 CUBRID doesn't support temporary tables. This test fails with " +
-                "HibernateException: cannot doAfterTransactionCompletion multi-table deletes using dialect not supporting temp tables"
-)
+@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTemporaryTable.class)
 @DomainModel(
 		annotatedClasses = {
 				JoinedFilteredBulkManipulationTest.Person.class,

@@ -11,11 +11,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * @author Andrea Boriero
@@ -27,6 +27,7 @@ public class UnionTableGroup implements VirtualTableGroup {
 	private final UnionSubclassEntityPersister modelPart;
 	private final String sourceAlias;
 	private final TableReference tableReference;
+	private boolean isOuterJoined;
 
 	public UnionTableGroup(
 			NavigablePath navigablePath,
@@ -75,9 +76,17 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public boolean isOuterJoined() {
+		return isOuterJoined;
+	}
+
+	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
+		}
+		if ( join.getJoinType() != SqlAstJoinType.INNER ) {
+			isOuterJoined = true;
 		}
 		if ( !tableGroupJoins.contains( join ) ) {
 			tableGroupJoins.add( join );

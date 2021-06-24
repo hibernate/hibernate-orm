@@ -41,6 +41,8 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	String getSourceAlias();
 
 	List<TableGroupJoin> getTableGroupJoins();
+	
+	boolean isOuterJoined();
 
 	boolean hasTableGroupJoins();
 

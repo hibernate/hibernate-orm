@@ -808,6 +808,9 @@ public class ToOneAttributeMapping
 			return SqlAstJoinType.LEFT;
 		}
 		else {
+			if ( parentTableGroup.isOuterJoined() ) {
+				return SqlAstJoinType.LEFT;
+			}
 			return SqlAstJoinType.INNER;
 		}
 	}

@@ -88,6 +88,11 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
+	public boolean isOuterJoined() {
+		return false;
+	}
+
+	@Override
 	public boolean hasTableGroupJoins() {
 		return false;
 	}

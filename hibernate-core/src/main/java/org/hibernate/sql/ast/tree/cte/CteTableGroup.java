@@ -61,6 +61,11 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
+	public boolean isOuterJoined() {
+		return false;
+	}
+
+	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		if ( cteTableReference.getTableExpression().equals( tableExpression ) ) {
 			return cteTableReference;

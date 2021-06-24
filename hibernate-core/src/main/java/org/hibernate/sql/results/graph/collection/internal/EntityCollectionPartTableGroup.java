@@ -9,7 +9,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.NavigablePath;
@@ -64,6 +63,11 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	@Override
 	public List<TableGroupJoin> getTableGroupJoins() {
 		return collectionTableGroup.getTableGroupJoins();
+	}
+
+	@Override
+	public boolean isOuterJoined() {
+		return collectionTableGroup.isOuterJoined();
 	}
 
 	@Override

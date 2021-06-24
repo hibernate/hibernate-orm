@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * @author Steve Ebersole
@@ -25,6 +25,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	private final TableGroup underlyingTableGroup;
 
 	private List<TableGroupJoin> tableGroupJoins;
+	private boolean isOuterJoined;
 
 	public CompositeTableGroup(
 			NavigablePath navigablePath,
@@ -67,6 +68,11 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
+	public boolean isOuterJoined() {
+		return isOuterJoined;
+	}
+
+	@Override
 	public boolean hasTableGroupJoins() {
 		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
 	}
@@ -75,6 +81,9 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
+		}
+		if ( join.getJoinType() != SqlAstJoinType.INNER ) {
+			isOuterJoined = true;
 		}
 		if ( !tableGroupJoins.contains( join ) ) {
 			tableGroupJoins.add( join );

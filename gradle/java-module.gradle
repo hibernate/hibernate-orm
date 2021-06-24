@@ -15,7 +15,6 @@ buildscript {
 	}
 	dependencies {
 		classpath 'de.thetaphi:forbiddenapis:3.0.1'
-		classpath 'org.hibernate.build:hibernate-build-plugin:1.0.0-SNAPSHOT'
 	}
 }
 

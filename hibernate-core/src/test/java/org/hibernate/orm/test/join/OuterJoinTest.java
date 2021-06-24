@@ -1,4 +1,4 @@
-package org.hibernate.test.join;
+package org.hibernate.orm.test.join;
 
 import java.util.List;
 import javax.persistence.Column;

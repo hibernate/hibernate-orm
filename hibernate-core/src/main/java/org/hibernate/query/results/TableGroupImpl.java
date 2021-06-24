@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
@@ -32,7 +33,7 @@ public class TableGroupImpl implements TableGroup {
 
 	private final ModelPartContainer container;
 	private final String sourceAlias;
-
+	private boolean isOuterJoined;
 
 	public TableGroupImpl(
 			NavigablePath navigablePath,
@@ -78,6 +79,11 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
+	public boolean isOuterJoined() {
+		return isOuterJoined;
+	}
+
+	@Override
 	public boolean hasTableGroupJoins() {
 		return tableGroupJoins != null && !tableGroupJoins.isEmpty();
 	}
@@ -86,6 +92,9 @@ public class TableGroupImpl implements TableGroup {
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
+		}
+		if ( join.getJoinType() != SqlAstJoinType.INNER ) {
+			isOuterJoined = true;
 		}
 		if ( !tableGroupJoins.contains( join ) ) {
 			tableGroupJoins.add( join );

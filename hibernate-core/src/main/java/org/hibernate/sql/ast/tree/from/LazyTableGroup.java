@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
@@ -110,6 +109,14 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 		if ( tableGroup != null ) {
 			tableGroup.visitTableGroupJoins( consumer );
 		}
+	}
+
+	@Override
+	public boolean isOuterJoined() {
+		if ( tableGroup != null ) {
+			return parentTableGroup.isOuterJoined() || tableGroup.isOuterJoined();
+		}
+		return parentTableGroup.isOuterJoined();
 	}
 
 	@Override

@@ -259,7 +259,7 @@ public class OneToManySizeTest2 {
 									"where size(student.teacher.students) > 2",
 							Student.class
 					).getResultList();
-					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 0, students.size() );
 
 					students = session.createQuery(
@@ -436,7 +436,7 @@ public class OneToManySizeTest2 {
 							Student.class
 					).getResultList();
 					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
-					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );
@@ -452,7 +452,7 @@ public class OneToManySizeTest2 {
 							Student.class
 					).getResultList();
 					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
-					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 3L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );
@@ -468,7 +468,7 @@ public class OneToManySizeTest2 {
 							Student.class
 					).getResultList();
 					// Since the join for "student.teacher" is never used and is a non-optional association we don't generate a SQL join for it
-					assertEquals( 3, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
+					assertEquals( 2, countNumberOfJoins( statementInspector.getSqlQueries().get( 0 ) ) );
 					assertEquals( 2L, students.size() );
 					assertTrue( Hibernate.isInitialized( students.get( 0 ).getTeacher().getStudents() ) );
 					assertTrue( Hibernate.isInitialized( students.get( 1 ).getTeacher().getStudents() ) );

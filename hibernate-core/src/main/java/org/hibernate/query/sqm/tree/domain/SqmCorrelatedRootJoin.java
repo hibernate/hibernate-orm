@@ -19,34 +19,28 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  */
 public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelation<T, T> {
 
-	private final SqmJoin<T, ?> correlationParent;
-
-	public SqmCorrelatedRootJoin(
+	SqmCorrelatedRootJoin(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedNavigable,
-			NodeBuilder nodeBuilder,
-			SqmJoin<T, ?> correlationParent) {
+			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
-		this.correlationParent = correlationParent;
 	}
 
 	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedRootJoin<X> create(J correlationParent, J correlatedJoin) {
 		final SqmFrom<?, X> parentPath = (SqmFrom<?, X>) correlationParent.getParentPath();
 		final SqmCorrelatedRootJoin<X> rootJoin;
 		if ( parentPath == null ) {
-			rootJoin = new SqmCorrelatedRootJoin<>(
-					null,
-					null,
-					correlationParent.nodeBuilder(),
-					correlationParent
+			rootJoin = new SqmCorrelatedRootJoin(
+					correlationParent.getNavigablePath(),
+					correlationParent.getReferencedPathSource(),
+					correlationParent.nodeBuilder()
 			);
 		}
 		else {
 			rootJoin = new SqmCorrelatedRootJoin<>(
 					parentPath.getNavigablePath(),
 					parentPath.getReferencedPathSource(),
-					correlationParent.nodeBuilder(),
-					correlationParent
+					correlationParent.nodeBuilder()
 			);
 		}
 		rootJoin.addSqmJoin( correlatedJoin );
@@ -55,7 +49,7 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 
 	@Override
 	public SqmRoot<T> getCorrelationParent() {
-		return null;
+		return this;
 	}
 
 	@Override

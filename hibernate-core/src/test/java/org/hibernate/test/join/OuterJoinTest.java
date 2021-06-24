@@ -120,20 +120,44 @@ public class OuterJoinTest extends BaseCoreFunctionalTestCase {
 			em.merge(association);
 
 			em.merge(new A(1L, "a", association));
-			em.merge(new A(2L, "b", association));
-			em.merge(new A(3L, "c", association));
+//			em.merge(new A(2L, "b", association));
+//			em.merge(new A(3L, "c", association));
+//
+//			em.merge(new B(1L, "d", association));
+//			em.merge(new B(2L, "e", association));
+//			em.merge(new B(3L, "f", association));
+//
+//			em.merge(new C(1L, "g", association));
+//			em.merge(new C(2L, "h", association));
+//			em.merge(new C(4L, "j", association));
+//
+//			em.merge(new D(1L, "k", association));
+//			em.merge(new D(2L, "l", association));
+//			em.merge(new D(4L, "m", association));
+		});
+	}
 
-			em.merge(new B(1L, "d", association));
-			em.merge(new B(2L, "e", association));
-			em.merge(new B(3L, "f", association));
+	@Test
+	public void mergeIt(){
+		doInJPA( this::sessionFactory, em -> {
+			Association association = new Association(1l, "association");
+			em.merge(association);
 
-			em.merge(new C(1L, "g", association));
-			em.merge(new C(2L, "h", association));
-			em.merge(new C(4L, "j", association));
-
-			em.merge(new D(1L, "k", association));
-			em.merge(new D(2L, "l", association));
-			em.merge(new D(4L, "m", association));
+			em.merge(new A(1L, "a", association));
+//			em.merge(new A(2L, "b", association));
+//			em.merge(new A(3L, "c", association));
+//
+//			em.merge(new B(1L, "d", association));
+//			em.merge(new B(2L, "e", association));
+//			em.merge(new B(3L, "f", association));
+//
+//			em.merge(new C(1L, "g", association));
+//			em.merge(new C(2L, "h", association));
+//			em.merge(new C(4L, "j", association));
+//
+//			em.merge(new D(1L, "k", association));
+//			em.merge(new D(2L, "l", association));
+//			em.merge(new D(4L, "m", association));
 		});
 	}
 

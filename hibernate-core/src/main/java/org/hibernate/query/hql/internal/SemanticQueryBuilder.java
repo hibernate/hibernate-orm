@@ -1510,10 +1510,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				sqmRoot.addSqmJoin( join );
 			}
 			else {
-				if ( joinType == SqmJoinType.RIGHT ) {
-					throw new SemanticException( "RIGHT OUTER attribute-joins are not supported : " + parserJoin.getText() );
-				}
-
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
 					if ( join.getExplicitAlias() != null ){
 						//noinspection rawtypes

@@ -1891,8 +1891,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		fromClauseIndex.register( sqmRoot, tableGroup );
 		currentQuerySpec().getFromClause().addRoot( tableGroup );
 
-		consumeExplicitJoins( sqmRoot, tableGroup );
 		consumeReusablePaths( sqmRoot, tableGroup );
+		consumeExplicitJoins( sqmRoot, tableGroup );
 	}
 
 	private EntityPersister resolveEntityPersister(EntityDomainType<?> entityDomainType) {
@@ -1985,6 +1985,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		getFromClauseIndex().register( sqmJoin, joinedTableGroup, joinPath );
 
+		consumeReusablePaths( sqmJoin, joinedTableGroup );
+
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
@@ -2001,7 +2003,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		consumeExplicitJoins( sqmJoin, joinedTableGroup );
-		consumeReusablePaths( sqmJoin, joinedTableGroup );
+
 	}
 
 	private NavigablePath getJoinNavigablePath(

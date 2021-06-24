@@ -258,7 +258,7 @@ public class ManyToManySizeTest2 {
 							Student.class
 					).getResultList();
 					assertEquals( 0, students.size() );
-					statementInspector.assertNumberOfJoins( 0, 4 );
+					statementInspector.assertNumberOfJoins( 0, 3 );
 
 					students = session.createQuery(
 							"select distinct student from Student student left join fetch student.teacher t left join fetch t.skills where size(student.teacher.skills) > 1",

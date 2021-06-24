@@ -7,32 +7,58 @@
 package org.hibernate.metamodel.internal;
 
 
+import java.lang.reflect.Constructor;
+
+import org.hibernate.InstantiationException;
+import org.hibernate.PropertyNotFoundException;
 import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * @author Steve Ebersole
+ * Support for instantiating entity values as POJO representation
  */
-public class PojoEntityInstantiatorImpl<J> extends PojoInstantiatorImpl<J> {
+public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPojo {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityInstantiatorPojoStandard.class );
 
 	private final EntityMetamodel entityMetamodel;
-	private final Class proxyInterface;
+	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
 
-	public PojoEntityInstantiatorImpl(
+	private final Constructor<?> constructor;
+
+	public EntityInstantiatorPojoStandard(
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
-			JavaTypeDescriptor javaTypeDescriptor) {
-		super( javaTypeDescriptor );
-		this.entityMetamodel = entityMetamodel;
+			JavaTypeDescriptor<?> javaTypeDescriptor) {
+		super( entityMetamodel, persistentClass, javaTypeDescriptor );
 
+		this.entityMetamodel = entityMetamodel;
 		this.proxyInterface = persistentClass.getProxyInterface();
+
+		this.constructor = isAbstract()
+				? null
+				: resolveConstructor( getMappedPojoClass() );
+
 		this.applyBytecodeInterception = PersistentAttributeInterceptable.class.isAssignableFrom( persistentClass.getMappedClass() );
+	}
+
+	protected static Constructor<?> resolveConstructor(Class<?> mappedPojoClass) {
+		try {
+			return ReflectHelper.getDefaultConstructor( mappedPojoClass);
+		}
+		catch ( PropertyNotFoundException e ) {
+			LOG.noDefaultConstructor( mappedPojoClass.getName() );
+		}
+
+		return null;
 	}
 
 	@Override
@@ -60,4 +86,21 @@ public class PojoEntityInstantiatorImpl<J> extends PojoInstantiatorImpl<J> {
 				( proxyInterface!=null && proxyInterface.isInstance(object) );
 	}
 
+	@Override
+	public Object instantiate(SessionFactoryImplementor sessionFactory) {
+		if ( isAbstract() ) {
+			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", getMappedPojoClass() );
+		}
+		else if ( constructor == null ) {
+			throw new InstantiationException( "No default constructor for entity: ", getMappedPojoClass() );
+		}
+		else {
+			try {
+				return applyInterception( constructor.newInstance( (Object[]) null ) );
+			}
+			catch ( Exception e ) {
+				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
+			}
+		}
+	}
 }

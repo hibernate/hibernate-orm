@@ -6,12 +6,16 @@
  */
 package org.hibernate.metamodel.spi;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+
 /**
+ * Contract for instantiating entity values
+ *
  * @author Steve Ebersole
  */
-public interface EmbeddableRepresentationStrategy extends ManagedTypeRepresentationStrategy {
+public interface EntityInstantiator extends Instantiator {
 	/**
-	 * Create a delegate capable of instantiating instances of the represented type.
+	 * Create an instance of managed entity
 	 */
-	EmbeddableInstantiator getInstantiator();
+	Object instantiate(SessionFactoryImplementor sessionFactory);
 }

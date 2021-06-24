@@ -20,7 +20,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexBackref;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
-import org.hibernate.metamodel.spi.Instantiator;
+import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
@@ -31,16 +31,15 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 /**
  * @author Steve Ebersole
  */
-public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbeddableRepresentationStrategy {
+public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepresentationStrategy {
 	private final StrategySelector strategySelector;
 
 	private final ReflectionOptimizer reflectionOptimizer;
-	private final Instantiator instantiator;
+	private final EmbeddableInstantiator instantiator;
 
-	public StandardPojoEmbeddableRepresentationStrategy(
+	public EmbeddableRepresentationStrategyPojo(
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-		//noinspection unchecked
 		super(
 				bootDescriptor,
 				creationContext.getTypeConfiguration()
@@ -67,12 +66,16 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
-			this.instantiator = instantiationOptimizer != null
-					? new OptimizedPojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor(), instantiationOptimizer )
-					: new PojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor() );
+			this.instantiator = new EmbeddableInstantiatorPojoOptimized(
+					getEmbeddableJavaTypeDescriptor(),
+					instantiationOptimizer
+			);
 		}
 		else {
-			this.instantiator = new PojoInstantiatorImpl<>( getEmbeddableJavaTypeDescriptor() );
+			this.instantiator = new EmbeddableInstantiatorPojoStandard(
+					bootDescriptor,
+					getEmbeddableJavaTypeDescriptor()
+			);
 		}
 	}
 
@@ -146,7 +149,7 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 
 		final String[] getterNames = new String[getPropertySpan()];
 		final String[] setterNames = new String[getPropertySpan()];
-		final Class[] propTypes = new Class[getPropertySpan()];
+		final Class<?>[] propTypes = new Class[getPropertySpan()];
 
 		for ( int i = 0; i < getPropertyAccesses().length; i++ ) {
 			final PropertyAccess propertyAccess = getPropertyAccesses()[i];
@@ -170,8 +173,7 @@ public class StandardPojoEmbeddableRepresentationStrategy extends AbstractEmbedd
 	}
 
 	@Override
-	public <J> Instantiator<J> getInstantiator() {
-		//noinspection unchecked
+	public EmbeddableInstantiator getInstantiator() {
 		return instantiator;
 	}
 }

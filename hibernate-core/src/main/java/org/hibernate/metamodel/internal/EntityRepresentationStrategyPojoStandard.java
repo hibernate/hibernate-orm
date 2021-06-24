@@ -20,6 +20,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
+import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -36,8 +37,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.metamodel.spi.Instantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessBasicImpl;
@@ -58,8 +59,8 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 /**
  * @author Steve Ebersole
  */
-public class StandardPojoEntityRepresentationStrategy implements EntityRepresentationStrategy {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StandardPojoEntityRepresentationStrategy.class );
+public class EntityRepresentationStrategyPojoStandard implements EntityRepresentationStrategy {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyPojoStandard.class );
 
 	private final JavaTypeDescriptor<?> mappedJtd;
 	private final JavaTypeDescriptor<?> proxyJtd;
@@ -69,16 +70,16 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 	private final ReflectionOptimizer reflectionOptimizer;
 	private final ProxyFactory proxyFactory;
-	private final Instantiator instantiator;
+	private final EntityInstantiator instantiator;
 
 	private final StrategySelector strategySelector;
 
 	private final String identifierPropertyName;
 	private final PropertyAccess identifierPropertyAccess;
 	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
-	private final StandardPojoEmbeddableRepresentationStrategy mapsIdRepresentationStrategy;
+	private final EmbeddableRepresentationStrategyPojo mapsIdRepresentationStrategy;
 
-	public StandardPojoEntityRepresentationStrategy(
+	public EntityRepresentationStrategyPojoStandard(
 			PersistentClass bootDescriptor,
 			EntityPersister runtimeDescriptor,
 			RuntimeModelCreationContext creationContext) {
@@ -110,13 +111,13 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 			if ( bootDescriptorIdentifier instanceof Component ) {
 				if ( bootDescriptor.getIdentifierMapper() != null ) {
-					mapsIdRepresentationStrategy = new StandardPojoEmbeddableRepresentationStrategy(
+					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
 							bootDescriptor.getIdentifierMapper(),
 							creationContext
 					);
 				}
 				else if ( bootDescriptorIdentifier != null ) {
-					mapsIdRepresentationStrategy = new StandardPojoEmbeddableRepresentationStrategy(
+					mapsIdRepresentationStrategy = new EmbeddableRepresentationStrategyPojo(
 							(Component) bootDescriptorIdentifier,
 							creationContext
 					);
@@ -153,22 +154,17 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 
 		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 
-		if ( reflectionOptimizer != null ) {
-			final ReflectionOptimizer.InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
-			if ( instantiationOptimizer != null ) {
-				this.instantiator = new OptimizedPojoEntityInstantiatorImpl<>(
-						entityMetamodel,
-						bootDescriptor,
-						mappedJtd,
-						instantiationOptimizer
-				);
-			}
-			else {
-				this.instantiator = new PojoEntityInstantiatorImpl<>( entityMetamodel, bootDescriptor, mappedJtd );
-			}
+		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
+			final InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
+			this.instantiator = new EntityInstantiatorPojoOptimized(
+					entityMetamodel,
+					bootDescriptor,
+					mappedJtd,
+					instantiationOptimizer
+			);
 		}
 		else {
-			this.instantiator = new PojoEntityInstantiatorImpl<>( entityMetamodel, bootDescriptor, mappedJtd );
+			this.instantiator = new EntityInstantiatorPojoStandard( entityMetamodel, bootDescriptor, mappedJtd );
 		}
 	}
 
@@ -378,7 +374,7 @@ public class StandardPojoEntityRepresentationStrategy implements EntityRepresent
 	}
 
 	@Override
-	public Instantiator getInstantiator() {
+	public EntityInstantiator getInstantiator() {
 		return instantiator;
 	}
 

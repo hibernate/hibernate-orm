@@ -45,26 +45,6 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 		return null;
 	}
 
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public J instantiate(SessionFactoryImplementor sessionFactory) {
-		if ( isAbstract() ) {
-			throw new InstantiationException( "Cannot instantiate abstract class or interface: ", getMappedPojoClass() );
-		}
-		else if ( constructor == null ) {
-			throw new InstantiationException( "No default constructor for entity: ", getMappedPojoClass() );
-		}
-		else {
-			try {
-				return (J) applyInterception( constructor.newInstance( (Object[]) null ) );
-			}
-			catch ( Exception e ) {
-				throw new InstantiationException( "Could not instantiate entity: ", getMappedPojoClass(), e );
-			}
-		}
-	}
-
 	protected Object applyInterception(Object entity) {
 		return entity;
 	}

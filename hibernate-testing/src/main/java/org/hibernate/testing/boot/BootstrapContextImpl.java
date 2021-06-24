@@ -9,8 +9,6 @@ package org.hibernate.testing.boot;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.xml.bind.JAXBContext;
-
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -26,7 +24,7 @@ import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
-import org.hibernate.metamodel.internal.StandardManagedTypeRepresentationResolver;
+import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -145,7 +143,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	@Override
 	public ManagedTypeRepresentationResolver getRepresentationStrategySelector() {
-		return StandardManagedTypeRepresentationResolver.INSTANCE;
+		return ManagedTypeRepresentationResolverStandard.INSTANCE;
 	}
 
 	@Override

@@ -11,18 +11,20 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.spi.Instantiator;
 
 /**
+ * Base support for POJO-based instantiation
+ *
  * @author Steve Ebersole
  */
 public abstract class AbstractPojoInstantiator implements Instantiator {
-	private final Class mappedPojoClass;
+	private final Class<?> mappedPojoClass;
 	private final boolean isAbstract;
 
-	public AbstractPojoInstantiator(Class mappedPojoClass) {
+	public AbstractPojoInstantiator(Class<?> mappedPojoClass) {
 		this.mappedPojoClass = mappedPojoClass;
 		this.isAbstract = ReflectHelper.isAbstractClass( mappedPojoClass );
 	}
 
-	public Class getMappedPojoClass() {
+	public Class<?> getMappedPojoClass() {
 		return mappedPojoClass;
 	}
 

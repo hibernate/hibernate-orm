@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -146,7 +147,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			compositeInstance = embeddableTypeDescriptor
 					.getRepresentationStrategy()
 					.getInstantiator()
-					.instantiate( rowProcessingState.getSession().getFactory() );
+					.instantiate( VALUE_ACCESS, rowProcessingState.getSession().getFactory() );
 		}
 
 		EmbeddableLoadingLogger.INSTANCE.debugf(
@@ -154,6 +155,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				navigablePath
 		);
 	}
+
+	private static Supplier<Object[]> VALUE_ACCESS = () -> {
+		throw new NotYetImplementedFor6Exception( "Constructor value injection for embeddables not yet implemented" );
+	};
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
@@ -211,7 +216,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				Object target = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
 						.getRepresentationStrategy()
 						.getInstantiator()
-						.instantiate( rowProcessingState.getSession().getFactory() );
+						.instantiate( VALUE_ACCESS, rowProcessingState.getSession().getFactory() );
 				embeddedModelPartDescriptor.getEmbeddableTypeDescriptor().setPropertyValues(
 						target,
 						resolvedValues

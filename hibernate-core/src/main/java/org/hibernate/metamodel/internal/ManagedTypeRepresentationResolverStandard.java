@@ -19,11 +19,11 @@ import org.hibernate.persister.entity.EntityPersister;
 /**
  * @author Steve Ebersole
  */
-public class StandardManagedTypeRepresentationResolver implements ManagedTypeRepresentationResolver {
+public class ManagedTypeRepresentationResolverStandard implements ManagedTypeRepresentationResolver {
 	/**
 	 * Singleton access
 	 */
-	public static final StandardManagedTypeRepresentationResolver INSTANCE = new StandardManagedTypeRepresentationResolver();
+	public static final ManagedTypeRepresentationResolverStandard INSTANCE = new ManagedTypeRepresentationResolverStandard();
 
 	@Override
 	public EntityRepresentationStrategy resolveStrategy(
@@ -42,7 +42,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 		}
 
 		if ( representation == RepresentationMode.MAP ) {
-			return new StandardMapEntityRepresentationStrategy( bootDescriptor, creationContext );
+			return new EntityRepresentationStrategyMap( bootDescriptor, creationContext );
 		}
 		else {
 			// todo (6.0) : fix this
@@ -51,7 +51,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new StandardPojoEntityRepresentationStrategy( bootDescriptor, runtimeDescriptor, creationContext );
+			return new EntityRepresentationStrategyPojoStandard( bootDescriptor, runtimeDescriptor, creationContext );
 		}
 	}
 
@@ -71,7 +71,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 		}
 
 		if ( representation == RepresentationMode.MAP ) {
-			return new StandardMapEmbeddableRepresentationStrategy( bootDescriptor, creationContext );
+			return new EmbeddableRepresentationStrategyMap( bootDescriptor, creationContext );
 		}
 		else {
 			// todo (6.0) : fix this
@@ -80,7 +80,7 @@ public class StandardManagedTypeRepresentationResolver implements ManagedTypeRep
 			//
 			//		instead, resolve ReflectionOptimizer once - here - and pass along to
 			//		StandardPojoRepresentationStrategy
-			return new StandardPojoEmbeddableRepresentationStrategy( bootDescriptor, creationContext );
+			return new EmbeddableRepresentationStrategyPojo( bootDescriptor, creationContext );
 		}
 	}
 }

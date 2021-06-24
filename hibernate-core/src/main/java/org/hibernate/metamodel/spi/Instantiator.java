@@ -15,11 +15,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 @Incubating
-public interface Instantiator<J> {
-	/**
-	 * Create an instance of the managed embedded value structure.
-	 */
-	J instantiate(SessionFactoryImplementor sessionFactory);
+public interface Instantiator {
 
 	/**
 	 * Performs and "instance of" check to see if the given object is an

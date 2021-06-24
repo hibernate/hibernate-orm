@@ -19,8 +19,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
-import org.hibernate.metamodel.spi.Instantiator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -31,17 +31,17 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Steve Ebersole
  */
-public class StandardMapEntityRepresentationStrategy implements EntityRepresentationStrategy {
-	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StandardMapEntityRepresentationStrategy.class );
+public class EntityRepresentationStrategyMap implements EntityRepresentationStrategy {
+	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyMap.class );
 
 	private final JavaTypeDescriptor<Map> mapJtd;
 
 	private final ProxyFactory proxyFactory;
-	private final DynamicMapInstantiator instantiator;
+	private final EntityInstantiatorDynamicMap instantiator;
 
 	private final Map<String, PropertyAccess> propertyAccessMap = new ConcurrentHashMap<>();
 
-	public StandardMapEntityRepresentationStrategy(
+	public EntityRepresentationStrategyMap(
 			PersistentClass bootType,
 			RuntimeModelCreationContext creationContext) {
 		this.mapJtd = creationContext.getTypeConfiguration()
@@ -49,7 +49,7 @@ public class StandardMapEntityRepresentationStrategy implements EntityRepresenta
 				.getDescriptor( Map.class );
 
 		this.proxyFactory = createProxyFactory( bootType );
-		this.instantiator = new DynamicMapInstantiator( bootType );
+		this.instantiator = new EntityInstantiatorDynamicMap( bootType );
 
 		//noinspection unchecked
 		final Iterator<Property> itr = bootType.getPropertyClosureIterator();
@@ -110,7 +110,7 @@ public class StandardMapEntityRepresentationStrategy implements EntityRepresenta
 	}
 
 	@Override
-	public Instantiator getInstantiator() {
+	public EntityInstantiator getInstantiator() {
 		return instantiator;
 	}
 
@@ -131,6 +131,6 @@ public class StandardMapEntityRepresentationStrategy implements EntityRepresenta
 
 	@Override
 	public void visitEntityNameResolvers(Consumer<EntityNameResolver> consumer) {
-		consumer.accept( DynamicMapInstantiator.ENTITY_NAME_RESOLVER );
+		consumer.accept( EntityInstantiatorDynamicMap.ENTITY_NAME_RESOLVER );
 	}
 }

@@ -22,7 +22,7 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 	/**
 	 * Create a delegate capable of instantiating instances of the represented type.
 	 */
-	Instantiator<?> getInstantiator();
+	EntityInstantiator getInstantiator();
 
 	/**
 	 * Create the delegate capable of producing proxies for the given entity

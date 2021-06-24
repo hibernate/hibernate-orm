@@ -4,8 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.inheritance;
+package org.hibernate.orm.test.inheritance;
 
+import java.util.Comparator;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.ConstraintMode;
@@ -17,7 +18,6 @@ import javax.persistence.Inheritance;
 import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MappedSuperclass;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -28,28 +28,40 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 @TestForIssue(jiraKey = "HHH-14103")
-public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				TransientOverrideAsPersistentTablePerClass.Employee.class,
+				TransientOverrideAsPersistentTablePerClass.Editor.class,
+				TransientOverrideAsPersistentTablePerClass.Writer.class,
+				TransientOverrideAsPersistentTablePerClass.Group.class,
+				TransientOverrideAsPersistentTablePerClass.Job.class
+		}
+)
+@SessionFactory
+public class TransientOverrideAsPersistentTablePerClass {
 
 	@Test
-	public void testFindByRootClass() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testFindByRootClass(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Employee editor = session.find( Employee.class, "Jane Smith" );
 			assertNotNull( editor );
 			assertEquals( "Senior Editor", editor.getTitle() );
 			final Employee writer = session.find( Employee.class, "John Smith" );
-			assertTrue( Writer.class.isInstance( writer ) );
+			assertThat( writer, instanceOf( Writer.class ) );
 			assertEquals( "Writing", writer.getTitle() );
 			assertNotNull( ( (Writer) writer ).getGroup() );
 			final Group group = ( (Writer) writer ).getGroup();
@@ -58,12 +70,12 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 			assertSame( editor, jobEditor.getEmployee() );
 			final Job jobWriter = session.find( Job.class, "Write" );
 			assertSame( writer, jobWriter.getEmployee() );
-		});
+		} );
 	}
 
 	@Test
-	public void testFindBySubclass() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testFindBySubclass(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Editor editor = session.find( Editor.class, "Jane Smith" );
 			assertNotNull( editor );
 			assertEquals( "Senior Editor", editor.getTitle() );
@@ -76,17 +88,18 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 			assertSame( editor, jobEditor.getEmployee() );
 			final Job jobWriter = session.find( Job.class, "Write" );
 			assertSame( writer, jobWriter.getEmployee() );
-		});
+		} );
 	}
 
 	@Test
-	public void testQueryByRootClass() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testQueryByRootClass(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final List<Employee> employees = session.createQuery( "from Employee", Employee.class )
 					.getResultList();
 			assertEquals( 2, employees.size() );
-			assertTrue( Editor.class.isInstance( employees.get( 0 ) ) );
-			assertTrue( Writer.class.isInstance( employees.get( 1 ) ) );
+			employees.sort( Comparator.comparing( Employee::getName ) );
+			assertThat( employees.get( 0 ), instanceOf( Editor.class ) );
+			assertThat( employees.get( 1 ), instanceOf( Writer.class ) );
 			final Editor editor = (Editor) employees.get( 0 );
 			assertEquals( "Senior Editor", editor.getTitle() );
 			final Writer writer = (Writer) employees.get( 1 );
@@ -94,62 +107,68 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 			assertNotNull( writer.getGroup() );
 			final Group group = writer.getGroup();
 			assertEquals( writer.getTitle(), group.getName() );
-		});
+		} );
 	}
 
 	@Test
-	public void testQueryByRootClassAndOverridenProperty() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Employee editor = session.createQuery( "from Employee where title=:title", Employee.class )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
-			assertTrue( Editor.class.isInstance( editor ) );
+			assertThat( editor, instanceOf( Editor.class ) );
 
 			final Employee writer = session.createQuery( "from Employee where title=:title", Employee.class )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
-			assertTrue( Writer.class.isInstance( writer ) );
+			assertThat( writer, instanceOf( Writer.class ) );
 			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup() .getName() );
-		});
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+		} );
 	}
 
 	@Test
-	public void testQueryByRootClassAndOverridenPropertyTreat() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Employee editor = session.createQuery( "from Employee e where treat( e as Editor ).title=:title", Employee.class )
+	public void testQueryByRootClassAndOverridenPropertyTreat(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final Employee editor = session.createQuery(
+					"from Employee e where treat( e as Editor ).title=:title",
+					Employee.class
+			)
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
-			assertTrue( Editor.class.isInstance( editor ) );
+			assertThat( editor, instanceOf( Editor.class ) );
 
-			final Employee writer = session.createQuery( "from Employee e where treat( e as Writer).title=:title", Employee.class )
+			final Employee writer = session.createQuery(
+					"from Employee e where treat( e as Writer).title=:title",
+					Employee.class
+			)
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
-			assertTrue( Writer.class.isInstance( writer ) );
+			assertThat( writer, instanceOf( Writer.class ) );
 			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup() .getName() );
-		});
-}
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+		} );
+	}
 
 	@Test
-	public void testQueryBySublassAndOverridenProperty() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testQueryBySublassAndOverridenProperty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			final Editor editor = session.createQuery( "from Editor where title=:title", Editor.class )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
-			assertTrue( Editor.class.isInstance( editor ) );
+			assertThat( editor, instanceOf( Editor.class ) );
 
 			final Writer writer = session.createQuery( "from Writer where title=:title", Writer.class )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
 			assertNotNull( writer.getGroup() );
 			assertEquals( writer.getTitle(), writer.getGroup().getName() );
-		});
+		} );
 	}
 
 	@Test
-	public void testCriteriaQueryByRootClassAndOverridenProperty() {
-		doInHibernate( this::sessionFactory, session -> {
+	public void testCriteriaQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 
 			final CriteriaBuilder builder = session.getCriteriaBuilder();
 
@@ -165,7 +184,7 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 			final Employee editor = session.createQuery( query )
 					.setParameter( "title", "Senior Editor" )
 					.getSingleResult();
-			assertTrue( Editor.class.isInstance( editor ) );
+			assertThat( editor, instanceOf( Editor.class ) );
 
 			final Predicate predicateWriter = builder.equal(
 					builder.treat( root, Writer.class ).get( "title" ),
@@ -175,20 +194,19 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 			final Employee writer = session.createQuery( query )
 					.setParameter( "title", "Writing" )
 					.getSingleResult();
-			assertTrue( Writer.class.isInstance( writer ) );
+			assertThat( writer, instanceOf( Writer.class ) );
 			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup() .getName() );
-		});
+			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+		} );
 	}
 
-	@Before
-	public void setupData() {
-
-		doInHibernate( this::sessionFactory, session -> {
-			Job jobEditor = new Job("Edit");
-			jobEditor.setEmployee(new Editor("Jane Smith", "Senior Editor"));
-			Job jobWriter= new Job("Write");
-			jobWriter.setEmployee(new Writer("John Smith", new Group("Writing")));
+	@BeforeEach
+	public void setupData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			Job jobEditor = new Job( "Edit" );
+			jobEditor.setEmployee( new Editor( "Jane Smith", "Senior Editor" ) );
+			Job jobWriter = new Job( "Write" );
+			jobWriter.setEmployee( new Writer( "John Smith", new Group( "Writing" ) ) );
 
 			Employee editor = jobEditor.getEmployee();
 			Employee writer = jobWriter.getEmployee();
@@ -199,57 +217,38 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 			session.persist( writer );
 			session.persist( jobEditor );
 			session.persist( jobWriter );
-		});
+		} );
 	}
 
-	@After
-	public void cleanupData() {
-		doInHibernate( this::sessionFactory, session -> {
+	@AfterEach
+	public void cleanupData(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			session.createQuery( "delete from Job" ).executeUpdate();
 			session.createQuery( "delete from Employee" ).executeUpdate();
 			session.createQuery( "delete from Group" ).executeUpdate();
-		});
+		} );
 	}
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Employee.class,
-				Editor.class,
-				Writer.class,
-				Group.class,
-				Job.class
-		};
-	}
-
-	@MappedSuperclass
-	public static class AbstractEmployee {
-		private String title;
-
-		@Transient
-		public String getTitle() {
-			return title;
-		}
-
-		protected void setTitle(String title) {
-			this.title = title;
-		}
-	}
-
-	@Entity(name="Employee")
-	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-	@DiscriminatorColumn(name="department")
-	public static abstract class Employee extends AbstractEmployee {
+	@Entity(name = "Employee")
+	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	@DiscriminatorColumn(name = "department")
+	public static abstract class Employee {
 		private String name;
+		private String title;
 
 		protected Employee(String name) {
 			this();
-			setName(name);
+			setName( name );
 		}
 
 		@Id
 		public String getName() {
 			return name;
+		}
+
+		@Transient
+		public String getTitle() {
+			return title;
 		}
 
 		protected Employee() {
@@ -259,12 +258,16 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 		protected void setName(String name) {
 			this.name = name;
 		}
+
+		protected void setTitle(String title) {
+			this.title = title;
+		}
 	}
 
 	@Entity(name = "Editor")
 	public static class Editor extends Employee {
 		public Editor(String name, String title) {
-			super(name);
+			super( name );
 			setTitle( title );
 		}
 
@@ -288,8 +291,8 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 		private Group group;
 
 		public Writer(String name, Group group) {
-			super(name);
-			setGroup(group);
+			super( name );
+			setGroup( group );
 		}
 
 		// Cannot have a constraint on e_title because
@@ -325,10 +328,11 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 	@Table(name = "WorkGroup")
 	public static class Group {
 		private String name;
+		private String details;
 
 		public Group(String name) {
 			this();
-			setName(name);
+			setName( name );
 		}
 
 		@Id
@@ -349,10 +353,11 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 	public static class Job {
 		private String name;
 		private Employee employee;
+		private String details;
 
 		public Job(String name) {
 			this();
-			setName(name);
+			setName( name );
 		}
 
 		@Id
@@ -361,7 +366,7 @@ public class TransientOverrideAsPersistentMappedSuperclass extends BaseNonConfig
 		}
 
 		@OneToOne
-		@JoinColumn(name="employee_name")
+		@JoinColumn(name = "employee_name")
 		public Employee getEmployee() {
 			return employee;
 		}

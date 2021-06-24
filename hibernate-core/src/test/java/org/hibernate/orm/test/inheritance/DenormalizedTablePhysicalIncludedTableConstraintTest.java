@@ -1,7 +1,6 @@
-package org.hibernate.test.inheritance;
+package org.hibernate.orm.test.inheritance;
 
 import java.io.Serializable;
-import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,35 +13,33 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Paln
  * @author Nathan Xu
  */
-@TestForIssue( jiraKey = "HHH-14234" )
+@TestForIssue(jiraKey = "HHH-14234")
 @RequiresDialect(
 		value = H2Dialect.class,
 		comment = "This test relies on 'hibernate.hbm2ddl.halt_on_error', only tested on h2; " +
 				"other dialects might be broken due to irrelevant reason (e.g. not supporting 'if exists' while dropping tables)."
 )
-public class DenormalizedTablePhysicalIncludedTableConstraintTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, Boolean.TRUE.toString() );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				SuperClass.class,
-				SubClass.class
-		};
-	}
+@DomainModel(
+		annotatedClasses = {
+				DenormalizedTablePhysicalIncludedTableConstraintTest.SuperClass.class,
+				DenormalizedTablePhysicalIncludedTableConstraintTest.SubClass.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(settings = @Setting( name = AvailableSettings.HBM2DDL_HALT_ON_ERROR, value = "true"))
+public class DenormalizedTablePhysicalIncludedTableConstraintTest {
 
 	@Test
 	public void testUniqueConstraintFromSupTableNotAppliedToSubTable() {
@@ -52,10 +49,10 @@ public class DenormalizedTablePhysicalIncludedTableConstraintTest extends BaseNo
 
 	@Entity(name = "SuperClass")
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-	@Table( name = "supTable",
+	@Table(name = "supTable",
 			uniqueConstraints = {
-					@UniqueConstraint(  name = "UK",
-							columnNames = {"colOne", "colTwo"})
+					@UniqueConstraint(name = "UK",
+							columnNames = { "colOne", "colTwo" })
 			}
 	)
 	static class SuperClass implements Serializable {
@@ -72,7 +69,7 @@ public class DenormalizedTablePhysicalIncludedTableConstraintTest extends BaseNo
 	}
 
 	@Entity(name = "SubClass")
-	@Table( name = "subTable" )
+	@Table(name = "subTable")
 	static class SubClass extends SuperClass {
 
 		@Column(name = "colThree")

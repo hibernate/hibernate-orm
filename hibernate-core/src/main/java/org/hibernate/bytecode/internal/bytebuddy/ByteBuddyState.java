@@ -78,8 +78,8 @@ public final class ByteBuddyState {
 	ByteBuddyState(ClassFileVersion classFileVersion) {
 		this.byteBuddy = new ByteBuddy( classFileVersion ).with( TypeValidation.DISABLED );
 
-		this.proxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
-		this.basicProxyCache = new TypeCache.WithInlineExpunction<TypeCache.SimpleKey>( TypeCache.Sort.WEAK );
+		this.proxyCache = new TypeCache( TypeCache.Sort.WEAK );
+		this.basicProxyCache = new TypeCache( TypeCache.Sort.WEAK );
 
 		if ( System.getSecurityManager() != null ) {
 			this.classRewriter = new SecurityManagerClassRewriter();

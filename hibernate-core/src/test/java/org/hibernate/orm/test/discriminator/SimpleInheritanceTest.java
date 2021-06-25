@@ -4,45 +4,52 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.discriminator;
+package org.hibernate.orm.test.discriminator;
 
 import java.math.BigDecimal;
 import java.util.List;
-
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import org.hibernate.Session;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gavin King
  */
-public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
-	public void configure(Configuration cfg) {
-		super.configure( cfg );
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/discriminator/SimpleInheritance.hbm.xml"
+)
+@SessionFactory
+public class SimpleInheritanceTest {
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "discriminator/SimpleInheritance.hbm.xml" };
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Person" ).executeUpdate()
+		);
 	}
 
 	@Test
-	public void testDiscriminatorSubclass() {
-		inTransaction(
+	public void testDiscriminatorSubclass(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Employee mark = new Employee();
 					mark.setId( 1 );
@@ -65,33 +72,41 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 					s.save( mark );
 					s.save( joe );
 
-					assertEquals( s.createQuery( "from java.io.Serializable" ).list().size(), 0 );
+					try {
+						s.createQuery( "from java.io.Serializable" ).list();
+						fail( "Expected IllegalAccessException" );
+					}
+					catch (Exception e) {
+						assertThat( e, instanceOf( IllegalArgumentException.class ) );
+					}
 
-					assertEquals( s.createQuery( "from org.hibernate.test.discriminator.Person" ).list().size(), 3 );
-					assertEquals( s.createQuery(
-							"from org.hibernate.test.discriminator.Person p where p.class = org.hibernate.test.discriminator.Person" )
-										  .list()
-										  .size(), 1 );
-					assertEquals( s.createQuery(
-							"from org.hibernate.test.discriminator.Person p where p.class = org.hibernate.test.discriminator.Customer" )
-										  .list()
-										  .size(), 1 );
-					assertEquals( s.createQuery( "from org.hibernate.test.discriminator.Person p where type(p) = :who" )
-										  .setParameter( "who", Person.class )
-										  .list()
-										  .size(), 1 );
-					assertEquals( s.createQuery( "from org.hibernate.test.discriminator.Person p where type(p) in :who" )
-										  .setParameterList( "who", new Class[] { Customer.class, Person.class } )
-										  .list()
-										  .size(), 2 );
+					assertThat(
+							s.createQuery( "from org.hibernate.orm.test.discriminator.Person" ).list().size(),
+							is( 3 )
+					);
+					assertThat( s.createQuery(
+							"from org.hibernate.orm.test.discriminator.Person p where p.class = org.hibernate.orm.test.discriminator.Person" )
+										.list()
+										.size(), is( 1 ) );
+					assertThat( s.createQuery(
+							"from org.hibernate.orm.test.discriminator.Person p where p.class = org.hibernate.orm.test.discriminator.Customer" )
+										.list()
+										.size(), is( 1 ) );
+					assertThat( s.createQuery( "from org.hibernate.orm.test.discriminator.Person p where type(p) = :who" )
+										.setParameter( "who", Person.class )
+										.list()
+										.size(), is( 1 ) );
+					assertThat( s.createQuery( "from org.hibernate.orm.test.discriminator.Person p where type(p) in :who" )
+										.setParameterList( "who", new Class[] { Customer.class, Person.class } )
+										.list()
+										.size(), is( 2 ) );
 					s.clear();
 
-					List customers = s.createQuery( "from org.hibernate.test.discriminator.Customer" ).list();
-					for ( Object customer : customers ) {
-						Customer c = (Customer) customer;
-						assertEquals( "Very demanding", c.getComments() );
+					List<Customer> customers = s.createQuery( "from org.hibernate.orm.test.discriminator.Customer" ).list();
+					for ( Customer c : customers ) {
+						assertThat( c.getComments(), is( "Very demanding" ) );
 					}
-					assertEquals( customers.size(), 1 );
+					assertThat( customers.size(), is( 1 ) );
 					s.clear();
 
 					mark = s.get( Employee.class, mark.getId() );
@@ -100,16 +115,16 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 					s.delete( mark );
 					s.delete( joe );
 					s.delete( yomomma );
-					assertTrue( s.createQuery( "from org.hibernate.test.discriminator.Person" ).list().isEmpty() );
+					assertTrue( s.createQuery( "from org.hibernate.orm.test.discriminator.Person" ).list().isEmpty() );
 
 				}
 		);
 	}
 
 	@Test
-	public void testAccessAsIncorrectSubclass() {
+	public void testAccessAsIncorrectSubclass(SessionFactoryScope scope) {
 		Employee employee = new Employee();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					employee.setId( 4 );
 					employee.setName( "Steve" );
@@ -119,55 +134,31 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		Customer c = null;
-		Session s = openSession();
-		try {
-			s.beginTransaction();
+		Customer c = scope.fromTransaction(
+				s ->
+						s.get( Customer.class, employee.getId() )
 
-			c = s.get( Customer.class, employee.getId() );
-			s.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			s.close();
+		);
 
-		}
 		assertNull( c );
 
-		Employee e = null;
-		s = openSession();
-		try {
-			s.beginTransaction();
+		scope.inTransaction(
+				s -> {
+					Employee e = s.get( Employee.class, employee.getId() );
+					Customer c1 = s.get( Customer.class, e.getId() );
+					assertNotNull( e );
+					assertNull( c1 );
+				}
+		);
 
-			e = s.get( Employee.class, employee.getId() );
-			c = s.get( Customer.class, e.getId() );
-			s.getTransaction().commit();
-		}
-		catch (Exception ex) {
-			if ( s.getTransaction().isActive() ) {
-				s.getTransaction().rollback();
-			}
-			throw ex;
-		}
-		finally {
-			s.close();
-		}
-		assertNotNull( e );
-		assertNull( c );
-
-		inTransaction(
+		scope.inTransaction(
 				session -> session.delete( employee )
 		);
 	}
 
 	@Test
-	public void testQuerySubclassAttribute() {
-		inTransaction(
+	public void testQuerySubclassAttribute(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Person p = new Person();
 					p.setId( 5 );
@@ -182,15 +173,15 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 					q.setSalary( new BigDecimal( 1000 ) );
 					s.save( q );
 
-					List result = s.createQuery( "from org.hibernate.test.discriminator.Person where salary > 100" )
+					List result = s.createQuery( "from org.hibernate.orm.test.discriminator.Person where salary > 100" )
 							.list();
-					assertEquals( result.size(), 1 );
+					assertThat( result.size(), is( 1 ) );
 					assertSame( result.get( 0 ), q );
 
 					result = s.createQuery(
-							"from org.hibernate.test.discriminator.Person where salary > 100 or name like 'E%'" )
+							"from org.hibernate.orm.test.discriminator.Person where salary > 100 or name like 'E%'" )
 							.list();
-					assertEquals( result.size(), 2 );
+					assertThat( result.size(), is( 2 ) );
 
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
@@ -201,7 +192,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 //					result = s.createCriteria( Person.class )
 //							.add( Property.forName( "salary" ).gt( new BigDecimal( 100 ) ) )
 //							.list();
-					assertEquals( result.size(), 1 );
+					assertThat( result.size(), is( 1 ) );
 					assertSame( result.get( 0 ), q );
 
 					//TODO: make this work:
@@ -216,9 +207,9 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testLoadSuperclassProxyPolymorphicAccess() {
+	public void testLoadSuperclassProxyPolymorphicAccess(SessionFactoryScope scope) {
 		Employee employee = new Employee();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					employee.setId( 7 );
 					employee.setName( "Steve" );
@@ -228,14 +219,14 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, new Long( employee.getId() ) );
+					Person pLoad = s.load( Person.class, employee.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					Person pGet = s.get( Person.class, employee.getId() );
 					Person pQuery = (Person) s.createQuery(
-							"from org.hibernate.test.discriminator.Person where id = :id" )
+							"from org.hibernate.orm.test.discriminator.Person where id = :id" )
 							.setParameter( "id", employee.getId() )
 							.uniqueResult();
 
@@ -250,23 +241,23 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 //							.uniqueResult();
 					// assert that executing the queries polymorphically returns the same proxy
 					assertSame( pLoad, pGet );
-					assertSame( pLoad, pQuery );
 					assertSame( pLoad, pCriteria );
+					assertSame( pLoad, pQuery );
 
 					// assert that the proxy is not an instance of Employee
 					assertFalse( pLoad instanceof Employee );
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> s.delete( employee )
 		);
 	}
 
 	@Test
-	public void testLoadSuperclassProxyEvictPolymorphicAccess() {
+	public void testLoadSuperclassProxyEvictPolymorphicAccess(SessionFactoryScope scope) {
 		Employee employee = new Employee();
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					employee.setId( 8 );
 					employee.setName( "Steve" );
@@ -277,16 +268,16 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					// load the superclass proxy.
-					Person pLoad = s.load( Person.class, new Long( employee.getId() ) );
+					Person pLoad = s.load( Person.class, employee.getId() );
 					assertTrue( pLoad instanceof HibernateProxy );
 					// evict the proxy
 					s.evict( pLoad );
 					Employee pGet = (Employee) s.get( Person.class, employee.getId() );
 					Employee pQuery = (Employee) s.createQuery(
-							"from org.hibernate.test.discriminator.Person where id = :id" )
+							"from org.hibernate.orm.test.discriminator.Person where id = :id" )
 							.setParameter( "id", employee.getId() )
 							.uniqueResult();
 
@@ -305,7 +296,7 @@ public class SimpleInheritanceTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> s.delete( employee )
 		);
 	}

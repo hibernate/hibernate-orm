@@ -465,10 +465,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 		final Object proxy = getProxy( persistenceContext );
-
 		// Special case map proxy to avoid stack overflows
 		// We know that a map proxy will always be of "the right type" so just use that object
-		if ( proxy != null && ( proxy instanceof MapProxy || concreteDescriptor.isInstance( proxy ) ) ) {
+		if ( proxy != null && ( proxy instanceof MapProxy
+				|| entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass().isInstance( proxy ) ) ) {
 			entityInstance = proxy;
 		}
 		else {

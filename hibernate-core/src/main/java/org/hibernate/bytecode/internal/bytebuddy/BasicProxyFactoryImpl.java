@@ -32,18 +32,22 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 	private final Constructor proxyClassConstructor;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public BasicProxyFactoryImpl(Class superClass, Class[] interfaces, ByteBuddyState byteBuddyState) {
-		if ( superClass == null && ( interfaces == null || interfaces.length < 1 ) ) {
+	public BasicProxyFactoryImpl(final Class superClass, final Class interfaceClass, final ByteBuddyState byteBuddyState) {
+		if ( superClass == null && interfaceClass == null ) {
 			throw new AssertionFailure( "attempting to build proxy without any superclass or interfaces" );
 		}
+		if ( superClass != null && interfaceClass != null ) {
+			//TODO cleanup this case
+			throw new AssertionFailure( "Ambiguous call: we assume invocation with EITHER a superClass OR an interfaceClass" );
+		}
 
-		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaces[0];
-		final TypeCache.SimpleKey cacheKey = getCacheKey( superClass, interfaces );
+		final Class<?> superClassOrMainInterface = superClass != null ? superClass : interfaceClass;
+		final TypeCache.SimpleKey cacheKey = new TypeCache.SimpleKey( superClassOrMainInterface );
 
 		this.proxyClass = byteBuddyState.loadBasicProxy( superClassOrMainInterface, cacheKey, byteBuddy -> byteBuddy
 				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( superClassOrMainInterface.getName() ) ) )
 				.subclass( superClass == null ? Object.class : superClass, ConstructorStrategy.Default.DEFAULT_CONSTRUCTOR )
-				.implement( interfaces == null ? NO_INTERFACES : interfaces )
+				.implement( interfaceClass == null ? NO_INTERFACES : new Class[]{ interfaceClass } )
 				.defineField( ProxyConfiguration.INTERCEPTOR_FIELD_NAME, ProxyConfiguration.Interceptor.class, Visibility.PRIVATE )
 				.method( byteBuddyState.getProxyDefinitionHelpers().getVirtualNotFinalizerFilter() )
 						.intercept( byteBuddyState.getProxyDefinitionHelpers().getDelegateToInterceptorDispatcherMethodDelegation() )
@@ -75,15 +79,4 @@ public class BasicProxyFactoryImpl implements BasicProxyFactory {
 		return proxyClass.isInstance( object );
 	}
 
-	private TypeCache.SimpleKey getCacheKey(Class<?> superClass, Class<?>[] interfaces) {
-		Set<Class<?>> key = new HashSet<Class<?>>();
-		if ( superClass != null ) {
-			key.add( superClass );
-		}
-		if ( interfaces != null ) {
-			key.addAll( Arrays.<Class<?>>asList( interfaces ) );
-		}
-
-		return new TypeCache.SimpleKey( key );
-	}
 }

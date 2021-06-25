@@ -15,6 +15,7 @@ import javassist.util.proxy.Proxy;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.bytecode.internal.bytebuddy.BasicProxyFactoryImpl;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,12 +44,24 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	 *
 	 * @param superClass The abstract super class (or null if none).
 	 * @param interfaces Interfaces to be proxied (or null if none).
+	 * @deprecated use {@link #buildBasicProxyFactory(Class)}
 	 *
 	 * @return The constructed BasicProxyFactoryImpl
 	 */
 	@Override
+	@Deprecated
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
 		return new BasicProxyFactoryImpl( superClass, interfaces );
+	}
+
+	@Override
+	public BasicProxyFactory buildBasicProxyFactory(Class superClassOrInterface) {
+		if ( superClassOrInterface.isInterface() ) {
+			return new BasicProxyFactoryImpl( null, new Class[]{ superClassOrInterface } );
+		}
+		else {
+			return new BasicProxyFactoryImpl( superClassOrInterface, null );
+		}
 	}
 
 	private static class BasicProxyFactoryImpl implements BasicProxyFactory {

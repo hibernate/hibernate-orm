@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.internal.bytebuddy;
 
+import org.hibernate.AssertionFailure;
 import org.hibernate.bytecode.spi.BasicProxyFactory;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -30,7 +31,27 @@ public class ProxyFactoryFactoryImpl implements ProxyFactoryFactory {
 	}
 
 	@Override
+	@Deprecated
 	public BasicProxyFactory buildBasicProxyFactory(Class superClass, Class[] interfaces) {
-		return new BasicProxyFactoryImpl( superClass, interfaces, byteBuddyState );
+		if ( superClass == null && ( interfaces == null || interfaces.length == 0 ) ) {
+			throw new AssertionFailure( "Attempting to build proxy without any superclass or interfaces" );
+		}
+		if ( superClass != null && ( interfaces != null && interfaces.length > 0 ) ) {
+			throw new AssertionFailure( "Ambiguous call: this method can only be invoked with either a superClass or interfaces, not both" );
+		}
+		if ( interfaces != null && interfaces.length > 1 ) {
+			throw new AssertionFailure( "Ambiguous call: this method can only accept a single interfaces, not multiple in the array (legacy expectation)" );
+		}
+		return buildBasicProxyFactory( superClass == null ? interfaces[0] : superClass );
 	}
+
+	public BasicProxyFactory buildBasicProxyFactory(Class superClassOrInterface) {
+		if ( superClassOrInterface.isInterface() ) {
+			return new BasicProxyFactoryImpl( null, superClassOrInterface, byteBuddyState );
+		}
+		else {
+			return new BasicProxyFactoryImpl( superClassOrInterface, null, byteBuddyState );
+		}
+	}
+
 }

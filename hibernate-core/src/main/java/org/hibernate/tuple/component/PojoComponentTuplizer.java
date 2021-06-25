@@ -156,14 +156,8 @@ public class PojoComponentTuplizer extends AbstractComponentTuplizer {
 
 		public ProxiedInstantiator(Class componentClass, ProxyFactoryFactory proxyFactoryFactory) {
 			proxiedClass = componentClass;
-			if ( proxiedClass.isInterface() ) {
-				factory = proxyFactoryFactory
-						.buildBasicProxyFactory( null, new Class[] { proxiedClass } );
-			}
-			else {
-				factory = proxyFactoryFactory
-						.buildBasicProxyFactory( proxiedClass, null );
-			}
+			factory = proxyFactoryFactory
+					.buildBasicProxyFactory( proxiedClass );
 		}
 
 		public Object instantiate(Serializable id) {

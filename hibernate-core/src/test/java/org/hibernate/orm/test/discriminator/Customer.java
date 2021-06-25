@@ -6,7 +6,7 @@
  */
 
 //$Id: Customer.java 4373 2004-08-18 09:18:34Z oneovthafew $
-package org.hibernate.test.discriminator;
+package org.hibernate.orm.test.discriminator;
 
 
 /**

@@ -6,7 +6,7 @@
  */
 
 //$Id: Item.java 6593 2005-04-28 15:52:26Z oneovthafew $
-package org.hibernate.test.iterate;
+package org.hibernate.orm.test.iterate;
 
 
 /**

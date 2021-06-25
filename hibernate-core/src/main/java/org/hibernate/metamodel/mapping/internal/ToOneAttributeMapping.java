@@ -849,8 +849,7 @@ public class ToOneAttributeMapping
 			SqlAliasBaseGenerator aliasBaseGenerator,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final String aliasRoot = explicitSourceAlias == null ? sqlAliasStem : explicitSourceAlias;
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( aliasRoot );
+		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( sqlAliasStem );
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				navigablePath,
 				() -> createTableGroupJoinInternal(

@@ -58,7 +58,7 @@ public final class ByteBuddyState {
 
 	private final ByteBuddy byteBuddy;
 
-	private final ProxyDefinitionHelpers proxyDefinitionHelpers;
+	private static final ProxyDefinitionHelpers proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 
 	private final ClassRewriter classRewriter;
 
@@ -87,8 +87,6 @@ public final class ByteBuddyState {
 		else {
 			this.classRewriter = new StandardClassRewriter();
 		}
-
-		this.proxyDefinitionHelpers = new ProxyDefinitionHelpers();
 	}
 
 	/**

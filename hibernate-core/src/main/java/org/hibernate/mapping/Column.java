@@ -94,7 +94,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	 */
 	public String getQuotedName() {
 		return safeInterning(
-				quoted ?
+				!quoted ?
 				"`" + name + "`" :
 				name
 		);
@@ -102,7 +102,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 
 	public String getQuotedName(Dialect d) {
 		return safeInterning(
-				quoted ?
+				!quoted ?
 				d.openQuote() + name + d.closeQuote() :
 				name
 		);

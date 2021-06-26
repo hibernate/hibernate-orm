@@ -14,7 +14,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:3.0.1'
+		classpath 'de.thetaphi:forbiddenapis:3.1'
 	}
 }
 
@@ -24,23 +24,13 @@ import org.apache.tools.ant.filters.ReplaceTokens
 apply from: rootProject.file( 'gradle/libraries.gradle' )
 apply from: rootProject.file( 'gradle/databases.gradle' )
 
-apply plugin: 'java'
-apply plugin: 'org.hibernate.build.plugin'
 apply plugin: 'java-library'
+apply plugin: 'org.hibernate.orm.database-service'
 apply plugin: 'biz.aQute.bnd.builder'
 
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
 apply plugin: 'project-report'
-
-ext {
-	forbiddenAPITargetJDKCompatibility = '11'
-}
-
-if ( !project.description ) {
-	project.description = "The Hibernate ORM $project.name module"
-}
-
 
 
 // Attempt to leverage JetBrain's Gradle extension to automatically define
@@ -211,10 +201,6 @@ else {
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
-sourceSets.main {
-	compileClasspath += configurations.provided
-}
-
 convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
 	JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
 
@@ -268,6 +254,8 @@ if ( gradle.ext.javaToolchainEnabled ) {
 
 tasks.withType( Test.class ).each { test ->
 	test.useJUnitPlatform()
+
+	test.usesService( project.gradle.sharedServices.registrations.getByName( 'databaseService' ).service )
 
 	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
 		// Byteman needs this property to be set, https://developer.jboss.org/thread/274997
@@ -435,64 +423,14 @@ task sourcesJar(type: Jar) {
 
 apply from: rootProject.file( 'gradle/javadoc.gradle' )
 
-javadoc {
-	doFirst {
-		// ordering problems if we try to do this during config phase :(
-		classpath += project.sourceSets.main.output.classesDirs + project.sourceSets.main.compileClasspath + project.configurations.provided
-	}
-}
-
-task javadocJar(type: Jar) {
-	from project.tasks.javadoc.outputs
-	manifest {
-		attributes(
-				// Basic JAR manifest attributes
-				'Specification-Title': project.name,
-				'Specification-Version': project.version,
-				'Specification-Vendor': 'Hibernate.org',
-				'Implementation-Title': project.name,
-				'Implementation-Version': project.version,
-				'Implementation-Vendor': 'Hibernate.org',
-				'Implementation-Vendor-Id': 'org.hibernate',
-				'Implementation-Url': 'https://hibernate.org/orm',
-
-				// Hibernate-specific JAR manifest attributes
-				'Hibernate-VersionFamily': project.ormVersion.family,
-				'Hibernate-JpaVersion': project.jpaVersion.name
-		)
-	}
-	archiveClassifier.set( 'javadoc' )
-}
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // IDE
 
 
-//idea {
-//	module {
-//		jdkName = project.sourceCompatibility
-//
-//		excludeDirs = [file( ".gradle" )]
-//		excludeDirs += file( "$buildDir/classes" )
-//		excludeDirs += file( "$buildDir/bundles" )
-//		excludeDirs += file( "$buildDir/packages" )
-//		excludeDirs += file( "$buildDir/dependency-cache" )
-//		excludeDirs += file( "$buildDir/libs" )
-//		excludeDirs += file( "$buildDir/reports" )
-//		excludeDirs += file( "$buildDir/test-results" )
-//		excludeDirs += file( "$buildDir/tmp" )
-//		excludeDirs += file( "$buildDir/matrix" )
-//		excludeDirs += file( "$buildDir/resources" )
-//
-//		downloadSources = true
-//		scopes.PROVIDED.plus += [configurations.provided]
-//	}
-//}
-//
 /*
- The latest versions of IntelliJ copy and use the test resources into out/test/resources
- this occurs before the placeholder in the test config file are substituted
- with the testing values.
+ The latest versions of IntelliJ copy the test resources into out/test/resources and
+ use those for its test classpath.  Unfortunately, this occurs before the placeholder
+ in the test config file are substituted with the testing values.
 
  This behaviour prevents the execution of the hibernate tests from inside the IDE.
 
@@ -507,23 +445,8 @@ task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.proce
 		}
 	}
 }
-//
-//
-//
-//eclipse {
-//	jdt {
-//		sourceCompatibility = project.sourceCompatibility
-//		targetCompatibility = project.targetCompatibility
-//	}
-//	classpath {
-//		plusConfigurations.add( configurations.provided )
-//	}
-//}
-//
-//// eclipseClasspath will not add sources to classpath unless the dirs actually exist.
-//// TODO: Eclipse's annotation processor handling is also fairly stupid (and completely lacks in the
-//// Gradle plugin).  For now, just compile first in order to get the logging classes.
-//eclipseClasspath.dependsOn compile
+
+
 
 /*
  Use this task to set the current DB in a given module.
@@ -563,21 +486,11 @@ checkstyleMain.exclude '**/org/hibernate/cfg/*'
 
 
 task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.sourceSets.main.output.classesDirs
-	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-system-out'
 	suppressAnnotations += ['org.hibernate.internal.build.AllowSysOut', 'org.hibernate.internal.build.AllowPrintStacktrace']
-
-	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
-	// to class definitions loaded previously - even possibly in a previous build.
-	disableClassloadingCache = true
 }
 
 task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.sourceSets.main.output.classesDirs
-	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += "jdk-unsafe-${gradle.ext.baselineJavaVersion}".toString()
 
 	// unfortunately we currently have many uses of default Locale implicitly (~370) which need to be fixed
@@ -585,24 +498,23 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 	//
 	// No idea how findbugs was missing these b4
 	ignoreFailures = true
-
-	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
-	// to class definitions loaded previously - even possibly in a previous build.
-	disableClassloadingCache = true
 }
 
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
-	classesDirs = project.sourceSets.main.output.classesDirs
-	classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
-	targetCompatibility = project.forbiddenAPITargetJDKCompatibility
 	bundledSignatures += 'jdk-non-portable'
-
-	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
-	// to class definitions loaded previously - even possibly in a previous build.
-	disableClassloadingCache = true
 }
 
 task forbiddenApis
-project.tasks.withType( CheckForbiddenApis ).each { task -> forbiddenApis.finalizedBy task }
+project.tasks.withType( CheckForbiddenApis ).each { task ->
+	task.outputs.dirs project.sourceSets.main.output.classesDirs
+	task.classesDirs = project.sourceSets.main.output.classesDirs
+	task.classpath = project.sourceSets.main.compileClasspath + project.sourceSets.main.runtimeClasspath
+	task.targetCompatibility = project.forbiddenAPITargetJDKCompatibility
+	// This slows down the checks a little, but is necessary to avoid the gradle deamon holding on
+	// to class definitions loaded previously - even possibly in a previous build.
+	task.disableClassloadingCache = true
 
-project.tasks.check.finalizedBy forbiddenApis
+	tasks.forbiddenApis.finalizedBy task
+}
+
+project.tasks.check.finalizedBy tasks.forbiddenApis

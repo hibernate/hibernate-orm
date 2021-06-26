@@ -6,7 +6,6 @@
  */
 repositories {
 	mavenCentral()
-	jcenter()
 }
 
 apply plugin: 'java-gradle-plugin'
@@ -16,7 +15,7 @@ version = '1.0.0-SNAPSHOT'
 buildDir = "target"
 
 dependencies {
-	compile gradleApi()
+	implementation gradleApi()
 }
 
 tasks.compileJava {
@@ -27,9 +26,9 @@ tasks.compileJava {
 
 gradlePlugin {
 	plugins {
-		customPlugin {
-			id = 'org.hibernate.build.plugin'
-			implementationClass = 'org.hibernate.build.HibernateBuildPlugin'
+		databaseServicePlugin {
+			id = 'org.hibernate.orm.database-service'
+			implementationClass = 'org.hibernate.orm.db.DatabaseServicePlugin'
 		}
 	}
 }

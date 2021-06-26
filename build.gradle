@@ -26,10 +26,10 @@ buildscript {
 plugins {
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 	id 'nu.studer.credentials' version '2.1'
-	id 'org.hibernate.build.plugin' version '1.0.0-SNAPSHOT' apply false
+	id 'org.hibernate.orm.database-service' version '1.0.0-SNAPSHOT' apply false
 
 	id 'idea'
-	id 'org.jetbrains.gradle.plugin.idea-ext' version '0.5'
+	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
 	id 'eclipse'
 
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
@@ -49,6 +49,7 @@ allprojects {
 	}
 
 	apply from: rootProject.file( 'gradle/base-information.gradle' )
+	apply plugin: 'org.hibernate.orm.database-service'
 
 	apply plugin: 'idea'
 	apply plugin: 'eclipse'

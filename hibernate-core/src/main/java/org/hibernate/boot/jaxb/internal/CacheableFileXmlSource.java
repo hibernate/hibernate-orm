@@ -33,12 +33,12 @@ public class CacheableFileXmlSource extends XmlSource {
 	private final File serFile;
 	private final boolean strict;
 
-	public CacheableFileXmlSource(Origin origin, File xmlFile, boolean strict) {
+	public CacheableFileXmlSource(Origin origin, File xmlFile, File cachedFileDir, boolean strict) {
 		super( origin );
 		this.xmlFile = xmlFile;
 		this.strict = strict;
 
-		this.serFile = determineCachedFile( xmlFile );
+		this.serFile = new File( cachedFileDir, xmlFile.getName() + ".bin" );
 
 		if ( strict ) {
 			if ( !serFile.exists() ) {
@@ -133,11 +133,15 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	public static void createSerFile(File xmlFile, Binder binder) {
+		createSerFile( xmlFile, determineCachedFile( xmlFile ), binder );
+	}
+
+	public static void createSerFile(File xmlFile, File outputFile, Binder binder) {
 		final Origin origin = new Origin( SourceType.FILE, xmlFile.getAbsolutePath() );
 		writeSerFile(
 				FileXmlSource.doBind( binder, xmlFile, origin ),
 				xmlFile,
-				determineCachedFile( xmlFile )
+				outputFile
 		);
 	}
 	

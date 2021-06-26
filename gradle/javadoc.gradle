@@ -58,3 +58,25 @@ javadoc {
         )
     }
 }
+
+task javadocJar(type: Jar) {
+    from project.tasks.javadoc.outputs
+    manifest {
+        attributes(
+                // Basic JAR manifest attributes
+                'Specification-Title': project.name,
+                'Specification-Version': project.version,
+                'Specification-Vendor': 'Hibernate.org',
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'Hibernate.org',
+                'Implementation-Vendor-Id': 'org.hibernate',
+                'Implementation-Url': 'https://hibernate.org/orm',
+
+                // Hibernate-specific JAR manifest attributes
+                'Hibernate-VersionFamily': project.ormVersion.family,
+                'Hibernate-JpaVersion': project.jpaVersion.name
+        )
+    }
+    archiveClassifier.set( 'javadoc' )
+}

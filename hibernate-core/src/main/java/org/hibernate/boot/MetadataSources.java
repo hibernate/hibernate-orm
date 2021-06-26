@@ -415,6 +415,20 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
+	 * See {@link #addCacheableFile(java.io.File)} for description
+	 *
+	 * @param path The path to a file.  Expected to be resolvable by {@link java.io.File#File(String)}
+	 *
+	 * @return this (for method chaining purposes)
+	 *
+	 * @see #addCacheableFile(java.io.File)
+	 */
+	public MetadataSources addCacheableFile(String path, File cacheDirectory) {
+		addCacheableFile( new File( path ), cacheDirectory );
+		return this;
+	}
+
+	/**
 	 * Add a cached mapping file.  A cached file is a serialized representation of the DOM structure of a
 	 * particular mapping.  It is saved from a previous call as a file with the name {@code {xmlFile}.bin}
 	 * where {@code {xmlFile}} is the name of the original mapping file.
@@ -428,7 +442,24 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining purposes)
 	 */
 	public MetadataSources addCacheableFile(File file) {
-		final XmlSource xmlSource = XmlSources.fromCacheableFile( file );
+		return addCacheableFile( file, file.getParentFile() );
+	}
+
+	/**
+	 * Add a cached mapping file.  A cached file is a serialized representation of the DOM structure of a
+	 * particular mapping.  It is saved from a previous call as a file with the name {@code {xmlFile}.bin}
+	 * where {@code {xmlFile}} is the name of the original mapping file.
+	 * </p>
+	 * If a cached {@code {xmlFile}.bin} exists and is newer than {@code {xmlFile}}, the {@code {xmlFile}.bin}
+	 * file will be read directly. Otherwise {@code {xmlFile}} is read and then serialized to {@code {xmlFile}.bin} for
+	 * use the next time.
+	 *
+	 * @param file The cacheable mapping file to be added, {@code {xmlFile}} in above discussion.
+	 *
+	 * @return this (for method chaining purposes)
+	 */
+	public MetadataSources addCacheableFile(File file, File cacheDirectory) {
+		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDirectory );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;
@@ -449,6 +480,26 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, true );
+		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
+		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
+		return this;
+	}
+
+	/**
+	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
+	 * <p/>
+	 * Much like {@link #addCacheableFile(java.io.File)} except that here we will fail immediately if
+	 * the cache version cannot be found or used for whatever reason
+	 *
+	 * @param file The xml file, not the bin!
+	 *
+	 * @return The dom "deserialized" from the cached file.
+	 *
+	 * @throws org.hibernate.type.SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws java.io.FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 */
+	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
+		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDir, true );
 		final XmlMappingBinderAccess binderAccess = getXmlMappingBinderAccess();
 		getXmlBindingsForWrite().add( xmlSource.doBind( binderAccess.getMappingBinder()  ) );
 		return this;

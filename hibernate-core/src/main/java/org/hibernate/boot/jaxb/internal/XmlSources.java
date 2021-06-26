@@ -72,15 +72,23 @@ public class XmlSources {
 	}
 
 	public static XmlSource fromCacheableFile(File file) {
-		return fromCacheableFile( file, false );
+		return fromCacheableFile( file, file.getParentFile() );
+	}
+
+	public static XmlSource fromCacheableFile(File file, File cacheableDir) {
+		return fromCacheableFile( file, cacheableDir, false );
 	}
 
 	public static XmlSource fromCacheableFile(File file, boolean strict) {
+		return fromCacheableFile( file, file.getParentFile(), strict );
+	}
+
+	public static XmlSource fromCacheableFile(File file, File cacheableDir, boolean strict) {
 		final String filePath = file.getPath();
 		JaxbLogger.JAXB_LOGGER.tracef( "reading mappings from cacheable-file : %s", filePath );
 
 		final Origin origin = new Origin( SourceType.FILE, filePath );
-		return new CacheableFileXmlSource( origin, file, strict );
+		return new CacheableFileXmlSource( origin, file, cacheableDir, strict );
 	}
 
 	public static XmlSource fromStream(InputStreamAccess inputStreamAccess) {

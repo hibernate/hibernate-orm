@@ -8,67 +8,37 @@
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
+configurations {
+    jakartaeeTransformTool {
+        description = 'JakartaTransformer tool dependencies'
+    }
+    tests {
+        description = 'Configuration for the produced test jar'
+    }
+}
+
+dependencies {
+    jakartaeeTransformTool 'org.eclipse.transformer:org.eclipse.transformer:0.2.0'
+    jakartaeeTransformTool 'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+}
+
+tasks.withType( Test ) { test ->
+    test.usesService( project.gradle.sharedServices.registrations.getByName( 'databaseService' ).service )
+}
+
 publishing {
     publications {
         publishedArtifacts {
             from components.java
         }
-
-        relocationArtifacts( MavenPublication ) {
-            pom {
-                name = project.name + ' - relocation'
-                groupId = 'org.hibernate'
-                artifactId = project.name
-                version = project.version
-
-                description = project.description
-                url = 'https://hibernate.org/orm'
-
-                organization {
-                    name = 'Hibernate.org'
-                    url = 'https://hibernate.org'
-                }
-
-                licenses {
-                    license {
-                        name = 'GNU Library General Public License v2.1 or later'
-                        url = 'https://www.opensource.org/licenses/LGPL-2.1'
-                        comments = 'See discussion at https://hibernate.org/community/license/ for more details.'
-                        distribution = 'repo'
-                    }
-                }
-
-                scm {
-                    url = 'https://github.com/hibernate/hibernate-orm'
-                    connection = 'scm:git:https://github.com/hibernate/hibernate-orm.git'
-                    developerConnection = 'scm:git:git@github.com:hibernate/hibernate-orm.git'
-                }
-
-                developers {
-                    developer {
-                        id = 'hibernate-team'
-                        name = 'The Hibernate Development Team'
-                        organization = 'Hibernate.org'
-                        organizationUrl = 'https://hibernate.org'
-                    }
-                }
-
-                issueManagement {
-                    system = 'jira'
-                    url = 'https://hibernate.atlassian.net/browse/HHH'
-                }
-
-                distributionManagement {
-                    relocation {
-                        groupId = 'org.hibernate.orm'
-                        artifactId = project.name
-                        version = project.version
-                    }
-                }
-            }
-        }
     }
 }
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Release / publishing tasks
@@ -77,3 +47,5 @@ task ciBuild( dependsOn: [test, publish] )
 
 task release(dependsOn: [test, publishToSonatype])
 publishToSonatype.mustRunAfter test
+
+

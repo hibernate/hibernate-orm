@@ -9,6 +9,9 @@ description = 'Support for testing Hibernate ORM functionality'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
+configurations {
+    tests
+}
 
 dependencies {
     api project( ':hibernate-core' )
@@ -36,5 +39,15 @@ dependencies {
 }
 
 tasks.test.include '**/*'
+
+task testJar(type: Jar, dependsOn: testClasses) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    archiveClassifier.set( 'test' )
+    from sourceSets.test.output
+}
+
+artifacts {
+    tests tasks.testJar
+}
 
 

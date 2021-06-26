@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.bootstrap.binding.hbm.cacheable;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.net.URL;
 
 import org.hibernate.boot.MappingException;
@@ -15,15 +14,15 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.jaxb.internal.CacheableFileXmlSource;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Originally developed to help diagnose HHH-10131 - the original tests
@@ -36,23 +35,19 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class CacheableHbmXmlTest extends BaseUnitTestCase {
+@ServiceRegistry()
+public class CacheableHbmXmlTest {
 
 	private static final String HBM_RESOURCE_NAME = "org/hibernate/orm/test/bootstrap/binding/hbm/cacheable/SimpleEntity.hbm.xml";
 
-	private StandardServiceRegistry ssr;
-	private MappingBinder binder;
+	private static MappingBinder binder;
+	private static File hbmXmlFile;
 
-	private File hbmXmlFile;
-	private File hbmXmlBinFile;
+	@BeforeAll
+	public static void prepareFixtures(ServiceRegistryScope scope) throws Exception {
+		binder = new XmlMappingBinderAccess( scope.getRegistry() ).getMappingBinder();
 
-	@Before
-	public void before() throws Exception {
-		ssr = new StandardServiceRegistryBuilder()
-				.build();
-		binder = new XmlMappingBinderAccess( ssr ).getMappingBinder();
-
-		final URL hbmXmlUrl = getClass().getClassLoader().getResource( HBM_RESOURCE_NAME );
+		final URL hbmXmlUrl = CacheableHbmXmlTest.class.getClassLoader().getResource( HBM_RESOURCE_NAME );
 		if ( hbmXmlUrl == null ) {
 			throw couldNotFindHbmXmlResource();
 		}
@@ -60,32 +55,27 @@ public class CacheableHbmXmlTest extends BaseUnitTestCase {
 		if ( ! hbmXmlFile.exists() ) {
 			throw couldNotFindHbmXmlFile( hbmXmlFile );
 		}
-		hbmXmlBinFile = CacheableFileXmlSource.determineCachedFile( hbmXmlFile );
 	}
 
-	private Exception couldNotFindHbmXmlResource() {
+	private static Exception couldNotFindHbmXmlResource() {
 		throw new IllegalStateException( "Could not locate `" + HBM_RESOURCE_NAME + "` by resource lookup" );
 	}
 
-	private Exception couldNotFindHbmXmlFile(File file) {
+	private static Exception couldNotFindHbmXmlFile(File file) {
 		throw new IllegalStateException(
 				"File `" + file.getAbsolutePath() + "` resolved from `" + HBM_RESOURCE_NAME + "` resource-lookup does not exist"
 		);
 	}
 
-	@After
-	public void after() {
-		if ( ssr != null ) {
-			StandardServiceRegistryBuilder.destroy( ssr );
-		}
-	}
-
 	@Test
-	public void testStrictCaseWhereFileDoesPreviouslyExist() throws FileNotFoundException {
-		deleteBinFile();
-		createBinFile();
+	public void testStrictlyWithExistingFile(ServiceRegistryScope serviceRegistryScope, @TempDir File binOutputDir) {
+		final StandardServiceRegistry ssr = serviceRegistryScope.getRegistry();
+
+		// create the cacheable file so that it exists before we try to build the boot model
+		createBinFile( binOutputDir );
+
 		try {
-			new MetadataSources( ssr ).addCacheableFileStrictly( hbmXmlFile ).buildMetadata();
+			new MetadataSources( ssr ).addCacheableFileStrictly( hbmXmlFile, binOutputDir ).buildMetadata();
 		}
 		catch (MappingException e) {
 			fail( "addCacheableFileStrictly led to MappingException when bin file existed" );
@@ -93,10 +83,12 @@ public class CacheableHbmXmlTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testStrictCaseWhereFileDoesNotPreviouslyExist() throws FileNotFoundException {
-		deleteBinFile();
+	public void testStrictlyWithNoExistingFile(ServiceRegistryScope serviceRegistryScope, @TempDir File binOutputDir) {
 		try {
-			new MetadataSources( ssr ).addCacheableFileStrictly( hbmXmlFile ).buildMetadata();
+			final StandardServiceRegistry ssr = serviceRegistryScope.getRegistry();
+			new MetadataSources( ssr )
+					.addCacheableFileStrictly( hbmXmlFile, binOutputDir )
+					.buildMetadata();
 			fail( "addCacheableFileStrictly should be led to MappingException when bin file does not exist" );
 		}
 		catch (MappingException ignore) {
@@ -105,34 +97,29 @@ public class CacheableHbmXmlTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testNonStrictCaseWhereFileDoesPreviouslyExist() {
-		deleteBinFile();
-		createBinFile();
-		new MetadataSources( ssr ).addCacheableFile( hbmXmlFile ).buildMetadata();
+	public void testNonStrictlyWithExistingFile(ServiceRegistryScope serviceRegistryScope, @TempDir File binOutputDir) {
+		final StandardServiceRegistry ssr = serviceRegistryScope.getRegistry();
+
+		// create the cacheable file so that it exists before we try to build the boot model
+		createBinFile( binOutputDir );
+
+		try {
+			new MetadataSources( ssr ).addCacheableFile( hbmXmlFile, binOutputDir ).buildMetadata();
+		}
+		catch (MappingException e) {
+			fail( "addCacheableFileStrictly led to MappingException when bin file existed" );
+		}
 	}
 
 	@Test
-	public void testNonStrictCaseWhereFileDoesNotPreviouslyExist() {
-		deleteBinFile();
-		new MetadataSources( ssr ).addCacheableFile( hbmXmlFile ).buildMetadata();
+	public void testNonStrictlyWithNoExistingFile(ServiceRegistryScope serviceRegistryScope, @TempDir File binOutputDir) {
+		final StandardServiceRegistry ssr = serviceRegistryScope.getRegistry();
+		new MetadataSources( ssr ).addCacheableFile( hbmXmlFile, binOutputDir ).buildMetadata();
 	}
 
-	private void deleteBinFile() {
-		// if it exists
-		if ( hbmXmlBinFile.exists() ) {
-			final boolean success = hbmXmlBinFile.delete();
-			if ( !success ) {
-				log.warn( "Unable to delete existing cached hbm.xml.bin file", new Exception() );
-			}
-		}
-	}
-
-	private void createBinFile() {
-		if ( hbmXmlBinFile.exists() ) {
-			log.warn( "Cached hbm.xml.bin file already existed on request to create", new Exception() );
-		}
-		else {
-			CacheableFileXmlSource.createSerFile( hbmXmlFile, binder );
-		}
+	private void createBinFile(File binOutputDir) {
+		final String outputName = hbmXmlFile.getName() + ".bin";
+		final File file = new File( binOutputDir, outputName );
+		CacheableFileXmlSource.createSerFile( hbmXmlFile, file, binder );
 	}
 }

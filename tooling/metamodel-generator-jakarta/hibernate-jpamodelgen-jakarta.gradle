@@ -15,8 +15,8 @@ configurations {
 
 dependencies {
 	// JAXB
-	compile( libraries.jakarta_jaxb_api )
-	compile( libraries.jakarta_jaxb_runtime )
+	implementation( libraries.jakarta_jaxb_api )
+	implementation( libraries.jakarta_jaxb_runtime )
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',
@@ -24,7 +24,7 @@ dependencies {
 			'org.slf4j:slf4j-api:1.7.26',
 			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
 			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
-	testCompile fileTree(dir: 'libs', include: '*.jar')
+	testImplementation fileTree(dir: 'libs', include: '*.jar')
 }
 
 jar {

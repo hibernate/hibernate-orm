@@ -1,4 +1,5 @@
-import org.apache.tools.ant.filters.ReplaceTokens
+import org.hibernate.orm.jakarta.JakartaDirectoryTransformation
+import org.hibernate.orm.jakarta.JakartaJarTransformation
 
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
@@ -11,86 +12,115 @@ description = 'Hibernate\'s entity version (audit/history) support Jakarta editi
 
 apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
 
-configurations {
-	jakartaeeTransformJars
-}
+evaluationDependsOn( ':hibernate-envers' )
 
 dependencies {
-	compile( project( ':hibernate-core-jakarta' ) ) {
+	api( project( ':hibernate-core-jakarta' ) ) {
 		// Exclude access to this to avoid future use.
 		exclude group: "org.javassist", module: "javassist"
 	}
 
-	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
-			'commons-cli:commons-cli:1.4',
-			'org.slf4j:slf4j-simple:1.7.30',
-			'org.slf4j:slf4j-api:1.7.26',
-			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
-			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
-
-	testCompile( project( ':hibernate-envers-jakarta' ) )
-	testCompile( project( ':hibernate-testing-jakarta' ) )
-	testCompile( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
+	testImplementation( project( ':hibernate-envers-jakarta' ) )
+	testImplementation( project( ':hibernate-testing-jakarta' ) )
+	testImplementation( project( path: ':hibernate-core-jakarta', configuration: 'tests' ) )
 }
 
-jar {
-	mustRunAfter project(':hibernate-envers').tasks.jar
-	mustRunAfter project(':hibernate-envers').tasks.testJar
-	dependsOn project(':hibernate-envers').tasks.jar
-	dependsOn project(':hibernate-envers').tasks.testJar
-	def baseDir = project(':hibernate-envers').buildDir
-	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
-	inputs.files(baseJars).skipWhenEmpty()
-	outputs.dir project.buildDir
-	doLast {
-		new File(project.buildDir, "libs").mkdirs()
-		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
 
-		baseJars.each { bundleJar ->
-			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
-			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// main jar
 
-			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-envers', 'hibernate-envers-jakarta' )
-			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
-
-			def transformerArgs = [
-					sourceJarPath, finalBundleJarName,
-					'-q', // quiet output
-					'-tr', new File(getProjectDir().getParentFile(), 'rules/jakarta-renames.properties').path,
-					'-tv', new File(getProjectDir().getParentFile(), 'rules/jakarta-versions.properties').path,
-					'-td', new File(getProjectDir().getParentFile(), 'rules/jakarta-direct.properties').path,
-			]
-
-			println 'Transformer options:'
-			transformerArgs.each {
-				println '  [ ' + it + ' ]'
-			}
-
-			javaexec {
-				classpath configurations.jakartaeeTransformJars
-				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
-				args = transformerArgs
-			}
-		}
-	}
+tasks.jar {
+	enabled false
 }
 
-task unpackTestJar(type: Copy) {
-	dependsOn jar
-	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
-		def outputDir = file("${buildDir}/unpacked/" + it.name)
-		from zipTree(it)
-		into outputDir
-	}
+task jakartafyJar( type: JakartaJarTransformation ) {
+	sourceJar = project(':hibernate-envers').tasks.jar.archiveFile
+	targetJar = tasks.jar.archiveFile
 }
 
-test {
-	dependsOn unpackTestJar
-	fileTree(project.buildDir).matching { include 'libs/*-test.jar' }.each {
-		def outputDir = file("${buildDir}/unpacked/" + it.name)
-		testClassesDirs += files(outputDir)
-		classpath += files(outputDir)
-	}
+tasks.jar.dependsOn project(':hibernate-envers').tasks.jar
+tasks.jar.finalizedBy tasks.jakartafyJar
+tasks.jakartafyJar.dependsOn tasks.jar
+tasks.jakartafyJar.mustRunAfter tasks.jar
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// javadoc jar
+
+tasks.javadocJar {
+	enabled false
+}
+
+task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+	sourceJar = project(':hibernate-envers').tasks.javadocJar.archiveFile
+	targetJar = tasks.javadocJar.archiveFile
+}
+
+tasks.javadocJar.dependsOn project(':hibernate-envers').tasks.javadocJar
+tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// sources jar
+
+tasks.sourcesJar {
+	enabled false
+}
+
+task jakartafySourcesJar( type: JakartaJarTransformation ) {
+	sourceJar = project(':hibernate-envers').tasks.sourcesJar.archiveFile
+	targetJar = tasks.javadocJar.archiveFile
+}
+
+tasks.sourcesJar.dependsOn project(':hibernate-envers').tasks.sourcesJar
+tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// testing
+
+project.ext {
+	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
+	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
+}
+
+tasks.compileTestJava {
+	enabled false
+}
+
+tasks.processTestResources {
+	enabled false
+}
+
+task unpackTests(type: Copy) {
+	from zipTree( project( ':hibernate-envers' ).tasks.testJar.archiveFile )
+	into project.testClassesUnpackTargetDirectory
+}
+
+task jakartafyTests(type: JakartaDirectoryTransformation) {
+	sourceDirectory = project.testClassesUnpackTargetDirectory
+	targetDirectory = project.testClassesTransformationTargetDirectory
+}
+
+
+tasks.compileTestJava.dependsOn tasks.unpackTests
+tasks.compileTestJava.finalizedBy tasks.jakartafyTests
+
+tasks.unpackTests.dependsOn project(':hibernate-envers').tasks.testJar
+
+tasks.jakartafyTests.dependsOn tasks.unpackTests
+
+tasks.test {
+	dependsOn tasks.jakartafyTests
+	testClassesDirs += project.files( tasks.jakartafyTests.targetDirectory )
+	classpath += project.files( tasks.jakartafyTests.targetDirectory )
+
 	systemProperty 'file.encoding', 'utf-8'
 
 	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
@@ -100,4 +130,16 @@ test {
 		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
 		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 	}
+}
+
+tasks.test.dependsOn project( ':hibernate-transaction-client' ).tasks.jar
+
+task testJar(type: Jar, dependsOn: testClasses) {
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	archiveClassifier.set( 'test' )
+	from sourceSets.test.output
+}
+
+artifacts {
+	tests tasks.testJar
 }

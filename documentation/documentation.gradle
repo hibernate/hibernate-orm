@@ -176,7 +176,7 @@ task aggregateJavadocs(type: Javadoc) {
     }
 }
 
-asciidoctor {
+tasks.asciidoctor {
 	// we do not want it creating its "default task"
 	enabled = false
 }

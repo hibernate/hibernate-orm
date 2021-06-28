@@ -16,7 +16,7 @@
     of the composition is a foreign-key to another entity.
 -->
 
-<hibernate-mapping package="org.hibernate.test.keymanytoone.bidir.ondelete">
+<hibernate-mapping package="org.hibernate.orm.test.keymanytoone.bidir.ondelete">
 
     <class name="Customer" table="CUSTOMERS">
         <id name="id" column="ID" type="long">

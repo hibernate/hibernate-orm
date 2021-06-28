@@ -16,7 +16,7 @@
     foreign-key to another entity.
 -->
 
-<hibernate-mapping package="org.hibernate.test.keymanytoone.bidir.embedded">
+<hibernate-mapping package="org.hibernate.orm.test.keymanytoone.bidir.embedded">
 
     <class name="Customer" table="EMBD_KM2O_CUST">
         <id name="id" column="ID" type="long">

@@ -4,17 +4,20 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.keymanytoone.bidir.ondelete;
-
+package org.hibernate.orm.test.keymanytoone.bidir.embedded;
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
+ * {@inheritDoc}
+ *
+ * @author Steve Ebersole
  */
 public class Order implements Serializable {
 	private Customer customer;
 	private long number;
-	private String item;
+	private Set items = new HashSet();
 
 	public Order() {
 	}
@@ -40,11 +43,11 @@ public class Order implements Serializable {
 		this.number = number;
 	}
 
-	public String getItem() {
-		return item;
+	public Set getItems() {
+		return items;
 	}
 
-	public void setItem(String item) {
-		this.item = item;
+	public void setItems(Set items) {
+		this.items = items;
 	}
 }

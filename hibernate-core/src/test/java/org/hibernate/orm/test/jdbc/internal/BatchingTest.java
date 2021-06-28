@@ -25,7 +25,7 @@ import org.hibernate.jdbc.Expectations;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.common.JournalingBatchObserver;
+import org.hibernate.orm.test.common.JournalingBatchObserver;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

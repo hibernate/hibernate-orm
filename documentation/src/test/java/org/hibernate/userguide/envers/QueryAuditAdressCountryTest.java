@@ -26,7 +26,6 @@ import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.orm.test.legacy.Custom;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

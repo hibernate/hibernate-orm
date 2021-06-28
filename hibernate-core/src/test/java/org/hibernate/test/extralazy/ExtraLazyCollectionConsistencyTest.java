@@ -7,124 +7,134 @@
 package org.hibernate.test.extralazy;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ExtraLazyCollectionConsistencyTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		xmlMappings = {
+				"org/hibernate/test/extralazy/UserGroup.hbm.xml"
+		}
+)
+@SessionFactory
+public class ExtraLazyCollectionConsistencyTest {
 
 	private User user;
 
-	@Override
-	public String[] getMappings() {
-		return new String[] { "extralazy/UserGroup.hbm.xml","extralazy/Parent.hbm.xml","extralazy/Child.hbm.xml" };
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			user = new User( "victor", "hugo" );
+			session.persist( user );
+		} );
 	}
 
-	@Override
-	protected void prepareTest()  {
-		doInHibernate( this::sessionFactory, session -> {
-			user = new User("victor", "hugo");
-			session.persist(user);
-		});
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
-
-	@Test
-	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetSize() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertEquals(1, _user.getDocuments().size());
-		});
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Document" ).executeUpdate();
+					session.createQuery( "delete from User" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetIterator() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertTrue(_user.getDocuments().iterator().hasNext());
-		});
+	public void testSetSize(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
+			new Document( "Les Miserables", "sad", _user );
+			assertThat( _user.getDocuments().size(), is( 1 ) );
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetIsEmpty() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertFalse(_user.getDocuments().isEmpty());
-		});
+	public void testSetIterator(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
+			new Document( "Les Miserables", "sad", _user );
+			assertTrue( _user.getDocuments().iterator().hasNext() );
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetContains() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertTrue(_user.getDocuments().contains(document));
-		});
+	public void testSetIsEmpty(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
+			new Document( "Les Miserables", "sad", _user );
+			assertFalse( _user.getDocuments().isEmpty() );
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetAdd() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
+	public void testSetContains(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
+			Document document = new Document( "Les Miserables", "sad", _user );
+			assertTrue( _user.getDocuments().contains( document ) );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-9933")
+	public void testSetAdd(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
 			Document document = new Document();
-			document.setTitle("Les Miserables");
-			document.setContent("sad");
-			document.setOwner(_user);
-			assertTrue("not added", _user.getDocuments().add(document));
-			assertFalse("added", _user.getDocuments().add(document));
-		});
+			document.setTitle( "Les Miserables" );
+			document.setContent( "sad" );
+			document.setOwner( _user );
+			assertTrue( _user.getDocuments().add( document ), "not added" );
+			assertFalse( _user.getDocuments().add( document ), "added" );
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetRemove() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
+	public void testSetRemove(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
 
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertTrue("not removed", _user.getDocuments().remove(document));
-		});
+			Document document = new Document( "Les Miserables", "sad", _user );
+			assertTrue( _user.getDocuments().remove( document ), "not removed" );
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetToArray() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
+	public void testSetToArray(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
 
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertEquals(1, _user.getDocuments().toArray().length);
-		});
+			new Document( "Les Miserables", "sad", _user );
+			assertThat( _user.getDocuments().toArray().length, is( 1 ) );
+		} );
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9933")
-	public void testSetToArrayTyped() {
-		doInHibernate( this::sessionFactory, session -> {
-			User _user = session.get(User.class, user.getName());
+	public void testSetToArrayTyped(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			User _user = session.get( User.class, user.getName() );
 
-			Document document = new Document("Les Miserables", "sad", _user);
-			assertEquals(1, _user.getDocuments().toArray(new Document[0]).length);
-		});
+			new Document( "Les Miserables", "sad", _user );
+			assertThat( _user.getDocuments().size(), is( 1 ) );
+		} );
 	}
 }
 

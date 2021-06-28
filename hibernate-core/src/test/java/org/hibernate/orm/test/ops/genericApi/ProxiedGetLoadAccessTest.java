@@ -13,33 +13,118 @@ import javax.persistence.Table;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Proxy;
-import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Steve Ebersole
  */
-public class ProxiedGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( UserImpl.class );
+@DomainModel(
+		annotatedClasses = ProxiedGetLoadAccessTest.UserImpl.class
+)
+@SessionFactory
+public class ProxiedGetLoadAccessTest {
+
+	@Test
+	public void testIt(SessionFactoryScope scope) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// create a row
+		scope.inTransaction(
+				session ->
+						session.save( new UserImpl( "steve" ) )
+		);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// test `get` access
+		scope.inTransaction(
+				session -> {
+					// THis technically works
+					session.get( UserImpl.class, 1 );
+					session.get( User.class, 1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.get( UserImpl.class, 1, LockMode.PESSIMISTIC_WRITE );
+					session.get( User.class, 1, LockMode.PESSIMISTIC_WRITE );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.get( UserImpl.class, 1, LockOptions.UPGRADE );
+					session.get( User.class, 1, LockOptions.UPGRADE );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.byId( UserImpl.class ).load( 1 );
+					session.byId( User.class ).load( 1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.byId( UserImpl.class ).with( LockOptions.UPGRADE ).load( 1 );
+					session.byId( User.class ).with( LockOptions.UPGRADE ).load( 1 );
+				}
+		);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// test `load` access
+		scope.inTransaction(
+				session -> {
+					session.load( UserImpl.class, 1 );
+					session.load( User.class, 1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.load( UserImpl.class, 1, LockMode.PESSIMISTIC_WRITE );
+					session.load( User.class, 1, LockMode.PESSIMISTIC_WRITE );
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					session.load( UserImpl.class, 1, LockOptions.UPGRADE );
+					session.load( User.class, 1, LockOptions.UPGRADE );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.byId( UserImpl.class ).getReference( 1 );
+					session.byId( User.class ).getReference( 1 );
+				}
+		);
+
+		scope.inTransaction(
+				session -> {
+					session.byId( UserImpl.class ).with( LockOptions.UPGRADE ).getReference( 1 );
+					session.byId( User.class ).with( LockOptions.UPGRADE ).getReference( 1 );
+				}
+		);
 	}
 
-	public static interface User {
-		public Integer getId();
-		public String getName();
-		public void setName(String name);
+	public interface User {
+		Integer getId();
+
+		String getName();
+
+		void setName(String name);
 	}
 
-	@Entity( name = "User" )
-	@Table( name = "my_user" )
-	@Proxy( proxyClass = User.class )
+	@Entity(name = "User")
+	@Table(name = "my_user")
+	@Proxy(proxyClass = User.class)
 	public static class UserImpl implements User {
 		private Integer id;
 		private String name;
@@ -52,8 +137,8 @@ public class ProxiedGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCas
 		}
 
 		@Id
-		@GeneratedValue( generator = "increment" )
-		@GenericGenerator( name = "increment", strategy = "increment" )
+		@GeneratedValue(generator = "increment")
+		@GenericGenerator(name = "increment", strategy = "increment")
 		@Override
 		public Integer getId() {
 			return id;
@@ -72,92 +157,5 @@ public class ProxiedGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCas
 		public void setName(String name) {
 			this.name = name;
 		}
-	}
-
-	@Test
-	public void testIt() {
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// create a row
-		Session s = openSession();
-		s.beginTransaction();
-		s.save( new UserImpl( "steve" ) );
-		s.getTransaction().commit();
-		s.close();
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// test `get` access
-		s = openSession();
-		s.beginTransaction();
-		// THis technically works
-		User user = s.get( UserImpl.class, 1 );
-		user = s.get( User.class, 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.get( UserImpl.class, 1, LockMode.PESSIMISTIC_WRITE );
-		user = s.get( User.class, 1, LockMode.PESSIMISTIC_WRITE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.get( UserImpl.class, 1, LockOptions.UPGRADE );
-		user = s.get( User.class, 1, LockOptions.UPGRADE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( UserImpl.class ).load( 1 );
-		user = s.byId( User.class ).load( 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( UserImpl.class ).with( LockOptions.UPGRADE ).load( 1 );
-		user = s.byId( User.class ).with( LockOptions.UPGRADE ).load( 1 );
-		s.getTransaction().commit();
-		s.close();
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// test `load` access
-		s = openSession();
-		s.beginTransaction();
-		user = s.load( UserImpl.class, 1 );
-		user = s.load( User.class, 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.load( UserImpl.class, 1, LockMode.PESSIMISTIC_WRITE );
-		user = s.load( User.class, 1, LockMode.PESSIMISTIC_WRITE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.load( UserImpl.class, 1, LockOptions.UPGRADE );
-		user = s.load( User.class, 1, LockOptions.UPGRADE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( UserImpl.class ).getReference( 1 );
-		user = s.byId( User.class ).getReference( 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( UserImpl.class ).with( LockOptions.UPGRADE ).getReference( 1 );
-		user = s.byId( User.class ).with( LockOptions.UPGRADE ).getReference( 1 );
-		s.getTransaction().commit();
-		s.close();
 	}
 }

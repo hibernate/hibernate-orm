@@ -15,30 +15,144 @@ import javax.persistence.Table;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.boot.MetadataSources;
 
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Steve Ebersole
  */
-public class BasicGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase {
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-		sources.addAnnotatedClass( User.class );
+@DomainModel(
+		annotatedClasses = BasicGetLoadAccessTest.User.class
+)
+@SessionFactory
+public class BasicGetLoadAccessTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from User" ).executeUpdate()
+		);
 	}
 
-	@Entity( name = "User" )
-	@Table( name = "my_user" )
+	@Test
+	public void testIt(SessionFactoryScope scope) {
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// create a row
+		scope.inTransaction(
+				session ->
+						session.save( new User( "steve" ) )
+		);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// test `get` access
+		scope.inTransaction(
+				session ->
+						session.get( User.class, 1 )
+		);
+
+
+		scope.inTransaction(
+				session ->
+						session.get( User.class, 1, LockMode.PESSIMISTIC_WRITE )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.get( User.class, 1, LockOptions.UPGRADE )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.byId( User.class ).load( 1 )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.byId( User.class ).with( LockOptions.UPGRADE ).load( 1 )
+		);
+
+		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		// test `load` access
+		scope.inTransaction(
+				session ->
+						session.load( User.class, 1 )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.load( User.class, 1, LockMode.PESSIMISTIC_WRITE )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.load( User.class, 1, LockOptions.UPGRADE )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.byId( User.class ).getReference( 1 )
+		);
+
+		scope.inTransaction(
+				session ->
+						session.byId( User.class ).with( LockOptions.UPGRADE ).getReference( 1 )
+		);
+	}
+
+	@Test
+	public void testNullLoadResult(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertNull( session.byId( User.class ).load( -1 ) );
+
+					Optional<User> user = session.byId( User.class ).loadOptional( -1 );
+					assertNotNull( user );
+					assertFalse( user.isPresent() );
+					try {
+						user.get();
+						fail( "Expecting call to Optional#get to throw NoSuchElementException" );
+					}
+					catch (NoSuchElementException expected) {
+						// the expected result...
+					}
+				}
+		);
+	}
+
+	@Test
+	public void testNullQueryResult(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertNull( session.createQuery( "select u from User u where u.id = -1" ).uniqueResult() );
+
+					Optional<User> user = session.createQuery( "select u from User u where u.id = -1" ).uniqueResultOptional();
+					assertNotNull( user );
+					assertFalse( user.isPresent() );
+					try {
+						user.get();
+						fail( "Expecting call to Optional#get to throw NoSuchElementException" );
+					}
+					catch (NoSuchElementException expected) {
+						// the expected result...
+					}
+				}
+		);
+	}
+
+	@Entity(name = "User")
+	@Table(name = "my_user")
 	public static class User {
 		private Integer id;
 		private String name;
@@ -51,8 +165,8 @@ public class BasicGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase 
 		}
 
 		@Id
-		@GeneratedValue( generator = "increment" )
-		@GenericGenerator( name = "increment", strategy = "increment" )
+		@GeneratedValue(generator = "increment")
+		@GenericGenerator(name = "increment", strategy = "increment")
 		public Integer getId() {
 			return id;
 		}
@@ -70,125 +184,4 @@ public class BasicGetLoadAccessTest extends BaseNonConfigCoreFunctionalTestCase 
 		}
 	}
 
-	@Test
-	public void testIt() {
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// create a row
-		Session s = openSession();
-		s.beginTransaction();
-		s.save( new User( "steve" ) );
-		s.getTransaction().commit();
-		s.close();
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// test `get` access
-		s = openSession();
-		s.beginTransaction();
-		User user = s.get( User.class, 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.get( User.class, 1, LockMode.PESSIMISTIC_WRITE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.get( User.class, 1, LockOptions.UPGRADE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( User.class ).load( 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( User.class ).with( LockOptions.UPGRADE ).load( 1 );
-		s.getTransaction().commit();
-		s.close();
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// test `load` access
-		s = openSession();
-		s.beginTransaction();
-		user = s.load( User.class, 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.load( User.class, 1, LockMode.PESSIMISTIC_WRITE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.load( User.class, 1, LockOptions.UPGRADE );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( User.class ).getReference( 1 );
-		s.getTransaction().commit();
-		s.close();
-
-		s = openSession();
-		s.beginTransaction();
-		user = s.byId( User.class ).with( LockOptions.UPGRADE ).getReference( 1 );
-		s.getTransaction().commit();
-		s.close();
-	}
-
-	@Test
-	public void testNullLoadResult() {
-		Session s = openSession();
-		s.beginTransaction();
-
-		assertNull( s.byId( User.class ).load( -1 ) );
-
-		Optional<User> user = s.byId( User.class ).loadOptional( -1 );
-		assertNotNull( user );
-		assertFalse( user.isPresent() );
-		try {
-			user.get();
-			fail( "Expecting call to Optional#get to throw NoSuchElementException" );
-		}
-		catch (NoSuchElementException expected) {
-			// the expected result...
-		}
-
-		s.getTransaction().commit();
-		s.close();
-
-	}
-
-	@Test
-	public void testNullQueryResult() {
-		Session s = openSession();
-		s.beginTransaction();
-
-		assertNull( s.createQuery( "select u from User u where u.id = -1" ).uniqueResult() );
-
-		Optional<User> user = s.createQuery( "select u from User u where u.id = -1" ).uniqueResultOptional();
-		assertNotNull( user );
-		assertFalse( user.isPresent() );
-		try {
-			user.get();
-			fail( "Expecting call to Optional#get to throw NoSuchElementException" );
-		}
-		catch (NoSuchElementException expected) {
-			// the expected result...
-		}
-
-		s.getTransaction().commit();
-		s.close();
-
-	}
 }

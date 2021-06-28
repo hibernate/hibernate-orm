@@ -6,11 +6,6 @@
  */
 package org.hibernate.event.service.internal;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.lang.reflect.Field;
 
 import org.hibernate.event.internal.DefaultMergeEventListener;
@@ -21,15 +16,20 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.MergeEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Frank Doherty
  */
 @TestForIssue(jiraKey = "HHH-13070")
-public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTestCase {
+public class EventListenerGroupAppendListenerTest extends BaseSessionFactoryFunctionalTest {
 
 	private static final DuplicationStrategy DUPLICATION_STRATEGY_REPLACE_ORIGINAL = new DuplicationStrategy() {
 
@@ -40,7 +40,7 @@ public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTest
 		}
 
 		@Override
-		public DuplicationStrategy.Action getAction() {
+		public Action getAction() {
 			return Action.REPLACE_ORIGINAL;
 		}
 	};
@@ -60,8 +60,9 @@ public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTest
 	}
 
 	private void runAppendListenerTest(
-			DuplicationStrategy duplicationStrategy, DefaultMergeEventListener mergeEventListener) {
-		doInHibernate( this::sessionFactory, session -> {
+			DuplicationStrategy duplicationStrategy,
+			DefaultMergeEventListener mergeEventListener) {
+		inTransaction( session -> {
 			ServiceRegistryImplementor serviceRegistry = sessionFactory().getServiceRegistry();
 			EventListenerRegistry listenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
 
@@ -72,7 +73,7 @@ public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTest
 			group.appendListener( mergeEventListener );
 
 			Iterable<MergeEventListener> listeners = group.listeners();
-			assertTrue( "Should have at least one listener", listeners.iterator().hasNext() );
+			assertTrue( listeners.iterator().hasNext(), "Should have at least one listener" );
 			listeners.forEach( this::assertCallbackRegistry );
 		} );
 	}
@@ -80,7 +81,7 @@ public class EventListenerGroupAppendListenerTest extends BaseCoreFunctionalTest
 	private void assertCallbackRegistry(
 			MergeEventListener listener) {
 		try {
-			assertNotNull( "callbackRegistry should not be null", getCallbackRegistry( listener ) );
+			assertNotNull( getCallbackRegistry( listener ), "callbackRegistry should not be null" );
 		}
 		catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException e) {
 			fail( "Unable to get callbackRegistry field on listener" );

@@ -8,9 +8,14 @@ package org.hibernate.testing.orm.junit;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.NClob;
+import java.util.Iterator;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -22,6 +27,14 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
+import org.hibernate.type.BlobType;
+import org.hibernate.type.ClobType;
+import org.hibernate.type.NClobType;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -90,9 +103,62 @@ public abstract class BaseSessionFactoryFunctionalTest
 	public MetadataImplementor produceModel(StandardServiceRegistry serviceRegistry) {
 		MetadataSources metadataSources = new MetadataSources( serviceRegistry );
 		MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
-		applyMetadataBuilder(metadataBuilder);
+		applyMetadataBuilder( metadataBuilder );
 		applyMetadataSources( metadataSources );
-		return (MetadataImplementor) metadataSources.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		if ( !overrideCacheStrategy() || getCacheConcurrencyStrategy() == null ) {
+			return metadata;
+		}
+
+		applyCacheSettings( metadata );
+
+		return metadata;
+	}
+
+	protected final void applyCacheSettings(Metadata metadata) {
+		for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+			if ( entityBinding.isInherited() ) {
+				continue;
+			}
+
+			boolean hasLob = false;
+
+			final Iterator props = entityBinding.getPropertyClosureIterator();
+			while ( props.hasNext() ) {
+				final Property prop = (Property) props.next();
+				if ( prop.getValue().isSimpleValue() ) {
+					if ( isLob( ( (SimpleValue) prop.getValue() ).getTypeName() ) ) {
+						hasLob = true;
+						break;
+					}
+				}
+			}
+
+			if ( !hasLob ) {
+				( (RootClass) entityBinding ).setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
+				entityBinding.setCached( true );
+			}
+		}
+
+		for ( Collection collectionBinding : metadata.getCollectionBindings() ) {
+			boolean isLob = false;
+
+			if ( collectionBinding.getElement().isSimpleValue() ) {
+				isLob = isLob( ( (SimpleValue) collectionBinding.getElement() ).getTypeName() );
+			}
+
+			if ( !isLob ) {
+				collectionBinding.setCacheConcurrencyStrategy( getCacheConcurrencyStrategy() );
+			}
+		}
+	}
+
+	protected boolean overrideCacheStrategy() {
+		return true;
+	}
+
+	protected String getCacheConcurrencyStrategy() {
+		return null;
 	}
 
 	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
@@ -209,6 +275,18 @@ public abstract class BaseSessionFactoryFunctionalTest
 
 	protected Dialect getDialect(){
 		return DialectContext.getDialect();
+	}
+
+	private boolean isLob(String typeName) {
+		return "blob".equals( typeName )
+				|| "clob".equals( typeName )
+				|| "nclob".equals( typeName )
+				|| Blob.class.getName().equals( typeName )
+				|| Clob.class.getName().equals( typeName )
+				|| NClob.class.getName().equals( typeName )
+				|| BlobType.class.getName().equals( typeName )
+				|| ClobType.class.getName().equals( typeName )
+				|| NClobType.class.getName().equals( typeName );
 	}
 
 }

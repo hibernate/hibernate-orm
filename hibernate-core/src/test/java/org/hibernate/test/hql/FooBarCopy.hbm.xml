@@ -8,7 +8,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
-<hibernate-mapping default-lazy="false" package="org.hibernate.test.legacy">
+<hibernate-mapping default-lazy="false" package="org.hibernate.orm.test.legacy">
 
     <!-- a slightly modified copy of FooBar.hbm.xml from the legacy test package -->
 
@@ -68,7 +68,7 @@
 		</property>
 		<property name="byte" column="byte_"/>
 		<property name="yesno" type="yes_no"/>
-		<property name="blob" type="org.hibernate.test.legacy.Foo$Struct" column="blobb_"/>
+		<property name="blob" type="org.hibernate.orm.test.legacy.Foo$Struct" column="blobb_"/>
 		<property name="nullBlob" type="serializable"/>
 		<property name="binary" column="bin_"/>
 		<property name="theLocale" access="field" column="`localeayzabc123`"/>

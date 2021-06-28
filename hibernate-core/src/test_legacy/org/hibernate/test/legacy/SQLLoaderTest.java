@@ -6,7 +6,7 @@
  */
 
 //$Id: SQLLoaderTest.java 11383 2007-04-02 15:34:02Z steve.ebersole@jboss.com $
-package org.hibernate.test.legacy;
+package org.hibernate.orm.test.legacy;
 
 import java.sql.SQLException;
 import java.util.ArrayList;

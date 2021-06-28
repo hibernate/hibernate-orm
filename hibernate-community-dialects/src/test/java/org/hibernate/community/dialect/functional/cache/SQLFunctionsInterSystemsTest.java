@@ -27,11 +27,11 @@ import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.test.legacy.Blobber;
-import org.hibernate.test.legacy.Broken;
-import org.hibernate.test.legacy.Fixed;
-import org.hibernate.test.legacy.Simple;
-import org.hibernate.test.legacy.Single;
+import org.hibernate.orm.test.legacy.Blobber;
+import org.hibernate.orm.test.legacy.Broken;
+import org.hibernate.orm.test.legacy.Fixed;
+import org.hibernate.orm.test.legacy.Simple;
+import org.hibernate.orm.test.legacy.Single;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

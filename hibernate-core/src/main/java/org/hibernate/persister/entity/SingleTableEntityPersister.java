@@ -57,6 +57,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
+import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.AssociationType;
@@ -1018,13 +1019,21 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			}
 			return p;
 		}
+		final Object value = getDiscriminatorValue();
+		final boolean hasNotNullDiscriminator = value == NOT_NULL_DISCRIMINATOR;
+		final boolean hasNullDiscrininator = value == NULL_DISCRIMINATOR;
+		if ( hasNotNullDiscriminator || hasNullDiscrininator ) {
+			final NullnessPredicate nullnessPredicate = new NullnessPredicate( sqlExpression );
+			if ( hasNotNullDiscriminator ) {
+				return new NegatedPredicate( nullnessPredicate );
+			}
+
+			return nullnessPredicate;
+		}
 		return new ComparisonPredicate(
 				sqlExpression,
 				ComparisonOperator.EQUAL,
-				new QueryLiteral<>(
-						getDiscriminatorValue(),
-						discriminatorType
-				)
+				new QueryLiteral<>( value, discriminatorType )
 		);
 	}
 

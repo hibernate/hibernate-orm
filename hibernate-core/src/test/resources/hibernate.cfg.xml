@@ -9,6 +9,6 @@
 	<session-factory name="foo">
 		<property name="show_sql">true</property>
 		<mapping resource="org/hibernate/test/legacy/Simple.hbm.xml"/>
-		<class-cache class="org.hibernate.test.legacy.Simple" region="Simple" usage="read-write"/>
+		<class-cache class="org.hibernate.orm.test.legacy.Simple" region="Simple" usage="read-write"/>
 	</session-factory>
 </hibernate-configuration>

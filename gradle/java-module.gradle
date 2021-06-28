@@ -224,15 +224,6 @@ convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet 
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// mac-specific stuff
-final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
-if ( ext.toolsJar.exists() ) {
-	dependencies{
-		testCompile files( toolsJar )
-	}
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Testing
 
 if ( gradle.ext.javaToolchainEnabled ) {

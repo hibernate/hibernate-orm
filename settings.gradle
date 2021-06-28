@@ -12,7 +12,7 @@ plugins {
 
 rootProject.name = 'hibernate-orm'
 
-includeBuild('database-service-plugin')
+includeBuild('hibernate-orm-build')
 
 apply from: file( 'gradle/gradle-enterprise.gradle' )
 

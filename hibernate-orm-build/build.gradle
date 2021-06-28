@@ -30,6 +30,10 @@ gradlePlugin {
 			id = 'org.hibernate.orm.database-service'
 			implementationClass = 'org.hibernate.orm.db.DatabaseServicePlugin'
 		}
+		antlrPlugin {
+			id = 'org.hibernate.orm.antlr'
+			implementationClass = 'org.hibernate.orm.antlr.Antlr4Plugin'
+		}
 	}
 }
 

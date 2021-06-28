@@ -151,7 +151,7 @@ task uploadDocumentation(type:Exec) {
  */
 distributions {
     main {
-        baseName = 'hibernate-release'
+        distributionBaseName = 'hibernate-release'
         contents {
             from rootProject.file( 'lgpl.txt' )
             from rootProject.file( 'changelog.txt' )

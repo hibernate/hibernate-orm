@@ -13,6 +13,7 @@ description = 'Hibernate\'s entity version (audit/history) support Jakarta editi
 apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
 
 evaluationDependsOn( ':hibernate-envers' )
+evaluationDependsOn( ':hibernate-transaction-client' )
 
 dependencies {
 	api( project( ':hibernate-core-jakarta' ) ) {
@@ -132,7 +133,7 @@ tasks.test {
 	}
 }
 
-tasks.test.dependsOn project( ':hibernate-transaction-client' ).tasks.jar
+tasks.test.dependsOn ':hibernate-transaction-client:jar'
 
 task testJar(type: Jar, dependsOn: testClasses) {
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE

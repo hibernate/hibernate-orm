@@ -8,36 +8,32 @@ import org.asciidoctor.gradle.AsciidoctorTask
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-ext {
-	projectsToSkipWhenAggregatingJavadocs = [
-			'documentation',
-			'hibernate-entitymanager',
-			'hibernate-gradle-plugin',
-			'project-template',
-			'hibernate-infinispan',
-			'hibernate-ehcache',
-			'hibernate-java8',
-			'hibernate-integrationtest-java-modules',
-			'hibernate-core-jakarta',
-			'hibernate-testing-jakarta',
-			'hibernate-envers-jakarta',
-			'hibernate-jpamodelgen-jakarta',
-			'release'
-	]
-}
+def projectsToIncludeInAggregatedJavadoc = [
+		':hibernate-core',
+		':hibernate-testing',
+		':hibernate-envers',
+		':hibernate-agroal',
+		':hibernate-c3p0',
+		':hibernate-graalvm',
+		':hibernate-hikaricp',
+		':hibernate-jcache',
+		':hibernate-micrometer',
+		':hibernate-proxool',
+		':hibernate-vibur',
+		':hibernate-gradle-plugin',
+		':hibernate-enhance-maven-plugin',
+		':hibernate-jpamodelgen',
+]
 
-rootProject.subprojects { subproject ->
-	if ( !this.projectsToSkipWhenAggregatingJavadocs.contains( subproject.name ) ) {
-		this.evaluationDependsOn( subproject.path )
-	}
+projectsToIncludeInAggregatedJavadoc.each {projectPath ->
+	evaluationDependsOn projectPath
 }
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
-
 apply plugin: 'org.asciidoctor.convert'
-
 apply plugin: 'hibernate-matrix-testing'
 
+tasks.build.dependsOn 'buildDocs'
 defaultTasks 'buildDocs'
 
 
@@ -110,7 +106,7 @@ final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) )
  * Builds the JavaDocs aggregated (unified) across all the sub-projects
  */
 task aggregateJavadocs(type: Javadoc) {
-    description = 'Builds the aggregated (unified) JavaDocs across all sub-projects'
+    description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
 
     final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
@@ -165,15 +161,14 @@ task aggregateJavadocs(type: Javadoc) {
     // process each project, building up:
     //      1) appropriate sources
     //      2) classpath
-    parent.subprojects.each { Project subProject->
-        // skip certain sub-projects
-		if ( ! projectsToSkipWhenAggregatingJavadocs.contains( subProject.name ) ) {
-			// we only care about the main SourceSet...
-			source subProject.sourceSets.main.java
+	projectsToIncludeInAggregatedJavadoc.each {projectPath ->
+		def includeProject = parent.project(projectPath)
 
-			classpath += subProject.sourceSets.main.output + subProject.sourceSets.main.compileClasspath + subProject.configurations.provided
-		}
-    }
+		// we only care about the main SourceSet...
+		source includeProject.sourceSets.main.java
+		classpath += ( includeProject.sourceSets.main.output + includeProject.sourceSets.main.compileClasspath )
+
+	}
 }
 
 tasks.asciidoctor {
@@ -221,8 +216,8 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 
 task buildTutorialZip(type: Zip) {
 	from 'src/main/asciidoc/quickstart/tutorials'
-	destinationDir = tasks.renderGettingStartedGuides.outputDir
-	archiveName = 'hibernate-tutorials.zip'
+	destinationDirectory = tasks.renderGettingStartedGuides.outputDir
+	archiveBaseName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
 			slf4j: "1.7.5",

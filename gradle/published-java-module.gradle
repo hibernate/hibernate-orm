@@ -8,7 +8,15 @@
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
 
+configurations {
+	javadocSources {
+		description 'Used to aggregate javadocs for the whole project'
+	}
+}
 
+dependencies {
+	javadocSources sourceSets.main.allJava
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Publishing

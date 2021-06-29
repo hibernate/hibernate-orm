@@ -7,6 +7,7 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.io.Serializable;
+import java.lang.reflect.Type;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.persistence.EnumType;
@@ -48,6 +49,7 @@ public class InferredBasicValueResolver {
 	public static BasicValue.Resolution from(
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess,
+			java.lang.reflect.Type resolvedJavaType,
 			Supplier<JavaTypeDescriptor> reflectedJtdResolver,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			Table table,
@@ -100,6 +102,7 @@ public class InferredBasicValueResolver {
 								(TemporalJavaTypeDescriptor) reflectedJtd,
 								explicitJavaType,
 								null,
+								resolvedJavaType,
 								stdIndicators,
 								typeConfiguration
 						);
@@ -154,6 +157,7 @@ public class InferredBasicValueResolver {
 							(TemporalJavaTypeDescriptor) reflectedJtd,
 							null,
 							null,
+							resolvedJavaType,
 							stdIndicators,
 							typeConfiguration
 					);
@@ -360,6 +364,7 @@ public class InferredBasicValueResolver {
 			TemporalJavaTypeDescriptor reflectedJtd,
 			BasicJavaDescriptor explicitJavaType,
 			JdbcTypeDescriptor explicitJdbcType,
+			java.lang.reflect.Type resolvedJavaType,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
@@ -437,8 +442,14 @@ public class InferredBasicValueResolver {
 		//
 		// 		- for the moment continue to use the legacy resolution to registered
 		// 		BasicType
-
-		final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( reflectedJtd.getJavaType() );
+		final Type javaType;
+		if ( resolvedJavaType == null ) {
+			javaType = reflectedJtd.getJavaType();
+		}
+		else {
+			javaType = resolvedJavaType;
+		}
+		final BasicType registeredType = typeConfiguration.getBasicTypeRegistry().getRegisteredType( javaType );
 		final AllowableTemporalParameterType legacyTemporalType = (AllowableTemporalParameterType) registeredType;
 
 		final BasicType basicType;

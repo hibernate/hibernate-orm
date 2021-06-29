@@ -376,6 +376,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		return InferredBasicValueResolver.from(
 				explicitJavaTypeAccess,
 				explicitSqlTypeAccess,
+				resolvedJavaType,
 				this::determineReflectedJavaTypeDescriptor,
 				this,
 				getTable(),

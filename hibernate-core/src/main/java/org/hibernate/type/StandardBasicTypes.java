@@ -970,6 +970,29 @@ public final class StandardBasicTypes {
 		//handle( new AdaptedImmutableType( DbTimestampType.INSTANCE ), typeConfiguration,
 		//		basicTypeProducerRegistry, "imm_dbtimestamp" );
 
+		final AdaptedImmutableType dateTypeImmutableType = new AdaptedImmutableType( DateType.INSTANCE );
+		handle( dateTypeImmutableType, null, basicTypeRegistry, dateTypeImmutableType.getName() );
+
+		final AdaptedImmutableType timeTypeImmutableType = new AdaptedImmutableType( TimeType.INSTANCE );
+		handle( timeTypeImmutableType, null, basicTypeRegistry, timeTypeImmutableType.getName() );
+
+		final AdaptedImmutableType timeStampImmutableType = new AdaptedImmutableType( TimestampType.INSTANCE );
+		handle( timeStampImmutableType, null, basicTypeRegistry, timeStampImmutableType.getName() );
+
+		final AdaptedImmutableType calendarImmutableType = new AdaptedImmutableType( CalendarType.INSTANCE );
+		handle( calendarImmutableType, null, basicTypeRegistry, calendarImmutableType.getName() );
+
+		final AdaptedImmutableType calendarDateImmutableType = new AdaptedImmutableType( CalendarDateType.INSTANCE );
+		handle( calendarDateImmutableType, null, basicTypeRegistry, calendarDateImmutableType.getName() );
+
+		//noinspection unchecked
+		final AdaptedImmutableType binaryImmutableType = new AdaptedImmutableType( BinaryType.INSTANCE );
+		handle( binaryImmutableType, null, basicTypeRegistry, binaryImmutableType.getName() );
+
+		//noinspection unchecked
+		final AdaptedImmutableType serializableImmutableType = new AdaptedImmutableType( SerializableType.INSTANCE );
+		handle( serializableImmutableType, null, basicTypeRegistry, serializableImmutableType.getName() );
+
 		basicTypeRegistry.primed();
 	}
 

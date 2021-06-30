@@ -104,7 +104,7 @@ EOF
 
 mssql() {
     docker rm -f mssql || true
-    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y microsoft/mssql-server-linux:2017-CU13
+    docker run --name mssql -d -p 1433:1433 -e "SA_PASSWORD=Hibernate_orm_test" -e ACCEPT_EULA=Y mcr.microsoft.com/mssql/server:2017-CU13
     sleep 5
     n=0
     until [ "$n" -ge 5 ]

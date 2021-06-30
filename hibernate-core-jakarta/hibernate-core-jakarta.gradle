@@ -229,6 +229,12 @@ tasks.test {
 		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
 		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 	}
+	// Allow to exclude specific tests
+	if ( project.hasProperty( 'excludeTests' ) ) {
+		filter {
+			excludeTestsMatching project.property( 'excludeTests' ).toString()
+		}
+	}
 }
 
 task testJar(type: Jar, dependsOn: testClasses) {

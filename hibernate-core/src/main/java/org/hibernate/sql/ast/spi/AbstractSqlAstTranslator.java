@@ -1518,8 +1518,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else {
 			for ( Expression partitionExpression : partitionExpressions ) {
-				if ( partitionExpression instanceof SqlTuple ) {
-					for ( Expression expression : ( (SqlTuple) partitionExpression ).getExpressions() ) {
+				if ( partitionExpression instanceof SqlTupleContainer ) {
+					for ( Expression expression : ( (SqlTupleContainer) partitionExpression ).getSqlTuple().getExpressions() ) {
 						appendSql( separator );
 						renderPartitionItem( resolveAliasedExpression( expression ) );
 						separator = COMA_SEPARATOR;

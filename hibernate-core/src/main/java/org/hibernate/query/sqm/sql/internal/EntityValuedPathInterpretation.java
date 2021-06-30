@@ -14,11 +14,13 @@ import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -65,19 +67,54 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				.findTableGroup( sqmPath.getLhs().getNavigablePath() )
 				.getModelPart()
 				.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
-		return from( sqmPath.getNavigablePath(), tableGroup, mapping, sqlAstCreationState );
+		return from( sqmPath.getNavigablePath(), tableGroup, mapping, false, sqlAstCreationState );
 	}
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			EntityValuedModelPart mapping,
+			boolean expandToAllColumns,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final SessionFactoryImplementor sessionFactory = sqlAstCreationState.getCreationContext().getSessionFactory();
 		final Expression sqlExpression;
 
-		if ( mapping instanceof EntityAssociationMapping ) {
+		if ( expandToAllColumns ) {
+			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
+			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
+			final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
+			final List<Expression> expressions = new ArrayList<>(
+					mapping.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount()
+							+ ( discriminatorMapping == null ? 0 : 1 )
+			);
+			final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
+				final TableReference tableReference = tableGroup.resolveTableReference(
+						navigablePath,
+						selectableMapping.getContainingTableExpression()
+				);
+				expressions.add(
+						sqlExprResolver.resolveSqlExpression(
+								createColumnReferenceKey(
+										tableReference,
+										selectableMapping.getSelectionExpression()
+								),
+								processingState -> new ColumnReference(
+										tableReference,
+										selectableMapping,
+										sessionFactory
+								)
+						)
+				);
+			};
+			identifierMapping.forEachSelectable( selectableConsumer );
+			if ( discriminatorMapping != null ) {
+				discriminatorMapping.forEachSelectable( selectableConsumer );
+			}
+			mapping.forEachSelectable( selectableConsumer );
+			sqlExpression = new SqlTuple( expressions, mapping );
+		}
+		else if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;
 			final ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
 			final String lhsTable;

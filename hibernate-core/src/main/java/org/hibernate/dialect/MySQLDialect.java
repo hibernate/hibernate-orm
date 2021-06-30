@@ -420,6 +420,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsSelectAliasInGroupByClause() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsColumnCheck() {
 		return false;
 	}

@@ -341,11 +341,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private int fetchDepth;
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
+	private SqmQueryPart<?> currentSqmQueryPart;
 
 	private Map<String, FilterPredicate> collectionFilterPredicates;
 	private OrderByFragmentConsumer orderByFragmentConsumer;
 
-	private Map<String, NavigablePath> joinPathBySqmJoinFullPath = new HashMap<>();
+	private final Map<String, NavigablePath> joinPathBySqmJoinFullPath = new HashMap<>();
 
 	private final SqlAliasBaseManager sqlAliasBaseManager = new SqlAliasBaseManager();
 	private final Stack<SqlAstProcessingState> processingStateStack = new StandardStack<>();
@@ -1315,6 +1316,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		final DelegatingSqmAliasedNodeCollector collector = (DelegatingSqmAliasedNodeCollector) processingState
 				.getSqlExpressionResolver();
+		final SqmQueryPart<?> sqmQueryPart = currentSqmQueryPart;
+		currentSqmQueryPart = queryGroup;
 		pushProcessingState( processingState );
 
 		try {
@@ -1335,6 +1338,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		finally {
 			popProcessingStateStack();
+			currentSqmQueryPart = sqmQueryPart;
 		}
 	}
 
@@ -1386,6 +1390,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
+		final SqmQueryPart<?> sqmQueryPart = currentSqmQueryPart;
+		currentSqmQueryPart = sqmQuerySpec;
 		pushProcessingState( processingState );
 
 		try {
@@ -1435,6 +1441,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			additionalRestrictions = originalAdditionalRestrictions;
 			popProcessingStateStack();
+			currentSqmQueryPart = sqmQueryPart;
 		}
 	}
 
@@ -1657,15 +1664,41 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else if ( tableGroup.getModelPart() instanceof EntityValuedModelPart ) {
 				final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup.getModelPart();
+				final boolean expandToAllColumns;
+				if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
+					// When the table group is known to be fetched i.e. a fetch join
+					// but also when the from clause is part of the select clause
+					// we need to expand to all columns, as we also expand this to all columns in the select clause
+					expandToAllColumns = tableGroup.isFetched()
+							|| groupByClauseExpression instanceof SqmFrom<?, ?> && selectClauseContains( (SqmFrom<?, ?>) groupByClauseExpression );
+				}
+				else {
+					expandToAllColumns = false;
+				}
 				return EntityValuedPathInterpretation.from(
 						tableGroup.getNavigablePath(),
 						tableGroup,
 						mapping,
+						expandToAllColumns,
 						this
 				);
 			}
 		}
 		return expression;
+	}
+
+	private boolean selectClauseContains(SqmFrom<?, ?> from) {
+		final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) currentSqmQueryPart;
+		final List<SqmSelection> selections = sqmQuerySpec.getSelectClause().getSelections();
+		if ( selections.isEmpty() && from instanceof SqmRoot<?> ) {
+			return true;
+		}
+		for ( SqmSelection selection : selections ) {
+			if ( selection.getSelectableNode() == from ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

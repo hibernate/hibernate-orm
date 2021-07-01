@@ -871,12 +871,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				// if we have only a single return expression, its java type should match the requested type
 				final Type queryResultType = queryPlan.getTranslators()[0].getReturnTypes()[0];
 				if ( !resultClass.isAssignableFrom( queryResultType.getReturnedClass() ) ) {
-					throw new IllegalArgumentException(
-							"Type specified for TypedQuery [" +
-									resultClass.getName() +
-									"] is incompatible with query return type [" +
-									queryResultType.getReturnedClass() + "]"
-					);
+					throw buildIncompatibleException( resultClass, queryResultType.getReturnedClass() );
 				}
 			}
 			else {
@@ -1001,10 +996,23 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
-		return new IllegalArgumentException(
-				"Type specified for TypedQuery [" + resultClass.getName() +
-						"] is incompatible with query return type [" + actualResultClass + "]"
-		);
+		final String resultClassName = resultClass.getName();
+		final String actualResultClassName = actualResultClass.getName();
+		if ( resultClassName.equals( actualResultClassName ) ) {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with the query return type of the same name." +
+							" Both classes have the same name but are different as they have been loaded respectively by Classloaders " +
+							resultClass.getClassLoader().toString() + ", " + actualResultClass.getClassLoader().toString() +
+							". This suggests a classloader bug in the Runtime executing Hibernate ORM, or in the integration code."
+			);
+		}
+		else {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with query return type [" + actualResultClass + "]"
+			);
+		}
 	}
 
 	@Override

@@ -171,13 +171,18 @@ ext {
     jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
 }
 
-sourceSets.main {
-    java.srcDir project.jaxbTargetDir
-}
-
-// resources inherently exclude sources
-sourceSets.test.resources {
-    setSrcDirs( ['src/test/java','src/test/resources','src/test/bundles'] )
+sourceSets {
+    main {
+        java {
+            srcDir project.jaxbTargetDir
+        }
+    }
+    test {
+        resources {
+            // resources inherently exclude Java sources
+            srcDir 'src/test/java'
+        }
+    }
 }
 
 idea {
@@ -227,9 +232,8 @@ task copyBundleResources (type: Copy) {
         ext.bundlesTargetDir.mkdirs()
     }
 }
-// Not sure if this is a proper fix, but if we use dependsOn instead of finalizedBy,
-// we will end up a test JAR with bundle files that where variables are replaced
-processTestResources.finalizedBy copyBundleResources
+
+processTestResources.dependsOn copyBundleResources
 
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE

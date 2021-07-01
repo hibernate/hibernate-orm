@@ -151,11 +151,18 @@ project.ext {
 
 tasks.compileTestJava {
 	enabled false
-	dependsOn project(':hibernate-core').tasks.testJar
+	dependsOn project(':hibernate-core').tasks.compileTestJava
+	dependsOn
+}
+
+tasks.processTestResources {
+	enabled false
+	dependsOn project(':hibernate-core').tasks.compileTestJava
 }
 
 task unpackTests(type: Copy) {
-	from zipTree( project( ':hibernate-core' ).tasks.testJar.archiveFile )
+	from project( ':hibernate-core' ).sourceSets.test.output
+//	from zipTree( project( ':hibernate-core' ).tasks.testJar.archiveFile )
 	into project.testClassesUnpackTargetDirectory
 	exclude 'templates/**'
 }
@@ -163,16 +170,15 @@ task unpackTests(type: Copy) {
 task jakartafyTests(type: JakartaDirectoryTransformation) {
 	sourceDirectory = project.testClassesUnpackTargetDirectory
 	targetDirectory = project.testClassesTransformationTargetDirectory
+
+	dependsOn 'compileTestJava'
+	dependsOn 'unpackTests'
 }
 
+tasks.test.dependsOn tasks.jakartafyTests
+//tasks.jakartafyTests.dependsOn tasks.unpackTests
+//tasks.unpackTests.dependsOn project( ':hibernate-core' ).tasks.testJar
 
-tasks.compileTestJava.finalizedBy tasks.jakartafyTests
-tasks.jakartafyTests.dependsOn tasks.unpackTests
-tasks.unpackTests.dependsOn project( ':hibernate-core' ).tasks.testJar
-
-tasks.processTestResources {
-	enabled false
-}
 
 task copyTestBundles(type: Copy) {
 	// `:hibernate-core:processTestResources` also triggers processing the

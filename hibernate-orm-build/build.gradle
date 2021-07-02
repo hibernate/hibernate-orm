@@ -34,6 +34,14 @@ gradlePlugin {
 			id = 'org.hibernate.orm.antlr'
 			implementationClass = 'org.hibernate.orm.antlr.Antlr4Plugin'
 		}
+		jakartaPlugin {
+			id = 'org.hibernate.orm.jakarta'
+			implementationClass = 'org.hibernate.orm.jakarta.JakartaPlugin'
+		}
+		jakartaPublishPlugin {
+			id = 'org.hibernate.orm.jakarta-publish'
+			implementationClass = 'org.hibernate.orm.jakarta.JakartaPublishingPlugin'
+		}
 	}
 }
 

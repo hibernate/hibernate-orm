@@ -1,17 +1,12 @@
-import javax.inject.Inject
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-import org.hibernate.orm.jakarta.JakartaDirectoryTransformation
-import org.hibernate.orm.jakarta.JakartaJarTransformation
-
 description = 'Hibernate O/RM implementation of the Jakarta Persistence specification'
 
-apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
 
 evaluationDependsOn( ':hibernate-core' )
 
@@ -84,58 +79,58 @@ dependencies {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // main jar
-
-tasks.jar {
-	enabled false
-}
-
-task jakartafyJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-core').tasks.jar.archiveFile
-	targetJar = tasks.jar.archiveFile
-}
-
-tasks.jar.dependsOn project(':hibernate-core').tasks.jar
-tasks.jar.finalizedBy tasks.jakartafyJar
-tasks.jakartafyJar.dependsOn tasks.jar
-tasks.jakartafyJar.mustRunAfter tasks.jar
+//
+//tasks.jar {
+//	enabled false
+//}
+//
+//task jakartafyJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-core').tasks.jar.archiveFile
+//	targetJar = tasks.jar.archiveFile
+//}
+//
+//tasks.jar.dependsOn project(':hibernate-core').tasks.jar
+//tasks.jar.finalizedBy tasks.jakartafyJar
+//tasks.jakartafyJar.dependsOn tasks.jar
+//tasks.jakartafyJar.mustRunAfter tasks.jar
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // javadoc jar
 
-tasks.javadocJar {
-	enabled false
-}
-
-task jakartafyJavadocJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-core').tasks.javadocJar.archiveFile
-	targetJar = tasks.javadocJar.archiveFile
-}
-
-tasks.javadocJar.dependsOn project(':hibernate-core').tasks.javadocJar
-tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
-tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
-tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+//tasks.javadocJar {
+//	enabled false
+//}
+//
+//task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-core').tasks.javadocJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.javadocJar.dependsOn project(':hibernate-core').tasks.javadocJar
+//tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+//tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+//tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
 
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // sources jar
 
-tasks.sourcesJar {
-	enabled false
-}
-
-task jakartafySourcesJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-core').tasks.sourcesJar.archiveFile
-	targetJar = tasks.javadocJar.archiveFile
-}
-
-tasks.sourcesJar.dependsOn project(':hibernate-core').tasks.sourcesJar
-tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
-tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
-tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
-
+//tasks.sourcesJar {
+//	enabled false
+//}
+//
+//task jakartafySourcesJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-core').tasks.sourcesJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.sourcesJar.dependsOn project(':hibernate-core').tasks.sourcesJar
+//tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+//tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+//tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
+//
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -149,36 +144,42 @@ project.ext {
 	templatesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/templates' )
 }
 
-tasks.compileTestJava {
-	enabled false
-	dependsOn project(':hibernate-core').tasks.compileTestJava
-	dependsOn
-}
+//tasks.compileTestJava {
+//	enabled false
+//	dependsOn project(':hibernate-core').tasks.compileTestJava
+//	dependsOn
+//}
+//
+//tasks.processTestResources {
+//	enabled false
+//	dependsOn project(':hibernate-core').tasks.compileTestJava
+//}
+//
+//task unpackTests(type: Copy) {
+//	from project( ':hibernate-core' ).sourceSets.test.output
+////	from zipTree( project( ':hibernate-core' ).tasks.testJar.archiveFile )
+//	into project.testClassesUnpackTargetDirectory
+//	exclude 'templates/**'
+//}
+//
+//task jakartafyTests(type: JakartaDirectoryTransformation) {
+//	sourceDirectory = project.testClassesUnpackTargetDirectory
+//	targetDirectory = project.testClassesTransformationTargetDirectory
+//
+//	dependsOn 'compileTestJava'
+//	dependsOn 'unpackTests'
+//}
 
-tasks.processTestResources {
-	enabled false
-	dependsOn project(':hibernate-core').tasks.compileTestJava
-}
-
-task unpackTests(type: Copy) {
-	from project( ':hibernate-core' ).sourceSets.test.output
-//	from zipTree( project( ':hibernate-core' ).tasks.testJar.archiveFile )
-	into project.testClassesUnpackTargetDirectory
-	exclude 'templates/**'
-}
-
-task jakartafyTests(type: JakartaDirectoryTransformation) {
-	sourceDirectory = project.testClassesUnpackTargetDirectory
-	targetDirectory = project.testClassesTransformationTargetDirectory
-
-	dependsOn 'compileTestJava'
-	dependsOn 'unpackTests'
-}
-
-tasks.test.dependsOn tasks.jakartafyTests
+//tasks.test.dependsOn tasks.jakartafyTests
 //tasks.jakartafyTests.dependsOn tasks.unpackTests
 //tasks.unpackTests.dependsOn project( ':hibernate-core' ).tasks.testJar
 
+tasks.collectTests {
+	exclude 'templates/**'
+}
+
+final Provider<Directory> bundleCollectDir = project.getLayout().getBuildDirectory().dir( "jakarta/collect/bundles" );
+final Provider<Directory> bundleTransformedDir = project.getLayout().getBuildDirectory().dir( "jakarta/transformed/bundles" );
 
 task copyTestBundles(type: Copy) {
 	// `:hibernate-core:processTestResources` also triggers processing the
@@ -187,10 +188,10 @@ task copyTestBundles(type: Copy) {
 	dependsOn project( ':hibernate-core' ).tasks.processTestResources
 
 	inputs.dir project( ':hibernate-core' ).layout.buildDirectory.dir( 'bundles' )
-	outputs.dir project.templateUnpackTargetDirectory
+	outputs.dir bundleCollectDir
 
 	from project( ':hibernate-core' ).layout.buildDirectory.dir( 'bundles' )
-	into project.templateUnpackTargetDirectory
+	into bundleCollectDir
 
 	// There are persistence.xml files referencing jar files through their absolute path so we
 	// have to replace 'hibernate-core' references in the path with 'hibernate-core-jakarta'
@@ -199,26 +200,21 @@ task copyTestBundles(type: Copy) {
 	}
 
 	doFirst {
-		project.templateUnpackTargetDirectory.get().asFile.mkdirs()
+		bundleCollectDir.get().asFile.mkdirs()
 	}
 }
 
 task jakartafyTemplates(type: JakartaDirectoryTransformation) {
 	dependsOn tasks.copyTestBundles
+	dependsOn tasks.jakartafyTests
 
-	sourceDirectory = project.templateUnpackTargetDirectory
-	targetDirectory = project.templatesTransformationTargetDirectory
+	sourceDirectory = bundleCollectDir
+	targetDirectory = bundleTransformedDir
 }
 
-tasks.processTestResources.dependsOn tasks.jakartafyTemplates
-
 tasks.test {
-	ext {
-		combinedDirs = project.files( tasks.jakartafyTests.targetDirectory ) + project.files( tasks.jakartafyTemplates.targetDirectory )
-	}
-
-	testClassesDirs += combinedDirs
-	classpath += combinedDirs
+	testClassesDirs += project.files( bundleTransformedDir )
+	classpath += project.files( bundleTransformedDir )
 
 	systemProperty 'file.encoding', 'utf-8'
 
@@ -235,15 +231,4 @@ tasks.test {
 			excludeTestsMatching project.property( 'excludeTests' ).toString()
 		}
 	}
-}
-
-task testJar(type: Jar, dependsOn: testClasses) {
-	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	archiveClassifier.set( 'test' )
-	from tasks.jakartafyTests.targetDirectory
-	from tasks.jakartafyTemplates.targetDirectory
-}
-
-artifacts {
-	tests tasks.testJar
 }

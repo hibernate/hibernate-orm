@@ -15,6 +15,8 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
+import static org.hibernate.orm.jakarta.JakartaPlugin.JAKARTA;
+
 /**
  * @author Steve Ebersole
  */
@@ -26,6 +28,8 @@ public abstract class JakartaJarTransformation extends DefaultTask {
 	public JakartaJarTransformation(ObjectFactory objectFactory) {
 		sourceJar = objectFactory.fileProperty();
 		targetJar = objectFactory.fileProperty();
+
+		setGroup( JAKARTA );
 	}
 
 	@InputFile

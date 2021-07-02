@@ -1,6 +1,3 @@
-import org.hibernate.orm.jakarta.JakartaDirectoryTransformation
-import org.hibernate.orm.jakarta.JakartaJarTransformation
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -11,7 +8,7 @@ import org.hibernate.orm.jakarta.JakartaJarTransformation
 description = 'Support for testing Hibernate ORM Jakarta functionality'
 
 
-apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
 
 evaluationDependsOn( ':hibernate-testing' )
 
@@ -48,115 +45,115 @@ dependencies {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // main jar
 
-tasks.jar {
-	enabled false
-}
-
-task jakartafyJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-testing').tasks.jar.archiveFile
-	targetJar = tasks.jar.archiveFile
-}
-
-tasks.jar.dependsOn project(':hibernate-testing').tasks.jar
-tasks.jar.finalizedBy tasks.jakartafyJar
-tasks.jakartafyJar.dependsOn tasks.jar
-tasks.jakartafyJar.mustRunAfter tasks.jar
-
+//tasks.jar {
+//	enabled false
+//}
+//
+//task jakartafyJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-testing').tasks.jar.archiveFile
+//	targetJar = tasks.jar.archiveFile
+//}
+//
+//tasks.jar.dependsOn project(':hibernate-testing').tasks.jar
+//tasks.jar.finalizedBy tasks.jakartafyJar
+//tasks.jakartafyJar.dependsOn tasks.jar
+//tasks.jakartafyJar.mustRunAfter tasks.jar
+//
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // javadoc jar
 
-tasks.javadocJar {
-	enabled false
-}
-
-task jakartafyJavadocJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-testing').tasks.javadocJar.archiveFile
-	targetJar = tasks.javadocJar.archiveFile
-}
-
-tasks.javadocJar.dependsOn project(':hibernate-testing').tasks.javadocJar
-tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
-tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
-tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+//tasks.javadocJar {
+//	enabled false
+//}
+//
+//task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-testing').tasks.javadocJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.javadocJar.dependsOn project(':hibernate-testing').tasks.javadocJar
+//tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+//tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+//tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
 
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // sources jar
 
-tasks.sourcesJar {
-	enabled false
-}
-
-task jakartafySourcesJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-testing').tasks.sourcesJar.archiveFile
-	targetJar = tasks.javadocJar.archiveFile
-}
-
-tasks.sourcesJar.dependsOn project(':hibernate-testing').tasks.sourcesJar
-tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
-tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
-tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
-
+//tasks.sourcesJar {
+//	enabled false
+//}
+//
+//task jakartafySourcesJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-testing').tasks.sourcesJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.sourcesJar.dependsOn project(':hibernate-testing').tasks.sourcesJar
+//tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+//tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+//tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
+//
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // testing
 
-project.ext {
-	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
-	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
-}
-
-tasks.compileTestJava {
-	enabled false
-}
-
-tasks.processTestResources {
-	enabled false
-}
-
-task unpackTests(type: Copy) {
-	from zipTree( project( ':hibernate-testing' ).tasks.testJar.archiveFile )
-	into project.testClassesUnpackTargetDirectory
-}
-
-task jakartafyTests(type: JakartaDirectoryTransformation) {
-	sourceDirectory = project.testClassesUnpackTargetDirectory
-	targetDirectory = project.testClassesTransformationTargetDirectory
-}
-
-
-tasks.compileTestJava.dependsOn tasks.unpackTests
-tasks.compileTestJava.finalizedBy tasks.jakartafyTests
-
-tasks.unpackTests.dependsOn project(':hibernate-testing').tasks.testJar
-
-tasks.jakartafyTests.dependsOn tasks.unpackTests
-
-tasks.test {
-	testClassesDirs += project.files( tasks.jakartafyTests.targetDirectory )
-	classpath += project.files( tasks.jakartafyTests.targetDirectory )
-
-	systemProperty 'file.encoding', 'utf-8'
-
-	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
-		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
-		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
-		// Weld needs this to generate proxies
-		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
-		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
-	}
-}
-
-task testJar(type: Jar, dependsOn: testClasses) {
-	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	archiveClassifier.set( 'test' )
-	from tasks.jakartafyTests.targetDirectory
-}
-
-artifacts {
-	tests tasks.testJar
-}
-
+//project.ext {
+//	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
+//	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
+//}
+//
+//tasks.compileTestJava {
+//	enabled false
+//}
+//
+//tasks.processTestResources {
+//	enabled false
+//}
+//
+//task unpackTests(type: Copy) {
+//	from zipTree( project( ':hibernate-testing' ).tasks.testJar.archiveFile )
+//	into project.testClassesUnpackTargetDirectory
+//}
+//
+//task jakartafyTests(type: JakartaDirectoryTransformation) {
+//	sourceDirectory = project.testClassesUnpackTargetDirectory
+//	targetDirectory = project.testClassesTransformationTargetDirectory
+//}
+//
+//
+//tasks.compileTestJava.dependsOn tasks.unpackTests
+//tasks.compileTestJava.finalizedBy tasks.jakartafyTests
+//
+//tasks.unpackTests.dependsOn project(':hibernate-testing').tasks.testJar
+//
+//tasks.jakartafyTests.dependsOn tasks.unpackTests
+//
+//tasks.test {
+//	testClassesDirs += project.files( tasks.jakartafyTests.targetDirectory )
+//	classpath += project.files( tasks.jakartafyTests.targetDirectory )
+//
+//	systemProperty 'file.encoding', 'utf-8'
+//
+//	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+//		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+//		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+//		// Weld needs this to generate proxies
+//		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+//		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+//	}
+//}
+//
+//task testJar(type: Jar, dependsOn: testClasses) {
+//	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+//	archiveClassifier.set( 'test' )
+//	from tasks.jakartafyTests.targetDirectory
+//}
+//
+//artifacts {
+//	tests tasks.testJar
+//}
+//

@@ -1,6 +1,3 @@
-import org.hibernate.orm.jakarta.JakartaDirectoryTransformation
-import org.hibernate.orm.jakarta.JakartaJarTransformation
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -10,7 +7,7 @@ import org.hibernate.orm.jakarta.JakartaJarTransformation
 
 description = 'Hibernate\'s entity version (audit/history) support Jakarta edition'
 
-apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
+apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
 
 evaluationDependsOn( ':hibernate-envers' )
 evaluationDependsOn( ':hibernate-transaction-client' )
@@ -30,92 +27,92 @@ dependencies {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // main jar
 
-tasks.jar {
-	enabled false
-}
-
-task jakartafyJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-envers').tasks.jar.archiveFile
-	targetJar = tasks.jar.archiveFile
-}
-
-tasks.jar.dependsOn project(':hibernate-envers').tasks.jar
-tasks.jar.finalizedBy tasks.jakartafyJar
-tasks.jakartafyJar.dependsOn tasks.jar
-tasks.jakartafyJar.mustRunAfter tasks.jar
+//tasks.jar {
+//	enabled false
+//}
+//
+//task jakartafyJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-envers').tasks.jar.archiveFile
+//	targetJar = tasks.jar.archiveFile
+//}
+//
+//tasks.jar.dependsOn project(':hibernate-envers').tasks.jar
+//tasks.jar.finalizedBy tasks.jakartafyJar
+//tasks.jakartafyJar.dependsOn tasks.jar
+//tasks.jakartafyJar.mustRunAfter tasks.jar
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // javadoc jar
 
-tasks.javadocJar {
-	enabled false
-}
-
-task jakartafyJavadocJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-envers').tasks.javadocJar.archiveFile
-	targetJar = tasks.javadocJar.archiveFile
-}
-
-tasks.javadocJar.dependsOn project(':hibernate-envers').tasks.javadocJar
-tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
-tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
-tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+//tasks.javadocJar {
+//	enabled false
+//}
+//
+//task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-envers').tasks.javadocJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.javadocJar.dependsOn project(':hibernate-envers').tasks.javadocJar
+//tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+//tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+//tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
 
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // sources jar
 
-tasks.sourcesJar {
-	enabled false
-}
-
-task jakartafySourcesJar( type: JakartaJarTransformation ) {
-	sourceJar = project(':hibernate-envers').tasks.sourcesJar.archiveFile
-	targetJar = tasks.javadocJar.archiveFile
-}
-
-tasks.sourcesJar.dependsOn project(':hibernate-envers').tasks.sourcesJar
-tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
-tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
-tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
-
+//tasks.sourcesJar {
+//	enabled false
+//}
+//
+//task jakartafySourcesJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-envers').tasks.sourcesJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.sourcesJar.dependsOn project(':hibernate-envers').tasks.sourcesJar
+//tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+//tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+//tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
+//
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // testing
 
-project.ext {
-	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
-	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
-}
-
-tasks.compileTestJava {
-	enabled false
-}
-
-tasks.processTestResources {
-	enabled false
-}
-
-task unpackTests(type: Copy) {
-	from zipTree( project( ':hibernate-envers' ).tasks.testJar.archiveFile )
-	into project.testClassesUnpackTargetDirectory
-}
-
-task jakartafyTests(type: JakartaDirectoryTransformation) {
-	sourceDirectory = project.testClassesUnpackTargetDirectory
-	targetDirectory = project.testClassesTransformationTargetDirectory
-}
-
-
-tasks.compileTestJava.dependsOn tasks.unpackTests
-tasks.compileTestJava.finalizedBy tasks.jakartafyTests
-
-tasks.unpackTests.dependsOn project(':hibernate-envers').tasks.testJar
-
-tasks.jakartafyTests.dependsOn tasks.unpackTests
+//project.ext {
+//	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
+//	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
+//}
+//
+//tasks.compileTestJava {
+//	enabled false
+//}
+//
+//tasks.processTestResources {
+//	enabled false
+//}
+//
+//task unpackTests(type: Copy) {
+//	from zipTree( project( ':hibernate-envers' ).tasks.testJar.archiveFile )
+//	into project.testClassesUnpackTargetDirectory
+//}
+//
+//task jakartafyTests(type: JakartaDirectoryTransformation) {
+//	sourceDirectory = project.testClassesUnpackTargetDirectory
+//	targetDirectory = project.testClassesTransformationTargetDirectory
+//}
+//
+//
+//tasks.compileTestJava.dependsOn tasks.unpackTests
+//tasks.compileTestJava.finalizedBy tasks.jakartafyTests
+//
+//tasks.unpackTests.dependsOn project(':hibernate-envers').tasks.testJar
+//
+//tasks.jakartafyTests.dependsOn tasks.unpackTests
 
 tasks.test {
 	dependsOn tasks.jakartafyTests
@@ -135,12 +132,12 @@ tasks.test {
 
 tasks.test.dependsOn ':hibernate-transaction-client:jar'
 
-task testJar(type: Jar, dependsOn: testClasses) {
-	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-	archiveClassifier.set( 'test' )
-	from sourceSets.test.output
-}
-
-artifacts {
-	tests tasks.testJar
-}
+//task testJar(type: Jar, dependsOn: testClasses) {
+//	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+//	archiveClassifier.set( 'test' )
+//	from sourceSets.test.output
+//}
+//
+//artifacts {
+//	tests tasks.testJar
+//}

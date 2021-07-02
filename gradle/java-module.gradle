@@ -54,12 +54,6 @@ if ( !project.description ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
-configurations {
-	provided {
-		description = 'Non-exported compile-time dependencies.'
-	}
-}
-
 configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
 
 

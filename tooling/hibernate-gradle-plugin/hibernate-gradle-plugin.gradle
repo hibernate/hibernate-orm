@@ -79,6 +79,10 @@ pluginBundle {
 	}
 }
 
+task publish {
+	dependsOn tasks.publishPlugins
+}
+
 processResources {
 	filter( ReplaceTokens, tokens: [ 'hibernateVersion': getVersion() ] )
 }
@@ -108,6 +112,14 @@ tasks.test {
 
 task release {
 	dependsOn tasks.publishPlugins
+}
+
+afterEvaluate {
+	if ( project.ormVersion.isSnapshot ) {
+		release.enabled false
+		publish.enabled false
+		publishPlugins.enabled false
+	}
 }
 
 gradle.taskGraph.whenReady { tg ->

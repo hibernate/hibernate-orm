@@ -5,15 +5,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-apply from: rootProject.file( 'gradle/java-module.gradle' )
-apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+apply plugin: 'org.hibernate.orm.jakarta'
+
+apply from: rootProject.file( 'gradle/libraries.gradle' )
+apply from: rootProject.file( 'gradle/databases.gradle' )
+apply plugin: 'org.hibernate.orm.database-service'
+apply plugin: 'build-dashboard'
+apply plugin: 'project-report'
 
 configurations {
     jakartaeeTransformTool {
         description = 'JakartaTransformer tool dependencies'
-    }
-    tests {
-        description = 'Configuration for the produced test jar'
     }
 }
 
@@ -25,27 +27,4 @@ dependencies {
 tasks.withType( Test ) { test ->
     test.usesService( project.gradle.sharedServices.registrations.getByName( 'databaseService' ).service )
 }
-
-publishing {
-    publications {
-        publishedArtifacts {
-            from components.java
-        }
-    }
-}
-
-java {
-    withJavadocJar()
-    withSourcesJar()
-}
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Release / publishing tasks
-
-task ciBuild( dependsOn: [test, publish] )
-
-task release(dependsOn: [test, publishToSonatype])
-publishToSonatype.mustRunAfter test
-
 

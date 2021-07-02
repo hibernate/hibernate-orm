@@ -7,7 +7,9 @@
 
 description = 'Annotation Processor to generate JPA 3 static metamodel classes'
 
-apply from: rootProject.file( 'gradle/jakarta-java-module.gradle' )
+evaluationDependsOn( ':hibernate-jpamodelgen' )
+
+apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
 
 configurations {
 	jakartaeeTransformJars
@@ -27,42 +29,54 @@ dependencies {
 	testImplementation fileTree(dir: 'libs', include: '*.jar')
 }
 
-jar {
-	mustRunAfter project(':hibernate-jpamodelgen').tasks.jar
-	dependsOn project(':hibernate-jpamodelgen').tasks.jar
-	def baseDir = project(':hibernate-jpamodelgen').buildDir
-	def baseJars = fileTree(baseDir).matching {include 'libs/*.jar' }
-	inputs.files(baseJars).skipWhenEmpty()
-	outputs.dir project.buildDir
-	doLast {
-		new File(project.buildDir, "libs").mkdirs()
-		fileTree(project.buildDir).matching { include 'libs/*.jar' }.each { delete it }
 
-		baseJars.each { bundleJar ->
-			def sourceJarPath = baseDir.path + '/libs/' + bundleJar.name
-			println 'Initial bundle jar name [ ' + sourceJarPath + ' ]'
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// main jar
 
-			def finalBundleJarName = project.buildDir.path + '/libs/' + bundleJar.name.replaceAll( 'hibernate-jpamodelgen', 'hibernate-jpamodelgen-jakarta' )
-			println 'Default jakarta final bundle jar name [ ' + finalBundleJarName + ' ]'
+//task jakartafyJar( type: JakartaJarTransformation ) {
+//	dependsOn project(':hibernate-jpamodelgen').tasks.jar
+//	sourceJar = project(':hibernate-jpamodelgen').tasks.jar.archiveFile
+//	targetJar = tasks.jar.archiveFile
+//}
+//
+//tasks.jar {
+//	enabled false
+//	dependsOn tasks.jakartafyJar
+//}
 
-			def transformerArgs = [
-					sourceJarPath, finalBundleJarName,
-					'-q', // quiet output
-					'-tr', new File(getProjectDir().getParentFile().getParentFile(), 'rules/jakarta-renames.properties').path,
-					'-tv', new File(getProjectDir().getParentFile().getParentFile(), 'rules/jakarta-versions.properties').path,
-					'-td', new File(getProjectDir().getParentFile().getParentFile(), 'rules/jakarta-direct-modelgen.properties').path,
-			]
 
-			println 'Transformer options:'
-			transformerArgs.each {
-				println '  [ ' + it + ' ]'
-			}
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// javadoc jar
 
-			javaexec {
-				classpath configurations.jakartaeeTransformJars
-				main = 'org.eclipse.transformer.jakarta.JakartaTransformer'
-				args = transformerArgs
-			}
-		}
-	}
-}
+//tasks.javadocJar {
+//	enabled false
+//}
+//
+//task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-core').tasks.javadocJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.javadocJar.dependsOn project(':hibernate-core').tasks.javadocJar
+//tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+//tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+//tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+//
+//
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// sources jar
+
+//tasks.sourcesJar {
+//	enabled false
+//}
+//
+//task jakartafySourcesJar( type: JakartaJarTransformation ) {
+//	sourceJar = project(':hibernate-core').tasks.sourcesJar.archiveFile
+//	targetJar = tasks.javadocJar.archiveFile
+//}
+//
+//tasks.sourcesJar.dependsOn project(':hibernate-core').tasks.sourcesJar
+//tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+//tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+//tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar

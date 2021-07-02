@@ -329,6 +329,11 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
+	public void validateQueryGroupFetchStructure() {
+		// No-op
+	}
+
+	@Override
 	public void appendHqlString(StringBuilder sb) {
 		if ( selectClause != null ) {
 			sb.append( "select " );

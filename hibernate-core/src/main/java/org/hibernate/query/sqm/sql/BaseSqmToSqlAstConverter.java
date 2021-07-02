@@ -1577,7 +1577,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final Stack<SqlAstProcessingState> processingStateStack = getProcessingStateStack();
 		final boolean needsDomainResults = domainResults != null && currentClauseContributesToTopLevelSelectClause();
 		final boolean collectDomainResults;
-		if ( processingStateStack.depth() == 1) {
+		if ( processingStateStack.depth() == 1 ) {
 			collectDomainResults = needsDomainResults;
 		}
 		else {
@@ -1605,6 +1605,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		if ( collectDomainResults ) {
 			resultProducers.forEach( (alias, r) -> domainResults.add( r.createDomainResult( alias, this ) ) );
+		}
+		else if ( needsDomainResults ) {
+			// We just create domain results for the purpose of creating selections
+			// This is necessary for top-level query specs within query groups to avoid cycles
+			resultProducers.forEach( (alias, r) -> r.createDomainResult( alias, this ) );
 		}
 		else {
 			resultProducers.forEach( (alias, r) -> r.applySqlSelections( this ) );

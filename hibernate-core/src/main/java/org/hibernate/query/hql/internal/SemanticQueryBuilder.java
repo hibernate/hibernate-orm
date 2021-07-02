@@ -301,7 +301,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		try {
 			if ( ctx.selectStatement() != null ) {
-				return visitSelectStatement( ctx.selectStatement() );
+				final SqmSelectStatement<R> selectStatement = visitSelectStatement( ctx.selectStatement() );
+				selectStatement.getQueryPart().validateQueryGroupFetchStructure();
+				return selectStatement;
 			}
 			else if ( ctx.insertStatement() != null ) {
 				return visitInsertStatement( ctx.insertStatement() );
@@ -606,18 +608,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			finally {
 				processingStateStack.pop();
-			}
-			final List<SqmSelection> selections = queryPart.getFirstQuerySpec().getSelectClause().getSelections();
-			if ( firstSelectionSize != selections.size() ) {
-				throw new SemanticException( "All query parts must have the same arity!" );
-			}
-			for ( int j = 0; j < firstSelectionSize; j++ ) {
-				final JavaTypeDescriptor<?> firstJavaTypeDescriptor = firstSelections.get( j ).getNodeJavaTypeDescriptor();
-				if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
-					throw new SemanticException(
-							"Select items of the same index must have the same java type across all query parts!"
-					);
-				}
 			}
 		}
 		processingStateStack.push( firstProcessingState );

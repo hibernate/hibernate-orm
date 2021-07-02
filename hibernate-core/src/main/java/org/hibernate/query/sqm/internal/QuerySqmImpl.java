@@ -200,8 +200,11 @@ public class QuerySqmImpl<R>
 
 		if ( resultType != null ) {
 			SqmUtil.verifyIsSelectStatement( sqmStatement );
+			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart();
+			// For criteria queries, we have to validate the fetch structure here
+			queryPart.validateQueryGroupFetchStructure();
 			visitQueryReturnType(
-					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
+					queryPart,
 					resultType,
 					producer.getFactory()
 			);

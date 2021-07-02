@@ -189,15 +189,18 @@ public class ManyToOneType extends EntityType {
 			boolean[] checkable,
 			SharedSessionContractImplementor session) throws HibernateException {
 		if ( current == null ) {
-			return old!=null;
+			return old != null;
 		}
 		if ( old == null ) {
 			// we already know current is not null...
 			return true;
 		}
+
+		assert current.getClass().isAssignableFrom( old.getClass() );
+
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
 		return getIdentifierOrUniqueKeyType( session.getFactory() )
-				.isDirty( old, getIdentifier( current, session ), session );
+				.isDirty( getIdentifier( old, session ), getIdentifier( current, session ), session );
 	}
 
 	@Override

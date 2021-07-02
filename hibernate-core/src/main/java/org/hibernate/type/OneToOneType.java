@@ -121,10 +121,8 @@ public class OneToOneType extends EntityType {
 			return false;
 		}
 
-		Object oldid = getIdentifier( old, session );
-		Object newid = getIdentifier( current, session );
-
-		return getIdentifierType( session ).isDirty( oldid, newid, session );
+		return getIdentifierType( session )
+				.isDirty( getIdentifier( old, session ), getIdentifier( current, session ), session );
 	}
 
 	@Override

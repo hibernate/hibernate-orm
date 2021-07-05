@@ -25,7 +25,7 @@ ext {
     jakartaWeldVersion = '4.0.1.SP1'
 
     javassistVersion = '3.27.0-GA'
-    byteBuddyVersion = '1.10.22'
+    byteBuddyVersion = '1.11.8'
 
     agroalVersion = '1.9'
 

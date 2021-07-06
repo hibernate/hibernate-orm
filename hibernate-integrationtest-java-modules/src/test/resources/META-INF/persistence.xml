@@ -10,7 +10,7 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
              version="1.0">
     <persistence-unit name="primaryPU">
-        <class>org.hibernate.orm.integrationtest.java.module.entity.Author</class>
+        <class>org.hibernate.orm.integrationtest.java.module.test.entity.Author</class>
         <properties>
             <property name="hibernate.connection.driver_class" value="org.h2.Driver"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>

@@ -33,7 +33,7 @@ jobs:
             experimental: false
           - rdbms: derby
             experimental: false
-          - rdbms: mysql
+          - rdbms: mysql8
             experimental: false
           - rdbms: mariadb
             experimental: false

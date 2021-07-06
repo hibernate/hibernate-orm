@@ -325,7 +325,7 @@ EOF"
 
 hana() {
     temp_dir=$(mktemp -d)
-    echo '{"main_password" : "H1bernate_test"}' >$temp_dir/password.json
+    echo '{"master_password" : "H1bernate_test"}' >$temp_dir/password.json
     chmod 777 -R $temp_dir
     docker rm -f hana || true
     docker run -d --name hana -p 39013:39013 -p 39017:39017 -p 39041-39045:39041-39045 -p 1128-1129:1128-1129 -p 59013-59014:59013-59014 \

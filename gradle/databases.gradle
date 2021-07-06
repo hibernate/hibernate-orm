@@ -85,14 +85,14 @@ ext {
                         'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?useSSL=false'
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true'
                 ],
                 mysql_ci : [
                         'db.dialect' : 'org.hibernate.dialect.MySQLDialect',
                         'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?useSSL=false'
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true'
                 ],
                 // uses docker mysql_8_0
                 mysql8_spatial_ci: [
@@ -100,7 +100,7 @@ ext {
                         'jdbc.driver': 'com.mysql.cj.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?useSSL=false'
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test?allowPublicKeyRetrieval=true'
                 ],
                 mariadb : [
                         'db.dialect' : 'org.hibernate.dialect.MariaDBDialect',
@@ -137,6 +137,13 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xe'
+                ],
+                oracle_jenkins : [
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@hibernate-testing-oracle-se.ccuzkqo3zqzq.us-east-1.rds.amazonaws.com:1521:ORCL'
                 ],
                 // Use ./docker_db.sh oracle_ee to start the database
                 oracle_docker : [
@@ -225,11 +232,11 @@ ext {
                         // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
                         'jdbc.url'   : 'jdbc:sap://' + dbHost + ':443/?encrypt=true&validateCertificate=false&statementCacheSize=0'
                 ],
-                hana_vlad : [
+                hana_jenkins : [
                         'db.dialect' : 'org.hibernate.dialect.HANAColumnStoreDialect',
                         'jdbc.driver': 'com.sap.db.jdbc.Driver',
-                        'jdbc.user'  : 'VLAD',
-                        'jdbc.pass'  : 'V1ad_test',
+                        'jdbc.user'  : 'HIBERNATE_TEST',
+                        'jdbc.pass'  : 'H1bernate_test',
                         // Disable prepared statement caching due to https://help.sap.com/viewer/0eec0d68141541d1b07893a39944924e/2.0.04/en-US/78f2163887814223858e4369d18e2847.html
                         'jdbc.url'   : 'jdbc:sap://' + dbHost + ':39015/?statementCacheSize=0'
                 ],

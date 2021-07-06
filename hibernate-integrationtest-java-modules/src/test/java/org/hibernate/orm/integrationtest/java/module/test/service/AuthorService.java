@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.integrationtest.java.module.service;
+package org.hibernate.orm.integrationtest.java.module.test.service;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
-import org.hibernate.orm.integrationtest.java.module.entity.Author;
+import org.hibernate.orm.integrationtest.java.module.test.entity.Author;
 
 public class AuthorService implements AutoCloseable {
 

@@ -27,17 +27,20 @@ public class StandardTableGroup extends AbstractTableGroup {
 	private final BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator;
 	private final boolean realTableGroup;
 	private final boolean fetched;
+	private final boolean canUseInnerJoins;
 
 	private List<TableReferenceJoin> tableJoins;
 
 	public StandardTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
 			String sourceAlias,
 			TableReference primaryTableReference,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
+		super( canUseInnerJoins, navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
+		this.canUseInnerJoins = canUseInnerJoins;
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = false;
 		this.fetched = false;
@@ -54,6 +57,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	public StandardTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
 			String sourceAlias,
@@ -63,7 +67,8 @@ public class StandardTableGroup extends AbstractTableGroup {
 			Predicate<String> tableReferenceJoinNameChecker,
 			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
+		super( canUseInnerJoins, navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
+		this.canUseInnerJoins = canUseInnerJoins;
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
 		this.fetched = false;
@@ -73,6 +78,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 	}
 
 	public StandardTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroupProducer tableGroupProducer,
 			boolean fetched,
@@ -83,7 +89,8 @@ public class StandardTableGroup extends AbstractTableGroup {
 			Predicate<String> tableReferenceJoinNameChecker,
 			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
-		super( navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
+		super( canUseInnerJoins, navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
+		this.canUseInnerJoins = canUseInnerJoins;
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
 		this.fetched = fetched;

@@ -39,6 +39,7 @@ public final class ExecuteWithoutIdTableHelper {
 		final QuerySpec matchingIdSelect = new QuerySpec( false, 1 );
 
 		final StandardTableGroup matchingIdSelectTableGroup = new StandardTableGroup(
+				true,
 				navigablePath,
 				rootEntityPersister,
 				rootTableReference.getIdentificationVariable(),

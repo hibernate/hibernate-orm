@@ -50,6 +50,7 @@ public class InformixSqmToSqlAstConverter<T extends Statement> extends BaseSqmTo
 			if ( this.needsDummyTableGroup ) {
 				querySpec.getFromClause().addRoot(
 						new StandardTableGroup(
+								false,
 								null,
 								null,
 								null,

@@ -15,25 +15,26 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * @author Andrea Boriero
  */
 public class UnionTableGroup implements VirtualTableGroup {
+	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
 	private List<TableGroupJoin> tableGroupJoins;
 
 	private final UnionSubclassEntityPersister modelPart;
 	private final String sourceAlias;
 	private final TableReference tableReference;
-	private boolean isOuterJoined;
 
 	public UnionTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableReference tableReference,
 			UnionSubclassEntityPersister modelPart,
 			String sourceAlias) {
+		this.canUseInnerJoins = canUseInnerJoins;
 		this.navigablePath = navigablePath;
 		this.tableReference = tableReference;
 		this.modelPart = modelPart;
@@ -76,17 +77,14 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean isOuterJoined() {
-		return isOuterJoined;
+	public boolean canUseInnerJoins() {
+		return canUseInnerJoins;
 	}
 
 	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
-		}
-		if ( join.getJoinType() != SqlAstJoinType.INNER ) {
-			isOuterJoined = true;
 		}
 		if ( !tableGroupJoins.contains( join ) ) {
 			tableGroupJoins.add( join );

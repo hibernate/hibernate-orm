@@ -241,6 +241,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
@@ -250,7 +251,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		final TableReference tableReference = resolvePrimaryTableReference(sqlAliasBase);
 
-		return new UnionTableGroup( navigablePath, tableReference, this, explicitSourceAlias );
+		return new UnionTableGroup( canUseInnerJoins, navigablePath, tableReference, this, explicitSourceAlias );
 	}
 
 	@Override

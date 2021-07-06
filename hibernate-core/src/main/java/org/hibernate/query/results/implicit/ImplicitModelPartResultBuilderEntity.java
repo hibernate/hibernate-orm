@@ -57,6 +57,7 @@ public class ImplicitModelPartResultBuilderEntity
 					}
 
 					return modelPart.getEntityMappingType().createRootTableGroup(
+							true,
 							navigablePath,
 							null,
 							() -> predicate -> {

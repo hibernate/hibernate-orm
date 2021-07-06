@@ -25,18 +25,19 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
  * @author Christian Beikov
  */
 public class CorrelatedTableGroup extends AbstractTableGroup {
-
 	private final TableGroup correlatedTableGroup;
 	private final QuerySpec querySpec;
 	private final Consumer<Predicate> joinPredicateConsumer;
 
 	public CorrelatedTableGroup(
+			boolean canUseInnerJoins,
 			TableGroup correlatedTableGroup,
 			SqlAliasBase sqlAliasBase,
 			QuerySpec querySpec,
 			Consumer<Predicate> joinPredicateConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		super(
+				canUseInnerJoins,
 				correlatedTableGroup.getNavigablePath(),
 				(TableGroupProducer) correlatedTableGroup.getExpressionType(),
 				null,

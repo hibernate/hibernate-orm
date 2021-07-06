@@ -14,7 +14,6 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 
 /**
@@ -28,22 +27,24 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 
 	private List<TableGroupJoin> tableGroupJoins;
 	private boolean isInnerJoinPossible;
-	private boolean isOuterJoined;
+	private boolean canUseInnerJoins;
 
 	private final SessionFactoryImplementor sessionFactory;
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		this( navigablePath, producer, sourceAlias, sqlAliasBase, false, sessionFactory );
+		this( canUseInnerJoins, navigablePath, producer, sourceAlias, sqlAliasBase, false, sessionFactory );
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroupProducer producer,
 			String sourceAlias,
@@ -51,6 +52,7 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 			boolean isInnerJoinPossible,
 			SessionFactoryImplementor sessionFactory) {
 		super();
+		this.canUseInnerJoins = canUseInnerJoins;
 		this.navigablePath = navigablePath;
 		this.producer = producer;
 		this.sourceAlias = sourceAlias;
@@ -99,8 +101,8 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	}
 
 	@Override
-	public boolean isOuterJoined() {
-		return isOuterJoined;
+	public boolean canUseInnerJoins() {
+		return canUseInnerJoins;
 	}
 
 	@Override
@@ -112,9 +114,6 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
-		}
-		if ( join.getJoinType() != SqlAstJoinType.INNER ) {
-			isOuterJoined = true;
 		}
 		if ( !tableGroupJoins.contains( join ) ) {
 			tableGroupJoins.add( join );

@@ -276,12 +276,14 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	@Override
 	default TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		return getEntityPersister().createRootTableGroup(
+				canUseInnerJoins,
 				navigablePath,
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,

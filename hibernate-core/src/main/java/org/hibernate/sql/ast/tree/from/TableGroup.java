@@ -7,10 +7,8 @@
 package org.hibernate.sql.ast.tree.from;
 
 import java.util.List;
-import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -42,7 +40,7 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 
 	List<TableGroupJoin> getTableGroupJoins();
 	
-	boolean isOuterJoined();
+	boolean canUseInnerJoins();
 
 	boolean hasTableGroupJoins();
 

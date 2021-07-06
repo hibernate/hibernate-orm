@@ -50,6 +50,7 @@ public class SybaseSqmToSqlAstConverter<T extends Statement> extends BaseSqmToSq
 			if ( this.needsDummyTableGroup ) {
 				querySpec.getFromClause().addRoot(
 						new StandardTableGroup(
+								true,
 								null,
 								null,
 								null,

@@ -386,6 +386,7 @@ public class LoaderSelectBuilder {
 		);
 
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
+				true,
 				rootNavigablePath,
 				null,
 				() -> rootQuerySpec::applyPredicate,
@@ -403,6 +404,7 @@ public class LoaderSelectBuilder {
 				final TableGroup tableGroup;
 				if ( part instanceof RootTableGroupProducer ) {
 					tableGroup = ( (RootTableGroupProducer) part ).createRootTableGroup(
+							true,
 							navigablePath,
 							null,
 							() -> rootQuerySpec::applyPredicate,
@@ -920,6 +922,7 @@ public class LoaderSelectBuilder {
 		//  	to control how that gets rendered in the walker
 
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
+				true,
 				rootNavigablePath,
 				null,
 				() -> rootQuerySpec::applyPredicate,

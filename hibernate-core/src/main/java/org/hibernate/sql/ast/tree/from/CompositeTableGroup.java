@@ -25,12 +25,13 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	private final TableGroup underlyingTableGroup;
 
 	private List<TableGroupJoin> tableGroupJoins;
-	private boolean isOuterJoined;
+	private final boolean canUseInnerJoins;
 
 	public CompositeTableGroup(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart compositionMapping,
 			TableGroup underlyingTableGroup) {
+		this.canUseInnerJoins = underlyingTableGroup.canUseInnerJoins();
 		this.navigablePath = navigablePath;
 		this.compositionMapping = compositionMapping;
 		this.underlyingTableGroup = underlyingTableGroup;
@@ -68,8 +69,8 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean isOuterJoined() {
-		return isOuterJoined;
+	public boolean canUseInnerJoins() {
+		return canUseInnerJoins;
 	}
 
 	@Override
@@ -81,9 +82,6 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	public void addTableGroupJoin(TableGroupJoin join) {
 		if ( tableGroupJoins == null ) {
 			tableGroupJoins = new ArrayList<>();
-		}
-		if ( join.getJoinType() != SqlAstJoinType.INNER ) {
-			isOuterJoined = true;
 		}
 		if ( !tableGroupJoins.contains( join ) ) {
 			tableGroupJoins.add( join );

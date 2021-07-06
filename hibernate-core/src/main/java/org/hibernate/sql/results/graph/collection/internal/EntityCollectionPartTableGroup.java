@@ -66,8 +66,8 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public boolean isOuterJoined() {
-		return collectionTableGroup.isOuterJoined();
+	public boolean canUseInnerJoins() {
+		return collectionTableGroup.canUseInnerJoins();
 	}
 
 	@Override

@@ -22,6 +22,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  */
 public class LazyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
 
+	private boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
 	private final String sourceAlias;
@@ -34,6 +35,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	private TableGroup tableGroup;
 
 	public LazyTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			Supplier<TableGroup> tableGroupSupplier,
 			Predicate<NavigablePath> navigablePathChecker,
@@ -42,6 +44,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory,
 			TableGroup parentTableGroup) {
+		this.canUseInnerJoins = canUseInnerJoins;
 		this.navigablePath = navigablePath;
 		this.producer = tableGroupProducer;
 		this.sourceAlias = sourceAlias;
@@ -50,6 +53,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 		this.navigablePathChecker = navigablePathChecker;
 		this.parentTableGroup = parentTableGroup;
 		this.sessionFactory = sessionFactory;
+
 	}
 
 	public TableGroup getUnderlyingTableGroup() {
@@ -112,11 +116,8 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	public boolean isOuterJoined() {
-		if ( tableGroup != null ) {
-			return parentTableGroup.isOuterJoined() || tableGroup.isOuterJoined();
-		}
-		return parentTableGroup.isOuterJoined();
+	public boolean canUseInnerJoins() {
+		return canUseInnerJoins;
 	}
 
 	@Override

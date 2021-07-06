@@ -71,6 +71,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
 					np -> entityDescriptor.createRootTableGroup(
+							true,
 							navigablePath,
 							null,
 							() -> predicate -> {},

@@ -78,6 +78,7 @@ public class CteTable {
 		);
 
 		final StandardTableGroup tableValueCtorGroup = new StandardTableGroup(
+				true,
 				new NavigablePath( "cte" ),
 				null,
 				null,

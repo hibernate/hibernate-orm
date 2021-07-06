@@ -27,6 +27,7 @@ public interface RootTableGroupProducer extends TableGroupProducer, ModelPartCon
 	 * Create a root TableGroup as defined by this producer
 	 */
 	TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,

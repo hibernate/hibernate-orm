@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -46,9 +47,10 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 				navigablePath,
 				np -> {
 					final EmbeddableValuedModelPart embeddedValueMapping = modelPart.getEmbeddableTypeDescriptor().getEmbeddedValueMapping();
+					final TableGroup tableGroup = fromClauseAccess.findTableGroup( navigablePath.getParent() );
 					final TableGroupJoin tableGroupJoin = embeddedValueMapping.createTableGroupJoin(
 							navigablePath,
-							fromClauseAccess.findTableGroup( navigablePath.getParent() ),
+							tableGroup,
 							resultVariable,
 							SqlAstJoinType.INNER,
 							true,

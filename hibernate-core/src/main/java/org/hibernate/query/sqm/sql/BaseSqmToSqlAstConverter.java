@@ -593,6 +593,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			final NavigablePath rootPath = sqmTarget.getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+					true,
 					rootPath,
 					sqmStatement.getRoot().getAlias(),
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
@@ -850,6 +851,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			final NavigablePath rootPath = statement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+					true,
 					rootPath,
 					statement.getRoot().getAlias(),
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
@@ -932,6 +934,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+					true,
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
@@ -1030,6 +1033,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		try {
 			final NavigablePath rootPath = sqmStatement.getTarget().getNavigablePath();
 			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+					true,
 					rootPath,
 					sqmStatement.getTarget().getExplicitAlias(),
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates( additionalRestrictions, predicate ),
@@ -1831,6 +1835,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// If we have just inner joins against a correlated root, we can render the joins as references
 				final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 				tableGroup = new CorrelatedTableGroup(
+						parentTableGroup.canUseInnerJoins(),
 						parentTableGroup,
 						sqlAliasBase,
 						currentQuerySpec(),
@@ -1850,6 +1855,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				// If we have non-inner joins against a correlated root, we must render the root with a correlation predicate
 				tableGroup = entityDescriptor.createRootTableGroup(
+						true,
 						sqmRoot.getNavigablePath(),
 						sqmRoot.getExplicitAlias(),
 						() -> predicate -> {},
@@ -1914,6 +1920,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			final EntityPersister entityDescriptor = resolveEntityPersister( sqmRoot.getReferencedPathSource() );
 			tableGroup = entityDescriptor.createRootTableGroup(
+					true,
 					sqmRoot.getNavigablePath(),
 					sqmRoot.getExplicitAlias(),
 					() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
@@ -2066,6 +2073,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
+				true,
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
@@ -2094,6 +2102,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
+				true,
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
@@ -3949,6 +3958,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		try {
 			final TableGroup tableGroup = collectionPart.createRootTableGroup(
+					true,
 					pluralPath.getNavigablePath(),
 					null,
 					() -> subQuerySpec::applyPredicate,
@@ -4017,6 +4027,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		try {
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
+					true,
 					pluralPartPath.getNavigablePath(),
 					null,
 					() -> subQuerySpec::applyPredicate,
@@ -4165,6 +4176,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 		try {
 			final TableGroup tableGroup = mappingModelExpressable.createRootTableGroup(
+					true,
 					pluralPath.getNavigablePath(),
 					null,
 					() -> subQuerySpec::applyPredicate,
@@ -4269,6 +4281,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup parentTableGroup = parentFromClauseAccess.getTableGroup( parentNavPath );
 			final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 			final TableGroup tableGroup = new CorrelatedTableGroup(
+					parentTableGroup.canUseInnerJoins(),
 					parentTableGroup,
 					sqlAliasBase,
 					subQuerySpec,

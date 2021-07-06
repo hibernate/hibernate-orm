@@ -173,6 +173,7 @@ public final class ExecuteWithIdTableHelper {
 				executionContext.getSession().getFactory()
 		);
 		final TableGroup idTableGroup = new StandardTableGroup(
+				true,
 				new NavigablePath( idTableReference.getTableExpression() ),
 				entityDescriptor,
 				null,

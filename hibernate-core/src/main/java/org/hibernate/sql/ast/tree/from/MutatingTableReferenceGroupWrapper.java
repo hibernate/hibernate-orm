@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
@@ -88,7 +87,7 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean isOuterJoined() {
+	public boolean canUseInnerJoins() {
 		return false;
 	}
 

@@ -89,6 +89,7 @@ class DatabaseSnapshotExecutor {
 		final NavigablePath rootPath = new NavigablePath( entityDescriptor.getEntityName() );
 
 		final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
+				true,
 				rootPath,
 				null,
 				() -> rootQuerySpec::applyPredicate,
@@ -146,6 +147,7 @@ class DatabaseSnapshotExecutor {
 						if ( contributorMapping instanceof EntityAssociationMapping ) {
 							domainResults.add(
 									( (EntityAssociationMapping) contributorMapping ).createDelayedDomainResult(
+											true,
 											navigablePath,
 											rootTableGroup,
 											null,

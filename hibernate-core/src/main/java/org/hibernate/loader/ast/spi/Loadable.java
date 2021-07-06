@@ -37,6 +37,7 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 
 	@Override
 	default TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,

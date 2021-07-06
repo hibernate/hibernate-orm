@@ -24,7 +24,6 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
-import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -38,7 +37,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
@@ -610,6 +608,7 @@ public class PluralAttributeMappingImpl
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createOneToManyTableGroup(
+				lhs.canUseInnerJoins(),
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
@@ -637,6 +636,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	private TableGroup createOneToManyTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			boolean fetched,
 			String sourceAlias,
@@ -678,6 +678,7 @@ public class PluralAttributeMappingImpl
 					);
 
 			return new StandardTableGroup(
+					canUseInnerJoins,
 					navigablePath,
 					this,
 					fetched,
@@ -751,6 +752,7 @@ public class PluralAttributeMappingImpl
 		};
 
 		return new StandardTableGroup(
+				canUseInnerJoins,
 				navigablePath,
 				this,
 				fetched,
@@ -775,6 +777,7 @@ public class PluralAttributeMappingImpl
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createCollectionTableGroup(
+				lhs.canUseInnerJoins(),
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
@@ -802,6 +805,7 @@ public class PluralAttributeMappingImpl
 	}
 
 	private TableGroup createCollectionTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			boolean fetched,
 			String sourceAlias,
@@ -930,6 +934,7 @@ public class PluralAttributeMappingImpl
 		}
 
 		final StandardTableGroup tableGroup = new StandardTableGroup(
+				canUseInnerJoins,
 				navigablePath,
 				this,
 				fetched,
@@ -1015,6 +1020,7 @@ public class PluralAttributeMappingImpl
 
 	@Override
 	public TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
@@ -1022,6 +1028,7 @@ public class PluralAttributeMappingImpl
 			SqlAstCreationContext creationContext) {
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
+					canUseInnerJoins,
 					navigablePath,
 					false,
 					explicitSourceAlias,
@@ -1032,6 +1039,7 @@ public class PluralAttributeMappingImpl
 		}
 		else {
 			return createCollectionTableGroup(
+					canUseInnerJoins,
 					navigablePath,
 					false,
 					explicitSourceAlias,

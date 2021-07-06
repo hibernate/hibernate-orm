@@ -657,7 +657,13 @@ public class ToOneAttributeMapping
 				tableGroup = fromClauseAccess.resolveTableGroup(
 						fetchablePath,
 						np ->
-								createTableGroupJoin( fetchablePath, true, resultVariable, creationState, parentTableGroup )
+								createTableGroupJoin(
+										fetchablePath,
+										true,
+										resultVariable,
+										creationState,
+										parentTableGroup
+								)
 				);
 			}
 
@@ -744,6 +750,7 @@ public class ToOneAttributeMapping
 
 	@Override
 	public <T> DomainResult<T> createDelayedDomainResult(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
@@ -808,10 +815,10 @@ public class ToOneAttributeMapping
 			return SqlAstJoinType.LEFT;
 		}
 		else {
-			if ( parentTableGroup.isOuterJoined() ) {
-				return SqlAstJoinType.LEFT;
+			if ( parentTableGroup.canUseInnerJoins() ) {
+				return SqlAstJoinType.INNER;
 			}
-			return SqlAstJoinType.INNER;
+			return SqlAstJoinType.LEFT;
 		}
 	}
 
@@ -850,9 +857,12 @@ public class ToOneAttributeMapping
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( sqlAliasStem );
+		boolean canUseInnerJoin = lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER;
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
+				canUseInnerJoin,
 				navigablePath,
 				() -> createTableGroupJoinInternal(
+						canUseInnerJoin,
 						navigablePath,
 						fetched,
 						null,
@@ -927,6 +937,7 @@ public class ToOneAttributeMapping
 	}
 
 	public TableGroup createTableGroupJoinInternal(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			boolean fetched,
 			String sourceAlias,
@@ -940,6 +951,7 @@ public class ToOneAttributeMapping
 		);
 
 		return new StandardTableGroup(
+				canUseInnerJoins,
 				navigablePath,
 				this,
 				fetched,

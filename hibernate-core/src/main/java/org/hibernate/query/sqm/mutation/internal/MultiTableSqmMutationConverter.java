@@ -103,6 +103,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 		final NavigablePath navigablePath = new NavigablePath( mutatingEntityDescriptor.getEntityName(), mutatingEntityExplicitAlias );
 		this.mutatingTableGroup = mutatingEntityDescriptor.createRootTableGroup(
+				true,
 				navigablePath,
 				sourceAlias,
 				() -> predicate -> {

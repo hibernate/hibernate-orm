@@ -1367,6 +1367,7 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
@@ -1383,6 +1384,7 @@ public abstract class AbstractEntityPersister
 		);
 
 		return new StandardTableGroup(
+				canUseInnerJoins,
 				navigablePath,
 				this,
 				explicitSourceAlias,

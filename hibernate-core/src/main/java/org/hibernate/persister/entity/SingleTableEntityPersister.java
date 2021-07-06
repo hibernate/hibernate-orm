@@ -927,12 +927,14 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = super.createRootTableGroup(
+				canUseInnerJoins,
 				navigablePath,
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,

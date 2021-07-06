@@ -79,6 +79,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
 					np -> entityDescriptor.createRootTableGroup(
+							true,
 							navigablePath,
 							null,
 							() -> predicate -> {},

@@ -710,11 +710,13 @@ countFunction
 	;
 
 everyFunction
-	: (EVERY|ALL) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN filterClause?
+	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause?
+	| (EVERY|ALL) LEFT_PAREN subQuery RIGHT_PAREN
 	;
 
 anyFunction
-	: (ANY|SOME) LEFT_PAREN (predicate | subQuery) RIGHT_PAREN filterClause?
+	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause?
+	| (ANY|SOME) LEFT_PAREN subQuery RIGHT_PAREN
 	;
 
 filterClause

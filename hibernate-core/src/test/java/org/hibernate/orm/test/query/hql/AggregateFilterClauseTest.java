@@ -10,6 +10,7 @@ import java.util.Date;
 
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.ParsingException;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -245,11 +246,11 @@ public class AggregateFilterClauseTest {
 					Exception e = Assertions.assertThrows(
 							IllegalArgumentException.class,
 							() -> {
-								session.createQuery( "select every( eob.theInteger > 0 ) filter ( where select 1 ) from EntityOfBasics eob" );
+								session.createQuery( "select every( select 1 ) filter ( where eob.theBoolean = false ) from EntityOfBasics eob" );
 							}
 
 					);
-					assertEquals( SemanticException.class, e.getCause().getClass() );
+					assertEquals( ParsingException.class, e.getCause().getClass() );
 				}
 		);
 		scope.inTransaction(
@@ -257,11 +258,11 @@ public class AggregateFilterClauseTest {
 					Exception e = Assertions.assertThrows(
 							IllegalArgumentException.class,
 							() -> {
-								session.createQuery( "select any( eob.theInteger > 0 ) filter ( where select 1 ) from EntityOfBasics eob" );
+								session.createQuery( "select any( select 1 ) filter ( where eob.theBoolean = false ) from EntityOfBasics eob" );
 							}
 
 					);
-					assertEquals( SemanticException.class, e.getCause().getClass() );
+					assertEquals( ParsingException.class, e.getCause().getClass() );
 				}
 		);
 	}

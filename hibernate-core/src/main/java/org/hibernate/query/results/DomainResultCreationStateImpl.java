@@ -414,8 +414,8 @@ public class DomainResultCreationStateImpl
 			}
 		}
 
+		fetchableContainer.visitKeyFetchables( fetchableConsumer, null );
 		fetchableContainer.visitFetchables( fetchableConsumer, null );
-
 		return fetches;
 	}
 

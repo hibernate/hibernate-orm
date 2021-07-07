@@ -57,6 +57,7 @@ public class ImplicitModelPartResultBuilderEntity
 					}
 
 					return modelPart.getEntityMappingType().createRootTableGroup(
+							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
 							null,

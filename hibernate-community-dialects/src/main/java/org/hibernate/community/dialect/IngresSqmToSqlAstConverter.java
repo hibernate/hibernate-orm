@@ -50,7 +50,7 @@ public class IngresSqmToSqlAstConverter<T extends Statement> extends BaseSqmToSq
 			if ( this.needsDummyTableGroup ) {
 				querySpec.getFromClause().addRoot(
 						new StandardTableGroup(
-								false,
+								true,
 								null,
 								null,
 								null,

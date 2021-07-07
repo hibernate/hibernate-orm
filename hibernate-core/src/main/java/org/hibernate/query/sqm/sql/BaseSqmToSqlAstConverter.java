@@ -1835,7 +1835,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// If we have just inner joins against a correlated root, we can render the joins as references
 				final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 				tableGroup = new CorrelatedTableGroup(
-						parentTableGroup.canUseInnerJoins(),
 						parentTableGroup,
 						sqlAliasBase,
 						currentQuerySpec(),
@@ -2101,8 +2100,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void consumeEntityJoin(SqmEntityJoin sqmJoin, TableGroup lhsTableGroup) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
+		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 		final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
-				true,
+				correspondingSqlJoinType == SqlAstJoinType.INNER || correspondingSqlJoinType == SqlAstJoinType.CROSS ,
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				() -> predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
@@ -2116,7 +2116,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
-				sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType(),
+				correspondingSqlJoinType,
 				tableGroup,
 				null
 		);
@@ -2125,7 +2125,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 		consumeReusablePaths( sqmJoin, tableGroupJoin.getJoinedGroup() );
 
-		// add any additional join restrictions
+		// add any additional join restrictionsHbmResultSetMappingDescriptor.java
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			tableGroupJoin.applyPredicate(
 					(Predicate) sqmJoin.getJoinPredicate().accept( this )
@@ -2169,11 +2169,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( subPart instanceof TableGroupJoinProducer ) {
 						implicitJoinChecker.accept( joinedPath );
 						final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
+						final SqlAstJoinType defaultSqlAstJoinType = joinProducer.getDefaultSqlAstJoinType(
+								parentTableGroup );
 						final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 								joinedPath.getNavigablePath(),
 								parentTableGroup,
 								null,
-								SqlAstJoinType.LEFT,
+								defaultSqlAstJoinType,
 								false,
 								this
 						);
@@ -4281,7 +4283,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup parentTableGroup = parentFromClauseAccess.getTableGroup( parentNavPath );
 			final SqlAliasBase sqlAliasBase = sqlAliasBaseManager.createSqlAliasBase( parentTableGroup.getGroupAlias() );
 			final TableGroup tableGroup = new CorrelatedTableGroup(
-					parentTableGroup.canUseInnerJoins(),
 					parentTableGroup,
 					sqlAliasBase,
 					subQuerySpec,
@@ -4676,6 +4677,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 
 				if ( joined && fetchable instanceof TableGroupJoinProducer ) {
+					TableGroupJoinProducer tableGroupJoinProducer = (TableGroupJoinProducer) fetchable;
 					fromClauseIndex.resolveTableGroup(
 							fetchablePath,
 							np -> {
@@ -4685,7 +4687,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 										fetchablePath,
 										lhs,
 										alias,
-										SqlAstJoinType.LEFT,
+										tableGroupJoinProducer.getDefaultSqlAstJoinType( lhs ),
 										true,
 										this
 								);

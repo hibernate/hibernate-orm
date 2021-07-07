@@ -18,6 +18,7 @@ import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.Assert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -245,7 +246,32 @@ public class ExtraLazyTest {
 					session.clear();
 					List results = session.getNamedQuery( "userSessionData" ).setParameter( "uname", "%in" ).list();
 					assertThat( results.size(), is( 2 ) );
-					gavin = (User) ( (Object[]) results.get( 0 ) )[0];
+					gavin = (User) results.get( 0 ) ;
+					assertThat( gavin.getName(), is( "gavin" ) );
+					Assert.assertTrue( Hibernate.isInitialized( gavin.getSession()) );
+					assertThat( gavin.getSession().size(), is( 2 ) );
+					session.createQuery( "delete SessionAttribute" ).executeUpdate();
+					session.createQuery( "delete User" ).executeUpdate();
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.DoubleQuoteQuoting.class)
+	public void testSQLQuery2(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					User gavin = new User( "gavin", "secret" );
+					User turin = new User( "turin", "tiger" );
+					gavin.getSession().put( "foo", new SessionAttribute( "foo", "foo bar baz" ) );
+					gavin.getSession().put( "bar", new SessionAttribute( "bar", "foo bar baz 2" ) );
+					session.persist( gavin );
+					session.persist( turin );
+					session.flush();
+					session.clear();
+					List results = session.getNamedQuery( "userData" ).setParameter( "uname", "%in" ).list();
+					assertThat( results.size(), is( 2 ) );
+					gavin = (User) results.get( 0 );
 					assertThat( gavin.getName(), is( "gavin" ) );
 					assertThat( gavin.getSession().size(), is( 2 ) );
 					session.createQuery( "delete SessionAttribute" ).executeUpdate();

@@ -29,14 +29,13 @@ public class CorrelatedTableGroup extends AbstractTableGroup {
 	private final Consumer<Predicate> joinPredicateConsumer;
 
 	public CorrelatedTableGroup(
-			boolean canUseInnerJoins,
 			TableGroup correlatedTableGroup,
 			SqlAliasBase sqlAliasBase,
 			QuerySpec querySpec,
 			Consumer<Predicate> joinPredicateConsumer,
 			SessionFactoryImplementor sessionFactory) {
 		super(
-				canUseInnerJoins,
+				true,
 				correlatedTableGroup.getNavigablePath(),
 				(TableGroupProducer) correlatedTableGroup.getExpressionType(),
 				null,

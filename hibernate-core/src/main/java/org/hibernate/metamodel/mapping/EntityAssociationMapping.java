@@ -41,7 +41,6 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	 * Create a delayed DomainResult for a specific reference to this ModelPart.
 	 */
 	default <T> DomainResult<T> createDelayedDomainResult(
-			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,

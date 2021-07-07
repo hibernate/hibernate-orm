@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  */
 public class LazyTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
 
-	private boolean canUseInnerJoins;
+	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
 	private final String sourceAlias;

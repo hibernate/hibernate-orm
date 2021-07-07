@@ -20,13 +20,13 @@ import org.hibernate.sql.ast.spi.SqlAliasBase;
  * @author Steve Ebersole
  */
 public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifier implements TableGroup {
+	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
 	private final TableGroupProducer producer;
 	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
 
 	private List<TableGroupJoin> tableGroupJoins;
-	private boolean canUseInnerJoins;
 
 	private final SessionFactoryImplementor sessionFactory;
 

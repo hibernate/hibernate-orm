@@ -557,6 +557,11 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
+		return SqlAstJoinType.LEFT;
+	}
+
+	@Override
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
@@ -608,7 +613,7 @@ public class PluralAttributeMappingImpl
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createOneToManyTableGroup(
-				lhs.canUseInnerJoins(),
+				lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
@@ -777,7 +782,7 @@ public class PluralAttributeMappingImpl
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = createCollectionTableGroup(
-				lhs.canUseInnerJoins(),
+				lhs.canUseInnerJoins() && sqlAstJoinType == SqlAstJoinType.INNER,
 				navigablePath,
 				fetched,
 				explicitSourceAlias,

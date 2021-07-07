@@ -71,6 +71,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			impl.getFromClauseAccess().resolveTableGroup(
 					navigablePath,
 					np -> entityDescriptor.createRootTableGroup(
+							// since this is only used for result set mappings, the canUseInnerJoins value is irrelevant.
 							true,
 							navigablePath,
 							null,

@@ -85,6 +85,11 @@ public class EntityCollectionPart
 
 
 	@Override
+	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
+		return SqlAstJoinType.INNER;
+	}
+
+	@Override
 	public Nature getNature() {
 		return nature;
 	}

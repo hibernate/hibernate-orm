@@ -18,12 +18,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.hibernate.Hibernate;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Max Rydahl Andersen
@@ -126,6 +128,7 @@ public class WhereTest extends BaseCoreFunctionalTestCase {
 
 					File parent = (File) query.list().get( 0 );
 					// @Where should not be applied
+					assertTrue( Hibernate.isInitialized( parent.getChildren() ) );
 					assertEquals( 2, parent.getChildren().size() );
 				}
 		);

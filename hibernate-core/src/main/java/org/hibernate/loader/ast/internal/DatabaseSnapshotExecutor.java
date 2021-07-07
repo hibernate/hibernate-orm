@@ -147,7 +147,6 @@ class DatabaseSnapshotExecutor {
 						if ( contributorMapping instanceof EntityAssociationMapping ) {
 							domainResults.add(
 									( (EntityAssociationMapping) contributorMapping ).createDelayedDomainResult(
-											true,
 											navigablePath,
 											rootTableGroup,
 											null,

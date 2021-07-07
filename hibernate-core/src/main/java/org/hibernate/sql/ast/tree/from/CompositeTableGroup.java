@@ -13,7 +13,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.SqlAstJoinType;
 
 /**
  * @author Steve Ebersole
@@ -25,13 +24,11 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	private final TableGroup underlyingTableGroup;
 
 	private List<TableGroupJoin> tableGroupJoins;
-	private final boolean canUseInnerJoins;
 
 	public CompositeTableGroup(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart compositionMapping,
 			TableGroup underlyingTableGroup) {
-		this.canUseInnerJoins = underlyingTableGroup.canUseInnerJoins();
 		this.navigablePath = navigablePath;
 		this.compositionMapping = compositionMapping;
 		this.underlyingTableGroup = underlyingTableGroup;
@@ -70,7 +67,7 @@ public class CompositeTableGroup implements VirtualTableGroup {
 
 	@Override
 	public boolean canUseInnerJoins() {
-		return canUseInnerJoins;
+		return underlyingTableGroup.canUseInnerJoins();
 	}
 
 	@Override

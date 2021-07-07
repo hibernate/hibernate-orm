@@ -32,12 +32,12 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * A  1 ------------> 1 B 1 ----------> 1 C
- * 1                 1
- * |                 |
- * |                 |
- * V                 V
- * 1                 N
- * D 1------------>N E
+ *                      1                 1
+ *                      |                 |
+ *                      |                 |
+ *                      V                 V
+ *                      1                 N
+ *                      D 1------------>N E
  *
  * @author Gail Badner
  */

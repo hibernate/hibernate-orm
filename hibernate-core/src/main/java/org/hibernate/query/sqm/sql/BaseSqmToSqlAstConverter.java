@@ -2125,7 +2125,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 		consumeReusablePaths( sqmJoin, tableGroupJoin.getJoinedGroup() );
 
-		// add any additional join restrictionsHbmResultSetMappingDescriptor.java
+		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			tableGroupJoin.applyPredicate(
 					(Predicate) sqmJoin.getJoinPredicate().accept( this )

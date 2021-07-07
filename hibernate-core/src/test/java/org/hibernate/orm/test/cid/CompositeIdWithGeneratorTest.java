@@ -8,7 +8,9 @@ package org.hibernate.orm.test.cid;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Set;
 
 import org.hibernate.Session;
@@ -37,6 +39,7 @@ import static org.junit.Assert.assertTrue;
 @TestForIssue( jiraKey = "HHH-2060" )
 public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
+	private Calendar cal = new GregorianCalendar(2021, 1, 31, 17, 30, 0);
 
 	@Override
 	protected String getBaseForMappings() {
@@ -55,6 +58,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		// persist the record to get the id generated
 		PurchaseRecord record = new PurchaseRecord();
+		record.setTimestamp( cal.getTime() );
 		s.persist(record);
 
 		t.commit();
@@ -83,7 +87,9 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		t = s.beginTransaction();
 		
 		// generate another new record
+		cal.roll( Calendar.SECOND, true );
 		PurchaseRecord record2 = new PurchaseRecord();
+		record2.setTimestamp( cal.getTime() );
 		s.persist(record2);
 		
 		t.commit();
@@ -121,6 +127,8 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		// persist the record
 		PurchaseRecord record = new PurchaseRecord();
+		cal.roll( Calendar.SECOND, true );
+		record.setTimestamp( cal.getTime() );
 		s.persist(record);
 		
 		// close session so we know the record is detached
@@ -131,7 +139,8 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		// change a non-id property, but do not persist
 		Date persistedTimestamp = record.getTimestamp();
-		Date newTimestamp = new Date(persistedTimestamp.getTime() + 1);
+		cal.roll( Calendar.SECOND, true );
+		Date newTimestamp = cal.getTime();
 		record.setTimestamp(newTimestamp);
 		
 		s = openSession();
@@ -174,8 +183,9 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Date timestamp1 = new Date();
-		Date timestamp2 = new Date(timestamp1.getTime() + 1);
+		Date timestamp1 = cal.getTime();
+		cal.roll( Calendar.SECOND, true );
+		Date timestamp2 = cal.getTime();
 
 		// persist two records
 		PurchaseRecord record1 = new PurchaseRecord();
@@ -249,8 +259,9 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Date timestamp1 = new Date();
-		Date timestamp2 = new Date(timestamp1.getTime() + 1);
+		Date timestamp1 = cal.getTime();
+		cal.roll( Calendar.SECOND, true );
+		Date timestamp2 = cal.getTime();
 
 		// persist the record
 		PurchaseRecord record = new PurchaseRecord();
@@ -288,6 +299,7 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 
 		// persist the record, then get the id and timestamp back
 		PurchaseRecord record = new PurchaseRecord();
+		record.setTimestamp( cal.getTime() );
 		s.persist(record);
 		
 		t.commit();
@@ -317,8 +329,9 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Date timestamp1 = new Date();
-		Date timestamp2 = new Date(timestamp1.getTime() + 1);
+		Date timestamp1 = cal.getTime();
+		cal.roll( Calendar.SECOND, true );
+		Date timestamp2 = cal.getTime();
 		
 		// persist the record, then evict it, then make changes to it ("within" the session)
 		PurchaseRecord record = new PurchaseRecord();
@@ -352,11 +365,13 @@ public class CompositeIdWithGeneratorTest extends BaseCoreFunctionalTestCase {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
 
-		Date timestamp1 = new Date();
-		Date timestamp2 = new Date(timestamp1.getTime() + 1);
+		Date timestamp1 = cal.getTime();
+		cal.roll( Calendar.SECOND, true );
+		Date timestamp2 = cal.getTime();
 
 		// persist the record
 		PurchaseRecord record = new PurchaseRecord();
+		record.setTimestamp( timestamp1 );
 		s.persist(record);
 		
 		t.commit();

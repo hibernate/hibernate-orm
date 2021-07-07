@@ -64,7 +64,7 @@ public class PurchaseRecord {
 	}
 
 	private Id id;
-	private Date timestamp = new Date();
+	private Date timestamp;
 	private Set details = new HashSet();
 
 	public PurchaseRecord() {}

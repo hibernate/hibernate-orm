@@ -110,8 +110,4 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 		return Collections.emptyList();
 	}
 
-	@Override
-	public boolean isInnerJoinPossible() {
-		return false;
-	}
 }

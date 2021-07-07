@@ -92,11 +92,6 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public boolean isInnerJoinPossible() {
-		return false;
-	}
-
-	@Override
 	public void addTableGroupJoin(TableGroupJoin join) {
 		throw new UnsupportedOperationException(  );
 	}

@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;

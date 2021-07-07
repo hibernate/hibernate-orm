@@ -113,11 +113,6 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean isInnerJoinPossible() {
-		return false;
-	}
-
-	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return resolveTableReference( navigablePath, tableExpression );
 	}

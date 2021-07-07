@@ -119,11 +119,6 @@ public class TableGroupImpl implements TableGroup {
 	}
 
 	@Override
-	public boolean isInnerJoinPossible() {
-		return false;
-	}
-
-	@Override
 	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
 		final TableReference tableReference = getTableReference( navigablePath, tableExpression );
 		if ( tableReference == null ) {

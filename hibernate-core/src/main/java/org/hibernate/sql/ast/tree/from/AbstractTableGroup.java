@@ -26,7 +26,6 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 	private final SqlAliasBase sqlAliasBase;
 
 	private List<TableGroupJoin> tableGroupJoins;
-	private boolean isInnerJoinPossible;
 	private boolean canUseInnerJoins;
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -39,25 +38,12 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
-		this( canUseInnerJoins, navigablePath, producer, sourceAlias, sqlAliasBase, false, sessionFactory );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public AbstractTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			TableGroupProducer producer,
-			String sourceAlias,
-			SqlAliasBase sqlAliasBase,
-			boolean isInnerJoinPossible,
-			SessionFactoryImplementor sessionFactory) {
 		super();
 		this.canUseInnerJoins = canUseInnerJoins;
 		this.navigablePath = navigablePath;
 		this.producer = producer;
 		this.sourceAlias = sourceAlias;
 		this.sqlAliasBase = sqlAliasBase;
-		this.isInnerJoinPossible = isInnerJoinPossible;
 		this.sessionFactory = sessionFactory;
 	}
 
@@ -125,11 +111,6 @@ public abstract class AbstractTableGroup extends AbstractColumnReferenceQualifie
 		if ( tableGroupJoins != null ) {
 			tableGroupJoins.forEach( consumer );
 		}
-	}
-
-	@Override
-	public boolean isInnerJoinPossible() {
-		return isInnerJoinPossible;
 	}
 
 	@Override

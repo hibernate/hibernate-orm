@@ -762,7 +762,7 @@ public class ToOneAttributeMapping
 					navigablePath,
 					tableGroup,
 					null,
-					tableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+					SqlAstJoinType.LEFT,
 					true,
 					creationState.getSqlAstCreationState()
 			);

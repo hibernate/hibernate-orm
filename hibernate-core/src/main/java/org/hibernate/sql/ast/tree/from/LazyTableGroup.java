@@ -151,11 +151,6 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	}
 
 	@Override
-	public boolean isInnerJoinPossible() {
-		return false;
-	}
-
-	@Override
 	public boolean isRealTableGroup() {
 		return false;
 	}

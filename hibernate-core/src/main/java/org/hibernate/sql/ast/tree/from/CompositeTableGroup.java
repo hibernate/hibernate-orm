@@ -111,11 +111,6 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public boolean isInnerJoinPossible() {
-		return underlyingTableGroup.isInnerJoinPossible();
-	}
-
-	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return underlyingTableGroup.getTableReference( navigablePath, tableExpression );
 	}

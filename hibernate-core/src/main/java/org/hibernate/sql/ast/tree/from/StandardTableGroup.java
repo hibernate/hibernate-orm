@@ -13,7 +13,6 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -27,7 +26,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 	private final BiFunction<String,TableGroup,TableReferenceJoin> tableReferenceJoinCreator;
 	private final boolean realTableGroup;
 	private final boolean fetched;
-	private final boolean canUseInnerJoins;
 
 	private List<TableReferenceJoin> tableJoins;
 
@@ -40,7 +38,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 			SqlAliasBase sqlAliasBase,
 			SessionFactoryImplementor sessionFactory) {
 		super( canUseInnerJoins, navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
-		this.canUseInnerJoins = canUseInnerJoins;
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = false;
 		this.fetched = false;
@@ -68,7 +65,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		super( canUseInnerJoins, navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
-		this.canUseInnerJoins = canUseInnerJoins;
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
 		this.fetched = false;
@@ -90,7 +86,6 @@ public class StandardTableGroup extends AbstractTableGroup {
 			BiFunction<String, TableGroup, TableReferenceJoin> tableReferenceJoinCreator,
 			SessionFactoryImplementor sessionFactory) {
 		super( canUseInnerJoins, navigablePath, tableGroupProducer, sourceAlias, sqlAliasBase, sessionFactory );
-		this.canUseInnerJoins = canUseInnerJoins;
 		this.primaryTableReference = primaryTableReference;
 		this.realTableGroup = realTableGroup;
 		this.fetched = fetched;

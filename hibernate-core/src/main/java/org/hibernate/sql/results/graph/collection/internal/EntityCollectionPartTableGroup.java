@@ -101,11 +101,6 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public boolean isInnerJoinPossible() {
-		return collectionTableGroup.isInnerJoinPossible();
-	}
-
-	@Override
 	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
 		return collectionTableGroup.getTableReference( navigablePath, tableExpression );
 	}

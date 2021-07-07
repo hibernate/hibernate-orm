@@ -2173,7 +2173,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								joinedPath.getNavigablePath(),
 								parentTableGroup,
 								null,
-								parentTableGroup.isInnerJoinPossible() ? SqlAstJoinType.INNER : SqlAstJoinType.LEFT,
+								SqlAstJoinType.LEFT,
 								false,
 								this
 						);

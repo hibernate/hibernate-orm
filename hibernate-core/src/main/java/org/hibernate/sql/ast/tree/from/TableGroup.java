@@ -86,8 +86,6 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 		sqlTreeWalker.visitTableGroup( this );
 	}
 
-	boolean isInnerJoinPossible();
-
 	default boolean isRealTableGroup() {
 		return false;
 	}

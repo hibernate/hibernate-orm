@@ -6,7 +6,7 @@
  */
 
 //$Id: Document.java 7552 2005-07-19 18:51:24Z oneovthafew $
-package org.hibernate.test.optlock;
+package org.hibernate.orm.test.optlock;
 
 
 /**

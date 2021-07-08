@@ -4,40 +4,45 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.ordered;
+package org.hibernate.orm.test.ordered;
 
 import java.util.Arrays;
 import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-public class HqlOrderByIdsTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = HqlOrderByIdsTest.Person.class
+)
+public class HqlOrderByIdsTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			Person.class
-		};
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager ->
+						entityManager.createQuery( "delete from Person" ).executeUpdate()
+		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-10502" )
-	@RequiresDialect( value = MySQL5Dialect.class )
-	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@TestForIssue(jiraKey = "HHH-10502")
+	@RequiresDialect(value = MySQLDialect.class, version = 500)
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person1 = new Person();
 			person1.setId( 1L );
 			person1.setName( "John" );
@@ -59,20 +64,21 @@ public class HqlOrderByIdsTest extends BaseEntityManagerFunctionalTestCase {
 			entityManager.persist( person3 );
 			entityManager.persist( person4 );
 		} );
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			List<Person> persons = entityManager.createQuery(
-				"SELECT p " +
-				"FROM Person p " +
-				"WHERE p.id IN (:ids) " +
-				"ORDER BY FIELD(id, :ids) ", Person.class)
-			.setParameter( "ids" , Arrays.asList(3L, 1L, 2L))
-			.getResultList();
 
-			assertEquals(3, persons.size());
+		scope.inTransaction( entityManager -> {
+			List<Person> persons = entityManager.createQuery(
+					"SELECT p " +
+							"FROM Person p " +
+							"WHERE p.id IN (:ids) " +
+							"ORDER BY FIELD(id, :ids) ", Person.class )
+					.setParameter( "ids", Arrays.asList( 3L, 1L, 2L ) )
+					.getResultList();
+
+			assertEquals( 3, persons.size() );
 			int index = 0;
-			assertEquals( Long.valueOf( 3L ), persons.get( index++ ).getId() );
-			assertEquals( Long.valueOf( 1L ), persons.get( index++ ).getId() );
-			assertEquals( Long.valueOf( 2L ), persons.get( index++ ).getId() );
+			assertEquals( 3L, persons.get( index++ ).getId() );
+			assertEquals( 1L, persons.get( index++ ).getId() );
+			assertEquals( 2L, persons.get( index++ ).getId() );
 		} );
 	}
 

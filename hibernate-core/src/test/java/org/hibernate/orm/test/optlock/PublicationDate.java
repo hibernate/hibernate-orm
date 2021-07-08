@@ -6,7 +6,7 @@
  */
 
 //$Id: PublicationDate.java 7556 2005-07-19 23:22:27Z oneovthafew $
-package org.hibernate.test.optlock;
+package org.hibernate.orm.test.optlock;
 
 
 public class PublicationDate {

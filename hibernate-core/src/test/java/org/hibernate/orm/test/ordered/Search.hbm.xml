@@ -13,7 +13,7 @@
   
 -->
 
-<hibernate-mapping package="org.hibernate.test.ordered">
+<hibernate-mapping package="org.hibernate.orm.test.ordered">
 	
 	<class name="Search">
 		<id name="searchString"/>

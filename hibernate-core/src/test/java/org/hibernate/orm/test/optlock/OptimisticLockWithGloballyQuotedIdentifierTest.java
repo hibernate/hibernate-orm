@@ -1,29 +1,37 @@
-package org.hibernate.test.optlock;
+package org.hibernate.orm.test.optlock;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.LockModeType;
 import javax.persistence.Version;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class OptimisticLockWithQuotedVersionTest extends BaseCoreFunctionalTestCase {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				OptimisticLockWithGloballyQuotedIdentifierTest.Person.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting( name =  AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, value = "true")
+)
+public class OptimisticLockWithGloballyQuotedIdentifierTest {
 
-	@Before
-	public void setUp() {
-		inTransaction(
+
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person person = new Person( "1", "Fabiana" );
 					session.persist( person );
@@ -31,9 +39,9 @@ public class OptimisticLockWithQuotedVersionTest extends BaseCoreFunctionalTestC
 		);
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from Person" ).executeUpdate();
 				}
@@ -41,8 +49,8 @@ public class OptimisticLockWithQuotedVersionTest extends BaseCoreFunctionalTestC
 	}
 
 	@Test
-	public void testHqlQueryWithOptimisticLock() {
-		inTransaction(
+	public void testHqlQueryWithOptimisticLock(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "from Person e", Person.class )
 							.setLockMode( LockModeType.OPTIMISTIC )
@@ -57,7 +65,6 @@ public class OptimisticLockWithQuotedVersionTest extends BaseCoreFunctionalTestC
 		private String id;
 
 		@Version
-		@Column(name = "`version`")
 		private long version;
 
 		private String name;

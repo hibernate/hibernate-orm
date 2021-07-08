@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.ordered;
+package org.hibernate.orm.test.ordered;
 
 import java.util.Iterator;
 import javax.persistence.criteria.CriteriaBuilder;
@@ -13,26 +13,40 @@ import javax.persistence.criteria.JoinType;
 
 import org.hibernate.Hibernate;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Gavin King
  */
-public class OrderByTest extends BaseCoreFunctionalTestCase {
-	public String[] getMappings() {
-		return new String[] { "ordered/Search.hbm.xml" };
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/ordered/Search.hbm.xml"
+)
+@SessionFactory
+public class OrderByTest {
+
+	@AfterEach
+	public void tearDonw(SessionFactoryScope scope){
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Search" ).executeUpdate()
+		);
 	}
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
-	public void testOrderBy() {
+	public void testOrderBy(SessionFactoryScope scope) {
 
-		inTransaction(
+		scope.inTransaction(
 				sess -> {
 					Search s = new Search( "Hibernate" );
 					s.getSearchResults().add( "jboss.com" );
@@ -49,9 +63,9 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 //					s = (Search) sess.createCriteria( Search.class ).uniqueResult();
 					assertFalse( Hibernate.isInitialized( s.getSearchResults() ) );
 					Iterator iter = s.getSearchResults().iterator();
-					assertEquals( iter.next(), "HiA" );
-					assertEquals( iter.next(), "hibernate.org" );
-					assertEquals( iter.next(), "jboss.com" );
+					assertThat( iter.next(), is( "HiA" ) );
+					assertThat( iter.next(), is( "hibernate.org" ) );
+					assertThat( iter.next(), is( "jboss.com" ) );
 					assertFalse( iter.hasNext() );
 
 					sess.clear();
@@ -63,9 +77,9 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 //							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
 					iter = s.getSearchResults().iterator();
-					assertEquals( iter.next(), "HiA" );
-					assertEquals( iter.next(), "hibernate.org" );
-					assertEquals( iter.next(), "jboss.com" );
+					assertThat( iter.next(), is( "HiA" ) );
+					assertThat( iter.next(), is( "hibernate.org" ) );
+					assertThat( iter.next(), is( "jboss.com" ) );
 					assertFalse( iter.hasNext() );
 
 					sess.clear();
@@ -73,9 +87,9 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 							.uniqueResult();
 					assertTrue( Hibernate.isInitialized( s.getSearchResults() ) );
 					iter = s.getSearchResults().iterator();
-					assertEquals( iter.next(), "HiA" );
-					assertEquals( iter.next(), "hibernate.org" );
-					assertEquals( iter.next(), "jboss.com" );
+					assertThat( iter.next(), is( "HiA" ) );
+					assertThat( iter.next(), is( "hibernate.org" ) );
+					assertThat( iter.next(), is( "jboss.com" ) );
 					assertFalse( iter.hasNext() );
 
 		/*sess.clear();

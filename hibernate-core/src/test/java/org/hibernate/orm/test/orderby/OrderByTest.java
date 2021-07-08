@@ -1,4 +1,4 @@
-package org.hibernate.test.orderby;
+package org.hibernate.orm.test.orderby;
 
 import java.util.List;
 import javax.persistence.DiscriminatorValue;
@@ -6,30 +6,32 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Christian Beikov
  */
-public class OrderByTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				OrderByTest.Person.class,
+				OrderByTest.P1.class,
+				OrderByTest.P2.class
+		}
+)
+@SessionFactory
+public class OrderByTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				P1.class,
-				P2.class
-		};
-	}
-
-	@Override
-	protected void prepareTest() throws Exception {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@BeforeEach
+	protected void prepareTest(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.persist( new P1( 1L, "abc" ) );
 					session.persist( new P1( 2L, "abc" ) );
 					session.persist( new P2( 3L, "def" ) );
@@ -37,20 +39,19 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Override
-	protected void cleanupTest() throws Exception {
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
+	@AfterEach
+	protected void cleanupTest(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Person" ).executeUpdate()
 		);
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-14351")
-	public void testOrderBySqlNode() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@TestForIssue(jiraKey = "HHH-14351")
+	public void testOrderBySqlNode(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					List<Person> list = session.createQuery( "from Person p order by type(p) desc, p.id", Person.class )
 							.getResultList();
 					assertEquals( 3L, list.get( 0 ).getId().longValue() );
@@ -92,7 +93,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "P1")
-	@DiscriminatorValue( "P1" )
+	@DiscriminatorValue("P1")
 	public static class P1 extends Person {
 		public P1() {
 		}
@@ -103,7 +104,7 @@ public class OrderByTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "P2")
-	@DiscriminatorValue( "P2" )
+	@DiscriminatorValue("P2")
 	public static class P2 extends Person {
 		public P2() {
 		}

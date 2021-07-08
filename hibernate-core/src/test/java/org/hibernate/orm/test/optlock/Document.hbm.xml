@@ -17,7 +17,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.optlock">
+<hibernate-mapping package="org.hibernate.orm.test.optlock">
 
 	<class name="Document" entity-name="LockDirty" table="Document" optimistic-lock="dirty" dynamic-update="true">
 		<id name="id">

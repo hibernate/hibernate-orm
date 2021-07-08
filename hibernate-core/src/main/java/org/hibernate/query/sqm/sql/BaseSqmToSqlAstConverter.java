@@ -4586,14 +4586,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
-		Object booleanExpression = predicate.getBooleanExpression().accept( this );
+		final Object booleanExpression = predicate.getBooleanExpression().accept( this );
 		if ( booleanExpression instanceof SelfRenderingExpression ) {
-			return new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );
+			final Predicate sqlPredicate = new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );
+			if ( predicate.isNegated() ) {
+				return new NegatedPredicate( sqlPredicate );
+			}
+			return sqlPredicate;
 		}
 		else {
 			return new ComparisonPredicate(
 					(Expression) booleanExpression,
-					ComparisonOperator.EQUAL,
+					predicate.isNegated() ? ComparisonOperator.NOT_EQUAL : ComparisonOperator.EQUAL,
 					new QueryLiteral<>( true, basicType( Boolean.class ) )
 			);
 		}

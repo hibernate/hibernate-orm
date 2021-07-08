@@ -54,7 +54,7 @@ public class QueryExceptionHandlingTest extends BaseExceptionHandlingTest {
 	public void testInvalidQuery() {
 		try {
 			TransactionUtil2.inSession( sessionFactory(), s -> {
-				s.createQuery( "from A where blahblahblah" ).list();
+				s.createQuery( "from A a where" ).list();
 			} );
 			fail( "should have thrown an exception" );
 		}

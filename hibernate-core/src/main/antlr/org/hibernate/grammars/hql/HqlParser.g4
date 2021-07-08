@@ -406,6 +406,7 @@ predicate
 	| NOT predicate											# NegatedPredicate
 	| predicate AND predicate								# AndPredicate
 	| predicate OR predicate								# OrPredicate
+	| expression											# BooleanExpressionPredicate
 	;
 
 comparisonOperator

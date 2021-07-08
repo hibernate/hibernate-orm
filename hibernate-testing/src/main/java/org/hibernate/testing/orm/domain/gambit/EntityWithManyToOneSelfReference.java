@@ -10,11 +10,13 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
+@Table(name = "entity_m2o_selfref")
 @SuppressWarnings("unused")
 public class EntityWithManyToOneSelfReference {
 	private Integer id;

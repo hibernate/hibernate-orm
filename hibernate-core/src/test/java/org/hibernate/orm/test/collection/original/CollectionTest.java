@@ -10,12 +10,10 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Hibernate;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionImplementor;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -31,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Gavin King
  */
-@RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(xmlMappings = {
 		"org/hibernate/orm/test/collection/original/UserPermissions.hbm.xml",
 		"org/hibernate/orm/test/collection/original/Zoo.hbm.xml",
@@ -243,7 +241,6 @@ public class CollectionTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-3636")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testCollectionInheritance(SessionFactoryScope scope) {
 		Zoo zoo = new Zoo();
 		scope.inTransaction(

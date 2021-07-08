@@ -25,6 +25,11 @@ import org.junit.Test;
 public class HANAFunctionsTest extends BaseCoreFunctionalTestCase {
 
 	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
+	}
+
+	@Override
 	public String[] getMappings() {
 		return new String[]{ "dialect/function/Product.hbm.xml" };
 	}

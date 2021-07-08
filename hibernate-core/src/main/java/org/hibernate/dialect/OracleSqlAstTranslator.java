@@ -314,7 +314,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	private boolean supportsOffsetFetchClause() {
-		return getDialect().getVersion() >= 1200;
+		return getDialect().supportsFetchClause( FetchClauseType.ROWS_ONLY );
 	}
 
 }

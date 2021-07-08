@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.id;
 
 import org.hibernate.FlushMode;
-import org.hibernate.dialect.AbstractHANADialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -15,10 +14,10 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @TestForIssue(jiraKey = "HHH-12464")
 @DomainModel(
 		annotatedClasses = {
@@ -30,7 +29,6 @@ import org.junit.jupiter.api.Test;
 public class CreateDeleteTest {
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void createAndDeleteAnEntityInTheSameTransactionTest(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

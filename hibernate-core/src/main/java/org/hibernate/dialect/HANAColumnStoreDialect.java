@@ -41,7 +41,7 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	}
 	
 	public HANAColumnStoreDialect() {
-		this(300);
+		this( 300 );
 	}
 
 	public HANAColumnStoreDialect(int version) {
@@ -106,9 +106,12 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 		queryEngine.getSqmFunctionRegistry().registerNamed( "score", StandardBasicTypes.DOUBLE );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
-//		queryEngine.getSqmFunctionRegistry().registerVarArgs( "contains", StandardSpiBasicTypes.BOOLEAN, "contains(", ",", ") /*" );
-//		queryEngine.getSqmFunctionRegistry().registerPattern( "contains_rhs", "*/", StandardSpiBasicTypes.BOOLEAN );
-//		queryEngine.getSqmFunctionRegistry().registerVarArgs( "not_contains", StandardSpiBasicTypes.BOOLEAN, "not_contains(", ",", ") /*" );
+		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
+				"contains",
+				StandardBasicTypes.BOOLEAN,
+				"contains(?1,?2)",
+				"contains(?1,?2,?3)"
+		);
 	}
 
 	@Override

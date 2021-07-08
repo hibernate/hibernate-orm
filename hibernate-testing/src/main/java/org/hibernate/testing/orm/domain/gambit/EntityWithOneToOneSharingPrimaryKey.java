@@ -16,7 +16,7 @@ import javax.persistence.Table;
  * @author Andrea Boriero
  */
 @Entity
-@Table(name= "EntityWithOneToOneSharingPrimaryKey")
+@Table(name = "entity_o2o_sharepk")
 public class EntityWithOneToOneSharingPrimaryKey {
 	private Integer id;
 

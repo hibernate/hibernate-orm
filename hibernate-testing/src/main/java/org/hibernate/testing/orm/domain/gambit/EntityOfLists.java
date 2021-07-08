@@ -8,6 +8,7 @@ package org.hibernate.testing.orm.domain.gambit;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.persistence.CollectionTable;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -68,6 +69,7 @@ public class EntityOfLists {
 
 	@ElementCollection
 	@OrderColumn
+	@CollectionTable(name = "EntityOfLists_basic")
 	public List<String> getListOfBasics() {
 		return listOfBasics;
 	}
@@ -90,6 +92,7 @@ public class EntityOfLists {
 	@ElementCollection
 	@OrderColumn
 	@Convert(converter = EnumValueConverter.class)
+	@CollectionTable(name = "EntityOfLists_enum1")
 	public List<EnumValue> getListOfConvertedEnums() {
 		return listOfConvertedEnums;
 	}
@@ -112,6 +115,7 @@ public class EntityOfLists {
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
 	@OrderColumn
+	@CollectionTable(name = "EntityOfLists_enum2")
 	public List<EnumValue> getListOfEnums() {
 		return listOfEnums;
 	}
@@ -133,6 +137,7 @@ public class EntityOfLists {
 
 	@ElementCollection
 	@OrderColumn
+	@CollectionTable(name = "EntityOfLists_comp")
 	public List<SimpleComponent> getListOfComponents() {
 		return listOfComponents;
 	}
@@ -154,6 +159,7 @@ public class EntityOfLists {
 
 	@OneToMany
 	@OrderColumn
+	@CollectionTable(name = "EntityOfLists_o2m")
 	public List<SimpleEntity> getListOfOneToMany() {
 		return listOfOneToMany;
 	}
@@ -175,6 +181,7 @@ public class EntityOfLists {
 
 	@ManyToMany
 	@OrderColumn
+	@CollectionTable(name = "EntityOfLists_m2m")
 	public List<SimpleEntity> getListOfManyToMany() {
 		return listOfManyToMany;
 	}

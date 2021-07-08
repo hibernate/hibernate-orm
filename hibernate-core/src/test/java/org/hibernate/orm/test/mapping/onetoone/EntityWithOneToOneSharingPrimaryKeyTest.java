@@ -50,7 +50,7 @@ public class EntityWithOneToOneSharingPrimaryKeyTest {
 		ForeignKeyDescriptor foreignKeyDescriptor = otherAttributeMapping.getForeignKeyDescriptor();
 		foreignKeyDescriptor.visitKeySelectables(
 				(columnIndex, selection) -> {
-					assertThat( selection.getContainingTableExpression(), is( "EntityWithOneToOneSharingPrimaryKey" ) );
+					assertThat( selection.getContainingTableExpression(), is( "entity_o2o_sharepk" ) );
 					assertThat( selection.getSelectionExpression(), is( "id" ) );
 				}
 		);

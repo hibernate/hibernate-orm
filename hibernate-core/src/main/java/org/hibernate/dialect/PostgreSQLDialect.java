@@ -188,7 +188,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit==DAY ) {
+		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit == DAY ) {
 			// special case: subtraction of two dates
 			// results in an integer number of days
 			// instead of an INTERVAL
@@ -196,27 +196,27 @@ public class PostgreSQLDialect extends Dialect {
 		}
 		else {
 			StringBuilder pattern = new StringBuilder();
-			switch (unit) {
+			switch ( unit ) {
 				case YEAR:
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit);
+					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
 					break;
 				case QUARTER:
-					pattern.append("(");
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit);
-					pattern.append("+");
-					extractField( pattern, QUARTER, fromTemporalType, toTemporalType, unit);
-					pattern.append(")");
+					pattern.append( "(" );
+					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
+					pattern.append( "+" );
+					extractField( pattern, QUARTER, fromTemporalType, toTemporalType, unit );
+					pattern.append( ")" );
 					break;
 				case MONTH:
-					pattern.append("(");
-					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit);
-					pattern.append("+");
-					extractField( pattern, MONTH, fromTemporalType, toTemporalType, unit);
-					pattern.append(")");
+					pattern.append( "(" );
+					extractField( pattern, YEAR, fromTemporalType, toTemporalType, unit );
+					pattern.append( "+" );
+					extractField( pattern, MONTH, fromTemporalType, toTemporalType, unit );
+					pattern.append( ")" );
 					break;
 				case WEEK: //week is not supported by extract() when the argument is a duration
 				case DAY:
-					extractField( pattern, DAY, fromTemporalType, toTemporalType, unit);
+					extractField( pattern, DAY, fromTemporalType, toTemporalType, unit );
 					break;
 				//in order to avoid multiple calls to extract(),
 				//we use extract(epoch from x - y) * factor for
@@ -226,48 +226,49 @@ public class PostgreSQLDialect extends Dialect {
 				case SECOND:
 				case NANOSECOND:
 				case NATIVE:
-					extractField( pattern, EPOCH, fromTemporalType, toTemporalType, unit);
+					extractField( pattern, EPOCH, fromTemporalType, toTemporalType, unit );
 					break;
 				default:
-					throw new SemanticException("unrecognized field: " + unit);
+					throw new SemanticException( "unrecognized field: " + unit );
 			}
 			return pattern.toString();
 		}
 	}
 
-	private void extractField(
+	protected void extractField(
 			StringBuilder pattern,
 			TemporalUnit unit,
-			TemporalType fromTimestamp, TemporalType toTimestamp,
+			TemporalType fromTimestamp,
+			TemporalType toTimestamp,
 			TemporalUnit toUnit) {
-		pattern.append("extract(");
-		pattern.append( translateDurationField(unit) );
-		pattern.append(" from ");
+		pattern.append( "extract(" );
+		pattern.append( translateDurationField( unit ) );
+		pattern.append( " from " );
 		if ( toTimestamp != TemporalType.TIMESTAMP && fromTimestamp != TemporalType.TIMESTAMP ) {
 			// special case subtraction of two
 			// dates results in an integer not
 			// an Interval
-			pattern.append("age(?3,?2)");
+			pattern.append( "age(?3,?2)" );
 		}
 		else {
-			switch (unit) {
+			switch ( unit ) {
 				case YEAR:
 				case MONTH:
 				case QUARTER:
-					pattern.append("age(?3,?2)");
+					pattern.append( "age(?3,?2)" );
 					break;
 				case DAY:
 				case HOUR:
 				case MINUTE:
 				case SECOND:
 				case EPOCH:
-					pattern.append("?3-?2");
+					pattern.append( "?3-?2" );
 					break;
 				default:
-					throw new SemanticException(unit + " is not a legal field");
+					throw new SemanticException( unit + " is not a legal field" );
 			}
 		}
-		pattern.append(")").append( unit.conversionFactor( toUnit, this ) );
+		pattern.append( ")" ).append( unit.conversionFactor( toUnit, this ) );
 	}
 
 	@Override

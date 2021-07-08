@@ -78,7 +78,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 
 			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(t), highlighted(t), score() from "
-					+ ENTITY_NAME + " b where contains(b.t, 'text') = contains_rhs()", Object[].class );
+					+ ENTITY_NAME + " b where contains(b.t, 'text')", Object[].class );
 
 			Object[] result = legacyQuery.getSingleResult();
 
@@ -110,7 +110,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			s.flush();
 
 			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(t), highlighted(t), score() from " + ENTITY_NAME
-					+ " b where not_contains(b.t, 'string') = contains_rhs()", Object[].class );
+					+ " b where not contains(b.t, 'string')", Object[].class );
 
 			Object[] result = legacyQuery.getSingleResult();
 
@@ -143,7 +143,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			s.beginTransaction();
 
 			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
-					+ " b where contains(b.c, 'string') = contains_rhs()", Object[].class );
+					+ " b where contains(b.c, 'string')", Object[].class );
 
 			Object[] result = legacyQuery.getSingleResult();
 
@@ -179,7 +179,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 
 			Query<Object[]> legacyQuery = s.createQuery(
 					"select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
-							+ " b where contains(b.c, 'string') = contains_rhs() and key=1 and score() > 0.5",
+							+ " b where contains(b.c, 'string') and key=1 and score() > 0.5",
 					Object[].class );
 
 			Object[] result = legacyQuery.getSingleResult();
@@ -215,7 +215,7 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 			s.beginTransaction();
 
 			Query<Object[]> legacyQuery = s.createQuery( "select b, snippets(c), highlighted(c), score() from " + ENTITY_NAME
-					+ " b where contains(b.c, 'string', FUZZY(0.7)) = contains_rhs()", Object[].class );
+					+ " b where contains(b.c, 'string', FUZZY(0.7))", Object[].class );
 
 			Object[] result = legacyQuery.getSingleResult();
 

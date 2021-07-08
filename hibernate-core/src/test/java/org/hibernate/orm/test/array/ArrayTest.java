@@ -6,12 +6,11 @@
  */
 package org.hibernate.orm.test.array;
 
-import org.hibernate.dialect.AbstractHANADialect;
-
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 /**
  * @author Emmanuel Bernard
  */
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/array/A.hbm.xml"
 )
@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ArrayTest {
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testArrayJoinFetch(SessionFactoryScope scope) {
 		A a = new A();
 		scope.inTransaction(

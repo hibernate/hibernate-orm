@@ -14,6 +14,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -252,18 +253,22 @@ public class SortTest {
 
 		@ElementCollection
 		@SortNatural
+		@CollectionTable( name = "Search_results1")
 		private SortedSet<String> searchResults = new TreeSet<>();
 
 		@ElementCollection
 		@SortComparator(StringCaseInsensitiveComparator.class)
+		@CollectionTable( name = "Search_results2")
 		private SortedSet<String> searchResultsCaseInsensitive = new TreeSet<>();
 
 		@ElementCollection
 		@SortNatural
+		@CollectionTable( name = "Search_tokens1")
 		private SortedMap<String, String> tokens = new TreeMap<>();
 
 		@ElementCollection
 		@SortComparator(StringCaseInsensitiveComparator.class)
+		@CollectionTable( name = "Search_tokens2")
 		private SortedMap<String, String> tokensCaseInsensitive = new TreeMap<>();
 
 		public Search() {

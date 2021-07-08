@@ -12,6 +12,8 @@ import javax.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
+import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
@@ -20,6 +22,7 @@ import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -55,6 +58,7 @@ public class ScrollableResultsTests {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA supports only ResultSet.TYPE_FORWARD_ONLY")
 	public void testCursorPositioning(SessionFactoryScope scope) {
 		// create an extra row so we can better test cursor positioning
 		scope.inTransaction(
@@ -263,19 +267,23 @@ public class ScrollableResultsTests {
 			validator.accept( results.get() );
 		}
 
-		try ( final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE ) ) {
-			assertThat( results.next(), is( true ) );
-			validator.accept( results.get() );
-		}
+		final SessionImplementor session = (SessionImplementor) query.getSession();
+		// HANA supports only ResultSet.TYPE_FORWARD_ONLY
+		if ( !( session.getFactory().getJdbcServices().getDialect() instanceof AbstractHANADialect ) ) {
+			try (final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
+				assertThat( results.next(), is( true ) );
+				validator.accept( results.get() );
+			}
 
-		try ( final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_SENSITIVE ) ) {
-			assertThat( results.next(), is( true ) );
-			validator.accept( results.get() );
-		}
+			try (final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_SENSITIVE )) {
+				assertThat( results.next(), is( true ) );
+				validator.accept( results.get() );
+			}
 
-		try ( final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE ) ) {
-			assertThat( results.next(), is( true ) );
-			validator.accept( results.get() );
+			try (final ScrollableResults<R> results = query.scroll( ScrollMode.SCROLL_INSENSITIVE )) {
+				assertThat( results.next(), is( true ) );
+				validator.accept( results.get() );
+			}
 		}
 	}
 }

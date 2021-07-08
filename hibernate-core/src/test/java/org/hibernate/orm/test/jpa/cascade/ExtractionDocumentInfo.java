@@ -31,7 +31,7 @@ import javax.persistence.Transient;
  * @author Emmanuel Bernard
  */
 @Entity
-@Table(name = "portal_pk_docs_extraction_info")
+@Table(name = "extraction_doc_info")
 @DynamicUpdate @DynamicInsert
 public class ExtractionDocumentInfo implements Serializable {
 	private Long id;

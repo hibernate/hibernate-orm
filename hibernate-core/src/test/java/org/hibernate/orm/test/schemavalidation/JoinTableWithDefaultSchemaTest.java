@@ -42,7 +42,6 @@ public class JoinTableWithDefaultSchemaTest extends BaseUnitTestCase {
 	public void testGetTableDataForJoinTableWithDefaultSchema() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DEFAULT_CATALOG, "hibernate_orm_test" )
-				.applySetting( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "false" )
 				.build();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )

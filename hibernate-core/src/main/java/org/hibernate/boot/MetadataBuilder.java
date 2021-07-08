@@ -187,28 +187,6 @@ public interface MetadataBuilder {
 	MetadataBuilder applyArchiveDescriptorFactory(ArchiveDescriptorFactory factory);
 
 	/**
-	 * Should we enable support for the "new" (since 3.2) identifier generator mappings for
-	 * handling:<ul>
-	 *     <li>{@link javax.persistence.GenerationType#SEQUENCE}</li>
-	 *     <li>{@link javax.persistence.GenerationType#IDENTITY}</li>
-	 *     <li>{@link javax.persistence.GenerationType#TABLE}</li>
-	 *     <li>{@link javax.persistence.GenerationType#AUTO}</li>
-	 * </ul>
-	 * <p/>
-	 * Its default is defined by the {@link org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS}
-	 * setting if using property-based configuration.
-	 *
-	 *
-	 * @param enable {@code true} to enable; {@code false} to disable; don't call for
-	 * default.
-	 *
-	 * @return {@code this}, for method chaining
-	 *
-	 * @see org.hibernate.cfg.AvailableSettings#USE_NEW_ID_GENERATOR_MAPPINGS
-	 */
-	MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enable);
-
-	/**
 	 * Should we process or ignore explicitly defined discriminators in the case
 	 * of joined-subclasses.  The legacy behavior of Hibernate was to ignore the
 	 * discriminator annotations because Hibernate (unlike some providers) does

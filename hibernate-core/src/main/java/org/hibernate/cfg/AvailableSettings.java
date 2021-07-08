@@ -761,17 +761,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String DEFAULT_CACHE_CONCURRENCY_STRATEGY = "hibernate.cache.default_cache_concurrency_strategy";
 
 	/**
-	 * Setting which indicates whether or not the new {@link org.hibernate.id.IdentifierGenerator} are used
-	 * for AUTO, TABLE and SEQUENCE.
-	 * <p/>
-	 * Default is {@code true}.  Existing applications may want to disable this (set it {@code false}) for
-	 * upgrade compatibility.
-	 *
-	 * @see MetadataBuilder#enableNewIdentifierGeneratorSupport
-	 */
-	String USE_NEW_ID_GENERATOR_MAPPINGS = "hibernate.id.new_generator_mappings";
-
-	/**
 	 * @see org.hibernate.boot.MetadataBuilder#enableImplicitForcingOfDiscriminatorsInSelect(boolean)
 	 */
 	String FORCE_DISCRIMINATOR_IN_SELECTS_BY_DEFAULT = "hibernate.discriminator.force_in_select";
@@ -2373,21 +2362,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @see org.hibernate.query.criteria.ValueHandlingMode
 	 */
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
-
-	/**
-	 * True/false setting indicating whether the value specified for {@link GeneratedValue#generator()}
-	 * should be used as the sequence/table name when no matching {@link javax.persistence.SequenceGenerator}
-	 * or {@link javax.persistence.TableGenerator} is found.
-	 *
-	 * The default value is `true` meaning that {@link GeneratedValue#generator()} will be used as the
-	 * sequence/table name by default.  Users migrating from earlier versions using the legacy
-	 * `hibernate_sequence` name should disable this setting.
-	 *
-	 * @deprecated As of 6.0 with no replacement - `hibernate_sequence` as a real, implicit exportable name
-	 * is no longer supported.  No effect
-	 */
-	@Deprecated
-	String PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME = "hibernate.model.generator_name_as_sequence_name";
 
 	/**
 	 * Should Hibernate's {@link Transaction} behave as

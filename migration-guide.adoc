@@ -20,6 +20,28 @@ Discuss `JdbcTypeCode`, `JdbcType`, `JdbcTypeRegistration`
 Discuss `@JavaType`, `@JavaTypeRegistration`
 
 
+=== IdentifierGenerator
+
+[[removed-generators]]
+==== Removed deprecated IdentifierGenerator implementations
+
+* `org.hibernate.id.MultipleHiLoPerTableGenerator`
+* `org.hibernate.id.SequenceGenerator`
+* `org.hibernate.id.SequenceHiLoGenerator`
+* `org.hibernate.id.SequenceIdentityGenerator`
+
+
+==== Removed deprecated IdentifierGenerator-related settings
+
+hibernate.id.new_generator_mappings::
+    The original purpose of adding this setting was to support legacy applications seamlessly
+    upgrade Hibernate if they were relying on legacy identifier generators.  Those legacy
+    generators have been deprecated for many years and are being removed<<removed-generators>>
+    as part of 6.0 so this setting is no longer relevant.
+hibernate.model.generator_name_as_sequence_name::
+    This is now the default behavior
+
+
 === SQM
 
 * Functions

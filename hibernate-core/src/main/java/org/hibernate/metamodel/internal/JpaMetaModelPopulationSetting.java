@@ -35,11 +35,10 @@ public enum JpaMetaModelPopulationSetting {
 	public static JpaMetaModelPopulationSetting determineJpaMetaModelPopulationSetting(Map configurationValues) {
 		String setting = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
-				configurationValues,
-				null
+				configurationValues
 		);
 		if ( setting == null ) {
-			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, configurationValues, null );
+			setting = ConfigurationHelper.getString( AvailableSettings.JPA_METAMODEL_GENERATION, configurationValues );
 			if ( setting != null ) {
 				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 						AvailableSettings.JPA_METAMODEL_GENERATION,

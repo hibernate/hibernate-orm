@@ -6,8 +6,9 @@
  */
 package org.hibernate.id;
 
+import javax.persistence.TableGenerator;
+
 import org.hibernate.HibernateException;
-import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.dialect.Dialect;
 
 /**
@@ -34,10 +35,27 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 	String SCHEMA = "schema";
 
 	/**
-	 * The configuration parameter holding the table name for the
-	 * generated id
+	 * The configuration parameter key for the explicit id table name
+	 *
+	 * @see TableGenerator#name()
+	 *
+	 * @implNote The name is used to avoid collision with parameters
+	 * for the entity table name which is already registered under `table`
 	 */
-	String TABLE = "target_table";
+	String TABLE_NAME_PARAM = "target_table";
+
+	/**
+	 * @deprecated (as of 6.0) Use {@link #TABLE_NAME_PARAM} instead
+	 */
+	@Deprecated
+	String TABLE = TABLE_NAME_PARAM;
+
+	/**
+	 * The configuration parameter key for the explicit id sequence name
+	 *
+	 * @see javax.persistence.SequenceGenerator#name()
+	 */
+	String SEQUENCE_NAME_PARAM = "sequence_name";
 
 	/**
 	 * The configuration parameter holding the table names for all

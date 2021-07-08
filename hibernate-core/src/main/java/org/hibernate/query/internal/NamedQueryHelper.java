@@ -150,7 +150,7 @@ public class NamedQueryHelper {
 
 	private static String determineCacheRegion(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {
 		assert sessionFactory.getSessionFactoryOptions().isQueryCacheEnabled();
-		return ConfigurationHelper.getString( QueryHints.HINT_CACHE_REGION, hints, null );
+		return ConfigurationHelper.getString( QueryHints.HINT_CACHE_REGION, hints );
 	}
 
 	private static CacheMode determineCacheMode(Map<String, Object> hints, SessionFactoryImplementor sessionFactory) {

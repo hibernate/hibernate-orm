@@ -119,7 +119,6 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 
 		settings.put( EnversSettings.USE_REVISION_ENTITY_WITH_NATIVE_ID, "false" );
 
-		settings.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );
 		return settings;
 	}

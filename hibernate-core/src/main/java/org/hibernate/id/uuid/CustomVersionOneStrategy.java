@@ -15,7 +15,7 @@ import org.hibernate.internal.util.BytesHelper;
 
 /**
  * Applies a version 1 (time-based) generation strategy (using ip address rather than mac address) but applies them in a
- * different layout.  The strategy is very similar to the legacy {@link org.hibernate.id.UUIDHexGenerator} id generator
+ * different layout.  The strategy is very similar to the legacy `org.hibernate.id.UUIDHexGenerator` id generator
  * but uses a RFC 4122 compliant layout (variant 2).
  * <p/>
  * NOTE : Can be a bottle neck due to the need to synchronize in order to increment an

@@ -67,6 +67,15 @@ public final class ConfigurationHelper {
 		return value == null ? defaultValue : value;
 	}
 
+	public static String getString(String name, Map values, Supplier<String> defaultValueSupplier) {
+		final String value = getString( name, values );
+		if ( value == null ) {
+			return defaultValueSupplier.get();
+		}
+
+		return value;
+	}
+
 	/**
 	 * Get the config value as a {@link String}.
 	 *

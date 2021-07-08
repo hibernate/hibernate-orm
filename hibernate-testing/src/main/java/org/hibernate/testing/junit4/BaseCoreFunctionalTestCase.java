@@ -162,7 +162,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected Configuration constructConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
 		Configuration configuration = new Configuration( bootstrapServiceRegistry );
 		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			configuration.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 			final String secondSchemaName = createSecondSchema();

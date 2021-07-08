@@ -41,25 +41,23 @@ import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
 public class UUIDGenerator implements IdentifierGenerator, Configurable {
 	public static final String UUID_GEN_STRATEGY = "uuid_gen_strategy";
 	public static final String UUID_GEN_STRATEGY_CLASS = "uuid_gen_strategy_class";
+	/**
+	 * Separator to use between the "parts" of the UUID when handling the UUID as String
+	 */
+	public static final String STRING_SEPARATOR_PARAM = "string-separator";
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( UUIDGenerator.class );
 
 	private UUIDGenerationStrategy strategy;
 	private UUIDTypeDescriptor.ValueTransformer valueTransformer;
 
-	public static UUIDGenerator buildSessionFactoryUniqueIdentifierGenerator() {
-		final UUIDGenerator generator = new UUIDGenerator();
-		generator.strategy = StandardRandomStrategy.INSTANCE;
-		generator.valueTransformer = UUIDTypeDescriptor.ToStringTransformer.INSTANCE;
-		return generator;
-	}
-
 	@Override
 	public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) throws MappingException {
-		// check first for the strategy instance
+		// check first for an explicit strategy instance
 		strategy = (UUIDGenerationStrategy) params.get( UUID_GEN_STRATEGY );
+
+		// next check for an explicit strategy class
 		if ( strategy == null ) {
-			// next check for the strategy class
 			final String strategyClassName = params.getProperty( UUID_GEN_STRATEGY_CLASS );
 			if ( strategyClassName != null ) {
 				try {
@@ -77,8 +75,9 @@ public class UUIDGenerator implements IdentifierGenerator, Configurable {
 				}
 			}
 		}
+
+		// lastly use the standard random generator
 		if ( strategy == null ) {
-			// lastly use the standard random generator
 			strategy = StandardRandomStrategy.INSTANCE;
 		}
 

@@ -54,8 +54,7 @@ public enum JpaStaticMetaModelPopulationSetting {
 	private static String determineSetting(Map configurationValues) {
 		final String setting = ConfigurationHelper.getString(
 				AvailableSettings.STATIC_METAMODEL_POPULATION,
-				configurationValues,
-				null
+				configurationValues
 		);
 		if ( setting != null ) {
 			return setting;
@@ -63,8 +62,7 @@ public enum JpaStaticMetaModelPopulationSetting {
 
 		final String legacySetting1 = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_POPULATION,
-				configurationValues,
-				null
+				configurationValues
 		);
 		if ( legacySetting1 != null ) {
 			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
@@ -76,8 +74,7 @@ public enum JpaStaticMetaModelPopulationSetting {
 
 		final String legacySetting2 = ConfigurationHelper.getString(
 				AvailableSettings.JPA_METAMODEL_GENERATION,
-				configurationValues,
-				null
+				configurationValues
 		);
 		if ( legacySetting2 != null ) {
 			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(

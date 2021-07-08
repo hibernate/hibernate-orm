@@ -375,17 +375,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	}
 
 	@Override
-	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enabled) {
-		if ( enabled ) {
-			this.options.idGenerationTypeInterpreter.disableLegacyFallback();
-		}
-		else {
-			this.options.idGenerationTypeInterpreter.enableLegacyFallback();
-		}
-		return this;
-	}
-
-	@Override
 	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
 		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
 		return this;
@@ -686,18 +675,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sourceProcessOrdering = resolveInitialSourceProcessOrdering( configService );
-
-			final boolean useNewIdentifierGenerators = configService.getSetting(
-					AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
-					StandardConverters.BOOLEAN,
-					true
-			);
-			if ( useNewIdentifierGenerators ) {
-				this.idGenerationTypeInterpreter.disableLegacyFallback();
-			}
-			else {
-				this.idGenerationTypeInterpreter.enableLegacyFallback();
-			}
 
 			this.useNationalizedCharacterData = configService.getSetting(
 					AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA,

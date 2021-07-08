@@ -82,7 +82,7 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	@Override
 	protected void renderPartitionItem(Expression expression) {
 		if ( expression instanceof Literal ) {
-			appendSql( "()" );
+			appendSql( "grouping sets (())" );
 		}
 		else if ( expression instanceof Summarization ) {
 			throw new UnsupportedOperationException( "Summarization is not supported by DBMS!" );

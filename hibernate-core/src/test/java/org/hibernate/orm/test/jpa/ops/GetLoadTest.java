@@ -9,7 +9,6 @@ package org.hibernate.orm.test.jpa.ops;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.TestForIssue;
@@ -18,7 +17,6 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -61,7 +59,6 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testGet(EntityManagerFactoryScope scope) {
 		clearCounts(scope);
 		String nodeName = "foo";
@@ -108,7 +105,6 @@ public class GetLoadTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testLoad(EntityManagerFactoryScope scope) {
 		clearCounts(scope);
 		String nodeName = "foo";

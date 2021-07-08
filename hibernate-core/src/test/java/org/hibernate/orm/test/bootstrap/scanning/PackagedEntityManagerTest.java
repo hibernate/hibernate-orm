@@ -202,7 +202,9 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 			emf = Persistence.createEntityManagerFactory( "excludehbmpar", new HashMap() );
 		}
 		catch ( PersistenceException e ) {
-			emf.close();
+			if ( emf != null ) {
+				emf.close();
+			}
 			Throwable nested = e.getCause();
 			if ( nested == null ) {
 				throw e;

@@ -37,6 +37,8 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
+import org.hibernate.query.CastType;
+import org.hibernate.query.NullOrdering;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
@@ -56,15 +58,18 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
+import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.sql.*;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.persistence.TemporalType;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -785,6 +790,23 @@ public abstract class AbstractHANADialect extends Dialect {
 		getDefaultProperties().setProperty( AvailableSettings.USE_GET_GENERATED_KEYS, "false" );
 	}
 
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( to == CastType.BOOLEAN ) {
+			switch ( from ) {
+				case INTEGER_BOOLEAN:
+				case INTEGER:
+				case LONG:
+					return "case ?1 when 1 then true when 0 then false else null end";
+				case YN_BOOLEAN:
+					return "case ?1 when 'Y' then true when 'N' then false else null end";
+				case TF_BOOLEAN:
+					return "case ?1 when 'T' then true when 'F' then false else null end";
+			}
+		}
+		return super.castPattern( from, to );
+	}
+
 	public int getDefaultDecimalPrecision() {
 		//the maximum on HANA
 		return 34;
@@ -823,6 +845,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.secondsBetween( queryEngine );
 		CommonFunctionFactory.format_toVarchar( queryEngine );
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
+		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
 	}
 
 	@Override
@@ -863,6 +886,8 @@ public abstract class AbstractHANADialect extends Dialect {
 				return "dayofmonth(?2)";
 			case DAY_OF_YEAR:
 				return "dayofyear(?2)";
+			case QUARTER:
+				return "((month(?2)+2)/3)";
 			default:
 				//I think week() returns the ISO week number
 				return "?1(?2)";
@@ -1476,7 +1501,47 @@ public abstract class AbstractHANADialect extends Dialect {
 				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
 
 		if ( this.treatDoubleTypedFieldsAsDecimal ) {
+			registerHibernateType( Types.FLOAT, StandardBasicTypes.BIG_DECIMAL.getName() );
+			registerHibernateType( Types.REAL, StandardBasicTypes.BIG_DECIMAL.getName() );
 			registerHibernateType( Types.DOUBLE, StandardBasicTypes.BIG_DECIMAL.getName() );
+			typeContributions.getTypeConfiguration().getBasicTypeRegistry()
+					.register(
+							new StandardBasicTypeImpl<>(
+									org.hibernate.type.descriptor.java.DoubleTypeDescriptor.INSTANCE,
+									NumericTypeDescriptor.INSTANCE
+							),
+							Double.class.getName()
+					);
+			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
+					.computeIfAbsent( Types.FLOAT, code -> new HashSet<>() )
+					.clear();
+			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
+					.computeIfAbsent( Types.REAL, code -> new HashSet<>() )
+					.clear();
+			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
+					.computeIfAbsent( Types.DOUBLE, code -> new HashSet<>() )
+					.clear();
+			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
+					.get( Types.FLOAT )
+					.add( StandardBasicTypes.BIG_DECIMAL.getName() );
+			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
+					.get( Types.REAL )
+					.add( StandardBasicTypes.BIG_DECIMAL.getName() );
+			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
+					.get( Types.DOUBLE )
+					.add( StandardBasicTypes.BIG_DECIMAL.getName() );
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					Types.FLOAT,
+					NumericTypeDescriptor.INSTANCE
+			);
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					Types.REAL,
+					NumericTypeDescriptor.INSTANCE
+			);
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					Types.DOUBLE,
+					NumericTypeDescriptor.INSTANCE
+			);
 		}
 	}
 
@@ -1549,9 +1614,77 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsValuesListForInsert() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsOrderByInSubquery() {
+		return false;
+	}
+
+	@Override
+	public NullOrdering getNullOrdering() {
+		return NullOrdering.SMALLEST;
+	}
+
+	@Override
 	public String translateDatetimeFormat(String format) {
 		//I don't think HANA needs FM
 		return OracleDialect.datetimeFormat( format, false, false ).result();
+	}
+
+	@Override
+	public boolean supportsFractionalTimestampArithmetic() {
+		return false;
+	}
+
+	@Override
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+				if ( temporalType == TemporalType.TIME ) {
+					return "cast(add_nano100('1970-01-01 '||(?3), ?2) as time)";
+				}
+				else {
+					return "add_nano100(?3, ?2)";
+				}
+			case QUARTER:
+				return "add_months(?3, 3*?2)";
+			case WEEK:
+				return "add_days(?3, 7*?2)";
+			case MINUTE:
+				return "add_seconds(?3, 60*?2)";
+			case HOUR:
+				return "add_seconds(?3, 3600*?2)";
+			default:
+				return "add_?1s(?3, ?2)";
+		}
+	}
+
+	@Override
+	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
+		switch (unit) {
+			case NANOSECOND:
+			case NATIVE:
+//				if ( temporalType == TemporalType.TIME ) {
+//					return "nano100_between(cast(?3 as timestamp), cast(?2 as timestamp))";
+//				}
+//				else {
+				return "nano100_between(?2, ?3)";
+//				}
+			case QUARTER:
+				return "months_between(?2, ?3)/3";
+			case WEEK:
+				return "days_between(?2, ?3)/7";
+			case MINUTE:
+				return "seconds_between(?2, ?3)/60";
+			case HOUR:
+				return "seconds_between(?2, ?3)/3600";
+			default:
+				return "?1s_between(?2, ?3)";
+		}
 	}
 
 	public boolean isUseUnicodeStringTypes() {

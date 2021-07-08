@@ -37,7 +37,7 @@ public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
 		SessionFactoryImplementor sessionFactoryImplementor = null;
 		try {
-			sessionFactoryImplementor = produceSessionFactory( model );
+			sessionFactoryImplementor = super.produceSessionFactory( model );
 
 			fail( "Should have thrown MappingException!" );
 			return sessionFactoryImplementor;
@@ -56,9 +56,6 @@ public class HANANoColumnInsertTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void test() {
-		inTransaction(
-				session -> {
-				}
-		);
+		sessionFactory();
 	}
 }

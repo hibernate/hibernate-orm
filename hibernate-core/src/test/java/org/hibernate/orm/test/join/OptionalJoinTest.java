@@ -8,12 +8,11 @@ package org.hibernate.orm.test.join;
 
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
-
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -23,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 /**
  * @author Chris Jones and Gail Badner
  */
-@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 @DomainModel(
 		xmlMappings = "org/hibernate/orm/test/join/Thing.hbm.xml"
 )

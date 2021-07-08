@@ -18,14 +18,17 @@ public class IdTableColumn {
 	private final IdTable containingTable;
 	private final String columnName;
 	private final JdbcMapping jdbcMapping;
+	private final String sqlTypeName;
 
 	public IdTableColumn(
 			IdTable containingTable,
 			String columnName,
-			JdbcMapping jdbcMapping) {
+			JdbcMapping jdbcMapping,
+			String sqlTypeName) {
 		this.containingTable = containingTable;
 		this.columnName = columnName;
 		this.jdbcMapping = jdbcMapping;
+		this.sqlTypeName = sqlTypeName;
 	}
 
 	public IdTable getContainingTable() {
@@ -45,7 +48,6 @@ public class IdTableColumn {
 	}
 
 	public String getSqlTypeDefinition() {
-		// todo (6.0) : this really ought to get the type def from the persister
-		return null;
+		return sqlTypeName;
 	}
 }

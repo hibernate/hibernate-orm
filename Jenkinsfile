@@ -143,6 +143,9 @@ stage('Build') {
 						case "hana":
   							goal = "-Pdb=hana_jenkins"
 							break;
+						case "edb":
+							goal = "-Pdb=edb_ci -DdbHost=localhost:5433"
+							break;
 						default:
 							goal = "-Pdb=${buildEnv.dbName}_ci"
 							break;

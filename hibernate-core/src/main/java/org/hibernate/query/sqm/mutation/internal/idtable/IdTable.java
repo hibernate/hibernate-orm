@@ -44,7 +44,10 @@ public class IdTable implements Exportable, Contributable {
 						new IdTableColumn(
 								this,
 								selection.getSelectionExpression(),
-								selection.getJdbcMapping()
+								selection.getJdbcMapping(),
+								dialect.getTypeName(
+										selection.getJdbcMapping().getJdbcTypeDescriptor()
+								)
 						)
 				)
 		);

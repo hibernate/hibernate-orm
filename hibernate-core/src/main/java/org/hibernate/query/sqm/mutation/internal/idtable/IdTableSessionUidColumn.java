@@ -16,7 +16,8 @@ public class IdTableSessionUidColumn extends IdTableColumn {
 		super(
 				containingTable,
 				IdTableHelper.SESSION_ID_COLUMN_NAME,
-				UUIDCharType.INSTANCE
+				UUIDCharType.INSTANCE,
+				null
 		);
 	}
 }

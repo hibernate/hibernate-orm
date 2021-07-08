@@ -15,7 +15,6 @@ import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -23,7 +22,6 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -225,7 +223,6 @@ public class PersistTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
 	public void testBasic(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

@@ -9,8 +9,10 @@ package org.hibernate.orm.test.component.empty;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
+@Table(name = "comp_empty_owner")
 public class ComponentEmptyEmbeddedOwner {
 
 	@Id

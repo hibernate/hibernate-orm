@@ -119,9 +119,9 @@ public class OracleDialect extends Dialect {
 		registerReverseHibernateTypeMappings();
 		registerDefaultProperties();
 
-		limitHandler = getVersion() < 1200
-				? new LegacyOracleLimitHandler( getVersion() )
-				: Oracle12LimitHandler.INSTANCE;
+		limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
+				? Oracle12LimitHandler.INSTANCE
+				: new LegacyOracleLimitHandler( getVersion() );
 	}
 
 	@Override
@@ -1051,7 +1051,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion() >= 1200;
+		// Until 12.2 there was a bug in the Oracle query rewriter causing ORA-00918
+		// when the query contains duplicate implicit aliases in the select clause
+		return getVersion() >= 1202;
 	}
 
 	@Override

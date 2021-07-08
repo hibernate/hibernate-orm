@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -39,32 +40,37 @@ public class EntityOfSets {
 	private String name;
 
 	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_basics")
+	@CollectionTable( name = "EntityOfSet_basic1")
+	@Column(name = "basic_val")
 	private Set<String> setOfBasics;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Sorted
 
 	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_sortedBasicsWithSortNaturalByDefault")
+	@CollectionTable( name = "EntityOfSet_basic2")
+	@Column(name = "basic_val")
 	private SortedSet<String> sortedSetOfBasicsWithSortNaturalByDefault;
 
 	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_sortedBasics")
+	@CollectionTable( name = "EntityOfSet_basic3")
 	@SortNatural
+	@Column(name = "basic_val")
 	private SortedSet<String> sortedSetOfBasics;
 
 	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_sortedBasicsWithComparator")
+	@CollectionTable( name = "EntityOfSet_basic4")
 	@SortComparator( SimpleBasicSortComparator.class )
+	@Column(name = "basic_val")
 	private SortedSet<String> sortedSetOfBasicsWithComparator;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordered
 
 	@ElementCollection()
-	@CollectionTable( name = "EntityOfSet_orderedSetOfBasics")
+	@CollectionTable( name = "EntityOfSet_basic5")
 	@OrderBy( "" )
+	@Column(name = "basic_val")
 	private Set<String> orderedSetOfBasics;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,33 +78,37 @@ public class EntityOfSets {
 
 	@ElementCollection
 	@Enumerated(EnumType.STRING)
+	@CollectionTable(name = "EntityOfSet_enum1")
+	@Column(name = "enum_val")
 	private Set<EnumValue> setOfEnums;
 
 	@ElementCollection
 	@Convert(converter = EnumValueConverter.class)
+	@CollectionTable(name = "EntityOfSet_enum2")
+	@Column(name = "enum_val")
 	private Set<EnumValue> setOfConvertedEnums;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Embeddables
 
 	@ElementCollection
-	@CollectionTable( name = "EntityOfSet_components")
+	@CollectionTable( name = "EntityOfSet_comp1")
 	private Set<SimpleComponent> setOfComponents;
 
 	@ElementCollection
 	@LazyCollection( LazyCollectionOption.EXTRA )
-	@CollectionTable( name = "EntityOfSet_extraLazyComponents")
+	@CollectionTable( name = "EntityOfSet_comp2")
 	private Set<SimpleComponent> extraLazySetOfComponents;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Entity associations
 
 	@OneToMany
-	@CollectionTable( name = "EntityOfSet_oneToMany")
+	@CollectionTable( name = "EntityOfSet_o2m")
 	private Set<SimpleEntity> setOfOneToMany;
 
 	@ManyToMany
-	@CollectionTable( name = "EntityOfSet_manyToMany")
+	@CollectionTable( name = "EntityOfSet_m2m")
 	private Set<SimpleEntity> setOfManyToMany;
 
 

@@ -52,7 +52,7 @@ public class PostgreSQLDatabaseCleaner implements DatabaseCleaner {
 				statement -> {
 					try {
 						return statement.executeQuery(
-								"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME <> 'information_schema' AND SCHEMA_NAME NOT LIKE 'pg_%'" );
+								"SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME <> 'information_schema' AND SCHEMA_NAME <> 'sys' AND SCHEMA_NAME NOT LIKE 'pg_%'" );
 					}
 					catch (SQLException sqlException) {
 						throw new RuntimeException( sqlException );

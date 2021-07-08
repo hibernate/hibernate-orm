@@ -11,14 +11,18 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.MapKeyEnumerated;
+import javax.persistence.MapKeyJoinColumn;
 import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.OrderBy;
@@ -87,6 +91,9 @@ public class EntityOfMaps {
 	// basicByBasic
 
 	@ElementCollection
+	@CollectionTable(name = "EntityOfMaps_basic_basic1")
+	@MapKeyColumn(name = "basic_key")
+	@Column(name = "basic_val")
 	public Map<String, String> getBasicByBasic() {
 		return basicByBasic;
 	}
@@ -107,6 +114,9 @@ public class EntityOfMaps {
 
 	@ElementCollection
 	@SortNatural
+	@CollectionTable(name = "EntityOfMaps_basic_basic2")
+	@MapKeyColumn(name = "basic_key")
+	@Column(name = "basic_val")
 	public SortedMap<String, String> getSortedBasicByBasic() {
 		return sortedBasicByBasic;
 	}
@@ -127,6 +137,9 @@ public class EntityOfMaps {
 
 	@ElementCollection
 	@SortComparator( SimpleBasicSortComparator.class )
+	@CollectionTable(name = "EntityOfMaps_basic_basic3")
+	@MapKeyColumn(name = "basic_key")
+	@Column(name = "basic_val")
 	public SortedMap<String, String> getSortedBasicByBasicWithComparator() {
 		return sortedBasicByBasicWithComparator;
 	}
@@ -146,6 +159,9 @@ public class EntityOfMaps {
 	// sortedBasicByBasicWithSortNaturalByDefault
 
 	@ElementCollection
+	@CollectionTable(name = "EntityOfMaps_basic_basic4")
+	@MapKeyColumn(name = "basic_key")
+	@Column(name = "basic_val")
 	public SortedMap<String, String> getSortedBasicByBasicWithSortNaturalByDefault() {
 		return sortedBasicByBasicWithSortNaturalByDefault;
 	}
@@ -166,6 +182,9 @@ public class EntityOfMaps {
 
 	@ElementCollection
 	@MapKeyEnumerated
+	@CollectionTable(name = "EntityOfMaps_basic_enum1")
+	@MapKeyColumn(name = "enum_key")
+	@Column(name = "basic_val")
 	public Map<EnumValue, String> getBasicByEnum() {
 		return basicByEnum;
 	}
@@ -187,6 +206,9 @@ public class EntityOfMaps {
 
 	@ElementCollection
 	@Convert(attributeName = "key", converter = EnumValueConverter.class)
+	@CollectionTable(name = "EntityOfMaps_basic_enum2")
+	@MapKeyColumn(name = "enum_key")
+	@Column(name = "basic_val")
 	public Map<EnumValue, String> getBasicByConvertedEnum() {
 		return basicByConvertedEnum;
 	}
@@ -207,6 +229,8 @@ public class EntityOfMaps {
 	// componentByBasic
 
 	@ElementCollection
+	@CollectionTable(name = "EntityOfMaps_comp_basic1")
+	@MapKeyColumn(name = "basic_key")
 	public Map<String, SimpleComponent> getComponentByBasic() {
 		return componentByBasic;
 	}
@@ -227,6 +251,8 @@ public class EntityOfMaps {
 	// basicByComponent
 
 	@ElementCollection
+	@CollectionTable(name = "EntityOfMaps_basic_comp")
+	@Column(name = "basic_val")
 	public Map<SimpleComponent, String> getBasicByComponent() {
 		return basicByComponent;
 	}
@@ -248,6 +274,10 @@ public class EntityOfMaps {
 
 	@OneToMany
 	@JoinColumn
+	@MapKeyColumn(name = "basic_key")
+	@JoinTable(name = "EntityOfMaps_o2m_basic",
+			joinColumns = @JoinColumn(name = "EntityOfMaps_o2m_basic_id1"),
+			inverseJoinColumns = @JoinColumn(name = "EntityOfMaps_o2m_basic_id2"))
 	public Map<String, SimpleEntity> getOneToManyByBasic() {
 		return oneToManyByBasic;
 	}
@@ -268,6 +298,9 @@ public class EntityOfMaps {
 	// basicByOneToMany
 
 	@ElementCollection
+	@CollectionTable(name = "EntityOfMaps_basic_o2m")
+	@Column(name = "basic_val")
+	@MapKeyJoinColumn(name = "EntityOfMaps_basic_o2m_key")
 	public Map<SimpleEntity, String> getBasicByOneToMany() {
 		return basicByOneToMany;
 	}
@@ -288,6 +321,10 @@ public class EntityOfMaps {
 	// manyToManyByBasic
 
 	@ManyToMany
+	@MapKeyColumn(name = "basic_key")
+	@JoinTable(name = "EntityOfMaps_m2m_basic1",
+			joinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic1_id1"),
+			inverseJoinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic1_id2"))
 	public Map<String, SimpleEntity> getManyToManyByBasic() {
 		return manyToManyByBasic;
 	}
@@ -311,6 +348,7 @@ public class EntityOfMaps {
 	@ElementCollection
 	@MapKeyColumn( name = "ordered_component_key")
 	@OrderBy( clause = "ordered_component_key, ordered_component_key" )
+	@CollectionTable(name = "EntityOfMaps_comp_basic2")
 	public Map<String, SimpleComponent> getComponentByBasicOrdered() {
 		return componentByBasicOrdered;
 	}
@@ -332,6 +370,10 @@ public class EntityOfMaps {
 
 	@ManyToMany
 	@SortNatural
+	@MapKeyColumn(name = "basic_key")
+	@JoinTable(name = "EntityOfMaps_m2m_basic2",
+			joinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic2_id1"),
+			inverseJoinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic2_id2"))
 	public SortedMap<String, SimpleEntity> getSortedManyToManyByBasic() {
 		return sortedManyToManyByBasic;
 	}
@@ -345,6 +387,10 @@ public class EntityOfMaps {
 
 	@ManyToMany
 	@SortComparator( SimpleBasicSortComparator.class )
+	@JoinTable(name = "EntityOfMaps_m2m_basic3",
+			joinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic3_id1"),
+			inverseJoinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic3_id2"))
+	@MapKeyColumn(name = "basic_key")
 	public SortedMap<String, SimpleEntity> getSortedManyToManyByBasicWithComparator() {
 		return sortedManyToManyByBasicWithComparator;
 	}
@@ -364,6 +410,10 @@ public class EntityOfMaps {
 	// sortedManyToManyByBasicWithSortNaturalByDefault
 
 	@ManyToMany
+	@MapKeyColumn(name = "basic_key")
+	@JoinTable(name = "EntityOfMaps_m2m_basic4",
+			joinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic4_id1"),
+			inverseJoinColumns = @JoinColumn(name = "EntityOfMaps_m2m_basic4_id2"))
 	public SortedMap<String, SimpleEntity> getSortedManyToManyByBasicWithSortNaturalByDefault() {
 		return sortedManyToManyByBasicWithSortNaturalByDefault;
 	}

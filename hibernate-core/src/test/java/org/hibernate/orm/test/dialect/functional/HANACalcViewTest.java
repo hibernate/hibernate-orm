@@ -123,7 +123,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-12541")
 	public void testCalcViewEntityQuery() throws Exception {
 		Session s = openSession();
-		Query<CVEntity> query = s.createQuery( "select e from HANACalcViewTest$CVEntity e", CVEntity.class );
+		Query<CVEntity> query = s.createQuery( "select e from CVEntity e", CVEntity.class );
 		List<CVEntity> list = query.list();
 		assertEquals( 1, list.size() );
 		CVEntity cvEntity = list.get( 0 );
@@ -156,7 +156,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 	public void testCalcViewDTO() throws Exception {
 		Session s = openSession();
 		Query<CVEntityDTO> query = s.createQuery(
-				"select new org.hibernate.test.dialect.functional.HANACalcViewTest$CVEntityDTO(e.dummyint, e.dummy) from HANACalcViewTest$CVEntity e",
+				"select new " + CVEntityDTO.class.getName() + "(e.dummyint, e.dummy) from CVEntity e",
 				CVEntityDTO.class );
 		List<CVEntityDTO> list = query.list();
 		assertEquals( 1, list.size() );
@@ -165,7 +165,7 @@ public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 		assertEquals( 2, cvEntity.getDummyint() );
 	}
 
-	@Entity
+	@Entity(name = "CVEntity")
 	@Table(name = CALC_VIEW_NAME)
 	private static class CVEntity {
 

@@ -9,11 +9,12 @@ package org.hibernate.orm.test.onetoone.link;
 import java.util.Date;
 
 import org.hibernate.Hibernate;
-import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.type.DateType;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -38,7 +39,7 @@ public class OneToOneLinkTest {
 
 	@Test
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "oracle12c returns time in getDate.  For now, skip.")
-	@SkipForDialect(dialectClass = AbstractHANADialect.class, reason = " HANA doesn't support tables consisting of only a single auto-generated column")
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsNoColumnInsert.class)
 	public void testOneToOneViaAssociationTable(SessionFactoryScope scope) {
 
 		scope.inTransaction(

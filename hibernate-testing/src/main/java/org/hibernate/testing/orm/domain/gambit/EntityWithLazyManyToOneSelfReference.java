@@ -11,11 +11,13 @@ import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * @author Andrea Boriero
  */
 @Entity
+@Table(name = "entity_lm2o_selfref")
 public class EntityWithLazyManyToOneSelfReference {
 	private Integer id;
 

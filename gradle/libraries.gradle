@@ -113,7 +113,7 @@ ext {
             java16_signature:   'org.codehaus.mojo.signature:java16:1.0@signature',
 
             //Maven plugin framework
-            maven_core: 'org.apache.maven:maven-core:3.0.5',
+            maven_core: 'org.apache.maven:maven-core:3.8.1',
             maven_artifact: 'org.apache.maven:maven-artifact:3.0.5',
             maven_plugin: 'org.apache.maven:maven-plugin-api:3.0.5',
             maven_plugin_tools: 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.2',

@@ -79,7 +79,7 @@ public class AutoGenerationTypeTests {
 		final DatabaseStructure database1Structure = entityIdGenerator.getDatabaseStructure();
 
 		// implicit name : `${entity-name}_seq`
-		assertThat( database1Structure.getName(), equalToIgnoringCase( "Entity1_seq" ) );
+		assertThat( database1Structure.getName(), equalToIgnoringCase( "tbl_1_SEQ" ) );
 		assertThat( database1Structure.getIncrementSize(), is( 50 ) );
 	}
 

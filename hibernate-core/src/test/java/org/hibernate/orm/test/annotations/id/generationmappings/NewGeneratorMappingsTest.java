@@ -12,7 +12,6 @@ import org.hibernate.id.enhanced.NoopOptimizer;
 import org.hibernate.id.enhanced.PooledOptimizer;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -40,7 +39,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				AutoEntity.class,
 				MinimalTableEntity.class,
 				DedicatedSequenceEntity1.class,
-				DedicatedSequenceEntity2.class
+				DedicatedSequenceEntity2.class,
+				AbstractTPCAutoEntity.class,
+				TPCAutoEntity1.class
 		},
 		annotatedPackageNames = {
 				"org.hibernate.orm.test.annotations.id.generationmappings"
@@ -90,6 +91,17 @@ public class NewGeneratorMappingsTest  {
 	}
 
 	@Test
+	public void testTablePerClassAutoEntity(SessionFactoryScope scope) {
+		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( AbstractTPCAutoEntity.class.getName() );
+		IdentifierGenerator generator = persister.getIdentifierGenerator();
+		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
+		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
+		assertEquals( "AbstractTPCAutoEntity_SEQ", seqGenerator.getDatabaseStructure().getName() );
+		assertEquals( SequenceStyleGenerator.DEFAULT_INITIAL_VALUE, seqGenerator.getDatabaseStructure().getInitialValue() );
+		assertEquals( SequenceStyleGenerator.DEFAULT_INCREMENT_SIZE, seqGenerator.getDatabaseStructure().getIncrementSize() );
+	}
+
+	@Test
 	public void testMinimalTableEntity(SessionFactoryScope scope) {
 		final EntityPersister persister = scope.getSessionFactory().getEntityPersister( MinimalTableEntity.class.getName() );
 		IdentifierGenerator generator = persister.getIdentifierGenerator();
@@ -115,7 +127,7 @@ public class NewGeneratorMappingsTest  {
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		SequenceStyleGenerator seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
-				StringHelper.unqualifyEntityName( DedicatedSequenceEntity1.class.getName() ) + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
+				"DEDICATED_SEQ_TBL1" + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
 				seqGenerator.getDatabaseStructure().getName()
 		);
 
@@ -125,7 +137,7 @@ public class NewGeneratorMappingsTest  {
 		assertTrue( SequenceStyleGenerator.class.isInstance( generator ) );
 		seqGenerator = (SequenceStyleGenerator) generator;
 		assertEquals(
-				DedicatedSequenceEntity2.ENTITY_NAME + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
+				"DEDICATED_SEQ_TBL2" + DedicatedSequenceEntity1.SEQUENCE_SUFFIX,
 				seqGenerator.getDatabaseStructure().getName()
 		);
 	}

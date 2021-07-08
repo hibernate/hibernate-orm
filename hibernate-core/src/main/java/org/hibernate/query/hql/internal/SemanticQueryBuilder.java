@@ -148,6 +148,7 @@ import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmAndPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmExistsPredicate;
@@ -1894,6 +1895,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitExistsPredicate(HqlParser.ExistsPredicateContext ctx) {
 		final SqmExpression expression = (SqmExpression) ctx.expression().accept( this );
 		return new SqmExistsPredicate( expression, creationContext.getNodeBuilder() );
+	}
+
+	@Override
+	public SqmPredicate visitBooleanExpressionPredicate(HqlParser.BooleanExpressionPredicateContext ctx) {
+		final SqmExpression expression = (SqmExpression) ctx.expression().accept( this );
+		if ( expression.getJavaType() != Boolean.class ) {
+			throw new SemanticException( "Non-boolean expression used in predicate context: " + ctx.getText() );
+		}
+		return new SqmBooleanExpressionPredicate( expression, creationContext.getNodeBuilder() );
 	}
 
 	@Override

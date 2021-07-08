@@ -3006,7 +3006,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private SqmExpression<?> visitFinalFunctionArgument(HqlParser.ExpressionContext expression) {
 		// the final argument to a function may accept multi-value parameter (varargs),
 		// 		but only if we are operating in non-strict JPA mode
-		parameterDeclarationContextStack.push( creationOptions::useStrictJpaCompliance );
+		parameterDeclarationContextStack.push( () -> !creationOptions.useStrictJpaCompliance() );
 		try {
 			return (SqmExpression<?>) expression.accept( this );
 		}

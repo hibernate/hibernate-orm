@@ -4943,4 +4943,34 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return selection;
 		}
 	}
+
+	@Override
+	public List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter sqmParameter) {
+		assert sqmParameter.allowMultiValuedBinding();
+		final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter(
+				sqmParameter );
+		final QueryParameterBinding domainParamBinding = domainParameterBindings.getBinding(
+				domainParam );
+
+		final Collection bindValues = domainParamBinding.getBindValues();
+		final int bindValuesSize = bindValues.size();
+		final List<Expression> result = new ArrayList<>( bindValuesSize );
+
+		boolean first = true;
+		for ( int i = 0; i < bindValuesSize; i++ ) {
+			final SqmParameter sqmParamToConsume;
+			// for each bind value create an "expansion"
+			if ( first ) {
+				sqmParamToConsume = sqmParameter;
+				first = false;
+			}
+			else {
+				sqmParamToConsume = sqmParameter.copy();
+				domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+			}
+			final Expression expression = consumeSqmParameter( sqmParamToConsume );
+			result.add( expression );
+		}
+		return result;
+	}
 }

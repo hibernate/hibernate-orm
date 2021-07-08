@@ -17,7 +17,9 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -60,7 +62,21 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 		for ( SqmTypedNode<?> sqmArgument : sqmArguments ) {
-			sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
+			if ( sqmArgument instanceof SqmParameter ) {
+				final SqmParameter sqmParameter = (SqmParameter) sqmArgument;
+				if ( sqmParameter.allowMultiValuedBinding() ) {
+					final List<Expression> expressions = walker.expandSelfRenderingFunctionMultiValueParameter( sqmParameter );
+					for ( int i = 0; i < expressions.size(); i++ ) {
+						sqlAstArguments.add( expressions.get( i ) );
+					}
+				}
+				else {
+					sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
+				}
+			}
+			else {
+				sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
+			}
 		}
 		return sqlAstArguments;
 	}

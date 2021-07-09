@@ -480,15 +480,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
-				if ( entityInstance == null ) {
-					entityInstance = resolveInstance(
-							entityIdentifier,
-							rowProcessingState,
-							session,
-							persistenceContext
-					);
+				entityInstance = resolveInstance(
+						entityIdentifier,
+						rowProcessingState,
+						session,
+						persistenceContext
+				);
 
-				}
 			}
 
 			if ( LockMode.NONE != lockMode ) {
@@ -646,13 +644,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( !hibernateLazyInitializer.isUninitialized() ) {
 				return;
 			}
-			Object instance = resolveInstance(
-					entityKey.getIdentifier(),
-					rowProcessingState,
-					session,
-					persistenceContext
-			);
-			initializeEntity( instance, rowProcessingState, session, persistenceContext );
+			Object instance = persistenceContext.getEntity( entityKey );
+			if ( instance == null ) {
+				instance = resolveInstance(
+						entityKey.getIdentifier(),
+						rowProcessingState,
+						session,
+						persistenceContext
+				);
+				initializeEntity( instance, rowProcessingState, session, persistenceContext );
+			}
 			hibernateLazyInitializer.setImplementation( instance );
 		}
 		else {
@@ -674,7 +675,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		final Object entity = persistenceContext.getEntity( entityKey );
 		assert entity == null || entity == toInitialize;
-//
+
 //		if ( entity != null ) {
 //			return;
 //		}

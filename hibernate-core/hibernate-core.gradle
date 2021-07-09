@@ -296,5 +296,6 @@ tasks.withType( Test.class ).each { test ->
     // widen the overall 6.0 filter to include various package-protected tests
     test.include 'org/hibernate/bytecode/internal/bytebuddy/**'
     test.include 'org/hibernate/event/service/internal/**'
+    test.include 'org/hibernate/tool/schema/internal/**'
 }
 

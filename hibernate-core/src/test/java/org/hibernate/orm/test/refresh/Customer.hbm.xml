@@ -5,7 +5,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping>
-    <class name="org.hibernate.test.refresh.Customer"
+    <class name="org.hibernate.orm.test.refresh.Customer"
             entity-name="CustomName"
             lazy="false">
 

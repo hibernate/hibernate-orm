@@ -119,7 +119,7 @@ ext {
             java16_signature:   'org.codehaus.mojo.signature:java16:1.0@signature',
 
             //Maven plugin framework
-            maven_core: 'org.apache.maven:maven-core:3.0.5',
+            maven_core: 'org.apache.maven:maven-core:3.8.1',
             maven_artifact: 'org.apache.maven:maven-artifact:3.0.5',
             maven_plugin: 'org.apache.maven:maven-plugin-api:3.0.5',
             maven_plugin_tools: 'org.apache.maven.plugin-tools:maven-plugin-annotations:3.2',
@@ -140,7 +140,7 @@ ext {
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",
             h2:              "com.h2database:h2:${h2Version}",
             hsqldb:          "org.hsqldb:hsqldb:2.3.6",
-            derby:           "org.apache.derby:derby:10.11.1.1",
+            derby:           "org.apache.derby:derby:10.14.2.0",
             postgresql:      'org.postgresql:postgresql:42.2.16',
             mysql:           'mysql:mysql-connector-java:8.0.17',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',

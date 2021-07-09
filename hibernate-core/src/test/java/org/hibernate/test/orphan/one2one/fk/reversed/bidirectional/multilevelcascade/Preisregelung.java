@@ -14,13 +14,12 @@ import javax.persistence.OneToOne;
 
 @Entity
 public class Preisregelung {
-    @Id
+
     private Long id;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Tranchenmodell tranchenmodell;
 
-
+    @Id
     public Long getId() {
         return id;
     }
@@ -29,6 +28,7 @@ public class Preisregelung {
 		this.id = id;
 	}
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     public Tranchenmodell getTranchenmodell() {
         return tranchenmodell;
     }

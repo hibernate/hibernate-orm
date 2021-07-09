@@ -18,17 +18,16 @@ import javax.persistence.OneToOne;
 @Entity
 public class Tranchenmodell {
 
-    @Id
+
     private Long id;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
     private List<Tranche> tranchen = new ArrayList<Tranche>();
 
-    @OneToOne(mappedBy="tranchenmodell", optional = true, fetch = FetchType.LAZY)
+
     private Preisregelung preisregelung;
 
 
-
+    @Id
     public Long getId() {
         return id;
     }
@@ -37,10 +36,16 @@ public class Tranchenmodell {
 		this.id = id;
 	}
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "tranchenmodell", fetch = FetchType.LAZY, orphanRemoval = true)
     public List<Tranche> getTranchen() {
         return tranchen;
     }
 
+    public void setTranchen(List<Tranche> tranchen) {
+        this.tranchen = tranchen;
+    }
+
+    @OneToOne(mappedBy="tranchenmodell", optional = true, fetch = FetchType.LAZY)
     public Preisregelung getPreisregelung() {
         return preisregelung;
     }

@@ -126,7 +126,7 @@ public class DeleteMultiLevelOrphansTest extends BaseCoreFunctionalTestCase {
 		results = session.createQuery( "from Preisregelung" ).list();
 		assertEquals( 1, results.size() );
 		Preisregelung preisregelung1Queried =  (Preisregelung) results.get( 0 );
-		assertEquals( tranchenmodellQueried, preisregelung1Queried.getTranchenmodell() );
+		assertEquals(  preisregelung1Queried.getTranchenmodell(), tranchenmodellQueried );
 		results = session.createQuery( "from Tranche" ).list();
 		assertEquals( 0, results.size() );
 

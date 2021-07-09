@@ -7,17 +7,23 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * Support for {@link javax.persistence.EmbeddedId}
@@ -54,6 +60,21 @@ public class EmbeddedIdentifierMappingImpl
 	@Override
 	public String getPartName() {
 		return name;
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+		getEmbeddableTypeDescriptor().applySqlSelections( navigablePath, tableGroup, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		getEmbeddableTypeDescriptor().applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 
 	@Override

@@ -10,6 +10,9 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
+import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
+import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.CastType;
@@ -37,6 +40,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
+import java.sql.DatabaseMetaData;
+import java.sql.SQLException;
 import java.sql.Types;
 import javax.persistence.TemporalType;
 
@@ -269,6 +274,17 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String translateDatetimeFormat(String format) {
 		throw new NotYetImplementedFor6Exception( "format() function not supported on Sybase");
+	}
+
+	@Override
+	public IdentifierHelper buildIdentifierHelper(IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData)
+			throws SQLException {
+		if ( dbMetaData == null ) {
+			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
+		}
+
+		return super.buildIdentifierHelper( builder, dbMetaData );
 	}
 
 }

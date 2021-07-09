@@ -86,7 +86,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect() {
-		this( 400 );
+		this( 500 );
 	}
 
 	public MySQLDialect(int version) {

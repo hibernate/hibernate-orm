@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.schemaupdate;
+package org.hibernate.orm.test.schemaupdate;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -16,7 +16,6 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -27,29 +26,32 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 
-import static org.hamcrest.CoreMatchers.containsString;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.StringContains.containsString;
 
 @TestForIssue(jiraKey = "HHH-11817")
 @RequiresDialect(H2Dialect.class)
-public class SchemaMigrationToOutputScriptTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class SchemaCreationToOutputScriptTest {
 
+	private final String createTableMyEntity = "create table MyEntity";
 	private final String createTableMySecondEntity = "create table MySecondEntity";
 
 	private File output;
 	private ServiceRegistry serviceRegistry;
 	private MetadataImplementor metadata;
 
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 		output = File.createTempFile( "creation_script", ".sql" );
 		output.deleteOnExit();
@@ -72,26 +74,13 @@ public class SchemaMigrationToOutputScriptTest extends BaseUnitTestCase {
 				bw.write( System.lineSeparator() );
 			}
 		}
-
-		serviceRegistry = new StandardServiceRegistryBuilder().applySetting(
-				AvailableSettings.HBM2DDL_AUTO,
-				"create-only"
-		)
-				.build();
-
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
-		final SessionFactory sessionFactory = metadata.buildSessionFactory();
-		sessionFactory.close();
 	}
 
 	private void createServiceRegistryAndMetadata(String append) {
 		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder()
 				.applySetting( Environment.FORMAT_SQL, "false" )
-				.applySetting( Environment.HBM2DDL_SCRIPTS_ACTION, "update" )
+				.applySetting( Environment.HBM2DDL_SCRIPTS_ACTION, "create" )
 				.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_TARGET, output.getAbsolutePath() );
-
 		if ( append != null ) {
 			standardServiceRegistryBuilder.applySetting( AvailableSettings.HBM2DDL_SCRIPTS_CREATE_APPEND, append );
 		}
@@ -105,17 +94,9 @@ public class SchemaMigrationToOutputScriptTest extends BaseUnitTestCase {
 		metadata.validate();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		ServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = new StandardServiceRegistryBuilder().applySetting( AvailableSettings.HBM2DDL_AUTO, "drop" )
-				.build();
-
-		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( MyEntity.class )
-				.buildMetadata();
-		final SessionFactory sessionFactory = metadata.buildSessionFactory();
-		sessionFactory.close();
 	}
 
 	@Test
@@ -131,8 +112,9 @@ public class SchemaMigrationToOutputScriptTest extends BaseUnitTestCase {
 				null
 		);
 		List<String> commands = Files.readAllLines( output.toPath() );
-		assertThat( commands.size(), is( 1 ) );
-		assertThat( commands.get( 0 ), containsString( createTableMySecondEntity ) );
+		assertThat( commands.size(), is( 2 ) );
+		assertThat( commands.get( 0 ), containsString( createTableMyEntity ) );
+		assertThat( commands.get( 1 ), containsString( createTableMySecondEntity ) );
 	}
 
 	@Test
@@ -148,8 +130,9 @@ public class SchemaMigrationToOutputScriptTest extends BaseUnitTestCase {
 				null
 		);
 		List<String> commands = Files.readAllLines( output.toPath() );
-		assertThat( commands.size(), is( 10 ) );
-		assertThat( commands.get( 9 ), containsString( createTableMySecondEntity ) );
+		assertThat( commands.size(), is( 11 ) );
+		assertThat( commands.get( 9 ), containsString( createTableMyEntity ) );
+		assertThat( commands.get( 10 ), containsString( createTableMySecondEntity ) );
 	}
 
 	@Test
@@ -165,8 +148,9 @@ public class SchemaMigrationToOutputScriptTest extends BaseUnitTestCase {
 				null
 		);
 		List<String> commands = Files.readAllLines( output.toPath() );
-		assertThat( commands.size(), is( 10 ) );
-		assertThat( commands.get( 9 ), containsString( createTableMySecondEntity ) );
+		assertThat( commands.size(), is( 11 ) );
+		assertThat( commands.get( 9 ), containsString( createTableMyEntity ) );
+		assertThat( commands.get( 10 ), containsString( createTableMySecondEntity ) );
 	}
 
 	@Entity(name = "MyEntity")

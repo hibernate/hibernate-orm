@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.schemaupdate;
+package org.hibernate.orm.test.schemaupdate;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -28,40 +29,22 @@ import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 
-/**
- * @author Andrea Boriero
- */
 @TestForIssue(jiraKey = "HHH-13788")
-@RunWith(Parameterized.class)
-public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
-
-	@Parameterized.Parameters
-	public static String[] parameters() {
-		return new String[] {
-				JdbcMetadaAccessStrategy.GROUPED.toString(),
-				JdbcMetadaAccessStrategy.INDIVIDUALLY.toString()
-		};
-	}
-
-	@Parameterized.Parameter
-	public String jdbcMetadataExtractorStrategy;
+public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameTest {
 
 	private File updateOutputFile;
 	private File createOutputFile;
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 
-	@Before
-	public void setUp() throws IOException {
+	public void setUp(String jdbcMetadataExtractorStrategy) throws IOException {
 		createOutputFile = File.createTempFile( "create_script", ".sql" );
 		createOutputFile.deleteOnExit();
 		updateOutputFile = File.createTempFile( "update_script", ".sql" );
@@ -76,13 +59,13 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 				.build();
 
 		final MetadataSources metadataSources = new MetadataSources( ssr );
-		metadataSources.addAnnotatedClass( TestEntity.class );
+		metadataSources.addAnnotatedClass( AnotherTestEntity.class );
 
 		metadata = (MetadataImplementor) metadataSources.buildMetadata();
 		metadata.validate();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		new SchemaExport().setHaltOnError( true )
 				.setFormat( false )
@@ -90,9 +73,12 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 		StandardServiceRegistryBuilder.destroy( ssr );
 	}
 
-	@Test
-	public void testSchemaUpdateDoesNotTryToRecreateExistingTables()
+	@ParameterizedTest
+	@EnumSource(JdbcMetadaAccessStrategy.class)
+	public void testSchemaUpdateDoesNotTryToRecreateExistingTables(JdbcMetadaAccessStrategy strategy)
 			throws Exception {
+		setUp( strategy.toString() );
+
 		createSchema();
 
 		new SchemaUpdate().setHaltOnError( true )
@@ -122,7 +108,15 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 
 	private void checkSchemaHasBeenGenerated() throws Exception {
 		String fileContent = new String( Files.readAllBytes( createOutputFile.toPath() ) );
-		Pattern fileContentPattern = Pattern.compile( "create( (column|row))? table my_test_entity" );
+		final Dialect dialect = metadata.getDatabase().getDialect();
+		Pattern fileContentPattern;
+		if ( dialect.openQuote() == '[' ) {
+			fileContentPattern = Pattern.compile( "create( (column|row))? table " + "\\[" + "another_test_entity" + "\\]" );
+		}
+		else {
+			fileContentPattern = Pattern.compile( "create( (column|row))? table " + dialect.openQuote() + "another_test_entity" + dialect
+					.closeQuote() );
+		}
 		Matcher fileContentMatcher = fileContentPattern.matcher( fileContent.toLowerCase() );
 		assertThat(
 				"The schema has not been correctly generated, Script file : " + fileContent.toLowerCase(),
@@ -131,11 +125,12 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 		);
 	}
 
-	@Entity(name = "My_Test_Entity")
-	public static class TestEntity {
+	@Entity(name = "`Another_Test_Entity`")
+	public static class AnotherTestEntity {
 		@Id
 		private Long id;
 
+		@Column(name = "`another_NAME`")
 		private String name;
 	}
 }

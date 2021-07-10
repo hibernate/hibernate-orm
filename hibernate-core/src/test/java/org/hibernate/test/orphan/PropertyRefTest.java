@@ -7,24 +7,40 @@
 package org.hibernate.test.orphan;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 
 /**
  * @author Steve Ebersole
  */
 @TestForIssue(jiraKey = "HHH-565")
-public class PropertyRefTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "orphan/User.hbm.xml", "orphan/Mail.hbm.xml" };
+@DomainModel(
+		xmlMappings = {
+				"org/hibernate/test/orphan/User.hbm.xml",
+				"org/hibernate/test/orphan/Mail.hbm.xml"
+		}
+)
+@SessionFactory
+public class PropertyRefTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Mail" ).executeUpdate();
+					session.createQuery( "delete from User" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testDeleteParentWithBidirOrphanDeleteCollectionBasedOnPropertyRef() {
+	public void testDeleteParentWithBidirOrphanDeleteCollectionBasedOnPropertyRef(SessionFactoryScope scope) {
 		User user = new User( "test" );
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					user.addMail( "test" );
 					user.addMail( "test" );
@@ -32,22 +48,21 @@ public class PropertyRefTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					User u = session.load( User.class, user.getId() );
 					session.delete( u );
 				}
 		);
 
-		inTransaction(
-				s -> {
+		scope.inTransaction(
+				session -> {
 					session.createQuery( "delete from Mail where alias = :alias" )
 							.setParameter( "alias", "test" )
 							.executeUpdate();
 					session.createQuery( "delete from User where userid = :userid" )
 							.setParameter( "userid", "test" )
 							.executeUpdate();
-
 				}
 		);
 	}

@@ -6,73 +6,85 @@
  */
 package org.hibernate.test.reattachment;
 
-import org.junit.Test;
 
-import org.hibernate.Session;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * Test of collection reattachment semantics
  *
  * @author Steve Ebersole
  */
-public class CollectionReattachmentTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "reattachment/Mappings.hbm.xml" };
+@DomainModel(
+		xmlMappings = " org/hibernate/test/reattachment/Mappings.hbm.xml"
+)
+@SessionFactory
+public class CollectionReattachmentTest {
+
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Child" ).executeUpdate();
+					session.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testUpdateOwnerAfterClear() {
-		Session s = openSession();
-		s.beginTransaction();
-		Parent p = new Parent( "p" );
-		p.getChildren().add( new Child( "c" ) );
-		s.save( p );
-		s.getTransaction().commit();
-		s.close();
+	public void testUpdateOwnerAfterClear(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Parent p = new Parent( "p" );
+					p.getChildren().add( new Child( "c" ) );
+					session.save( p );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		p = ( Parent ) s.get( Parent.class, "p" );
-		// clear...
-		s.clear();
-		// now try to reattach...
-		s.update( p );
-		s.getTransaction().commit();
-		s.close();
+		Parent parent = scope.fromTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, "p" );
+					// clear...
+					session.clear();
+					// now try to reattach...
+					session.update( p );
+					return p;
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		s.delete( p );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session ->
+						session.delete( parent )
+		);
 	}
 
 	@Test
-	public void testUpdateOwnerAfterEvict() {
-		Session s = openSession();
-		s.beginTransaction();
-		Parent p = new Parent( "p" );
-		p.getChildren().add( new Child( "c" ) );
-		s.save( p );
-		s.getTransaction().commit();
-		s.close();
+	public void testUpdateOwnerAfterEvict(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Parent p = new Parent( "p" );
+					p.getChildren().add( new Child( "c" ) );
+					session.save( p );
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		p = ( Parent ) s.get( Parent.class, "p" );
-		// evict...
-		s.evict( p );
-		// now try to reattach...
-		s.update( p );
-		s.getTransaction().commit();
-		s.close();
+		Parent parent = scope.fromTransaction(
+				session -> {
+					Parent p = session.get( Parent.class, "p" );
+					// evict...
+					session.evict( p );
+					// now try to reattach...
+					session.update( p );
+					return p;
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		s.delete( p );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session ->
+						session.delete( parent )
+		);
 	}
 }

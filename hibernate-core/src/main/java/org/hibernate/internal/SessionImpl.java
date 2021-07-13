@@ -494,14 +494,6 @@ public class SessionImpl
 		autoClear = enabled;
 	}
 
-	/**
-	 * Check if there is a Hibernate or JTA transaction in progress and,
-	 * if there is not, flush if necessary, make sure the connection has
-	 * been committed (if it is not in autocommit mode) and run the after
-	 * completion processing
-	 *
-	 * @param success Was the operation a success
-	 */
 	public void afterOperation(boolean success) {
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();

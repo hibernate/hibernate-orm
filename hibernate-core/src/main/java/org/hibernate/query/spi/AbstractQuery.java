@@ -1349,7 +1349,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected void afterQuery() {
+	protected void afterQuery(boolean success) {
 		if ( sessionFlushMode != null ) {
 			getSession().setHibernateFlushMode( sessionFlushMode );
 			sessionFlushMode = null;
@@ -1358,13 +1358,20 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			getSession().setCacheMode( sessionCacheMode );
 			sessionCacheMode = null;
 		}
+		if ( !session.isTransactionInProgress() ) {
+			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		}
+		session.afterOperation( success );
 	}
 
 	@Override
 	public List<R> list() {
 		beforeQuery( false );
+		boolean success = false;
 		try {
-			return doList();
+			final List<R> result = doList();
+			success = true;
+			return result;
 		}
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
@@ -1376,7 +1383,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			throw getSession().getExceptionConverter().convert( he, getLockOptions() );
 		}
 		finally {
-			afterQuery();
+			afterQuery( success );
 		}
 	}
 
@@ -1442,20 +1449,23 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public int executeUpdate() throws HibernateException {
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
 		beforeQuery( false );
+		boolean success = false;
 		try {
-			return doExecuteUpdate();
+			final int result = doExecuteUpdate();
+			success = true;
+			return result;
 		}
 		catch (IllegalQueryOperationException e) {
 			throw new IllegalStateException( e );
 		}
-		catch( TypeMismatchException e ) {
+		catch (TypeMismatchException e) {
 			throw new IllegalArgumentException( e );
 		}
-		catch ( HibernateException e) {
+		catch (HibernateException e) {
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery();
+			afterQuery( true );
 		}
 	}
 

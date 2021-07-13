@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.connections;
+package org.hibernate.orm.test.connections;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import javax.persistence.Entity;
-import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -33,25 +32,24 @@ import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.UserSuppliedConnectionProviderImpl;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.connection.BaseDataSource;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import static junit.framework.TestCase.assertTrue;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
 
 /**
  * @author Selaron
  */
 @TestForIssue(jiraKey = "HHH-4808")
-public class LazyLoadingConnectionCloseTest extends BaseEntityManagerFunctionalTestCase {
+public class LazyLoadingConnectionCloseTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	private ConnectionProviderDecorator connectionProvider;
 
@@ -61,22 +59,25 @@ public class LazyLoadingConnectionCloseTest extends BaseEntityManagerFunctionalT
 	}
 
 	@Override
-	protected Map getConfig() {
-		Map config = super.getConfig();
-		config.put( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.ENABLE_LAZY_LOAD_NO_TRANS, "true" );
 
-		config.put( AvailableSettings.CONNECTION_HANDLING, PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT );
+		options.put(
+				AvailableSettings.CONNECTION_HANDLING,
+				PhysicalConnectionHandlingMode.DELAYED_ACQUISITION_AND_RELEASE_AFTER_STATEMENT
+		);
 
-		config.put( AvailableSettings.AUTOCOMMIT, "false" );
+		options.put( AvailableSettings.AUTOCOMMIT, "false" );
 
 		connectionProvider = new ConnectionProviderDecorator( getDataSource() );
-		config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
-		return config;
+		options.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
+
 	}
 
-	@Before
+
+	@BeforeAll
 	public void setUp() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+		inTransaction( entityManager -> {
 			final SimpleEntity entity = new SimpleEntity();
 			entity.setId( 1L );
 			entity.setName( "TheParent" );
@@ -97,39 +98,44 @@ public class LazyLoadingConnectionCloseTest extends BaseEntityManagerFunctionalT
 		} );
 	}
 
+	@AfterAll
+	public void tearDown() {
+		inTransaction( entityManager -> {
+			entityManager.createQuery( "delete from ChildEntity" ).executeUpdate();
+			entityManager.createQuery( "delete from SimpleEntity" ).executeUpdate();
+		} );
+	}
+
 	/**
 	 * Tests connections get closed after transaction commit.
 	 */
 	@Test
 	public void testConnectionCloseAfterTx() {
 		connectionProvider.clear();
-		EntityManager entityManager = getOrCreateEntityManager();
+		inEntityManager(
+				entityManager -> {
+					entityManager.getTransaction().begin();
+					try {
 
-		try {
-			entityManager.getTransaction().begin();
-			try {
-
-				final Query qry = entityManager.createQuery( "FROM SimpleEntity" );
-				final List<SimpleEntity> entities = qry.getResultList();
-				final SimpleEntity entity = entities.get( 0 );
-				assertEquals( 1, connectionProvider.getCurrentOpenConnections() );
-			}
-			catch (Exception e) {
-				if ( entityManager.getTransaction().isActive() ) {
-					entityManager.getTransaction().rollback();
+						final Query qry = entityManager.createQuery( "FROM SimpleEntity" );
+						final List<SimpleEntity> entities = qry.getResultList();
+						final SimpleEntity entity = entities.get( 0 );
+						assertEquals( 1, connectionProvider.getCurrentOpenConnections() );
+					}
+					catch (Exception e) {
+						if ( entityManager.getTransaction().isActive() ) {
+							entityManager.getTransaction().rollback();
+						}
+						throw e;
+					}
+					finally {
+						if ( entityManager.getTransaction().isActive() ) {
+							entityManager.getTransaction().commit();
+						}
+					}
+					assertTrue( connectionProvider.areAllConnectionClosed() );
 				}
-				throw e;
-			}
-			finally {
-				if ( entityManager.getTransaction().isActive() ) {
-					entityManager.getTransaction().commit();
-				}
-			}
-			assertTrue( connectionProvider.areAllConnectionClosed() );
-		}
-		finally {
-			entityManager.close();
-		}
+		);
 
 	}
 
@@ -139,32 +145,29 @@ public class LazyLoadingConnectionCloseTest extends BaseEntityManagerFunctionalT
 	@Test
 	public void testConnectionCloseAfterLazyCollectionInit() {
 		connectionProvider.clear();
-		EntityManager entityManager = getOrCreateEntityManager();
+		inEntityManager(
+				entityManager -> {
+					final Query qry = entityManager.createQuery( "FROM SimpleEntity" );
+					final List<SimpleEntity> entities = qry.getResultList();
+					final SimpleEntity entity = entities.get( 0 );
 
-		try {
-			final Query qry = entityManager.createQuery( "FROM SimpleEntity" );
-			final List<SimpleEntity> entities = qry.getResultList();
-			final SimpleEntity entity = entities.get( 0 );
+					// assert no connection is open
+					assertTrue( connectionProvider.areAllConnectionClosed() );
 
-			// assert no connection is open
-			assertTrue( connectionProvider.areAllConnectionClosed() );
+					final int oldOpenedConnections = connectionProvider.getTotalOpenedConnectionCount();
+					final Set<ChildEntity> lazyChildren = entity.getChildren();
 
-			final int oldOpenedConnections = connectionProvider.getTotalOpenedConnectionCount();
-			final Set<ChildEntity> lazyChildren = entity.getChildren();
+					// this will initialize the collection and such trigger a query
+					lazyChildren.stream().findAny();
 
-			// this will initialize the collection and such trigger a query
-			lazyChildren.stream().findAny();
+					// assert a connection had been opened
+					assertTrue( oldOpenedConnections < connectionProvider.getTotalOpenedConnectionCount() );
 
-			// assert a connection had been opened
-			Assert.assertTrue( oldOpenedConnections < connectionProvider.getTotalOpenedConnectionCount() );
+					// assert there's no remaining connection left.
+					assertTrue( connectionProvider.areAllConnectionClosed() );
 
-			// assert there's no remaining connection left.
-			assertTrue( connectionProvider.areAllConnectionClosed() );
-
-		}
-		finally {
-			entityManager.close();
-		}
+				}
+		);
 	}
 
 	/**
@@ -173,31 +176,28 @@ public class LazyLoadingConnectionCloseTest extends BaseEntityManagerFunctionalT
 	@Test
 	public void testConnectionCloseAfterLazyPojoPropertyInit() {
 		connectionProvider.clear();
-		EntityManager entityManager = getOrCreateEntityManager();
+		inEntityManager(
+				entityManager -> {
+					final Query qry = entityManager.createQuery( "FROM ChildEntity" );
+					final List<ChildEntity> entities = qry.getResultList();
+					final ChildEntity entity = entities.get( 0 );
 
-		try {
-			final Query qry = entityManager.createQuery( "FROM ChildEntity" );
-			final List<ChildEntity> entities = qry.getResultList();
-			final ChildEntity entity = entities.get( 0 );
+					// assert no connection is open
+					assertTrue( connectionProvider.areAllConnectionClosed() );
 
-			// assert no connection is open
-			assertTrue( connectionProvider.areAllConnectionClosed() );
+					final int oldOpenedConnections = connectionProvider.getTotalOpenedConnectionCount();
 
-			final int oldOpenedConnections = connectionProvider.getTotalOpenedConnectionCount();
-
-			final SimpleEntity parent = entity.getParent();
-			// this will initialize the collection and such trigger a query
-			parent.getName();
-			// assert a connection had been opened
-			Assert.assertTrue( oldOpenedConnections < connectionProvider.getTotalOpenedConnectionCount() );
+					final SimpleEntity parent = entity.getParent();
+					// this will initialize the collection and such trigger a query
+					parent.getName();
+					// assert a connection had been opened
+					assertTrue( oldOpenedConnections < connectionProvider.getTotalOpenedConnectionCount() );
 
 
-			// assert there's no remaining connection left.
-			assertTrue( connectionProvider.areAllConnectionClosed() );
-		}
-		finally {
-			entityManager.close();
-		}
+					// assert there's no remaining connection left.
+					assertTrue( connectionProvider.areAllConnectionClosed() );
+				}
+		);
 	}
 
 	/**
@@ -206,22 +206,19 @@ public class LazyLoadingConnectionCloseTest extends BaseEntityManagerFunctionalT
 	@Test
 	public void testConnectionCloseAfterQueryWithoutTx() {
 		connectionProvider.clear();
-		EntityManager entityManager = getOrCreateEntityManager();
+		inEntityManager(
+				entityManager -> {
+					final int oldOpenedConnections = connectionProvider.getTotalOpenedConnectionCount();
+					final List<ChildEntity> childrenByQuery = entityManager.createQuery( "FROM ChildEntity" )
+							.getResultList();
+					assertTrue( childrenByQuery.size() > 0 );
 
-		try {
-
-			final int oldOpenedConnections = connectionProvider.getTotalOpenedConnectionCount();
-			final List<ChildEntity> childrenByQuery = entityManager.createQuery( "FROM ChildEntity" ).getResultList();
-			assertTrue( childrenByQuery.size() > 0 );
-
-			// assert a connection had been opened
-			assertTrue( oldOpenedConnections < connectionProvider.getTotalOpenedConnectionCount() );
-			// assert there's no remaining connection left.
-			assertTrue( connectionProvider.areAllConnectionClosed() );
-		}
-		finally {
-			entityManager.close();
-		}
+					// assert a connection had been opened
+					assertTrue( oldOpenedConnections < connectionProvider.getTotalOpenedConnectionCount() );
+					// assert there's no remaining connection left.
+					assertTrue( connectionProvider.areAllConnectionClosed() );
+				}
+		);
 	}
 
 	@Entity(name = "SimpleEntity")

@@ -377,6 +377,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public void afterOperation(boolean success) {
+		delegate.afterOperation( success );
+	}
+
+	@Override
 	public SessionEventListenerManager getEventListenerManager() {
 		return delegate.getEventListenerManager();
 	}

@@ -192,14 +192,16 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 		loadingEntityMap.forEach(
 				(entityKey, loadingEntityEntry) -> {
-					postLoadEvent.reset();
-					postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
-							.setId( entityKey.getIdentifier() )
-							.setPersister( loadingEntityEntry.getDescriptor() );
-
-					for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
-						listener.onPostLoad( postLoadEvent );
+					if ( postLoadEvent != null ) {
+						postLoadEvent.reset();
+						postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
+								.setId( entityKey.getIdentifier() )
+								.setPersister( loadingEntityEntry.getDescriptor() );
+						for ( PostLoadEventListener listener : listenerGroup.listeners() ) {
+							listener.onPostLoad( postLoadEvent );
+						}
 					}
+
 					executionContext.invokeAfterLoadActions(
 							getSession(),
 							loadingEntityEntry.getEntityInstance(),

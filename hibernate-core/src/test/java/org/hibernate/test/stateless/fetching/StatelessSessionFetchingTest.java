@@ -26,6 +26,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -54,7 +55,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 
 		protected String applyPrefix(String baseTableName) {
 			String prefixed = prefix + '_' + baseTableName;
-            log.debug("prefixed table name : " + baseTableName + " -> " + prefixed);
+			log.debug( "prefixed table name : " + baseTableName + " -> " + prefixed );
 			return prefixed;
 		}
 
@@ -64,7 +65,7 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		}
 
 		private String determineUniquePrefix() {
-			return StringHelper.collapseQualifier( getClass().getName(), false ).toUpperCase(Locale.ROOT);
+			return StringHelper.collapseQualifier( getClass().getName(), false ).toUpperCase( Locale.ROOT );
 		}
 	}
 
@@ -86,8 +87,8 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 
 		StatelessSession ss = sessionFactory().openStatelessSession();
 		ss.beginTransaction();
-		Task taskRef = ( Task ) ss.createQuery( "from Task t join fetch t.resource join fetch t.user" ).uniqueResult();
-		assertTrue( taskRef != null );
+		Task taskRef = (Task) ss.createQuery( "from Task t join fetch t.resource join fetch t.user" ).uniqueResult();
+		assertNotNull( taskRef );
 		assertTrue( Hibernate.isInitialized( taskRef ) );
 		assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 		assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -130,10 +131,10 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		StatelessSession ss = sessionFactory().openStatelessSession();
 		ss.beginTransaction();
 
-		final Query query = ss.createQuery( "from Task t join fetch t.resource join fetch t.user");
-		final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY);
+		final Query query = ss.createQuery( "from Task t join fetch t.resource join fetch t.user" );
+		final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 		while ( scrollableResults.next() ) {
-			Task taskRef = (Task) ( (Object[]) scrollableResults.get() )[0];
+			Task taskRef = (Task) scrollableResults.get();
 			assertTrue( Hibernate.isInitialized( taskRef ) );
 			assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 			assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -177,10 +178,10 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 
 		inTransaction(
 				session -> {
-					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user");
+					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
 					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) ( (Object[]) scrollableResults.get() )[0];
+						Task taskRef = (Task) scrollableResults.get();
 						assertTrue( Hibernate.isInitialized( taskRef ) );
 						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
 						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
@@ -210,9 +211,9 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		session.save( v1 );
 		session.save( v2 );
 
-		final Product product1 = new Product(1, "123", v1, p1);
-		final Product product2 = new Product(2, "456", v1, p1);
-		final Product product3 = new Product(3, "789", v1, p2);
+		final Product product1 = new Product( 1, "123", v1, p1 );
+		final Product product2 = new Product( 2, "456", v1, p1 );
+		final Product product3 = new Product( 3, "789", v1, p2 );
 
 		session.save( product1 );
 		session.save( product2 );
@@ -225,24 +226,14 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		ss.beginTransaction();
 
 		final Query query = ss.createQuery( "select p from Producer p join fetch p.products" );
-		ScrollableResults scrollableResults = null;
-		if ( getDialect() instanceof DB2Dialect ) {
-			/*
-				FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-				but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-				set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 */
-			scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-		}
-		else {
-			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-		}
+		final ScrollableResults scrollableResults = getScrollableResults( query );
+
 		while ( scrollableResults.next() ) {
-			Producer producer = (Producer) ( (Object[]) scrollableResults.get() )[0];
+			Producer producer = (Producer) scrollableResults.get();
 			assertTrue( Hibernate.isInitialized( producer ) );
 			assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 
-			for (Product product : producer.getProducts()) {
+			for ( Product product : producer.getProducts() ) {
 				assertTrue( Hibernate.isInitialized( product ) );
 				assertFalse( Hibernate.isInitialized( product.getVendor() ) );
 			}
@@ -252,6 +243,21 @@ public class StatelessSessionFetchingTest extends BaseCoreFunctionalTestCase {
 		ss.close();
 
 		cleanup();
+	}
+
+	private ScrollableResults getScrollableResults(Query query) {
+		ScrollableResults scrollableResults;
+		if ( getDialect() instanceof DB2Dialect ) {
+			/*
+				FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
+				but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
+				set type of TYPE_FORWARD_ONLY and db2 does not support it.
+			 */
+			return query.scroll( ScrollMode.SCROLL_INSENSITIVE );
+		}
+		else {
+			return query.scroll( ScrollMode.FORWARD_ONLY );
+		}
 	}
 
 	private void cleanup() {

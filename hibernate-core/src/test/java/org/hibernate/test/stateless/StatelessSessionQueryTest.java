@@ -46,7 +46,7 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
 		TestData testData=new TestData();
 		testData.createData();
 		StatelessSession s = sessionFactory().openStatelessSession();
-		assertEquals( 1, s.createQuery( "from Contact c join fetch c.org join fetch c.org.country" )
+		assertEquals( 1, s.createQuery( "from Contact c join fetch c.org o join fetch c.org.country" )
 				.list().size() );
 		s.close();
 		testData.cleanData();
@@ -59,7 +59,7 @@ public class StatelessSessionQueryTest extends BaseCoreFunctionalTestCase {
         TestData testData=new TestData();
         testData.createData();
 
-		final String queryString = "from Contact c join fetch c.org join fetch c.org.country";
+		final String queryString = "from Contact c join fetch c.org o join fetch o.country";
 		StatelessSession s = sessionFactory().openStatelessSession();
 
 		org.hibernate.query.Query query = s.createQuery( queryString );

@@ -7,7 +7,7 @@
 
 plugins {
     id 'com.gradle.enterprise' version '3.6.1'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.2.1'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.4.2'
 }
 
 rootProject.name = 'hibernate-orm'

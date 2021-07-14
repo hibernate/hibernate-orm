@@ -31,7 +31,7 @@ projectsToIncludeInAggregatedJavadoc.each {projectPath ->
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply plugin: 'org.asciidoctor.convert'
-apply plugin: 'hibernate-matrix-testing'
+apply plugin: 'org.hibernate.matrix-test'
 
 tasks.build.dependsOn 'buildDocs'
 defaultTasks 'buildDocs'

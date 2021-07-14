@@ -10,7 +10,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 description = 'Integrate support for Spatial/GIS data into Hibernate O/RM'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'hibernate-matrix-testing'
+apply plugin: 'org.hibernate.matrix-test'
 
 
 dependencies {

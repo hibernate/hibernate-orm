@@ -8,7 +8,7 @@
 description = 'Hibernate\'s entity version (audit/history) support'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'hibernate-matrix-testing'
+apply plugin: 'org.hibernate.matrix-test'
 
 dependencies {
     api( project( ':hibernate-core' ) ) {

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.stateless;
+package org.hibernate.orm.test.stateless;
 
 import java.util.Collections;
 import java.util.function.Consumer;
@@ -21,26 +21,42 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Andrea Boriero
  */
-public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				StatelessSessionPersistentContextTest.TestEntity.class,
+				StatelessSessionPersistentContextTest.OtherEntity.class
+		}
+)
+@SessionFactory
+public class StatelessSessionPersistentContextTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TestEntity.class, OtherEntity.class };
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from TestEntity" ).executeUpdate();
+					session.createQuery( "delete from OtherEntity" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13672")
-	public void testStatelessSessionPersistenceContextIsCleared() {
+	public void testStatelessSessionPersistenceContextIsCleared(SessionFactoryScope scope) {
 		TestEntity testEntity = new TestEntity();
 		consumeAndCheckPersistenceContextIsClosed(
+				scope,
 				statelessSession -> {
 					testEntity.setName( "Fab" );
 					OtherEntity otherEntity = new OtherEntity();
@@ -52,12 +68,14 @@ public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTes
 		);
 
 		consumeAndCheckPersistenceContextIsClosed(
+				scope,
 				statelessSession -> {
 					statelessSession.get( TestEntity.class, testEntity.getId() );
 				}
 		);
 
 		consumeAndCheckPersistenceContextIsClosed(
+				scope,
 				statelessSession -> {
 					TestEntity p2 = (TestEntity) statelessSession.get( TestEntity.class, testEntity.getId() );
 					p2.setName( "Fabulous" );
@@ -66,6 +84,7 @@ public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTes
 		);
 
 		consumeAndCheckPersistenceContextIsClosed(
+				scope,
 				statelessSession -> {
 					TestEntity testEntity1 = (TestEntity) statelessSession.createQuery(
 							"select p from TestEntity p where id = :id" )
@@ -76,23 +95,25 @@ public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTes
 		);
 
 		consumeAndCheckPersistenceContextIsClosed(
+				scope,
 				statelessSession -> {
 					statelessSession.refresh( testEntity );
-
 				}
 		);
 
 		consumeAndCheckPersistenceContextIsClosed(
+				scope,
 				statelessSession -> {
 					statelessSession.delete( testEntity );
-
 				}
 		);
 	}
 
-	private void consumeAndCheckPersistenceContextIsClosed(Consumer<StatelessSession> consumer) {
+	private void consumeAndCheckPersistenceContextIsClosed(
+			SessionFactoryScope scope,
+			Consumer<StatelessSession> consumer) {
 		Transaction transaction = null;
-		StatelessSession statelessSession = sessionFactory().openStatelessSession();
+		StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession();
 		try {
 			transaction = statelessSession.beginTransaction();
 			consumer.accept( statelessSession );
@@ -113,20 +134,20 @@ public class StatelessSessionPersistentContextTest extends BaseCoreFunctionalTes
 	private void assertThatPersistenContextIsCleared(StatelessSession ss) {
 		PersistenceContext persistenceContextInternal = ( (SharedSessionContractImplementor) ss ).getPersistenceContextInternal();
 		assertTrue(
-				"StatelessSession: PersistenceContext has not been cleared",
-				persistenceContextInternal.getEntitiesByKey().isEmpty()
+				persistenceContextInternal.getEntitiesByKey().isEmpty(),
+				"StatelessSession: PersistenceContext has not been cleared"
 		);
 		assertTrue(
-				"StatelessSession: PersistenceContext has not been cleared",
-				persistenceContextInternal.managedEntitiesIterator() == Collections.emptyIterator()
+				persistenceContextInternal.managedEntitiesIterator() == Collections.emptyIterator(),
+				"StatelessSession: PersistenceContext has not been cleared"
 		);
 		assertTrue(
-				"StatelessSession: PersistenceContext has not been cleared",
-				persistenceContextInternal.getCollectionsByKey().isEmpty()
+				persistenceContextInternal.getCollectionsByKey().isEmpty(),
+				"StatelessSession: PersistenceContext has not been cleared"
 		);
 		assertTrue(
-				"StatelessSession: PersistenceContext has not been cleared",
-				persistenceContextInternal.getCollectionsByKey() == Collections.emptyMap()
+				persistenceContextInternal.getCollectionsByKey() == Collections.emptyMap(),
+				"StatelessSession: PersistenceContext has not been cleared"
 		);
 	}
 

@@ -9,25 +9,28 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<!--
+<hibernate-mapping package="org.hibernate.orm.test.stateless">
 
+	<class name="Contact">
+		<id name="id">
+			<generator class="native" />
+		</id>
+		<many-to-one name="org" lazy="false" fetch="join" />
+		<query name="contacts">from Contact</query>
 
--->
-
-<hibernate-mapping 
-	package="org.hibernate.test.stateless">
-
-	<class name="Document">
-		<id name="name"/>
-		<timestamp name="lastModified"/>
-		<property name="text"/>
 	</class>
 
-    <class name="Paper">
+	<class name="Org">
 		<id name="id">
-            <generator class="native"/>
-        </id>
-        <property name="color"/>
+			<generator class="native" />
+		</id>
+		<many-to-one name="country" lazy="false" fetch="join" />
+	</class>
+
+	<class name="Country">
+		<id name="id">
+			<generator class="native" />
+		</id>
 	</class>
 
 </hibernate-mapping>

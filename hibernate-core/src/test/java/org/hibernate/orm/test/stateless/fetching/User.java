@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.stateless.fetching;
+package org.hibernate.orm.test.stateless.fetching;
 
 
 /**
@@ -12,17 +12,15 @@ package org.hibernate.test.stateless.fetching;
  *
  * @author Steve Ebersole
  */
-public class Resource {
+public class User {
 	private Long id;
 	private String name;
-	private User owner;
 
-	public Resource() {
+	public User() {
 	}
 
-	public Resource(String name, User owner) {
+	public User(String name) {
 		this.name = name;
-		this.owner = owner;
 	}
 
 	public Long getId() {
@@ -39,13 +37,5 @@ public class Resource {
 
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public User getOwner() {
-		return owner;
-	}
-
-	public void setOwner(User owner) {
-		this.owner = owner;
 	}
 }

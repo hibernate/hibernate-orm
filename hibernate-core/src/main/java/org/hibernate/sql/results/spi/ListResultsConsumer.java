@@ -114,7 +114,13 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 					rowProcessingState.finishRowProcessing();
 				}
 			}
-			jdbcValuesSourceProcessingState.finishUp();
+			try {
+				jdbcValuesSourceProcessingState.finishUp();
+			}
+			finally {
+				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );
+			}
+
 			return results;
 		}
 		finally {

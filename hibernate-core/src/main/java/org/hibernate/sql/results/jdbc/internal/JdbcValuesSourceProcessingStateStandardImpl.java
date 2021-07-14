@@ -16,9 +16,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
@@ -164,22 +162,17 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	@Override
 	public void finishUp() {
-		try {
-			// for arrays, we should end the collection load beforeQuery resolving the entities, since the
-			// actual array instances are not instantiated during loading
-			finishLoadingArrays();
+		// for arrays, we should end the collection load beforeQuery resolving the entities, since the
+		// actual array instances are not instantiated during loading
+		finishLoadingArrays();
 
-			// now finish loading the entities (2-phase load)
-			performTwoPhaseLoad();
+		// now finish loading the entities (2-phase load)
+		performTwoPhaseLoad();
 
-			// now we can finalize loading collections
-			finishLoadingCollections();
+		// now we can finalize loading collections
+		finishLoadingCollections();
 
-			postLoad();
-		}
-		finally {
-			executionContext.getSession().getPersistenceContext().getLoadContexts().deregister( this );
-		}
+		postLoad();
 	}
 
 	private void postLoad() {
@@ -209,6 +202,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 					);
 				}
 		);
+		loadingEntityMap = null;
 	}
 
 	private void finishLoadingArrays() {
@@ -247,7 +241,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 				loadingCollectionEntry.finishLoading( getExecutionContext() );
 			}
 
-			loadingCollectionMap.clear();
+			loadingCollectionMap = null;
 		}
 	}
 

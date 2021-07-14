@@ -537,6 +537,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 //	}
 
 	public void afterOperation(boolean success) {
+		temporaryPersistenceContext.clear();
 		if ( !isTransactionInProgress() ) {
 			getJdbcCoordinator().afterTransaction();
 		}

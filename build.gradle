@@ -12,7 +12,6 @@ buildscript {
 	}
 
 	dependencies {
-		classpath 'org.hibernate.build.gradle:hibernate-matrix-testing:3.0.0.Final'
 		classpath 'org.hibernate.build.gradle:version-injection-plugin:1.0.0'
 		classpath 'gradle.plugin.com.github.lburgazzoli:gradle-karaf-plugin:0.5.1'
 		classpath 'org.asciidoctor:asciidoctor-gradle-plugin:1.5.7'
@@ -33,6 +32,7 @@ plugins {
 	id 'eclipse'
 
 	id 'org.hibernate.build.xjc' version '2.0.1' apply false
+	id 'org.hibernate.matrix-test' version '3.1.0' apply false
 	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
 

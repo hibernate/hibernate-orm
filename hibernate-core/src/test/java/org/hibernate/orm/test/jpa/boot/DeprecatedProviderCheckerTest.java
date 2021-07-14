@@ -12,11 +12,9 @@ import org.hibernate.jpa.boot.spi.ProviderChecker;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.Triggerable;
-import org.hibernate.testing.orm.logger.LogInspector;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-import org.hibernate.testing.orm.logger.Inspector;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -27,15 +25,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *
  * @author Gail Badner
  */
-@ExtendWith(LoggerInspectionExtension.class)
 public class DeprecatedProviderCheckerTest {
 	final static String DEPRECATED_PROVIDER_NAME = "org.hibernate.ejb.HibernatePersistence";
 
+	@RegisterExtension
+	public LoggerInspectionExtension logger = LoggerInspectionExtension
+			.builder().setLogger(
+					HEMLogging.messageLogger( ProviderChecker.class.getName() )
+			).build();
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-13027")
-	public void testDeprecatedProvider(@LogInspector Inspector logger) {
-		logger.init( HEMLogging.messageLogger( ProviderChecker.class.getName() ) );
-
+	public void testDeprecatedProvider() {
 		Triggerable triggerable = logger.watchForLogMessages( "HHH015016" );
 		triggerable.reset();
 		assertTrue( ProviderChecker.hibernateProviderNamesContain( DEPRECATED_PROVIDER_NAME ) );

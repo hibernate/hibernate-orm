@@ -4,17 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id: Paper.java 8048 2005-08-30 21:27:17Z epbernard $
-package org.hibernate.test.stateless;
+package org.hibernate.orm.test.stateless;
 
 
-/**
- * @author Emmanuel Bernard
- */
-public class Paper {
+public class Org {
 	private Integer id;
-	private String color;
+	private Country country;
 
 	public Integer getId() {
 		return id;
@@ -24,11 +19,12 @@ public class Paper {
 		this.id = id;
 	}
 
-	public String getColor() {
-		return color;
+	public Country getCountry() {
+		return country;
 	}
 
-	public void setColor(String color) {
-		this.color = color;
+	public void setCountry(Country country) {
+		this.country = country;
 	}
+
 }

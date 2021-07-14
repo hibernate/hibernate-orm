@@ -11,7 +11,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.stateless;
+package org.hibernate.orm.test.stateless;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -24,11 +24,13 @@ import javax.persistence.Table;
 import org.hibernate.StatelessSession;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -37,18 +39,18 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * @author Andrea Boriero
  */
 @RequiresDialect(H2Dialect.class)
-public class StatelessDoWorkTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = StatelessDoWorkTest.TestEntity.class
+)
+@SessionFactory
+public class StatelessDoWorkTest {
 	public static final String EXPECTED_ENTITY_NAME = "test";
 	public static final Integer PERSISTED_TEST_ENTITY_ID = 1;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TestEntity.class };
-	}
 
-	@Before
-	public void setUp() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					TestEntity entity = new TestEntity( PERSISTED_TEST_ENTITY_ID, EXPECTED_ENTITY_NAME );
 					session.save( entity );
@@ -56,9 +58,9 @@ public class StatelessDoWorkTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@After
-	public void tearDown() {
-		inTransaction(
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createQuery( "delete from TestEntity" ).executeUpdate();
 				}
@@ -66,9 +68,9 @@ public class StatelessDoWorkTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDoReturningWork() {
+	public void testDoReturningWork(SessionFactoryScope scope) {
 		String retrievedEntityName;
-		try (StatelessSession statelessSession = sessionFactory().openStatelessSession()) {
+		try (StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession()) {
 			retrievedEntityName = statelessSession.doReturningWork(
 					(connection) -> {
 						try (PreparedStatement preparedStatement = connection.prepareStatement(
@@ -89,8 +91,8 @@ public class StatelessDoWorkTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testDoWork() {
-		try (StatelessSession statelessSession = sessionFactory().openStatelessSession()) {
+	public void testDoWork(SessionFactoryScope scope) {
+		try (StatelessSession statelessSession = scope.getSessionFactory().openStatelessSession()) {
 			statelessSession.doWork(
 					(connection) -> {
 						try (PreparedStatement preparedStatement = connection.prepareStatement(
@@ -101,11 +103,11 @@ public class StatelessDoWorkTest extends BaseCoreFunctionalTestCase {
 			);
 		}
 
-		assertThatAllTestEntitiesHaveBeenDeleted();
+		assertThatAllTestEntitiesHaveBeenDeleted( scope );
 	}
 
-	private void assertThatAllTestEntitiesHaveBeenDeleted() {
-		inTransaction( session -> {
+	private void assertThatAllTestEntitiesHaveBeenDeleted(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
 			List results = session.createQuery( "from TestEntity" ).list();
 			assertThat( results.size(), is( 0 ) );
 		} );

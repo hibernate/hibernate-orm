@@ -6,7 +6,7 @@
  */
 
 //$Id: Document.java 8057 2005-08-31 23:19:53Z oneovthafew $
-package org.hibernate.test.stateless;
+package org.hibernate.orm.test.stateless;
 import java.util.Date;
 
 /**

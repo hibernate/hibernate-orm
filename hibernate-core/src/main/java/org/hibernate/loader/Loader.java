@@ -60,6 +60,7 @@ import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.spi.TypedValue;
 import org.hibernate.event.spi.EventSource;
@@ -1669,24 +1670,29 @@ public abstract class Loader {
 			// perform the hydration just as if it were "not yet loaded"
 			final PersistentAttributeInterceptor interceptor = ( (PersistentAttributeInterceptable) object ).$$_hibernate_getInterceptor();
 			if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-				hydrateEntityState(
-						rs,
-						i,
-						persister,
-						getEntityAliases()[i].getRowIdAlias(),
-						key,
-						hydratedObjects,
-						session,
-						getInstanceClass(
-								rs,
-								i,
-								persister,
-								key.getIdentifier(),
-								session
-						),
-						object,
-						requestedLockMode
-				);
+				EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
+				// Avoid loading the same entity proxy twice for the same result set: it could lead to errors,
+				// because some code writes to its input (ID in hydrated state replaced by the loaded entity, in particular).
+				if ( entry != null && entry.getStatus() != Status.LOADING ) {
+					hydrateEntityState(
+							rs,
+							i,
+							persister,
+							getEntityAliases()[i].getRowIdAlias(),
+							key,
+							hydratedObjects,
+							session,
+							getInstanceClass(
+									rs,
+									i,
+									persister,
+									key.getIdentifier(),
+									session
+							),
+							object,
+							requestedLockMode
+					);
+				}
 
 				// EARLY EXIT!!!
 				//		- to skip the version check

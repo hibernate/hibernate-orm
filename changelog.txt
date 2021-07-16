@@ -3,6 +3,40 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.21.Final (July 16, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31897
+
+** Bug
+    * [HHH-14616] - Optimistic Lock throws org.hibernate.exception.SQLGrammarException: could not retrieve version
+    * [HHH-14608] - Merge causes StackOverflow when JPA proxy compliance is enabled
+    * [HHH-14537] - EntityNotFoundException thrown when non-existing association with @NotFound(IGNORE) mapped has proxy in PersistenceContext
+    * [HHH-14247] - Automatic release scripts, wrong Jira release url
+    * [HHH-14199] - setDataBase gradle task failed
+    * [HHH-14030] - hibernate-orm fails to build locally on German Win10
+    * [HHH-13875] - Optional one-to-one does not always join the associated entity table when querying
+    * [HHH-12842] - Non-optional OneToOne relation can't be lazy loaded anymore
+    * [HHH-12436] - Attempted to assign id from null one-to-one property
+    * [HHH-12320] - @JoinColumn's foreign key custom name does not work with @MapsId
+
+** Improvement
+    * [HHH-14083] - Gradle, add task to automate the CI release process
+
+** Task
+    * [HHH-14697] - TimePropertyTest fails on MySQL 8.0 with a ComparisonFailure
+    * [HHH-14640] - Backport support for automating releases that push to Sonatype to 5.3 branch (includes Gradle upgrade)
+    * [HHH-14513] - Move publishing release artifacts from BinTray
+    * [HHH-14315] - Upgrade to Gradle 6.7 and use toolchains for per-JDK builds
+    * [HHH-14283] - Review tuning of JVM parameters for the build
+    * [HHH-14144] - Explicitly set localization assumptions for the build and testsuite
+    * [HHH-14111] - Upgrade build dependencies to test JDK15/JDK16
+    * [HHH-13925] - Upgrade to Gradle 6.3
+    * [HHH-13689] - Replace uses of the deprecated osgi plugin with the biz.aQute.bnd plugin
+    * [HHH-13685] - Upgrade to Gradle 5
+    * [HHH-13682] - Generate Java 13/14 bytecode for tests when building with JDK13/14
+
+
 Changes in 5.3.20.Final (November 16th, 2020)
 ------------------------------------------------------------------------------------------------------------------------
 

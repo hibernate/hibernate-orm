@@ -27,7 +27,7 @@ public class ClassicTranslatorTest extends QueryTranslatorTestCase {
 	public void configure(Configuration cfg) {
 		super.configure( cfg );
 		cfg.setProperty( Environment.QUERY_TRANSLATOR, ClassicQueryTranslatorFactory.class.getName() );
-		cfg.setProperty( AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE, "true" );
+		cfg.setProperty( AvailableSettings.JDBC_STYLE_PARAMS_ZERO_BASE, "true" );
 	}
 
 	@Override

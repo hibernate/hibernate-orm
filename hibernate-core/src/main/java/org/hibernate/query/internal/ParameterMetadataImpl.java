@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -18,12 +16,10 @@ import java.util.function.Consumer;
 
 import javax.persistence.Parameter;
 
-import org.hibernate.QueryException;
 import org.hibernate.QueryParameterException;
 import org.hibernate.engine.query.spi.NamedParameterDescriptor;
 import org.hibernate.engine.query.spi.OrdinalParameterDescriptor;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.type.Type;
@@ -34,6 +30,8 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public class ParameterMetadataImpl implements ParameterMetadata {
+	public static final String MIXED_POSITIONAL_PARAM_STYLE_ERROR_MSG = "Cannot mix legacy-style (`?`) and JPA-style (`?n`) positional parameters in the same query";
+
 	private final Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap;
 	private final Map<String,NamedParameterDescriptor> namedDescriptorMap;
 
@@ -46,34 +44,6 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 		this.namedDescriptorMap = namedDescriptorMap == null
 				? Collections.emptyMap()
 				: Collections.unmodifiableMap( namedDescriptorMap );
-
-		if (ordinalDescriptorMap != null &&  ! ordinalDescriptorMap.isEmpty() ) {
-			final List<Integer> sortedPositions = new ArrayList<>( ordinalDescriptorMap.keySet() );
-			sortedPositions.sort( ComparableComparator.INSTANCE );
-
-			int lastPosition = -1;
-			for ( Integer sortedPosition : sortedPositions ) {
-				if ( lastPosition == -1 ) {
-					lastPosition = sortedPosition;
-					continue;
-				}
-
-				if ( sortedPosition != lastPosition + 1 ) {
-					throw new QueryException(
-							String.format(
-									Locale.ROOT,
-									"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
-									lastPosition,
-									sortedPosition,
-									StringHelper.join( ",", sortedPositions.iterator() )
-							)
-					);
-				}
-
-				lastPosition = sortedPosition;
-			}
-
-		}
 	}
 
 	@Override

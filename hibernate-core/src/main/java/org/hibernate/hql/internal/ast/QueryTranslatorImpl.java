@@ -9,9 +9,11 @@ package org.hibernate.hql.internal.ast;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -598,9 +600,52 @@ public class QueryTranslatorImpl implements FilterTranslator {
 	@Override
 	public ParameterTranslations getParameterTranslations() {
 		if ( paramTranslations == null ) {
+			if ( getWalker().getPositionalParameterStyle() == HqlSqlWalker.PositionalParameterStyle.JPA ) {
+				verifyJpaPositionalParameterSequence( getWalker().getJpaPositionalParamLabels() );
+			}
 			paramTranslations = new ParameterTranslationsImpl( getWalker().getParameterSpecs() );
 		}
 		return paramTranslations;
+	}
+
+	private void verifyJpaPositionalParameterSequence(Set<Integer> jpaPositionalParamLabels) {
+		if ( jpaPositionalParamLabels == null || jpaPositionalParamLabels.isEmpty() ) {
+			return;
+		}
+
+		final List<Integer> sortedPositions = new ArrayList<>( jpaPositionalParamLabels );
+		sortedPositions.sort( Comparator.naturalOrder() );
+
+		int lastPosition = -1;
+		for ( Integer sortedPosition : sortedPositions ) {
+			if ( lastPosition == -1 ) {
+				// first in the sequence, validate that it is `1` per JPA
+				if ( sortedPosition != 1 ) {
+					throw new QueryException(
+							String.format(
+									Locale.ROOT,
+									"Unexpected ordinal parameter label base [%s]; expecting 1",
+									sortedPosition
+							)
+					);
+				}
+			}
+			else {
+				if ( sortedPosition != lastPosition + 1 ) {
+					throw new QueryException(
+							String.format(
+									Locale.ROOT,
+									"Unexpected gap in ordinal parameter labels [%s -> %s] : [%s]",
+									lastPosition,
+									sortedPosition,
+									StringHelper.join( ",", sortedPositions )
+							)
+					);
+				}
+			}
+
+			lastPosition = sortedPosition;
+		}
 	}
 
 	public List<ParameterSpecification> getCollectedParameterSpecifications() {

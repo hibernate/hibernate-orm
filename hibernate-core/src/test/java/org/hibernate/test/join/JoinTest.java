@@ -40,7 +40,7 @@ public class JoinTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		super.afterConfigurationBuilt( configuration );
-		configuration.setProperty( AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE, "true" );
+		configuration.setProperty( AvailableSettings.JDBC_STYLE_PARAMS_ZERO_BASE, "true" );
 	}
 
 	@Test

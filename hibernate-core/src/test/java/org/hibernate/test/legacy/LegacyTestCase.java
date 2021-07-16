@@ -89,7 +89,7 @@ public abstract class LegacyTestCase extends BaseCoreFunctionalTestCase {
 				// the Integer#parseInt call failed...
 			}
 		}
-		cfg.setProperty( AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE, "true" );
+		cfg.setProperty( AvailableSettings.JDBC_STYLE_PARAMS_ZERO_BASE, "true" );
 	}
 
 	protected int doDelete(Session session, String queryString) {

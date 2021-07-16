@@ -15,7 +15,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -83,6 +82,7 @@ import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
+import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.sql.JoinType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
@@ -95,8 +95,6 @@ import antlr.ASTFactory;
 import antlr.RecognitionException;
 import antlr.SemanticException;
 import antlr.collections.AST;
-
-import static org.hibernate.hql.spi.QueryTranslator.ERROR_LEGACY_ORDINAL_PARAMS_NO_LONGER_SUPPORTED;
 
 /**
  * Implements methods used by the HQL->SQL tree transform grammar (a.k.a. the second phase).
@@ -145,6 +143,16 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 
 	private boolean inEntityGraph;
 
+	public enum PositionalParameterStyle {
+		JPA,
+		LEGACY
+	}
+
+	private PositionalParameterStyle positionalParameterStyle;
+	private Set<Integer> jpaPositionalParamLabels;
+	private int legacyParameterCount;
+
+
 	/**
 	 * Create a new tree transformer.
 	 *
@@ -171,7 +179,18 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		this.tokenReplacements = tokenReplacements;
 		this.collectionFilterRole = collectionRole;
 		this.hqlParser = parser;
+
+		this.legacyParameterCount = getSessionFactoryHelper().getFactory().getSessionFactoryOptions().jdbcStyleParamsZeroBased() ? 0 : 1;
 	}
+
+	public PositionalParameterStyle getPositionalParameterStyle() {
+		return positionalParameterStyle;
+	}
+
+	public Set<Integer> getJpaPositionalParamLabels() {
+		return jpaPositionalParamLabels;
+	}
+
 
 	// handle trace logging ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1085,6 +1104,7 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 		}
 	}
 
+
 	@Override
 	protected AST generatePositionalParameter(AST delimiterNode, AST numberNode) throws SemanticException {
 		// todo : we check this multiple times
@@ -1094,35 +1114,62 @@ public class HqlSqlWalker extends HqlSqlBaseWalker implements ErrorReporter, Par
 			);
 		}
 
+		final int parameterLabel;
 		if ( numberNode == null ) {
-			throw new QueryException(
-					String.format(
-							Locale.ROOT,
-							ERROR_LEGACY_ORDINAL_PARAMS_NO_LONGER_SUPPORTED,
-							queryTranslatorImpl.getQueryString()
-					)
-			);
+			if ( positionalParameterStyle == null ) {
+				positionalParameterStyle = PositionalParameterStyle.LEGACY;
+			}
+			else {
+				if ( positionalParameterStyle == PositionalParameterStyle.JPA ) {
+					throw generateMixedPositionalParamException();
+				}
+			}
+			parameterLabel = legacyParameterCount++;
 		}
-		final String positionString = numberNode.getText();
-		final int label = Integer.parseInt( positionString );
-		trackPositionalParameterPositions( label );
+		else {
+			if ( positionalParameterStyle == null ) {
+				positionalParameterStyle = PositionalParameterStyle.JPA;
+			}
+			else {
+				if ( positionalParameterStyle == PositionalParameterStyle.LEGACY ) {
+					throw generateMixedPositionalParamException();
+				}
+			}
 
-		final ParameterNode parameter = (ParameterNode) astFactory.create( PARAM, positionString );
+			final String positionString = numberNode.getText();
+			parameterLabel = Integer.parseInt( positionString );
+
+			if ( jpaPositionalParamLabels == null ) {
+				jpaPositionalParamLabels = new HashSet<>();
+			}
+			jpaPositionalParamLabels.add( parameterLabel );
+		}
+
+		trackPositionalParameterPositions( parameterLabel );
+
+		final ParameterNode parameter = (ParameterNode) astFactory.create( PARAM, Integer.toString( parameterLabel ) );
 		parameter.setText( "?" );
 
 		final int queryParamtersPosition = isFilter()
-				? label
-				: label - 1;
+				? parameterLabel
+				: parameterLabel - 1;
 		final PositionalParameterSpecification paramSpec = new PositionalParameterSpecification(
 				delimiterNode.getLine(),
 				delimiterNode.getColumn(),
-				label,
+				parameterLabel,
 				queryParamtersPosition
 		);
 		parameter.setHqlParameterSpecification( paramSpec );
 		parameterSpecs.add( paramSpec );
 
 		return parameter;
+	}
+
+	private QueryException generateMixedPositionalParamException() {
+		return new QueryException(
+				ParameterMetadataImpl.MIXED_POSITIONAL_PARAM_STYLE_ERROR_MSG,
+				queryTranslatorImpl.getQueryString()
+		);
 	}
 
 	@SuppressWarnings("unchecked")

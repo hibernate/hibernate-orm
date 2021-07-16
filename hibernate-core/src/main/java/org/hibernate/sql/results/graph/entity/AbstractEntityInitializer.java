@@ -667,15 +667,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			PersistenceContext persistenceContext) {
 		final EntityEntry entry = persistenceContext.getEntry( toInitialize );
 		if ( entry != null ) {
-			if ( entry.getStatus() != Status.LOADING ) {
-				final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
-						.getProcessingOptions()
-						.getEffectiveOptionalObject();
-				// If the instance to initialize is the main entity, we can't skip this
-				// This can happen if we initialize an enhanced proxy
-				if ( !isEntityReturn() || toInitialize != optionalEntityInstance ) {
-					return;
-				}
+			if ( skipInitialization( toInitialize, rowProcessingState, entry ) ) {
+				return;
 			}
 		}
 
@@ -861,6 +854,25 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.loadEntity( concreteDescriptor.getEntityName() );
 		}
+	}
+
+	protected boolean skipInitialization(
+			Object toInitialize,
+			RowProcessingState rowProcessingState,
+			EntityEntry entry) {
+		// If the instance to initialize is the main entity, we can't skip this
+		// This can happen if we initialize an enhanced proxy
+		if ( entry.getStatus() != Status.LOADING ) {
+			final Object optionalEntityInstance = rowProcessingState.getJdbcValuesSourceProcessingState()
+					.getProcessingOptions()
+					.getEffectiveOptionalObject();
+			// If the instance to initialize is the main entity, we can't skip this
+			// This can happen if we initialize an enhanced proxy
+			if ( !isEntityReturn() || toInitialize != optionalEntityInstance ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isReadOnly(

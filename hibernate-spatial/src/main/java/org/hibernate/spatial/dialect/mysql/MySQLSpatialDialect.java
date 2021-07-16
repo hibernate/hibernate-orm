@@ -133,4 +133,14 @@ public class MySQLSpatialDialect extends MySQLDialect implements SpatialDialect 
 		}
 	}
 
+	/**
+	 * This method is here to allow for access to the {@link #registerColumnType(int, String)} method to be accessed
+	 * through delegation by upstream classes.
+	 *
+	 * @param code The {@link java.sql.Types} typecode
+	 * @param name The database type name
+	 */
+	void registerColumnTypeDelegated(int code, String name) {
+		registerColumnType(code, name);
+	}
 }

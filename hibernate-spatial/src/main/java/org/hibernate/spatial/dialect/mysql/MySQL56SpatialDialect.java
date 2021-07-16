@@ -77,6 +77,18 @@ public class MySQL56SpatialDialect extends MySQL55Dialect implements SpatialDial
 	}
 
 	/**
+	 * This method calls {@link #registerColumnType(int, String)} on the {@link #dialectDelegate}.
+	 * This is necessary because the delegated design makes calling {@link #registerColumnType(int, String)} on this
+	 * class directly ineffective.
+	 *
+	 * @param code The {@link java.sql.Types} typecode
+	 * @param name The database type name
+	 */
+	protected void registerColumnTypeDelegated(int code, String name) {
+		dialectDelegate.registerColumnTypeDelegated(code, name);
+	}
+
+	/**
 	 * Allows the Dialect to contribute additional types
 	 *
 	 * @param typeContributions Callback to contribute the types

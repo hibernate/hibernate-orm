@@ -1471,7 +1471,7 @@ public class SessionImpl
 			if ( li.getSession() != this ) {
 				throw new TransientObjectException( "The proxy was not associated with this session" );
 			}
-			return li.getIdentifier();
+			return li.getInternalIdentifier();
 		}
 		else {
 			EntityEntry entry = persistenceContext.getEntry( object );
@@ -1499,7 +1499,7 @@ public class SessionImpl
 	}
 
 	private Object getProxyIdentifier(Object proxy) {
-		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getIdentifier();
+		return ( (HibernateProxy) proxy ).getHibernateLazyInitializer().getInternalIdentifier();
 	}
 
 	@Override

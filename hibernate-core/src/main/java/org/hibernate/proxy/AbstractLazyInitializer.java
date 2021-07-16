@@ -82,6 +82,11 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	@Override
+	public final Object getInternalIdentifier() {
+		return id;
+	}
+
+	@Override
 	public final Object getIdentifier() {
 		if ( isUninitialized() && isInitializeProxyWhenAccessingIdentifier() ) {
 			initialize();
@@ -90,7 +95,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	private boolean isInitializeProxyWhenAccessingIdentifier() {
-		return session != null && session.getFactory()
+		return getSession() != null && getSession().getFactory()
 				.getSessionFactoryOptions()
 				.getJpaCompliance().isJpaProxyComplianceEnabled();
 	}
@@ -256,7 +261,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	public final void initializeWithoutLoadIfPossible() {
 		if ( !initialized && session != null && session.isOpenOrWaitingForAutoClose() ) {
 			final EntityKey key = session.generateEntityKey(
-					getIdentifier(),
+					getInternalIdentifier(),
 					session.getFactory().getMetamodel().entityPersister( getEntityName() )
 			);
 			final Object entity = session.getPersistenceContextInternal().getEntity( key );
@@ -301,7 +306,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	private Object getProxyOrNull() {
-		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
+		final EntityKey entityKey = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
 		if ( entityKey != null && session != null && session.isOpenOrWaitingForAutoClose() ) {
 			return session.getPersistenceContextInternal().getProxy( entityKey );
 		}
@@ -322,7 +327,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 
 	@Override
 	public final Object getImplementation(SharedSessionContractImplementor s) throws HibernateException {
-		final EntityKey entityKey = generateEntityKeyOrNull( getIdentifier(), s, getEntityName() );
+		final EntityKey entityKey = generateEntityKeyOrNull( getInternalIdentifier(), s, getEntityName() );
 		return ( entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey ) );
 	}
 
@@ -372,7 +377,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 			}
 			this.readOnly = readOnly;
 			if ( initialized ) {
-				EntityKey key = generateEntityKeyOrNull( getIdentifier(), session, getEntityName() );
+				EntityKey key = generateEntityKeyOrNull( getInternalIdentifier(), session, getEntityName() );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 				if ( key != null && persistenceContext.containsEntity( key ) ) {
 					persistenceContext.setReadOnly( target, readOnly );

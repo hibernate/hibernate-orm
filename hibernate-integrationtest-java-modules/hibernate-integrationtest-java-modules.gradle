@@ -9,34 +9,10 @@ description = 'Integration tests for running Hibernate ORM in the Java module pa
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 
+// See https://docs.gradle.org/6.7.1/userguide/java_testing.html#blackbox_integration_testing
+// See https://docs.gradle.org/6.7.1/samples/sample_java_modules_multi_project_with_integration_tests.html
 java.modularity.inferModulePath = true
 
-// In this module, the "main" code is actually just test code that happens
-// to be built independently so as to generate a Java module.
-// So, let's override settings for compilation of the main code, just for this particular case.
-def testJavaVersions = gradle.ext.javaVersions.test
-tasks.compileJava {
-	if ( !gradle.ext.javaToolchainEnabled ) {
-		sourceCompatibility = JavaVersion.toVersion( testJavaVersions.release )
-		targetCompatibility = JavaVersion.toVersion( testJavaVersions.release )
-	}
-	else {
-		javaCompiler = javaToolchains.compilerFor {
-			languageVersion = testJavaVersions.compiler
-		}
-
-		// Remove JDK8-only options (if any) that are incompatible with options.release
-		for ( it = options.compilerArgs.listIterator(); it.hasNext(); ) {
-			if ( it.next() in ['-source', '-target'] ) {
-				it.remove()
-				it.next()
-				it.remove()
-			}
-		}
-
-		options.release = testJavaVersions.release.asInt()
-	}
-}
 
 // Checkstyle fails for module-info
 checkstyleMain.exclude '**/module-info.java'
@@ -44,6 +20,7 @@ checkstyleMain.exclude '**/module-info.java'
 dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )
+	api libraries.jpa
 	implementation libraries.jpa
 }
 

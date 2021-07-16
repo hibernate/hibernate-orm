@@ -28,6 +28,17 @@ public interface LazyInitializer {
 	 *
 	 * @return The identifier value.
 	 */
+	default Object getInternalIdentifier() {
+		return getIdentifier();
+	}
+
+	/**
+	 * Retrieve the identifier value for the entity our owning proxy represents.
+	 *
+	 * When JPA proxy compliance is enabled the proxy is initialized.
+	 *
+	 * @return The identifier value.
+	 */
 	Object getIdentifier();
 
 	/**

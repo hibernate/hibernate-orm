@@ -214,7 +214,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 			id = entity;
 		}
 		else if ( HibernateProxy.class.isInstance( entity ) ) {
-			id = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+			id = ( (HibernateProxy) entity ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 		else {
 			if ( idGetter == null ) {
@@ -451,7 +451,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 
 		if ( entity instanceof HibernateProxy ) {
 			// entity is a proxy, so we know it is not transient; just return ID from proxy
-			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getIdentifier();
+			return ( (HibernateProxy) entity ).getHibernateLazyInitializer().getInternalIdentifier();
 		}
 
 		if ( session != null ) {

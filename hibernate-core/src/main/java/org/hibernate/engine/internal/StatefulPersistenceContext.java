@@ -630,7 +630,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	private void reassociateProxy(LazyInitializer li, HibernateProxy proxy) {
 		if ( li.getSession() != this.getSession() ) {
 			final EntityPersister persister = session.getFactory().getMetamodel().entityPersister( li.getEntityName() );
-			final EntityKey key = session.generateEntityKey( li.getIdentifier(), persister );
+			final EntityKey key = session.generateEntityKey( li.getInternalIdentifier(), persister );
 		  	// any earlier proxy takes precedence
 			getOrInitializeProxiesByKey().putIfAbsent( key, proxy );
 			proxy.getHibernateLazyInitializer().setSession( session );
@@ -1338,7 +1338,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 							);
 						}
 						if ( found ) {
-							return proxy.getHibernateLazyInitializer().getIdentifier();
+							return proxy.getHibernateLazyInitializer().getInternalIdentifier();
 						}
 					}
 				}

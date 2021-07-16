@@ -15,7 +15,7 @@ import org.hibernate.boot.archive.scan.internal.StandardScanParameters;
 import org.hibernate.boot.archive.scan.internal.StandardScanner;
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
-import org.hibernate.orm.integrationtest.java.module.entity.Author;
+import org.hibernate.orm.integrationtest.java.module.test.entity.Author;
 
 import org.junit.Assert;
 import org.junit.Test;

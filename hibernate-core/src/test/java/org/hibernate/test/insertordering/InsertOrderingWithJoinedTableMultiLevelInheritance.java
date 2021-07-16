@@ -78,7 +78,7 @@ public class InsertOrderingWithJoinedTableMultiLevelInheritance extends BaseInse
 			clearBatches();
 		} );
 
-		verifyPreparedStatementCount( 17 );
+		verifyPreparedStatementCount( 10 );
 	}
 
 	@Override

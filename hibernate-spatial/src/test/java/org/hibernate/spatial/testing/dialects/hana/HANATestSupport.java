@@ -16,8 +16,9 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 public class HANATestSupport extends TestSupport {
 
+
 	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "hana/test-hana-data-set.xml" );
 	}
 

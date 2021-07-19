@@ -39,7 +39,8 @@ public class GeoDBTestSupport extends TestSupport {
 		}
 	}
 
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "h2geodb/test-geodb-data-set.xml" );
 	}
 

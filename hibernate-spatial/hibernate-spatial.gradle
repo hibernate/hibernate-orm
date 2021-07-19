@@ -19,7 +19,7 @@ dependencies {
 
     compile( libraries.postgresql )
 
-    testCompile(libraries.junit)
+
     testCompile(project(':hibernate-testing'))
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )    
     testCompile(libraries.validation)

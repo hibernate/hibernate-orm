@@ -18,17 +18,18 @@ import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisExpressionTemplate;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import junit.framework.TestCase;
 
 public class CockroachDBTestSupport extends TestSupport {
+
 	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
-		if ( ( testcaseClass == TestSpatialFunctions.class ) ||
-				( testcaseClass == TestJTSSpatialPredicates.class ) ||
-				( testcaseClass == TestGeolatteSpatialPredicates.class ) ) {
-			return TestData.fromFile( "cockroachdb/functions-test.xml" );
+	public TestData createTestData(TestDataPurpose purpose) {
+		switch ( purpose ) {
+			case SpatialFunctionsData:
+				return TestData.fromFile( "cockroachdb/functions-test.xml" );
+			default:
+				return TestData.fromFile( "cockroachdb/test-data-set.xml" );
 		}
-		return TestData.fromFile( "cockroachdb/test-data-set.xml" );
 	}
 
 	@Override

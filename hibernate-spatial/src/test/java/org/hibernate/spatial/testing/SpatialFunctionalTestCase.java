@@ -21,9 +21,9 @@ import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.integration.jts.JtsGeomEntity;
+import org.hibernate.spatial.testing.domain.GeomEntity;
+import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 
@@ -113,7 +113,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( getDialect() );
 			dataSourceUtils = support.createDataSourceUtil( serviceRegistry );
 			expectationsFactory = support.createExpectationsFactory( dataSourceUtils );
-			testData = support.createTestData( this );
+			testData = support.createTestData( TestSupport.TestDataPurpose.StoreRetrieveData );
 			geometryEquality = support.createGeometryEquality();
 		}
 		catch (Exception e) {
@@ -151,7 +151,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				org.hibernate.spatial.integration.geolatte.GeomEntity.class,
+				GeomEntity.class,
 				JtsGeomEntity.class
 		};
 	}
@@ -252,10 +252,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 
 	protected String entityName(String pckg) {
 		if ( JTS.equalsIgnoreCase( pckg ) ) {
-			return "org.hibernate.spatial.integration.jts.JtsGeomEntity";
+			return "org.hibernate.spatial.testing.domain.JtsGeomEntity";
 		}
 		else {
-			return "org.hibernate.spatial.integration.geolatte.GeomEntity";
+			return "org.hibernate.spatial.testing.domain.GeomEntity";
 		}
 	}
 

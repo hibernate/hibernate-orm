@@ -20,8 +20,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class SQLServerTestSupport extends TestSupport {
 
-
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "test-data-set.xml" );
 	}
 

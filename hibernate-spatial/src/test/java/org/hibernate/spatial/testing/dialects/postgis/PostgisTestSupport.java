@@ -26,14 +26,14 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class PostgisTestSupport extends TestSupport {
 
 
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
-		if ( testcaseClass == TestSpatialFunctions.class ||
-				testcaseClass == TestJTSSpatialPredicates.class ||
-				testcaseClass == TestGeolatteSpatialPredicates.class ) {
-			return TestData.fromFile( "postgis-functions-test.xml" );
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
+		switch ( purpose ) {
+			case SpatialFunctionsData:
+				return TestData.fromFile( "postgis-functions-test.xml" );
+			default:
+				return TestData.fromFile( "test-data-set.xml" );
 		}
-		return TestData.fromFile( "test-data-set.xml" );
 	}
 
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {

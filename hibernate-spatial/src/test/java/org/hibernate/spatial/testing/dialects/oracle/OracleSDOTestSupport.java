@@ -24,7 +24,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class OracleSDOTestSupport extends TestSupport {
 
 	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "oracle10g/test-sdo-geometry-data-set-2D.xml", new SDOTestDataReader() );
 	}
 

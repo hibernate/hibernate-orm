@@ -3,6 +3,34 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.4.Final (July 19, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31959
+
+** Bug
+    * [HHH-14730] - Failure during lazy loading of bytecode-enhancement proxy triggered by the loading of a collection with eager references to that proxy
+    * [HHH-14722] - InformationExtractorJdbcDatabaseMetaDataImpl#getCurrentSchema() method returns currentCatalog if schema == null
+    * [HHH-14720] - Aliases generated for mixed-case column names that end in a number are not all lower-case
+    * [HHH-14719] - Hibernate has a dependency on apache-derby:10.11.1.1 that is vulnerable to CVE-2015-1832 with a CVSS of 9.1 and CVE-2018-1313 with a CVSS of 5.3
+    * [HHH-14715] - Hibernate has a dependency to maven-core:3.0.5 that is vulnerable to CVE-2021-26291 with a CVSS of 9.1
+    * [HHH-14608] - Merge causes StackOverflow when JPA proxy compliance is enabled
+
+** Improvement
+    * [HHH-14734] - No good reason tu use TypeCache(s) with WithInlineExpunction in ByteBuddy proxy generation
+    * [HHH-14733] - Not useful to clear the bycodeprovider caches on  sessionFactoryClosing
+    * [HHH-14732] - ProxyDefinitionHelpers are immutable and can be declared  static
+    * [HHH-14731] - Simplify SPI ProxyFactoryFactory#buildBasicProxyFactory to accept a single class or interface only
+    * [HHH-14728] - Include CamelCaseToUnderscoresNamingStrategy from Spring Boot
+    * [HHH-14727] - Minor code cleanup in StandardSQLExceptionConverter
+    * [HHH-14706] - Improve error message on incompatible types due to mismatched classloader
+    * [HHH-14688] - Get IdentifierGenerator from BeanContainer if not registered
+
+** Task
+    * [HHH-14709] - Upgrade to Gradle 6.7.1 and move to Gradle's built-in way of testing Java modules
+    * [HHH-14707] - Upgrade to Byte Buddy 1.11.8
+
+
 Changes in 5.5.3.Final (June 22, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

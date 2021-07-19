@@ -5,6 +5,16 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven {
+            name = 'localPluginRepository'
+            url = uri( "${gradle.gradleUserHomeDir}/tmp/plugins" )
+        }
+    }
+}
+
 plugins {
     id 'com.gradle.enterprise' version '3.6.1'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.4.2'

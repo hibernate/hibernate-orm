@@ -192,22 +192,22 @@ idea {
 }
 
 xjc {
-    outputDir = project.jaxbTargetDir
+    outputDirectory = project.jaxbTargetDir
 
     schemas {
         cfg {
-            xsd = file( 'src/main/resources/org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd' )
-            xjcBinding = file( 'src/main/xjb/hbm-configuration-bindings.xjb' )
+            xsdFile = 'src/main/resources/org/hibernate/xsd/cfg/legacy-configuration-4.0.xsd'
+            xjcBindingFile = 'src/main/xjb/hbm-configuration-bindings.xjb'
         }
         hbm {
-            xsd = file( 'src/main/resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd' )
-            xjcBinding = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
-            xjcExtensions = ['inheritance', 'simplify']
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd' )
+            xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
+            xjcExtensions += ['inheritance', 'simplify']
         }
         mapping {
-            xsd = file( 'src/main/resources/org/hibernate/jpa/orm_2_2.xsd' )
-            xjcBinding = file( 'src/main/xjb/mapping-bindings.xjb' )
-            xjcExtensions = ['inheritance']
+            xsdFile = file( 'src/main/resources/org/hibernate/jpa/orm_2_2.xsd' )
+            xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )
+            xjcExtensions += ['inheritance']
         }
     }
 }

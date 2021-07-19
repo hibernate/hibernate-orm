@@ -838,8 +838,9 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitLikePredicate(SqmLikePredicate predicate) {
+		final String likeType = predicate.isCaseSensitive() ? "like" : "ilike";
 		processStanza(
-				predicate.isNegated() ? "is-not-like" : "is-like",
+				( predicate.isNegated() ? "is-not-" : "is-" ) + likeType,
 				() -> {
 					predicate.getPattern().accept( this );
 					predicate.getMatchExpression().accept( this );

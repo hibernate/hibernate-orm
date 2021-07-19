@@ -33,7 +33,6 @@ import javax.persistence.criteria.Subquery;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
@@ -621,6 +620,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	JpaPredicate like(Expression<String> x, String pattern, char escapeChar);
 
+	JpaPredicate ilike(Expression<String> x, Expression<String> pattern);
+
+	JpaPredicate ilike(Expression<String> x, String pattern);
+
+	JpaPredicate ilike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar);
+
+	JpaPredicate ilike(Expression<String> x, Expression<String> pattern, char escapeChar);
+
+	JpaPredicate ilike(Expression<String> x, String pattern, Expression<Character> escapeChar);
+
+	JpaPredicate ilike(Expression<String> x, String pattern, char escapeChar);
+
 	@Override
 	JpaPredicate notLike(Expression<String> x, Expression<String> pattern);
 
@@ -638,6 +649,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaPredicate notLike(Expression<String> x, String pattern, char escapeChar);
+
+	JpaPredicate notIlike(Expression<String> x, Expression<String> pattern);
+
+	JpaPredicate notIlike(Expression<String> x, String pattern);
+
+	JpaPredicate notIlike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar);
+
+	JpaPredicate notIlike(Expression<String> x, Expression<String> pattern, char escapeChar);
+
+	JpaPredicate notIlike(Expression<String> x, String pattern, Expression<Character> escapeChar);
+
+	JpaPredicate notIlike(Expression<String> x, String pattern, char escapeChar);
 
 	@Override
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression);

@@ -4562,15 +4562,60 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitLikePredicate(LikePredicate likePredicate) {
-		likePredicate.getMatchExpression().accept( this );
-		if ( likePredicate.isNegated() ) {
-			appendSql( " not" );
+		if ( likePredicate.isCaseSensitive() ) {
+
+			likePredicate.getMatchExpression().accept( this );
+			if ( likePredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " like " );
+			likePredicate.getPattern().accept( this );
+			if ( likePredicate.getEscapeCharacter() != null ) {
+				appendSql( " escape " );
+				likePredicate.getEscapeCharacter().accept( this );
+			}
+
 		}
+		else {
+			if (dialect.supportsCaseInsensitiveLike()) {
+
+				likePredicate.getMatchExpression().accept( this );
+				if ( likePredicate.isNegated() ) {
+					appendSql( " not" );
+				}
+				appendSql( " " );
+				appendSql( dialect.getCaseInsensitiveLike() );
+				appendSql( " " );
+				likePredicate.getPattern().accept( this );
+				if ( likePredicate.getEscapeCharacter() != null ) {
+					appendSql( " escape " );
+					likePredicate.getEscapeCharacter().accept( this );
+				}
+
+			}
+			else {
+				renderCaseInsensitiveLikeEmulation(likePredicate.getMatchExpression(), likePredicate.getPattern(), likePredicate.getEscapeCharacter(), likePredicate.isNegated());
+			}
+
+		}
+	}
+
+	protected void renderCaseInsensitiveLikeEmulation(Expression lhs, Expression rhs, Expression escapeCharacter, boolean negated) {
+		//LOWER(lhs) operator LOWER(rhs)
+		appendSql( " " );
+		appendSql( dialect.getLowercaseFunction() );
+		appendSql( "( ");
+		lhs.accept( this );
+		appendSql( " )" );
+		appendSql( negated ? " not" : "" );
 		appendSql( " like " );
-		likePredicate.getPattern().accept( this );
-		if ( likePredicate.getEscapeCharacter() != null ) {
+		appendSql( dialect.getLowercaseFunction() );
+		appendSql( "( " );
+		rhs.accept( this );
+		appendSql( " ) " );
+		if ( escapeCharacter != null ) {
 			appendSql( " escape " );
-			likePredicate.getEscapeCharacter().accept( this );
+			escapeCharacter.accept( this );
 		}
 	}
 

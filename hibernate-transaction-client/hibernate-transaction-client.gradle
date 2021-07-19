@@ -38,6 +38,9 @@ tasks.test.enabled = false
 tasks.jar.enabled = false
 
 task jakartafyDependency(type: JakartaJarTransformation) {
-	sourceJar = project.configurations.wildFlyTxnClient.resolvedConfiguration.resolvedArtifacts.find().file
+	sourceJar = project.provider({
+		project.configurations.wildFlyTxnClient.resolvedConfiguration.resolvedArtifacts.find().file
+	})
+
 	targetJar = tasks.jar.archiveFile
 }

@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.TaskAction;
@@ -21,6 +22,7 @@ import static org.hibernate.orm.jakarta.JakartaPlugin.JAKARTA;
 /**
  * @author Steve Ebersole
  */
+@CacheableTask
 public abstract class JakartaDirectoryTransformation extends DefaultTask {
 	private final DirectoryProperty sourceDirectory;
 	private final DirectoryProperty targetDirectory;

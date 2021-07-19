@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -20,6 +21,7 @@ import static org.hibernate.orm.jakarta.JakartaPlugin.JAKARTA;
 /**
  * @author Steve Ebersole
  */
+@CacheableTask
 public abstract class JakartaJarTransformation extends DefaultTask {
 	private final RegularFileProperty sourceJar;
 	private final RegularFileProperty targetJar;

@@ -12,7 +12,8 @@ import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 
-import org.jboss.logging.Logger;
+import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import org.hibernate.cfg.Environment;
@@ -92,6 +93,10 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB do not support FK violation checking"
+	)
 	public void testConstraintViolationException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

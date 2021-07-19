@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.dialect.TiDBDialect;
 import org.junit.Test;
 
 import org.hibernate.Hibernate;
@@ -37,6 +38,10 @@ import static org.junit.Assert.fail;
  * @author Gavin King
  */
 @RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
+@SkipForDialect(
+		value = TiDBDialect.class,
+		comment = "TiDB do not support FK violation checking"
+)
 public class MergeTest extends AbstractOperationTestCase {
 	@Test
 	public void testMergeStaleVersionFails() throws Exception {

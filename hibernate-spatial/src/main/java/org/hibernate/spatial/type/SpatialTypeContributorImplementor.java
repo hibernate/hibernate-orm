@@ -7,5 +7,23 @@
 
 package org.hibernate.spatial.type;
 
-public interface SpatialTypeContributorImplementor {
+import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.service.ServiceRegistry;
+
+/**
+ * Internal contract for TypeContributor
+ */
+abstract class SpatialTypeContributorImplementor {
+	private final ServiceRegistry serviceRegistryegistry;
+
+	SpatialTypeContributorImplementor(ServiceRegistry serviceRegistry) {
+		this.serviceRegistryegistry = serviceRegistry;
+	}
+
+	abstract void contribute(TypeContributions typeContributions);
+
+
+	ServiceRegistry getServiceRegistryegistry() {
+		return serviceRegistryegistry;
+	}
 }

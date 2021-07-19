@@ -111,6 +111,8 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGNVARCHAR, "text" );
 
+		registerColumnType( 5432, "geometry" );
+
 		if ( getVersion() >= 820 ) {
 			registerColumnType( PostgresUUIDType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode(), "uuid" );
 

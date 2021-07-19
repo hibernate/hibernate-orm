@@ -8,6 +8,7 @@
 package org.hibernate.spatial;
 
 import org.jboss.logging.BasicLogger;
+import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
 import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
@@ -23,6 +24,14 @@ import static org.jboss.logging.Logger.Level.INFO;
 @MessageLogger(projectCode = "HHH")
 @ValidIdRange(min = 80000001, max = 80001000)
 public interface HSMessageLogger extends BasicLogger {
+
+	String LOGGER_NAME = "org.hibernate.spatial";
+
+	HSMessageLogger LOGGER = Logger.getMessageLogger( HSMessageLogger.class, LOGGER_NAME );
+
+	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
+	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
+
 	@LogMessage(level = INFO)
 	@Message(value = "hibernate-spatial integration enabled : %s", id = 80000001)
 	void spatialEnabled(boolean enabled);
@@ -30,5 +39,9 @@ public interface HSMessageLogger extends BasicLogger {
 	@LogMessage(level = INFO)
 	@Message(value = "hibernate-spatial using Connection Finder for creating Oracle types : %s", id = 80000002)
 	void connectionFinder(String className);
+
+	@LogMessage(level = INFO) //maybe should be DEBUG?
+	@Message(value = "hibernate-spatial using type contributions from : %s", id = 80000003)
+	void typeContributions(String source);
 
 }

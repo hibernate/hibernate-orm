@@ -20,13 +20,15 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class DB2TestSupport extends TestSupport {
 
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		if ( "org.hibernate.spatial.integration.TestSpatialFunctions".equals(
-				testcase.getClass().getCanonicalName() ) ) {
-			return TestData.fromFile( "db2/test-db2nozm-only-polygon.xml" );
+	public TestData createTestData(TestDataPurpose purpose) {
+		switch ( purpose ) {
+			case SpatialFunctionsData:
+				return TestData.fromFile( "db2/test-db2nozm-only-polygon.xml" );
+			default:
+				return TestData.fromFile( "db2/test-db2nozm-data-set.xml" );
 		}
-		return TestData.fromFile( "db2/test-db2nozm-data-set.xml" );
 	}
+
 
 	public DB2ExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
 		return new DB2ExpectationsFactory( dataSourceUtils );

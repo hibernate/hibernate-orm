@@ -16,10 +16,10 @@ import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 public class MariaDBTestSupport extends TestSupport  {
-	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		return TestData.fromFile( "mariadb/test-mariadb-functions-data-set.xml" );
 
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
+		return TestData.fromFile( "mariadb/test-mariadb-functions-data-set.xml" );
 	}
 
 	@Override

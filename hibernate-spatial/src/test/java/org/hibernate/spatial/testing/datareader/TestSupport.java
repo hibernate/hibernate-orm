@@ -23,13 +23,20 @@ import org.hibernate.spatial.testing.JTSGeometryEquality;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import junit.framework.TestCase;
 
 
 /**
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
+@Deprecated
 public abstract class TestSupport {
+
+	public enum TestDataPurpose {
+		SpatialFunctionsData,
+		StoreRetrieveData
+	}
 
 	protected ConfigurationService configurationService;
 
@@ -42,7 +49,7 @@ public abstract class TestSupport {
 		return new JTSGeometryEquality();
 	}
 
-	public abstract TestData createTestData(BaseCoreFunctionalTestCase testcase);
+	public abstract TestData createTestData(TestDataPurpose purpose);
 
 	public abstract AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils);
 

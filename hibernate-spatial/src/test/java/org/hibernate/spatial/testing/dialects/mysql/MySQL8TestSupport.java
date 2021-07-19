@@ -19,9 +19,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class MySQL8TestSupport extends MySQLTestSupport {
 
 	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "mysql/test-mysql8-functions-data-set.xml" );
 	}
+
 
 	@Override
 	public SQLExpressionTemplate getSQLExpressionTemplate() {

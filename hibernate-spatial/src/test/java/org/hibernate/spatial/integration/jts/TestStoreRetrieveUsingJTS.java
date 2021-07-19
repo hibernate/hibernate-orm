@@ -13,6 +13,7 @@ import org.hibernate.spatial.testing.GeometryEquality;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
+import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 
 import org.hibernate.testing.Skip;
 

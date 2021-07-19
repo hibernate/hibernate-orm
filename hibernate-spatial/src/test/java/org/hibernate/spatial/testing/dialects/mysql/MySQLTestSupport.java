@@ -16,6 +16,7 @@ import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import junit.framework.TestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -23,11 +24,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class MySQLTestSupport extends TestSupport {
 
-	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		return TestData.fromFile( "mysql/test-mysql-functions-data-set.xml" );
 
-	}
 
 	@Override
 	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
@@ -37,6 +34,11 @@ public class MySQLTestSupport extends TestSupport {
 	@Override
 	public JTSGeometryEquality createGeometryEquality() {
 		return new MySQLGeometryEquality();
+	}
+
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
+		return TestData.fromFile( "mysql/test-mysql-functions-data-set.xml" );
 	}
 
 	@Override

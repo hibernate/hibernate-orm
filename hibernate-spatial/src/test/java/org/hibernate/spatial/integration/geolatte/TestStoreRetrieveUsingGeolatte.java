@@ -13,6 +13,7 @@ import org.hibernate.spatial.testing.GeolatteGeometryEquality;
 import org.hibernate.spatial.testing.GeometryEquality;
 import org.hibernate.spatial.testing.SpatialDialectMatcher;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
+import org.hibernate.spatial.testing.domain.GeomEntity;
 
 import org.hibernate.testing.Skip;
 
@@ -25,7 +26,7 @@ import org.geolatte.geom.codec.WktDecodeException;
  * This testsuite-suite class verifies whether the <code>Geometry</code>s retrieved
  * are equal to the <code>Geometry</code>s stored.
  */
-@Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
+
 public class TestStoreRetrieveUsingGeolatte extends AbstractTestStoreRetrieve<Geometry, GeomEntity> {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(

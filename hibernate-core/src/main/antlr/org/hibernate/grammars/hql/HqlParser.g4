@@ -399,7 +399,7 @@ predicate
 	| expression IS (NOT)? EMPTY							# IsEmptyPredicate
 	| expression (NOT)? IN inList							# InPredicate
 	| expression (NOT)? BETWEEN expression AND expression	# BetweenPredicate
-	| expression (NOT)? LIKE expression (likeEscape)?		# LikePredicate
+	| expression (NOT)? (LIKE | ILIKE) expression (likeEscape)?		# LikePredicate
 	| expression comparisonOperator expression				# ComparisonPredicate
 	| EXISTS expression										# ExistsPredicate
 	| expression (NOT)? MEMBER OF path						# MemberOfPredicate
@@ -1167,6 +1167,7 @@ identifier
 	| HOUR
 	| ID
 	| IFNULL
+	| ILIKE
 	| IN
 	| INDEX
 	| INNER

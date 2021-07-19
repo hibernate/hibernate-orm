@@ -1795,6 +1795,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(SqmExpression) expressionContexts.get( 1 ).accept( this ),
 					(SqmExpression) ctx.likeEscape().expression().accept( this ),
 					ctx.NOT() != null,
+					ctx.ILIKE() == null,
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1803,6 +1804,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(SqmExpression) expressionContexts.get( 0 ).accept( this ),
 					(SqmExpression) expressionContexts.get( 1 ).accept( this ),
 					ctx.NOT() != null,
+					ctx.ILIKE() == null,
 					creationContext.getNodeBuilder()
 			);
 		}

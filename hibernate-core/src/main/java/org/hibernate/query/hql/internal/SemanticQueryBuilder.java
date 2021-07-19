@@ -1972,12 +1972,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitLikePredicate(HqlParser.LikePredicateContext ctx) {
 		final boolean negated = ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.NOT;
 		final int startIndex = negated ? 3 : 2;
+		final boolean caseSensitive = ( (TerminalNode) ctx.getChild( negated ? 2 : 1 ) ).getSymbol()
+				.getType() == HqlParser.LIKE;
 		if ( ctx.getChildCount() == startIndex + 2 ) {
 			return new SqmLikePredicate(
 					(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
 					(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
 					(SqmExpression<?>) ctx.getChild( startIndex + 1 ).getChild( 1 ).accept( this ),
 					negated,
+					caseSensitive,
 					creationContext.getNodeBuilder()
 			);
 		}
@@ -1986,6 +1989,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
 					(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
 					negated,
+					caseSensitive,
 					creationContext.getNodeBuilder()
 			);
 		}

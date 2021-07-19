@@ -212,6 +212,7 @@ LEAST				: [lL] [eE] [aA] [sS] [tT];
 LEFT				: [lL] [eE] [fF] [tT];
 LENGTH				: [lL] [eE] [nN] [gG] [tT] [hH];
 LIKE				: [lL] [iI] [kK] [eE];
+ILIKE				: [iI] [lL] [iI] [kK] [eE];
 LIMIT				: [lL] [iI] [mM] [iI] [tT];
 LIST				: [lL] [iI] [sS] [tT];
 LN  				: [lL] [nN];

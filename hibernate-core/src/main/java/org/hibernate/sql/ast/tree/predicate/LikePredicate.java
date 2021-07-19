@@ -17,6 +17,7 @@ public class LikePredicate implements Predicate {
 	private final Expression pattern;
 	private final Expression escapeCharacter;
 	private final boolean negated;
+	private final boolean isCaseSensitive;
 
 	public LikePredicate(
 			Expression matchExpression,
@@ -28,11 +29,22 @@ public class LikePredicate implements Predicate {
 	public LikePredicate(
 			Expression matchExpression,
 			Expression pattern,
-			Expression escapeCharacter, boolean negated) {
+			Expression escapeCharacter,
+			boolean negated) {
+		this( matchExpression, pattern, escapeCharacter, negated, true );
+	}
+
+	public LikePredicate(
+			Expression matchExpression,
+			Expression pattern,
+			Expression escapeCharacter,
+			boolean negated,
+			boolean isCaseSensitive) {
 		this.matchExpression = matchExpression;
 		this.pattern = pattern;
 		this.escapeCharacter = escapeCharacter;
 		this.negated = negated;
+		this.isCaseSensitive = isCaseSensitive;
 	}
 
 	public LikePredicate(Expression matchExpression, Expression pattern) {
@@ -53,6 +65,10 @@ public class LikePredicate implements Predicate {
 
 	public boolean isNegated() {
 		return negated;
+	}
+
+	public boolean isCaseSensitive() {
+		return isCaseSensitive;
 	}
 
 	@Override

@@ -4468,7 +4468,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				(Expression) predicate.getMatchExpression().accept( this ),
 				(Expression) predicate.getPattern().accept( this ),
 				escapeExpression,
-				predicate.isNegated()
+				predicate.isNegated(),
+				predicate.isCaseSensitive()
 		);
 	}
 

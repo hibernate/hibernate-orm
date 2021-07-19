@@ -1971,6 +1971,79 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	}
 
 	@Override
+	public SqmPredicate ilike(Expression<String> searchString, Expression<String> pattern) {
+		return new SqmLikePredicate(
+				(SqmExpression) searchString,
+				(SqmExpression) pattern,
+				false,
+				false,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate ilike(Expression<String> searchString, String pattern) {
+		return new SqmLikePredicate(
+				(SqmExpression) searchString,
+				value( pattern, (SqmExpression) searchString ),
+				false,
+				false,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate ilike(
+			Expression<String> searchString,
+			Expression<String> pattern,
+			Expression<Character> escapeChar) {
+		return new SqmLikePredicate(
+				(SqmExpression) searchString,
+				(SqmExpression) pattern,
+				(SqmExpression) escapeChar,
+				false,
+				false,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate ilike(Expression<String> searchString, Expression<String> pattern, char escapeChar) {
+		return new SqmLikePredicate(
+				(SqmExpression) searchString,
+				(SqmExpression) pattern,
+				literal( escapeChar ),
+				false,
+				false,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate ilike(Expression<String> searchString, String pattern, Expression<Character> escapeChar) {
+		return new SqmLikePredicate(
+				(SqmExpression) searchString,
+				value( pattern, (SqmExpression) searchString ),
+				(SqmExpression) escapeChar,
+				false,
+				false,
+				this
+		);
+	}
+
+	@Override
+	public SqmPredicate ilike(Expression<String> searchString, String pattern, char escapeChar) {
+		return new SqmLikePredicate(
+				(SqmExpression) searchString,
+				value( pattern, (SqmExpression) searchString ),
+				literal( escapeChar ),
+				false,
+				false,
+				this
+		);
+	}
+
+	@Override
 	public SqmPredicate notLike(Expression<String> x, Expression<String> pattern) {
 		return not( like( x, pattern ) );
 	}
@@ -1998,6 +2071,36 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 	@Override
 	public SqmPredicate notLike(Expression<String> x, String pattern, char escapeChar) {
 		return not( like( x, pattern, escapeChar ) );
+	}
+
+	@Override
+	public SqmPredicate notIlike(Expression<String> x, Expression<String> pattern) {
+		return not( ilike( x, pattern ) );
+	}
+
+	@Override
+	public SqmPredicate notIlike(Expression<String> x, String pattern) {
+		return not( ilike( x, pattern ) );
+	}
+
+	@Override
+	public SqmPredicate notIlike(Expression<String> x, Expression<String> pattern, Expression<Character> escapeChar) {
+		return not( ilike( x, pattern, escapeChar ) );
+	}
+
+	@Override
+	public SqmPredicate notIlike(Expression<String> x, Expression<String> pattern, char escapeChar) {
+		return not( ilike( x, pattern, escapeChar ) );
+	}
+
+	@Override
+	public SqmPredicate notIlike(Expression<String> x, String pattern, Expression<Character> escapeChar) {
+		return not( ilike( x, pattern, escapeChar ) );
+	}
+
+	@Override
+	public SqmPredicate notIlike(Expression<String> x, String pattern, char escapeChar) {
+		return not( ilike( x, pattern, escapeChar ) );
 	}
 
 	@Override

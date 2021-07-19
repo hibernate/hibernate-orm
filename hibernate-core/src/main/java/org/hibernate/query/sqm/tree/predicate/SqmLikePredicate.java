@@ -17,6 +17,7 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 	private final SqmExpression<?> matchExpression;
 	private final SqmExpression<?> pattern;
 	private final SqmExpression<?> escapeCharacter;
+	private final boolean isCaseSensitive;
 
 	public SqmLikePredicate(
 			SqmExpression<?> matchExpression,
@@ -26,17 +27,27 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 		this( matchExpression, pattern, escapeCharacter, false, nodeBuilder );
 	}
 
-	@SuppressWarnings("WeakerAccess")
 	public SqmLikePredicate(
 			SqmExpression<?> matchExpression,
 			SqmExpression<?> pattern,
 			SqmExpression<?> escapeCharacter,
 			boolean negated,
 			NodeBuilder nodeBuilder) {
+		this( matchExpression, pattern, escapeCharacter, negated, true, nodeBuilder );
+	}
+
+	public SqmLikePredicate(
+			SqmExpression<?> matchExpression,
+			SqmExpression<?> pattern,
+			SqmExpression<?> escapeCharacter,
+			boolean negated,
+			boolean isCaseSensitive,
+			NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.matchExpression = matchExpression;
 		this.pattern = pattern;
 		this.escapeCharacter = escapeCharacter;
+		this.isCaseSensitive = isCaseSensitive;
 	}
 
 	public SqmLikePredicate(
@@ -50,8 +61,9 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 			SqmExpression<?> matchExpression,
 			SqmExpression<?> pattern,
 			boolean negated,
+			boolean isCaseSensitive,
 			NodeBuilder nodeBuilder) {
-		this( matchExpression, pattern, null, negated, nodeBuilder );
+		this( matchExpression, pattern, null, negated, isCaseSensitive, nodeBuilder );
 	}
 
 	public SqmExpression<?> getMatchExpression() {
@@ -64,6 +76,10 @@ public class SqmLikePredicate extends AbstractNegatableSqmPredicate {
 
 	public SqmExpression<?> getEscapeCharacter() {
 		return escapeCharacter;
+	}
+
+	public boolean isCaseSensitive() {
+		return isCaseSensitive;
 	}
 
 	@Override

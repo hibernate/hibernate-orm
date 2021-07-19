@@ -148,7 +148,7 @@ ext {
                         'connection.init_sql' : ''
                 ],
                 postgis : [
-                        'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect',
+                        'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
                         'jdbc.driver': 'org.postgresql.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',

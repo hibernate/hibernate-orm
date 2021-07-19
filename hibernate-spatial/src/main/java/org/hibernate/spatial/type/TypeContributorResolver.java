@@ -7,5 +7,23 @@
 
 package org.hibernate.spatial.type;
 
-public class TypeContributorResolver {
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.service.ServiceRegistry;
+
+class TypeContributorResolver {
+
+	private TypeContributorResolver() {
+	}
+
+	static SpatialTypeContributorImplementor resolve(ServiceRegistry serviceRegistry) {
+		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+		Dialect dialect = jdbcServices.getDialect();
+		if ( dialect.getClass().isAssignableFrom( PostgreSQLDialect.class ) ) {
+			return new PostgreSQLDialectTypeContributor( serviceRegistry );
+		}
+		return null;
+	}
+
 }

@@ -127,6 +127,11 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 				getProcessingOptions()
 		);
 
+		getRowProcessingState().finishRowProcessing();
+		getJdbcValuesSourceProcessingState().finishUp();
+
+		getRowProcessingState().getSession().getPersistenceContext().initializeNonLazyCollections();
+
 		afterScrollOperation();
 	}
 

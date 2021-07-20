@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
@@ -47,10 +48,10 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		return new SelfRenderingAggregateFunctionSqlAstExpression(
 				getFunctionName(),
 				getRenderingSupport(),
-				resolveSqlAstArguments( getArguments(), walker ),
+				resolveSqlAstArguments( getArguments(), (BaseSqmToSqlAstConverter) walker ),
 				filter == null ? null : (Predicate) filter.accept( walker ),
 				resultType,
-				getMappingModelExpressable( walker, resultType )
+				getMappingModelExpressable( (BaseSqmToSqlAstConverter) walker, resultType )
 		);
 	}
 

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -48,6 +49,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -555,7 +557,26 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		visitAttributeMappings(
+				attributeMapping -> attributeMapping.applySqlSelections( navigablePath, tableGroup, creationState )
+		);
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		visitAttributeMappings(
+				attributeMapping ->
+						ManagedMappingType.super.applySqlSelections(
+								navigablePath,
+								tableGroup,
+								creationState,
+								selectionConsumer
+						)
+		);
 	}
 
 	@Override

@@ -367,4 +367,9 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class DoesRepeatableReadNotCauseReadersToBlockWritersCheck implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return ! dialect.doesRepeatableReadCauseReadersToBlockWriters();
+		}
+	}
 }

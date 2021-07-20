@@ -357,8 +357,12 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			catch (SQLException ignore) {
 				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
 			}
+			catch (AbstractMethodError error) {
+				// The jTDS driver doesn't implement the getSchema()
+				return null;
+			}
 		}
-		return currentCatalog;
+		return currentSchema;
 	}
 
 	private Identifier getCurrentCatalog(JdbcEnvironment jdbcEnvironment) {
@@ -417,6 +421,11 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 			catch (SQLException ignore) {
 				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
 			}
+			catch (AbstractMethodError error) {
+				// The jTDS driver doesn't implement the getSchema()
+				log.debug( "The jTDS driver doesn't implement the getSchema() method" );
+				return null;
+			}
 		}
 		return currentSchemaFilter;
 	}
@@ -438,7 +447,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						catalogFilter = toMetaDataObjectName( extractionContext.getDefaultCatalog() );
 					}
 					else {
-						catalogFilter = "";
+						// 3) look in all namespaces
+						catalogFilter = null;
 					}
 				}
 			}
@@ -457,7 +467,8 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 						schemaFilter = toMetaDataObjectName( extractionContext.getDefaultSchema() );
 					}
 					else {
-						schemaFilter = "";
+						// 3) look in all namespaces
+						schemaFilter = null;
 					}
 				}
 			}

@@ -26,12 +26,13 @@ import org.hibernate.tool.schema.extract.spi.TableInformation;
 import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.spi.ContributableMatcher;
 import org.hibernate.tool.schema.spi.ExecutionOptions;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import static java.util.Collections.singletonList;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
 import static org.hibernate.boot.model.naming.Identifier.toIdentifier;
-import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 

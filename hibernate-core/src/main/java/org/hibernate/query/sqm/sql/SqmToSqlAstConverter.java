@@ -6,10 +6,14 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import java.util.List;
+
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * Specialized SemanticQueryWalker (SQM visitor) for producing SQL AST.
@@ -18,4 +22,7 @@ import org.hibernate.sql.ast.Clause;
  */
 public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAstCreationState {
 	Stack<Clause> getCurrentClauseStack();
+
+	List<Expression> expandSelfRenderingFunctionMultiValueParameter(SqmParameter sqmParameter);
+
 }

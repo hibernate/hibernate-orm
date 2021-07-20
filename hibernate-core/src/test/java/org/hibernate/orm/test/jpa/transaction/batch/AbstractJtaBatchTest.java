@@ -22,32 +22,32 @@ import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.boot.spi.ProviderChecker;
 
 import org.hibernate.testing.jta.JtaAwareConnectionProviderImpl;
-import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
-import org.hibernate.testing.orm.logger.Inspector;
-import org.hibernate.testing.orm.logger.LogInspector;
 import org.hibernate.testing.orm.logger.LoggerInspectionExtension;
-
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.hamcrest.core.Is.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andrea Boriero
  */
-@ExtendWith(LoggerInspectionExtension.class)
 public abstract class AbstractJtaBatchTest {
 
 	protected Triggerable triggerable;
 
+	@RegisterExtension
+	public LoggerInspectionExtension logger = LoggerInspectionExtension
+			.builder().setLogger(
+					HEMLogging.messageLogger( ProviderChecker.class.getName() )
+			).build();
+
 	@BeforeEach
-	public void setUp(@LogInspector Inspector logInspector) {
-		logInspector.init( HEMLogging.messageLogger( ProviderChecker.class.getName() ) );
-		triggerable = logInspector.watchForLogMessages(
+	public void setUp() {
+		triggerable = logger.watchForLogMessages(
 				"HHH000352: Unable to release batch statement..." );
 		triggerable.reset();
 	}

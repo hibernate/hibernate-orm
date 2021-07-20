@@ -72,41 +72,31 @@ task assembleDocumentation(type: Copy) {
     group 'Release'
     description 'Assembles all documentation into the {buildDir}/documentation directory'
 
-    dependsOn rootProject.project( 'documentation' ).tasks.buildDocsForPublishing
+    dependsOn ':documentation:buildDocsForPublishing'
 
     // copy documentation outputs into target/documentation.
     // 		* this is used in building the dist bundles
     //		* it is also used as a base to build a staged directory for documentation upload
 
     // Integrations Guide
-    copy {
-        from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/integrationguide"
-        into "${documentationDir}/integrationguide"
-    }
+    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/integrationguide"
+    into "${documentationDir}/integrationguide"
 
     // Getting-started Guide
-    copy {
-        from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/quickstart"
-        into "${documentationDir}/quickstart"
-    }
+    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/quickstart"
+    into "${documentationDir}/quickstart"
 
     // Topical Guide
-    copy {
-        from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/topical"
-        into "${documentationDir}/topical"
-    }
+    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/topical"
+    into "${documentationDir}/topical"
 
     // User Guide
-    copy {
-        from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/userguide"
-        into "${documentationDir}/userguide"
-    }
+    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/userguide"
+    into "${documentationDir}/userguide"
 
     // Aggregated JavaDoc
-    copy {
-        from "${rootProject.project( 'documentation' ).buildDir}/javadocs"
-        into "${documentationDir}/javadocs"
-    }
+    from "${rootProject.project( 'documentation' ).buildDir}/javadocs"
+    into "${documentationDir}/javadocs"
 }
 
 //task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {

@@ -53,6 +53,15 @@ public interface CollectionPart extends ModelPart, Fetchable {
 
 			return null;
 		}
+
+		public static Nature fromNameStrictly(String name) {
+			for ( Nature nature : Nature.values() ) {
+				if ( nature.getName().equals( name ) ) {
+					return nature;
+				}
+			}
+			return null;
+		}
 	}
 
 	Nature getNature();

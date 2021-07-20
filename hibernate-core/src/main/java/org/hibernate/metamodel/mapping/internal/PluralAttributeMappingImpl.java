@@ -249,7 +249,7 @@ public class PluralAttributeMappingImpl
 				.getDialect();
 		if ( collectionDescriptor.getElementType() instanceof EntityType ) {
 			creationProcess.registerForeignKeyPostInitCallbacks(
-					"To-many key - " + getNavigableRole(),
+					"Element key - " + getNavigableRole(),
 					() -> {
 						elementFkDescriptor = createForeignKeyDescriptor(
 								bootDescriptor.getElement(),
@@ -263,7 +263,7 @@ public class PluralAttributeMappingImpl
 		}
 		if ( collectionDescriptor.getIndexType() instanceof EntityType ) {
 			creationProcess.registerForeignKeyPostInitCallbacks(
-					"To-many index - " + getNavigableRole(),
+					"Index key - " + getNavigableRole(),
 					() -> {
 						indexFkDescriptor = createForeignKeyDescriptor(
 								( (IndexedCollection) bootDescriptor ).getIndex(),
@@ -373,6 +373,18 @@ public class PluralAttributeMappingImpl
 	@Override
 	public ForeignKeyDescriptor getKeyDescriptor() {
 		return fkDescriptor;
+	}
+
+	@Override
+	public ForeignKeyDescriptor getKeyDescriptor(CollectionPart.Nature nature) {
+		switch ( nature ) {
+			case INDEX:
+				return indexFkDescriptor;
+			case ELEMENT:
+				return elementFkDescriptor;
+			default:
+				throw new NotYetImplementedFor6Exception( getClass() );
+		}
 	}
 
 	@Override

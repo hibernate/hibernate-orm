@@ -25,6 +25,7 @@ public interface PluralAttributeMapping
 	CollectionPersister getCollectionDescriptor();
 
 	ForeignKeyDescriptor getKeyDescriptor();
+	ForeignKeyDescriptor getKeyDescriptor(CollectionPart.Nature nature);
 
 	CollectionPart getIndexDescriptor();
 

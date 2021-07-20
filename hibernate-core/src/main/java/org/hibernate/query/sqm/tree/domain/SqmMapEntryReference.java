@@ -99,7 +99,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public SqmExpressable<Map.Entry<K, V>> getNodeType() {
-		return null;
+		return () -> mapEntryTypeDescriptor;
 	}
 
 	@Override

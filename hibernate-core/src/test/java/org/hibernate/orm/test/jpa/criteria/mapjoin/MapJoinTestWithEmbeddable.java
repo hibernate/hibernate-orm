@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.criteria.mapjoin;
+package org.hibernate.orm.test.jpa.criteria.mapjoin;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -51,7 +51,7 @@ public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCa
 			CriteriaQuery<Node> query = cb.createQuery( Node.class );
 			Root<Batch> root = query.from( Batch.class );
 
-			MapJoin nodes = (MapJoin) root.join( "batchNodeMetadata" );
+			MapJoin<Batch, Node, BatchNodeMetadata> nodes = (MapJoin) root.join( "batchNodeMetadata" );
 
 			query.select( nodes.key() );
 			query.where( cb.equal( root.get( "id" ), 1 ) );
@@ -65,12 +65,12 @@ public class MapJoinTestWithEmbeddable extends BaseEntityManagerFunctionalTestCa
 	public void testSelectingValueOfMapJoin() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-			CriteriaQuery<Node> query = cb.createQuery( Node.class );
+			CriteriaQuery<BatchNodeMetadata> query = cb.createQuery( BatchNodeMetadata.class );
 			Root<Batch> root = query.from( Batch.class );
 
-			MapJoin nodes = (MapJoin) root.join( "batchNodeMetadata" );
+			MapJoin<Batch, Node, BatchNodeMetadata> nodes = (MapJoin) root.join( "batchNodeMetadata" );
 
-			query.select( nodes );
+			query.select( nodes.value() );
 			query.where( cb.equal( root.get( "id" ), 1 ) );
 
 			entityManager.createQuery( query ).getResultList();

@@ -72,6 +72,7 @@ public class EntityMetamodel implements Serializable {
 
 	private final IdentifierProperty identifierAttribute;
 	private final boolean versioned;
+	private final boolean softDelete;
 
 	private final int propertySpan;
 	private final int versionPropertyIndex;
@@ -145,6 +146,7 @@ public class EntityMetamodel implements Serializable {
 		);
 
 		versioned = persistentClass.isVersioned();
+		softDelete = persistentClass.isCustomSoftDelete();
 
 		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 
@@ -968,6 +970,10 @@ public class EntityMetamodel implements Serializable {
 
 	public boolean isVersioned() {
 		return versioned;
+	}
+
+	public boolean isSoftDelete() {
+		return softDelete;
 	}
 
 	public boolean isAbstract() {

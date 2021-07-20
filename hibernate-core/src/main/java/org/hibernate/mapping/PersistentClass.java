@@ -82,6 +82,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private boolean customUpdateCallable;
 	private ExecuteUpdateResultCheckStyle updateCheckStyle;
 	private String customSQLDelete;
+	private boolean customSoftDelete;
 	private boolean customDeleteCallable;
 	private ExecuteUpdateResultCheckStyle deleteCheckStyle;
 
@@ -817,12 +818,23 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.deleteCheckStyle = checkStyle;
 	}
 
+	public void setCustomSQLDelete(String customSQLDelete, boolean callable, boolean soft, ExecuteUpdateResultCheckStyle checkStyle) {
+		this.customSQLDelete = customSQLDelete;
+		this.customDeleteCallable = callable;
+		this.deleteCheckStyle = checkStyle;
+		this.customSoftDelete = soft;
+	}
+
 	public String getCustomSQLDelete() {
 		return customSQLDelete;
 	}
 
 	public boolean isCustomDeleteCallable() {
 		return customDeleteCallable;
+	}
+
+	public boolean isCustomSoftDelete() {
+		return customSoftDelete;
 	}
 
 	public ExecuteUpdateResultCheckStyle getCustomSQLDeleteCheckStyle() {

@@ -17,6 +17,7 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SharedSessionBuilder;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
@@ -108,6 +109,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder<T extends SharedSes
 	@Override
 	public T statementInspector(StatementInspector statementInspector) {
 		delegate.statementInspector( statementInspector );
+		return getThis();
+	}
+
+	@Override
+	public T statementExecutionListener(StatementExecutionListener statementExecutionListener) {
+		delegate.statementExecutionListener( statementExecutionListener );
 		return getThis();
 	}
 

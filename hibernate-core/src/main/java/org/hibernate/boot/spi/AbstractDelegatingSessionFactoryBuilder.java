@@ -27,6 +27,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -109,6 +110,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyStatementInspector(StatementInspector statementInspector) {
 		delegate.applyStatementInspector( statementInspector );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyStatementExecutionListener(StatementExecutionListener statementExecutionListener) {
+		delegate.applyStatementExecutionListener( statementExecutionListener );
 		return getThis();
 	}
 

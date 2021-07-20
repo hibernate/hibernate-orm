@@ -76,7 +76,8 @@ public class JdbcCoordinatorTest {
 		JdbcCoordinatorImpl jdbcCoordinator = new JdbcCoordinatorImpl(
 				null,
 				sessionOwner,
-				jdbcServices
+				jdbcServices,
+				null
 		);
 
 		Batch currentBatch = Mockito.mock( Batch.class );

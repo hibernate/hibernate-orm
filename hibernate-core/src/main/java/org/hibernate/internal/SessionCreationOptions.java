@@ -15,6 +15,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
@@ -40,6 +41,8 @@ public interface SessionCreationOptions {
 	Interceptor getInterceptor();
 
 	StatementInspector getStatementInspector();
+
+	StatementExecutionListener getStatementExecutionListener();
 
 	PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode();
 

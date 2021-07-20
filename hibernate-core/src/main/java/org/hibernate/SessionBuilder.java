@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.util.TimeZone;
 
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 /**
@@ -56,6 +57,15 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 * @return {@code this}, for method chaining
 	 */
 	T statementInspector(StatementInspector statementInspector);
+
+	/**
+	 * Applies a specific StatementExecutionListener to the session options.
+	 *
+	 * @param statementExecutionListener The StatementExecutionListener to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	T statementExecutionListener(StatementExecutionListener statementExecutionListener);
 
 	/**
 	 * Adds a specific connection to the session options.

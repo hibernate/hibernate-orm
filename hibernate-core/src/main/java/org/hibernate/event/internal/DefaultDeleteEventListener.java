@@ -292,6 +292,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 							deletedState,
 							version,
 							entity,
+							entityEntry.getRowId(),
 							persister,
 							isCascadeDeleteEnabled,
 							session
@@ -306,6 +307,7 @@ public class DefaultDeleteEventListener implements DeleteEventListener,	Callback
 							deletedState,
 							version,
 							entity,
+							entityEntry.getRowId(),
 							persister,
 							isCascadeDeleteEnabled,
 							session

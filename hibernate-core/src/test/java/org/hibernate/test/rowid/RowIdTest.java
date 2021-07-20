@@ -10,16 +10,30 @@ import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Version;
 
 import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.annotations.RowId;
 import org.hibernate.dialect.Oracle9iDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 /**
  * @author Gavin King
@@ -42,50 +56,58 @@ public class RowIdTest extends BaseCoreFunctionalTestCase {
 		super.afterSessionFactoryBuilt();
 		final Session session = sessionFactory().openSession();
 		session.doWork(
-				new Work() {
-					@Override
-					public void execute(Connection connection) throws SQLException {
-						Statement st = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
-						try {
-							((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "drop table Point");
-						}
-						catch (Exception ignored) {
-						}
-						((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
-						((SessionImplementor)session).getJdbcCoordinator().getResourceRegistry().release( st );
+				connection -> {
+					Statement st = ((SessionImplementor)session).getJdbcCoordinator().getStatementPreparer().createStatement();
+					try {
+						((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "drop table Point");
 					}
+					catch (Exception ignored) {
+					}
+					((SessionImplementor)session).getJdbcCoordinator().getResultSetReturn().execute( st, "create table Point (\"x\" number(19,2) not null, \"y\" number(19,2) not null, description varchar2(255) )");
+					((SessionImplementor)session).getJdbcCoordinator().getResourceRegistry().release( st );
 				}
 		);
 		session.close();
 	}
 
 	@Test
-	public void testRowId() {
-		Session s = openSession();
-		Transaction t = s.beginTransaction();
-		Point p = new Point( new BigDecimal(1.0), new BigDecimal(1.0) );
-		s.persist(p);
-		t.commit();
-		s.clear();
-		
-		t = s.beginTransaction();
-		p = (Point) s.createCriteria(Point.class).uniqueResult();
-		p.setDescription("new desc");
-		t.commit();
-		s.clear();
-		
-		t = s.beginTransaction();
-		p = (Point) s.createQuery("from Point").uniqueResult();
-		p.setDescription("new new desc");
-		t.commit();
-		s.clear();
-		
-		t = s.beginTransaction();
-		p = (Point) s.get(Point.class, p);
-		p.setDescription("new new new desc");
-		t.commit();
-		s.close();
+	public void testUpdateByRowId() {
+		doInHibernate( this::sessionFactory, s -> {
+			Point p = new Point( new BigDecimal(1.0), new BigDecimal(1.0) );
+			s.persist(p);
+		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			Point p = (Point) s.createCriteria(Point.class).uniqueResult();
+			p.setDescription("new desc");
+		} );
+
+		Point _p = doInHibernate( this::sessionFactory, s -> {
+			Point p = (Point) s.createQuery("from Point").uniqueResult();
+			p.setDescription("new new desc");
+
+			return p;
+		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			Point p = s.get(Point.class, _p);
+			p.setDescription("new new new desc");
+		} );
 	}
 
+	@Test
+	public void testDeleteByRowId() {
+		Point _p = doInHibernate( this::sessionFactory, s -> {
+			Point p = new Point( new BigDecimal(1.0), new BigDecimal(1.0) );
+			s.persist(p);
+
+			return p;
+		} );
+
+		doInHibernate( this::sessionFactory, s -> {
+			Point p = (Point) s.merge( _p );
+			s.remove( p );
+		} );
+	}
 }
 

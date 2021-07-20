@@ -281,10 +281,10 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	@Override
 	public void setEntryStatus(EntityEntry entry, Status status) {
 		entry.setStatus( status );
-		setHasNonReadOnlyEnties( status );
+		setHasNonReadOnlyEntities( status );
 	}
 
-	private void setHasNonReadOnlyEnties(Status status) {
+	private void setHasNonReadOnlyEntities(Status status) {
 		if ( status==Status.DELETED || status==Status.MANAGED || status==Status.SAVING ) {
 			hasNonReadOnlyEntities = true;
 		}
@@ -558,7 +558,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		entityEntryContext.addEntityEntry( entity, e );
 
-		setHasNonReadOnlyEnties( status );
+		setHasNonReadOnlyEntities( status );
 		return e;
 	}
 
@@ -569,7 +569,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		((ManagedEntity)entity).$$_hibernate_getEntityEntry().setStatus( status );
 		entityEntryContext.addEntityEntry( entity, ((ManagedEntity)entity).$$_hibernate_getEntityEntry() );
 
-		setHasNonReadOnlyEnties( status );
+		setHasNonReadOnlyEntities( status );
 		return ((ManagedEntity)entity).$$_hibernate_getEntityEntry();
 	}
 

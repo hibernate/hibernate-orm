@@ -462,17 +462,16 @@ public final class ConfigurationHelper {
 				// peek ahead
 				if ( chars[pos+1] == '{' ) {
 					// we have a placeholder, spin forward till we find the end
-					String systemPropertyName = "";
 					int x = pos + 2;
-					for (  ; x < chars.length && chars[x] != '}'; x++ ) {
-						systemPropertyName += chars[x];
+					while ( x < chars.length && chars[x] != '}' ) {
 						// if we reach the end of the string w/o finding the
 						// matching end, that is an exception
 						if ( x == chars.length - 1 ) {
 							throw new IllegalArgumentException( "unmatched placeholder start [" + property + "]" );
 						}
+						x++;
 					}
-					String systemProperty = extractFromSystem( systemPropertyName );
+					String systemProperty = extractFromSystem( property.substring( pos + 2, x ) );
 					buff.append( systemProperty == null ? "" : systemProperty );
 					pos = x + 1;
 					// make sure spinning forward did not put us past the end of the buffer...

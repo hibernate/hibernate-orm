@@ -916,7 +916,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return constraintOrderedTableNames;
 	}
 
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 

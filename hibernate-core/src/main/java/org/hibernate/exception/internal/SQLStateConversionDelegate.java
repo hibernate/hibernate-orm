@@ -65,8 +65,8 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 		return Collections.unmodifiableSet( categories );
 	}
 
-	private static final Set INTEGRITY_VIOLATION_CATEGORIES = buildContraintCategories();
-	private static Set<String> buildContraintCategories() {
+	private static final Set INTEGRITY_VIOLATION_CATEGORIES = buildConstraintCategories();
+	private static Set<String> buildConstraintCategories() {
 		HashSet<String> categories = new HashSet<>(
 				Arrays.asList(
 						"23",	// "integrity constraint violation"

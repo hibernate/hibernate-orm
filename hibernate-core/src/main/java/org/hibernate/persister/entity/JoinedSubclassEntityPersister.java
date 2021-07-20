@@ -1148,7 +1148,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return constraintOrderedTableNames;
 	}
 
-	public String[][] getContraintOrderedTableKeyColumnClosure() {
+	public String[][] getConstraintOrderedTableKeyColumnClosure() {
 		return constraintOrderedKeyColumnNames;
 	}
 

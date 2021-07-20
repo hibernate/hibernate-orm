@@ -20,6 +20,7 @@ import javax.persistence.criteria.Root;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Test;
@@ -41,6 +42,7 @@ public class InClauseParameterPaddingCriteriaTest extends BaseEntityManagerFunct
 		sqlStatementInterceptor = new SQLStatementInterceptor( options );
 		options.put( AvailableSettings.USE_SQL_COMMENTS, Boolean.TRUE.toString() );
 		options.put( AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, Boolean.TRUE.toString() );
+		options.put( AvailableSettings.CRITERIA_LITERAL_HANDLING_MODE, LiteralHandlingMode.BIND );
 	}
 
 	@Override
@@ -89,6 +91,29 @@ public class InClauseParameterPaddingCriteriaTest extends BaseEntityManagerFunct
 							)
 					)
 					.getResultList();
+			assertEquals( 1, ids.size() );
+		} );
+
+		assertTrue( sqlStatementInterceptor.getSqlQueries().get( 0 ).endsWith( "in (? , ? , ? , ? , ? , ? , ? , ?)" ) );
+
+	}
+
+
+	@Test
+	public void testInClauseParameterBindingPadding() {
+		sqlStatementInterceptor.clear();
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			CriteriaBuilder cb = entityManager.getCriteriaBuilder();
+			CriteriaQuery<Long> query = cb.createQuery( Long.class );
+			Root<Document> document = query.from( Document.class );
+
+			query
+					.select( document.get( "id" ) )
+					.where( document.get( "id" ).in( Arrays.asList( 1, 2, 3, 4, 5 ) ) );
+
+
+			List<Long> ids = entityManager.createQuery( query ).getResultList();
 			assertEquals( 1, ids.size() );
 		} );
 

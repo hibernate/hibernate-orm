@@ -1,0 +1,32 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+
+plugins {
+    // Apply the java plugin to add support for Java
+    id 'java'
+}
+
+repositories {
+    // Use jcenter for resolving dependencies.
+    // You can declare any Maven/Ivy/file repository here.
+    jcenter()
+}
+
+dependencies {
+    def ormVersion = "@ormVersion@"
+
+    implementation group: 'org.hibernate', name: 'hibernate-core', version: ormVersion
+
+    // Use JUnit test framework
+    testImplementation 'junit:junit:4.13'
+
+    runtimeOnly 'com.h2database:h2:1.4.200'
+}
+
+test {
+    useJUnit()
+}

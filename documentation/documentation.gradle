@@ -12,6 +12,7 @@ ext {
 	projectsToSkipWhenAggregatingJavadocs = [
 			'documentation',
 			'hibernate-entitymanager',
+			'project-template',
 			'hibernate-infinispan',
 			'hibernate-ehcache',
 			'hibernate-java8',

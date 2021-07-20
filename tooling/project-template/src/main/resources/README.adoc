@@ -1,0 +1,5 @@
+A template project to help bootstrap a Gradle project with support for Hibernate
+specific extensions.
+
+This might be useful for new users wanting to get started as well as a quick way to
+bootstrap project for test cases (bug reports, etc)

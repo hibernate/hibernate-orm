@@ -31,7 +31,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -46,6 +45,7 @@ import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
@@ -193,7 +193,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Tester.class )
-					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/orm.xml" ) )
+					.addURL( ClassLoaderServiceTestingImpl.INSTANCE.locateResource( "org/hibernate/test/converter/orm.xml" ) )
 					.getMetadataBuilder()
 					.build();
 

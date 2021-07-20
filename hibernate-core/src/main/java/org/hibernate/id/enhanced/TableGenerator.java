@@ -585,6 +585,8 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 													statementLogger,
 													statsCollector
 											)) {
+												boolean wasNullValue = false;
+
 												selectPS.setString( 1, segmentValue );
 												final ResultSet selectRS = executeQuery( selectPS, statsCollector );
 												if ( !selectRS.next() ) {
@@ -618,8 +620,15 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 														defaultValue = 1;
 													}
 													value.initialize( selectRS, defaultValue );
+
+													wasNullValue = selectRS.wasNull();
 												}
 												selectRS.close();
+
+												if (wasNullValue) {
+													throw new HibernateException("null '" + valueColumnName + "' for "
+														+ segmentColumnName + " '" + segmentValue + "'");
+												}
 											}
 											catch (SQLException e) {
 												LOG.unableToReadOrInitHiValue( e );

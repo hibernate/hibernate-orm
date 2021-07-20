@@ -124,12 +124,12 @@ public class CriteriaBuilderImpl implements HibernateCriteriaBuilder, Serializab
 
 	@Override
 	public <T> CriteriaUpdate<T> createCriteriaUpdate(Class<T> targetEntity) {
-		return new CriteriaUpdateImpl<T>( this );
+		return new CriteriaUpdateImpl<T>( this, targetEntity );
 	}
 
 	@Override
 	public <T> CriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
-		return new CriteriaDeleteImpl<T>( this );
+		return new CriteriaDeleteImpl<T>( this, targetEntity );
 	}
 
 

@@ -40,8 +40,9 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 	private RootImpl<T> root;
 	private Predicate restriction;
 
-	protected AbstractManipulationCriteriaQuery(CriteriaBuilderImpl criteriaBuilder) {
+	protected AbstractManipulationCriteriaQuery(CriteriaBuilderImpl criteriaBuilder, Class<T> rootClass) {
 		this.criteriaBuilder = criteriaBuilder;
+		from(rootClass);
 	}
 
 	protected CriteriaBuilderImpl criteriaBuilder() {

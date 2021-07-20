@@ -6,17 +6,19 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-
+import java.util.Set;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -63,10 +65,26 @@ public class SqmJpaCompoundSelection<T>
 			JavaTypeDescriptor<T> javaTypeDescriptor,
 			NodeBuilder criteriaBuilder) {
 		super( null, criteriaBuilder );
+		checkDuplicatedAliases( selectableNodes );
 		this.selectableNodes = selectableNodes;
 		this.javaTypeDescriptor = javaTypeDescriptor;
 
 		setExpressableType( this );
+	}
+
+	private static void checkDuplicatedAliases(Collection<? extends SqmSelectableNode> selectableNodes) {
+		Set<String> aliases = null;
+		for ( SqmSelectableNode selectableNode : selectableNodes ) {
+			final String alias = selectableNode.getAlias();
+			if ( alias != null ) {
+				if ( aliases == null ) {
+					aliases = new HashSet<>();
+				}
+				if ( ! aliases.add( alias ) ) {
+					throw new IllegalArgumentException( "Multi-select expressions defined duplicate alias : " + alias );
+				}
+			}
+		}
 	}
 
 	@Override

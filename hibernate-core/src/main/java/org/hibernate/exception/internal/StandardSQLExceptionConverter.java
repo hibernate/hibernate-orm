@@ -20,13 +20,15 @@ import org.hibernate.exception.spi.SQLExceptionConverter;
  */
 public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 
-	private final ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<SQLExceptionConversionDelegate>(4);
+	private final ArrayList<SQLExceptionConversionDelegate> delegates = new ArrayList<>();
 
 	public StandardSQLExceptionConverter() {
 	}
 
 	public void addDelegate(SQLExceptionConversionDelegate delegate) {
-		this.delegates.add( delegate );
+		if ( delegate != null ) {
+			this.delegates.add( delegate );
+		}
 	}
 
 	@Override

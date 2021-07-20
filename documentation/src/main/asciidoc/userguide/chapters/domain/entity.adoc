@@ -430,6 +430,12 @@ include::{sourcedir-mapping}/basic/SubselectTest.java[tag=mapping-Subselect-enti
 ----
 ====
 
+[NOTE]
+====
+The underlying `@Subselect` SQL query supports standard Hibernate placeholders ( see <<chapters/query/native/Native.adoc#sql-global-catalog-schema,Catalog and schema in SQL queries>> ).
+Global settings can be overridden using the `schema` or `catalog` attributes of the `@Table` annotation.
+====
+
 If we add a new `AccountTransaction` entity and refresh the `AccountSummary` entity, the balance is updated accordingly:
 
 [[mapping-Subselect-refresh-find-example]]

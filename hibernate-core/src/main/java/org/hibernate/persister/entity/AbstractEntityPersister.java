@@ -4408,6 +4408,10 @@ public abstract class AbstractEntityPersister
 		return new SubstituteBracketSQLQueryParser( sql, getFactory() ).process();
 	}
 
+	private String substituteBrackets(String sql, String schemaName, String catalogName) {
+		return new SubstituteBracketSQLQueryParser( sql, schemaName, catalogName ).process();
+	}
+
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
 
@@ -5802,7 +5806,7 @@ public abstract class AbstractEntityPersister
 
 	protected String determineTableName(Table table, JdbcEnvironment jdbcEnvironment) {
 		if ( table.getSubselect() != null ) {
-			return "( " + table.getSubselect() + " )";
+			return "( " + substituteBrackets( table.getSubselect(), table.getSchema(), table.getCatalog() ) + " )";
 		}
 
 		return jdbcEnvironment.getQualifiedObjectNameFormatter().format(
@@ -6135,6 +6139,10 @@ public abstract class AbstractEntityPersister
 
 		SubstituteBracketSQLQueryParser(String queryString, SessionFactoryImplementor factory) {
 			super( queryString, null, factory );
+		}
+
+		SubstituteBracketSQLQueryParser(String queryString, String schemaName, String catalogName) {
+			super( queryString, null, schemaName, catalogName, true /*ignored*/ );
 		}
 
 		@Override

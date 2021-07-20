@@ -32,7 +32,10 @@ public class SQLQueryParser {
 	private static final String CATALOG_PLACEHOLDER = "h-catalog";
 	private static final String SCHEMA_PLACEHOLDER = "h-schema";
 
-	private final SessionFactoryImplementor factory;
+	private final String schemaName;
+	private final String catalogName;
+	private final boolean jdbcStyleParamsZeroBased;
+
 	private final String originalQueryString;
 	private final ParserContext context;
 
@@ -51,9 +54,26 @@ public class SQLQueryParser {
 	}
 
 	public SQLQueryParser(String queryString, ParserContext context, SessionFactoryImplementor factory) {
+		this(
+				queryString,
+				context,
+				factory.getSettings().getDefaultSchemaName(),
+				factory.getSettings().getDefaultCatalogName(),
+				factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased()
+		);
+	}
+
+	protected SQLQueryParser(
+			String queryString,
+			ParserContext context,
+			String schemaName,
+			String catalogName,
+			boolean jdbcStyleParamsZeroBased) {
 		this.originalQueryString = queryString;
 		this.context = context;
-		this.factory = factory;
+		this.schemaName = schemaName;
+		this.catalogName = catalogName;
+		this.jdbcStyleParamsZeroBased = jdbcStyleParamsZeroBased;
 	}
 
 	public List<ParameterBinder> getParameterValueBinders() {
@@ -107,12 +127,10 @@ public class SQLQueryParser {
 			if ( isPlaceholder ) {
 				// Domain replacement
 				if ( DOMAIN_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
 					if ( catalogName != null ) {
 						result.append( catalogName );
 						result.append( "." );
 					}
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
 					if ( schemaName != null ) {
 						result.append( schemaName );
 						result.append( "." );
@@ -120,7 +138,6 @@ public class SQLQueryParser {
 				}
 				// Schema replacement
 				else if ( SCHEMA_PLACEHOLDER.equals( aliasPath ) ) {
-					final String schemaName = factory.getSettings().getDefaultSchemaName();
 					if ( schemaName != null ) {
 						result.append(schemaName);
 						result.append(".");
@@ -128,7 +145,6 @@ public class SQLQueryParser {
 				}
 				// Catalog replacement
 				else if ( CATALOG_PLACEHOLDER.equals( aliasPath ) ) {
-					final String catalogName = factory.getSettings().getDefaultCatalogName();
 					if ( catalogName != null ) {
 						result.append( catalogName );
 						result.append( "." );
@@ -281,7 +297,7 @@ public class SQLQueryParser {
 	 * @return The SQL query with parameter substitution complete.
 	 */
 	private String substituteParams(String sqlString) {
-		final ParameterSubstitutionRecognizer recognizer = new ParameterSubstitutionRecognizer( factory );
+		final ParameterSubstitutionRecognizer recognizer = new ParameterSubstitutionRecognizer( jdbcStyleParamsZeroBased );
 		ParameterParser.parse( sqlString, recognizer );
 
 		paramValueBinders = recognizer.getParameterValueBinders();
@@ -295,10 +311,8 @@ public class SQLQueryParser {
 		int jdbcPositionalParamCount;
 		private List<ParameterBinder> paramValueBinders;
 
-		public ParameterSubstitutionRecognizer(SessionFactoryImplementor factory) {
-			this.jdbcPositionalParamCount = factory.getSessionFactoryOptions().jdbcStyleParamsZeroBased()
-					? 0
-					: 1;
+		public ParameterSubstitutionRecognizer(boolean jdbcStyleParamsZeroBased) {
+			this.jdbcPositionalParamCount = jdbcStyleParamsZeroBased ? 0 : 1;
 		}
 
 		@Override

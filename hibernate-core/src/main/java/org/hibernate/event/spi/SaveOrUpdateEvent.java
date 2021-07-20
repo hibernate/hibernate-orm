@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 
 import org.hibernate.engine.spi.EntityEntry;
@@ -31,22 +33,12 @@ public class SaveOrUpdateEvent extends AbstractEvent {
 
 	public SaveOrUpdateEvent(String entityName, Object original, Serializable id, EventSource source) {
 		this(entityName, original, source);
-		this.requestedId = id;
-		if ( requestedId == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create saveOrUpdate event with null identifier"
-				);
-		}
+		this.requestedId = checkNotNullIAE( "id", id );
 	}
 
 	public SaveOrUpdateEvent(Object object, EventSource source) {
 		super(source);
-		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create saveOrUpdate event with null entity"
-				);
-		}
-		this.object = object;
+		this.object = checkNotNullIAE( "object", object );
 	}
 
 	public Object getObject() {

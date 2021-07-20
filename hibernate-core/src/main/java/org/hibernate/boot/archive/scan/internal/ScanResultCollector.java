@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.archive.scan.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -31,16 +33,11 @@ public class ScanResultCollector {
 	private final Set<MappingFileDescriptor> discoveredMappingFiles;
 
 	public ScanResultCollector(ScanEnvironment environment, ScanOptions options, ScanParameters parameters) {
-		this.environment = environment;
+		this.environment = checkNotNullIAE( "environment", environment );
 		this.options = options;
 
-		if ( environment.getExplicitlyListedClassNames() == null ) {
-			throw new IllegalArgumentException( "ScanEnvironment#getExplicitlyListedClassNames should not return null" );
-		}
-
-		if ( environment.getExplicitlyListedMappingFiles() == null ) {
-			throw new IllegalArgumentException( "ScanEnvironment#getExplicitlyListedMappingFiles should not return null" );
-		}
+		checkNotNullIAE( "environment.getExplicitlyListedClassNames", environment.getExplicitlyListedClassNames() );
+		checkNotNullIAE( "environment.getExplicitlyListedMappingFiles", environment.getExplicitlyListedMappingFiles() );
 
 		this.discoveredPackages = new HashSet<PackageDescriptor>();
 		this.discoveredClasses = new HashSet<ClassDescriptor>();

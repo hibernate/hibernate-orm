@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -358,9 +360,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addTypeDefinition(TypeDefinition typeDefinition) {
-		if ( typeDefinition == null ) {
-			throw new IllegalArgumentException( "Type definition is null" );
-		}
+		checkNotNullIAE( "typeDefinition", typeDefinition );
 
 		// Need to register both by name and registration keys.
 		if ( !StringHelper.isEmpty( typeDefinition.getName() ) ) {
@@ -428,9 +428,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addFilterDefinition(FilterDefinition filterDefinition) {
-		if ( filterDefinition == null || filterDefinition.getFilterName() == null ) {
-			throw new IllegalArgumentException( "Filter definition object or name is null: "  + filterDefinition );
-		}
+		checkNotNullIAE( "filterDefinition", filterDefinition );
+		checkNotNullIAE( "filterDefinition.getFilterName", filterDefinition.getFilterName() );
+
 		filterDefinitionMap.put( filterDefinition.getFilterName(), filterDefinition );
 	}
 
@@ -450,9 +450,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addFetchProfile(FetchProfile profile) {
-		if ( profile == null || profile.getName() == null ) {
-			throw new IllegalArgumentException( "Fetch profile object or name is null: " + profile );
-		}
+		checkNotNullIAE( "profile", profile );
+		checkNotNullIAE( "profile.getName", profile.getName() );
+
 		FetchProfile old = fetchProfileMap.put( profile.getName(), profile );
 		if ( old != null ) {
 			log.warn( "Duplicated fetch profile with same name [" + profile.getName() + "] found." );
@@ -465,10 +465,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public IdentifierGeneratorDefinition getIdentifierGenerator(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "null is not a valid generator name" );
-		}
-		return idGeneratorDefinitionMap.get( name );
+		return idGeneratorDefinitionMap.get( checkNotNullIAE( "name", name ) );
 	}
 
 	@Override
@@ -482,11 +479,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addIdentifierGenerator(IdentifierGeneratorDefinition generator) {
-		if ( generator == null || generator.getName() == null ) {
-			throw new IllegalArgumentException( "ID generator object or name is null." );
-		}
+		checkNotNullIAE( "generator", generator );
 
-		if ( defaultIdentifierGeneratorNames.contains( generator.getName() ) ) {
+		if ( defaultIdentifierGeneratorNames.contains( checkNotNullIAE( "generator.getName", generator.getName() ) ) ) {
 			return;
 		}
 		final IdentifierGeneratorDefinition old = idGeneratorDefinitionMap.put( generator.getName(), generator );
@@ -536,10 +531,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// Named query handling
 
 	public NamedQueryDefinition getNamedQueryDefinition(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "null is not a valid query name" );
-		}
-		return namedQueryMap.get( name );
+		return namedQueryMap.get( checkNotNullIAE( "name", name ) );
 	}
 
 	@Override
@@ -549,12 +541,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addNamedQuery(NamedQueryDefinition def) {
-		if ( def == null ) {
-			throw new IllegalArgumentException( "Named query definition is null" );
-		}
-		else if ( def.getName() == null ) {
-			throw new IllegalArgumentException( "Named query definition name is null: " + def.getQueryString() );
-		}
+		checkNotNullIAE( "def", def );
+		checkNotNullIAE( "def.getName", def.getName() );
 
 		if ( defaultNamedQueryNames.contains( def.getName() ) ) {
 			return;
@@ -595,12 +583,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addNamedNativeQuery(NamedSQLQueryDefinition def) {
-		if ( def == null ) {
-			throw new IllegalArgumentException( "Named native query definition object is null" );
-		}
-		if ( def.getName() == null ) {
-			throw new IllegalArgumentException( "Named native query definition name is null: " + def.getQueryString() );
-		}
+		checkNotNullIAE( "def", def );
+		checkNotNullIAE( "def.getName", def.getName() );
 
 		if ( defaultNamedNativeQueryNames.contains( def.getName() ) ) {
 			return;
@@ -631,9 +615,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addNamedProcedureCallDefinition(NamedProcedureCallDefinition definition) {
-		if ( definition == null ) {
-			throw new IllegalArgumentException( "Named query definition is null" );
-		}
+		checkNotNullIAE( "definition", definition );
 
 		final String name = definition.getRegisteredName();
 
@@ -669,14 +651,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addResultSetMapping(ResultSetMappingDefinition resultSetMappingDefinition) {
-		if ( resultSetMappingDefinition == null ) {
-			throw new IllegalArgumentException( "Result-set mapping was null" );
-		}
+		checkNotNullIAE( "resultSetMappingDefinition", resultSetMappingDefinition );
 
-		final String name = resultSetMappingDefinition.getName();
-		if ( name == null ) {
-			throw new IllegalArgumentException( "Result-set mapping name is null: " + resultSetMappingDefinition );
-		}
+		final String name = checkNotNullIAE( "resultSetMappingDefinition.getName", resultSetMappingDefinition.getName() );
 
 		if ( defaultSqlResultSetMappingNames.contains( name ) ) {
 			return;
@@ -719,9 +696,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public void addImport(String importName, String entityName) {
-		if ( importName == null || entityName == null ) {
-			throw new IllegalArgumentException( "Import name or entity name is null" );
-		}
+		checkNotNullIAE( "importName", importName );
+		checkNotNullIAE( "entityName", entityName );
 		log.tracev( "Import: {0} -> {1}", importName, entityName );
 		String old = imports.put( importName, entityName );
 		if ( old != null ) {

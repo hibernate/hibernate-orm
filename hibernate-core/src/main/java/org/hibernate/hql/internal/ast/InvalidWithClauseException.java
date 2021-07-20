@@ -6,6 +6,8 @@
  */
 package org.hibernate.hql.internal.ast;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 /**
  * Indicates an issue with the encountered with-clause.
  *
@@ -14,8 +16,6 @@ package org.hibernate.hql.internal.ast;
 public class InvalidWithClauseException extends QuerySyntaxException {
 	public InvalidWithClauseException(String message, String queryString) {
 		super( message, queryString );
-		if ( queryString == null ) {
-			throw new IllegalArgumentException( "Illegal to pass null as queryString argument" );
-		}
+		checkNotNullIAE( "queryString", queryString );
 	}
 }

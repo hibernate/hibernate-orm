@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import org.hibernate.ReplicationMode;
 
 /**
@@ -25,20 +27,8 @@ public class ReplicateEvent extends AbstractEvent {
 	public ReplicateEvent(String entityName, Object object, ReplicationMode replicationMode, EventSource source) {
 		super(source);
 		this.entityName = entityName;
-
-		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null entity"
-			);
-		}
-		if ( replicationMode == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create replication strategy with null replication mode"
-			);
-		}
-
-		this.object = object;
-		this.replicationMode = replicationMode;
+		this.object = checkNotNullIAE( "object", object );
+		this.replicationMode = checkNotNullIAE( "replicationMode", replicationMode );
 	}
 
 	public Object getObject() {

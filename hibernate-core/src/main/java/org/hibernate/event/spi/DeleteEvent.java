@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 /**
  * Defines an event class for the deletion of an entity.
  *
@@ -27,12 +29,7 @@ public class DeleteEvent extends AbstractEvent {
 	 */
 	public DeleteEvent(Object object, EventSource source) {
 		super(source);
-		if (object == null) {
-			throw new IllegalArgumentException(
-					"attempt to create delete event with null entity"
-				);
-		}
-		this.object = object;
+		this.object = checkNotNullIAE( "object", object );
 	}
 
 	public DeleteEvent(String entityName, Object object, EventSource source) {

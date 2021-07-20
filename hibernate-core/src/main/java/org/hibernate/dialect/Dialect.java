@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.Blob;
@@ -514,9 +516,7 @@ public abstract class Dialect implements ConversionContext {
 	 * @see #getSqlTypeDescriptorOverride
 	 */
 	public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
-		if ( sqlTypeDescriptor == null ) {
-			throw new IllegalArgumentException( "sqlTypeDescriptor is null" );
-		}
+		checkNotNullIAE( "sqlTypeDescriptor", sqlTypeDescriptor );
 		if ( ! sqlTypeDescriptor.canBeRemapped() ) {
 			return sqlTypeDescriptor;
 		}

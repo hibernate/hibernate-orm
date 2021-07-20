@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -34,14 +36,10 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 			PhysicalConnectionHandlingMode connectionHandlingMode,
 			FastSessionServices fastSessionServices) {
 		this.sessionFactory = session.getFactory();
-		this.statementInspector = statementInspector;
+		this.statementInspector = checkNotNullIAE( "statementInspector", statementInspector );
 		this.connectionHandlingMode = connectionHandlingMode;
 		this.serviceRegistry = sessionFactory.getServiceRegistry();
 		this.jdbcObserver = new JdbcObserverImpl( session, fastSessionServices );
-
-		if ( this.statementInspector == null ) {
-			throw new IllegalArgumentException( "StatementInspector cannot be null" );
-		}
 	}
 
 	@Override

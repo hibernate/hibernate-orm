@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.util.Map;
 
@@ -77,9 +79,7 @@ public class EffectiveEntityGraph implements AppliedGraph, Serializable {
 	 * @throws IllegalStateException If previous state is still available (hasn't been cleared).
 	 */
 	public void applyGraph(RootGraphImplementor<?> graph, GraphSemantic semantic) {
-		if ( semantic == null ) {
-			throw new IllegalArgumentException( "Graph semantic cannot be null" );
-		}
+		checkNotNullIAE( "semantic", semantic );
 
 		verifyWriteability();
 

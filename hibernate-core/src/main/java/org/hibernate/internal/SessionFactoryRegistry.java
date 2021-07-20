@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Hashtable;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.naming.Context;
@@ -66,9 +68,7 @@ public class SessionFactoryRegistry {
 			boolean isNameAlsoJndiName,
 			SessionFactory instance,
 			JndiService jndiService) {
-		if ( uuid == null ) {
-			throw new IllegalArgumentException( "SessionFactory UUID cannot be null" );
-		}
+		checkNotNullIAE( "uuid", uuid );
 
 		LOG.debugf( "Registering SessionFactory: %s (%s)", uuid, name == null ? "<unnamed>" : name );
 		sessionFactoryMap.put( uuid, instance );

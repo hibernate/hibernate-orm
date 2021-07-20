@@ -6,6 +6,8 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import javax.persistence.NamedEntityGraph;
 
 import org.hibernate.internal.util.StringHelper;
@@ -28,9 +30,7 @@ public class NamedEntityGraphDefinition {
 		this.name = StringHelper.isNotEmpty( annotation.name() )
 				? annotation.name()
 				: jpaEntityName;
-		if ( name == null ) {
-			throw new IllegalArgumentException( "Named entity graph name cannot be null" );
-		}
+		checkNotNullIAE( "name", name );
 	}
 
 	public String getRegisteredName() {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.transform;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 /**
  * An implementation of TupleSubsetResultTransformer that ignores a
  * tuple element if its corresponding alias is null.
@@ -18,9 +20,7 @@ public abstract class AliasedTupleSubsetResultTransformer
 
 	@Override
 	public boolean[] includeInTransform(String[] aliases, int tupleLength) {
-		if ( aliases == null ) {
-			throw new IllegalArgumentException( "aliases cannot be null" );
-		}
+		checkNotNullIAE( "aliases", aliases );
 		if ( aliases.length != tupleLength ) {
 			throw new IllegalArgumentException(
 					"aliases and tupleLength must have the same length; " +

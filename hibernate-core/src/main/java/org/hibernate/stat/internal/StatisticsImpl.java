@@ -6,7 +6,8 @@
  */
 package org.hibernate.stat.internal;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -114,8 +115,8 @@ public class StatisticsImpl implements StatisticsImplementor, Service, Manageabl
 	private final StatsNamedContainer<DeprecatedNaturalIdCacheStatisticsImpl> deprecatedNaturalIdStatsMap = new StatsNamedContainer();
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
-		Objects.requireNonNull( sessionFactory );
-		SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
+		SessionFactoryOptions sessionFactoryOptions = checkNotNullNPE( "sessionFactory", sessionFactory )
+				.getSessionFactoryOptions();
 		this.queryStatsMap = new StatsNamedContainer(
 				sessionFactory != null ?
 					sessionFactoryOptions.getQueryStatisticsMaxSize() :

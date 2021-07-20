@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,7 +21,6 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 
@@ -97,8 +99,7 @@ public class MetadataSources implements Serializable {
 	 * @param disableXmlMappingBinders
 	 */
 	public MetadataSources(ServiceRegistry serviceRegistry, boolean disableXmlMappingBinders) {
-		Objects.requireNonNull( serviceRegistry );
-		this.serviceRegistry = serviceRegistry;
+		this.serviceRegistry = checkNotNullNPE( "serviceRegistry", serviceRegistry );
 		this.disableXmlMappingBinders = disableXmlMappingBinders;
 	}
 
@@ -246,11 +247,7 @@ public class MetadataSources implements Serializable {
 	 * @return this (for method chaining)
 	 */
 	public MetadataSources addPackage(String packageName) {
-		if ( packageName == null ) {
-			throw new IllegalArgumentException( "The specified package name cannot be null" );
-		}
-
-		if ( packageName.endsWith( "." ) ) {
+		if ( checkNotNullIAE( "packageName", packageName ).endsWith( "." ) ) {
 			packageName = packageName.substring( 0, packageName.length() - 1 );
 		}
 
@@ -289,9 +286,7 @@ public class MetadataSources implements Serializable {
 	 */
 	@Deprecated
 	public MetadataSources addClass(Class entityClass) {
-		if ( entityClass == null ) {
-			throw new IllegalArgumentException( "The specified class cannot be null" );
-		}
+		checkNotNullIAE( "entityClass", entityClass );
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "adding resource mappings from class convention : %s", entityClass.getName() );
 		}

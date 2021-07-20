@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
@@ -96,9 +98,8 @@ public class FilterImpl implements Filter, Serializable {
 	 */
 	public Filter setParameterList(String name, Collection values) throws HibernateException  {
 		// Make sure this is a defined parameter and check the incoming value type
-		if ( values == null ) {
-			throw new IllegalArgumentException( "Collection must be not null!" );
-		}
+
+		checkNotNullIAE( "values", values );
 		Type type = definition.getParameterType( name );
 		if ( type == null ) {
 			throw new HibernateException( "Undefined filter parameter [" + name + "]" );

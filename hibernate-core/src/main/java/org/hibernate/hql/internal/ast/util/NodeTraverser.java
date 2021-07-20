@@ -6,6 +6,8 @@
  */
 package org.hibernate.hql.internal.ast.util;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -42,10 +44,7 @@ public class NodeTraverser {
 	 *            </p>
 	 */
 	public void traverseDepthFirst( AST ast ) {
-		if ( ast == null ) {
-			throw new IllegalArgumentException(
-					"node to traverse cannot be null!" );
-		}
+		checkNotNullIAE( "ast", ast );
 		visitDepthFirst( ast.getFirstChild() );
 	}
 

@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
@@ -44,10 +46,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 	 * @throws HibernateException
 	 */
 	public void onEvict(EvictEvent event) throws HibernateException {
-		final Object object = event.getObject();
-		if ( object == null ) {
-			throw new NullPointerException( "null passed to Session.evict()" );
-		}
+		checkNotNullNPE( "event", event );
+		final Object object = checkNotNullNPE( "event.getObject", event.getObject() );
 
 		final EventSource source = event.getSession();
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();

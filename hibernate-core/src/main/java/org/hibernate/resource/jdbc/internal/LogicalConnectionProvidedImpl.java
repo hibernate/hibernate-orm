@@ -6,6 +6,8 @@
  */
 package org.hibernate.resource.jdbc.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -30,11 +32,7 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 
 	public LogicalConnectionProvidedImpl(Connection providedConnection, ResourceRegistry resourceRegistry) {
 		this.resourceRegistry = resourceRegistry;
-		if ( providedConnection == null ) {
-			throw new IllegalArgumentException( "Provided Connection cannot be null" );
-		}
-
-		this.providedConnection = providedConnection;
+		this.providedConnection = checkNotNullIAE( "providedConnection", providedConnection ) ;
 		this.initiallyAutoCommit = determineInitialAutoCommitMode( providedConnection );
 	}
 
@@ -117,10 +115,8 @@ public class LogicalConnectionProvidedImpl extends AbstractLogicalConnectionImpl
 	public void manualReconnect(Connection connection) {
 		errorIfClosed();
 
-		if ( connection == null ) {
-			throw new IllegalArgumentException( "cannot reconnect using a null connection" );
-		}
-		else if ( connection == providedConnection ) {
+		checkNotNullIAE( "connection", connection );
+		if ( connection == providedConnection ) {
 			// likely an unmatched reconnect call (no matching disconnect call)
 			log.debug( "reconnecting the same connection that is already connected; should this connection have been disconnected?" );
 		}

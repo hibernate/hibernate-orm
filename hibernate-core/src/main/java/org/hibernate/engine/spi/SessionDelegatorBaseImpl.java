@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Iterator;
@@ -90,12 +92,9 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	 */
 	@Deprecated
 	public SessionDelegatorBaseImpl(SessionImplementor delegate, Session session) {
-		if ( delegate == null ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from a null delegate object" );
-		}
-		if ( session == null ) {
-			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from a null Session" );
-		}
+		checkNotNullIAE( "delegate", delegate );
+		checkNotNullIAE( "session", session );
+
 		if ( delegate != session ) {
 			throw new IllegalArgumentException( "Unable to create a SessionDelegatorBaseImpl from different Session/SessionImplementor references" );
 		}

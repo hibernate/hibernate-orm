@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.Map;
@@ -42,9 +44,7 @@ public class ResolveNaturalIdEvent extends AbstractEvent {
 			EventSource source) {
 		super( source );
 
-		if ( entityPersister == null ) {
-			throw new IllegalArgumentException( "EntityPersister is required for loading" );
-		}
+		checkNotNullIAE( "entityPersister", entityPersister );
 
 		if ( ! entityPersister.hasNaturalIdentifier() ) {
 			throw new HibernateException( "Entity did not define a natural-id" );

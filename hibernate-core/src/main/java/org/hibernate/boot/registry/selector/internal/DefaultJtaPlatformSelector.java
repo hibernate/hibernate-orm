@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.registry.selector.internal;
 
-import java.util.Objects;
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
 
 import org.hibernate.engine.transaction.jta.platform.internal.AtomikosJtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.internal.BitronixJtaPlatform;
@@ -31,7 +31,7 @@ public class DefaultJtaPlatformSelector implements LazyServiceResolver<JtaPlatfo
 
 	@Override
 	public Class<? extends JtaPlatform> resolve(final String name) {
-		Objects.requireNonNull( name);
+		checkNotNullNPE( "name", name );
 		if ( name.isEmpty() ) {
 			return null;
 		}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
@@ -92,9 +94,7 @@ public class LoadEvent extends AbstractEvent {
 
 		super( source );
 
-		if ( entityId == null ) {
-			throw new IllegalArgumentException( "id to load is required for loading" );
-		}
+		checkNotNullIAE( "entityId", entityId );
 
 		if ( lockOptions.getLockMode() == LockMode.WRITE ) {
 			throw new IllegalArgumentException("Invalid lock mode for loading");

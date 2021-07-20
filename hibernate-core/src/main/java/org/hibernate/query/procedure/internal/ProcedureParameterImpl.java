@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.procedure.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.sql.Types;
@@ -126,12 +128,8 @@ public class ProcedureParameterImpl<T>
 			sqlTypes = new int[] { Types.REF_CURSOR };
 		}
 		else {
-			if ( expectedType == null ) {
-				throw new IllegalArgumentException( "Type cannot be null" );
-			}
-			else {
-				sqlTypes = expectedType.sqlTypes( procedureCall.getSession().getFactory() );
-			}
+			checkNotNullIAE( "expectedType", expectedType );
+			sqlTypes = expectedType.sqlTypes( procedureCall.getSession().getFactory() );
 		}
 
 	}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.transform;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Arrays;
 
 import org.hibernate.HibernateException;
@@ -47,11 +49,8 @@ public class AliasToBeanResultTransformer extends AliasedTupleSubsetResultTransf
 	private Setter[] setters;
 
 	public AliasToBeanResultTransformer(Class resultClass) {
-		if ( resultClass == null ) {
-			throw new IllegalArgumentException( "resultClass cannot be null" );
-		}
 		isInitialized = false;
-		this.resultClass = resultClass;
+		this.resultClass = checkNotNullIAE( "resultClass", resultClass );
 	}
 
 	@Override

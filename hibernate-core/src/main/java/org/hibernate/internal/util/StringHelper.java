@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.util;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.BitSet;
@@ -499,16 +501,14 @@ public final class StringHelper {
 	}
 
 	public static String qualify(String prefix, String name) {
-		if ( name == null || prefix == null ) {
-			throw new NullPointerException( "prefix or name were null attempting to build qualified name" );
-		}
+		checkNotNullNPE( "prefix", prefix );
+		checkNotNullNPE( "name", name );
+
 		return prefix + '.' + name;
 	}
 
 	public static String qualifyConditionally(String prefix, String name) {
-		if ( name == null ) {
-			throw new NullPointerException( "name was null attempting to build qualified name" );
-		}
+		checkNotNullNPE( "name", name );
 		return isEmpty( prefix ) ? name : prefix + '.' + name;
 	}
 

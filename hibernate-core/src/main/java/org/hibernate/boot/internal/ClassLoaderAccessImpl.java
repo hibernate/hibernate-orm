@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.net.URL;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -49,9 +51,7 @@ public class ClassLoaderAccessImpl implements ClassLoaderAccess {
 	@Override
 	@SuppressWarnings("unchecked")
 	public Class<?> classForName(String name) {
-		if ( name == null ) {
-			throw new IllegalArgumentException( "Name of class to load cannot be null" );
-		}
+		checkNotNullIAE( "name", name );
 
 		if ( isSafeClass( name ) ) {
 			return classLoaderService.classForName( name );

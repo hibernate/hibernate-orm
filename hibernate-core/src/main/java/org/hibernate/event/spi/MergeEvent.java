@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 
 /** 
@@ -28,22 +30,12 @@ public class MergeEvent extends AbstractEvent {
 
 	public MergeEvent(String entityName, Object original, Serializable id, EventSource source) {
 		this(entityName, original, source);
-		this.requestedId = id;
-		if ( requestedId == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null identifier"
-				);
-		}
+		this.requestedId = checkNotNullIAE( "id", id );
 	}
 
 	public MergeEvent(Object object, EventSource source) {
 		super(source);
-		if ( object == null ) {
-			throw new IllegalArgumentException(
-					"attempt to create merge event with null entity"
-				);
-		}
-		this.original = object;
+		this.original = checkNotNullIAE( "object", object );
 	}
 
 	public Object getOriginal() {

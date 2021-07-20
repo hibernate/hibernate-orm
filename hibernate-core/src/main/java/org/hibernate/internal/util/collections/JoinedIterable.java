@@ -6,6 +6,8 @@
  */
 package org.hibernate.internal.util.collections;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -27,10 +29,7 @@ public class JoinedIterable<T> implements Iterable<T> {
 	private final TypeSafeJoinedIterator<T> iterator;
 
 	public JoinedIterable(List<Iterable<T>> iterables) {
-		if ( iterables == null ) {
-			throw new NullPointerException( "Unexpected null iterables argument" );
-		}
-		iterator = new TypeSafeJoinedIterator<T>( iterables );
+		iterator = new TypeSafeJoinedIterator<T>( checkNotNullNPE( "iterables", iterables ) );
 	}
 
 	public Iterator<T> iterator() {

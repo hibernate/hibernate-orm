@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.plan.build.internal.spaces;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.PropertyMapping;
@@ -70,9 +72,7 @@ public class CompositePropertyMapping implements PropertyMapping {
 	 * @param propertyName The incoming propertyName argument to validate
 	 */
 	protected void checkIncomingPropertyName(String propertyName) {
-		if ( propertyName == null ) {
-			throw new NullPointerException( "Provided property name cannot be null" );
-		}
+		checkNotNullNPE( "propertyName", propertyName );
 
 		//if ( propertyName.contains( "." ) ) {
 		//	throw new IllegalArgumentException(

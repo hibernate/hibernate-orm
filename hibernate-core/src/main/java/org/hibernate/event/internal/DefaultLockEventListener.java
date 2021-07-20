@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.internal;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+
 import java.io.Serializable;
 
 import org.hibernate.HibernateException;
@@ -46,10 +48,8 @@ public class DefaultLockEventListener extends AbstractLockUpgradeEventListener i
 	 * @throws HibernateException
 	 */
 	public void onLock(LockEvent event) throws HibernateException {
-
-		if ( event.getObject() == null ) {
-			throw new NullPointerException( "attempted to lock null" );
-		}
+		checkNotNullNPE( "event", event );
+		checkNotNullNPE( "event.getObject", event.getObject() );
 
 		if ( event.getLockMode() == LockMode.WRITE ) {
 			throw new HibernateException( "Invalid lock mode for lock()" );

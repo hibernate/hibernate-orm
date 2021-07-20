@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Objects;
@@ -60,9 +62,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 * @return The extracted hash code.
 	 */
 	default int extractHashCode(T value) {
-		if ( value == null ) {
-			throw new IllegalArgumentException( "Value to extract hashCode from cannot be null" );
-		}
+		checkNotNullIAE( "value", value );
 		return value.hashCode();
 	}
 

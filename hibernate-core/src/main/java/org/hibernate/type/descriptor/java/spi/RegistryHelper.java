@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.io.Serializable;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -35,9 +37,7 @@ public class RegistryHelper {
 			Map<Class,JavaTypeDescriptor> descriptorsByClass,
 			Class<J> cls,
 			Supplier<JavaTypeDescriptor<J>> defaultValueSupplier) {
-		if ( cls == null ) {
-			throw new IllegalArgumentException( "Class passed to locate JavaTypeDescriptor cannot be null" );
-		}
+		checkNotNullIAE( "cls", cls );
 
 		JavaTypeDescriptor<J> descriptor = descriptorsByClass.get( cls );
 		if ( descriptor != null ) {

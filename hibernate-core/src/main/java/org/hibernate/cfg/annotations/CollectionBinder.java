@@ -6,6 +6,9 @@
  */
 package org.hibernate.cfg.annotations;
 
+import static org.hibernate.internal.util.Validator.checkNotNullNPE;
+import static org.hibernate.internal.util.Validator.checkNotNullIAE;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -1320,9 +1323,7 @@ public abstract class CollectionBinder {
 			XProperty property,
 			PropertyHolder parentPropertyHolder,
 			MetadataBuildingContext buildingContext) throws MappingException {
-		if ( property == null ) {
-			throw new IllegalArgumentException( "null was passed for argument property" );
-		}
+		checkNotNullIAE( "property", property );
 
 		final PersistentClass collectionEntity = persistentClasses.get( collType.getName() );
 		final String hqlOrderBy = extractHqlOrderBy( jpaOrderBy );

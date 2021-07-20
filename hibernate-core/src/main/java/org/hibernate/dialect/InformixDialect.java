@@ -312,4 +312,19 @@ public class InformixDialect extends Dialect {
 	public String toBooleanValueString(boolean bool) {
 		return bool ? "'t'" : "'f'";
 	}
+	@Override
+	public boolean supportsUnionAll() {
+		return true;
+	}
+
+	@Override
+	public String getSelectClauseNullString(int sqlType) {
+		String typeName = getCastTypeName( sqlType);
+		//trim off the length/precision/scale
+		final int loc = typeName.indexOf( '(' );
+		if ( loc > -1 ) {
+			typeName = typeName.substring( 0, loc );
+		}
+		return "null::" + typeName;
+	}
 }

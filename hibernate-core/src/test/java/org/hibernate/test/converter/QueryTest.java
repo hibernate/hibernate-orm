@@ -19,6 +19,7 @@ import javax.persistence.Table;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertNull;
  * Test AttributeConverter functioning in various Query scenarios.
  *
  * @author Steve Ebersole
+ * @author Ľubomír Varga
  */
 public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
@@ -41,6 +43,17 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		Session session = openSession();
 		session.getTransaction().begin();
 		Employee jDoe = (Employee) session.createQuery( "from Employee e where e.salary = " + SALARY + "f" ).uniqueResult();
+		assertNotNull( jDoe );
+		session.getTransaction().commit();
+		session.close();
+	}
+
+	@Test
+	@TestForIssue("HHH-13728") // https://hibernate.atlassian.net/browse/HHH-13728
+	public void testJpqlEnumWithConverterLiteral() {
+		Session session = openSession();
+		session.getTransaction().begin();
+		Employee jDoe = (Employee) session.createQuery( "from Employee e where e.contractType = org.hibernate.test.converter.QueryTest.ContractType.INTERNAL" ).uniqueResult();
 		assertNotNull( jDoe );
 		session.getTransaction().commit();
 		session.close();
@@ -89,6 +102,8 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		public Float salary;
 		@Convert( converter = BooleanConverter.class )
 		public boolean active = true;
+		@Column(length = 1)
+		public ContractType contractType = ContractType.INTERNAL;
 
 		public Employee() {
 		}
@@ -118,6 +133,43 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
+	public enum ContractType {
+		EXTERNAL_COMPANY('E'),
+		INTERNAL('I'),
+		CONTRACTOR('C'),
+		UNKNOWN('?');
+
+		private final Character code;
+
+		ContractType(Character code) {
+			this.code = code;
+		}
+
+		private static ContractType[] contractTypes = new ContractType[255];
+
+		static {
+			for (int i = 0; i < 255; i++) {
+				contractTypes[i] = UNKNOWN;
+			}
+			contractTypes['E'] = EXTERNAL_COMPANY;
+			contractTypes['I'] = INTERNAL;
+			contractTypes['C'] = CONTRACTOR;
+		}
+
+		public static ContractType fromCode(Character charCode) {
+			ContractType result = contractTypes[charCode];
+			if (result == UNKNOWN) {
+				throw new RuntimeException("I am not able to convert \"" + charCode + "\" to ContractType! Check app version.");
+			} else {
+				return result;
+			}
+		}
+
+		public Character getCode() {
+			return code;
+		}
+	}
+
 	@Converter( autoApply = true )
 	public static class SalaryConverter implements AttributeConverter<Float,Long> {
 		@Override
@@ -138,6 +190,22 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 			}
 
 			return new Float( ( dbData.floatValue() ) / 100 );
+		}
+	}
+
+	@Converter( autoApply = true )
+	public static class ContractTypeConverter implements AttributeConverter<ContractType,Character> {
+		public static final ContractType CONTRACTTYPE_FOR_NULL_CHARACTER = ContractType.UNKNOWN;
+		public static final Character CHARACTER_FOR_NULL_CONTRACTTYPE = CONTRACTTYPE_FOR_NULL_CHARACTER.getCode();
+
+		@Override
+		public Character convertToDatabaseColumn(ContractType contractType) {
+			return contractType == null ? CHARACTER_FOR_NULL_CONTRACTTYPE : contractType.getCode();
+		}
+
+		@Override
+		public ContractType convertToEntityAttribute(Character charCode) {
+			return charCode == null ? CONTRACTTYPE_FOR_NULL_CHARACTER : ContractType.fromCode(charCode);
 		}
 	}
 

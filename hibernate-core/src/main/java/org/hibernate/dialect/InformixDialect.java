@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.NoArgSQLFunction;
 import org.hibernate.dialect.function.NvlFunction;
 import org.hibernate.dialect.function.SQLFunctionTemplate;
@@ -21,6 +22,8 @@ import org.hibernate.dialect.pagination.LegacyFirstLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.unique.InformixUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtracter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtracter;
 import org.hibernate.hql.spi.id.IdTableSupportStandardImpl;
@@ -28,6 +31,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.hql.spi.id.local.AfterUseAction;
 import org.hibernate.hql.spi.id.local.LocalTemporaryTableBulkIdStrategy;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorInformixDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.StandardBasicTypes;
@@ -40,7 +44,8 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Molitor
  */
 public class InformixDialect extends Dialect {
-	
+	private static final String USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME = "hibernate.dialect.informix.use_legacy_boolean_type";	
+	private boolean useLegacyBooleanType;
 	private final UniqueDelegate uniqueDelegate;
 
 	/**
@@ -85,6 +90,16 @@ public class InformixDialect extends Dialect {
 		registerFunction( "current_date", new NoArgSQLFunction( "today", StandardBasicTypes.DATE, false ) );
 
 		uniqueDelegate = new InformixUniqueDelegate( this );
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+		this.useLegacyBooleanType = configurationService.getSetting( USE_LEGACY_BOOLEAN_TYPE_PARAMETER_NAME, StandardConverters.BOOLEAN, false );
+		if ( this.useLegacyBooleanType ) {
+			registerColumnType( Types.BOOLEAN, "smallint" );
+		}		
 	}
 
 	@Override
@@ -310,6 +325,9 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String toBooleanValueString(boolean bool) {
+		if ( this.useLegacyBooleanType ) {
+			return bool ? "1" : "0";
+		}
 		return bool ? "'t'" : "'f'";
 	}
 }

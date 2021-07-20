@@ -2363,6 +2363,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public Expression visitLiteral(SqmLiteral<?> literal) {
 		final Supplier<MappingModelExpressable> inferableTypeAccess = inferrableTypeAccessStack.getCurrent();
 
+		if ( literal.getNodeType() instanceof SqmEnumLiteral ) {
+			return new QueryLiteral<>( literal, (BasicValuedMapping) inferableTypeAccess.get() );
+		}
+
 		if ( literal instanceof SqmLiteralNull ) {
 			final MappingModelExpressable mappingModelExpressable = inferableTypeAccess.get();
 			if ( mappingModelExpressable instanceof BasicValuedMapping ) {
@@ -3713,7 +3717,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final MappingModelExpressable<?> alreadyKnown = determineCurrentExpressable( expression );
 		MappingModelExpressable<?> resolved = alreadyKnown;
 
-		inferrableTypeAccessStack.push( () -> alreadyKnown );
+		if ( alreadyKnown != null ) {
+			inferrableTypeAccessStack.push( () -> alreadyKnown );
+		}
 
 		Expression otherwise = null;
 		try {
@@ -3764,7 +3770,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final MappingModelExpressable<?> alreadyKnown = determineCurrentExpressable( expression );
 		MappingModelExpressable<?> resolved = alreadyKnown;
 
-		inferrableTypeAccessStack.push( () -> alreadyKnown );
+		if ( alreadyKnown != null ) {
+			inferrableTypeAccessStack.push( () -> alreadyKnown );
+		}
 
 		Expression otherwise = null;
 		try {

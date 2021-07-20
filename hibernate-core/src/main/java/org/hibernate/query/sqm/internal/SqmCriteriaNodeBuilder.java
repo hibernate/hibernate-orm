@@ -80,6 +80,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
 import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
@@ -118,6 +119,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -805,7 +807,21 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 			return new SqmLiteralNull<>( this );
 		}
 
-		final SqmExpressable<T> expressable = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+		final SqmExpressable<T> expressable;
+		if ( value instanceof Enum ) {
+			final Enum enumValue = (Enum) value;
+			//noinspection unchecked
+			expressable = new SqmEnumLiteral(
+					enumValue,
+					(EnumJavaTypeDescriptor) getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor( value.getClass() ),
+					enumValue.name(),
+					this
+			);
+		}
+		else {
+			expressable = resolveInferredType( value, typeInferenceSource, getTypeConfiguration() );
+		}
+
 		return new SqmLiteral<>( value, expressable, this );
 	}
 
@@ -831,10 +847,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 			return new SqmLiteralNull<>( this );
 		}
 
-		//noinspection unchecked
+		final SqmExpressable<T> expressable;
+		if ( value instanceof Enum ) {
+			final Enum enumValue = (Enum) value;
+			//noinspection unchecked
+			expressable = new SqmEnumLiteral(
+					enumValue,
+					(EnumJavaTypeDescriptor) getTypeConfiguration().getJavaTypeDescriptorRegistry().resolveDescriptor( value.getClass() ),
+					enumValue.name(),
+					this
+			);
+		}
+		else {
+			//noinspection unchecked
+			expressable = getTypeConfiguration().standardBasicTypeForJavaType( (Class<T>) value.getClass() );
+		}
+
 		return new SqmLiteral<>(
 				value,
-				getTypeConfiguration().standardBasicTypeForJavaType( (Class<T>) value.getClass() ),
+				expressable,
 				this
 		);
 	}

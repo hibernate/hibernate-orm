@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -546,6 +547,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitFunction(SqmFunction sqmFunction) {
+		for ( Object argument : sqmFunction.getArguments() ) {
+			if ( argument instanceof SqmVisitableNode ) {
+				( (SqmVisitableNode) argument ).accept( this );
+			}
+		}
 		return sqmFunction;
 	}
 
@@ -652,6 +658,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitSimpleCaseExpression(SqmCaseSimple<?,?> expression) {
+		expression.getFixture().accept( this );
+		expression.getWhenFragments().forEach( whenFragment -> {
+			whenFragment.getCheckValue().accept( this );
+			whenFragment.getResult().accept( this );
+		} );
+		expression.getOtherwise().accept( this );
 		return expression;
 	}
 
@@ -672,6 +684,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
+		expression.getWhenFragments().forEach( whenFragment -> {
+			whenFragment.getPredicate().accept( this );
+			whenFragment.getResult().accept( this );
+		} );
+		expression.getOtherwise().accept( this );
 		return expression;
 	}
 

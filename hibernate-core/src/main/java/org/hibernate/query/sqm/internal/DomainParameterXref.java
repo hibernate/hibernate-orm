@@ -216,6 +216,9 @@ public class DomainParameterXref {
 		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
 			return ( (SqmJpaCriteriaParameterWrapper) sqmParameter ).getJpaCriteriaParameter();
 		}
+		if ( sqmParameter instanceof JpaCriteriaParameter ) {
+			return (JpaCriteriaParameter) sqmParameter;
+		}
 		return queryParamBySqmParam.get( sqmParameter );
 	}
 

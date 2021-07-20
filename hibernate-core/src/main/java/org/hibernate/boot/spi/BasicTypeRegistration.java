@@ -6,6 +6,10 @@
  */
 package org.hibernate.boot.spi;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeCustomType;
 import org.hibernate.type.CustomType;
@@ -25,7 +29,23 @@ public class BasicTypeRegistration {
 
 	public BasicTypeRegistration(BasicType basicType, String[] registrationKeys) {
 		this.basicType = basicType;
-		this.registrationKeys = registrationKeys;
+		Class returnedClass = basicType.getReturnedClass();
+
+		if ( returnedClass != null ) {
+			String returnedClassName = returnedClass.getName();
+
+			List<String> registrationKeysList = registrationKeys == null || registrationKeys.length == 0 ?
+					new ArrayList<>() :
+					new ArrayList<>( Arrays.asList( registrationKeys ) );
+
+			if ( !registrationKeysList.contains( returnedClassName ) ) {
+				registrationKeysList.add( returnedClassName );
+			}
+			this.registrationKeys = registrationKeysList.toArray( new String[] {} );
+		}
+		else {
+			this.registrationKeys = registrationKeys;
+		}
 	}
 
 	public BasicTypeRegistration(UserType type, String[] keys) {

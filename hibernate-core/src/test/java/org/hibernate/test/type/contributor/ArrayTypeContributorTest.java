@@ -6,14 +6,14 @@
  */
 package org.hibernate.test.type.contributor;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+import javax.persistence.ColumnResult;
+import javax.persistence.ConstructorResult;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.SqlResultSetMapping;
 
-import org.hibernate.Session;
 import org.hibernate.annotations.Type;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -25,13 +25,12 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-11409" )
+@TestForIssue(jiraKey = "HHH-11409")
 public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -46,7 +45,8 @@ public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCas
 				(MetadataBuilderContributor) metadataBuilder ->
 						metadataBuilder.applyTypes( (typeContributions, serviceRegistry) -> {
 							typeContributions.contributeType( ArrayType.INSTANCE );
-						} ));
+						} )
+		);
 	}
 
 	@Override
@@ -65,10 +65,10 @@ public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCas
 	public void test() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<CorporateUser> users = entityManager.createQuery(
-				"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
-			.unwrap( Query.class )
-			.setParameter( "address", new Array(), ArrayType.INSTANCE )
-			.getResultList();
+					"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
+					.unwrap( Query.class )
+					.setParameter( "address", new Array(), ArrayType.INSTANCE )
+					.getResultList();
 
 			assertTrue( users.isEmpty() );
 		} );
@@ -78,15 +78,39 @@ public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCas
 	public void testNativeSQL() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			List<Array> emails = entityManager.createNativeQuery(
-				"select u.emailAddresses from CorporateUser u where u.userName = :name" )
-			.setParameter( "name", "Vlad" )
-			.getResultList();
+					"select u.emailAddresses from CorporateUser u where u.userName = :name" )
+					.setParameter( "name", "Vlad" )
+					.getResultList();
+
+			assertEquals( 1, emails.size() );
+		} );
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<CorporateUserDTO> emails = entityManager.createNativeQuery(
+					"select " +
+							"	u.userName as userName, " +
+							"	u.emailAddresses as emailAddresses " +
+							"from CorporateUser u " +
+							"where u.userName = :name", "CorporateUserDTO" )
+					.setParameter( "name", "Vlad" )
+					.getResultList();
 
 			assertEquals( 1, emails.size() );
 		} );
 	}
 
 	@Entity(name = "CorporateUser")
+	@SqlResultSetMapping(
+			name = "CorporateUserDTO",
+			classes = @ConstructorResult(
+					targetClass = CorporateUserDTO.class,
+					columns = {
+							@ColumnResult(name = "userName", type = String.class),
+							@ColumnResult(name = "emailAddresses", type = Array.class),
+					}
+			)
+
+	)
 	public static class CorporateUser {
 
 		@Id
@@ -108,6 +132,24 @@ public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCas
 		}
 	}
 
+	public static class CorporateUserDTO {
 
+		private String userName;
+
+		private Array emailAddresses = new Array();
+
+		public CorporateUserDTO(String userName, Array emailAddresses) {
+			this.userName = userName;
+			this.emailAddresses = emailAddresses;
+		}
+
+		public String getUserName() {
+			return userName;
+		}
+
+		public Array getEmailAddresses() {
+			return emailAddresses;
+		}
+	}
 }
 

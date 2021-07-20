@@ -7,11 +7,16 @@
 package org.hibernate.envers.test.entities.onetomany;
 
 import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 /**
  * ReferencEd entity
@@ -27,8 +32,12 @@ public class SetRefEdEntity {
 	private String data;
 
 	@Audited
-	@OneToMany(mappedBy = "reference")
+	@OneToMany(fetch = FetchType.LAZY, mappedBy = "reference", cascade = CascadeType.ALL)
 	private Set<SetRefIngEntity> reffering;
+	
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	@ManyToOne(fetch = FetchType.LAZY)
+	private SetRefIngEntity ref;
 
 	public SetRefEdEntity() {
 	}
@@ -64,6 +73,14 @@ public class SetRefEdEntity {
 
 	public void setReffering(Set<SetRefIngEntity> reffering) {
 		this.reffering = reffering;
+	}
+
+	public SetRefIngEntity getRef() {
+		return ref;
+	}
+
+	public void setRef(SetRefIngEntity ref) {
+		this.ref = ref;
 	}
 
 	public boolean equals(Object o) {

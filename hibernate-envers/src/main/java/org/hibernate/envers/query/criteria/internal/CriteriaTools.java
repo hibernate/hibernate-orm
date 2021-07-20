@@ -47,7 +47,10 @@ public abstract class CriteriaTools {
 			return null;
 		}
 
-		if ( relationDesc.getRelationType() == RelationType.TO_ONE ) {
+		if ( relationDesc.getRelationType() == RelationType.TO_ONE
+				|| relationDesc.getRelationType() == RelationType.TO_MANY_MIDDLE
+				|| relationDesc.getRelationType() == RelationType.TO_MANY_NOT_OWNING
+				|| relationDesc.getRelationType() == RelationType.TO_MANY_MIDDLE_NOT_OWNING ) {
 			return relationDesc;
 		}
 

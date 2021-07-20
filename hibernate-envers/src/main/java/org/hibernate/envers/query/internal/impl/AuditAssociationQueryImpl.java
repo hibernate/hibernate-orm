@@ -18,10 +18,12 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
 import org.hibernate.LockMode;
+import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.entities.mapper.id.IdMapper;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
@@ -46,8 +48,9 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 	private final QueryBuilder queryBuilder;
 	private final JoinType joinType;
 	private final String entityName;
-	private final IdMapper ownerAssociationIdMapper;
+	private final RelationDescription relationDescription;
 	private final String ownerAlias;
+	private final String ownerEntityName;
 	private final String alias;
 	private final Map<String, String> aliasToEntityNameMap;
 	private final List<AuditCriterion> criterions = new ArrayList<>();
@@ -71,7 +74,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 		this.queryBuilder = queryBuilder;
 		this.joinType = joinType;
 
-		String ownerEntityName = aliasToEntityNameMap.get( ownerAlias );
+		ownerEntityName = aliasToEntityNameMap.get( ownerAlias );
 		final RelationDescription relationDescription = CriteriaTools.getRelatedEntity(
 				enversService,
 				ownerEntityName,
@@ -81,7 +84,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 			throw new IllegalArgumentException( "Property " + propertyName + " of entity " + ownerEntityName + " is not a valid association for queries" );
 		}
 		this.entityName = relationDescription.getToEntityName();
-		this.ownerAssociationIdMapper = relationDescription.getIdMapper();
+		this.relationDescription = relationDescription;
 		this.ownerAlias = ownerAlias;
 		this.alias = userSuppliedAlias == null ? queryBuilder.generateAlias() : userSuppliedAlias;
 		aliasToEntityNameMap.put( this.alias, entityName );
@@ -240,26 +243,113 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 	}
 
 	protected void addCriterionsToQuery(AuditReaderImplementor versionsReader) {
-		if ( enversService.getEntitiesConfigurations().isVersioned( entityName ) ) {
-			String auditEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
-			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, auditEntityName, alias, false );
+		boolean targetIsAudited = enversService.getEntitiesConfigurations().isVersioned( entityName );
+		String targetEntityName = entityName;
+		if ( targetIsAudited ) {
+			targetEntityName = enversService.getAuditEntitiesConfiguration().getAuditEntityName( entityName );
+		}
+		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
+		String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
+		String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
+
+		if ( relationDescription.getRelationType() == RelationType.TO_ONE ) {
+			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
 
 			// owner.reference_id = target.originalId.id
-			AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
-			String originalIdPropertyName = verEntCfg.getOriginalIdPropName();
-			IdMapper idMapperTarget = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
-			final String prefix = alias.concat( "." ).concat( originalIdPropertyName );
-			ownerAssociationIdMapper.addIdsEqualToQuery(
+			IdMapper idMapperTarget;
+			String prefix;
+			if ( targetIsAudited ) {
+				idMapperTarget = enversService.getEntitiesConfigurations().get( entityName ).getIdMapper();
+				prefix = alias.concat( "." ).concat( originalIdPropertyName );
+			}
+			else {
+				idMapperTarget = enversService.getEntitiesConfigurations()
+						.getNotVersionEntityConfiguration( entityName )
+						.getIdMapper();
+				prefix = alias;
+			}
+			relationDescription.getIdMapper().addIdsEqualToQuery(
 					joinConditionParameters,
 					ownerAlias,
 					idMapperTarget,
 					prefix
 			);
+		}
+		else if ( relationDescription.getRelationType() == RelationType.TO_MANY_NOT_OWNING ) {
+			if ( !targetIsAudited ) {
+				throw new AuditException(
+						"Cannot build queries for relation type " + relationDescription.getRelationType() + " to non audited target entities" );
+			}
+			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
 
+			// owner.originalId.id = target.reference_id
+			IdMapper idMapperOwner = enversService.getEntitiesConfigurations().get( ownerEntityName ).getIdMapper();
+			String prefix = ownerAlias.concat( "." ).concat( originalIdPropertyName );
+			relationDescription.getIdMapper().addIdsEqualToQuery(
+					joinConditionParameters,
+					alias,
+					idMapperOwner,
+					prefix );
+		}
+		else if ( relationDescription.getRelationType() == RelationType.TO_MANY_MIDDLE
+				|| relationDescription.getRelationType() == RelationType.TO_MANY_MIDDLE_NOT_OWNING ) {
+			if ( !targetIsAudited && relationDescription.getRelationType() == RelationType.TO_MANY_MIDDLE_NOT_OWNING ) {
+				throw new AuditException(
+						"Cannot build queries for relation type " + relationDescription.getRelationType() + " to non audited target entities" );
+			}
+			String middleEntityAlias = queryBuilder.generateAlias();
+			// join middle_entity
+			Parameters joinConditionParametersMiddle = queryBuilder.addJoin( joinType, relationDescription.getAuditMiddleEntityName(), middleEntityAlias,
+					false );
+			// join target_entity
+			Parameters joinConditionParametersTarget = queryBuilder.addJoin( joinType, targetEntityName, alias, false );
+
+			Parameters middleParameters = queryBuilder.addParameters( middleEntityAlias );
+			String middleOriginalIdPropertyPath = middleEntityAlias + "." + originalIdPropertyName;
+
+			// join condition: owner.reference_id = middle.id_ref_ing
+			String ownerPrefix = ownerAlias + "." + originalIdPropertyName;
+			MiddleIdData referencingIdData = relationDescription.getReferencingIdData();
+			referencingIdData.getPrefixedMapper().addIdsEqualToQuery( joinConditionParametersMiddle, middleOriginalIdPropertyPath,
+					referencingIdData.getOriginalMapper(), ownerPrefix );
+
+			// join condition: middle.id_ref_ed = target.id
+			String targetPrefix = alias;
+			if ( targetIsAudited ) {
+				targetPrefix = alias + "." + originalIdPropertyName;
+			}
+			MiddleIdData referencedIdData = relationDescription.getReferencedIdData();
+			referencedIdData.getPrefixedMapper().addIdsEqualToQuery( joinConditionParametersTarget, middleOriginalIdPropertyPath,
+					referencedIdData.getOriginalMapper(), targetPrefix );
+
+			// filter revisions of middle entity
+			Parameters middleParametersToUse = middleParameters;
+			if ( joinType == JoinType.LEFT ) {
+				middleParametersToUse = middleParameters.addSubParameters( Parameters.OR );
+				middleParametersToUse.addNullRestriction( revisionPropertyPath, true );
+				middleParametersToUse = middleParametersToUse.addSubParameters( Parameters.AND );
+			}
+			enversService.getAuditStrategy().addAssociationAtRevisionRestriction(
+					queryBuilder, middleParametersToUse, revisionPropertyPath, verEntCfg.getRevisionEndFieldName(), true,
+					referencingIdData, relationDescription.getAuditMiddleEntityName(), middleOriginalIdPropertyPath, revisionPropertyPath,
+					originalIdPropertyName, middleEntityAlias, true );
+
+			// filter deleted middle entities
+			if ( joinType == JoinType.LEFT ) {
+				middleParametersToUse = middleParameters.addSubParameters( Parameters.OR );
+				middleParametersToUse.addNullRestriction( verEntCfg.getRevisionTypePropName(), true );
+			}
+			middleParametersToUse.addWhereWithParam( verEntCfg.getRevisionTypePropName(), true, "!=", RevisionType.DEL );
+		}
+		else {
+			throw new AuditException(
+					"Cannot build queries for relation type " + relationDescription.getRelationType() );
+		}
+
+		if ( targetIsAudited ) {
 			// filter revision of target entity
 			Parameters parametersToUse = parameters;
-			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
-			if (joinType == JoinType.LEFT) {
+			if ( joinType == JoinType.LEFT ) {
 				parametersToUse = parameters.addSubParameters( Parameters.OR );
 				parametersToUse.addNullRestriction( revisionPropertyPath, true );
 				parametersToUse = parametersToUse.addSubParameters( Parameters.AND );
@@ -269,7 +359,7 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 					enversService.getEntitiesConfigurations().get( entityName ).getIdMappingData(),
 					null,
 					entityName,
-					enversService.getEntitiesConfigurations().isVersioned( entityName )
+					true
 			);
 			enversService.getAuditStrategy().addEntityAtRevisionRestriction(
 					enversService.getGlobalConfiguration(),
@@ -284,19 +374,6 @@ public class AuditAssociationQueryImpl<Q extends AuditQueryImplementor>
 					alias,
 					queryBuilder.generateAlias(),
 					true
-			);
-		}
-		else {
-			Parameters joinConditionParameters = queryBuilder.addJoin( joinType, entityName, alias, false );
-			// owner.reference_id = target.id
-			final IdMapper idMapperTarget = enversService.getEntitiesConfigurations()
-					.getNotVersionEntityConfiguration( entityName )
-					.getIdMapper();
-			ownerAssociationIdMapper.addIdsEqualToQuery(
-					joinConditionParameters,
-					ownerAlias,
-					idMapperTarget,
-					alias
 			);
 		}
 

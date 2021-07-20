@@ -9,6 +9,7 @@ package org.hibernate.envers.query.criteria.internal;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -49,8 +50,12 @@ public class RelatedAuditEqualityExpression extends AbstractAtomicExpression {
 		RelationDescription relatedEntity = CriteriaTools.getRelatedEntity( enversService, entityName, propertyName );
 		if ( relatedEntity == null ) {
 			throw new AuditException(
-					"This criterion can only be used on a property that is a relation to another property."
-			);
+					"This criterion can only be used on a property that is a relation to another property." );
+		}
+		else if ( relatedEntity.getRelationType() != RelationType.TO_ONE ) {
+			throw new AuditException(
+					"This type of relation (" + entityName + "." + propertyName +
+							") can't be used with related equality restrictions." );
 		}
 		relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, equals );
 	}

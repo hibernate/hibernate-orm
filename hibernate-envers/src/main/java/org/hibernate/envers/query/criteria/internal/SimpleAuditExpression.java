@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -76,7 +77,7 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 				parameters.addWhereWithParam( alias, propertyName, op, value );
 			}
 		}
-		else {
+		else if ( relatedEntity.getRelationType() == RelationType.TO_ONE ) {
 			if ( !"=".equals( op ) && !"<>".equals( op ) ) {
 				throw new AuditException(
 						"This type of operation: " + op + " (" + entityName + "." + propertyName +
@@ -85,6 +86,11 @@ public class SimpleAuditExpression extends AbstractAtomicExpression {
 			}
 			Object id = relatedEntity.getIdMapper().mapToIdFromEntity( value );
 			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, id, alias, null, "=".equals( op ) );
+		}
+		else {
+			throw new AuditException(
+					"This type of relation (" + entityName + "." + propertyName +
+							") can't be used in audit query restrictions." );
 		}
 	}
 

@@ -7,7 +7,9 @@
 package org.hibernate.envers.query.criteria.internal;
 
 import org.hibernate.envers.boot.internal.EnversService;
+import org.hibernate.envers.exception.AuditException;
 import org.hibernate.envers.internal.entities.RelationDescription;
+import org.hibernate.envers.internal.entities.RelationType;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
 import org.hibernate.envers.internal.tools.query.Parameters;
 import org.hibernate.envers.internal.tools.query.QueryBuilder;
@@ -43,8 +45,13 @@ public class NotNullAuditExpression extends AbstractAtomicExpression {
 		if ( relatedEntity == null ) {
 			parameters.addNotNullRestriction( alias, propertyName );
 		}
-		else {
+		else if ( relatedEntity.getRelationType() == RelationType.TO_ONE ) {
 			relatedEntity.getIdMapper().addIdEqualsToQuery( parameters, null, alias, null, false );
+		}
+		else {
+			throw new AuditException(
+					"This type of relation (" + entityName + "." + propertyName +
+							") can't be used with not null restrictions." );
 		}
 	}
 }

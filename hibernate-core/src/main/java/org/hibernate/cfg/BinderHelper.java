@@ -998,6 +998,7 @@ public class BinderHelper {
 		Ejb3Column[] metaColumns = Ejb3Column.buildColumnFromAnnotation(
 				new javax.persistence.Column[] { metaColumn },
 				null,
+				null,
 				nullability,
 				propertyHolder,
 				inferredData,

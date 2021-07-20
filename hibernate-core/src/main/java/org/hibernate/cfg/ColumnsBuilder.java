@@ -17,6 +17,7 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
@@ -78,6 +79,7 @@ class ColumnsBuilder {
 			columns = Ejb3Column.buildColumnFromAnnotation(
 					new Column[] { ann },
 					formulaAnn,
+					property.getAnnotation( Comment.class ),
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -90,6 +92,7 @@ class ColumnsBuilder {
 			columns = Ejb3Column.buildColumnFromAnnotation(
 					anns.columns(),
 					null,
+					property.getAnnotation( Comment.class ),
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -115,6 +118,7 @@ class ColumnsBuilder {
 					"";
 			joinColumns = Ejb3JoinColumn.buildJoinColumns(
 					null,
+					property.getAnnotation( Comment.class ),
 					mappedBy,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -131,6 +135,7 @@ class ColumnsBuilder {
 			columns = Ejb3Column.buildColumnFromAnnotation(
 					null,
 					null,
+					property.getAnnotation( Comment.class ),
 					nullability,
 					propertyHolder,
 					inferredData,
@@ -154,6 +159,7 @@ class ColumnsBuilder {
 		if ( joinTableAnn != null ) {
 			joinColumns = Ejb3JoinColumn.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
+					property.getAnnotation( Comment.class ),
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -174,6 +180,7 @@ class ColumnsBuilder {
 					: null;
 			joinColumns = Ejb3JoinColumn.buildJoinColumns(
 					null,
+					property.getAnnotation( Comment.class ),
 					mappedBy,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,
@@ -203,6 +210,7 @@ class ColumnsBuilder {
 		if ( joinColumnAnnotations != null ) {
 			return Ejb3JoinColumn.buildJoinColumns(
 					joinColumnAnnotations,
+					property.getAnnotation( Comment.class ),
 					null,
 					entityBinder.getSecondaryTables(),
 					propertyHolder,

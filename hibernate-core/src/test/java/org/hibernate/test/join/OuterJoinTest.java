@@ -1,5 +1,7 @@
 package org.hibernate.test.join;
 
+import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -256,6 +258,10 @@ public class OuterJoinTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB doesn't support ON condition with subqueries yet"
+	)
 	public void testJoinOrderWithRightJoinWithInnerImplicitJoins() {
 		doInJPA( this::sessionFactory, em -> {
 			List<Tuple> resultList = em.createQuery("SELECT COALESCE(a.key,b.key,c.key,d.key) AS key, a.value AS aValue, b.value AS bValue, c.value AS cValue, d.value AS dValue " +

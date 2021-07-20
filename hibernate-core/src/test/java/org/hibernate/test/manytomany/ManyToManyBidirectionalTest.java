@@ -8,7 +8,6 @@ package org.hibernate.test.manytomany;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -17,9 +16,11 @@ import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -65,6 +66,10 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB do not support FK violation checking"
+	)
 	@FailureExpected( jiraKey = "HHH-12239")
 	public void testRemoveMappedBySide() {
 		Address _address1 = doInJPA( this::entityManagerFactory, entityManager -> {

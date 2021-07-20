@@ -14,8 +14,10 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.criterion.Projections;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -46,6 +48,10 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB do not support cascades update"
+	)
 	public void testSaveOrUpdateDeepTree() {
 		clearCounts();
 
@@ -339,6 +345,10 @@ public class SaveOrUpdateTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB do not support cascades update"
+	)
 	public void testSaveOrUpdateGotWithMutableProp() {
 		clearCounts();
 

@@ -98,6 +98,13 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:mariadb://' + dbHost + '/hibernate_orm_test'
                 ],
+                tidb : [
+                        'db.dialect' : 'org.hibernate.dialect.TiDBDialect',
+                        'jdbc.driver': 'com.mysql.jdbc.Driver',
+                        'jdbc.user'  : 'hibernateormtest',
+                        'jdbc.pass'  : 'hibernateormtest',
+                        'jdbc.url'   : 'jdbc:mysql://localhost/hibernate_orm_test'
+                ],
                 postgis : [
                         'db.dialect' : 'org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect',
                         'jdbc.driver': 'org.postgresql.Driver',

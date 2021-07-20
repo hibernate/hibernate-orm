@@ -63,7 +63,7 @@ public class CompoundSelectionImpl<X>
 			valueHandlers.add( valueHandler );
 			foundHandlers = foundHandlers || valueHandler != null;
 		}
-		return foundHandlers ? null : valueHandlers;
+		return foundHandlers ? valueHandlers : null;
 	}
 
 	public void registerParameters(ParameterRegistry registry) {

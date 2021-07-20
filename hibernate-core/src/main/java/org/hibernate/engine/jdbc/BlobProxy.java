@@ -112,6 +112,9 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		if ( length < 0 ) {
 			throw new SQLException( "Length must be great-than-or-equal to zero." );
 		}
+		if ( length == length()) {
+			return DataHelper.extractBytes( getBinaryStream() );
+		}
 		return DataHelper.extractBytes( getStream(), start-1, length );
 	}
 
@@ -163,6 +166,9 @@ public final class BlobProxy implements Blob, BlobImplementer {
 		if ( start > length() ) {
 			throw new SQLException( "Start position [" + start + "] cannot exceed overall CLOB length [" + length() + "]" );
 		}
+		if ( length == length()) {
+			return DataHelper.subStream( getBinaryStream() );
+		}
 		if ( length > Integer.MAX_VALUE ) {
 			throw new SQLException( "Can't deal with Blobs larger than Integer.MAX_VALUE" );
 		}
@@ -201,7 +207,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 
 		@Override
 		public long getLength() {
-			return (int) length;
+			return length;
 		}
 
 		@Override

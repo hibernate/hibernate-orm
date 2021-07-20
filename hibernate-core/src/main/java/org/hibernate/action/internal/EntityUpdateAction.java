@@ -171,7 +171,9 @@ public class EntityUpdateAction extends EntityAction {
 		final SharedSessionContractImplementor session = getSession();
 		final Object instance = getInstance();
 
-		final boolean veto = preUpdate();
+		if ( preUpdate() ) {
+			return;
+		}
 
 		final SessionFactoryImplementor factory = session.getFactory();
 		Object previousVersion = this.previousVersion;
@@ -196,27 +198,24 @@ public class EntityUpdateAction extends EntityAction {
 		else {
 			ck = null;
 		}
-
-		if ( !veto ) {
-			persister.update(
-					id,
-					state,
-					dirtyFields,
-					hasDirtyCollection,
-					previousState,
-					previousVersion,
-					instance,
-					rowId,
-					session
-			);
-		}
+		persister.update(
+				id,
+				state,
+				dirtyFields,
+				hasDirtyCollection,
+				previousState,
+				previousVersion,
+				instance,
+				rowId,
+				session
+		);
 
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 		if ( entry == null ) {
-			throw new AssertionFailure( "possible nonthreadsafe access to session" );
+			throw new AssertionFailure( "possible non thread safe access to session" );
 		}
 
-		if ( entry.getStatus()==Status.MANAGED || persister.isVersionPropertyGenerated() ) {
+		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			// get the updated snapshot of the entity state by cloning current state;
 			// it is safe to copy in place, since by this time no-one else (should have)
 			// has a reference  to the array
@@ -242,12 +241,12 @@ public class EntityUpdateAction extends EntityAction {
 
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( persister.canWriteToCache() ) {
-			if ( persister.isCacheInvalidationRequired() || entry.getStatus()!= Status.MANAGED ) {
-				persister.getCacheAccessStrategy().remove( session, ck);
+			if ( persister.isCacheInvalidationRequired() || entry.getStatus() != Status.MANAGED ) {
+				persister.getCacheAccessStrategy().remove( session, ck );
 			}
 			else if ( session.getCacheMode().isPutEnabled() ) {
 				//TODO: inefficient if that cache is just going to ignore the updated state!
-				final CacheEntry ce = persister.buildCacheEntry( instance,state, nextVersion, getSession() );
+				final CacheEntry ce = persister.buildCacheEntry( instance, state, nextVersion, getSession() );
 				cacheEntry = persister.getCacheEntryStructure().structure( ce );
 
 				final boolean put = cacheUpdate( persister, previousVersion, ck );
@@ -270,9 +269,10 @@ public class EntityUpdateAction extends EntityAction {
 
 		postUpdate();
 
-		if ( statistics.isStatisticsEnabled() && !veto ) {
+		if ( statistics.isStatisticsEnabled() ) {
 			statistics.updateEntity( getPersister().getEntityName() );
 		}
+
 	}
 
 	protected boolean cacheUpdate(EntityPersister persister, Object previousVersion, Object ck) {

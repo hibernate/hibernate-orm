@@ -13,6 +13,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,7 +50,9 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -305,7 +308,43 @@ public class ActionQueue {
 
 	@SuppressWarnings("unchecked")
 	private <T extends Executable & Comparable & Serializable> void addAction(Class<T> executableClass, T action) {
+		if ( action instanceof EntityUpdateAction && trySquashEntityUpdateAction( (EntityUpdateAction) action ) ) {
+			return;
+		}
 		EXECUTABLE_LISTS_MAP.get( executableClass ).getOrInit( this ).add( action );
+	}
+
+	private boolean trySquashEntityUpdateAction(EntityUpdateAction action) {
+		if ( insertions != null ) {
+			for ( NonIdentifierAttribute attr : action.getPersister().getEntityMetamodel().getProperties()) {
+				// avoid potential foreign key violation
+				final Type type = attr.getType();
+				if ( type instanceof EntityType ) {
+					return false;
+				}
+				else if ( type instanceof ComponentType ) {
+					for ( Type t : ((ComponentType) type).getSubtypes() ) {
+						if ( t instanceof EntityType ) {
+							return false;
+						}
+					}
+				}
+			}
+			final Iterator<AbstractEntityInsertAction> it = insertions.iterator();
+			while ( it.hasNext() ) {
+				final AbstractEntityInsertAction insertAction = it.next();
+				if ( insertAction.getInstance() == action.getInstance() ) {
+					final Object[] oldState = insertAction.getState();
+					final Object[] newState = action.getState();
+					final int[] dirtyFields = action.getDirtyFields();
+					for (int i = 0; i < dirtyFields.length; i++) {
+						oldState[dirtyFields[i]] = newState[dirtyFields[i]];
+					}
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**

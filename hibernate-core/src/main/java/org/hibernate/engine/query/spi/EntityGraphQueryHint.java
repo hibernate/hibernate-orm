@@ -114,7 +114,6 @@ public class EntityGraphQueryHint implements AppliedGraph {
 			// TODO: This is ignored by collection types and probably wrong for entity types.  Presumably it screws
 			// with inheritance.
 			final String role = className + "." + attributeName;
-			final String classAlias = origin.getClassAlias();
 			final String originTableAlias = origin.getTableAlias();
 			final Type propertyType = origin.getPropertyType( attributeName, attributeName );
 
@@ -132,7 +131,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 
 						final FromElementFactory fromElementFactory = new FromElementFactory(
 								fromClause, origin,
-								attributeName, classAlias, columns, false
+								attributeName, null, columns, false
 						);
 						final JoinSequence joinSequence = walker.getSessionFactoryHelper().createJoinSequence(
 								false, entityType, tableAlias, JoinType.LEFT_OUTER_JOIN, columns
@@ -154,7 +153,7 @@ public class EntityGraphQueryHint implements AppliedGraph {
 
 						final FromElementFactory fromElementFactory = new FromElementFactory(
 								fromClause, origin,
-								attributeName, classAlias, columns, false
+								attributeName, null, columns, false
 						);
 						final QueryableCollection queryableCollection = walker.getSessionFactoryHelper()
 								.requireQueryableCollection( collectionType.getRole() );

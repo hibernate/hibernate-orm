@@ -143,6 +143,7 @@ ext {
             derby:           "org.apache.derby:derby:10.14.2.0",
             postgresql:      'org.postgresql:postgresql:42.2.16',
             mysql:           'mysql:mysql-connector-java:8.0.17',
+            tidb:            'mysql:mysql-connector-java:8.0.17',
             mariadb:         'org.mariadb.jdbc:mariadb-java-client:2.2.3',
             cockroachdb:     'org.postgresql:postgresql:42.2.8',
 

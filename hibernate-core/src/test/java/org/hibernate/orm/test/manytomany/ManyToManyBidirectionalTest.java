@@ -17,6 +17,8 @@ import javax.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
 
+import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -72,6 +74,10 @@ public class ManyToManyBidirectionalTest {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB do not support FK violation checking"
+	)
 	@FailureExpected(jiraKey = "HHH-12239")
 	public void testRemoveMappedBySide(EntityManagerFactoryScope scope) {
 		Address _address1 = scope.fromTransaction( entityManager -> {

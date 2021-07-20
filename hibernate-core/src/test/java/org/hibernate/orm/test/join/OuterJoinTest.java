@@ -11,6 +11,8 @@ import javax.persistence.PrimaryKeyJoinColumn;
 import javax.persistence.Table;
 import javax.persistence.Tuple;
 
+import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.AfterAll;
@@ -224,6 +226,7 @@ public class OuterJoinTest {
 	}
 
 	@Test
+	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
 	public void testJoinOrderWithRightJoinWithInnerImplicitJoins(EntityManagerFactoryScope scope) {
 		scope.inTransaction( em -> {
 			List<Tuple> resultList = em.createQuery(

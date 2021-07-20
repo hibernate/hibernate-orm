@@ -42,7 +42,6 @@ import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.TableBinder;
 import org.hibernate.id.IdentifierGenerator;
-import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -690,8 +689,7 @@ public class BinderHelper {
 			//yuk! this is a hack not to override 'AUTO' even if generator is set
 			final boolean avoidOverriding =
 					identifierGeneratorStrategy.equals( "identity" )
-							|| identifierGeneratorStrategy.equals( "seqhilo" )
-							|| identifierGeneratorStrategy.equals( MultipleHiLoPerTableGenerator.class.getName() );
+							|| identifierGeneratorStrategy.equals( "seqhilo" );
 			if ( generatorType == null || !avoidOverriding ) {
 				id.setIdentifierGeneratorStrategy( identifierGeneratorStrategy );
 			}

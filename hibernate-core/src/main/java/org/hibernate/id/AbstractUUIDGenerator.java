@@ -15,7 +15,6 @@ import org.hibernate.internal.util.BytesHelper;
  * class implements the algorithm, subclasses define the identifier
  * format.
  *
- * @see UUIDHexGenerator
  * @author Gavin King
  */
 public abstract class AbstractUUIDGenerator implements IdentifierGenerator {

@@ -39,11 +39,6 @@ public class NationalizedLobFieldTest extends BaseCoreFunctionalTestCase {
 		return new Class[] {MyEntity.class};
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "false" );
-	}
-
 	@Test
 	public void testNationalization() {
 		Session s = openSession();

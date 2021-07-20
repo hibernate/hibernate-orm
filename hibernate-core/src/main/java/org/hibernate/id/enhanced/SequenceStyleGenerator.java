@@ -107,7 +107,13 @@ public class SequenceStyleGenerator
 	 * Indicates the name of the sequence (or table) to use.  The implicit value is
 	 * based on the entity / collection-role name
 	 */
-	public static final String SEQUENCE_PARAM = "sequence_name";
+	public static final String SEQUENCE_PARAM = PersistentIdentifierGenerator.SEQUENCE_NAME_PARAM;
+
+	/**
+	 * @deprecated (as of 6.0) Prefer {@link #SEQUENCE_PARAM} instead
+	 */
+	@Deprecated
+	public static final String SEQUENCE_PARAM_LEGACY = "sequence";
 
 	/**
 	 * @deprecated As of 6.0 with no replacement - `hibernate_sequence` as a real, implicit exportable name
@@ -285,18 +291,23 @@ public class SequenceStyleGenerator
 				ConfigurationHelper.getString( SCHEMA, params )
 		);
 
-		final String sequenceName = ConfigurationHelper.getString( SEQUENCE_PARAM, params );
-		if ( StringHelper.isNotEmpty( sequenceName ) ) {
+		final String explicitSequenceName = ConfigurationHelper.getString(
+				SEQUENCE_PARAM,
+				params,
+				() -> ConfigurationHelper.getString( SEQUENCE_PARAM_LEGACY, params )
+		);
+
+		if ( StringHelper.isNotEmpty( explicitSequenceName ) ) {
 			// we have an explicit name, use it
-			if ( sequenceName.contains( "." ) ) {
+			if ( explicitSequenceName.contains( "." ) ) {
 				//
-				return QualifiedNameParser.INSTANCE.parse( sequenceName );
+				return QualifiedNameParser.INSTANCE.parse( explicitSequenceName );
 			}
 			else {
 				return new QualifiedNameParser.NameParts(
 						catalog,
 						schema,
-						jdbcEnv.getIdentifierHelper().toIdentifier( sequenceName )
+						jdbcEnv.getIdentifierHelper().toIdentifier( explicitSequenceName )
 				);
 			}
 		}

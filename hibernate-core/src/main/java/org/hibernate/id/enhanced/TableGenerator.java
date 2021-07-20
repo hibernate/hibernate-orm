@@ -66,13 +66,6 @@ import org.jboss.logging.Logger;
  * performing generation, which would mean that we would have a row in the generator
  * table for each entity name.  Or any configuration really; the setup is very flexible.
  * <p/>
- * In this respect it is very similar to the legacy
- * {@link org.hibernate.id.MultipleHiLoPerTableGenerator} in terms of the
- * underlying storage structure (namely a single table capable of holding
- * multiple generator values).  The differentiator is, as with
- * {@link SequenceStyleGenerator} as well, the externalized notion
- * of an optimizer.
- * <p/>
  * <b>NOTE</b> that by default we use a single row for all generators (based
  * on {@link #DEF_SEGMENT_VALUE}).  The configuration parameter
  * {@link #CONFIG_PREFER_SEGMENT_PER_ENTITY} can be used to change that to
@@ -382,13 +375,9 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 		String fallbackTableName = DEF_TABLE;
 
-		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
-		if ( preferGeneratorNameAsDefaultName ) {
-			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-			if ( StringHelper.isNotEmpty( generatorName ) ) {
-				fallbackTableName = generatorName;
-			}
+		final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+		if ( StringHelper.isNotEmpty( generatorName ) ) {
+			fallbackTableName = generatorName;
 		}
 
 

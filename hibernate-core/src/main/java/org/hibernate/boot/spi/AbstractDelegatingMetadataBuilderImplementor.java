@@ -135,12 +135,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder enableNewIdentifierGeneratorSupport(boolean enable) {
-		delegate.enableNewIdentifierGeneratorSupport( enable );
-		return getThis();
-	}
-
-	@Override
 	public MetadataBuilder enableExplicitDiscriminatorsForJoinedSubclassSupport(boolean enabled) {
 		delegate.enableExplicitDiscriminatorsForJoinedSubclassSupport( enabled );
 		return getThis();

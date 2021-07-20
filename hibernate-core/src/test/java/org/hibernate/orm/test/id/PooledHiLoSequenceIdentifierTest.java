@@ -44,7 +44,6 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
@@ -55,7 +54,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = PooledHiLoSequenceIdentifierTest.SequenceIdentifier.class
 )
 @SessionFactory
-@ServiceRegistry(settings = @Setting(name = USE_NEW_ID_GENERATOR_MAPPINGS, value = "true"))
 public class PooledHiLoSequenceIdentifierTest {
 
 	@AfterEach

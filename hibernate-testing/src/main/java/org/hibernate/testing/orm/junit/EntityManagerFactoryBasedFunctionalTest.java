@@ -24,7 +24,6 @@ import javax.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -111,8 +110,6 @@ public class EntityManagerFactoryBasedFunctionalTest
 		if ( exportSchema() ) {
 			settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
-
-		settings.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 
 		return settings;
 	}

@@ -223,7 +223,6 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		final Dialect dialect = BaseCoreFunctionalTestCase.getDialect();
 
 		ssrb.applySetting( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
-		ssrb.applySetting( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
 			ssrb.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 			final String secondSchemaName = createSecondSchema();
@@ -316,7 +315,6 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected void initialize(MetadataBuilder metadataBuilder) {
-		metadataBuilder.enableNewIdentifierGeneratorSupport( true );
 		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyLegacyJpaImpl.INSTANCE );
 	}
 

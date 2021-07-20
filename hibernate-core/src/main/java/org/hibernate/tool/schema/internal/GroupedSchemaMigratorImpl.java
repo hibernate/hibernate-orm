@@ -6,14 +6,18 @@
  */
 package org.hibernate.tool.schema.internal;
 
+import java.sql.SQLException;
 import java.util.Set;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.mapping.Table;
+import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
+import org.hibernate.tool.schema.extract.internal.DatabaseInformationCachedImpl;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.NameSpaceTablesInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
@@ -33,6 +37,20 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 			HibernateSchemaManagementTool tool,
 			SchemaFilter schemaFilter) {
 		super( tool, schemaFilter );
+	}
+
+	protected DatabaseInformation getDatabaseInformation(DdlTransactionIsolator ddlTransactionIsolator, Namespace namespace) {
+		final JdbcEnvironment jdbcEnvironment = tool.getServiceRegistry().getService( JdbcEnvironment.class );
+		try {
+			return new DatabaseInformationCachedImpl(
+				tool.getServiceRegistry(),
+				jdbcEnvironment,
+				ddlTransactionIsolator,
+				namespace);
+		}
+		catch (SQLException e) {
+			throw jdbcEnvironment.getSqlExceptionHelper().convert( e, "Unable to build DatabaseInformationCached" );
+		}
 	}
 
 	@Override

@@ -52,7 +52,7 @@ public class TeradataSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getForShare() {
+	protected String getForShare(int timeoutMillis) {
 		return "locking row for read ";
 	}
 

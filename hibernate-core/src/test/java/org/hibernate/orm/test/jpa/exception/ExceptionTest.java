@@ -12,7 +12,9 @@ import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.exception.ConstraintViolationException;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -116,6 +118,10 @@ public class ExceptionTest {
 	}
 
 	@Test
+	@SkipForDialect(
+			value = TiDBDialect.class,
+			comment = "TiDB do not support FK violation checking"
+	)
 	public void testConstraintViolationException(EntityManagerFactoryScope scope) {
 		scope.inEntityManager(
 				entityManager -> {

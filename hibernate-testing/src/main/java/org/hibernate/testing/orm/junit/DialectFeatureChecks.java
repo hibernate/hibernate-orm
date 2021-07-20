@@ -18,6 +18,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.FetchClauseType;
 
 /**
@@ -254,7 +255,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof PostgreSQLDialect && dialect.getVersion() >= 950
 					|| dialect instanceof SQLServerDialect
 					|| dialect instanceof DerbyDialect
-					|| dialect instanceof MySQLDialect
+					|| dialect instanceof MySQLDialect && !(dialect instanceof TiDBDialect)
 					|| dialect instanceof MariaDBDialect;
 		}
 	}

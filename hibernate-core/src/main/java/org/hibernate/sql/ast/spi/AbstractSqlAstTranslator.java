@@ -1103,7 +1103,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		if ( lockKind != LockKind.NONE ) {
 			if ( lockKind == LockKind.SHARE ) {
-				appendSql( getForShare() );
+				appendSql( getForShare( timeoutMillis ) );
 				if ( forUpdateClause.hasAliases() && getDialect().getReadRowLockStrategy() != RowLockStrategy.NONE ) {
 					appendSql( " of " );
 					forUpdateClause.appendAliases( this );
@@ -1150,7 +1150,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return " for update";
 	}
 
-	protected String getForShare() {
+	protected String getForShare(int timeoutMillis) {
 		return " for update";
 	}
 

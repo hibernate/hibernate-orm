@@ -41,7 +41,7 @@ public class CockroachSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected String getForShare() {
+	protected String getForShare(int timeoutMillis) {
 		return " for share";
 	}
 

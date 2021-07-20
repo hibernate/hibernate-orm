@@ -44,6 +44,7 @@ stage('Configure') {
 // 		buildEnv('8', 'sybase'),
 		buildEnv('8', 'hana', 'HANA'),
 		buildEnv('8', 's390x', 's390x'),
+		buildEnv('8', 'tidb', 'tidb'),
 		// Disable EDB for now as the image is not available anymore
 // 		buildEnv('8', 'edb')
 	];
@@ -157,6 +158,9 @@ stage('Build') {
 								break;
 							case "mysql8":
 								runTest("-Pdb=mysql_ci")
+								break;
+							case "tidb":
+								runTest("-Pdb=tidb -DdbHost=localhost:4000", 'TIDB')
 								break;
 							case "postgresql_9_5":
 							case "postgresql_13":

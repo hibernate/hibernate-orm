@@ -119,7 +119,7 @@ public class XmlParserHelper {
 		ContextProvidingValidationEventHandler handler = new ContextProvidingValidationEventHandler();
 		try {
 			staxEventReader = new JpaNamespaceTransformingEventReader( staxEventReader );
-			JAXBContext jaxbContext = JAXBContext.newInstance( ObjectFactory.class );
+			JAXBContext jaxbContext = JAXBContext.newInstance( ObjectFactory.class.getPackage().getName(), getClass().getClassLoader() );
 			Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
 			unmarshaller.setSchema( schema );
 			unmarshaller.setEventHandler( handler );
@@ -133,6 +133,8 @@ public class XmlParserHelper {
 			builder.append( handler.getColumnNumber() );
 			builder.append( ". Message: " );
 			builder.append( handler.getMessage() );
+			builder.append( ". Exception message: " );
+			builder.append( e.getMessage() );
 			throw new XmlParsingException( builder.toString(), e );
 		}
 	}

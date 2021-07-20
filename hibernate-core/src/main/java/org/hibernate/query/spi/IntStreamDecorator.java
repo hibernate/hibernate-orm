@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.IntSummaryStatistics;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
@@ -26,14 +27,13 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
+import org.hibernate.HibernateException;
 import org.hibernate.Incubating;
+import org.hibernate.internal.util.ReflectHelper;
 
 /**
- * The {@link IntStreamDecorator} wraps a Java {@link IntStream} and registers a {@code closeHandler}
- * which is passed further to any resulting {@link Stream}.
- * <p>
- * The goal of the {@link IntStreamDecorator} is to close the underlying {@link IntStream} upon
- * calling a terminal operation.
+ * The {@link IntStreamDecorator} wraps a Java {@link IntStream} to close the underlying
+ * {@link IntStream} upon calling a terminal operation.
  *
  * @author Vlad Mihalcea
  * @since 5.4
@@ -42,271 +42,275 @@ import org.hibernate.Incubating;
 public class IntStreamDecorator implements IntStream {
 
 	private final IntStream delegate;
-	private final Runnable closeHandler;
 
 	public IntStreamDecorator(
-			IntStream delegate,
-			Runnable closeHandler) {
-		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose( closeHandler );
+			IntStream delegate) {
+		this.delegate = delegate;
+	}
+
+	private IntStream newDecorator(IntStream stream) {
+		return delegate == stream ? this : new IntStreamDecorator( stream );
 	}
 
 	@Override
 	public IntStream filter(IntPredicate predicate) {
-		return new IntStreamDecorator(
-				delegate.filter( predicate ),
-				closeHandler
-		);
+		return newDecorator( delegate.filter( predicate ) );
 	}
 
 	@Override
 	public IntStream map(IntUnaryOperator mapper) {
-		return new IntStreamDecorator(
-				delegate.map( mapper ),
-				closeHandler
-		);
+		return newDecorator( delegate.map( mapper ) );
 	}
 
 	@Override
 	public <U> Stream<U> mapToObj(IntFunction<? extends U> mapper) {
-		return new StreamDecorator<>(
-				delegate.mapToObj( mapper ),
-				closeHandler
-		);
+		return new StreamDecorator<>( delegate.mapToObj( mapper ) );
 	}
 
 	@Override
 	public LongStream mapToLong(IntToLongFunction mapper) {
-		return new LongStreamDecorator(
-				delegate.mapToLong( mapper ),
-				closeHandler
-		);
+		return new LongStreamDecorator( delegate.mapToLong( mapper ) );
 	}
 
 	@Override
 	public DoubleStream mapToDouble(IntToDoubleFunction mapper) {
-		return new DoubleStreamDecorator(
-				delegate.mapToDouble( mapper ),
-				closeHandler
-		);
+		return new DoubleStreamDecorator( delegate.mapToDouble( mapper ) );
 	}
 
 	@Override
 	public IntStream flatMap(IntFunction<? extends IntStream> mapper) {
-		return new IntStreamDecorator(
-				delegate.flatMap( mapper ),
-				closeHandler
-		);
+		return newDecorator( delegate.flatMap( mapper ) );
 	}
 
 	@Override
 	public IntStream distinct() {
-		return new IntStreamDecorator(
-				delegate.distinct(),
-				closeHandler
-		);
+		return newDecorator( delegate.distinct() );
 	}
 
 	@Override
 	public IntStream sorted() {
-		return new IntStreamDecorator(
-				delegate.sorted(),
-				closeHandler
-		);
+		return newDecorator( delegate.sorted() );
 	}
 
 	@Override
 	public IntStream peek(IntConsumer action) {
-		return new IntStreamDecorator(
-				delegate.peek( action ),
-				closeHandler
-		);
+		return newDecorator( delegate.peek( action ) );
 	}
 
 	@Override
 	public IntStream limit(long maxSize) {
-		return new IntStreamDecorator(
-				delegate.limit( maxSize ),
-				closeHandler
-		);
+		return newDecorator( delegate.limit( maxSize ) );
 	}
 
 	@Override
 	public IntStream skip(long n) {
-		return new IntStreamDecorator(
-				delegate.skip( n ),
-				closeHandler
-		);
+		return newDecorator( delegate.skip( n ) );
 	}
 
 	@Override
 	public void forEach(IntConsumer action) {
-		delegate.forEach( action );
-		close();
+		try {
+			delegate.forEach( action );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public void forEachOrdered(IntConsumer action) {
-		delegate.forEachOrdered( action );
-		close();
+		try {
+			delegate.forEachOrdered( action );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public int[] toArray() {
-		int[] result = delegate.toArray();
-		close();
-		return result;
+		try {
+			return delegate.toArray();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public int reduce(int identity, IntBinaryOperator op) {
-		int result = delegate.reduce( identity, op );
-		close();
-		return result;
+		try {
+			return delegate.reduce( identity, op );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt reduce(IntBinaryOperator op) {
-		OptionalInt result = delegate.reduce( op );
-		close();
-		return result;
+		try {
+			return delegate.reduce( op );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <R> R collect(
 			Supplier<R> supplier, ObjIntConsumer<R> accumulator, BiConsumer<R, R> combiner) {
-		R result = delegate.collect( supplier, accumulator, combiner );
-		close();
-		return result;
+		try {
+			return delegate.collect( supplier, accumulator, combiner );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public int sum() {
-		int result = delegate.sum();
-		close();
-		return result;
+		try {
+			return delegate.sum();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt min() {
-		OptionalInt result = delegate.min();
-		close();
-		return result;
+		try {
+			return delegate.min();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt max() {
-		OptionalInt result = delegate.max();
-		close();
-		return result;
+		try {
+			return delegate.max();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public long count() {
-		long result = delegate.count();
-		close();
-		return result;
+		try {
+			return delegate.count();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalDouble average() {
-		OptionalDouble result = delegate.average();
-		close();
-		return result;
+		try {
+			return delegate.average();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public IntSummaryStatistics summaryStatistics() {
-		IntSummaryStatistics result = delegate.summaryStatistics();
-		close();
-		return result;
+		try {
+			return delegate.summaryStatistics();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean anyMatch(IntPredicate predicate) {
-		boolean result = delegate.anyMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.anyMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean allMatch(IntPredicate predicate) {
-		boolean result = delegate.allMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.allMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean noneMatch(IntPredicate predicate) {
-		boolean result = delegate.noneMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.noneMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt findFirst() {
-		OptionalInt result = delegate.findFirst();
-		close();
-		return result;
+		try {
+			return delegate.findFirst();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public OptionalInt findAny() {
-		OptionalInt result = delegate.findAny();
-		close();
-		return result;
+		try {
+			return delegate.findAny();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public LongStream asLongStream() {
-		LongStream result = delegate.asLongStream();
-		close();
-		return result;
+		return new LongStreamDecorator( delegate.asLongStream() );
 	}
 
 	@Override
 	public DoubleStream asDoubleStream() {
-		DoubleStream result = delegate.asDoubleStream();
-		close();
-		return result;
+		return new DoubleStreamDecorator( delegate.asDoubleStream() );
 	}
 
 	@Override
 	public Stream<Integer> boxed() {
-		return new StreamDecorator<>(
-				delegate.boxed(),
-				closeHandler
-		);
+		return new StreamDecorator<>( delegate.boxed() );
 	}
 
 	@Override
 	public IntStream sequential() {
-		return new IntStreamDecorator(
-				delegate.sequential(),
-				closeHandler
-		);
+		return newDecorator( delegate.sequential() );
 	}
 
 	@Override
 	public IntStream parallel() {
-		return new IntStreamDecorator(
-				delegate.parallel(),
-				closeHandler
-		);
+		return newDecorator( delegate.parallel() );
 	}
 
 	@Override
 	public IntStream unordered() {
-		return new IntStreamDecorator(
-				delegate.unordered(),
-				closeHandler
-		);
+		return newDecorator( delegate.unordered() );
 	}
 
 	@Override
 	public IntStream onClose(Runnable closeHandler) {
-		this.delegate.onClose( closeHandler );
-		return this;
+		return newDecorator( delegate.onClose( closeHandler ) );
 	}
 
 	@Override
@@ -328,4 +332,33 @@ public class IntStreamDecorator implements IntStream {
 	public boolean isParallel() {
 		return delegate.isParallel();
 	}
+
+	//Methods added to JDK 9
+
+	public IntStream takeWhile(IntPredicate predicate) {
+		try {
+			IntStream result = (IntStream)
+					ReflectHelper.getMethod( IntStream.class, "takeWhile", IntPredicate.class )
+							.invoke( delegate, predicate );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public IntStream dropWhile(IntPredicate predicate) {
+		try {
+			IntStream result = (IntStream)
+					ReflectHelper.getMethod( Stream.class, "dropWhile", IntPredicate.class )
+							.invoke( delegate, predicate );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	//Methods added to JDK 16
+	//TODO: Find a way to support mapMulti(DoubleMapMultiConsumer)
 }

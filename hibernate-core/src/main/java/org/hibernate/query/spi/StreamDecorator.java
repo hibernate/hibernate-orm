@@ -9,14 +9,18 @@ package org.hibernate.query.spi;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
+import java.util.function.DoubleConsumer;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
@@ -33,11 +37,8 @@ import org.hibernate.Incubating;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
- * The {@link StreamDecorator} wraps a Java {@link Stream} and registers a {@code closeHandler}
- * which is passed further to any resulting {@link Stream}.
- *
- * The goal of the {@link StreamDecorator} is to close the underlying {@link Stream} upon
- * calling a terminal operation.
+ * The {@link StreamDecorator} wraps a Java {@link Stream} to close the underlying
+ * {@link Stream} upon calling a terminal operation.
  *
  * @author Vlad Mihalcea
  * @since 5.4
@@ -46,225 +47,262 @@ import org.hibernate.internal.util.ReflectHelper;
 public class StreamDecorator<R> implements Stream<R> {
 
 	private final Stream<R> delegate;
-	private final Runnable closeHandler;
 
 	public StreamDecorator(
-			Stream<R> delegate,
-			Runnable closeHandler) {
-		this.closeHandler = closeHandler;
-		this.delegate = delegate.onClose( closeHandler );
+			Stream<R> delegate) {
+		this.delegate = delegate;
+	}
+
+	@SuppressWarnings("unchecked")
+	private <T> Stream<T> newDecorator(Stream<T> stream) {
+		return delegate == stream ? (Stream<T>) this : new StreamDecorator<>( stream );
 	}
 
 	@Override
 	public Stream<R> filter(Predicate<? super R> predicate) {
-		return new StreamDecorator<R>( delegate.filter( predicate ), closeHandler );
+		return newDecorator( delegate.filter( predicate ) );
 	}
 
 	@Override
 	public <R1> Stream<R1> map(Function<? super R, ? extends R1> mapper) {
-		return new StreamDecorator<>( delegate.map( mapper ), closeHandler );
+		return newDecorator( delegate.map( mapper ) );
 	}
 
 	@Override
 	public IntStream mapToInt(ToIntFunction<? super R> mapper) {
-		return new IntStreamDecorator(
-				delegate.mapToInt( mapper ),
-				closeHandler
-		);
+		return new IntStreamDecorator( delegate.mapToInt( mapper ) );
 	}
 
 	@Override
 	public LongStream mapToLong(ToLongFunction<? super R> mapper) {
-		return new LongStreamDecorator(
-				delegate.mapToLong( mapper ),
-				closeHandler
-		);
+		return new LongStreamDecorator( delegate.mapToLong( mapper ) );
 	}
 
 	@Override
 	public DoubleStream mapToDouble(ToDoubleFunction<? super R> mapper) {
-		return new DoubleStreamDecorator(
-				delegate.mapToDouble( mapper ),
-				closeHandler
-		);
+		return new DoubleStreamDecorator( delegate.mapToDouble( mapper ) );
 	}
 
 	@Override
 	public <R1> Stream<R1> flatMap(Function<? super R, ? extends Stream<? extends R1>> mapper) {
-		return new StreamDecorator<>( delegate.flatMap( mapper ), closeHandler );
+		return newDecorator( delegate.flatMap( mapper ) );
 	}
 
 	@Override
 	public IntStream flatMapToInt(Function<? super R, ? extends IntStream> mapper) {
-		return new IntStreamDecorator(
-				delegate.flatMapToInt( mapper ),
-				closeHandler
-		);
+		return new IntStreamDecorator( delegate.flatMapToInt( mapper ) );
 	}
 
 	@Override
 	public LongStream flatMapToLong(Function<? super R, ? extends LongStream> mapper) {
-		return new LongStreamDecorator(
-				delegate.flatMapToLong( mapper ),
-				closeHandler
-		);
+		return new LongStreamDecorator( delegate.flatMapToLong( mapper ) );
 	}
 
 	@Override
 	public DoubleStream flatMapToDouble(Function<? super R, ? extends DoubleStream> mapper) {
-		return new DoubleStreamDecorator(
-				delegate.flatMapToDouble( mapper ),
-				closeHandler
-		);
+		return new DoubleStreamDecorator( delegate.flatMapToDouble( mapper ) );
 	}
 
 	@Override
 	public Stream<R> distinct() {
-		return new StreamDecorator<>( delegate.distinct(), closeHandler );
+		return newDecorator( delegate.distinct() );
 	}
 
 	@Override
 	public Stream<R> sorted() {
-		return new StreamDecorator<>( delegate.sorted(), closeHandler );
+		return newDecorator( delegate.sorted() );
 	}
 
 	@Override
 	public Stream<R> sorted(Comparator<? super R> comparator) {
-		return new StreamDecorator<>( delegate.sorted( comparator ), closeHandler );
+		return newDecorator( delegate.sorted( comparator ) );
 	}
 
 	@Override
 	public Stream<R> peek(Consumer<? super R> action) {
-		return new StreamDecorator<>( delegate.peek( action ), closeHandler );
+		return newDecorator( delegate.peek( action ) );
 	}
 
 	@Override
 	public Stream<R> limit(long maxSize) {
-		return new StreamDecorator<>( delegate.limit( maxSize ), closeHandler );
+		return newDecorator( delegate.limit( maxSize ) );
 	}
 
 	@Override
 	public Stream<R> skip(long n) {
-		return new StreamDecorator<>( delegate.skip( n ), closeHandler );
+		return newDecorator( delegate.skip( n ) );
 	}
 
 	@Override
 	public void forEach(Consumer<? super R> action) {
-		delegate.forEach( action );
-		close();
+		try {
+			delegate.forEach(action);
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public void forEachOrdered(Consumer<? super R> action) {
-		delegate.forEachOrdered( action );
-		close();
+		try {
+			delegate.forEachOrdered( action );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Object[] toArray() {
-		Object[] result = delegate.toArray();
-		close();
-		return result;
+		try {
+			return delegate.toArray();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <A> A[] toArray(IntFunction<A[]> generator) {
-		A[] result = delegate.toArray( generator );
-		close();
-		return result;
+		try {
+			return delegate.toArray( generator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public R reduce(R identity, BinaryOperator<R> accumulator) {
-		R result = delegate.reduce( identity, accumulator );
-		close();
-		return result;
+		try {
+			return delegate.reduce( identity, accumulator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> reduce(BinaryOperator<R> accumulator) {
-		Optional<R> result = delegate.reduce( accumulator );
-		close();
-		return result;
+		try {
+			return delegate.reduce( accumulator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <U> U reduce(
 			U identity, BiFunction<U, ? super R, U> accumulator, BinaryOperator<U> combiner) {
-		U result = delegate.reduce( identity, accumulator, combiner );
-		close();
-		return result;
+		try {
+			return delegate.reduce( identity, accumulator, combiner );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <R1> R1 collect(
 			Supplier<R1> supplier, BiConsumer<R1, ? super R> accumulator, BiConsumer<R1, R1> combiner) {
-		R1 result = delegate.collect( supplier, accumulator, combiner );
-		close();
-		return result;
+		try {
+			return delegate.collect( supplier, accumulator, combiner );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public <R1, A> R1 collect(Collector<? super R, A, R1> collector) {
-		R1 result = delegate.collect( collector );
-		close();
-		return result;
+		try {
+			return delegate.collect( collector );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> min(Comparator<? super R> comparator) {
-		Optional<R> result = delegate.min( comparator );
-		close();
-		return result;
+		try {
+			return delegate.min( comparator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> max(Comparator<? super R> comparator) {
-		Optional<R> result = delegate.max( comparator );
-		close();
-		return result;
+		try {
+			return delegate.max( comparator );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public long count() {
-		long result = delegate.count();
-		close();
-		return result;
+		try {
+			return delegate.count();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean anyMatch(Predicate<? super R> predicate) {
-		boolean result = delegate.anyMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.anyMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean allMatch(Predicate<? super R> predicate) {
-		boolean result = delegate.allMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.allMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public boolean noneMatch(Predicate<? super R> predicate) {
-		boolean result = delegate.noneMatch( predicate );
-		close();
-		return result;
+		try {
+			return delegate.noneMatch( predicate );
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> findFirst() {
-		Optional<R> result = delegate.findFirst();
-		close();
-		return result;
+		try {
+			return delegate.findFirst();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
 	public Optional<R> findAny() {
-		Optional<R> result = delegate.findAny();
-		close();
-		return result;
+		try {
+			return delegate.findAny();
+		}
+		finally {
+			close();
+		}
 	}
 
 	@Override
@@ -284,23 +322,22 @@ public class StreamDecorator<R> implements Stream<R> {
 
 	@Override
 	public Stream<R> sequential() {
-		return new StreamDecorator<>( delegate.sequential(), closeHandler );
+		return newDecorator( delegate.sequential() );
 	}
 
 	@Override
 	public Stream<R> parallel() {
-		return new StreamDecorator<>( delegate.parallel(), closeHandler );
+		return newDecorator( delegate.parallel() );
 	}
 
 	@Override
 	public Stream<R> unordered() {
-		return new StreamDecorator<>( delegate.unordered(), closeHandler );
+		return newDecorator( delegate.unordered() );
 	}
 
 	@Override
 	public Stream<R> onClose(Runnable closeHandler) {
-		this.delegate.onClose( closeHandler );
-		return this;
+		return newDecorator( delegate.onClose( closeHandler ) );
 	}
 
 	@Override
@@ -316,7 +353,7 @@ public class StreamDecorator<R> implements Stream<R> {
 			Stream<R> result = (Stream<R>)
 					ReflectHelper.getMethod( Stream.class, "takeWhile", Predicate.class )
 							.invoke( delegate, predicate );
-			return new StreamDecorator<>( result, closeHandler );
+			return newDecorator( result );
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			throw new HibernateException( e );
@@ -329,10 +366,76 @@ public class StreamDecorator<R> implements Stream<R> {
 			Stream<R> result = (Stream<R>)
 					ReflectHelper.getMethod( Stream.class, "dropWhile", Predicate.class )
 							.invoke( delegate, predicate );
-			return new StreamDecorator<>( result, closeHandler );
+			return newDecorator( result );
 		}
 		catch (IllegalAccessException | InvocationTargetException e) {
 			throw new HibernateException( e );
+		}
+	}
+
+	//Methods added to JDK 16
+
+	public <T> Stream<T> mapMulti(BiConsumer<? super R, ? super Consumer<T>> mapper) {
+		try {
+			@SuppressWarnings("unchecked")
+			Stream<T> result = (Stream<T>)
+					ReflectHelper.getMethod( Stream.class, "mapMulti", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return newDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public IntStream mapMultiToInt(BiConsumer<? super R, ? super IntConsumer> mapper) {
+		try {
+			IntStream result = (IntStream)
+					ReflectHelper.getMethod( Stream.class, "mapMultiToInt", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return new IntStreamDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public LongStream mapMultiToLong(BiConsumer<? super R, ? super LongConsumer> mapper) {
+		try {
+			LongStream result = (LongStream)
+					ReflectHelper.getMethod( Stream.class, "mapMultiToLong", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return new LongStreamDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	public DoubleStream mapMultiToDouble(BiConsumer<? super R, ? super DoubleConsumer> mapper) {
+		try {
+			DoubleStream result = (DoubleStream)
+					ReflectHelper.getMethod( Stream.class, "mapMultiToDouble", BiConsumer.class )
+							.invoke( delegate, mapper );
+			return new DoubleStreamDecorator( result );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<R> toList() {
+		try {
+			return (List<R>)
+					ReflectHelper.getMethod( Stream.class, "toList", BiConsumer.class )
+							.invoke( delegate );
+		}
+		catch (IllegalAccessException | InvocationTargetException e) {
+			throw new HibernateException( e );
+		}
+		finally {
+			close();
 		}
 	}
 }

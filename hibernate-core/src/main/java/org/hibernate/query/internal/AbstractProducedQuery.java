@@ -1600,8 +1600,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		final Spliterator<R> spliterator = Spliterators.spliteratorUnknownSize( iterator, Spliterator.NONNULL );
 
 		return new StreamDecorator<>(
-				StreamSupport.stream( spliterator, false ),
-				iterator::close
+				StreamSupport.stream( spliterator, false ).onClose( iterator::close )
 		);
 	}
 

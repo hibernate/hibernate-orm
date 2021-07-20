@@ -57,7 +57,7 @@ public class PropertyMap {
 
 	@ManyToAny( metaColumn = @Column( name = "property_type" ) )
 	@AnyMetaDef(
-			idType = "integer", metaType = "string",
+			idType = "integer",
 			metaValues = {
 			@MetaValue( value = "S", targetEntity = StringProperty.class ),
 			@MetaValue( value = "I", targetEntity = IntegerProperty.class ) } )

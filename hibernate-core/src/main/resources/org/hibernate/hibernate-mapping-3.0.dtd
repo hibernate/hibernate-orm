@@ -459,7 +459,7 @@ holding the name of the class (for that row). -->
 
 <!ELEMENT any (meta*,meta-value*,column,column+)>
 	<!ATTLIST any id-type CDATA #REQUIRED>
-	<!ATTLIST any meta-type CDATA #IMPLIED>			 	<!--- default: Hibernate.STRING -->
+	<!ATTLIST any meta-type CDATA "string">			 	<!--- default: Hibernate.STRING -->
 	<!ATTLIST any name CDATA #REQUIRED>
 	<!ATTLIST any access CDATA #IMPLIED>
 	<!ATTLIST any insert (true|false) "true">

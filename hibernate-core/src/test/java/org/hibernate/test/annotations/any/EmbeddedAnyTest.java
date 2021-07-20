@@ -113,7 +113,7 @@ public class EmbeddedAnyTest extends BaseEntityManagerFunctionalTestCase {
 	@Embeddable
 	public static class FooEmbeddable {
 
-		@AnyMetaDef(idType = "integer", metaType = "string", metaValues = {
+		@AnyMetaDef(idType = "integer", metaValues = {
 				@MetaValue(value = "1", targetEntity = Bar1.class),
 				@MetaValue(value = "2", targetEntity = Bar2.class)
 		})

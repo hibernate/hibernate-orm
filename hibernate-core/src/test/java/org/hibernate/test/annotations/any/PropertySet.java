@@ -41,7 +41,7 @@ public class PropertySet {
 
 	@ManyToAny(
 			metaColumn = @Column( name = "property_type" ) )
-	@AnyMetaDef( idType = "integer", metaType = "string",
+	@AnyMetaDef( idType = "integer",
 			metaValues = {
 			@MetaValue( value = "S", targetEntity = StringProperty.class ),
 			@MetaValue( value = "I", targetEntity = IntegerProperty.class ) } )
@@ -76,7 +76,7 @@ public class PropertySet {
 
 	@Any( metaColumn = @Column( name = "property_type" ) )
 	@Cascade( value = { CascadeType.ALL } )
-	@AnyMetaDef( idType = "integer", metaType = "string", metaValues = {
+	@AnyMetaDef( idType = "integer", metaValues = {
 	@MetaValue( value = "S", targetEntity = StringProperty.class ),
 	@MetaValue( value = "I", targetEntity = IntegerProperty.class )
 			} )

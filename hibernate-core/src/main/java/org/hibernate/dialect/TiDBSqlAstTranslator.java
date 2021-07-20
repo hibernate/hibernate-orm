@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
@@ -21,13 +22,14 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
 /**
- * A SQL AST translator for MariaDB.
+ * A SQL AST translator for TiDB.
  *
  * @author Christian Beikov
+ * @author Cong Wang
  */
-public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
 
-	public MariaDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
+	public TiDBSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
 	}
 
@@ -41,14 +43,10 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		booleanExpressionPredicate.getExpression().accept( this );
 	}
 
-	@Override
-	protected String getForShare(int timeoutMillis) {
-		return " lock in share mode";
-	}
-
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
 		// Check if current query part is already row numbering to avoid infinite recursion
-		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart && supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
+		return useOffsetFetchClause( queryPart ) && getQueryPartForRowNumbering() != queryPart
+				&& getDialect().supportsWindowFunctions() && !isRowsOnlyFetchClauseType( queryPart );
 	}
 
 	@Override
@@ -80,12 +78,12 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	protected void renderSearchClause(CteStatement cte) {
-		// MariaDB does not support this, but it's just a hint anyway
+		// TiDB does not support this, but it's just a hint anyway
 	}
 
 	@Override
 	protected void renderCycleClause(CteStatement cte) {
-		// MariaDB does not support this, but it can be emulated
+		// TiDB does not support this, but it can be emulated
 	}
 
 	@Override
@@ -115,11 +113,30 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	}
 
 	@Override
+	public boolean supportsRowValueConstructorSyntaxInInList() {
+		return getDialect().getVersion() >= 570;
+	}
+
+	@Override
 	protected boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
 		return false;
 	}
 
-	private boolean supportsWindowFunctions() {
-		return getDialect().getVersion() >= 1020;
+	@Override
+	protected String getFromDual() {
+		return " from dual";
+	}
+
+	@Override
+	protected String getForShare(int timeoutMillis) {
+		if ( timeoutMillis == LockOptions.NO_WAIT ) {
+			return getForUpdate();
+		}
+		return " lock in share mode";
+	}
+
+	@Override
+	public TiDBDialect getDialect() {
+		return (TiDBDialect) super.getDialect();
 	}
 }

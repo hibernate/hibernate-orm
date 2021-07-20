@@ -31,6 +31,7 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.userguide.model.AddressType;
@@ -1666,6 +1667,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support subqueries for ON condition")
 	public void test_hql_collection_index_operator_example_3() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-collection-index-operator-example[]

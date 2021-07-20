@@ -42,7 +42,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getForShare() {
+	protected String getForShare(int timeoutMillis) {
 		return getDialect().getVersion() >= 800 ? " for share" : " lock in share mode";
 	}
 

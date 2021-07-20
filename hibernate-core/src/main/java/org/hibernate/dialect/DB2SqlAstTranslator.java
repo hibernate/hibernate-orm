@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -118,7 +117,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected String getForShare() {
+	protected String getForShare(int timeoutMillis) {
 		return " for read only with rs use and keep share locks";
 	}
 

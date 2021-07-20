@@ -888,6 +888,7 @@ constant
 	| NUM_BIG_INTEGER
 	| NUM_BIG_DECIMAL
 	| QUOTED_STRING
+	| JDBC_DATETIMELITERAL
 	| NULL
 	| TRUE
 	| FALSE
@@ -991,6 +992,10 @@ ID_LETTER
 
 QUOTED_STRING
 	  : '\'' ( (ESCqs)=> ESCqs | ~'\'' )* '\''
+	;
+
+JDBC_DATETIMELITERAL
+	: ('{' ("ts" | "t" | "d") ' ' QUOTED_STRING '}' )
 	;
 
 protected

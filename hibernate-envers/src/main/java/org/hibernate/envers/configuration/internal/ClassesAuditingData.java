@@ -14,6 +14,7 @@ import java.util.Map;
 import org.hibernate.MappingException;
 import org.hibernate.envers.ModificationStore;
 import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.envers.RelationTargetNotFoundAction;
 import org.hibernate.envers.configuration.internal.metadata.reader.AuditedPropertiesHolder;
 import org.hibernate.envers.configuration.internal.metadata.reader.ClassAuditingData;
 import org.hibernate.envers.configuration.internal.metadata.reader.ComponentAuditingData;
@@ -166,6 +167,7 @@ public class ClassesAuditingData {
 						propertyAccessorName,
 						ModificationStore.FULL,
 						RelationTargetAuditMode.AUDITED,
+						RelationTargetNotFoundAction.ERROR,
 						null,
 						null,
 						false,
@@ -188,6 +190,7 @@ public class ClassesAuditingData {
 							propertyAccessorName,
 							ModificationStore.FULL,
 							RelationTargetAuditMode.AUDITED,
+							RelationTargetNotFoundAction.ERROR,
 							null,
 							null,
 							true,

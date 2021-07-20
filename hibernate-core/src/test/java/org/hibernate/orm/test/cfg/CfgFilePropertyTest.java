@@ -10,17 +10,18 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.Properties;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.persistence.Persistence;
 
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
-import static org.hibernate.internal.util.ConfigHelper.findAsResource;
 import static org.junit.Assert.assertNull;
 
 /**
@@ -36,8 +37,9 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 
 		Thread thread = new Thread( () -> {
 			try {
-				final Properties props = new Properties();
-				props.setProperty( AvailableSettings.CFG_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
+				final Map props = new HashMap();
+				props.put( AvailableSettings.CFG_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CLASSLOADERS, Collections.singletonList( new TestClassLoader() ) );
 
 				Persistence.createEntityManagerFactory( "ExcludeUnlistedClassesTest1", props );
 			}
@@ -45,23 +47,24 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 				exceptionHolder.set( e );
 			}
 		} );
-		thread.setContextClassLoader( new ClassLoader() {
-
-			@Override
-			protected Enumeration<URL> findResources(String name) throws IOException {
-				return name.equals( "META-INF/persistence.xml" ) ?
-					Collections.enumeration(
-						Collections.singletonList(
-							findAsResource( "org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" )
-						)
-					) :
-					Collections.emptyEnumeration();
-			}
-		}  );
 
 		thread.start();
 		thread.join();
 
 		assertNull( exceptionHolder.get() );
+	}
+
+	private static class TestClassLoader extends ClassLoader {
+		@Override
+		protected Enumeration<URL> findResources(String name) throws IOException {
+			return name.equals( "META-INF/persistence.xml" ) ?
+					Collections.enumeration(
+							Collections.singletonList(
+									ClassLoaderServiceTestingImpl.INSTANCE.locateResource(
+											"org/hibernate/jpa/test/persistenceunit/META-INF/persistence.xml" )
+							)
+					) :
+					Collections.emptyEnumeration();
+		}
 	}
 }

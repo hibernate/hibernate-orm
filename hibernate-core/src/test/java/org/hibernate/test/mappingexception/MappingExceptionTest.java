@@ -22,8 +22,8 @@ import org.hibernate.InvalidMappingException;
 import org.hibernate.MappingException;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.internal.util.ConfigHelper;
 
+import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
 
@@ -141,7 +141,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		String resourceName = "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml";
 		File file = File.createTempFile( "TempInvalidMapping", ".hbm.xml" );
 		file.deleteOnExit();
-		copy( ConfigHelper.getConfigStream( resourceName ), file );
+		copy( ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( resourceName ), file );
 
 		Configuration cfg = new Configuration();
 		try {
@@ -193,7 +193,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 
 
 		try {
-			cfg.addInputStream( ConfigHelper.getResourceAsStream( resourceName ) );
+			cfg.addInputStream( ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( resourceName ) );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {
@@ -220,7 +220,7 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 		}
 
 		try {
-			cfg.addURL( ConfigHelper.findAsResource( resourceName ) );
+			cfg.addURL( ClassLoaderServiceTestingImpl.INSTANCE.locateResource( resourceName ) );
 			fail();
 		}
 		catch ( InvalidMappingException inv ) {

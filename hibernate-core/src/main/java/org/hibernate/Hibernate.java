@@ -14,12 +14,16 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.HibernateIterator;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.query.spi.AbstractParameterDescriptor;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.QueryParameter;
+import org.hibernate.query.internal.NativeQueryImpl;
+import org.hibernate.query.internal.QueryParameterImpl;
 
 /**
  * <ul>
@@ -208,6 +212,74 @@ public final class Hibernate {
 		}
 
 		return true;
+	}
+
+	/**
+	 * This method sets the parameter type that a native query should expect for a named parameter,
+	 * and what it should treat it as, when the parameter is null.<br/>
+	 * This is mostly useful for PostgreSQL, where type is checked before null.<br/>
+	 * Useful for bypassing this common error:<br/>
+	 * {@code org.postgresql.util.PSQLException: ERROR: operator does not exist: [text/bigint/other] = bytea}
+	 *
+	 * @param query The native query.
+	 * @param name The parameter name.
+	 * @param type The expected class.
+	 * @return The Parameter object useful for {@code setParameter(Parameter<T>, T value)} calls.
+	 */
+	@Incubating
+	public static <T> javax.persistence.Parameter<T> setQueryParameterType(javax.persistence.Query query, String name, Class<T> type) {
+		if ( ! (query instanceof NativeQueryImpl ) ) {
+			throw new IllegalArgumentException( "This helper method is only used for Hibernate Native queries. Non-native queries determine type automatically." );
+		}
+		NativeQueryImpl<?> natQ = ( NativeQueryImpl<?> ) query;
+		org.hibernate.type.Type expectedType = natQ.getProducer().getFactory().getTypeHelper().heuristicType( type.getName() );
+		QueryParameter<?> param = natQ.getParameter( name );
+		if ( param instanceof QueryParameterImpl ) {
+			QueryParameterImpl<?> paramDescriptor = ( QueryParameterImpl<?> ) param;
+			paramDescriptor.setHibernateType( expectedType );
+		}
+		else if ( param instanceof AbstractParameterDescriptor ) {
+			AbstractParameterDescriptor paramDescriptor = ( AbstractParameterDescriptor ) param;
+			paramDescriptor.resetExpectedType( expectedType );
+		}
+		else {
+			throw new HibernateException( "Unknown parameter type. Implementation altered, but this method was forgotten." );
+		}
+		return ( javax.persistence.Parameter<T> ) param;
+	}
+
+	/**
+	 * This method sets the parameter type that a native query should expect for a named parameter,
+	 * and what it should treat it as, when the parameter is null.<br/>
+	 * This is mostly useful for PostgreSQL, where type is checked before null.<br/>
+	 * Useful for bypassing this common error:<br/>
+	 * {@code org.postgresql.util.PSQLException: ERROR: operator does not exist: [text/bigint/other] = bytea}
+	 *
+	 * @param query The native query.
+	 * @param index The parameter index.
+	 * @param type The expected class.
+	 * @return The Parameter object useful for {@code setParameter(Parameter<T>, T value)} calls.
+	 */
+	@Incubating
+	public static <T> javax.persistence.Parameter<T> setQueryParameterType(javax.persistence.Query query, int index, Class<T> type) {
+		if ( ! (query instanceof NativeQueryImpl ) ) {
+			throw new IllegalArgumentException( "This helper method is only used for Hibernate Native queries. Non-native queries determine type automatically." );
+		}
+		NativeQueryImpl<?> natQ = ( NativeQueryImpl<?> ) query;
+		org.hibernate.type.Type expectedType = natQ.getProducer().getFactory().getTypeHelper().heuristicType( type.getName() );
+		QueryParameter<?> param = natQ.getParameter( index );
+		if ( param instanceof QueryParameterImpl ) {
+			QueryParameterImpl<?> paramDescriptor = ( QueryParameterImpl<?> ) param;
+			paramDescriptor.setHibernateType( expectedType );
+		}
+		else if ( param instanceof AbstractParameterDescriptor ) {
+			AbstractParameterDescriptor paramDescriptor = ( AbstractParameterDescriptor ) param;
+			paramDescriptor.resetExpectedType( expectedType );
+		}
+		else {
+			throw new HibernateException( "Unknown parameter type. Implementation altered, but this method was forgotten." );
+		}
+		return ( javax.persistence.Parameter<T> ) param;
 	}
 
     /**

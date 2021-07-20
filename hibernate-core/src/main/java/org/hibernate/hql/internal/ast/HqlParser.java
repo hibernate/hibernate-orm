@@ -427,6 +427,19 @@ public final class HqlParser extends HqlBaseParser {
 					}
 				}
 				break;
+			case JOIN:
+				// Treat quoted string as ident if follows keyword join
+				// in.musicmaster causing issue as in is a keyword
+				// Any domains ending with 'in' Entities will face issues. Other bugs to be resolved later.
+				if (LA(2) == QUOTED_STRING) {
+					LT(2).setType(IDENT);
+					String id = unquote(LT(2).getText());
+					LT(2).setText(id);
+					if ( LOG.isDebugEnabled() ) {
+						LOG.debugf("weakKeywords() : new LT(2) token - %s", LT( 2 ));
+					}
+				}
+				break;
 			default:
 				// Case 2: The current token is after FROM and before '.'.
 				if ( LA( 0 ) == FROM && t != IDENT && LA( 2 ) == DOT ) {

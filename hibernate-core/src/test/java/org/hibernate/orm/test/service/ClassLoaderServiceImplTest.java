@@ -19,7 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.integrator.spi.Integrator;
-import org.hibernate.internal.util.ConfigHelper;
+import org.hibernate.internal.util.ResourcesHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
@@ -108,9 +108,12 @@ public class ClassLoaderServiceImplTest {
     	@Override
         protected Enumeration<URL> findResources(String name) throws IOException {
     		if (name.equals( "META-INF/services/org.hibernate.integrator.spi.Integrator" )) {
-    			final URL serviceUrl = ConfigHelper.findAsResource(
-						"org/hibernate/orm/test/service/org.hibernate.integrator.spi.Integrator" );
-    			return new Enumeration<URL>() {
+				// Not using the org.hibernate.testing.boot.ClassLoaderServiceTestingImpl.INSTANCE here since we are testing the ClassLoaderService
+    			final URL serviceUrl = ResourcesHelper.locateResourceAsUrl(
+						"org/hibernate/orm/test/service/org.hibernate.integrator.spi.Integrator",
+						ClassLoaderServiceImplTest.class.getClassLoader()
+				);
+				return new Enumeration<URL>() {
         			boolean hasMore = true;
         			
     				@Override

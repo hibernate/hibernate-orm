@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +27,7 @@ import javax.xml.validation.Validator;
 
 import org.hibernate.boot.archive.internal.ArchiveHelper;
 import org.hibernate.boot.registry.classloading.internal.ClassLoaderServiceImpl;
+import org.hibernate.boot.registry.classloading.internal.TcclLookupPrecedence;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.ConfigXsdSupport;
 import org.hibernate.cfg.AvailableSettings;
@@ -62,7 +64,7 @@ public class PersistenceXmlParser {
 	 */
 	public static List<ParsedPersistenceXmlDescriptor> locatePersistenceUnits(Map integration) {
 		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				ClassLoaderServiceImpl.fromConfigSettings( integration ),
+				getClassLoaderService( integration ),
 				PersistenceUnitTransactionType.RESOURCE_LOCAL
 		);
 		parser.doResolve( integration );
@@ -111,7 +113,7 @@ public class PersistenceXmlParser {
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
 		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				ClassLoaderServiceImpl.fromConfigSettings( integration ),
+				getClassLoaderService( integration ),
 				transactionType
 		);
 
@@ -167,7 +169,7 @@ public class PersistenceXmlParser {
 		assert StringHelper.isNotEmpty( name );
 
 		final PersistenceXmlParser parser = new PersistenceXmlParser(
-				ClassLoaderServiceImpl.fromConfigSettings( integration ),
+				getClassLoaderService( integration ),
 				transactionType
 		);
 
@@ -187,7 +189,6 @@ public class PersistenceXmlParser {
 			PersistenceUnitTransactionType transactionType) {
 		return parse( persistenceXmlUrl, transactionType, Collections.emptyMap() );
 	}
-
 	/**
 	 * Generic method to parse a specified {@code persistence.xml} and return a Map of descriptors
 	 * for all discovered persistence-units keyed by the PU name.
@@ -202,8 +203,9 @@ public class PersistenceXmlParser {
 			URL persistenceXmlUrl,
 			PersistenceUnitTransactionType transactionType,
 			Map integration) {
+
 		PersistenceXmlParser parser = new PersistenceXmlParser(
-				ClassLoaderServiceImpl.fromConfigSettings( integration ),
+				getClassLoaderService( integration ),
 				transactionType
 		);
 
@@ -442,6 +444,15 @@ public class PersistenceXmlParser {
 		else {
 			throw new PersistenceException( "Unknown persistence unit transaction type : " + value );
 		}
+	}
+
+	private static ClassLoaderService getClassLoaderService( Map integration ) {
+		final List<ClassLoader> providedClassLoaders = new ArrayList<>();
+		final Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) integration.get( AvailableSettings.CLASSLOADERS );
+		if ( classLoaders != null ) {
+			providedClassLoaders.addAll( classLoaders );
+		}
+		return new ClassLoaderServiceImpl( providedClassLoaders, TcclLookupPrecedence.AFTER);
 	}
 
 	private Document loadUrl(URL xmlUrl) {

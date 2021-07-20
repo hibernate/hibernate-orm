@@ -413,41 +413,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String TC_CLASSLOADER = "hibernate.classLoader.tccl_lookup_precedence";
 
 	/**
-	 * Names the {@link ClassLoader} used to load user application classes.
-	 * @since 4.0
-	 *
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String APP_CLASSLOADER = "hibernate.classLoader.application";
-
-	/**
-	 * Names the {@link ClassLoader} Hibernate should use to perform resource loading.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String RESOURCES_CLASSLOADER = "hibernate.classLoader.resources";
-
-	/**
-	 * Names the {@link ClassLoader} responsible for loading Hibernate classes.  By default this is
-	 * the {@link ClassLoader} that loaded this class.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String HIBERNATE_CLASSLOADER = "hibernate.classLoader.hibernate";
-
-	/**
-	 * Names the {@link ClassLoader} used when Hibernate is unable to locate classes on the
-	 * {@link #APP_CLASSLOADER} or {@link #HIBERNATE_CLASSLOADER}.
-	 * @since 4.0
-	 * @deprecated Use {@link #CLASSLOADERS} instead
-	 */
-	@Deprecated
-	String ENVIRONMENT_CLASSLOADER = "hibernate.classLoader.environment";
-
-	/**
 	 * @deprecated use {@link #JPA_METAMODEL_POPULATION} instead.
 	 */
 	@Deprecated

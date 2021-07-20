@@ -9,12 +9,16 @@ package org.hibernate.envers.query.internal.impl;
 import java.util.Collection;
 import java.util.List;
 
+import javax.persistence.criteria.JoinType;
+
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleIdData;
 import org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants;
 import org.hibernate.envers.internal.reader.AuditReaderImplementor;
+import org.hibernate.envers.query.AuditAssociationQuery;
+import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.query.Query;
 
@@ -25,6 +29,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 	private final Number revision;
@@ -50,6 +55,32 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 		this.includeDeletions = includeDeletions;
 	}
 
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias) {
+		AbstractAuditAssociationQuery<AuditQueryImplementor> query = associationQueryMap.get( associationName );
+		if ( query == null ) {
+			query = new EntitiesAtRevisionAssociationQuery<>(
+					enversService,
+					versionsReader,
+					this,
+					qb,
+					associationName,
+					joinType,
+					aliasToEntityNameMap,
+					REFERENCED_ENTITY_ALIAS,
+					alias
+			);
+
+			addAssociationQuery( associationName, query );
+		}
+
+		return query;
+	}
+
+	@Override
 	public List list() {
 		/*
          * The query that we need to create:
@@ -119,7 +150,7 @@ public class EntitiesAtRevisionQuery extends AbstractAuditQuery {
 			);
 		}
 
-		for (final AuditAssociationQueryImpl<?> associationQuery : associationQueries) {
+		for ( AbstractAuditAssociationQuery<?> associationQuery : associationQueries ) {
 			associationQuery.addCriterionsToQuery( versionsReader );
 		}
 

@@ -29,9 +29,12 @@ import org.hibernate.envers.query.AuditQuery;
 import org.hibernate.envers.query.criteria.AuditCriterion;
 import org.hibernate.proxy.HibernateProxy;
 
+import static org.hibernate.envers.internal.entities.mapper.relation.query.QueryConstants.REFERENCED_ENTITY_ALIAS;
+
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	private final boolean selectEntitiesOnly;
@@ -71,6 +74,35 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		this.includePropertyChanges = includePropertyChanges;
 	}
 
+	@Override
+	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(
+			String associationName,
+			JoinType joinType,
+			String alias) {
+
+		if ( !selectEntitiesOnly ) {
+			throw new IllegalStateException( "Audit association queries are only permitted when the query is created with selectEntitiesOnly: true." );
+		}
+
+		return associationQueryMap.computeIfAbsent(
+				associationName,
+				name -> {
+					AbstractAuditAssociationQuery<AuditQueryImplementor> query = new RevisionsOfEntityAssociationQuery<>(
+							enversService,
+							versionsReader,
+							this,
+							qb,
+							name,
+							joinType,
+							aliasToEntityNameMap,
+							REFERENCED_ENTITY_ALIAS,
+							alias);
+
+					addAssociationQuery( name, query );
+					return query;
+				} );
+	}
+
 	private Number getRevisionNumber(Map versionsEntity) {
 		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
 
@@ -89,6 +121,7 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 	}
 
 	@SuppressWarnings({"unchecked"})
+	@Override
 	public List list() throws AuditException {
 		AuditEntitiesConfiguration verEntCfg = enversService.getAuditEntitiesConfiguration();
 
@@ -117,6 +150,10 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 			);
 		}
 
+		for ( AbstractAuditAssociationQuery<?> associationQuery : associationQueries ) {
+			associationQuery.addCriterionsToQuery( versionsReader );
+		}
+
 		if ( !hasProjection() && !hasOrder ) {
 			String revisionPropertyPath = verEntCfg.getRevisionNumberPath();
 			qb.addOrder( QueryConstants.REFERENCED_ENTITY_ALIAS, revisionPropertyPath, true );
@@ -134,11 +171,6 @@ public class RevisionsOfEntityQuery extends AbstractAuditQuery {
 		}
 
 		return getQueryResults();
-	}
-
-	@Override
-	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType) {
-		throw new UnsupportedOperationException( "Not yet implemented for revisions of entity queries" );
 	}
 
 	private boolean isEntityUsingModifiedFlags() {

@@ -12,6 +12,7 @@ import java.util.Locale;
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author Lukasz Zuchowski (author at zuchos dot com)
+ * @author Chris Cranford
  */
 public abstract class StringTools {
 	public static boolean isEmpty(String s) {
@@ -69,5 +70,16 @@ public abstract class StringTools {
 	 */
 	public static String capitalizeFirst(String fieldName) {
 		return fieldName.substring( 0, 1 ).toUpperCase( Locale.ROOT ) + fieldName.substring( 1 );
+	}
+
+	/**
+	 * Returns a default value if the object passed is {@code null}.
+	 *
+	 * @param value the {@code String} to test, may be {@code null}.
+	 * @param defaultValue the default value to return, may be {@code null}.
+	 * @return {@code string} if it is not {@code null}, defaultValue otherwise
+	 */
+	public static String defaultIfNull(String value, String defaultValue) {
+		return value == null ? defaultValue : value;
 	}
 }

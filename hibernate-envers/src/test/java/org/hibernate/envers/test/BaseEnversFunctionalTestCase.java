@@ -13,7 +13,9 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.envers.AuditReader;
 import org.hibernate.envers.AuditReaderFactory;
+import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.EnversSettings;
+import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -75,5 +77,9 @@ public abstract class BaseEnversFunctionalTestCase extends BaseNonConfigCoreFunc
 	@Override
 	protected String getBaseForMappings() {
 		return "";
+	}
+
+	public GlobalConfiguration getGlobalConfiguration() {
+		return serviceRegistry().getService( EnversService.class ).getGlobalConfiguration();
 	}
 }

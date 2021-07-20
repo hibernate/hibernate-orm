@@ -40,6 +40,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
 /**
  * @author Adam Warski (adam at warski dot org)
  * @author HernпїЅn Chanfreau
+ * @author Chris Cranford
  */
 public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected EntityInstantiator entityInstantiator;
@@ -56,8 +57,8 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected final EnversService enversService;
 	protected final AuditReaderImplementor versionsReader;
 
-	protected final List<AuditAssociationQueryImpl<?>> associationQueries = new ArrayList<>();
-	protected final Map<String, AuditAssociationQueryImpl<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
+	protected final List<AbstractAuditAssociationQuery<?>> associationQueries = new ArrayList<>();
+	protected final Map<String, AbstractAuditAssociationQuery<AuditQueryImplementor>> associationQueryMap = new HashMap<>();
 	protected final List<Pair<String, AuditProjection>> projections = new ArrayList<>();
 
 	protected AbstractAuditQuery(
@@ -184,27 +185,6 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 				joinType,
 				null
 		);
-	}
-
-	@Override
-	public AuditAssociationQuery<? extends AuditQuery> traverseRelation(String associationName, JoinType joinType, String alias) {
-		AuditAssociationQueryImpl<AuditQueryImplementor> result = associationQueryMap.get( associationName );
-		if (result == null) {
-			result = new AuditAssociationQueryImpl<>(
-					enversService,
-					versionsReader,
-					this,
-					qb,
-					associationName,
-					joinType,
-					aliasToEntityNameMap,
-					REFERENCED_ENTITY_ALIAS,
-					alias
-			);
-			associationQueries.add( result );
-			associationQueryMap.put( associationName, result );
-		}
-		return result;
 	}
 
 	// Query properties
@@ -350,5 +330,10 @@ public abstract class AbstractAuditQuery implements AuditQueryImplementor {
 	protected String getEntityName() {
 		// todo: can this be replaced by a call to getEntittyConfiguration#getEntityClassName()?
 		return entityName;
+	}
+
+	protected void addAssociationQuery(String associationName, AbstractAuditAssociationQuery<AuditQueryImplementor> query) {
+		associationQueries.add( query );
+		associationQueryMap.put( associationName, query );
 	}
 }

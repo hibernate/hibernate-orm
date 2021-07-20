@@ -2033,7 +2033,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public String[] toColumns(String propertyName) throws QueryException {
-		return propertyMapping.getColumnNames( propertyName );
+		return propertyMapping.toColumns( propertyName );
 	}
 
 	/**
@@ -2225,7 +2225,8 @@ public abstract class AbstractEntityPersister
 		return subclassPropertyTypeClosure;
 	}
 
-	protected String[][] getSubclassPropertyColumnNameClosure() {
+	@Override
+	public String[][] getSubclassPropertyColumnNameClosure() {
 		return subclassPropertyColumnNameClosure;
 	}
 
@@ -2821,17 +2822,36 @@ public abstract class AbstractEntityPersister
 					String[] propertyColumnNames = getPropertyColumnNames( i );
 					String[] propertyColumnWriters = getPropertyColumnWriters( i );
 					boolean[] propertyNullness = types[i].toColumnNullness( oldFields[i], getFactory() );
+					String[] propertyColumnFormulaTemplates = this.propertyColumnFormulaTemplates[i];
 					for ( int k = 0; k < propertyNullness.length; k++ ) {
-						if ( propertyNullness[k] ) {
-							update.addWhereColumn( propertyColumnNames[k], "=" + propertyColumnWriters[k] );
+						final String propertyColumnFormulaTemplate = propertyColumnFormulaTemplates[k];
+						final String propertyColumnName = propertyColumnNames[k];
+						if ( propertyColumnName == null && propertyColumnFormulaTemplate != null ) {
+							final String formula = StringHelper.replace(
+									propertyColumnFormulaTemplate,
+									Template.TEMPLATE + ".",
+									""
+							);
+							if ( propertyNullness[k] ) {
+								final String propertyColumnWriter = propertyColumnWriters[k];
+								update.addWhereColumn(
+										formula,
+										"=" + ( propertyColumnWriter == null ? "?" : propertyColumnWriter )
+								);
+							}
+							else {
+								update.addWhereColumn( formula, " is null" );
+							}
+						}
+						else if ( propertyNullness[k] ) {
+							update.addWhereColumn( propertyColumnName, "=" + propertyColumnWriters[k] );
 						}
 						else {
-							update.addWhereColumn( propertyColumnNames[k], " is null" );
+							update.addWhereColumn( propertyColumnName, " is null" );
 						}
 					}
 				}
 			}
-
 		}
 
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {

@@ -18,6 +18,16 @@ import org.hibernate.engine.spi.Mapping;
 public class JoinedSubclass extends Subclass implements TableOwner {
 	private Table table;
 	private KeyValue key;
+	private String where;
+
+	@Override
+	public String getJoinedSubclassWhere() {
+		return where;
+	}
+
+	public void setWhere(String where) {
+		this.where = where;
+	}
 
 	public JoinedSubclass(PersistentClass superclass, MetadataBuildingContext metadataBuildingContext) {
 		super( superclass, metadataBuildingContext );

@@ -85,6 +85,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -269,6 +270,13 @@ public class EntityBinder {
 		}
 		persistentClass.setDynamicInsert( dynamicInsert );
 		persistentClass.setDynamicUpdate( dynamicUpdate );
+
+		if ( persistentClass instanceof JoinedSubclass ) {
+			JoinedSubclass joinedSubclass = (JoinedSubclass) persistentClass;
+			if ( StringHelper.isNotEmpty( where ) ) {
+				joinedSubclass.setWhere( where );
+			}
+		}
 
 		if ( persistentClass instanceof RootClass ) {
 			RootClass rootClass = (RootClass) persistentClass;

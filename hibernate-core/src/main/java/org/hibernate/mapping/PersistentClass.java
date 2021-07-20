@@ -393,6 +393,10 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public abstract String getWhere();
 
+	public String getJoinedSubclassWhere() {
+		return null;
+	}
+
 	public int getBatchSize() {
 		return batchSize;
 	}

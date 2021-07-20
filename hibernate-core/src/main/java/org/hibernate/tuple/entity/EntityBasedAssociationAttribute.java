@@ -60,10 +60,14 @@ public class EntityBasedAssociationAttribute
 	@Override
 	public AssociationKey getAssociationKey() {
 		final AssociationType type = getType();
+		final String sourceTableName = ( (Joinable) sessionFactory().getMetamodel()
+				.entityPersister( getSource().getRootEntityName() ) )
+				.getTableName();
 
 		if ( type.isAnyType() ) {
 			return new AssociationKey(
 					JoinHelper.getLHSTableName( type, attributeNumber(), (OuterJoinLoadable) getSource() ),
+					sourceTableName,
 					JoinHelper.getLHSColumnNames(
 							type,
 							attributeNumber(),
@@ -90,10 +94,10 @@ public class EntityBasedAssociationAttribute
 				lhsTableName = getLHSTableName( type, attributeNumber(), entityPersister );
 				lhsColumnNames = getLHSColumnNames( type, attributeNumber(), entityPersister, sessionFactory() );
 			}
-			return new AssociationKey( lhsTableName, lhsColumnNames );
+			return new AssociationKey( lhsTableName, sourceTableName, lhsColumnNames );
 		}
 		else {
-			return new AssociationKey( joinable.getTableName(), getRHSColumnNames( type, sessionFactory() ) );
+			return new AssociationKey( joinable.getTableName(), sourceTableName, getRHSColumnNames( type, sessionFactory() ) );
 		}
 	}
 

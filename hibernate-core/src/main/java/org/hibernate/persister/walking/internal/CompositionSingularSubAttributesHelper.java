@@ -19,6 +19,7 @@ import org.hibernate.loader.PropertyPath;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 import org.hibernate.persister.spi.HydratedCompoundValueHandler;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
@@ -139,7 +140,15 @@ public final class CompositionSingularSubAttributesHelper {
 							return new AssociationAttributeDefinition() {
 								@Override
 								public AssociationKey getAssociationKey() {
-									return new AssociationKey( lhsTableName, subAttributeLhsColumns );
+									return new AssociationKey(
+											lhsTableName,
+											( (Joinable) ownerEntityPersister.getFactory().getMetamodel()
+													.entityPersister(
+															( (EntityPersister) ( (AssociationType) type ).getAssociatedJoinable(
+																	ownerEntityPersister.getFactory() ) ).getRootEntityName() )
+											).getTableName(),
+											subAttributeLhsColumns
+									);
 								}
 
 

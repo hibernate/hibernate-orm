@@ -25,6 +25,7 @@ import java.util.Arrays;
  */
 public class AssociationKey {
 	private final String table;
+	private final String otherTable;
 	private final String[] columns;
 
 	/**
@@ -35,6 +36,13 @@ public class AssociationKey {
 	 */
 	public AssociationKey(String table, String[] columns) {
 		this.table = table;
+		this.otherTable = "";
+		this.columns = columns;
+	}
+
+	public AssociationKey(String table, String otherTable, String[] columns) {
+		this.table = table;
+		this.otherTable = otherTable;
 		this.columns = columns;
 	}
 
@@ -48,8 +56,7 @@ public class AssociationKey {
 		}
 
 		final AssociationKey that = (AssociationKey) o;
-		return table.equals( that.table ) && Arrays.equals( columns, that.columns );
-
+		return table.equals( that.table ) && otherTable.equals( that.otherTable ) && Arrays.equals( columns, that.columns );
 	}
 
 	@Override
@@ -61,9 +68,10 @@ public class AssociationKey {
 
 	@Override
 	public String toString() {
-		if ( str == null ) {
-			str = "AssociationKey(table=" + table + ", columns={" + String.join( ",", columns ) + "})";
+		String s = str;
+		if ( s == null ) {
+			str = s = "AssociationKey(table=" + table + ", otherTable=" + otherTable + ", columns={" + String.join( ",", columns ) + "})";
 		}
-		return str;
+		return s;
 	}
 }

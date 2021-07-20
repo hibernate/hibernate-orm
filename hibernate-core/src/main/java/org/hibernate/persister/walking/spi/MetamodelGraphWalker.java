@@ -15,6 +15,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
 import org.hibernate.type.Type;
 
 import org.jboss.logging.Logger;
@@ -285,9 +286,13 @@ public class MetamodelGraphWalker {
 			else if ( collectionElementType.isEntityType() ) {
 				if ( !collectionDefinition.getCollectionPersister().isOneToMany() ) {
 					final QueryableCollection queryableCollection = (QueryableCollection) collectionDefinition.getCollectionPersister();
+					final String sourceTableName = ( (Joinable) factory.getMetamodel()
+							.entityPersister( queryableCollection.getOwnerEntityPersister().getRootEntityName() ) )
+							.getTableName();
 					addAssociationKey(
 							new AssociationKey(
 									queryableCollection.getTableName(),
+									sourceTableName,
 									queryableCollection.getElementColumnNames()
 							)
 					);

@@ -135,7 +135,7 @@ public class PersistentAttributesHelper {
 	 * duplicated here to take CtClass instead of Class
 	 * @see org.hibernate.internal.util.ReflectHelper#findGetterMethod
 	 */
-	private static CtMethod findGetterOrNull(CtClass ctClass, String propertyName) {
+	public static CtMethod findGetterOrNull(CtClass ctClass, String propertyName) {
 		if ( ctClass == null ) {
 			return null;
 		}

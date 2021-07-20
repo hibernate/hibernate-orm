@@ -15,9 +15,12 @@ import javax.persistence.Id;
 
 import javassist.CtClass;
 import javassist.CtField;
+import javassist.CtMethod;
 import javassist.NotFoundException;
 
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
+import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 
 /**
  * utility class to generate interceptor methods
@@ -37,7 +40,7 @@ public abstract class AttributeTypeDescriptor {
 
 	public abstract String buildWriteInterceptionBodyFragment(String fieldName);
 
-	public String buildInLineDirtyCheckingBodyFragment(JavassistEnhancementContext context, CtField currentValue) {
+	public String buildInLineDirtyCheckingBodyFragment(JavassistEnhancementContext context, CtClass managedCtClass, CtField currentValue) {
 		StringBuilder builder = new StringBuilder();
 		try {
 			// should ignore primary keys
@@ -49,6 +52,8 @@ public abstract class AttributeTypeDescriptor {
 			String readFragment = inheritanceMetadata.isInherited() && !inheritanceMetadata.isVisible()
 					? "super." + inheritanceMetadata.getReaderName() + "()"
 					: "this." + currentValue.getName();
+
+			fetchValueBeforeComparisonIfNeeded( context, managedCtClass, currentValue, builder );
 
 			if ( currentValue.getType().isPrimitive() || currentValue.getType().isEnum() ) {
 				// primitives || enums
@@ -77,6 +82,36 @@ public abstract class AttributeTypeDescriptor {
 		catch (NotFoundException ignore) {
 		}
 		return builder.toString();
+	}
+
+	private void fetchValueBeforeComparisonIfNeeded(
+			JavassistEnhancementContext context,
+			CtClass managedCtClass,
+			CtField currentValue,
+			StringBuilder builder) {
+		if ( PersistentAttributesHelper.isAssignable( managedCtClass, PersistentAttributeInterceptable.class.getName() )
+				&& context.isLazyLoadable( currentValue ) ) {
+			// Should fetch the value by calling the GET method (if not loaded yet) , in order to initialize the value before the comparison,
+			// otherwise the original value = null and the dirty checking is wrong
+			builder.append( String.format(
+					" if( $1 == null " +
+							" && %1$s != null " +
+							" &&  %1$s instanceof %2$s " +
+							" &&  !((%2$s) %1$s).isAttributeLoaded(\"%3$s\") ) ",
+					EnhancerConstants.INTERCEPTOR_FIELD_NAME,
+					LazyAttributeLoadingInterceptor.class.getName(),
+					currentValue.getName()
+							)
+			);
+			CtMethod getterMethod = PersistentAttributesHelper.findGetterOrNull(
+					managedCtClass,
+					currentValue.getName()
+			);
+			builder.append( String.format(
+					"  {  %s();  }",
+					getterMethod.getName()
+			) );
+		}
 	}
 
 	/* --- */

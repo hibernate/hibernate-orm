@@ -512,8 +512,8 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful, boolean delayed) {
-		delegate.afterTransactionCompletion( successful, delayed );
+	public void afterTransactionCompletion(boolean successful, boolean delayed, boolean readonly) {
+		delegate.afterTransactionCompletion( successful, delayed, readonly );
 	}
 
 	@Override
@@ -613,7 +613,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public NativeQueryImplementor createNativeQuery(String sqlString, Class resultClass) {
-		return delegate.createNativeQuery( sqlString, resultClass );
+		return (NativeQueryImplementor) delegate.createNativeQuery( sqlString, resultClass );
 	}
 
 	@Override

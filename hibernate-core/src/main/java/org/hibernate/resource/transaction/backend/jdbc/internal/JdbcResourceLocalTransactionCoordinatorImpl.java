@@ -6,9 +6,13 @@
  */
 package org.hibernate.resource.transaction.backend.jdbc.internal;
 
+import static org.hibernate.internal.CoreLogging.messageLogger;
+
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import javax.persistence.RollbackException;
 import javax.transaction.Status;
 
@@ -17,6 +21,7 @@ import org.hibernate.engine.transaction.spi.IsolationDelegate;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.resource.jdbc.internal.AbstractLogicalConnectionImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransactionAccess;
@@ -26,8 +31,6 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorOwner;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
-
-import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * An implementation of TransactionCoordinator based on managing a transaction through the JDBC Connection
@@ -195,14 +198,14 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 		}
 	}
 
-	private void afterCompletionCallback(boolean successful) {
+	private void afterCompletionCallback(boolean successful, boolean readonly) {
 		log.tracef( "ResourceLocalTransactionCoordinatorImpl#afterCompletionCallback(%s)", successful );
 		final int statusToSend = successful ? Status.STATUS_COMMITTED : Status.STATUS_UNKNOWN;
 		synchronizationRegistry.notifySynchronizationsAfterTransactionCompletion( statusToSend );
 
-		transactionCoordinatorOwner.afterTransactionCompletion( successful, false );
+		transactionCoordinatorOwner.afterTransactionCompletion( successful, false, readonly );
 		for ( TransactionObserver observer : observers() ) {
-			observer.afterCompletion( successful, false );
+			observer.afterCompletion( successful, false, readonly );
 		}
 	}
 
@@ -277,10 +280,18 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 						throw e;
 					}
 				}
-
+				boolean readonly = false;
+				if (jdbcResourceTransaction instanceof AbstractLogicalConnectionImplementor) {
+					try {
+						readonly = ((AbstractLogicalConnectionImplementor) jdbcResourceTransaction).getPhysicalConnection().isReadOnly();
+					} 
+					catch (SQLException e) {
+						// safe to ignore
+					}
+				}
 				JdbcResourceLocalTransactionCoordinatorImpl.this.beforeCompletionCallback();
 				jdbcResourceTransaction.commit();
-				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true );
+				JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( true, readonly );
 			}
 			catch (RollbackException e) {
 				throw e;
@@ -302,7 +313,7 @@ public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionC
 				TransactionStatus status = jdbcResourceTransaction.getStatus();
 				if ( ( rollbackOnly && status != TransactionStatus.NOT_ACTIVE ) || status == TransactionStatus.ACTIVE ) {
 					jdbcResourceTransaction.rollback();
-					JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false );
+					JdbcResourceLocalTransactionCoordinatorImpl.this.afterCompletionCallback( false, false );
 				}
 			}
 			finally {

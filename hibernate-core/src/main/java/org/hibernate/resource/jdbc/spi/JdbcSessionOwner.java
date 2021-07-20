@@ -56,7 +56,18 @@ public interface JdbcSessionOwner {
 	 * @param successful Was the transaction successful?
 	 * @param delayed Is this a delayed after transaction completion call (aka after a timeout)?
 	 */
-	void afterTransactionCompletion(boolean successful, boolean delayed);
+	default void afterTransactionCompletion(boolean successful, boolean delayed) {
+		afterTransactionCompletion(successful, delayed, false);
+	}
+
+	/**
+	 * An after-completion callback to the owner.
+	 *
+	 * @param successful Was the transaction successful?
+	 * @param delayed Is this a delayed after transaction completion call (aka after a timeout)?
+	 * @param readonly Is this transaction readonly?
+	 */
+	void afterTransactionCompletion(boolean successful, boolean delayed, boolean readonly);
 
 	void flushBeforeTransactionCompletion();
 

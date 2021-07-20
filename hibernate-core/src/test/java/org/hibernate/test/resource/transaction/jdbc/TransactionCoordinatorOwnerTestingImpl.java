@@ -92,7 +92,7 @@ public class TransactionCoordinatorOwnerTestingImpl
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed, boolean readonly) {
 		log.debug( "#afterTransactionCompletion called" );
 		if ( successful ) {
 			successfulCompletionCount++;

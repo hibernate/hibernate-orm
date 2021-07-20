@@ -2418,7 +2418,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed, boolean readonly) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "SessionImpl#afterTransactionCompletion(successful=%s, delayed=%s)", successful, delayed );
 		}
@@ -2436,7 +2436,7 @@ public class SessionImpl
 
 		final StatisticsImplementor statistics = getFactory().getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
-			statistics.endTransaction( successful );
+			statistics.endTransaction( successful, readonly );
 		}
 
 		try {
@@ -2452,7 +2452,7 @@ public class SessionImpl
 			}
 		}
 
-		super.afterTransactionCompletion( successful, delayed );
+		super.afterTransactionCompletion( successful, delayed, readonly );
 	}
 
 	private static class LobHelperImpl implements LobHelper {
@@ -2668,8 +2668,8 @@ public class SessionImpl
 			}
 
 			@Override
-			public void afterCompletion(boolean successful, boolean delayed) {
-				afterTransactionCompletion( successful, delayed );
+			public void afterCompletion(boolean successful, boolean delayed, boolean readonly) {
+				afterTransactionCompletion( successful, delayed, readonly );
 				if ( !isClosed() && autoClose ) {
 					managedClose();
 				}

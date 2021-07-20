@@ -467,7 +467,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public void afterTransactionCompletion(boolean successful, boolean delayed) {
+	public void afterTransactionCompletion(boolean successful, boolean delayed, boolean readonly) {
 		getCacheTransactionSynchronization().transactionCompleted( successful );
 	}
 

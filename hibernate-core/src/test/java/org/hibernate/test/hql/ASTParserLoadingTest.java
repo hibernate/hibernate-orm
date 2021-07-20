@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1780,12 +1781,91 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	public void testAggregatedJoinAlias() {
 		Session s = openSession();
 		s.getTransaction().begin();
-		s.createQuery(
+
+		// Add data
+		// - assume IDs start with 1;
+		// - integer in parentheses is value for #intValue.
+		//
+		// Generation 0:       1(5)   2(5)    4(5)            8(5)
+		//                             |      /  \         /   |    \
+		// Generation 1:              3(1)  5(1) 6(2)  9(1)  10(2)   12(3)
+		//                                        |            |     |     \
+		// Generation 2:                         7(5)        11(5)  13(5)  14(5)
+
+		for ( int i = 1 ; i < 5 ; i++ ) {
+			Human generation0 = new Human();
+			generation0.setIntValue( 5 );
+			s.persist( generation0 );
+			generation0.setOffspring( new HashSet() );
+			for ( int j = 1 ; j < i ; j++ ) {
+				Human generation1 = new Human();
+				generation1.setMother( generation0 );
+				generation0.getOffspring().add( generation1 );
+				generation1.setOffspring( new HashSet() );
+				generation1.setIntValue( j );
+				s.persist( generation1 );
+				for ( int k = 1 ; k < j ; k++ ) {
+					Human generation2 = new Human();
+					generation2.setMother( generation1 );
+					generation1.getOffspring().add( generation2 );
+					generation2.setIntValue( 5 );
+					s.persist( generation2 );
+				}
+			}
+		}
+
+		s.flush();
+		s.clear();
+
+		List results = s.createQuery(
+				"select distinct p.id " +
+						"from Animal p " +
+						"left outer join p.offspring descendants " +
+						"group by p.id" )
+				.list();
+		assertEquals( 14, results.size() );
+
+		results = s.createQuery(
 			"select p.id, size( descendants ) " +
 			"from Animal p " +
 			"left outer join p.offspring descendants " +
-			"group by p.id" )
+			"group by p.id order by p.id" )
 		.list();
+
+		assertEquals( 14, results.size() );
+		assertEquals( 0, ( (Object[]) results.get( 0 ) )[1] );
+		assertEquals( 1, ( (Object[]) results.get( 1 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 2 ) )[1] );
+		assertEquals( 2, ( (Object[]) results.get( 3 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 4 ) )[1] );
+		assertEquals( 1, ( (Object[]) results.get( 5 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 6 ) )[1] );
+		assertEquals( 3, ( (Object[]) results.get( 7 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 8 ) )[1] );
+		assertEquals( 1, ( (Object[]) results.get( 9 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 10 ) )[1] );
+		assertEquals( 2, ( (Object[]) results.get( 11 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 12 ) )[1] );
+		assertEquals( 0, ( (Object[]) results.get( 13 ) )[1] );
+
+		// The following query results will depend on #intValue
+		results = s.createQuery(
+				"select p.id, size( descendants ) " +
+						"from Animal p " +
+						"left outer join p.offspring descendants " +
+						"where descendants.intValue > 1 " +
+						"group by p.id order by p.id" )
+				.list();
+
+		// Expect results for:           4, 6, 8, 10, 12
+		// Expected size(descendants):   1, 1, 2,  1,  2
+		assertEquals( 5, results.size() );
+		assertEquals( 1, ( (Object[]) results.get( 0 ) )[1] );
+		assertEquals( 1, ( (Object[]) results.get( 1 ) )[1] );
+		assertEquals( 2, ( (Object[]) results.get( 2 ) )[1] );
+		assertEquals( 1, ( (Object[]) results.get( 3 ) )[1] );
+		assertEquals( 2, ( (Object[]) results.get( 4 ) )[1] );
+
 		s.getTransaction().commit();
 		s.close();
 	}

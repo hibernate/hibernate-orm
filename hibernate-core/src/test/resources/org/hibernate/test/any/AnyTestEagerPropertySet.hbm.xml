@@ -10,7 +10,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping package="org.hibernate.test.annotations.any">
-    <class name="PropertySet" table="lazy_property_set">
+    <class name="PropertySet" table="property_set">
         <id name="id" type="java.lang.Integer">
             <generator class="increment"/>
         </id>
@@ -23,5 +23,17 @@
             <column name="PROP_TYPE"/>
             <column name="property_id"/>
         </any>
+
+        <list name="generalProperties" table="obj_properties" cascade="all" lazy="false">
+            <key column="obj_id"/>
+            <list-index column = "idx"/>
+
+            <many-to-any id-type="integer" meta-type="string">
+                <meta-value value="S" class="StringProperty"/>
+                <meta-value value="I" class="IntegerProperty"/>
+                <column name="PROP_TYPE"/>
+                <column name="property_id"/>
+            </many-to-any>
+        </list>
     </class>
 </hibernate-mapping>

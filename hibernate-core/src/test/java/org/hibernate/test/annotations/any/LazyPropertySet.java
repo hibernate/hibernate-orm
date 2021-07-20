@@ -6,18 +6,22 @@
  */
 package org.hibernate.test.annotations.any;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.Any;
 import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.MetaValue;
 
 @Entity
@@ -26,6 +30,7 @@ public class LazyPropertySet {
 	private Integer id;
 	private String name;
 	private Property someProperty;
+	private List<Property> generalProperties = new ArrayList<Property>();
 
 	public LazyPropertySet() {
 		super();
@@ -66,5 +71,27 @@ public class LazyPropertySet {
 
 	public void setSomeProperty(Property someProperty) {
 		this.someProperty = someProperty;
+	}
+
+	@ManyToAny(
+			metaColumn = @Column( name = "property_type" ),
+			fetch = FetchType.LAZY )
+	@AnyMetaDef( idType = "integer", metaType = "string",
+			metaValues = {
+			@MetaValue( value = "S", targetEntity = StringProperty.class ),
+			@MetaValue( value = "I", targetEntity = IntegerProperty.class ) } )
+	@Cascade( { org.hibernate.annotations.CascadeType.ALL } )
+	@JoinTable( name = "lazy_obj_properties", joinColumns = @JoinColumn( name = "obj_id" ),
+			inverseJoinColumns = @JoinColumn( name = "property_id" ) )
+	public List<Property> getGeneralProperties() {
+		return generalProperties;
+	}
+
+	public void setGeneralProperties(List<Property> generalProperties) {
+		this.generalProperties = generalProperties;
+	}
+
+	public void addGeneralProperty(Property property) {
+		this.generalProperties.add( property );
 	}
 }

@@ -32,6 +32,7 @@ public class PluralAttributeElementSourceManyToAnyImpl
 
 	private final AnyDiscriminatorSource discriminatorSource;
 	private final AnyKeySource keySource;
+	private final boolean isLazy;
 
 	public PluralAttributeElementSourceManyToAnyImpl(
 			final MappingDocument mappingDocument,
@@ -139,6 +140,8 @@ public class PluralAttributeElementSourceManyToAnyImpl
 				return mappingDocument;
 			}
 		};
+
+		this.isLazy = jaxbManyToAnyMapping.isLazy();
 	}
 
 	@Override
@@ -154,5 +157,10 @@ public class PluralAttributeElementSourceManyToAnyImpl
 	@Override
 	public PluralAttributeElementNature getNature() {
 		return PluralAttributeElementNature.MANY_TO_ANY;
+	}
+
+	@Override
+	public boolean isLazy() {
+		return isLazy;
 	}
 }

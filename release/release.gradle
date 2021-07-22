@@ -57,10 +57,10 @@ dependencies {
 
     jpamodelgen project( ':hibernate-jpamodelgen' )
 
-    coreJakarta project( ':hibernate-core-jakarta' )
+//    coreJakarta project( ':hibernate-core-jakarta' )
 //    testingJakarta project( ':hibernate-testing-jakarta' )
-    enversJakarta project( ':hibernate-envers-jakarta' )
-    jpamodelgenJakarta project( ':hibernate-jpamodelgen-jakarta' )
+//    enversJakarta project( ':hibernate-envers-jakarta' )
+//    jpamodelgenJakarta project( ':hibernate-jpamodelgen-jakarta' )
 }
 
 /**

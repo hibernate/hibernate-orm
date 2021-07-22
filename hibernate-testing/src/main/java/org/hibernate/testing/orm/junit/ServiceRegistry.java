@@ -69,11 +69,12 @@ import org.hibernate.service.spi.ServiceContributor;
 public @interface ServiceRegistry {
 	Class<? extends ServiceContributor>[] serviceContributors() default {};
 
-	Class<? extends StandardServiceInitiator>[] initiators() default {};
+	Class<? extends StandardServiceInitiator<?>>[] initiators() default {};
 
 	Service[] services() default {};
 
 	Setting[] settings() default {};
+	SettingsContributor[] settingsContributors() default {};
 
 	@interface Service {
 		Class<? extends org.hibernate.service.Service> role();

@@ -130,7 +130,10 @@ public interface SessionFactoryImplementor
 
 	/**
 	 * Get the identifier generator for the hierarchy
+	 *
+	 * @deprecated (since 6.0) Prefer {@link EntityPersister#getIdentifierGenerator} instead
 	 */
+	@Deprecated
 	IdentifierGenerator getIdentifierGenerator(String rootEntityName);
 
 

@@ -26,6 +26,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.IdGenCreationLogging;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
@@ -386,6 +387,11 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private IdentifierGenerator builtIdentifierGenerator;
 
 	@Override
+	public IdentifierGenerator getIdentifierGenerator() {
+		return builtIdentifierGenerator;
+	}
+
+	@Override
 	public IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
@@ -401,6 +407,13 @@ public class Component extends SimpleValue implements MetaAttributable {
 					rootClass
 			);
 		}
+		else {
+			IdGenCreationLogging.ID_GEN_LOGGER.debugf(
+					"IdentifierGenerator creation called multiple times for composite id on table `%s`",
+					getTable().getQuotedName()
+			);
+		}
+
 		return builtIdentifierGenerator;
 	}
 

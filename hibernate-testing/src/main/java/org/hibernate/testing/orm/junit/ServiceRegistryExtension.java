@@ -182,17 +182,24 @@ public class ServiceRegistryExtension
 				ssrb.applySetting( setting.name(), setting.value() );
 			}
 
+			for ( SettingsContributor contributorAnn : serviceRegistryAnn.settingsContributors() ) {
+				final Class<? extends SettingsContribution> contributionClass = contributorAnn.value();
+				final SettingsContribution contribution = contributionClass.getConstructor().newInstance();
+				contribution.contributeSettings( ssrb::applySetting );
+			}
+
+
 			for ( Class<? extends ServiceContributor> contributorClass : serviceRegistryAnn.serviceContributors() ) {
-				final ServiceContributor serviceContributor = contributorClass.newInstance();
+				final ServiceContributor serviceContributor = contributorClass.getConstructor().newInstance();
 				serviceContributor.contribute( ssrb );
 			}
 
-			for ( Class<? extends StandardServiceInitiator> initiatorClass : serviceRegistryAnn.initiators() ) {
-				ssrb.addInitiator( initiatorClass.newInstance() );
+			for ( Class<? extends StandardServiceInitiator<?>> initiatorClass : serviceRegistryAnn.initiators() ) {
+				ssrb.addInitiator( initiatorClass.getConstructor().newInstance() );
 			}
 
 			for ( ServiceRegistry.Service service : serviceRegistryAnn.services() ) {
-				ssrb.addService( service.role(), service.impl().newInstance() );
+				ssrb.addService( service.role(), service.impl().getConstructor().newInstance() );
 			}
 		}
 		catch (Exception e) {

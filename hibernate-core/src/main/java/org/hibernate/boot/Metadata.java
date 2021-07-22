@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
@@ -76,6 +77,16 @@ public interface Metadata extends Mapping {
 	 * @return All PersistentClass representations.
 	 */
 	java.util.Collection<PersistentClass> getEntityBindings();
+
+	/**
+	 * Visit each registered entity mapping
+	 */
+	void forEachEntityBinding(Consumer<PersistentClass> consumer);
+
+	/**
+	 * Visit each hierarchy root entity mapping
+	 */
+	void forEachHierarchyRoot(Consumer<RootClass> consumer);
 
 	/**
 	 * Retrieves the PersistentClass entity mapping metadata representation for

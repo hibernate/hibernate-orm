@@ -161,6 +161,10 @@ public class EntityBinder {
 		bindHibernateAnnotation();
 	}
 
+	public PersistentClass getPersistentClass() {
+		return persistentClass;
+	}
+
 	/**
 	 * For the most part, this is a simple delegation to {@link PersistentClass#isPropertyDefinedInHierarchy},
 	 * after verifying that PersistentClass is indeed set here.

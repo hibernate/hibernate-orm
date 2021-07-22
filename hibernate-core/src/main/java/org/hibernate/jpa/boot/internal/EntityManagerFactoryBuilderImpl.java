@@ -57,6 +57,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -1188,7 +1189,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( idGeneratorStrategyProviderSetting != null ) {
 			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
 					strategySelector.resolveStrategy( IdentifierGeneratorStrategyProvider.class, idGeneratorStrategyProviderSetting );
-			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( MutableIdentifierGeneratorFactory.class );
+			final IdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( IdentifierGeneratorFactory.class );
 			if ( identifierGeneratorFactory == null ) {
 				throw persistenceException(
 						"Application requested custom identifier generator strategies, " +
@@ -1196,7 +1197,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				);
 			}
 			for ( Map.Entry<String,Class<?>> entry : idGeneratorStrategyProvider.getStrategies().entrySet() ) {
-				identifierGeneratorFactory.register( entry.getKey(), entry.getValue() );
+				// todo (6.0) : for now...
+				( (MutableIdentifierGeneratorFactory) identifierGeneratorFactory ).register( entry.getKey(), entry.getValue() );
 			}
 		}
 	}

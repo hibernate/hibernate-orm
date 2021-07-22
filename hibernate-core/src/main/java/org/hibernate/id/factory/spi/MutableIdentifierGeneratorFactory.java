@@ -7,13 +7,12 @@
 package org.hibernate.id.factory.spi;
 
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
-import org.hibernate.service.Service;
 
 /**
  * Let people register strategies
  *
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
-public interface MutableIdentifierGeneratorFactory extends IdentifierGeneratorFactory, Service {
-	public void register(String strategy, Class generatorClass);
+public interface MutableIdentifierGeneratorFactory extends IdentifierGeneratorFactory {
+	void register(String strategy, Class generatorClass);
 }

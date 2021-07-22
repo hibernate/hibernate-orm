@@ -5,11 +5,12 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.id.factory;
+
 import java.util.Properties;
 
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.service.Service;
 import org.hibernate.type.Type;
 
 /**
@@ -17,7 +18,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  */
-public interface IdentifierGeneratorFactory {
+public interface IdentifierGeneratorFactory extends Service {
 	/**
 	 * Get the dialect.
 	 *

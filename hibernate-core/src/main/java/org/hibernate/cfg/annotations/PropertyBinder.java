@@ -31,6 +31,7 @@ import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -253,6 +254,18 @@ public class PropertyBinder {
 					}
 				}
 			}
+
+			buildingContext.getMetadataCollector().registerIdentifierGeneratorCreator( (context) -> {
+				final IdentifierGenerator identifierGenerator = rootClass.getIdentifier().createIdentifierGenerator(
+						context.getGeneratorFactory(),
+						context.getDialect(),
+						buildingContext.getMappingDefaults().getImplicitCatalogName(),
+						buildingContext.getMappingDefaults().getImplicitSchemaName(),
+						rootClass
+				);
+
+				context.registerEntityIdentifierGenerator( rootClass.getEntityName(), identifierGenerator );
+			});
 		}
 		else {
 			holder.addProperty( prop, columns, declaringClass );

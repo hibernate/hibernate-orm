@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -48,6 +49,7 @@ import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
+import org.hibernate.boot.model.relational.ExportableProducer;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -213,6 +215,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				.getServiceRegistry()
 				.getService( SessionFactoryServiceRegistryFactory.class )
 				.buildServiceRegistry( this, options );
+		jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		this.eventEngine = new EventEngine( bootMetamodel, this );
 
@@ -230,8 +233,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		this.name = sfName;
 		this.uuid = options.getUuid();
-
-		jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
@@ -287,18 +288,16 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 				integrator.integrate( bootMetamodel, bootstrapContext, this );
 				integratorObserver.integrators.add( integrator );
 			}
-			//Generators:
+
 			this.identifierGenerators = new HashMap<>();
-			bootMetamodel.getEntityBindings().stream().filter( model -> !model.isInherited() ).forEach( model -> {
-				IdentifierGenerator generator = model.getIdentifier().createIdentifierGenerator(
-						bootMetamodel.getIdentifierGeneratorFactory(),
-						jdbcServices.getJdbcEnvironment().getDialect(),
-						settings.getDefaultCatalogName(),
-						settings.getDefaultSchemaName(),
-						(RootClass) model
-				);
-				identifierGenerators.put( model.getEntityName(), generator );
-			} );
+			bootMetamodel.forEachHierarchyRoot( (root) -> {
+				final String entityName = root.getEntityName();
+				if ( ! identifierGenerators.containsKey( entityName ) ) {
+					final IdentifierGenerator generator = root.getIdentifier().getIdentifierGenerator();
+					identifierGenerators.put( entityName, generator );
+				}
+			});
+
 			bootMetamodel.validate();
 
 			LOG.debug( "Instantiated session factory" );

@@ -18,20 +18,27 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
  */
 public interface KeyValue extends Value {
 
-	public IdentifierGenerator createIdentifierGenerator(
+	IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) throws MappingException;
 
-	public boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
+	/**
+	 * Retrieve the previously {@link #createIdentifierGenerator created} generator
+	 *
+	 * @return The previously created generator, or null if not yet created
+	 */
+	IdentifierGenerator getIdentifierGenerator();
+
+	boolean isIdentityColumn(IdentifierGeneratorFactory identifierGeneratorFactory, Dialect dialect);
 	
-	public void createForeignKeyOfEntity(String entityName);
+	void createForeignKeyOfEntity(String entityName);
 	
-	public boolean isCascadeDeleteEnabled();
+	boolean isCascadeDeleteEnabled();
 	
-	public String getNullValue();
+	String getNullValue();
 	
-	public boolean isUpdateable();
+	boolean isUpdateable();
 }

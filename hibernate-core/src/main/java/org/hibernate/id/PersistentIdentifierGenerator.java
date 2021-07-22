@@ -27,12 +27,12 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 	/**
 	 * The configuration parameter holding the catalog name
 	 */
-	String CATALOG = "catalog";
+	String CATALOG_NAME_PARAM = "catalog";
 
 	/**
 	 * The configuration parameter holding the schema name
 	 */
-	String SCHEMA = "schema";
+	String SCHEMA_NAME_PARAM = "schema";
 
 	/**
 	 * The configuration parameter key for the explicit id table name
@@ -41,14 +41,9 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 	 *
 	 * @implNote The name is used to avoid collision with parameters
 	 * for the entity table name which is already registered under `table`
+	 * The configuration parameter key for the explicit id table name
 	 */
 	String TABLE_NAME_PARAM = "target_table";
-
-	/**
-	 * @deprecated (as of 6.0) Use {@link #TABLE_NAME_PARAM} instead
-	 */
-	@Deprecated
-	String TABLE = TABLE_NAME_PARAM;
 
 	/**
 	 * The configuration parameter key for the explicit id sequence name
@@ -107,4 +102,22 @@ public interface PersistentIdentifierGenerator extends OptimizableGenerator {
 	 * @return Object an identifying key for this generator
 	 */
 	Object generatorKey();
+
+	/**
+	 * @deprecated (as of 6.0) Use {@link #CATALOG_NAME_PARAM} instead
+	 */
+	@Deprecated
+	String CATALOG = CATALOG_NAME_PARAM;
+
+	/**
+	 * @deprecated (as of 6.0) Use {@link #SCHEMA_NAME_PARAM} instead
+	 */
+	@Deprecated
+	String SCHEMA = SCHEMA_NAME_PARAM;
+
+	/**
+	 * @deprecated (as of 6.0) Use {@link #TABLE_NAME_PARAM} instead
+	 */
+	@Deprecated
+	String TABLE = TABLE_NAME_PARAM;
 }

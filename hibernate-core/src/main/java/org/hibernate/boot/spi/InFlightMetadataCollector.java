@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import javax.persistence.AttributeConverter;
 
@@ -43,6 +44,8 @@ import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.id.factory.spi.IdentifierGeneratorCreator;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -318,6 +321,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	ClassmateContext getClassmateContext();
 
 	void registerValueMappingResolver(Function<MetadataBuildingContext,Boolean> resolver);
+	void registerIdentifierGeneratorCreator(IdentifierGeneratorCreator creator);
 
 	void addJavaTypeRegistration(Class<?> javaType, JavaTypeDescriptor<?> jtd);
 	void addJdbcTypeRegistration(int typeCode, JdbcTypeDescriptor jdbcTypeDescriptor);

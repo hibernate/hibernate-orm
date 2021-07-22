@@ -30,6 +30,7 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -67,6 +68,16 @@ public abstract class AbstractDelegatingMetadata implements MetadataImplementor 
 	@Override
 	public String getIdentifierPropertyName(String className) throws MappingException {
 		return delegate.getIdentifierPropertyName( className );
+	}
+
+	@Override
+	public void forEachEntityBinding(Consumer<PersistentClass> consumer) {
+		delegate.forEachEntityBinding( consumer );
+	}
+
+	@Override
+	public void forEachHierarchyRoot(Consumer<RootClass> consumer) {
+		delegate.forEachHierarchyRoot( consumer );
 	}
 
 	@Override

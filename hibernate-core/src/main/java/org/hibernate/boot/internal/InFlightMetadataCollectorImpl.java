@@ -29,6 +29,7 @@ import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.AnyMetaDef;
@@ -84,6 +85,8 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
+import org.hibernate.id.factory.spi.IdentifierGeneratorCreationContext;
+import org.hibernate.id.factory.spi.IdentifierGeneratorCreator;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -107,6 +110,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -170,6 +174,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
 	private Map<Table, List<JPAIndexHolder>> jpaIndexHoldersByTable;
 	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
+	private List<IdentifierGeneratorCreator> identifierGeneratorCreators;
 
 	public InFlightMetadataCollectorImpl(
 			BootstrapContext bootstrapContext,
@@ -178,8 +183,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		this.uuid = UUID.randomUUID();
 		this.options = options;
 
-		this.identifierGeneratorFactory = options.getServiceRegistry()
-				.getService( MutableIdentifierGeneratorFactory.class );
+		this.identifierGeneratorFactory = (MutableIdentifierGeneratorFactory) options.getServiceRegistry().getService( IdentifierGeneratorFactory.class );
 
 		for ( Map.Entry<String, SqmFunctionDescriptor> sqlFunctionEntry : bootstrapContext.getSqlFunctions().entrySet() ) {
 			if ( sqlFunctionMap == null ) {
@@ -248,7 +252,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 	@Override
-	public void initSessionFactory(SessionFactoryImplementor sessionFactory) {
+	public void initSessionFactory(SessionFactoryImplementor sessionFactoryImplementor) {
 		throw new UnsupportedOperationException(
 				"You should not be building a SessionFactory from an in-flight metadata collector; and of course " +
 						"we should better segment this in the API :)"
@@ -295,6 +299,22 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	@Override
 	public java.util.Collection<PersistentClass> getEntityBindings() {
 		return entityBindingMap.values();
+	}
+
+	@Override
+	public void forEachEntityBinding(Consumer<PersistentClass> consumer) {
+		entityBindingMap.forEach( (entityName, entityDescriptor) -> {
+			consumer.accept( entityDescriptor );
+		});
+	}
+
+	@Override
+	public void forEachHierarchyRoot(Consumer<RootClass> consumer) {
+		forEachEntityBinding( (entityDescriptor) -> {
+			if ( entityDescriptor instanceof RootClass ) {
+				consumer.accept( (RootClass) entityDescriptor );
+			}
+		});
 	}
 
 	@Override
@@ -390,6 +410,14 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			valueResolvers = new ArrayList<>();
 		}
 		valueResolvers.add( resolver );
+	}
+
+	@Override
+	public void registerIdentifierGeneratorCreator(IdentifierGeneratorCreator creator) {
+		if ( identifierGeneratorCreators == null ) {
+			identifierGeneratorCreators = new ArrayList<>();
+		}
+		identifierGeneratorCreators.add( creator );
 	}
 
 	@Override
@@ -1680,6 +1708,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	/**
 	 * Ugh!  But we need this done before we ask Envers to produce its entities.
 	 */
+	@Internal
 	public void processSecondPasses(MetadataBuildingContext buildingContext) {
 		inSecondPass = true;
 
@@ -2296,7 +2325,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	 */
 	public MetadataImpl buildMetadataInstance(MetadataBuildingContext buildingContext) {
 		processSecondPasses( buildingContext );
-		processExportableProducers( );
+		initializeIdGenerators( buildingContext );
 
 		try {
 			return new MetadataImpl(
@@ -2327,6 +2356,72 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
+
+	private void initializeIdGenerators(MetadataBuildingContext buildingContext) {
+		// this is the way we want to move forward for id-generator creation
+		//		at the moment this works for HBM binding as well as most annotation
+		//		binding.
+		processRegisteredCreators( buildingContext );
+
+		// however, not all annotation binding cases have been converted to this
+		// approach yet so continue to do its old behavior for the time being
+		processExportableProducers();
+
+		// todo (6.0) : convert the rest of the cases handled by `#processExportableProducers` to use the registration approach
+	}
+
+	private void processRegisteredCreators(MetadataBuildingContext buildingContext) {
+		if ( CollectionHelper.isEmpty( identifierGeneratorCreators ) ) {
+			return;
+		}
+
+		final ServiceRegistry serviceRegistry = buildingContext.getBootstrapContext().getServiceRegistry();
+		final IdentifierGeneratorFactory generatorFactory = serviceRegistry.getService( IdentifierGeneratorFactory.class );
+
+		final IdentifierGeneratorCreationContext creationContext = new IdentifierGeneratorCreationContext() {
+			@Override
+			public BootstrapContext getBootstrapContext() {
+				return bootstrapContext;
+			}
+
+			@Override
+			public IdentifierGeneratorFactory getGeneratorFactory() {
+				return generatorFactory;
+			}
+
+			@Override
+			public Dialect getDialect() {
+				return getDatabase().getDialect();
+			}
+
+			@Override
+			public void registerEntityIdentifierGenerator(String rootEntityName, IdentifierGenerator generator) {
+				processIdGenerator( generator );
+			}
+
+			@Override
+			public void registerNonEntityIdentifierGenerator(IdentifierGenerator generator) {
+				processIdGenerator( generator );
+			}
+		};
+
+		if ( identifierGeneratorCreators != null ) {
+			for ( int i = 0; i < identifierGeneratorCreators.size(); i++ ) {
+				identifierGeneratorCreators.get( i ).createGenerator( creationContext );
+			}
+		}
+	}
+
+	private void processIdGenerator(IdentifierGenerator generator) {
+		if ( generator instanceof ExportableProducer ) {
+			( (ExportableProducer) generator ).registerExportables( getDatabase() );
+		}
+	}
+
+	/**
+	 * @deprecated Register a callback and create id-generators via callback instead.  See {@link #registerIdentifierGeneratorCreator}
+	 */
+	@Deprecated
 	private void processExportableProducers() {
 		// for now we only handle id generators as ExportableProducers
 
@@ -2349,17 +2444,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		for ( Collection collection : collectionBindingMap.values() ) {
-			if ( !(collection instanceof IdentifierCollection) ) {
-				continue;
+			if ( collection instanceof IdentifierCollection ) {
+				handleIdentifierValueBinding(
+						( (IdentifierCollection) collection ).getIdentifier(),
+						dialect,
+						defaultCatalog,
+						defaultSchema,
+						null
+				);
 			}
-
-			handleIdentifierValueBinding(
-					( (IdentifierCollection) collection ).getIdentifier(),
-					dialect,
-					defaultCatalog,
-					defaultSchema,
-					null
-			);
 		}
 	}
 
@@ -2369,30 +2462,19 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass entityBinding) {
-		// todo : store this result (back into the entity or into the KeyValue, maybe?)
-		// 		This process of instantiating the id-generator is called multiple times.
-		//		It was done this way in the old code too, so no "regression" here; but
-		//		it could be done better
-		try {
-			final IdentifierGenerator ig = identifierValueBinding.createIdentifierGenerator(
-					getIdentifierGeneratorFactory(),
-					dialect,
-					defaultCatalog,
-					defaultSchema,
-					entityBinding
-			);
+		if ( identifierValueBinding.getIdentifierGenerator() != null ) {
+			return;
+		}
 
-			if ( ig instanceof ExportableProducer ) {
-				( (ExportableProducer) ig ).registerExportables( getDatabase() );
-			}
-		}
-		catch (MappingException e) {
-			// ignore this for now.  The reasoning being "non-reflective" binding as needed
-			// by tools.  We want to hold off requiring classes being present until we
-			// try to build a SF.  Here, just building the Metadata, it is "ok" for an
-			// exception to occur, the same exception will happen later as we build the SF.
-			log.debugf( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
-		}
+		processIdGenerator(
+				identifierValueBinding.createIdentifierGenerator(
+						getIdentifierGeneratorFactory(),
+						dialect,
+						defaultCatalog,
+						defaultSchema,
+						entityBinding
+				)
+		);
 	}
 
 	private String extractName(Identifier identifier, Dialect dialect) {

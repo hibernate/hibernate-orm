@@ -12,6 +12,7 @@ apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
 evaluationDependsOn( ':hibernate-envers' )
 evaluationDependsOn( ':hibernate-transaction-client' )
 
+configurations.testImplementation.extendsFrom project(':hibernate-core-jakarta').configurations.runtimeClasspath
 dependencies {
 	api( project( ':hibernate-core-jakarta' ) ) {
 		// Exclude access to this to avoid future use.

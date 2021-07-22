@@ -650,17 +650,15 @@ public class BinderHelper {
 		Properties params = new Properties();
 
 		//always settable
-		params.setProperty(
-				PersistentIdentifierGenerator.TABLE, table.getName()
-		);
+		params.setProperty( PersistentIdentifierGenerator.TABLE_NAME_PARAM, table.getName() );
 
 		final String implicitCatalogName = buildingContext.getBuildingOptions().getMappingDefaults().getImplicitCatalogName();
 		if ( implicitCatalogName != null ) {
-			params.put( PersistentIdentifierGenerator.CATALOG, implicitCatalogName );
+			params.put( PersistentIdentifierGenerator.CATALOG_NAME_PARAM, implicitCatalogName );
 		}
 		final String implicitSchemaName = buildingContext.getBuildingOptions().getMappingDefaults().getImplicitSchemaName();
 		if ( implicitSchemaName != null ) {
-			params.put( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
+			params.put( PersistentIdentifierGenerator.SCHEMA_NAME_PARAM, implicitSchemaName );
 		}
 
 		if ( id.getColumnSpan() == 1 ) {
@@ -705,6 +703,7 @@ public class BinderHelper {
 		if ( "assigned".equals( generatorType ) ) {
 			id.setNullValue( "undefined" );
 		}
+
 		id.setIdentifierGeneratorProperties( params );
 	}
 

@@ -87,6 +87,7 @@ import org.hibernate.boot.model.source.spi.Sortable;
 import org.hibernate.boot.model.source.spi.TableSource;
 import org.hibernate.boot.model.source.spi.TableSpecificationSource;
 import org.hibernate.boot.model.source.spi.VersionAttributeSource;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -101,7 +102,9 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -788,7 +791,8 @@ public class ModelBinder {
 				sourceDocument,
 				idSource.getIdentifierGeneratorDescriptor(),
 				idSource.getUnsavedValue(),
-				idValue
+				idValue,
+				rootEntityDescriptor
 		);
 	}
 
@@ -796,7 +800,18 @@ public class ModelBinder {
 			final MappingDocument sourceDocument,
 			IdentifierGeneratorDefinition generator,
 			String unsavedValue,
-			SimpleValue identifierValue) {
+			SimpleValue identifierValue,
+			RootClass rootEntityDescriptor) {
+		final Identifier implicitCatalog = database.getDefaultNamespace().getPhysicalName().getCatalog();
+		final String implicitCatalogName = implicitCatalog != null
+				? implicitCatalog.render( database.getDialect() )
+				: null;
+
+		final Identifier implicitSchema = database.getDefaultNamespace().getPhysicalName().getSchema();
+		final String implicitSchemaName = implicitSchema != null
+				? implicitSchema.render( database.getDialect() )
+				: null;
+
 		if ( generator != null ) {
 			String generatorName = generator.getStrategy();
 			Properties params = new Properties();
@@ -813,17 +828,11 @@ public class ModelBinder {
 			// YUCK!  but cannot think of a clean way to do this given the string-config based scheme
 			params.put( PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER, objectNameNormalizer);
 
-			if ( database.getDefaultNamespace().getPhysicalName().getSchema() != null ) {
-				params.setProperty(
-						PersistentIdentifierGenerator.SCHEMA,
-						database.getDefaultNamespace().getPhysicalName().getSchema().render( database.getDialect() )
-				);
+			if ( implicitCatalogName != null ) {
+				params.setProperty( PersistentIdentifierGenerator.CATALOG, implicitCatalogName );
 			}
-			if ( database.getDefaultNamespace().getPhysicalName().getCatalog() != null ) {
-				params.setProperty(
-						PersistentIdentifierGenerator.CATALOG,
-						database.getDefaultNamespace().getPhysicalName().getCatalog().render( database.getDialect() )
-				);
+			if ( implicitSchema != null ) {
+				params.setProperty( PersistentIdentifierGenerator.SCHEMA, implicitSchemaName );
 			}
 
 			params.putAll( generator.getParameters() );
@@ -844,6 +853,27 @@ public class ModelBinder {
 				identifierValue.setNullValue( null );
 			}
 		}
+
+		metadataBuildingContext.getMetadataCollector().registerIdentifierGeneratorCreator( (context) -> {
+			final BootstrapContext bootstrapContext = context.getBootstrapContext();
+			final StandardServiceRegistry serviceRegistry = bootstrapContext.getServiceRegistry();
+			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
+
+			final IdentifierGenerator identifierGenerator = identifierValue.createIdentifierGenerator(
+					context.getGeneratorFactory(),
+					jdbcServices.getDialect(),
+					implicitCatalogName,
+					implicitSchemaName,
+					rootEntityDescriptor
+			);
+
+			if ( rootEntityDescriptor != null ) {
+				context.registerEntityIdentifierGenerator( rootEntityDescriptor.getEntityName(), identifierGenerator );
+			}
+			else {
+				context.registerNonEntityIdentifierGenerator( identifierGenerator );
+			}
+		});
 	}
 
 	private void bindAggregatedCompositeEntityIdentifier(
@@ -1001,7 +1031,8 @@ public class ModelBinder {
 				sourceDocument,
 				identifierSource.getIdentifierGeneratorDescriptor(),
 				null,
-				cid
+				cid,
+				rootEntityDescriptor
 		);
 	}
 
@@ -3484,7 +3515,8 @@ public class ModelBinder {
 						mappingDocument,
 						new IdentifierGeneratorDefinition( idSource.getGeneratorName(), idSource.getParameters() ),
 						null,
-						idBinding
+						idBinding,
+						null
 				);
 			}
 		}

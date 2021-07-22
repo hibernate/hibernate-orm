@@ -9,18 +9,22 @@ package org.hibernate.id.factory.internal;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
+import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 /**
+ * Service initiator for the IdentifierGeneratorFactory service
+ *
+ * @author Steve Ebersole
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
-public class MutableIdentifierGeneratorFactoryInitiator implements StandardServiceInitiator<MutableIdentifierGeneratorFactory> {
-	public static final MutableIdentifierGeneratorFactoryInitiator INSTANCE = new MutableIdentifierGeneratorFactoryInitiator();
+public class IdentifierGeneratorFactoryInitiator implements StandardServiceInitiator<IdentifierGeneratorFactory> {
+	public static final IdentifierGeneratorFactoryInitiator INSTANCE = new IdentifierGeneratorFactoryInitiator();
 
 	@Override
-	public Class<MutableIdentifierGeneratorFactory> getServiceInitiated() {
-		return MutableIdentifierGeneratorFactory.class;
+	public Class<IdentifierGeneratorFactory> getServiceInitiated() {
+		return IdentifierGeneratorFactory.class;
 	}
 
 	@Override

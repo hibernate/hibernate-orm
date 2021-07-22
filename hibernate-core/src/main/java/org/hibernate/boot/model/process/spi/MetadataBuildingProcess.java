@@ -11,8 +11,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
 import org.hibernate.boot.model.TypeContributions;
@@ -29,6 +32,7 @@ import org.hibernate.boot.model.source.spi.MetadataSourceProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -88,6 +92,34 @@ public class MetadataBuildingProcess {
 		return complete( prepare( sources, bootstrapContext ), bootstrapContext, options );
 	}
 
+	@Internal
+	public static InFlightMetadataCollector buildMetadataCollector(
+			MetadataSources sources,
+			BootstrapContextImpl bootstrapContext,
+			MetadataBuilderImpl.MetadataBuildingOptionsImpl options) {
+		final ManagedResources managedResources = prepare( sources, bootstrapContext );
+
+		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
+
+		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
+				bootstrapContext,
+				options
+		);
+
+		handleTypes( bootstrapContext, options );
+
+		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
+				"orm",
+				bootstrapContext,
+				options,
+				metadataCollector
+		);
+
+		prepareMetadataCollector( managedResources, options, classLoaderService, bootstrapContext, metadataCollector, rootMetadataBuildingContext );
+
+		return metadataCollector;
+	}
+
 	/**
 	 * First step of 2-phase for MetadataSources->Metadata process
 	 *
@@ -126,14 +158,14 @@ public class MetadataBuildingProcess {
 			final ManagedResources managedResources,
 			final BootstrapContext bootstrapContext,
 			final MetadataBuildingOptions options) {
+		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
+
 		final InFlightMetadataCollectorImpl metadataCollector = new InFlightMetadataCollectorImpl(
 				bootstrapContext,
 				options
 		);
 
 		handleTypes( bootstrapContext, options );
-
-		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService( ClassLoaderService.class );
 
 		final MetadataBuildingContextRootImpl rootMetadataBuildingContext = new MetadataBuildingContextRootImpl(
 				"orm",
@@ -142,28 +174,62 @@ public class MetadataBuildingProcess {
 				metadataCollector
 		);
 
+		prepareMetadataCollector( managedResources, options, classLoaderService, bootstrapContext, metadataCollector, rootMetadataBuildingContext );
+
+		if ( options.isXmlMappingEnabled() ) {
+			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
+			if ( producers != null ) {
+				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
+				// final MappingBinder mappingBinder = new MappingBinder( true );
+				// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
+				final MappingBinder mappingBinder = new MappingBinder( classLoaderService, false );
+				for ( AdditionalJaxbMappingProducer producer : producers ) {
+					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
+					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
+							metadataCollector,
+							bootstrapContext.getJandexView(),
+							mappingBinder,
+							rootMetadataBuildingContext
+					);
+					for ( MappingDocument mappingDocument : additionalMappings ) {
+						hierarchyBuilder.indexMappingDocument( mappingDocument );
+					}
+				}
+
+				ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
+				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
+					binder.bindEntityHierarchy( entityHierarchySource );
+				}
+			}
+		}
+
+		applyExtraQueryImports( managedResources, metadataCollector );
+
+		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
+	}
+
+	private static void prepareMetadataCollector(
+			ManagedResources managedResources,
+			MetadataBuildingOptions options,
+			ClassLoaderService classLoaderService,
+			BootstrapContext bootstrapContext,
+			InFlightMetadataCollectorImpl metadataCollector,
+			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 		managedResources.getAttributeConverterDescriptors().forEach( metadataCollector::addAttributeConverter );
-
 		bootstrapContext.getTypeConfiguration().scope( rootMetadataBuildingContext );
-
-
-		final IndexView jandexView = bootstrapContext.getJandexView();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Set up the processors and start binding
-		//		NOTE : this becomes even more simplified after we move purely
-		// 		to unified model
 
 		final MetadataSourceProcessor processor = new MetadataSourceProcessor() {
-			private final MetadataSourceProcessor hbmProcessor =
-						options.isXmlMappingEnabled()
-							? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
-							: new NoOpMetadataSourceProcessorImpl();
+			private final MetadataSourceProcessor hbmProcessor = options.isXmlMappingEnabled()
+					? new HbmMetadataSourceProcessorImpl( managedResources, rootMetadataBuildingContext )
+					: new NoOpMetadataSourceProcessorImpl();
 
 			private final AnnotationMetadataSourceProcessorImpl annotationProcessor = new AnnotationMetadataSourceProcessorImpl(
 					managedResources,
 					rootMetadataBuildingContext,
-					jandexView
+					bootstrapContext.getJandexView()
 			);
 
 			@Override
@@ -288,41 +354,10 @@ public class MetadataBuildingProcess {
 
 		for ( MetadataContributor contributor : classLoaderService.loadJavaServices( MetadataContributor.class ) ) {
 			log.tracef( "Calling MetadataContributor : %s", contributor );
-			contributor.contribute( metadataCollector, jandexView );
+			contributor.contribute( metadataCollector, bootstrapContext.getJandexView() );
 		}
 
 		metadataCollector.processSecondPasses( rootMetadataBuildingContext );
-
-		if ( options.isXmlMappingEnabled() ) {
-			final Iterable<AdditionalJaxbMappingProducer> producers = classLoaderService.loadJavaServices( AdditionalJaxbMappingProducer.class );
-			if ( producers != null ) {
-				final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
-				// final MappingBinder mappingBinder = new MappingBinder( true );
-				// We need to disable validation here.  It seems Envers is not producing valid (according to schema) XML
-				final MappingBinder mappingBinder = new MappingBinder( classLoaderService, false );
-				for ( AdditionalJaxbMappingProducer producer : producers ) {
-					log.tracef( "Calling AdditionalJaxbMappingProducer : %s", producer );
-					Collection<MappingDocument> additionalMappings = producer.produceAdditionalMappings(
-							metadataCollector,
-							jandexView,
-							mappingBinder,
-							rootMetadataBuildingContext
-					);
-					for ( MappingDocument mappingDocument : additionalMappings ) {
-						hierarchyBuilder.indexMappingDocument( mappingDocument );
-					}
-				}
-
-				ModelBinder binder = ModelBinder.prepare( rootMetadataBuildingContext );
-				for ( EntityHierarchySourceImpl entityHierarchySource : hierarchyBuilder.buildHierarchies() ) {
-					binder.bindEntityHierarchy( entityHierarchySource );
-				}
-			}
-		}
-
-		applyExtraQueryImports( managedResources, metadataCollector );
-
-		return metadataCollector.buildMetadataInstance( rootMetadataBuildingContext );
 	}
 
 	private static void applyExtraQueryImports(

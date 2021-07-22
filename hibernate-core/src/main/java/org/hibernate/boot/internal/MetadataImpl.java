@@ -27,14 +27,14 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.Sequence;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.BootstrapContext;
-import org.hibernate.boot.spi.MetadataBuildingOptions;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.query.NamedResultSetMappingDescriptor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingOptions;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderFactory;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderService;
@@ -53,6 +53,7 @@ import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
@@ -209,6 +210,22 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 	@Override
 	public java.util.Collection<PersistentClass> getEntityBindings() {
 		return entityBindingMap.values();
+	}
+
+	@Override
+	public void forEachEntityBinding(Consumer<PersistentClass> consumer) {
+		entityBindingMap.forEach( (entityName, entityDescriptor) -> {
+			consumer.accept( entityDescriptor );
+		});
+	}
+
+	@Override
+	public void forEachHierarchyRoot(Consumer<RootClass> consumer) {
+		forEachEntityBinding( (entityDescriptor) -> {
+			if ( entityDescriptor instanceof RootClass ) {
+				consumer.accept( (RootClass) entityDescriptor );
+			}
+		});
 	}
 
 	@Override

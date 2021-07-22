@@ -39,6 +39,7 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.factory.IdGenCreationLogging;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -275,6 +276,7 @@ public abstract class SimpleValue implements KeyValue {
 	 * {@link #createIdentifierGenerator(IdentifierGeneratorFactory, Dialect, String, String, RootClass)} was never
 	 * completed.
 	 */
+	@Override
 	public IdentifierGenerator getIdentifierGenerator() {
 		return identifierGenerator;
 	}
@@ -288,6 +290,11 @@ public abstract class SimpleValue implements KeyValue {
 			RootClass rootClass) throws MappingException {
 
 		if ( identifierGenerator != null ) {
+			IdGenCreationLogging.ID_GEN_LOGGER.debugf(
+					"IdentifierGenerator creation called multiple times for basic id on column `%s.%s`",
+					getTable().getQuotedName(),
+					getTable().getColumn( 0 ).getQuotedName()
+			);
 			return identifierGenerator;
 		}
 

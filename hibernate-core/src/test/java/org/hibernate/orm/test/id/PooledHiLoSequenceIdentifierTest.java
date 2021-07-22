@@ -34,6 +34,7 @@ import org.hibernate.Session;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -120,6 +121,10 @@ public class PooledHiLoSequenceIdentifierTest {
 		final SessionImplementor si = (SessionImplementor) session;
 		final SessionFactoryImplementor sfi = si.getFactory();
 
+		final EntityPersister entityDescriptor = sfi.getRuntimeMetamodels()
+				.getMappingMetamodel()
+				.findEntityDescriptor( SequenceIdentifier.class );
+
 		session.doWork(
 				connection -> {
 					PreparedStatement statement = null;
@@ -127,8 +132,7 @@ public class PooledHiLoSequenceIdentifierTest {
 						statement = connection.prepareStatement( "INSERT INTO sequenceIdentifier VALUES (?,?)" );
 						statement.setObject(
 								1,
-								sfi.getIdentifierGenerator( SequenceIdentifier.class.getName() )
-										.generate( si, null )
+								entityDescriptor.getIdentifierGenerator().generate( si, null )
 						);
 						statement.setString( 2,"name" );
 						statement.executeUpdate();

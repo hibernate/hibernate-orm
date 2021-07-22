@@ -15,6 +15,7 @@ import javax.persistence.ConstraintMode;
 import javax.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
+import org.hibernate.Internal;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -47,6 +48,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BasicTypeRegistration;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.JpaOrmXmlPersistenceUnitDefaultAware;
 import org.hibernate.boot.spi.MappingDefaults;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
@@ -398,6 +400,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		return MetadataBuildingProcess.build( sources, bootstrapContext, options );
+	}
+
+	@Internal
+	public InFlightMetadataCollector buildMetadataCollector() {
+		return MetadataBuildingProcess.buildMetadataCollector( sources, bootstrapContext, options );
 	}
 
 	@Override

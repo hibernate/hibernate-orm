@@ -1699,7 +1699,6 @@ public final class AnnotationBinder {
 	/*
 	 * Process annotation of a particular property
 	 */
-
 	private static void processElementAnnotations(
 			PropertyHolder propertyHolder,
 			Nullability nullability,

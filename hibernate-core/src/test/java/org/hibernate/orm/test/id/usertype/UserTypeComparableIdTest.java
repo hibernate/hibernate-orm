@@ -132,7 +132,7 @@ public class UserTypeComparableIdTest {
 
 		@Override
 		public int[] sqlTypes() {
-			return new int[] { SQL_TYPE.sqlType() };
+			return new int[] { SQL_TYPE.getJdbcTypeCode() };
 		}
 
 		@Override
@@ -152,7 +152,7 @@ public class UserTypeComparableIdTest {
 			CustomId customId = (CustomId) value;
 
 			if ( customId == null ) {
-				preparedStatement.setNull( index, SQL_TYPE.sqlType() );
+				preparedStatement.setNull( index, SQL_TYPE.getJdbcTypeCode() );
 			}
 			else {
 				preparedStatement.setLong( index, customId.getValue() );

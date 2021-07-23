@@ -29,7 +29,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	 * A "friendly" name for use in logging
 	 */
 	default String getFriendlyName() {
-		return Integer.toString( getJdbcType() );
+		return Integer.toString( getJdbcTypeCode() );
 	}
 
 	/**
@@ -51,6 +51,16 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	/**
+	 * Get a JDBC type code that identifies the SQL column type to be
+	 * used for schema generation.
+	 *
+	 * @see #getJdbcType
+	 */
+	default int getDefaultSqlTypeCode() {
+		return getJdbcType();
+	}
+
+	/**
 	 * Is this descriptor available for remapping?
 	 *
 	 * @return {@code true} indicates this descriptor can be remapped; otherwise, {@code false}
@@ -63,7 +73,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	default <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
 		// match legacy behavior
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
-				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getJdbcType() )
+				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getJdbcTypeCode() )
 		);
 	}
 
@@ -95,7 +105,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	<X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
 
 	default boolean isInteger() {
-		switch ( getJdbcType() ) {
+		switch ( getJdbcTypeCode() ) {
 			case Types.BIT:
 			case Types.TINYINT:
 			case Types.SMALLINT:
@@ -107,7 +117,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	default boolean isNumber() {
-		switch ( getJdbcType() ) {
+		switch ( getJdbcTypeCode() ) {
 			case Types.BIT:
 			case Types.TINYINT:
 			case Types.SMALLINT:
@@ -124,7 +134,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	default boolean isBinary() {
-		switch ( getJdbcType() ) {
+		switch ( getJdbcTypeCode() ) {
 			case Types.BINARY:
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
@@ -135,7 +145,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	default boolean isString() {
-		switch ( getJdbcType() ) {
+		switch ( getJdbcTypeCode() ) {
 			case Types.CHAR:
 			case Types.NCHAR:
 			case Types.VARCHAR:
@@ -150,7 +160,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	default boolean isTemporal() {
-		switch ( getJdbcType() ) {
+		switch ( getJdbcTypeCode() ) {
 			case Types.DATE:
 			case Types.TIME:
 			case Types.TIMESTAMP:
@@ -161,7 +171,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	default CastType getCastType() {
-		switch ( getJdbcType() ) {
+		switch ( getJdbcTypeCode() ) {
 			case Types.INTEGER:
 			case Types.TINYINT:
 			case Types.SMALLINT:

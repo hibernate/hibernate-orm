@@ -110,7 +110,7 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.LONGNVARCHAR, "text" );
 
 		if ( getVersion() >= 820 ) {
-			registerColumnType( PostgresUUIDType.INSTANCE.sqlType(), "uuid" );
+			registerColumnType( PostgresUUIDType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode(), "uuid" );
 
 			if ( getVersion() >= 920 ) {
 				registerColumnType( Types.JAVA_OBJECT, "json" );

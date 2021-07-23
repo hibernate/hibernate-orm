@@ -233,7 +233,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			);
 
 			try {
-				int[] jdbcTypes = basicType.sqlTypes( null );
+				int[] jdbcTypes = basicType.getSqlTypeCodes( null );
 
 				if ( jdbcTypes.length == 1 ) {
 					int jdbcType = jdbcTypes[0];
@@ -650,7 +650,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcTypeDescriptor() );
 		}
 		else if (type instanceof SingleColumnType) {
-			return getSqlTemporalType( ((SingleColumnType<?>) type).sqlType() );
+			return getSqlTemporalType( ((SingleColumnType<?>) type).getJdbcTypeCode() );
 		}
 		return null;
 	}

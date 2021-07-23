@@ -84,7 +84,7 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping session) throws MappingException {
+	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 

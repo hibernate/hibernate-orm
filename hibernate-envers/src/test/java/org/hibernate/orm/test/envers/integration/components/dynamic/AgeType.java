@@ -21,7 +21,7 @@ public class AgeType implements UserType {
 	@Override
 	public int[] sqlTypes() {
 		return new int[] {
-				IntegerType.INSTANCE.sqlType()
+				IntegerType.INSTANCE.getJdbcTypeCode()
 		};
 	}
 

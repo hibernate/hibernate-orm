@@ -128,8 +128,8 @@ public class CustomType
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping pi) {
-		return new int[] { jdbcTypeDescriptor.getJdbcType() };
+	public int[] getSqlTypeCodes(Mapping pi) {
+		return new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
 	}
 
 	@Override

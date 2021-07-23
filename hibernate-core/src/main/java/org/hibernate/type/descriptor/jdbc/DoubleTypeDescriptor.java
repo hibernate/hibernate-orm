@@ -31,9 +31,20 @@ public class DoubleTypeDescriptor implements JdbcTypeDescriptor {
 	public DoubleTypeDescriptor() {
 	}
 
+	/**
+	 * @return {@link Types#DOUBLE}
+	 */
 	@Override
 	public int getJdbcType() {
 		return Types.DOUBLE;
+	}
+
+	/**
+	 * @return {@link Types#FLOAT} for schema generation
+	 */
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return Types.FLOAT;
 	}
 
 	@Override
@@ -43,7 +54,7 @@ public class DoubleTypeDescriptor implements JdbcTypeDescriptor {
 
 	@Override
 	public String toString() {
-		return "SqlTypeDescriptor(" + getFriendlyName() + ")";
+		return "DoubleTypeDescriptor";
 	}
 
 	@Override

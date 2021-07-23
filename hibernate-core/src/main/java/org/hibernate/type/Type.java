@@ -108,7 +108,7 @@ public interface Type extends Serializable {
 	 *
 	 * @throws MappingException Generally indicates an issue accessing the passed mapping object.
 	 */
-	int[] sqlTypes(Mapping mapping) throws MappingException;
+	int[] getSqlTypeCodes(Mapping mapping) throws MappingException;
 
 	/**
 	 * Return the column sizes dictated by this type.  For example, the mapping for a {@code char}/{@link Character} would

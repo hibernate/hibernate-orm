@@ -54,7 +54,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	public AbstractStandardBasicType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
-		this.sqlTypes = new int[] { jdbcTypeDescriptor.getJdbcType() };
+		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
 		this.javaTypeDescriptor = javaTypeDescriptor;
 
 		this.jdbcValueBinder = jdbcTypeDescriptor.getBinder( javaTypeDescriptor );
@@ -156,7 +156,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	public final void setSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
-		this.sqlTypes = new int[] { jdbcTypeDescriptor.getJdbcType() };
+		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
 
 		this.jdbcValueBinder = getJdbcTypeDescriptor().getBinder( javaTypeDescriptor );
 		this.jdbcValueExtractor = getJdbcTypeDescriptor().getExtractor( javaTypeDescriptor );
@@ -173,7 +173,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public final int[] sqlTypes(Mapping mapping) throws MappingException {
+	public final int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
 		return sqlTypes;
 	}
 

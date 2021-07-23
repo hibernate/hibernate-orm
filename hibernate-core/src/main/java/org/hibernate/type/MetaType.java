@@ -51,8 +51,8 @@ public class MetaType extends AbstractType {
 		return discriminatorValuesToEntityNameMap;
 	}
 
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return baseType.sqlTypes(mapping);
+	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+		return baseType.getSqlTypeCodes(mapping);
 	}
 
 	@Override

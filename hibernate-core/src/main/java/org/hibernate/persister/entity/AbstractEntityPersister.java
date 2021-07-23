@@ -3430,7 +3430,7 @@ public abstract class AbstractEntityPersister
 				.getIdentitySelectString(
 						getTableName( 0 ),
 						getKeyColumns( 0 )[0],
-						getIdentifierType().sqlTypes( getFactory() )[0]
+						getIdentifierType().getSqlTypeCodes( getFactory() )[0]
 				);
 	}
 

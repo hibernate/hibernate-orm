@@ -649,7 +649,7 @@ public abstract class SimpleValue implements KeyValue {
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
 				metadata::getTypeConfiguration
 		);
-		int jdbcTypeCode = recommendedJdbcType.getJdbcType();
+		int jdbcTypeCode = recommendedJdbcType.getJdbcTypeCode();
 		if ( isLob() ) {
 			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );

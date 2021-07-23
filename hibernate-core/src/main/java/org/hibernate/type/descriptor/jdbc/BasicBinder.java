@@ -50,7 +50,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() )
+								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
 						)
 				);
 			}
@@ -62,7 +62,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( jdbcTypeDescriptor.getJdbcType() ),
+								JdbcTypeNameMapper.getTypeName( jdbcTypeDescriptor.getJdbcTypeCode() ),
 								getJavaTypeDescriptor().extractLoggableRepresentation( value )
 						)
 				);
@@ -79,7 +79,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() )
+								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
 						)
 				);
 			}
@@ -91,7 +91,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( jdbcTypeDescriptor.getJdbcType() ),
+								JdbcTypeNameMapper.getTypeName( jdbcTypeDescriptor.getJdbcTypeCode() ),
 								getJavaTypeDescriptor().extractLoggableRepresentation( value )
 						)
 				);
@@ -110,7 +110,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	 * @throws SQLException Indicates a problem binding to the prepared statement.
 	 */
 	protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
-		st.setNull( index, jdbcTypeDescriptor.getJdbcType() );
+		st.setNull( index, jdbcTypeDescriptor.getJdbcTypeCode() );
 	}
 
 	/**
@@ -123,7 +123,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	 * @throws SQLException Indicates a problem binding to the callable statement.
 	 */
 	protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
-		st.setNull( name, jdbcTypeDescriptor.getJdbcType() );
+		st.setNull( name, jdbcTypeDescriptor.getJdbcTypeCode() );
 	}
 
 	/**

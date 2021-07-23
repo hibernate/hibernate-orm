@@ -108,8 +108,8 @@ public class ManyToOneType extends EntityType {
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return requireIdentifierOrUniqueKeyType( mapping ).sqlTypes( mapping );
+	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+		return requireIdentifierOrUniqueKeyType( mapping ).getSqlTypeCodes( mapping );
 	}
 
 	@Override

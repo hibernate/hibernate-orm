@@ -28,8 +28,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 	}
 
 	@Override
-	public final int sqlType() {
-		return getJdbcTypeDescriptor().getJdbcType();
+	public final int getJdbcTypeCode() {
+		return getJdbcTypeDescriptor().getJdbcTypeCode();
 	}
 
 	@Override

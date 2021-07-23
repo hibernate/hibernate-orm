@@ -55,7 +55,7 @@ public class NestedEmbeddableMetadataTest {
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
 			CustomType currencyType = (CustomType) currencyMetadata.getType();
-			int[] currencySqlTypes = currencyType.sqlTypes( metadata );
+			int[] currencySqlTypes = currencyType.getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
 			assertJdbcTypeCode( Types.VARCHAR, currencySqlTypes[0] );
 		}

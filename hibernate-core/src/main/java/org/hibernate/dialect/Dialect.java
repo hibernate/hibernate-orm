@@ -1097,7 +1097,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public String getTypeName(JdbcTypeDescriptor jdbcTypeDescriptor) throws HibernateException {
-		return getTypeName( jdbcTypeDescriptor.getJdbcTypeCode() );
+		return getTypeName( jdbcTypeDescriptor.getDefaultSqlTypeCode() );
 	}
 
 	public String getTypeName(int code) throws HibernateException {

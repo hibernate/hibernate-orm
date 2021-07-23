@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public interface SingleColumnType<T> extends Type {
 
-	int sqlType();
+	int getJdbcTypeCode();
 
 	String toString(T value) throws HibernateException;
 

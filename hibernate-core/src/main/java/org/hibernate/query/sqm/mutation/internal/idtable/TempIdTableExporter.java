@@ -57,7 +57,7 @@ public class TempIdTableExporter implements IdTableExporter {
 			}
 
 			buffer.append( column.getColumnName() ).append( ' ' );
-			final int sqlTypeCode = column.getJdbcMapping().getJdbcTypeDescriptor().getJdbcType();
+			final int sqlTypeCode = column.getJdbcMapping().getJdbcTypeDescriptor().getDefaultSqlTypeCode();
 			final String databaseTypeName = databaseTypeNameResolver.apply( sqlTypeCode );
 
 			buffer.append( " " ).append( databaseTypeName ).append( " " );

@@ -13,6 +13,8 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * Descriptor for {@link Float} handling.
@@ -25,6 +27,12 @@ public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> impl
 	public FloatTypeDescriptor() {
 		super( Float.class );
 	}
+
+	@Override
+	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+		return org.hibernate.type.descriptor.jdbc.FloatTypeDescriptor.INSTANCE;
+	}
+
 	@Override
 	public String toString(Float value) {
 		return value == null ? null : value.toString();

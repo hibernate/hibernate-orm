@@ -256,7 +256,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		if ( column instanceof Column && resolution.getValueConverter() == null ) {
 			final Column physicalColumn = (Column) column;
 			if ( physicalColumn.getSqlTypeCode() == null ) {
-				physicalColumn.setSqlTypeCode( resolution.getJdbcTypeDescriptor().getJdbcTypeCode() );
+				physicalColumn.setSqlTypeCode( resolution.getJdbcTypeDescriptor().getDefaultSqlTypeCode() );
 			}
 
 			final BasicType<?> basicType = resolution.getLegacyResolvedBasicType();

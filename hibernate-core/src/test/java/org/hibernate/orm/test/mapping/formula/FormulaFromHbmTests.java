@@ -39,7 +39,7 @@ public class FormulaFromHbmTests {
 				(rootClass) -> {
 					final Property stringFormula = rootClass.getProperty( "stringFormula" );
 					{
-						final int[] sqlTypes = stringFormula.getType().sqlTypes( scope.getDomainModel() );
+						final int[] sqlTypes = stringFormula.getType().getSqlTypeCodes( scope.getDomainModel() );
 						assertThat( sqlTypes.length, is( 1 ) );
 						assertThat( sqlTypes[ 0 ], is( Types.VARCHAR ) );
 
@@ -49,7 +49,7 @@ public class FormulaFromHbmTests {
 
 					final Property integerFormula = rootClass.getProperty( "integerFormula" );
 					{
-						final int[] sqlTypes = integerFormula.getType().sqlTypes( scope.getDomainModel() );
+						final int[] sqlTypes = integerFormula.getType().getSqlTypeCodes( scope.getDomainModel() );
 						assertThat( sqlTypes.length, is( 1 ) );
 						assertThat( sqlTypes[ 0 ], is( Types.INTEGER ) );
 

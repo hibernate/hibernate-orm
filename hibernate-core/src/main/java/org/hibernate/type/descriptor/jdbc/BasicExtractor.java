@@ -47,7 +47,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted value ([%s] : [%s]) - [null]",
 						paramIndex,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() )
+						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
 				);
 			}
 			return null;
@@ -57,7 +57,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted value ([%s] : [%s]) - [%s]",
 						paramIndex,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() ),
+						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() ),
 						getJavaTypeDescriptor().extractLoggableRepresentation( value )
 				);
 			}
@@ -85,7 +85,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [null]",
 						paramIndex,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() )
+						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
 				);
 			}
 			return null;
@@ -95,7 +95,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted procedure output  parameter ([%s] : [%s]) - [%s]",
 						paramIndex,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() ),
+						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() ),
 						getJavaTypeDescriptor().extractLoggableRepresentation( value )
 				);
 			}
@@ -123,7 +123,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [null]",
 						paramName,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() )
+						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
 				);
 			}
 			return null;
@@ -133,7 +133,7 @@ public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializab
 				JdbcExtractingLogging.LOGGER.tracef(
 						"extracted named procedure output  parameter ([%s] : [%s]) - [%s]",
 						paramName,
-						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcType() ),
+						JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() ),
 						getJavaTypeDescriptor().extractLoggableRepresentation( value )
 				);
 			}

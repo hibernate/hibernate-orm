@@ -81,8 +81,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join( discriminatorType.sqlTypes( mapping ), identifierType.sqlTypes( mapping ) );
+	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+		return ArrayHelper.join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
 	}
 
 	@Override

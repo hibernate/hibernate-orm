@@ -163,7 +163,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	}
 
 	@Override
-	public int[] sqlTypes(Mapping session) throws MappingException {
+	public int[] getSqlTypeCodes(Mapping session) throws MappingException {
 		return ArrayHelper.EMPTY_INT_ARRAY;
 	}
 

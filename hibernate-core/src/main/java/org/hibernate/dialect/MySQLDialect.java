@@ -191,8 +191,7 @@ public class MySQLDialect extends Dialect {
 					Integer precision,
 					Integer scale,
 					Long length) {
-				final int jdbcTypeCode = jdbcType.getJdbcType();
-				switch ( jdbcTypeCode ) {
+				switch ( jdbcType.getDefaultSqlTypeCode() ) {
 					case Types.BIT:
 						// MySQL allows BIT with a length up to 64
 						if ( length != null ) {

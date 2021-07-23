@@ -22,14 +22,8 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -207,8 +201,8 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 	// simple delegation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public int[] sqlTypes(Mapping mapping) throws MappingException {
-		return underlyingType.sqlTypes( mapping );
+	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
+		return underlyingType.getSqlTypeCodes( mapping );
 	}
 
 	@Override

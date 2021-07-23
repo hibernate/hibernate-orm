@@ -25,7 +25,7 @@ public class DoubleType
 	public static final Double ZERO = 0.0;
 
 	public DoubleType() {
-		super( org.hibernate.type.descriptor.jdbc.FloatTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
+		super( org.hibernate.type.descriptor.jdbc.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {

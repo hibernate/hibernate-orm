@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import java.sql.Types;
 import javax.persistence.AttributeConverter;
 import javax.persistence.Convert;
 import javax.persistence.Entity;
@@ -49,7 +48,7 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 			final Dialect dialect = metadata.getDatabase().getDialect();
 			assertEquals(
 					dialect.getNationalizationSupport().getVarcharVariantCode(),
-					entityBinding.getProperty( "name" ).getType().sqlTypes( metadata )[0]
+					entityBinding.getProperty( "name" ).getType().getSqlTypeCodes( metadata )[0]
 			);
 		}
 		finally {

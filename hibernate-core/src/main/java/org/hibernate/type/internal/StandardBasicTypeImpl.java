@@ -61,7 +61,7 @@ public class StandardBasicTypeImpl<J>
 	@Override
 	public CastType getCastType() {
 		if ( getJavaTypeDescriptor() == BooleanTypeDescriptor.INSTANCE ) {
-			switch ( sqlType() ) {
+			switch ( getJdbcTypeCode() ) {
 				case Types.BIT:
 				case Types.SMALLINT:
 				case Types.TINYINT:

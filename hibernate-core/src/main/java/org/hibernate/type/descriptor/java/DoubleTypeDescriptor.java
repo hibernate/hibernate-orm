@@ -31,7 +31,7 @@ public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> im
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
-		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.REAL );
+		return org.hibernate.type.descriptor.jdbc.DoubleTypeDescriptor.INSTANCE;
 	}
 
 	@Override

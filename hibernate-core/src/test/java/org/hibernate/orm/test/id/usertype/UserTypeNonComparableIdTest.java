@@ -119,7 +119,7 @@ public class UserTypeNonComparableIdTest {
 
 		@Override
 		public int[] sqlTypes() {
-			return new int[] { SQL_TYPE.getJdbcTypeCode() };
+			return new int[] { SQL_TYPE.getJdbcTypeDescriptor().getDefaultSqlTypeCode() };
 		}
 
 		@Override

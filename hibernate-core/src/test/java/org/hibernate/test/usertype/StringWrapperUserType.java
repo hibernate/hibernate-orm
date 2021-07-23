@@ -25,7 +25,7 @@ public class StringWrapperUserType implements UserType {
 
     @Override
     public int[] sqlTypes() {
-        return new int[] {StringType.INSTANCE.getJdbcTypeCode()};
+        return new int[] {StringType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode()};
     }
 
     @Override

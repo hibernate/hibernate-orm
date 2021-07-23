@@ -107,10 +107,8 @@ public class AttributeOverrideEnhancedUserTypeTest {
 	public static class YearMonthUserType implements UserType, Serializable {
 		@Override
 		public int[] sqlTypes() {
-			return new int[] {
-					IntegerType.INSTANCE.getJdbcTypeCode(),
-					IntegerType.INSTANCE.getJdbcTypeCode(),
-			};
+			int intType = IntegerType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode();
+			return new int[] { intType, intType };
 		}
 
 		@Override

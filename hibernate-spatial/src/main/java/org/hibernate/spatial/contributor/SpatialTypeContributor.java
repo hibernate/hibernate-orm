@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.type;
+package org.hibernate.spatial.contributor;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -15,10 +15,10 @@ public class SpatialTypeContributor implements TypeContributor {
 	@Override
 	public void contribute(
 			TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		SpatialTypeContributorImplementor contributorImplementor = TypeContributorResolver.resolve( serviceRegistry );
+		ContributorImplementor contributorImplementor = ContributorResolver.resolveSpatialtypeContributorImplementor( serviceRegistry );
 
 		if (contributorImplementor != null) {
-			contributorImplementor.contribute( typeContributions );
+			contributorImplementor.contributeTypes( typeContributions );
 		}
 
 	}

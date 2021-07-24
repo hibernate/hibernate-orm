@@ -165,7 +165,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 */
 	public boolean isSupportedByDialect(SpatialFunction spatialFunction) {
 		Dialect dialect = getDialect();
-		throw new NotYetImplementedException();
+		return true;
 	}
 
 

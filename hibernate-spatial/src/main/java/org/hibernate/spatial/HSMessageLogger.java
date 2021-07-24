@@ -41,7 +41,10 @@ public interface HSMessageLogger extends BasicLogger {
 	void connectionFinder(String className);
 
 	@LogMessage(level = INFO) //maybe should be DEBUG?
-	@Message(value = "hibernate-spatial using type contributions from : %s", id = 80000003)
+	@Message(value = "hibernate-spatial adding type contributions from : %s", id = 80000003)
 	void typeContributions(String source);
 
+	@LogMessage(level = INFO) //maybe should be DEBUG?
+	@Message(value = "hibernate-spatial adding function contributions from : %s", id = 80000004)
+	void functionContributions(String source);
 }

@@ -7,6 +7,9 @@
 package org.hibernate.query.spi;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.boot.model.FunctionContributor;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
@@ -25,6 +28,7 @@ import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -125,6 +129,11 @@ public class QueryEngine {
 		dialect.initializeFunctionRegistry( this );
 		if ( userDefinedRegistry != null ) {
 			userDefinedRegistry.overlay( sqmFunctionRegistry );
+		}
+
+		for ( FunctionContributor contributor : serviceRegistry.getService( ClassLoaderService.class )
+				.loadJavaServices( FunctionContributor.class ) ) {
+			contributor.contributeTypes( sqmFunctionRegistry::register, serviceRegistry );
 		}
 
 		final boolean showSQLFunctions = ConfigurationHelper.getBoolean(
@@ -281,7 +290,9 @@ public class QueryEngine {
 		return new StandardSqmTranslatorFactory();
 	}
 
-	private static QueryInterpretationCache buildInterpretationCache(Supplier<StatisticsImplementor> statisticsSupplier, Map properties) {
+	private static QueryInterpretationCache buildInterpretationCache(
+			Supplier<StatisticsImplementor> statisticsSupplier,
+			Map properties) {
 		final boolean explicitUseCache = ConfigurationHelper.getBoolean(
 				AvailableSettings.QUERY_PLAN_CACHE_ENABLED,
 				properties,

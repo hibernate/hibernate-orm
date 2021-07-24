@@ -19,6 +19,7 @@ import javax.persistence.Query;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 
@@ -34,7 +35,7 @@ import org.locationtech.jts.geom.Point;
 import static org.junit.Assert.assertEquals;
 
 @TestForIssue(jiraKey = "HHH-14523")
-@RequiresDialect(PostgisPG95Dialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
 public class DirtyCheckingTest extends BaseEntityManagerFunctionalTestCase {
 
 	private GeometryFactory gfact = new GeometryFactory();

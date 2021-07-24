@@ -15,7 +15,10 @@ import org.hibernate.testing.Skip;
 /**
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 1/13/12
+ *
+ * @deprecated Since we no longer require SpatialDialects
  */
+@Deprecated
 public class SpatialDialectMatcher implements Skip.Matcher {
 	@Override
 	public boolean isMatch() {

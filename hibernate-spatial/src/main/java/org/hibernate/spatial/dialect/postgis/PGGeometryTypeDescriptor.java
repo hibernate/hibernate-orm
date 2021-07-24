@@ -11,6 +11,7 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -76,6 +77,8 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 		return decoder.decode( pgValue );
 	}
 
+
+
 	@Override
 	public int getJdbcType() {
 		return 5432;
@@ -103,9 +106,20 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 				st.setObject( name, obj );
 			}
 
+			//this and the  next override is ONLY necessary as long as the distinction between SQLType and JDBC Type is not resolved
+			@Override
+			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+				st.setNull( index, Types.OTHER );
+			}
+
+			@Override
+			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+				st.setNull( name, Types.OTHER );
+			}
+
 			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
 				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
-				final Geometry geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
 				final String hexString = encoder.encode( geometry, ByteOrder.NDR ).toString();
 				final PGobject obj = new PGobject();
 				obj.setType( "geometry" );

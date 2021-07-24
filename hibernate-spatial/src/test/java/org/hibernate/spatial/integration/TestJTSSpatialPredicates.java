@@ -36,6 +36,7 @@ import static org.junit.Assert.fail;
 
 @Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 @SkipForDialect(value = HANASpatialDialect.class, comment = "The HANA dialect is tested via org.hibernate.spatial.dialect.hana.TestHANASpatialFunctions", jiraKey = "HHH-12426")
+@Deprecated
 public class TestJTSSpatialPredicates extends SpatialFunctionalTestCase {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(

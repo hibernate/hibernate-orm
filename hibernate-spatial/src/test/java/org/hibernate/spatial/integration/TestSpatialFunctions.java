@@ -36,7 +36,7 @@ import static java.lang.String.format;
 /**
  * @author Karel Maesen, Geovise BVBA
  */
-@Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
+@Deprecated
 public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(

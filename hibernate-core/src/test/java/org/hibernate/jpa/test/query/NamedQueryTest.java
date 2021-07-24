@@ -19,6 +19,7 @@ import javax.persistence.Query;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
+
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
@@ -26,6 +27,7 @@ import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * @author Andrea Boriero
@@ -33,11 +35,11 @@ import static org.junit.Assert.assertEquals;
 @TestForIssue(jiraKey = "HHH-11092")
 public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
-	private static final String[] GAME_TITLES = {"Halo", "Grand Theft Auto", "NetHack"};
+	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] {Game.class};
+		return new Class[] { Game.class };
 	}
 
 	@Before
@@ -175,6 +177,18 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 			NativeQuery<?> query2 = entityManager.createNamedQuery( "myQuery" ).unwrap( NativeQuery.class );
 
 			assertEquals( 0, query2.getSynchronizedQuerySpaces().size() );
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11413")
+	public void testNamedNativeQueryExceptionNoRedultDefined() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			assertThrows(
+					"Named query exists but its result type is not compatible",
+					IllegalArgumentException.class,
+					() -> entityManager.createNamedQuery( "NamedNativeQuery", Game.class )
+			);
 		} );
 	}
 

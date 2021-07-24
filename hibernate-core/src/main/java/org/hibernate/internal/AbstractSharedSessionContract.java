@@ -966,6 +966,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
 		}
 
+		if ( queryReturns.length == 0 ) {
+			throw new IllegalArgumentException("Named query exists but its result type is not compatible");
+		}
+
 		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];
 
 		if ( nativeSQLQueryReturn instanceof NativeSQLQueryRootReturn ) {

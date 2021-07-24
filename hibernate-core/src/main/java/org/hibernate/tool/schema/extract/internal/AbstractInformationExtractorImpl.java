@@ -586,7 +586,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 * @param schemaFilter
 	 * @param tableNameFilter
 	 * @param tableTypes
-	 * @return
+	 * @return results of type {@code T}
 	 * @throws SQLException
 	 */
 	protected abstract <T> T processTableResultSet(
@@ -888,7 +888,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 * @param schemaFilter
 	 * @param tableName
 	 * @param approximate
-	 * @return
+	 * @return results of type {@code T}
 	 * @throws SQLException
 	 */
 	protected abstract <T> T processIndexInfoResultSet(
@@ -923,7 +923,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 
 		try {
-			 processIndexInfoResultSet(
+			processIndexInfoResultSet(
 					catalogFilter,
 					schemaFilter,
 					tableName.getTableName(),

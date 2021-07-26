@@ -358,7 +358,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl implements Information
 				log.sqlWarning( ignore.getErrorCode(), ignore.getSQLState() );
 			}
 		}
-		return currentCatalog;
+		return currentSchema;
 	}
 
 	private Identifier getCurrentCatalog(JdbcEnvironment jdbcEnvironment) {

@@ -19,7 +19,7 @@ public class GenerateProxiesTest {
 
 	@Test
 	public void generateBasicProxy() {
-		BasicProxyFactoryImpl basicProxyFactory = new BasicProxyFactoryImpl( SimpleEntity.class, new Class<?>[0],
+		BasicProxyFactoryImpl basicProxyFactory = new BasicProxyFactoryImpl( SimpleEntity.class, null,
 				new ByteBuddyState() );
 		assertNotNull( basicProxyFactory.getProxy() );
 	}

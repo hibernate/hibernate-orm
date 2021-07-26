@@ -15,12 +15,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.stat.Statistics;
 
@@ -31,7 +27,6 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -77,7 +72,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCor
 				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -104,7 +99,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCor
 				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.human ) );
 					assertFalse( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -131,7 +126,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCor
 				session -> {
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -163,7 +158,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCor
 		inStatelessSession(
 				session -> {
 
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "animal" ) );
 					assertFalse( Hibernate.isInitialized( otherEntity.animal ) );
 					assertTrue( HibernateProxy.class.isInstance( otherEntity.animal ) );
@@ -197,7 +192,7 @@ public class LazyToOnesProxyWithSubclassesStatelessTest extends BaseNonConfigCor
 					final Statistics stats = sessionFactory().getStatistics();
 					stats.clear();
 
-					final OtherEntity otherEntity = (OtherEntity) session.get( OtherEntity.class, "test1" );
+					final OtherEntity otherEntity = session.get( OtherEntity.class, "test1" );
 					assertNull( otherEntity.animal );
 					assertNull( otherEntity.primate );
 					assertTrue( Hibernate.isPropertyInitialized( otherEntity, "human" ) );

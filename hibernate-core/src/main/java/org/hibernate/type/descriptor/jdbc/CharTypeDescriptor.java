@@ -27,7 +27,7 @@ public class CharTypeDescriptor extends VarcharTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.CHAR;
 	}
 

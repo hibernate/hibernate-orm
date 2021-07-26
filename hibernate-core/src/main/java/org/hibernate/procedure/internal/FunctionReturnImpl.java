@@ -32,7 +32,7 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 
 	public FunctionReturnImpl(ProcedureCallImplementor procedureCall, AllowableOutputParameterType ormType) {
 		this.procedureCall = procedureCall;
-		this.jdbcTypeCode = ormType.getJdbcTypeDescriptor().getJdbcType();
+		this.jdbcTypeCode = ormType.getJdbcTypeDescriptor().getJdbcTypeCode();
 
 		this.ormType = ormType;
 	}

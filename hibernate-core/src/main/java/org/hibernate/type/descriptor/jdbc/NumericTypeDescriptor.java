@@ -25,7 +25,7 @@ public class NumericTypeDescriptor extends DecimalTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.NUMERIC;
 	}
 }

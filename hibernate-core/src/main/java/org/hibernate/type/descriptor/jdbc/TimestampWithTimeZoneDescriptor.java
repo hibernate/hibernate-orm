@@ -35,7 +35,7 @@ public class TimestampWithTimeZoneDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.TIMESTAMP_WITH_TIMEZONE;
 	}
 

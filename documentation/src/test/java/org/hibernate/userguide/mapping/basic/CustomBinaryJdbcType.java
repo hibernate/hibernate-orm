@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
  */
 public class CustomBinaryJdbcType implements JdbcTypeDescriptor {
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.VARBINARY;
 	}
 

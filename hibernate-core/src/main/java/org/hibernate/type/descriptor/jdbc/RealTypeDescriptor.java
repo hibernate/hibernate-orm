@@ -26,7 +26,7 @@ public class RealTypeDescriptor extends FloatTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.REAL;
 	}
 

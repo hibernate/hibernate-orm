@@ -36,7 +36,7 @@ public class TimestampTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.TIMESTAMP;
 	}
 

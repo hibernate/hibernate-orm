@@ -39,7 +39,7 @@ public class MyCustomJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		// given the Oracle example above we might want to replace the
 		// handling of VARCHAR
 		return Types.VARCHAR;
@@ -57,7 +57,7 @@ public class MyCustomJdbcTypeDescriptor implements JdbcTypeDescriptor {
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
 				final String valueStr = javaTypeDescriptor.unwrap( value, String.class, options );
 				if ( StringHelper.isBlank( valueStr ) ) {
-					st.setNull( index, getJdbcType() );
+					st.setNull( index, getJdbcTypeCode() );
 				}
 				else {
 					st.setString( index, valueStr );
@@ -68,7 +68,7 @@ public class MyCustomJdbcTypeDescriptor implements JdbcTypeDescriptor {
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options) throws SQLException {
 				final String valueStr = javaTypeDescriptor.unwrap( value, String.class, options );
 				if ( StringHelper.isBlank( valueStr ) ) {
-					st.setNull( name, getJdbcType() );
+					st.setNull( name, getJdbcTypeCode() );
 				}
 				else {
 					st.setString( name, valueStr );

@@ -63,7 +63,7 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 			);
 
 			assertThat(
-					bootTypeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( MyCustomJdbcTypeDescriptor.INSTANCE.getJdbcType() ),
+					bootTypeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( MyCustomJdbcTypeDescriptor.INSTANCE.getJdbcTypeCode() ),
 					sameInstance( MyCustomJdbcTypeDescriptor.INSTANCE )
 			);
 

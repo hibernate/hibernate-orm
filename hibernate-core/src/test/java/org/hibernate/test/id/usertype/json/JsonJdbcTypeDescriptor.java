@@ -30,7 +30,7 @@ public class JsonJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	public static final JsonJdbcTypeDescriptor INSTANCE = new JsonJdbcTypeDescriptor();
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.OTHER;
 	}
 

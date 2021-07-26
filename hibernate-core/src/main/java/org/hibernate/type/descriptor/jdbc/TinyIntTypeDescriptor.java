@@ -35,7 +35,7 @@ public class TinyIntTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.TINYINT;
 	}
 

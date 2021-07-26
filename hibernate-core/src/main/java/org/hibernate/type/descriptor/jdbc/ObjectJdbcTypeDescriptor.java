@@ -35,7 +35,7 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return jdbcTypeCode;
 	}
 

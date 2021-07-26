@@ -32,7 +32,7 @@ public class NVarcharTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.NVARCHAR;
 	}
 

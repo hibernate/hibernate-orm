@@ -47,7 +47,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return userType.sqlTypes()[0];
 	}
 

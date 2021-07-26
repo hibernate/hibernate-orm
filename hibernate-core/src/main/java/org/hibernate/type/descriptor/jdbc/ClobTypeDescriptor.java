@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public abstract class ClobTypeDescriptor implements JdbcTypeDescriptor {
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.CLOB;
 	}
 

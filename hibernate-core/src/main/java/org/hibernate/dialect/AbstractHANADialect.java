@@ -298,7 +298,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int getJdbcType() {
+		public int getJdbcTypeCode() {
 			return Types.BLOB;
 		}
 
@@ -583,7 +583,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		}
 
 		@Override
-		public int getJdbcType() {
+		public int getJdbcTypeCode() {
 			return Types.BLOB;
 		}
 

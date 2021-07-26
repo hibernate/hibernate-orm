@@ -49,7 +49,7 @@ public class VarbinaryTypeDescriptor implements JdbcTypeDescriptor {
 		return "VarbinaryTypeDescriptor";
 	}
 
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.VARBINARY;
 	}
 

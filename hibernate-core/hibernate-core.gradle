@@ -214,6 +214,5 @@ tasks.withType( Test.class ).each { test ->
     test.include 'org/hibernate/bytecode/internal/bytebuddy/**'
     test.include 'org/hibernate/event/service/internal/**'
     test.include 'org/hibernate/tool/schema/internal/**'
-//    test.include '**/*'
 }
 

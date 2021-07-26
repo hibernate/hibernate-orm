@@ -35,24 +35,24 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsBinaryStatement() {
+	public NativeSQLStatement createNativeAsBinaryStatement() {
 		return createNativeSQLStatement( "select id, ST_AsEWKB(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsTextStatement() {
+	public NativeSQLStatement createNativeAsTextStatement() {
 		return createNativeSQLStatement( "select id, ST_AsText(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBoundaryStatement() {
+	public NativeSQLStatement createNativeBoundaryStatement() {
 		throw new UnsupportedOperationException(
 				"Method ST_Bounday() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
+	public NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, ST_Buffer(t.geom,?) from GEOMTEST t where ST_SRID(t.geom) = 4326",
 				new Object[] { distance }
@@ -60,7 +60,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeContainsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeContainsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Contains(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Contains(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -68,14 +68,14 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
+	public NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_ConvexHull() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Crosses(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Crosses(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -83,21 +83,21 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_Difference() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDimensionSQL() {
+	public NativeSQLStatement createNativeDimensionSQL() {
 		throw new UnsupportedOperationException(
 				"Method ST_Dimension() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Disjoint(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Disjoint(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -105,17 +105,17 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTransformStatement(int epsg) {
+	public NativeSQLStatement createNativeTransformStatement(int epsg) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
+	public NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
 		return createNativeSQLStatement( "select t.id, (st_srid(t.geom) = " + srid + ") from GeomTest t where ST_SRID(t.geom) =  " + srid );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, st_distance(t.geom, ST_GeomFromText(?, 4326)) from GeomTest t where ST_SRID(t.geom) = 4326",
 				geom.toText()
@@ -123,12 +123,12 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEnvelopeStatement() {
+	public NativeSQLStatement createNativeEnvelopeStatement() {
 		return createNativeSQLStatement( "select id, ST_Envelope(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Equals(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Equals(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -136,33 +136,33 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
+	public NativeSQLStatement createNativeFilterStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_MBRIntersects() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_GeomUnion() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeometryTypeStatement() {
+	public NativeSQLStatement createNativeGeometryTypeStatement() {
 		return createNativeSQLStatement( "select id, GeometryType(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_Intersection() is not implemented in the current version of GeoDB."
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Intersects(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Intersects(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -170,22 +170,22 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsEmptyStatement() {
+	public NativeSQLStatement createNativeIsEmptyStatement() {
 		return createNativeSQLStatement( "select id, ST_IsEmpty(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsNotEmptyStatement() {
+	public NativeSQLStatement createNativeIsNotEmptyStatement() {
 		return createNativeSQLStatement( "select id, not ST_IsEmpty(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsSimpleStatement() {
+	public NativeSQLStatement createNativeIsSimpleStatement() {
 		return createNativeSQLStatement( "select id, ST_IsSimple(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Overlaps(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Overlaps(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -193,7 +193,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeRelateStatement(
+	public NativeSQLStatement createNativeRelateStatement(
 			Geometry geom,
 			String matrix) {
 		throw new UnsupportedOperationException(
@@ -202,7 +202,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
+	public NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		String sql = "select t.id, st_dwithin(t.geom, ST_GeomFromText(?, 4326), " + distance + " ) from GeomTest t where st_dwithin(t.geom, ST_GeomFromText(?, 4326), " + distance + ") = 'true' and ST_SRID(t.geom) = 4326";
 		return createNativeSQLStatementAllWKTParams( sql, geom.toText() );
 	}
@@ -215,12 +215,12 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	 */
 
 	@Override
-	protected NativeSQLStatement createNativeSridStatement() {
+	public NativeSQLStatement createNativeSridStatement() {
 		return createNativeSQLStatement( "select id, ST_SRID(geom) from GEOMTEST" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSymDifferenceStatement(
+	public NativeSQLStatement createNativeSymDifferenceStatement(
 			Geometry geom) {
 		throw new UnsupportedOperationException(
 				"Method ST_SymDifference() is not implemented in the current version of GeoDB."
@@ -228,7 +228,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Touches(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Touches(t.geom, ST_GeomFromText(?, 4326)) = 1",
 				geom.toText()
@@ -236,7 +236,7 @@ public class GeoDBNoSRIDExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeWithinStatement(
+	public NativeSQLStatement createNativeWithinStatement(
 			Geometry testPolygon) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, ST_Within(t.geom, ST_GeomFromText(?, 4326)) from GEOMTEST t where ST_Within(t.geom, ST_GeomFromText(?, 4326)) = 1 and ST_SRID(t.geom) = 4326",

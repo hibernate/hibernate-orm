@@ -6,13 +6,27 @@
  */
 package org.hibernate.spatial.dialect.postgis;
 
-import org.hibernate.dialect.PostgreSQL93Dialect;
-import org.hibernate.spatial.SpatialDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 
 /**
  * Extends the {@code PostgreSQL93Dialect} to add support for the Postgis spatial types, functions and operators .
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 01/11/16.
+ *
+ * @deprecated A SpatialDialect is no longer required. Use the standard Dialect for this database.
  */
-public class PostgisPG93Dialect extends PostgreSQL93Dialect implements SpatialDialect {
+@Deprecated
+public class PostgisPG93Dialect extends PostgreSQLDialect {
+	public PostgisPG93Dialect(DialectResolutionInfo info) {
+		super( info );
+	}
+
+	public PostgisPG93Dialect() {
+		super();
+	}
+
+	public PostgisPG93Dialect(int version) {
+		super( version );
+	}
 }

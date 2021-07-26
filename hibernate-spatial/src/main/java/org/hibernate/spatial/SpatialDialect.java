@@ -12,7 +12,9 @@ import java.io.Serializable;
  * Describes the features of a spatially enabled dialect.
  *
  * @author Karel Maesen
+ *
  */
+@Deprecated
 public interface SpatialDialect extends Serializable {
 
 //	/**

@@ -31,6 +31,7 @@ import org.hibernate.spatial.testing.dialects.sqlserver.SQLServerTestSupport;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
+@Deprecated
 public class TestSupportFactories {
 
 	private static final TestSupportFactories instance = new TestSupportFactories();

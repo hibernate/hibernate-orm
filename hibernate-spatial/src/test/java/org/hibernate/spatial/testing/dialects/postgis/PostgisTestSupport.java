@@ -13,6 +13,7 @@ import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
 import org.hibernate.spatial.integration.TestSpatialFunctions;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
+import org.hibernate.spatial.testing.NativeSqlTemplates;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -25,6 +26,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class PostgisTestSupport extends TestSupport {
 
+	@Override
+	public NativeSqlTemplates getNativeSqlTemplates() {
+		return new PostgisNativeSqlTemplates();
+	}
 
 	@Override
 	public TestData createTestData(TestDataPurpose purpose) {

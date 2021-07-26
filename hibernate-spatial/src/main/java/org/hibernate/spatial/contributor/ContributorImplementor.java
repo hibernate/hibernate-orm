@@ -9,24 +9,16 @@ package org.hibernate.spatial.contributor;
 
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Internal contract for TypeContributor
+ * Internal contract for Type and Function Contributors
  */
-abstract class ContributorImplementor {
-	private final ServiceRegistry serviceRegistryegistry;
+public interface ContributorImplementor {
 
-	ContributorImplementor(ServiceRegistry serviceRegistry) {
-		this.serviceRegistryegistry = serviceRegistry;
-	}
+	void contributeTypes(TypeContributions typeContributions);
 
-	abstract void contributeTypes(TypeContributions typeContributions);
+	void contributeFunctions(FunctionContributions functionContributions);
 
-	abstract void contributeFunctions(FunctionContributions functionContributions);
-
-	ServiceRegistry getServiceRegistryegistry() {
-		return serviceRegistryegistry;
-	}
+	ServiceRegistry getServiceRegistry();
 }

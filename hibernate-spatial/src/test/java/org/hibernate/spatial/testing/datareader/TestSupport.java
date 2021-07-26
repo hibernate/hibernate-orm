@@ -20,6 +20,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
+import org.hibernate.spatial.testing.NativeSqlTemplates;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -33,6 +34,12 @@ import junit.framework.TestCase;
 @Deprecated
 public abstract class TestSupport {
 
+	//TODO -- make this abstract
+
+	public NativeSqlTemplates getNativeSqlTemplates() {
+		return null;
+	};
+
 	public enum TestDataPurpose {
 		SpatialFunctionsData,
 		StoreRetrieveData
@@ -40,10 +47,7 @@ public abstract class TestSupport {
 
 	protected ConfigurationService configurationService;
 
-	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
-		this.configurationService = serviceRegistry.getService( ConfigurationService.class );
-		return new DataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
-	}
+
 
 	public JTSGeometryEquality createGeometryEquality() {
 		return new JTSGeometryEquality();

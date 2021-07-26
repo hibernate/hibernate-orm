@@ -26,7 +26,6 @@ import org.locationtech.jts.io.ParseException;
  * This testsuite-suite class verifies whether the <code>Geometry</code>s retrieved
  * are equal to the <code>Geometry</code>s stored.
  */
-@Skip(condition = SpatialDialectMatcher.class, message = "No Spatial Dialect")
 public class TestStoreRetrieveUsingJTS extends AbstractTestStoreRetrieve<Geometry, JtsGeomEntity> {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(

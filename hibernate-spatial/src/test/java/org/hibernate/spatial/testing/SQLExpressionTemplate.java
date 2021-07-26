@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.testing;
 
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 /**
@@ -15,6 +16,7 @@ import org.hibernate.spatial.testing.datareader.TestDataElement;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@Deprecated
 public interface SQLExpressionTemplate {
 
 	/**
@@ -25,5 +27,9 @@ public interface SQLExpressionTemplate {
 	 * @return an insert SQL for testDataElement
 	 */
 	String toInsertSql(TestDataElement testDataElement);
+
+	default String toInsertSql(TestDataElement testDataElement, String tableName) {
+		throw new NotYetImplementedException();
+	}
 
 }

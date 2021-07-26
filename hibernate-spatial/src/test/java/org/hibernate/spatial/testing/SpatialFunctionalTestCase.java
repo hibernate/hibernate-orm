@@ -41,6 +41,7 @@ import static org.junit.Assert.fail;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
+@Deprecated
 public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
 
 	protected final static String JTS = "jts";
@@ -111,8 +112,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	private void initializeSpatialTestSupport(ServiceRegistry serviceRegistry) {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( getDialect() );
-			dataSourceUtils = support.createDataSourceUtil( serviceRegistry );
-			expectationsFactory = support.createExpectationsFactory( dataSourceUtils );
+			expectationsFactory = support.createExpectationsFactory( null );
 			testData = support.createTestData( TestSupport.TestDataPurpose.StoreRetrieveData );
 			geometryEquality = support.createGeometryEquality();
 		}

@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.postgis;
 import java.io.Serializable;
 import java.sql.Types;
 
+import org.hibernate.annotations.Remove;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
@@ -24,6 +25,7 @@ import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 /**
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
  */
+@Deprecated
 public class PostgisSupport implements SpatialDialect, Serializable {
 
 	private final SpatialFunctionsRegistry postgisFunctions;

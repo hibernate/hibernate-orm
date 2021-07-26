@@ -14,6 +14,11 @@ import java.util.stream.Stream;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.NamedFunctionDescriptorBuilder;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -23,11 +28,16 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ASTEXT;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_GEOMETRYTYPE;
+
 /**
  * Functions registered in all Postgis Dialects
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
+ * @deprecated replaced by DialectSpatialSqmFunctionDescriptors
  */
+@Deprecated
 public class PostgisFunctions extends SpatialFunctionsRegistry {
 
 	public PostgisFunctions() {
@@ -38,11 +48,7 @@ public class PostgisFunctions extends SpatialFunctionsRegistry {
 						StandardBasicTypes.INTEGER
 				)
 		);
-		put(
-				"geometrytype", new StandardSQLFunction(
-						"st_geometrytype", StandardBasicTypes.STRING
-				)
-		);
+
 		put(
 				"srid", new StandardSQLFunction(
 						"st_srid",
@@ -59,12 +65,7 @@ public class PostgisFunctions extends SpatialFunctionsRegistry {
 						"st_makeenvelope"
 				)
 		);
-		put(
-				"astext", new StandardSQLFunction(
-						"st_astext",
-						StandardBasicTypes.STRING
-				)
-		);
+
 		put(
 				"asbinary", new StandardSQLFunction(
 						"st_asbinary",
@@ -212,14 +213,13 @@ public class PostgisFunctions extends SpatialFunctionsRegistry {
 		}
 
 
-
 		@Override
 		public void render(
 				SqlAppender sqlAppender,
 				List<SqlAstNode> sqlAstArguments,
 				Predicate filter,
 				SqlAstTranslator<?> translator) {
-			super.render( sqlAppender, sqlAstArguments, filter, translator ) ;
+			super.render( sqlAppender, sqlAstArguments, filter, translator );
 			sqlAppender.appendSql( "::geometry" );
 		}
 	}

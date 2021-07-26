@@ -22,6 +22,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.integration.GeomEntityLike;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 
+import org.geolatte.geom.codec.Wkt;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.geolatte.geom.codec.WktDecoder;
@@ -33,7 +34,7 @@ import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
  * Test class used in unit testing.
  */
 @Entity
-@Table(name = "geomtest")
+@Table(name = "jtsgeomtest")
 public class JtsGeomEntity implements GeomEntityLike<Geometry> {
 
 
@@ -90,6 +91,10 @@ public class JtsGeomEntity implements GeomEntityLike<Geometry> {
 		JtsGeomEntity geomEntity = (JtsGeomEntity) o;
 
 		return id.equals( geomEntity.id );
+	}
+
+	public void setGeomFromWkt(String wkt) {
+		this.geom = JTS.to( Wkt.fromWkt( wkt ) );
 	}
 
 	@Override

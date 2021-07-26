@@ -31,6 +31,7 @@ import org.locationtech.jts.io.WKBWriter;
 import org.locationtech.jts.io.WKTWriter;
 
 @RequiresDialect(value = HANASpatialDialect.class, comment = "This test tests the HANA spatial functions not covered by Hibernate Spatial", jiraKey = "HHH-12426")
+@Deprecated
 public class TestHANASpatialFunctions extends TestSpatialFunctions {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(

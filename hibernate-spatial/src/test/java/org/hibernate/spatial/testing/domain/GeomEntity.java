@@ -23,6 +23,7 @@ import org.hibernate.spatial.integration.GeomEntityLike;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecodeException;
 import org.geolatte.geom.codec.WktDecoder;
 
@@ -97,6 +98,11 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 
 		return id.equals( geomEntity.id );
 	}
+
+	public void setGeomFromWkt(String wkt) {
+		this.geom =  Wkt.fromWkt( wkt );
+	}
+
 
 	@Override
 	public int hashCode() {

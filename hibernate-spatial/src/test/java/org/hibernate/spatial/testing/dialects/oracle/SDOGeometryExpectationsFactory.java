@@ -34,7 +34,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Touch(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Touch(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -42,7 +42,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Overlap(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Overlap(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -50,7 +50,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
+	public NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Relate(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326), '" + matrix + "') from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Relate(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326), '" + matrix + "') = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -58,7 +58,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
+	public NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, 1 from GEOMTEST T where MDSYS.SDO_WITHIN_DISTANCE(t.GEOM, SDO_GEOMETRY(? , 4326), 'distance = " + distance + "') = 'TRUE' and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -66,7 +66,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Intersects(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Intersects(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -74,7 +74,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
+	public NativeSQLStatement createNativeFilterStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, 1 from GEOMTEST t where SDO_FILTER(t.GEOM, MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326).GEOM)  = 'TRUE' ",
 				geom.toText()
@@ -82,7 +82,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Distance(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -90,14 +90,14 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDimensionSQL() {
+	public NativeSQLStatement createNativeDimensionSQL() {
 		return createNativeSQLStatement(
 				"select ID, MDSYS.OGC_DIMENSION(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM( T.GEOM)) FROM GEOMTEST T"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
+	public NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Buffer(?).GEOM from GEOMTEST T where t.GEOM.SDO_SRID = 4326",
 				new Double[] { distance }
@@ -105,7 +105,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
+	public NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Union(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)).ST_ConvexHull().GEOM from GEOMTEST T where t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -113,7 +113,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Intersection(MDSYS.ST_GEOMETRY.FROM_WKT(?,4326)).GEOM FROM GEOMTEST t where t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -121,7 +121,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Difference(MDSYS.ST_GEOMETRY.FROM_WKT(?,4326)).GEOM FROM GEOMTEST t where t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -129,7 +129,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_SymmetricDifference(MDSYS.ST_GEOMETRY.FROM_WKT(?,4326)).GEOM FROM GEOMTEST t where t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -137,7 +137,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Union(MDSYS.ST_GEOMETRY.FROM_WKT(?,4326)).GEOM FROM GEOMTEST t where t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -145,17 +145,17 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsTextStatement() {
+	public NativeSQLStatement createNativeAsTextStatement() {
 		return createNativeSQLStatement( "select t.ID, t.GEOM.GET_WKT() FROM GEOMTEST T" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSridStatement() {
+	public NativeSQLStatement createNativeSridStatement() {
 		return createNativeSQLStatement( "SELECT t.ID, t.GEOM.SDO_SRID FROM GEOMTEST t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsSimpleStatement() {
+	public NativeSQLStatement createNativeIsSimpleStatement() {
 		return createNativeSQLStatement(
 				"SELECT t.ID, MDSYS.OGC_ISSIMPLE(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM)) FROM GEOMTEST t where MDSYS.OGC_ISSIMPLE(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM)) = 1"
 		);
@@ -163,47 +163,47 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsEmptyStatement() {
+	public NativeSQLStatement createNativeIsEmptyStatement() {
 		return createNativeSQLStatement(
 				"SELECT t.ID, MDSYS.OGC_ISEMPTY(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM)) FROM GEOMTEST t"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsNotEmptyStatement() {
+	public NativeSQLStatement createNativeIsNotEmptyStatement() {
 		return createNativeSQLStatement(
 				"SELECT t.ID, CASE MDSYS.OGC_ISEMPTY(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM)) WHEN 0 THEN 1 ELSE 0 END FROM GEOMTEST t"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBoundaryStatement() {
+	public NativeSQLStatement createNativeBoundaryStatement() {
 		return createNativeSQLStatement(
 				"SELECT t.ID, MDSYS.OGC_BOUNDARY(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM)).GEOM FROM GEOMTEST t"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEnvelopeStatement() {
+	public NativeSQLStatement createNativeEnvelopeStatement() {
 		return createNativeSQLStatement(
 				"SELECT t.ID, MDSYS.OGC_ENVELOPE(MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM)).GEOM FROM GEOMTEST t"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsBinaryStatement() {
+	public NativeSQLStatement createNativeAsBinaryStatement() {
 		return createNativeSQLStatement( "select t.ID, t.GEOM.GET_WKB() FROM GEOMTEST T" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeometryTypeStatement() {
+	public NativeSQLStatement createNativeGeometryTypeStatement() {
 		return createNativeSQLStatement(
 				"select t.id, CASE t.geom.Get_GType() WHEN 1 THEN 'POINT' WHEN 2 THEN 'LINESTRING' WHEN 3 THEN 'POLYGON' WHEN 5 THEN 'MULTIPOINT' WHEN 6 THEN 'MULTILINE' WHEN 7 THEN 'MULTIPOLYGON' END from GEOMTEST t"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeWithinStatement(Geometry testPolygon) {
+	public NativeSQLStatement createNativeWithinStatement(Geometry testPolygon) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, mdsys.OGC_WITHIN( MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM), MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where mdsys.OGC_WITHIN( MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM), MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				testPolygon.toText()
@@ -211,7 +211,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEqualsStatement(Geometry testPolygon) {
+	public NativeSQLStatement createNativeEqualsStatement(Geometry testPolygon) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Equals(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Equals(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				testPolygon.toText()
@@ -219,7 +219,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Cross(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Cross(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -227,7 +227,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeContainsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeContainsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Contains(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Contains(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -235,7 +235,7 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Disjoint(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) from GEOMTEST T where MDSYS.ST_GEOMETRY.FROM_SDO_GEOM(t.GEOM).ST_Disjoint(MDSYS.ST_GEOMETRY.FROM_WKT(?, 4326)) = 1 and t.GEOM.SDO_SRID = 4326",
 				geom.toText()
@@ -243,14 +243,14 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTransformStatement(int epsg) {
+	public NativeSQLStatement createNativeTransformStatement(int epsg) {
 		return createNativeSQLStatement(
 				"select t.id, MDSYS.SDO_CS.transform(t.geom," + epsg + ") from GeomTest t where t.geom.SDO_SRID = 4326"
 		);
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
+	public NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
 		return createNativeSQLStatement( "select t.id, 1 from GeomTest t where t.geom.SDO_SRID =  " + srid );
 	}
 

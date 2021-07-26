@@ -358,6 +358,8 @@ jar {
 				'Hibernate-JpaVersion': project.jpaVersion.name,
 
 				// BND Plugin instructions (for OSGi):
+				'-reproducible': true,
+				'-noextraheaders': true,
 				'Bundle-Name': project.name,
 				'Bundle-SymbolicName': project.java9ModuleName,
 				'Bundle-Vendor': 'Hibernate.org',

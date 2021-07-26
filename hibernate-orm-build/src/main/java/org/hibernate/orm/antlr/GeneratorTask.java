@@ -14,13 +14,17 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 /**
  * @author Steve Ebersole
  */
+@CacheableTask
 public abstract class GeneratorTask extends DefaultTask {
 	private final Provider<RegularFile> grammarFile;
 	private final Provider<Directory> outputDirectory;
@@ -34,6 +38,7 @@ public abstract class GeneratorTask extends DefaultTask {
 	}
 
 	@InputFile
+	@PathSensitive( PathSensitivity.RELATIVE )
 	public Provider<RegularFile> getGrammarFile() {
 		return grammarFile;
 	}

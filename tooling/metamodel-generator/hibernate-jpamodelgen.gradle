@@ -59,7 +59,9 @@ task jaxb {
                 package: 'org.hibernate.jpamodelgen.xml.jaxb',
                 extension: 'true'
         ) {
-            schema  ( dir: xsdDir.path, includes: "*.xsd" )
+            project.ant.arg line: '-no-header'
+            project.ant.arg line: '-npa'
+            schema( dir: xsdDir.path, includes: "*.xsd" )
         }
     }
 }

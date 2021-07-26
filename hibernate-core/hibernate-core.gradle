@@ -233,10 +233,14 @@ task copyBundleResources (type: Copy) {
     }
 }
 
-processTestResources.dependsOn copyBundleResources
+processTestResources {
+    dependsOn copyBundleResources
+    duplicatesStrategy = DuplicatesStrategy.WARN
+}
 
 sourcesJar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
 }
 
 task testJar(type: Jar, dependsOn: testClasses) {

@@ -30,6 +30,11 @@ if ( !JavaVersion.current().java8Compatible ) {
     throw new GradleException( "Gradle must be run with Java 8 or later" )
 }
 
+buildCache {
+    local { enabled = true }
+    remote(HttpBuildCache) { enabled = false }
+}
+
 gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 8 )
 
 // Gradle does bytecode transformation on tests.

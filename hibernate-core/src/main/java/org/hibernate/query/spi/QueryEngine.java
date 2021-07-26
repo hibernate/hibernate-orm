@@ -6,6 +6,12 @@
  */
 package org.hibernate.query.spi;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -36,9 +42,6 @@ import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.spi.TypeConfiguration;
-
-import java.util.Map;
-import java.util.function.Supplier;
 
 import org.jboss.logging.Logger;
 
@@ -129,8 +132,7 @@ public class QueryEngine {
 			userDefinedRegistry.overlay( sqmFunctionRegistry );
 		}
 
-		for ( FunctionContributor contributor : serviceRegistry.getService( ClassLoaderService.class )
-				.loadJavaServices( FunctionContributor.class ) ) {
+		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
 			contributor.contributeFunctions( sqmFunctionRegistry::register, serviceRegistry );
 		}
 
@@ -286,6 +288,14 @@ public class QueryEngine {
 		}
 
 		return new StandardSqmTranslatorFactory();
+	}
+
+	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
+		List<FunctionContributor> contributors = new ArrayList<>( serviceRegistry.getService( ClassLoaderService.class )
+																		.loadJavaServices( FunctionContributor.class ) );
+		contributors.sort( Comparator.comparingInt( FunctionContributor::ordinal )
+								.thenComparing( a -> a.getClass().getCanonicalName() ) );
+		return contributors;
 	}
 
 	private static QueryInterpretationCache buildInterpretationCache(

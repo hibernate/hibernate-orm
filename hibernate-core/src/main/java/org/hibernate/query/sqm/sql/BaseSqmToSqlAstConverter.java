@@ -1644,7 +1644,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						continue OUTER;
 					}
 				}
-				expressions.add( new SqlSelectionExpression( selection ) );
+				if ( currentSqmQueryPart instanceof SqmQueryGroup<?> ) {
+					// Reusing the SqlSelection for query groups would be wrong because the aliases do no exist
+					// So we have to use a literal expression in a new SqlSelection instance to refer to the position
+					expressions.add(
+							new SqlSelectionExpression(
+									new SqlSelectionImpl(
+											selection.getJdbcResultSetIndex(),
+											selection.getValuesArrayPosition(),
+											new QueryLiteral<>(
+													selection.getValuesArrayPosition(),
+													StandardBasicTypes.INTEGER
+											)
+									)
+							)
+					);
+				}
+				else {
+					expressions.add( new SqlSelectionExpression( selection ) );
+				}
 			}
 
 			if ( expressions.size() == 1 ) {

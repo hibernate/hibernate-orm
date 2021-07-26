@@ -233,6 +233,11 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 	}
 
 	@Override
+	public Expression getSqlExpression() {
+		return sqlExpression;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlExpression.accept( sqlTreeWalker );
 	}

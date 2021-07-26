@@ -145,6 +145,13 @@ ext {
                         'jdbc.pass'  : 'hibernate_orm_test',
                         'jdbc.url'   : 'jdbc:oracle:thin:@hibernate-testing-oracle-se.ccuzkqo3zqzq.us-east-1.rds.amazonaws.com:1521:ORCL'
                 ],
+                oracle_rds : [
+                        'db.dialect' : 'org.hibernate.dialect.OracleDialect',
+                        'jdbc.driver': 'oracle.jdbc.OracleDriver',
+                        'jdbc.user'  : 'hibernate_orm_test',
+                        'jdbc.pass'  : 'hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@localhost:1521:ORCL'
+                ],
                 // Use ./docker_db.sh oracle_ee to start the database
                 oracle_docker : [
                         'db.dialect' : 'org.hibernate.dialect.OracleDialect',

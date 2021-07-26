@@ -129,15 +129,41 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			Expression fetchExpression,
 			FetchClauseType fetchClauseType,
 			boolean emulateFetchClause) {
-		if ( queryPart instanceof QuerySpec && !queryPart.hasSortSpecifications() && offsetExpression == null && fetchClauseType == FetchClauseType.ROWS_ONLY ) {
+		if ( queryPart instanceof QuerySpec && offsetExpression == null && fetchClauseType == FetchClauseType.ROWS_ONLY ) {
 			// Special case for Oracle to support locking along with simple max results paging
 			final QuerySpec querySpec = (QuerySpec) queryPart;
 			withRowNumbering(
 					querySpec,
+					false,
 					() -> {
-						appendSql( "select * from (" );
+						final QueryPart currentQueryPart = getQueryPartStack().getCurrent();
+						final boolean needsParenthesis;
+						final boolean needsWrapper;
+						if ( currentQueryPart instanceof QueryGroup ) {
+							needsParenthesis = false;
+							// visitQuerySpec will add the select wrapper
+							needsWrapper = !currentQueryPart.hasOffsetOrFetchClause();
+						}
+						else {
+							needsParenthesis = !querySpec.isRoot();
+							needsWrapper = true;
+						}
+						if ( needsWrapper ) {
+							if ( needsParenthesis ) {
+								appendSql( '(' );
+							}
+							appendSql( "select * from " );
+							if ( !needsParenthesis ) {
+								appendSql( '(' );
+							}
+						}
 						super.visitQuerySpec( querySpec );
-						appendSql( ") where rownum <= " );
+						if ( needsWrapper ) {
+							if ( !needsParenthesis ) {
+								appendSql( ')' );
+							}
+						}
+						appendSql( " where rownum <= " );
 						final Stack<Clause> clauseStack = getClauseStack();
 						clauseStack.push( Clause.WHERE );
 						try {
@@ -151,6 +177,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 						finally {
 							clauseStack.pop();
 						}
+
+						if ( needsWrapper ) {
+							if ( needsParenthesis ) {
+								appendSql( ')' );
+							}
+						}
 					}
 			);
 		}
@@ -162,6 +194,29 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 					fetchClauseType,
 					emulateFetchClause
 			);
+		}
+	}
+
+	@Override
+	protected void visitOrderBy(List<SortSpecification> sortSpecifications) {
+		// If we have a query part for row numbering, there is no need to render the order by clause
+		// as that is part of the row numbering window function already, by which we then order by in the outer query
+		final QueryPart queryPartForRowNumbering = getQueryPartForRowNumbering();
+		if ( queryPartForRowNumbering == null ) {
+			renderOrderBy( true, sortSpecifications );
+		}
+		else {
+			// This logic is tightly coupled to emulateFetchOffsetWithWindowFunctions
+			// so that this is rendered when we end up in the special case for Oracle that renders a rownum filter
+			final FetchClauseType fetchClauseType = getFetchClauseTypeForRowNumbering( queryPartForRowNumbering );
+			if ( fetchClauseType == FetchClauseType.ROWS_ONLY && queryPartForRowNumbering instanceof QuerySpec ) {
+				final QuerySpec querySpec = (QuerySpec) queryPartForRowNumbering;
+				if ( querySpec.getOffsetClauseExpression() == null
+						&& ( !querySpec.isRoot() || getOffsetParameter() == null ) ) {
+					// When rendering `rownum` for Oracle, we need to render the order by clause still
+					renderOrderBy( true, sortSpecifications );
+				}
+			}
 		}
 	}
 
@@ -223,22 +278,12 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	@Override
 	protected void renderRowNumber(SelectClause selectClause, QueryPart queryPart) {
-		if ( supportsOffsetFetchClause() || selectClause.isDistinct() ) {
-			final List<SortSpecification> sortSpecifications = getSortSpecificationsRowNumbering( selectClause, queryPart );
-			if ( selectClause.isDistinct() ) {
-				appendSql( "dense_rank()" );
-			}
-			else {
-				if ( sortSpecifications.isEmpty() ) {
-					appendSql( "rownum" );
-					return;
-				}
-				appendSql( "row_number()" );
-			}
-			visitOverClause( Collections.emptyList(), sortSpecifications );
+		if ( !queryPart.hasSortSpecifications() ) {
+			// Oracle doesn't allow an empty over clause for the row_number() function
+			appendSql( "rownum" );
 		}
 		else {
-			appendSql( "rownum" );
+			super.renderRowNumber( selectClause, queryPart );
 		}
 	}
 

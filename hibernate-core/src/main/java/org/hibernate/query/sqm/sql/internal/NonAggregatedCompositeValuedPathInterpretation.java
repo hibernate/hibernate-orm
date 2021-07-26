@@ -58,6 +58,7 @@ public class NonAggregatedCompositeValuedPathInterpretation<T>
 		this.sqlExpression = sqlExpression;
 	}
 
+	@Override
 	public SqlTuple getSqlExpression() {
 		return sqlExpression;
 	}

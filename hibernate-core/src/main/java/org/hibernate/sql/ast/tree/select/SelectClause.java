@@ -23,7 +23,15 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 public class SelectClause implements SqlAstNode {
 	private boolean distinct;
 
-	private final List<SqlSelection> sqlSelections = new ArrayList<>();
+	private final List<SqlSelection> sqlSelections;
+
+	public SelectClause() {
+		this.sqlSelections = new ArrayList<>();
+	}
+
+	public SelectClause(int estimateSelectionSize) {
+		this.sqlSelections = new ArrayList<>( estimateSelectionSize );
+	}
 
 	public void makeDistinct(boolean distinct) {
 		this.distinct = distinct;

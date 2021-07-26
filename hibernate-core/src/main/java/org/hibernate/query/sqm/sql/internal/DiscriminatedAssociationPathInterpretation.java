@@ -78,6 +78,11 @@ public class DiscriminatedAssociationPathInterpretation<T> extends AbstractSqmPa
 	}
 
 	@Override
+	public SqlTuple getSqlExpression() {
+		return sqlTuple;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTuple.accept( sqlTreeWalker );
 	}

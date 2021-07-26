@@ -128,6 +128,11 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 	// DomainResultProducer
 
 	@Override
+	public Expression getSqlExpression() {
+		return columnReference;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		columnReference.accept( sqlTreeWalker );
 	}

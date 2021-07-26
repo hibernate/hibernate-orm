@@ -14,6 +14,7 @@
 
 package org.hibernate.boot.model;
 
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -26,10 +27,10 @@ public interface FunctionContributor {
 	/**
 	 *  Contribute functions
 	 *
-	 * @param functionContributions The callback for contributing functions
+	 * @param functionRegistry The target for the contributions
 	 * @param serviceRegistry The service registry
 	 */
-	void contributeFunctions(FunctionContributions functionContributions, ServiceRegistry serviceRegistry);
+	void contributeFunctions(SqmFunctionRegistry functionRegistry, ServiceRegistry serviceRegistry);
 
 	/**
 	 * Determines order in which the contributions will be applied (lowest ordinal first).

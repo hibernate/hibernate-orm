@@ -291,8 +291,9 @@ public class QueryEngine {
 	}
 
 	private static List<FunctionContributor> sortedFunctionContributors(ServiceRegistry serviceRegistry) {
-		List<FunctionContributor> contributors = new ArrayList<>( serviceRegistry.getService( ClassLoaderService.class )
-																		.loadJavaServices( FunctionContributor.class ) );
+		List<FunctionContributor> contributors = new ArrayList<>(
+				serviceRegistry.getService( ClassLoaderService.class )
+						.loadJavaServices( FunctionContributor.class ) );
 		contributors.sort( Comparator.comparingInt( FunctionContributor::ordinal )
 								.thenComparing( a -> a.getClass().getCanonicalName() ) );
 		return contributors;

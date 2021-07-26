@@ -49,6 +49,11 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 	}
 
 	@Override
+	public Expression getSqlExpression() {
+		return sqlExpression;
+	}
+
+	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

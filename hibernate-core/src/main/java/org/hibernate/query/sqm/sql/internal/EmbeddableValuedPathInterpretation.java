@@ -86,6 +86,7 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 		this.sqlExpression = sqlExpression;
 	}
 
+	@Override
 	public SqlTuple getSqlExpression() {
 		return sqlExpression;
 	}

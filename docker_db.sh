@@ -3,16 +3,72 @@
 mysql_5_7() {
     docker rm -f mysql || true
     docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:5.7 --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { docker logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MySQL failed to start and configure after 15 seconds"
+    else
+      echo "MySQL successfully started"
+    fi
 }
 
 mysql_8_0() {
     docker rm -f mysql || true
     docker run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mysql:8.0.21 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_ai_ci
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { docker logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MySQL failed to start and configure after 15 seconds"
+    else
+      echo "MySQL successfully started"
+    fi
 }
 
 mariadb() {
     docker rm -f mariadb || true
     docker run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d mariadb:10.5.8 --character-set-server=utf8mb4 --collation-server=utf8mb4_general_ci
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { docker logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MariaDB to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MariaDB failed to start and configure after 15 seconds"
+    else
+      echo "MariaDB successfully started"
+    fi
 }
 
 postgresql_9_5() {

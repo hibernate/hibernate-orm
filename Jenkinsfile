@@ -60,109 +60,129 @@ stage('Build') {
 	environments.each { BuildEnvironment buildEnv ->
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node) {
+				def containerName = null
 				env.JAVA_HOME="${tool buildEnv.buildJdkTool}"
 				env.PATH="${env.JAVA_HOME}/bin:${env.PATH}"
 				stage('Checkout') {
 					checkout scm
 				}
-				stage('Start database') {
-					switch (buildEnv.dbName) {
-						case "mysql8":
-							docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-								docker.image('mysql:8.0.21').pull()
-							}
-							sh "./docker_db.sh mysql_8_0"
-							break;
-						case "mariadb":
-							docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-								docker.image('mariadb:10.5.8').pull()
-							}
-							sh "./docker_db.sh mariadb"
-							break;
-						case "postgresql":
-							docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-								docker.image('postgres:9.5').pull()
-							}
-							sh "./docker_db.sh postgresql_9_5"
-							break;
-						case "oracle":
-							docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-								docker.image('quillbuilduser/oracle-18-xe').pull()
-							}
-							sh "./docker_db.sh oracle"
-							break;
-						case "db2":
-							docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-								docker.image('ibmcom/db2:11.5.5.0').pull()
-							}
-							sh "./docker_db.sh db2"
-							break;
-						case "mssql":
-							docker.image('mcr.microsoft.com/mssql/server:2017-CU13').pull()
-							sh "./docker_db.sh mssql"
-							break;
-						case "sybase":
-							docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-								docker.image('nguoianphu/docker-sybase').pull()
-							}
-							sh "./docker_db.sh sybase"
-							break;
-						case "edb":
-							docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
-// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
-// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
-// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
-								docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
-							}
-							sh "./docker_db.sh edb"
-							break;
-					}
-				}
-				stage('Test') {
-					String goal;
-					String lockableResource;
-					switch (buildEnv.dbName) {
-						case "h2":
-						case "derby":
-						case "hsqldb":
-							goal = "-Pdb=${buildEnv.dbName}"
-							break;
-						case "mysql8":
-							goal = "-Pdb=mysql_ci"
-							break;
-						case "postgresql":
-							goal = "-Pdb=pgsql_ci"
-							break;
-						case "oracle":
-  							goal = "-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
-							break;
-						case "oracle_ee":
-  							goal = "-Pdb=oracle_jenkins"
-  							lockableResource = 'ORACLE_RDS'
-							break;
-						case "hana":
-  							goal = "-Pdb=hana_jenkins"
-							break;
-						case "edb":
-							goal = "-Pdb=edb_ci -DdbHost=localhost:5433"
-							break;
-						default:
-							goal = "-Pdb=${buildEnv.dbName}_ci"
-							break;
-					}
-					String cmd = "./gradlew check ${goal} -Plog-test-progress=true --stacktrace";
-					try {
-						if (lockableResource == null) {
-							sh cmd
+				try {
+					stage('Start database') {
+						switch (buildEnv.dbName) {
+							case "mysql8":
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('mysql:8.0.21').pull()
+								}
+								sh "./docker_db.sh mysql_8_0"
+								containerName = "mysql"
+								break;
+							case "mariadb":
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('mariadb:10.5.8').pull()
+								}
+								sh "./docker_db.sh mariadb"
+								containerName = "mariadb"
+								break;
+							case "postgresql":
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('postgres:9.5').pull()
+								}
+								sh "./docker_db.sh postgresql_9_5"
+								containerName = "postgres"
+								break;
+							case "oracle":
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('quillbuilduser/oracle-18-xe').pull()
+								}
+								sh "./docker_db.sh oracle"
+								containerName = "oracle"
+								break;
+							case "db2":
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('ibmcom/db2:11.5.5.0').pull()
+								}
+								sh "./docker_db.sh db2"
+								containerName = "db2"
+								break;
+							case "mssql":
+								docker.image('mcr.microsoft.com/mssql/server:2017-CU13').pull()
+								sh "./docker_db.sh mssql"
+								containerName = "mssql"
+								break;
+							case "sybase":
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('nguoianphu/docker-sybase').pull()
+								}
+								sh "./docker_db.sh sybase"
+								containerName = "sybase"
+								break;
+							case "edb":
+								docker.withRegistry('https://containers.enterprisedb.com', 'hibernateci.containers.enterprisedb.com') {
+	// 							withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'hibernateci.containers.enterprisedb.com',
+	// 								usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD']]) {
+	// 							  	sh 'docker login -u "$USERNAME" -p "$PASSWORD" https://containers.enterprisedb.com'
+									docker.image('containers.enterprisedb.com/edb/edb-as-lite:v11').pull()
+								}
+								sh "./docker_db.sh edb"
+								containerName = "edb"
+								break;
 						}
-						else {
-							lock(lockableResource) {
+					}
+					stage('Test') {
+						// Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
+						boolean clean = true;
+						String goal;
+						String lockableResource;
+						switch (buildEnv.dbName) {
+							case "h2":
+							case "derby":
+							case "hsqldb":
+								goal = "-Pdb=${buildEnv.dbName}"
+								break;
+							case "mysql8":
+								goal = "-Pdb=mysql_ci"
+								break;
+							case "postgresql":
+								goal = "-Pdb=pgsql_ci"
+								break;
+							case "oracle":
+								goal = "-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
+								break;
+							case "oracle_ee":
+								goal = "-Pdb=oracle_jenkins"
+								lockableResource = 'ORACLE_RDS'
+								break;
+							case "hana":
+								// For HANA we have to also clean because this is a shared VM and the compile cache can become a problem
+								clean = true;
+								goal = "-Pdb=hana_jenkins"
+								break;
+							case "edb":
+								goal = "-Pdb=edb_ci -DdbHost=localhost:5433"
+								break;
+							default:
+								goal = "-Pdb=${buildEnv.dbName}_ci"
+								break;
+						}
+						String cmd = "./gradlew" + (clean ? " clean" : "") + " check ${goal} -Plog-test-progress=true --stacktrace";
+						try {
+							if (lockableResource == null) {
 								sh cmd
 							}
+							else {
+								lock(lockableResource) {
+									sh cmd
+								}
+							}
+						}
+						finally {
+							junit '**/target/test-results/test/*.xml'
 						}
 					}
-					finally {
-						junit '**/target/test-results/test/*.xml'
+				}
+				finally {
+					if ( containerName != null ) {
+						sh "docker rm -f ${containerName}"
 					}
 				}
 			}
@@ -218,7 +238,7 @@ void runBuildOnNode(String label, Closure body) {
 	node( label ) {
 		pruneDockerContainers()
         try {
-        	timeout( [time: 1, unit: 'HOURS'], body )
+        	timeout( [time: 90, unit: 'MINUTES'], body )
         }
         finally {
         	pruneDockerContainers()

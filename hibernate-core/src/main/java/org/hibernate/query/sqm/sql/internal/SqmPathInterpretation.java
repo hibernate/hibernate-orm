@@ -24,4 +24,8 @@ public interface SqmPathInterpretation<T> extends Expression, DomainResultProduc
 
 	@Override
 	ModelPart getExpressionType();
+
+	default Expression getSqlExpression() {
+		return this;
+	}
 }

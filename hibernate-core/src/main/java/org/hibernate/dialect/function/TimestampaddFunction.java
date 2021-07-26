@@ -69,7 +69,7 @@ public class TimestampaddFunction
 		else {
 			final Expression magnitude = (Expression) arguments.get( 1 );
 			final JdbcMapping magnitudeJdbcMapping = magnitude.getExpressionType().getJdbcMappings().get( 0 );
-			switch ( magnitudeJdbcMapping.getJdbcTypeDescriptor().getJdbcType() ) {
+			switch ( magnitudeJdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode() ) {
 				case Types.INTEGER:
 				case Types.TINYINT:
 				case Types.SMALLINT:

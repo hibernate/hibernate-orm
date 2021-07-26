@@ -29,7 +29,7 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 		this.registrationKeys = registrationKeys;
 
 		this.name = javaTypeDescriptor.getJavaType() == null ? "(map-mode)" : javaTypeDescriptor.getJavaType().getTypeName()
-				+ " -> " + jdbcTypeDescriptor.getJdbcType();
+				+ " -> " + jdbcTypeDescriptor.getJdbcTypeCode();
 	}
 
 	@Override

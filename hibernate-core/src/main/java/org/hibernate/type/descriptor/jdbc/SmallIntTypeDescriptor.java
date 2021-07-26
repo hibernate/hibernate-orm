@@ -32,7 +32,7 @@ public class SmallIntTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.SMALLINT;
 	}
 

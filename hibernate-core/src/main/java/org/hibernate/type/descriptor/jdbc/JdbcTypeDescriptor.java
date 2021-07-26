@@ -33,31 +33,26 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	/**
-	 * Return the {@linkplain java.sql.Types JDBC type-code} for the column mapped by this type.
+	 * Return the {@linkplain java.sql.Types JDBC type code} used when interacting
+	 * with JDBC APIs.
 	 *
-	 * @apiNote Prefer {@link #getJdbcTypeCode}
+	 * For example, it's used when calling {@link java.sql.PreparedStatement#setNull(int, int)}.
 	 *
-	 * @return typeCode The JDBC type-code
+	 * @return a JDBC type code
 	 */
-	int getJdbcType();
+	int getJdbcTypeCode();
 
 	/**
-	 * Get the JDBC type code associated with this SQL type descriptor
+	 * Get a JDBC type code that identifies the SQL column type to be used for
+	 * schema generation.
+	 * 
+	 * This value is passed to {@link org.hibernate.dialect.Dialect#getTypeName(int)}
+	 * to obtain the SQL column type.
 	 *
-	 * @see #getJdbcType
-	 */
-	default int getJdbcTypeCode() {
-		return getJdbcType();
-	}
-
-	/**
-	 * Get a JDBC type code that identifies the SQL column type to be
-	 * used for schema generation.
-	 *
-	 * @see #getJdbcType
+	 * @return a JDBC type code
 	 */
 	default int getDefaultSqlTypeCode() {
-		return getJdbcType();
+		return getJdbcTypeCode();
 	}
 
 	/**

@@ -66,7 +66,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		private static final int JDBC_TYPE_CODE = 3975;
 
 		@Override
-		public int getJdbcType() {
+		public int getJdbcTypeCode() {
 			return JDBC_TYPE_CODE;
 		}
 

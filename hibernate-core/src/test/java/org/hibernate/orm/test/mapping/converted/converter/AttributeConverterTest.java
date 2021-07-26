@@ -238,7 +238,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.VARCHAR, basicType.getJdbcTypeDescriptor().getJdbcType() );
+			assertEquals( Types.VARCHAR, basicType.getJdbcTypeDescriptor().getJdbcTypeCode() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

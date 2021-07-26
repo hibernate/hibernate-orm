@@ -35,7 +35,7 @@ public class DoubleTypeDescriptor implements JdbcTypeDescriptor {
 	 * @return {@link Types#DOUBLE}
 	 */
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.DOUBLE;
 	}
 

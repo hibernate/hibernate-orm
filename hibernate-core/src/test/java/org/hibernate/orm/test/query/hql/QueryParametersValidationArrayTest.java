@@ -96,7 +96,7 @@ public class QueryParametersValidationArrayTest {
 		public static final StringArrayJdbcTypeDescriptor INSTANCE = new StringArrayJdbcTypeDescriptor();
 
 		@Override
-		public int getJdbcType() {
+		public int getJdbcTypeCode() {
 			return Types.ARRAY;
 		}
 

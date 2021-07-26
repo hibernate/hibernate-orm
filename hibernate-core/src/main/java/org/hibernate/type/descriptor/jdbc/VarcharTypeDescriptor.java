@@ -32,7 +32,7 @@ public class VarcharTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.VARCHAR;
 	}
 

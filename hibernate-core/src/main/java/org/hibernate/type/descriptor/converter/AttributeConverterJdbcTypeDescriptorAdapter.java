@@ -51,8 +51,8 @@ public class AttributeConverterJdbcTypeDescriptorAdapter implements JdbcTypeDesc
 	}
 
 	@Override
-	public int getJdbcType() {
-		return delegate.getJdbcType();
+	public int getJdbcTypeCode() {
+		return delegate.getJdbcTypeCode();
 	}
 
 	@Override

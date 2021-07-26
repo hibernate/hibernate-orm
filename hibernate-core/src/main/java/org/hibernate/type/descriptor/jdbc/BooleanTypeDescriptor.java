@@ -31,7 +31,7 @@ public class BooleanTypeDescriptor implements JdbcTypeDescriptor {
 	public BooleanTypeDescriptor() {
 	}
 
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.BOOLEAN;
 	}
 

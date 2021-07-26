@@ -152,7 +152,7 @@ public class JdbcTypeTests {
 
 	public static class CustomJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		@Override
-		public int getJdbcType() {
+		public int getJdbcTypeCode() {
 			return Types.TINYINT;
 		}
 

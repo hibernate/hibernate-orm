@@ -19,7 +19,7 @@ public class BinaryTypeDescriptor extends VarbinaryTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.BINARY;
 	}
 }

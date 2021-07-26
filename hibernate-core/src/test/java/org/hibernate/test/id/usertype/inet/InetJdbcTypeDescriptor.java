@@ -31,7 +31,7 @@ public class InetJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	public static final InetJdbcTypeDescriptor INSTANCE = new InetJdbcTypeDescriptor();
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.OTHER;
 	}
 

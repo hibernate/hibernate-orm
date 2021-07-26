@@ -616,7 +616,7 @@ class BitTypeDescriptor implements JdbcTypeDescriptor {
 	public BitTypeDescriptor() {
 	}
 
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.BIT;
 	}
 

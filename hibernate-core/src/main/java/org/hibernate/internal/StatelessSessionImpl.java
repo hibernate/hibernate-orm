@@ -26,9 +26,11 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.id.IdentifierGeneratorHelper;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
 import jakarta.transaction.SystemException;
@@ -356,6 +358,55 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final Object proxy = entityKey.getPersister().createProxy( entityKey.getIdentifier(), this );
 		getPersistenceContext().addProxy( entityKey, proxy );
 		return proxy;
+	}
+
+	@Override
+	public void fetch(Object association) {
+		checkOpen();
+		PersistenceContext persistenceContext = getPersistenceContext();
+		if ( association instanceof HibernateProxy ) {
+			LazyInitializer initializer =
+					((HibernateProxy) association).getHibernateLazyInitializer();
+			if ( initializer.isUninitialized() ) {
+				String entityName = initializer.getEntityName();
+				Object id = initializer.getIdentifier();
+				initializer.setSession(this);
+				persistenceContext.beforeLoad();
+				try {
+					Object entity = initializer.getImplementation(); //forces the load to occur
+					if ( entity==null ) {
+						getFactory().getEntityNotFoundDelegate().handleEntityNotFound( entityName, id );
+					}
+					initializer.setImplementation( entity );
+				}
+				finally {
+					initializer.unsetSession();
+					persistenceContext.afterLoad();
+					if ( persistenceContext.isLoadFinished() ) {
+						persistenceContext.clear();
+					}
+				}
+			}
+		}
+		else if ( association instanceof PersistentCollection ) {
+			PersistentCollection<?> persistentCollection = (PersistentCollection<?>) association;
+			if ( !persistentCollection.wasInitialized() ) {
+				CollectionPersister persister =
+						getFactory().getMetamodel().collectionPersister( persistentCollection.getRole() );
+				Object key = persistentCollection.getKey();
+				persistenceContext.addUninitializedCollection( persister, persistentCollection, key );
+				persistentCollection.setCurrentSession(this);
+				try {
+					persister.initialize( key, this );
+				}
+				finally {
+					persistentCollection.unsetSession(this);
+					if ( persistenceContext.isLoadFinished() ) {
+						persistenceContext.clear();
+					}
+				}
+			}
+		}
 	}
 
 	@Override

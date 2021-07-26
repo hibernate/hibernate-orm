@@ -8,7 +8,7 @@ package org.hibernate;
 
 /**
  * A command-oriented API for performing bulk operations against a database.
- * <p/>
+ * <p>
  * A stateless session does not implement a first-level cache nor interact
  * with any second-level cache, nor does it implement transactional
  * write-behind or automatic dirty checking, nor do operations cascade to
@@ -16,7 +16,7 @@ package org.hibernate;
  * Operations performed via a stateless session bypass Hibernate's event model
  * and interceptors.  Stateless sessions are vulnerable to data aliasing
  * effects, due to the lack of a first-level cache.
- * <p/>
+ * <p>
  * For certain kinds of transactions, a stateless session may perform slightly
  * faster than a stateful session.
  *
@@ -150,4 +150,16 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @param lockMode The LockMode to be applied.
 	 */
 	void refresh(String entityName, Object entity, LockMode lockMode);
+
+	/**
+	 * Fetch an association that's configured for lazy loading.
+	 * <p>
+	 * Warning: this operation in a stateless session is quite sensitive
+	 * to data aliasing effects and should be used with great care.
+	 *
+	 * @param association a lazy-loaded association
+	 *
+	 * @see org.hibernate.Hibernate#initialize(Object)
+	 */
+	void fetch(Object association);
 }

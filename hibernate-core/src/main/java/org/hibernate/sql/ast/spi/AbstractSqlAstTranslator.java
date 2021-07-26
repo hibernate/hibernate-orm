@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
@@ -94,6 +95,7 @@ import org.hibernate.sql.ast.tree.expression.Every;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
+import org.hibernate.sql.ast.tree.expression.FunctionExpression;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
@@ -830,6 +832,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
 				if ( columnReferences.size() == 1 ) {
 					columnReferences.get( 0 ).accept( this );
+					appendSql( " = " );
+					final Expression assignedValue = assignment.getAssignedValue();
+					if ( assignedValue instanceof SqlTupleContainer ) {
+						final SqlTuple sqlTuple = ( (SqlTupleContainer) assignedValue ).getSqlTuple();
+						if ( sqlTuple != null ) {
+							final Expression expression = sqlTuple
+									.getExpressions()
+									.get( 0 );
+							expression.accept( this );
+						}
+						else {
+							assignedValue.accept( this );
+						}
+					}
+					else {
+						assignment.getAssignedValue().accept( this );
+					}
 				}
 				else {
 					appendSql( " (" );
@@ -837,9 +856,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						columnReference.accept( this );
 					}
 					appendSql( ") " );
+					appendSql( " = " );
+					assignment.getAssignedValue().accept( this );
 				}
-				appendSql( " = " );
-				assignment.getAssignedValue().accept( this );
 			}
 		}
 		finally {
@@ -1512,39 +1531,34 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected final void visitPartitionExpressions(List<Expression> partitionExpressions, boolean supportsSelectAliases) {
-		String separator = "";
+	protected final void visitPartitionExpressions(
+			List<Expression> partitionExpressions,
+			boolean supportsSelectAliases) {
 		if ( supportsSelectAliases ) {
-			for ( Expression partitionExpression : partitionExpressions ) {
-				if ( partitionExpression instanceof SqlTuple ) {
-					for ( Expression expression : ( (SqlTuple) partitionExpression ).getExpressions() ) {
-						appendSql( separator );
-						renderPartitionItem( expression );
-						separator = COMA_SEPARATOR;
-					}
-				}
-				else {
-					appendSql( separator );
-					renderPartitionItem( partitionExpression );
-				}
-				separator = COMA_SEPARATOR;
-			}
+			visitPartitionExpressions( partitionExpressions, expression -> expression );
 		}
 		else {
-			for ( Expression partitionExpression : partitionExpressions ) {
-				if ( partitionExpression instanceof SqlTupleContainer ) {
-					for ( Expression expression : ( (SqlTupleContainer) partitionExpression ).getSqlTuple().getExpressions() ) {
-						appendSql( separator );
-						renderPartitionItem( resolveAliasedExpression( expression ) );
-						separator = COMA_SEPARATOR;
-					}
-				}
-				else {
+			visitPartitionExpressions( partitionExpressions, expression -> resolveAliasedExpression( expression ) );
+		}
+	}
+
+	protected final void visitPartitionExpressions(
+			List<Expression> partitionExpressions,
+			Function<Expression, Expression> resolveAliasExpression) {
+		String separator = "";
+		for ( Expression partitionExpression : partitionExpressions ) {
+			if ( partitionExpression instanceof SqlTupleContainer ) {
+				for ( Expression e : ( (SqlTupleContainer) partitionExpression ).getSqlTuple().getExpressions() ) {
 					appendSql( separator );
-					renderPartitionItem( resolveAliasedExpression( partitionExpression ) );
+					renderPartitionItem( resolveAliasExpression.apply( e ) );
+					separator = COMA_SEPARATOR;
 				}
-				separator = COMA_SEPARATOR;
 			}
+			else {
+				appendSql( separator );
+				renderPartitionItem( resolveAliasExpression.apply( partitionExpression ) );
+			}
+			separator = COMA_SEPARATOR;
 		}
 	}
 
@@ -2905,7 +2919,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
-		renderSelectExpression( sqlSelection.getExpression() );
+		final Expression expression = sqlSelection.getExpression();
+		if ( expression instanceof SqlTupleContainer ) {
+			boolean isFirst = true;
+			for ( Expression e : ( (SqlTupleContainer) expression ).getSqlTuple().getExpressions() ) {
+				if ( isFirst ) {
+					isFirst = false;
+				}
+				else {
+					appendSql( ", " );
+				}
+				renderSelectExpression( e );
+			}
+		}
+		else {
+			renderSelectExpression( expression );
+		}
 	}
 
 	protected void renderSelectExpression(Expression expression) {
@@ -3376,16 +3405,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitTuple(SqlTuple tuple) {
-		boolean isCurrentWhereClause = clauseStack.getCurrent() == Clause.WHERE;
-		if ( isCurrentWhereClause ) {
-			appendSql( OPEN_PARENTHESIS );
-		}
+		appendSql( OPEN_PARENTHESIS );
 
 		renderCommaSeparated( tuple.getExpressions() );
 
-		if ( isCurrentWhereClause ) {
-			appendSql( CLOSE_PARENTHESIS );
-		}
+		appendSql( CLOSE_PARENTHESIS );
 	}
 
 	protected final void renderCommaSeparated(Iterable<? extends SqlAstNode> expressions) {

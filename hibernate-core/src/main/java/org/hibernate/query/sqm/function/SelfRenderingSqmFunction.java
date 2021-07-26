@@ -62,21 +62,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>( sqmArguments.size() );
 		for ( SqmTypedNode<?> sqmArgument : sqmArguments ) {
-			if ( sqmArgument instanceof SqmParameter ) {
-				final SqmParameter sqmParameter = (SqmParameter) sqmArgument;
-				if ( sqmParameter.allowMultiValuedBinding() ) {
-					final List<Expression> expressions = walker.expandSelfRenderingFunctionMultiValueParameter( sqmParameter );
-					for ( int i = 0; i < expressions.size(); i++ ) {
-						sqlAstArguments.add( expressions.get( i ) );
-					}
-				}
-				else {
-					sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
-				}
-			}
-			else {
-				sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
-			}
+			sqlAstArguments.add( (SqlAstNode) ( (SqmVisitableNode) sqmArgument ).accept( walker ) );
 		}
 		return sqlAstArguments;
 	}

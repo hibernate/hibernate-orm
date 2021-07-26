@@ -5,15 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial;
+package org.hibernate.spatial.testing.dialects.postgis;
 
-/**
- * A marker interface for spatial (geometric/geographic) types.
- *
- * @author Karel Maesen, Geovise BVBA
- * creation-date: 4/18/13
- */
-@Deprecated
-public interface Spatial {
+import org.hibernate.spatial.testing.NativeSqlTemplates;
+
+public class PostgisNativeSqlTemplates extends NativeSqlTemplates {
+
 
 }

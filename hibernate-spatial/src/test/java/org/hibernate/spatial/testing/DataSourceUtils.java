@@ -42,6 +42,7 @@ import org.geolatte.geom.codec.WktDecoder;
  *
  * @author Karel Maesen, Geovise BVBA.
  */
+@Deprecated
 public class DataSourceUtils {
 
 

@@ -7,18 +7,16 @@
 
 package org.hibernate.spatial.integration;
 
-import java.sql.BatchUpdateException;
-import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
-import javax.persistence.Query;
-
-import org.hibernate.cfg.NotYetImplementedException;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
+import org.hibernate.spatial.testing.NativeSqlTemplates;
+import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.TestSupportFactories;
 import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -28,12 +26,14 @@ public class SpatialTestDataProvider {
 
 	protected TestData testData;
 	protected JTSGeometryEquality geometryEquality;
-	protected AbstractExpectationsFactory expectationsFactory;
+	protected NativeSqlTemplates templates;
+
 
 
 	public SpatialTestDataProvider() {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( DialectContext.getDialect() );
+			templates = support.getNativeSqlTemplates();
 			testData = support.createTestData( TestSupport.TestDataPurpose.StoreRetrieveData );
 			geometryEquality = support.createGeometryEquality();
 		}
@@ -42,22 +42,21 @@ public class SpatialTestDataProvider {
 		}
 	}
 
-	/**
-	 * Inserts the test data via a direct route (JDBC).
-	 */
-	public void prepareTest(SessionImplementor session) {
-		throw new NotYetImplementedException();
-	}
-
-
-
-
-	protected String entityName(String pckg) {
-		if ( JTS.equalsIgnoreCase( pckg ) ) {
-			return "org.hibernate.spatial.testing.domain.JtsGeomEntity";
+	protected <T extends GeomEntityLike<?>> List<T> entities(Class<T> clazz) {
+		try {
+			List<T> entities = new ArrayList<>();
+			for ( TestDataElement testDataElement : testData ) {
+				T entity = clazz.getDeclaredConstructor().newInstance();
+				entity.setGeomFromWkt( testDataElement.wkt );
+				entity.setId( testDataElement.id );
+				entity.setType( testDataElement.type );
+				entities.add( entity );
+			}
+			return entities;
 		}
-		else {
-			return "org.hibernate.spatial.testing.domain.GeomEntity";
+		catch (Throwable ex) {
+			throw new RuntimeException( ex );
 		}
 	}
+
 }

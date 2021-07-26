@@ -16,8 +16,11 @@ package org.hibernate.spatial;
  * </ul>
  *
  * @author Karel Maesen, Geovise BVBA
+ *
  * creation-date: Oct 7, 2010
+ * @deprecated To be replaced by {@link CommonSpatialFunction}
  */
+@Deprecated
 public enum SpatialFunction {
 
 	/**

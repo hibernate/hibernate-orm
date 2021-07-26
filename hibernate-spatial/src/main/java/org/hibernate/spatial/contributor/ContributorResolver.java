@@ -15,6 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.dialect.postgis.PostgisDialectContributor;
 
 class ContributorResolver {
 
@@ -24,7 +25,7 @@ class ContributorResolver {
 
 	static {
 		//TypeContributorImplementor
-		ContributorMap.put( PostgreSQLDialect.class, PostgreSQLDialectContributor::new );
+		ContributorMap.put( PostgreSQLDialect.class, PostgisDialectContributor::new );
 	}
 
 	private ContributorResolver() {

@@ -27,7 +27,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class GeoDBTestSupport extends TestSupport {
 
 	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
-		super.createDataSourceUtil( serviceRegistry );
+
 		try {
 			return new GeoDBDataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 		}

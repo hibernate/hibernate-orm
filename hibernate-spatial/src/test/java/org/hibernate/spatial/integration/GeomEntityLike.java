@@ -23,4 +23,6 @@ public interface GeomEntityLike<G> {
 	G getGeom();
 
 	void setGeom(G geom);
+
+	void setGeomFromWkt(String wkt);
 }

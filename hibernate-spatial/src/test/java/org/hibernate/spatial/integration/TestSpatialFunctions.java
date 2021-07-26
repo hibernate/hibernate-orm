@@ -67,24 +67,6 @@ public class TestSpatialFunctions extends SpatialFunctionalTestCase {
 		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
 	}
 
-	@Test
-	public void test_astext_on_jts() throws SQLException {
-		astext( JTS );
-	}
-
-	@Test
-	public void test_astext_on_geolatte() throws SQLException {
-		astext( GEOLATTE );
-	}
-
-	public void astext(String pckg) throws SQLException {
-		if ( !isSupportedByDialect( SpatialFunction.astext ) ) {
-			return;
-		}
-		Map<Integer, String> dbexpected = expectationsFactory.getAsText();
-		String hql = format( "SELECT id, astext(geom) from %s", entityName( pckg ) );
-		retrieveHQLResultsAndCompare( dbexpected, hql, pckg );
-	}
 
 	@Test
 	public void test_asbinary_on_jts() throws SQLException {

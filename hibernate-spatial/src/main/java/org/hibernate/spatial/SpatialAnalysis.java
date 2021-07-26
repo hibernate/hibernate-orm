@@ -11,6 +11,7 @@ package org.hibernate.spatial;
  *
  * @author Karel Maesen
  */
+@Deprecated
 public interface SpatialAnalysis {
 
 	/**

@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
  * Registers all available spatial functions for a <code>Dialect</code>
  * <p>
  * Created by Karel Maesen, Geovise BVBA on 29/10/16.
+ * @Deprecated Use
  */
 public abstract class SpatialFunctionsRegistry implements Iterable<Map.Entry<String, SqmFunctionDescriptor>>, Serializable {
 	protected final Map<String, SqmFunctionDescriptor> functionMap = new HashMap<String, SqmFunctionDescriptor>();

@@ -17,11 +17,22 @@ import org.hibernate.spatial.testing.datareader.TestDataElement;
  */
 public class PostgisExpressionTemplate implements SQLExpressionTemplate {
 
-	static final String SQL_TEMPLATE = "insert into geomtest (id, type, geom) values (%d, '%s', ST_GeomFromText('%s'))";
+	static final String SQL_TEMPLATE = "insert into %s (id, type, geom) values (%d, '%s', ST_GeomFromText('%s'))";
+
+	public String toInsertSql(TestDataElement testDataElement, String table) {
+		return String.format(
+				SQL_TEMPLATE,
+				table,
+				testDataElement.id,
+				testDataElement.type,
+				testDataElement.wkt
+		);
+	}
 
 	public String toInsertSql(TestDataElement testDataElement) {
 		return String.format(
 				SQL_TEMPLATE,
+				"geomtest",
 				testDataElement.id,
 				testDataElement.type,
 				testDataElement.wkt

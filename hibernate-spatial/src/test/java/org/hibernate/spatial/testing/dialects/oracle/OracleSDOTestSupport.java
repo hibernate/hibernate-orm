@@ -38,9 +38,8 @@ public class OracleSDOTestSupport extends TestSupport {
 		return new SDOGeometryExpressionTemplate();
 	}
 
-	@Override
+
 	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
-		super.createDataSourceUtil( serviceRegistry );
 		return new SDODataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
 	}
 }

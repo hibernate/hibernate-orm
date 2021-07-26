@@ -443,7 +443,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeTouchesStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeTouchesStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -453,7 +453,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeOverlapsStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeOverlapsStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -464,7 +464,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix);
+	public abstract NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -475,7 +475,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeDwithinStatement(Point geom, double distance);
+	public abstract NativeSQLStatement createNativeDwithinStatement(Point geom, double distance);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -485,7 +485,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeIntersectsStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeIntersectsStatement(Geometry geom);
 
 	/**
 	 * Returns the statement corresponding to the SpatialRestrictions.filter() method.
@@ -494,7 +494,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeFilterStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeFilterStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -504,7 +504,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeDistanceStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeDistanceStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -512,7 +512,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the SQL String
 	 */
-	protected abstract NativeSQLStatement createNativeDimensionSQL();
+	public abstract NativeSQLStatement createNativeDimensionSQL();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -522,7 +522,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeBufferStatement(Double distance);
+	public abstract NativeSQLStatement createNativeBufferStatement(Double distance);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -532,7 +532,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeConvexHullStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeConvexHullStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -542,7 +542,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeIntersectionStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeIntersectionStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -552,7 +552,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeDifferenceStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeDifferenceStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -562,7 +562,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -572,7 +572,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeGeomUnionStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeGeomUnionStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -580,7 +580,11 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeAsTextStatement();
+	public abstract NativeSQLStatement createNativeAsTextStatement();
+
+
+
+
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -588,7 +592,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeSridStatement();
+	public abstract NativeSQLStatement createNativeSridStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -596,7 +600,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeIsSimpleStatement();
+	public abstract NativeSQLStatement createNativeIsSimpleStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -604,7 +608,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeIsEmptyStatement();
+	public abstract NativeSQLStatement createNativeIsEmptyStatement();
 
 
 	/**
@@ -613,7 +617,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeIsNotEmptyStatement();
+	public abstract NativeSQLStatement createNativeIsNotEmptyStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -621,7 +625,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeBoundaryStatement();
+	public abstract NativeSQLStatement createNativeBoundaryStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -629,7 +633,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeEnvelopeStatement();
+	public abstract NativeSQLStatement createNativeEnvelopeStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -637,7 +641,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the native SQL Statement
 	 */
-	protected abstract NativeSQLStatement createNativeAsBinaryStatement();
+	public abstract NativeSQLStatement createNativeAsBinaryStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -645,7 +649,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return the SQL String
 	 */
-	protected abstract NativeSQLStatement createNativeGeometryTypeStatement();
+	public abstract NativeSQLStatement createNativeGeometryTypeStatement();
 
 	/**
 	 * Returns a statement corresponding to the HQL statement
@@ -655,7 +659,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeWithinStatement(Geometry testPolygon);
+	public abstract NativeSQLStatement createNativeWithinStatement(Geometry testPolygon);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement
@@ -665,7 +669,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeEqualsStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeEqualsStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement
@@ -675,7 +679,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeCrossesStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeCrossesStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement:
@@ -685,7 +689,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeContainsStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeContainsStatement(Geometry geom);
 
 	/**
 	 * Returns a statement corresponding to the HQL statement
@@ -695,7 +699,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeDisjointStatement(Geometry geom);
+	public abstract NativeSQLStatement createNativeDisjointStatement(Geometry geom);
 
 
 	/**
@@ -706,7 +710,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeTransformStatement(int epsg);
+	public abstract NativeSQLStatement createNativeTransformStatement(int epsg);
 
 	/**
 	 * Returns the statement corresponding to the HQL statement
@@ -716,7 +720,7 @@ public abstract class AbstractExpectationsFactory {
 	 *
 	 * @return
 	 */
-	protected abstract NativeSQLStatement createNativeHavingSRIDStatement(int srid);
+	public abstract NativeSQLStatement createNativeHavingSRIDStatement(int srid);
 
 	/**
 	 * Creates a connection to the database
@@ -849,7 +853,12 @@ public abstract class AbstractExpectationsFactory {
 		}
 	}
 
-	protected NativeSQLStatement createNativeSQLStatement(final String sql) {
+
+	public NativeSQLStatement createNativeSQSStatement(final NativeSQLTemplate template, final String table) {
+		return createNativeSQLStatement( template.mkNativeSQLString( table ) );
+	}
+
+	public NativeSQLStatement createNativeSQLStatement(final String sql) {
 		return new NativeSQLStatement() {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				return connection.prepareStatement( sql );
@@ -861,7 +870,7 @@ public abstract class AbstractExpectationsFactory {
 		};
 	}
 
-	protected NativeSQLStatement createNativeSQLStatementAllWKTParams(final String sql, final String wkt) {
+	public NativeSQLStatement createNativeSQLStatementAllWKTParams(final String sql, final String wkt) {
 		return new NativeSQLStatement() {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				PreparedStatement pstmt = connection.prepareStatement( sql );
@@ -877,7 +886,7 @@ public abstract class AbstractExpectationsFactory {
 		};
 	}
 
-	protected NativeSQLStatement createNativeSQLStatement(final String sql, final Object[] params) {
+	public NativeSQLStatement createNativeSQLStatement(final String sql, final Object[] params) {
 		return new NativeSQLStatement() {
 			public PreparedStatement prepare(Connection connection) throws SQLException {
 				PreparedStatement pstmt = connection.prepareStatement( sql );
@@ -898,4 +907,6 @@ public abstract class AbstractExpectationsFactory {
 	protected int numPlaceHoldersInSQL(String sql) {
 		return sql.replaceAll( "[^?]", "" ).length();
 	}
+
+
 }

@@ -41,6 +41,21 @@ public class HqlOrderByIdsTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10502")
 	@RequiresDialect(value = MySQLDialect.class, version = 500)
+	public void testIt(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			List<Person> persons = entityManager.createQuery(
+					"SELECT p " +
+							"FROM Person p " +
+							"ORDER BY FIELD(id, :ids)  ", Person.class )
+					.setParameter( "ids", Arrays.asList( 3L, 1L, 2L ) )
+					.getResultList();
+
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-10502")
+	@RequiresDialect(value = MySQLDialect.class, version = 500)
 	public void testLifecycle(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			Person person1 = new Person();
@@ -70,7 +85,7 @@ public class HqlOrderByIdsTest {
 					"SELECT p " +
 							"FROM Person p " +
 							"WHERE p.id IN (:ids) " +
-							"ORDER BY FIELD(id, :ids) ", Person.class )
+							"ORDER BY FIELD(id, :ids)  ", Person.class )
 					.setParameter( "ids", Arrays.asList( 3L, 1L, 2L ) )
 					.getResultList();
 

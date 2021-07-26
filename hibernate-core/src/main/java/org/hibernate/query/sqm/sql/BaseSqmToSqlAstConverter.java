@@ -447,7 +447,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		fromClauseIndexStack.push( fromClauseIndex );
 		processingStateStack.push( processingState );
 	}
-	
+
 	protected void popProcessingStateStack() {
 		lastPoppedFromClauseIndex = fromClauseIndexStack.pop();
 		lastPoppedProcessingState = processingStateStack.pop();
@@ -785,7 +785,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( sqmAssignment.getValue() instanceof SqmParameter ) {
 					final SqmParameter<?> sqmParameter = (SqmParameter<?>) sqmAssignment.getValue();
 
-					consumeSqmParameter(
+					consumeSingleSqmParameter(
 							sqmParameter,
 							(index, jdbcParameter) -> assignments.add(
 									new Assignment(
@@ -2463,8 +2463,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return consumeSqmParameter( expression );
 	}
 
-
-	protected Expression consumeSqmParameter(
+	protected Expression consumeSingleSqmParameter(
 			SqmParameter sqmParameter,
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
@@ -2498,6 +2497,39 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	protected Expression consumeSqmParameter(SqmParameter sqmParameter) {
+		if ( sqmParameter.allowMultiValuedBinding() ) {
+			final QueryParameterImplementor<?> domainParam = domainParameterXref.getQueryParameter( sqmParameter );
+			final QueryParameterBinding domainParamBinding = domainParameterBindings.getBinding( domainParam );
+
+			if ( !domainParamBinding.isMultiValued() ) {
+				return consumeSingleSqmParameter( sqmParameter );
+			}
+
+			final Collection bindValues = domainParamBinding.getBindValues();
+			final List<Expression> expressions = new ArrayList<>( bindValues.size());
+			boolean first = true;
+			for ( Object bindValue : bindValues ) {
+				final SqmParameter sqmParamToConsume;
+				// for each bind value create an "expansion"
+				if ( first ) {
+					sqmParamToConsume = sqmParameter;
+					first = false;
+				}
+				else {
+					sqmParamToConsume = sqmParameter.copy();
+					domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
+				}
+				expressions.add( consumeSingleSqmParameter( sqmParamToConsume ) );
+			}
+
+			return new SqlTuple( expressions, null );
+		}
+		else {
+			return consumeSingleSqmParameter( sqmParameter );
+		}
+	}
+
+	protected Expression consumeSingleSqmParameter(SqmParameter sqmParameter) {
 		final MappingModelExpressable valueMapping = determineValueMapping( sqmParameter );
 
 		final List<JdbcParameter> jdbcParametersForSqm = new ArrayList<>();
@@ -4488,7 +4520,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 				}
 
-				inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
+				inListPredicate.addExpression( consumeSingleSqmParameter( sqmParamToConsume ) );
 			}
 		}
 		finally {
@@ -4533,7 +4565,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					domainParameterXref.addExpansion( jpaCriteriaParameter, sqmWrapper, sqmParamToConsume );
 				}
 
-				inListPredicate.addExpression( consumeSqmParameter( sqmParamToConsume ) );
+				inListPredicate.addExpression( consumeSingleSqmParameter( sqmParamToConsume ) );
 			}
 		}
 		finally {
@@ -4968,7 +5000,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmParamToConsume = sqmParameter.copy();
 				domainParameterXref.addExpansion( domainParam, sqmParameter, sqmParamToConsume );
 			}
-			final Expression expression = consumeSqmParameter( sqmParamToConsume );
+			final Expression expression = consumeSingleSqmParameter( sqmParamToConsume );
 			result.add( expression );
 		}
 		return result;

@@ -216,10 +216,10 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 	}
 
 	@Override
-	protected Expression consumeSqmParameter(SqmParameter sqmParameter) {
+	protected Expression consumeSingleSqmParameter(SqmParameter sqmParameter) {
 		assert parameterResolutionConsumer != null;
 
-		final Expression expression = super.consumeSqmParameter( sqmParameter );
+		final Expression expression = super.consumeSingleSqmParameter( sqmParameter );
 
 		final List<List<JdbcParameter>> jdbcParameters = getJdbcParamsBySqmParam().get( sqmParameter );
 		final MappingModelExpressable<?> mappingType = getSqmParameterMappingModelExpressableResolutions().get( sqmParameter );

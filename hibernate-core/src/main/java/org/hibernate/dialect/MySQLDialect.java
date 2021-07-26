@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.FieldFunction;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -380,6 +381,8 @@ public class MySQLDialect extends Dialect {
 			// we want the standard default precision of 6 (microseconds)
 			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 		}
+
+		queryEngine.getSqmFunctionRegistry().register( "field", new FieldFunction() );
 	}
 
 	@Override

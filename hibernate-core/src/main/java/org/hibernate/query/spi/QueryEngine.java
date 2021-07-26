@@ -133,7 +133,7 @@ public class QueryEngine {
 		}
 
 		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
-			contributor.contributeFunctions( sqmFunctionRegistry::register, serviceRegistry );
+			contributor.contributeFunctions( sqmFunctionRegistry, serviceRegistry );
 		}
 
 		final boolean showSQLFunctions = ConfigurationHelper.getBoolean(

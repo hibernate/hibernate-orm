@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.query.results;
+package org.hibernate.orm.test.query.returns;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -26,9 +26,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.typeCompatibleWith;
-import static org.hibernate.orm.test.query.results.ScalarQueries.MULTI_SELECTION_QUERY;
-import static org.hibernate.orm.test.query.results.ScalarQueries.SINGLE_ALIASED_SELECTION_QUERY;
-import static org.hibernate.orm.test.query.results.ScalarQueries.SINGLE_SELECTION_QUERY;
+import static org.hibernate.orm.test.query.returns.ScalarQueries.MULTI_SELECTION_QUERY;
+import static org.hibernate.orm.test.query.returns.ScalarQueries.SINGLE_ALIASED_SELECTION_QUERY;
+import static org.hibernate.orm.test.query.returns.ScalarQueries.SINGLE_SELECTION_QUERY;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**

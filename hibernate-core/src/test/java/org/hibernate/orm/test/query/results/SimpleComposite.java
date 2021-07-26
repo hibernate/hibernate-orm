@@ -6,11 +6,21 @@
  */
 package org.hibernate.orm.test.query.results;
 
+import javax.persistence.Embeddable;
+
 /**
  * @author Steve Ebersole
  */
-public interface ScalarQueries {
-	String SINGLE_SELECTION_QUERY = "select e.data from BasicEntity e order by e.data";
-	String MULTI_SELECTION_QUERY = "select e.id, e.data from BasicEntity e order by e.id";
-	String SINGLE_ALIASED_SELECTION_QUERY = "select e.data as state from BasicEntity e order by e.data";
+@Embeddable
+public class SimpleComposite {
+	public String value1;
+	public String value2;
+
+	public SimpleComposite() {
+	}
+
+	public SimpleComposite(String value1, String value2) {
+		this.value1 = value1;
+		this.value2 = value2;
+	}
 }

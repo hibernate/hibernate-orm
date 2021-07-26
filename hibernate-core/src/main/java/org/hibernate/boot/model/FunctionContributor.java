@@ -30,4 +30,16 @@ public interface FunctionContributor {
 	 * @param serviceRegistry The service registry
 	 */
 	void contributeFunctions(FunctionContributions functionContributions, ServiceRegistry serviceRegistry);
+
+	/**
+	 * Determines order in which the contributions will be applied (lowest ordinal first).
+	 *
+	 * The range 0-500 is reserved for Hibernate, range 500-1000 for libraries and 1000-Integer.MAX_VALUE for
+	 * user-defined FunctionContributors.
+	 *
+	 * @return the ordinal for this FunctionContributor
+	 */
+	default int ordinal(){
+		return 1000;
+	}
 }

@@ -959,7 +959,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			queryReturns = rsMapping.getQueryReturns();
 		}
 		else {
-			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager");
+			throw new AssertionFailure( "Unsupported named query model. Please report the bug in Hibernate EntityManager" );
 		}
 
 		if ( queryReturns.length > 1 ) {
@@ -967,7 +967,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		if ( queryReturns.length == 0 ) {
-			throw new IllegalArgumentException("Named query exists but its result type is not compatible");
+			throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
 		}
 
 		final NativeSQLQueryReturn nativeSQLQueryReturn = queryReturns[0];

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 
 /**
@@ -16,7 +14,7 @@ import org.hibernate.HibernateException;
  * @author Eric Dalquist
  * @author Steve Ebersole
  */
-public interface ResolveNaturalIdEventListener extends Serializable {
+public interface ResolveNaturalIdEventListener {
 
 	/**
 	 * Handle the given resolve natural id event.

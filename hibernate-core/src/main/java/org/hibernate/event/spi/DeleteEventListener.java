@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -16,7 +15,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface DeleteEventListener extends Serializable {
+public interface DeleteEventListener {
 
     /** Handle the given delete event.
      *

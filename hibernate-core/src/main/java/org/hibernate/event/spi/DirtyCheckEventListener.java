@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 
 /**
@@ -15,7 +13,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface DirtyCheckEventListener extends Serializable {
+public interface DirtyCheckEventListener {
 
     /** Handle the given dirty-check event.
      *

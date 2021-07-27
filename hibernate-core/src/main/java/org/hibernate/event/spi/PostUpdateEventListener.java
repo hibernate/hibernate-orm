@@ -6,13 +6,11 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called after updating the datastore
  * 
  * @author Gavin King
  */
-public interface PostUpdateEventListener extends Serializable, PostActionEventListener {
+public interface PostUpdateEventListener extends PostActionEventListener {
 	void onPostUpdate(PostUpdateEvent event);
 }

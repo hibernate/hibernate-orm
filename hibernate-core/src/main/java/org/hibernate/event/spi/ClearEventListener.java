@@ -6,14 +6,12 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Listener for notification of {@link org.hibernate.Session#clear()}
  *
  * @author Steve Ebersole
  */
-public interface ClearEventListener extends Serializable {
+public interface ClearEventListener {
 	/**
 	 * Callback for {@link org.hibernate.Session#clear()} notification
 	 *

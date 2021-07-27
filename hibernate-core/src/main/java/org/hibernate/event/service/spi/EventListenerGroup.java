@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.service.spi;
 
-import java.io.Serializable;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -21,7 +20,7 @@ import org.hibernate.event.spi.EventType;
  *
  * @author Steve Ebersole
  */
-public interface EventListenerGroup<T> extends Serializable {
+public interface EventListenerGroup<T> {
 
 	/**
 	 * Retrieve the event type associated with this groups of listeners.

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 
 /**
@@ -16,6 +14,6 @@ import org.hibernate.HibernateException;
  *
  * @author Gavin King
  */
-public interface InitializeCollectionEventListener extends Serializable {
+public interface InitializeCollectionEventListener {
 	void onInitializeCollection(InitializeCollectionEvent event) throws HibernateException;
 }

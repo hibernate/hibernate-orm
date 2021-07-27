@@ -55,15 +55,30 @@ public class DefaultIdentifierGeneratorFactory
 
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( DefaultIdentifierGeneratorFactory.class );
 
+	private final boolean ignoreBeanContainer;
+
 	private ServiceRegistry serviceRegistry;
 	private Dialect dialect;
 
-	private ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<String, Class>();
+	private final ConcurrentHashMap<String, Class> generatorStrategyToClassNameMap = new ConcurrentHashMap<>();
+
+	private BeanContainer beanContainer;
 
 	/**
 	 * Constructs a new DefaultIdentifierGeneratorFactory.
 	 */
 	public DefaultIdentifierGeneratorFactory() {
+		this( false );
+	}
+
+	/**
+	 * Allows to explicitly control if the BeanContainer should be ignored
+	 * (if there is one registered) when initializing any new IdentifierGenerator
+	 * instances.
+	 * @param ignoreBeanContainer
+	 */
+	public DefaultIdentifierGeneratorFactory(boolean ignoreBeanContainer) {
+		this.ignoreBeanContainer = ignoreBeanContainer;
 		register( "uuid2", UUIDGenerator.class );
 		register( "guid", GUIDGenerator.class );			// can be done with UUIDGenerator + strategy
 		register( "uuid", UUIDHexGenerator.class );			// "deprecated" for new use
@@ -102,9 +117,8 @@ public class DefaultIdentifierGeneratorFactory
 	public IdentifierGenerator createIdentifierGenerator(String strategy, Type type, Properties config) {
 		try {
 			Class clazz = getIdentifierGeneratorClass( strategy );
-			BeanContainer beanContainer = serviceRegistry.getService(ManagedBeanRegistry.class).getBeanContainer();
 			IdentifierGenerator identifierGenerator;
-			if ( generatorStrategyToClassNameMap.containsKey(strategy) || beanContainer == null ) {
+			if ( beanContainer == null || generatorStrategyToClassNameMap.containsKey( strategy ) ) {
 				identifierGenerator = ( IdentifierGenerator ) clazz.newInstance();
 			}
 			else {
@@ -163,6 +177,10 @@ public class DefaultIdentifierGeneratorFactory
 		this.serviceRegistry = serviceRegistry;
 		this.dialect = serviceRegistry.getService( JdbcEnvironment.class ).getDialect();
 		final ConfigurationService configService = serviceRegistry.getService( ConfigurationService.class );
+		if ( ! this.ignoreBeanContainer ) {
+			this.beanContainer = serviceRegistry.getService( ManagedBeanRegistry.class ).getBeanContainer();
+			//else we just have beanContainer = null;
+		}
 
 		final boolean useNewIdentifierGenerators = configService.getSetting(
 				AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS,
@@ -170,7 +188,7 @@ public class DefaultIdentifierGeneratorFactory
 				true
 		);
 
-		if(!useNewIdentifierGenerators) {
+		if ( ! useNewIdentifierGenerators ) {
 			register( "sequence", SequenceGenerator.class );
 		}
 	}

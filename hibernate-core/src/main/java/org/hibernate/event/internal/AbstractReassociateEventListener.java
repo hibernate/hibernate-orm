@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
-
 import org.hibernate.LockMode;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.spi.EntityEntry;
@@ -29,7 +27,7 @@ import org.jboss.logging.Logger;
  *
  * @author Gavin King
  */
-public abstract class AbstractReassociateEventListener implements Serializable {
+public abstract class AbstractReassociateEventListener {
 	private static final Logger log = CoreLogging.logger( AbstractReassociateEventListener.class );
 
 	/**

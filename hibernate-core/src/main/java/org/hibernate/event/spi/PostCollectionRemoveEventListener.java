@@ -6,13 +6,11 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called after removing a collection
  *
  * @author Gail Badner
  */
-public interface PostCollectionRemoveEventListener extends Serializable {
+public interface PostCollectionRemoveEventListener {
 	public void onPostRemoveCollection(PostCollectionRemoveEvent event);
 }

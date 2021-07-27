@@ -6,14 +6,12 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called after inserting an item in the datastore
  *
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface PostInsertEventListener extends Serializable, PostActionEventListener {
+public interface PostInsertEventListener extends PostActionEventListener {
 	void onPostInsert(PostInsertEvent event);
 }

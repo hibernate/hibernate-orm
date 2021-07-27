@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.service.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.service.Service;
@@ -18,7 +16,7 @@ import org.hibernate.service.Service;
  *
  * @author Steve Ebersole
  */
-public interface EventListenerRegistry extends Service, Serializable {
+public interface EventListenerRegistry extends Service {
 	/**
 	 * @deprecated this method was only ever used to initialize the CallbackRegistry
 	 * which is now managed as part of the EventEngine

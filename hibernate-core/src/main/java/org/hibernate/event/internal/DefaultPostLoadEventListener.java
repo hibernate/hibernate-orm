@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.internal;
 
-import java.io.Serializable;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.LockMode;

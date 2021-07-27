@@ -6,13 +6,11 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called after recreating a collection
  *
  * @author Gail Badner
  */
-public interface PostCollectionRecreateEventListener extends Serializable {
+public interface PostCollectionRecreateEventListener {
 	public void onPostRecreateCollection(PostCollectionRecreateEvent event);
 }

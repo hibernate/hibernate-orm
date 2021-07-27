@@ -22,7 +22,6 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -52,7 +51,6 @@ public class CompositeParameterTests {
 	}
 
 	@Test
-	@NotImplementedYet
 	public void testSimplePredicateCriteria(SessionFactoryScope scope) {
 		final HibernateCriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
 		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
@@ -77,7 +75,6 @@ public class CompositeParameterTests {
 	}
 
 	@Test
-	@NotImplementedYet
 	public void testInPredicateCriteria(SessionFactoryScope scope) {
 		final HibernateCriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
 		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
@@ -102,7 +99,6 @@ public class CompositeParameterTests {
 	}
 
 	@Test
-	@NotImplementedYet
 	public void testDeTypedInPredicateCriteria(SessionFactoryScope scope) {
 		final HibernateCriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
 		final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();

@@ -29,8 +29,8 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassTypeDescript
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		throw new UnsupportedOperationException(
-				"Recommended SqlTypeDescriptor not known for this Java type : " + getJavaType().getTypeName()
+		throw new JdbcTypeRecommendationException(
+				"Could not determine recommended JdbcTypeDescriptor for `" + getJavaType().getTypeName() + "`"
 		);
 	}
 

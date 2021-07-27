@@ -119,6 +119,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
@@ -898,36 +899,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass) {
-		if ( Collection.class.isAssignableFrom( paramClass ) ) {
-			// a Collection-valued, multi-valued parameter
-			return new JpaCriteriaParameter(
-					new MultiValueParameterType( Collection.class ),
-					true,
-					this
-			);
-		}
-
-		if ( paramClass.isArray() ) {
-			// an array-valued, multi-valued parameter
-			return new JpaCriteriaParameter(
-					new MultiValueParameterType( Object[].class ),
-					true,
-					this
-			);
-		}
-
-		//noinspection unchecked
-		return new JpaCriteriaParameter<>(
-				getTypeConfiguration().standardBasicTypeForJavaType( paramClass ),
-				false,
-				this
-		);
+		return parameter( paramClass, null );
 	}
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
+
 		if ( Collection.class.isAssignableFrom( paramClass ) ) {
-			// a multi-valued parameter
+			// a Collection-valued, multi-valued parameter
 			return new JpaCriteriaParameter(
 					name,
 					new MultiValueParameterType<>( Collection.class ),
@@ -946,13 +925,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext {
 			);
 		}
 
-		//noinspection unchecked
-		return new JpaCriteriaParameter<>(
-				name,
-				getTypeConfiguration().standardBasicTypeForJavaType( paramClass ),
-				false,
-				this
-		);
+		try {
+			final BasicType<T> basicType = getTypeConfiguration().standardBasicTypeForJavaType( paramClass );
+			return new JpaCriteriaParameter<>( name, basicType, false, this );
+		}
+		catch (JdbcTypeRecommendationException e) {
+			return new JpaCriteriaParameter<>( name, null, false, this );
+		}
 	}
 
 	@Override

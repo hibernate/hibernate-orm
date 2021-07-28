@@ -27,10 +27,6 @@ public @interface ParamDef {
 	/**
 	 * The type to be used for the parameter.  See {@link Type#type} for a list of
 	 * expected values
-	 *
-	 *
-	 *
-	 *
 	 */
 	String type();
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.usertype.UserType;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -27,6 +29,18 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({FIELD, METHOD})
 @Retention(RUNTIME)
 public @interface Type {
+
+	/**
+	 * An implementation of {@link org.hibernate.type.Type}
+	 */
+	Class<org.hibernate.type.Type> value() default org.hibernate.type.Type.class;
+
+	/**
+	 * An implementation of {@link org.hibernate.usertype.UserType}
+	 */
+	@SuppressWarnings("rawtypes")
+	Class<UserType> userType() default UserType.class;
+
 	/**
 	 * The Hibernate type name.  This should be one of: <ul>
 	 *     <li>Registration key for a basic type (see {@link org.hibernate.type.BasicTypeRegistry})</li>
@@ -35,7 +49,7 @@ public @interface Type {
 	 *     <li>FQN for a {@link org.hibernate.usertype.UserType} implementation class</li>
 	 * </ul>
 	 */
-	String type();
+	String type() default "";
 
 	/**
 	 * Any configuration parameters for the named type.

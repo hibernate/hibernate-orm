@@ -324,7 +324,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			throw new MappingException( "idbag mapping missing @CollectionId" );
 		}
 
-		explicitBasicTypeName = collectionIdAnn.type().type();
+		explicitBasicTypeName = typeName( collectionIdAnn.type(), "collection id" );
 		implicitJavaTypeAccess = typeConfiguration -> null;
 
 		final String generator = collectionIdAnn.generator();
@@ -716,8 +716,23 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	}
 
 	public void setExplicitType(Type typeAnn) {
-		setExplicitType( typeAnn.type() );
+		setExplicitType( typeName(typeAnn, propertyName) );
 		this.explicitLocalTypeParams = extractTypeParams( typeAnn.parameters() );
+	}
+
+	static String typeName(Type typeAnn, String propertyName) {
+		if ( !typeAnn.value().equals(org.hibernate.type.Type.class) ) {
+			return typeAnn.value().getName();
+		}
+		else if ( !typeAnn.userType().equals(org.hibernate.usertype.UserType.class) ) {
+			return typeAnn.userType().getName();
+		}
+		else if ( !typeAnn.type().isEmpty() ) {
+			return typeAnn.type();
+		}
+		else {
+			throw new MappingException("no type specified by @Type annotation of " + propertyName);
+		}
 	}
 
 	@SuppressWarnings("unchecked")

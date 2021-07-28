@@ -13,7 +13,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.MyNamingStrategy;
-import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
+import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;

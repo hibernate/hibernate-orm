@@ -14,6 +14,8 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 import static org.hibernate.orm.jakarta.JakartaPlugin.JAKARTA;
@@ -35,6 +37,7 @@ public abstract class JakartaJarTransformation extends DefaultTask {
 	}
 
 	@InputFile
+	@PathSensitive( PathSensitivity.RELATIVE )
 	public RegularFileProperty getSourceJar() {
 		return sourceJar;
 	}

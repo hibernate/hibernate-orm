@@ -15,7 +15,7 @@ import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.PersistenceUnitDescriptorAdapter;
+import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.FailureExpected;

@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 
+import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
+
 /**
  * @author Steve Ebersole
  */

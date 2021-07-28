@@ -18,7 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
+import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;

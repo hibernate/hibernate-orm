@@ -12,7 +12,7 @@ import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
+import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 
 /**
  * @author Steve Ebersole

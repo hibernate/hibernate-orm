@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
+import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;

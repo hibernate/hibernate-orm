@@ -11,11 +11,7 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
 
 dependencies {
-    api( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        // todo (6.0) : this should no longer be transitive from core.  Come back and verify this
-        exclude group: "org.javassist", module: "javassist"
-    }
+    api project( ':hibernate-core' )
 
     implementation libraries.commons_annotations
 
@@ -27,7 +23,6 @@ dependencies {
     annotationProcessor project( ':hibernate-jpamodelgen' )
 
     testImplementation project( ':hibernate-testing' )
-    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 }
 
 sourceSets {

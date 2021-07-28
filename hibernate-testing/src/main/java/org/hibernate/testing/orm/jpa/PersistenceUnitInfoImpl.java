@@ -21,6 +21,12 @@ import javax.sql.DataSource;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 /**
+ * Implementation of {@link PersistenceUnitInfo} for testing use.
+ *
+ * This implementation provides a bean-like contract for providing PU information.
+ *
+ * See {@link PersistenceUnitInfoAdapter} for an override-based solution
+ *
  * @author Steve Ebersole
  */
 public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {

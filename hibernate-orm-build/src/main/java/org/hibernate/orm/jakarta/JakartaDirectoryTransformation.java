@@ -15,6 +15,8 @@ import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 import static org.hibernate.orm.jakarta.JakartaPlugin.JAKARTA;
@@ -36,6 +38,7 @@ public abstract class JakartaDirectoryTransformation extends DefaultTask {
 	}
 
 	@InputDirectory
+	@PathSensitive( PathSensitivity.RELATIVE )
 	public DirectoryProperty getSourceDirectory() {
 		return sourceDirectory;
 	}

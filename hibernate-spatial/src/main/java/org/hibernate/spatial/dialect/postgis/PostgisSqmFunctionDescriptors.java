@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.KeyedSqmFunctionDescriptors;
 import org.hibernate.spatial.FunctionKey;
 
@@ -25,7 +26,8 @@ public class PostgisSqmFunctionDescriptors implements KeyedSqmFunctionDescriptor
 
 	private final Map<FunctionKey, SqmFunctionDescriptor> map = new HashMap<>();
 
-	PostgisSqmFunctionDescriptors() {
+	PostgisSqmFunctionDescriptors(ServiceRegistry serviceRegistry) {
+
 		map.put(
 				ST_GEOMETRYTYPE.getKey(), new NamedSqmFunctionDescriptor(
 						ST_GEOMETRYTYPE.getKey().getName(),

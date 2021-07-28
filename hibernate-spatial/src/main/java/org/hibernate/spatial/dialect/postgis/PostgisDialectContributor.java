@@ -38,7 +38,7 @@ public class PostgisDialectContributor implements ContributorImplementor {
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
-		PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors();
+		PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( getServiceRegistry() );
 
 		postgisFunctions.asMap().forEach( (key, desc) -> {
 			functionContributions.contributeFunction( key.getName(), desc );

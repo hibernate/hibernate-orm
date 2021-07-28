@@ -33,7 +33,6 @@ dependencies {
 	api libraries.jakarta_jaxb_runtime
 
 	testImplementation project(':hibernate-testing-jakarta')
-	testImplementation fileTree(dir: 'libs', include: '*.jar')
 
 	testImplementation libraries.shrinkwrap_api
 	testImplementation libraries.shrinkwrap

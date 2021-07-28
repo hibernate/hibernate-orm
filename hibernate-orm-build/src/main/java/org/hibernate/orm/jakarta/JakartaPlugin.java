@@ -12,6 +12,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.Directory;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Copy;
@@ -164,6 +165,8 @@ public class JakartaPlugin implements Plugin<Project> {
 				}
 		);
 
+		final DirectoryProperty buildDirectory = project.getLayout().getBuildDirectory();
+
 		tasks.create(
 				"jakartafyJar",
 				JakartaJarTransformation.class,
@@ -172,11 +175,7 @@ public class JakartaPlugin implements Plugin<Project> {
 					transformation.setDescription( "Transforms the source project's main jar" );
 					transformation.setGroup( JAKARTA );
 					transformation.getSourceJar().convention( sourceProjectJarTask.getArchiveFile() );
-					transformation.getTargetJar().convention(
-							project.getLayout()
-									.getBuildDirectory()
-									.file( relativeArchiveFileName( project, null ) )
-					);
+					transformation.getTargetJar().convention( buildDirectory.file( relativeArchiveFileName( project, null ) ) );
 					jakartafyTask.dependsOn( transformation );
 				}
 		);
@@ -189,11 +188,7 @@ public class JakartaPlugin implements Plugin<Project> {
 					transformation.setDescription( "Transforms the source project's sources jar" );
 					transformation.setGroup( JAKARTA );
 					transformation.getSourceJar().convention( sourceProjectSourcesJarTask.getArchiveFile() );
-					transformation.getTargetJar().convention(
-							project.getLayout()
-									.getBuildDirectory()
-									.file( relativeArchiveFileName( project, "sources" ) )
-					);
+					transformation.getTargetJar().convention( buildDirectory.file( relativeArchiveFileName( project, "sources" ) ) );
 					jakartafyTask.dependsOn( transformation );
 				}
 		);
@@ -206,11 +201,7 @@ public class JakartaPlugin implements Plugin<Project> {
 					transformation.setDescription( "Transforms the source project's javadoc jar" );
 					transformation.setGroup( JAKARTA );
 					transformation.getSourceJar().convention( sourceProjectJavadocJarTask.getArchiveFile() );
-					transformation.getTargetJar().convention(
-							project.getLayout()
-									.getBuildDirectory()
-									.file( relativeArchiveFileName( project, "javadoc" ) )
-					);
+					transformation.getTargetJar().convention( buildDirectory.file( relativeArchiveFileName( project, "javadoc" ) ) );
 					jakartafyTask.dependsOn( transformation );
 				}
 		);
@@ -252,7 +243,14 @@ public class JakartaPlugin implements Plugin<Project> {
 
 					final ConfigurableFileCollection transformedTests = project.files( testTransformedDir );
 					task.setTestClassesDirs( transformedTests );
-					task.setClasspath( transformedTests.plus( testRuntimeClasspath ) );
+					task.setClasspath( task.getClasspath().plus( transformedTests ).plus( testRuntimeClasspath ) );
+
+					project.getLayout().getBuildDirectory();
+					task.getBinaryResultsDirectory().convention( project.getLayout().getBuildDirectory().dir( "test-results/test/binary" ) );
+					task.reports( (reports) -> {
+						reports.getHtml().getOutputLocation().convention( buildDirectory.dir( "reports/tests/test" ) );
+						reports.getJunitXml().getOutputLocation().convention( buildDirectory.dir( "test-results/test" ) );
+					});
 				}
 		);
 	}

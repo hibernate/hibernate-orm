@@ -669,7 +669,7 @@ public abstract class CollectionBinder {
 	private AnnotationException buildIllegalSortCombination() {
 		return new AnnotationException(
 				String.format(
-						"Illegal combination of annotations on %s.  Only one of @%s, @%s and @%s can be used",
+						"Illegal combination of annotations on %s.  Only one of @%s and @%s can be used",
 						safeCollectionRole(),
 						SortNatural.class.getName(),
 						SortComparator.class.getName()

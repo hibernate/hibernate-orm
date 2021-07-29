@@ -34,7 +34,7 @@ public class DatabaseInformationImpl
 	private final ExtractionContext extractionContext;
 	private final InformationExtractor extractor;
 
-	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<QualifiedSequenceName, SequenceInformation>();
+	private final Map<QualifiedSequenceName, SequenceInformation> sequenceInformationMap = new HashMap<>();
 
 	public DatabaseInformationImpl(
 			ServiceRegistry serviceRegistry,
@@ -43,7 +43,7 @@ public class DatabaseInformationImpl
 			Namespace.Name defaultNamespace,
 			SchemaManagementTool tool) throws SQLException {
 		this.jdbcEnvironment = jdbcEnvironment;
-		this.extractionContext = tool.createExtractionContext(
+		this.extractionContext = tool.getExtractionTool().createExtractionContext(
 				serviceRegistry,
 				jdbcEnvironment,
 				ddlTransactionIsolator,
@@ -52,8 +52,7 @@ public class DatabaseInformationImpl
 				this
 		);
 
-		// todo : make this pluggable
-		this.extractor = tool.createInformationExtractor( extractionContext );
+		this.extractor = tool.getExtractionTool().createInformationExtractor( extractionContext );
 
 		// because we do not have defined a way to locate sequence info by name
 		initializeSequences();

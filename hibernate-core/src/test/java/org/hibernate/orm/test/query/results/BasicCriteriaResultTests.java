@@ -68,6 +68,44 @@ public class BasicCriteriaResultTests {
 	}
 
 	@Test
+	public void testBasicStatelessSelection(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( (session) -> {
+			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
+			final SingularPersistentAttribute<? super SimpleEntity, Integer> idAttribute = entityDescriptor.getId( Integer.class );
+
+			final CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
+			final Root<SimpleEntity> root = criteria.from( SimpleEntity.class );
+
+//			final Path<Integer> idPath = root.get( SimpleEntity_ );
+			final Path<Integer> idPath = root.get( idAttribute );
+			criteria.select( idPath );
+			criteria.orderBy( builder.asc( idPath ) );
+
+			session.createQuery( criteria ).list();
+		});
+	}
+
+	@Test
+	public void testBasicStatelessSelectionMixedPathRefs(SessionFactoryScope scope) {
+		scope.inStatelessTransaction( (session) -> {
+			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();
+			final JpaMetamodel jpaMetamodel = scope.getSessionFactory().getRuntimeMetamodels().getJpaMetamodel();
+			final EntityDomainType<SimpleEntity> entityDescriptor = jpaMetamodel.entity( SimpleEntity.class );
+			final Class<Integer> idType = (Class<Integer>) entityDescriptor.getIdType().getJavaType();
+
+			final CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
+			final Root<SimpleEntity> root = criteria.from( SimpleEntity.class );
+
+			criteria.select( root.get( entityDescriptor.getId( idType ) ) );
+			criteria.orderBy( builder.asc( root.get( "id" ) ) );
+
+			session.createQuery( criteria ).list();
+		});
+	}
+
+	@Test
 	public void testBasicTupleSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final CriteriaBuilder builder = scope.getSessionFactory().getCriteriaBuilder();

@@ -15,6 +15,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -36,9 +37,9 @@ public class FieldFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			sqlAppender.appendSql( ", " );
 
 			final SqlAstNode argument = sqlAstArguments.get( i );
-			if ( argument instanceof SqlTupleContainer ) {
-				final List<? extends Expression> expressions = ( (SqlTupleContainer) argument ).getSqlTuple()
-						.getExpressions();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( argument );
+			if ( sqlTuple != null ) {
+				final List<? extends Expression> expressions = sqlTuple.getExpressions();
 				for ( int j = 0; j < expressions.size(); j++ ) {
 					if ( j != 0 ) {
 						sqlAppender.appendSql( ", " );

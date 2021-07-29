@@ -3,6 +3,22 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.5.Final (July 29, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31963
+
+** Bug
+    * [HHH-14740] - HHH-14740 Still need the nullcheck removed in HHH-14727
+    * [HHH-14724] - Metamodel generates invalid model classes for converters and user types
+
+** Improvement
+    * [HHH-14755] - Allow to instantiate a DefaultIdentifierGeneratorFactory which does not bind to the BeanManager
+
+** Task
+    * [HHH-10661] - Method serialize() in StatefulPersistenceContext has duplicate code
+
+
 Changes in 5.5.4.Final (July 19, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

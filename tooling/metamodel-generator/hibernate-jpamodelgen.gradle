@@ -45,8 +45,9 @@ compileTestJava {
 
 task jaxb {
     // configure Gradle up-to-date checking
-    inputs.dir( xsdDir )
+    inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
     outputs.dir( xjcTargetDir )
+    outputs.cacheIf { true }
 
     // perform actions
     doLast {

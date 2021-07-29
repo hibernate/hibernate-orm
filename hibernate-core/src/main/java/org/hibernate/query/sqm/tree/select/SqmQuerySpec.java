@@ -141,10 +141,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		return groupByClauseExpressions;
 	}
 
-	public void setGroupByClauseExpressions(List<SqmExpression<?>> groupByClauseExpressions) {
-		this.groupByClauseExpressions = groupByClauseExpressions == null
+	public void setGroupByClauseExpressions(final List<SqmExpression<?>> lgroupByClauseExpressions) {
+		this.groupByClauseExpressions = lgroupByClauseExpressions == null
 				? Collections.emptyList()
-				: groupByClauseExpressions;
+				: lgroupByClauseExpressions;
 
 		for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
 			final SqmExpression<?> groupItem = groupByClauseExpressions.get( i );

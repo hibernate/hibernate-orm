@@ -113,14 +113,12 @@ public class QueryKey implements Serializable {
 	@Override
 	@SuppressWarnings({"RedundantIfStatement", "EqualsWhichDoesntCheckParameterClass"})
 	public boolean equals(Object other) {
-		// it should never be another type, so skip the instanceof check and just do the cast
 		final QueryKey that;
 
-		try {
+		if ( other instanceof QueryKey ) { //instanceof does a null check, too
 			that = (QueryKey) other;
 		}
-		catch (ClassCastException cce) {
-			// treat this as the exception case
+		else {
 			return false;
 		}
 

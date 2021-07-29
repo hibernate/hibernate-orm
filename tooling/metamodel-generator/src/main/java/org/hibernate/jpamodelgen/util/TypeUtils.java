@@ -407,7 +407,7 @@ public final class TypeUtils {
 					accessAnnotationMirror,
 					DEFAULT_ANNOTATION_PARAMETER_NAME
 			);
-			if ( accessElement.getKind().equals( ElementKind.ENUM_CONSTANT ) ) {
+			if ( accessElement != null && accessElement.getKind().equals( ElementKind.ENUM_CONSTANT ) ) {
 				if ( accessElement.getSimpleName().toString().equals( AccessType.PROPERTY.toString() ) ) {
 					forcedAccessType = AccessType.PROPERTY;
 				}

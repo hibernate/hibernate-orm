@@ -548,12 +548,16 @@ public class TableBinder {
 					: columns[0].getPropertyHolder().getPersistentClass();
 		}
 		final String mappedByProperty = columns[0].getMappedBy();
+
+		// associatedClassEntityName needed here for LOG.debug plus later for a exception text
+		final String associatedClassEntityName = associatedClass != null ? associatedClass.getEntityName() : "'associatedClass null'";
+
 		if ( StringHelper.isNotEmpty( mappedByProperty ) ) {
 			/**
 			 * Get the columns of the mapped-by property
 			 * copy them and link the copy to the actual value
 			 */
-			LOG.debugf( "Retrieving property %s.%s", associatedClass.getEntityName(), mappedByProperty );
+			LOG.debugf( "Retrieving property %s.%s", associatedClassEntityName, mappedByProperty );
 
 			final Property property = associatedClass.getRecursiveProperty( columns[0].getMappedBy() );
 			Iterator mappedByColumns;
@@ -643,7 +647,7 @@ public class TableBinder {
 					if ( columns.length != referencedEntity.getIdentifier().getColumnSpan() ) {
 						throw new AnnotationException(
 								"A Foreign key referring " + referencedEntity.getEntityName()
-										+ " from " + associatedClass.getEntityName()
+										+ " from " + associatedClassEntityName
 										+ " has the wrong number of column. should be " + referencedEntity.getIdentifier()
 										.getColumnSpan()
 						);

@@ -81,7 +81,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 		if ( updateTranslator != null ) {
 			jdbcUpdate = updateTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
-		else {
+		else if ( jdbcUpdate != null ) {
 			jdbcUpdate.bindFilterJdbcParameters( jdbcParameterBindings );
 		}
 

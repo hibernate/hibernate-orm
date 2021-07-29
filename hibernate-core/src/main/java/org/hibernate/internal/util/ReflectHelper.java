@@ -15,6 +15,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import javax.persistence.Transient;
 
@@ -455,7 +456,10 @@ public final class ReflectHelper {
 	}
 
 	public static Method findGetterMethod(Class containerClass, String propertyName) {
-		Class checkClass = containerClass;
+		Class checkClass = Objects.requireNonNull( containerClass, "containerClass");
+		if(Objects.requireNonNull( propertyName ).isEmpty()) {
+			throw new IllegalArgumentException("propertyName must not be empty.");
+		}
 		Method getter = null;
 
 		// check containerClass, and then its super types (if any)

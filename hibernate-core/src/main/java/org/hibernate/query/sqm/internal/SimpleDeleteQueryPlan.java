@@ -116,7 +116,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 		if ( deleteTranslator != null ) {
 			jdbcDelete = deleteTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
-		else {
+		else if ( jdbcDelete != null ) {
 			jdbcDelete.bindFilterJdbcParameters( jdbcParameterBindings );
 		}
 

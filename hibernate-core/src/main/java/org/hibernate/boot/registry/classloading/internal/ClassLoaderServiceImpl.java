@@ -159,7 +159,7 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		catch (Exception ignore) {
 		}
 
-		if ( name.startsWith( "/" ) ) {
+		if ( name != null && name.startsWith( "/" ) ) {
 			name = name.substring( 1 );
 
 			try {
@@ -199,7 +199,10 @@ public class ClassLoaderServiceImpl implements ClassLoaderService {
 		catch (Exception ignore) {
 		}
 
-		final String stripped = name.startsWith( "/" ) ? name.substring( 1 ) : null;
+		String stripped = null;
+		if ( name != null ) {
+			stripped = name.startsWith( "/" ) ? name.substring( 1 ) : null;
+		}
 
 		if ( stripped != null ) {
 			try {

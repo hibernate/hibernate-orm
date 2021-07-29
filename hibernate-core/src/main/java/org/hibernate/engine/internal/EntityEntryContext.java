@@ -443,7 +443,7 @@ public class EntityEntryContext {
 
 			final ManagedEntity managedEntity;
 			if ( isEnhanced ) {
-				if ( entry.getPersister().isMutable() ) {
+				if ( entry != null && entry.getPersister().isMutable() ) {
 					managedEntity = (ManagedEntity) entity;
 				}
 				else {

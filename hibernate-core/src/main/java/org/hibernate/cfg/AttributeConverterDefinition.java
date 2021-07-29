@@ -162,6 +162,9 @@ public class AttributeConverterDefinition implements AttributeConverterInfo {
 	private ParameterizedType extractAttributeConverterParameterizedType(Type base) {
 		if ( base != null ) {
 			Class clazz = extractClass( base );
+			if ( clazz == null ) {
+				return null;
+			}
 			List<Type> types = new ArrayList<>();
 			types.add( clazz.getGenericSuperclass() );
 			types.addAll( Arrays.asList( clazz.getGenericInterfaces() ) );
@@ -221,7 +224,7 @@ public class AttributeConverterDefinition implements AttributeConverterInfo {
 
 	private static Type resolveTypeVariable(TypeVariable typeVariable, ParameterizedType context) {
 		Class clazz = extractClass( context.getRawType() );
-		TypeVariable[] typeParameters = clazz.getTypeParameters();
+		TypeVariable[] typeParameters = clazz != null ? clazz.getTypeParameters() : new TypeVariable[0];
 		for ( int idx = 0; idx < typeParameters.length; idx++ ) {
 			if ( typeVariable.getName().equals( typeParameters[idx].getName() ) ) {
 				return resolveType( context.getActualTypeArguments()[idx], context );

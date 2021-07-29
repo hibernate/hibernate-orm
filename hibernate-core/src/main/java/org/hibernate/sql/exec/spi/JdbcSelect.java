@@ -124,9 +124,9 @@ public class JdbcSelect extends AbstractJdbcOperation {
 				// We handle limit and offset parameters below
 				if ( parameter != offsetParameter && parameter != limitParameter ) {
 					final JdbcParameterBinding binding = jdbcParameterBindings.getBinding( parameter );
-					if ( binding == null || !appliedBinding.getBindType()
+					if ( binding == null || (appliedBinding != null && !appliedBinding.getBindType()
 							.getJavaTypeDescriptor()
-							.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) {
+							.areEqual( binding.getBindValue(), appliedBinding.getBindValue() ) ) ) {
 						return false;
 					}
 				}

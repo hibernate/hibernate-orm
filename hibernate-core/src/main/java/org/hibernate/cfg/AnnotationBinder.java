@@ -322,7 +322,8 @@ public final class AnnotationBinder {
 			IdentifierGeneratorDefinition idGen = buildIdGenerator( ann, context );
 			context.getMetadataCollector().addIdentifierGenerator( idGen );
 			if ( LOG.isTraceEnabled() ) {
-				LOG.tracev( "Add sequence generator with name: {0}", idGen.getName() );
+				final String idGenName = idGen != null ? idGen.getName() : "null";
+				LOG.tracev( "Add sequence generator with name: {0}", idGenName );
 			}
 		}
 		if ( pckg.isAnnotationPresent( SequenceGenerators.class ) ) {
@@ -1319,16 +1320,15 @@ public final class AnnotationBinder {
 		InheritanceState superEntityState = InheritanceState.getInheritanceStateOfSuperEntity(
 				clazzToProcess, inheritanceStatePerClass
 		);
-		PersistentClass superEntity = superEntityState != null
-				? context.getMetadataCollector().getEntityBinding( superEntityState.getClazz().getName() )
-				: null;
-		if ( superEntity == null ) {
-			//check if superclass is not a potential persistent class
-			if ( inheritanceState.hasParents() ) {
+		PersistentClass superEntity = null;
+		if ( superEntityState != null ) {
+			superEntity = context.getMetadataCollector().getEntityBinding( superEntityState.getClazz().getName() );
+			if ( superEntity == null
+					// check if superclass is not a potential persistent class
+					&& inheritanceState.hasParents() ) {
 				throw new AssertionFailure(
 						"Subclass has to be binded after it's mother class: "
-								+ superEntityState.getClazz().getName()
-				);
+								+ superEntityState.getClazz().getName() );
 			}
 		}
 		return superEntity;

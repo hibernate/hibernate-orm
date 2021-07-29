@@ -337,7 +337,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		catch (SQLException sqle) {
 			SqlExceptionHelper sqlExceptionHelper = jdbcServices.getSqlExceptionHelper();
 			//Should always be non-null, but to make sure as the implementation is lazy:
-			if ( sqlExceptionHelper != null ) {
+			if ( sqlExceptionHelper == null ) {
 				sqlExceptionHelper = new SqlExceptionHelper( false );
 			}
 			throw sqlExceptionHelper.convert( sqle, "Cannot cancel query" );

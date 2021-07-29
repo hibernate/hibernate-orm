@@ -275,7 +275,7 @@ public class InheritanceState {
 			classesToProcessForMappedSuperclass.add( 0, currentClassInHierarchy );
 			XClass superClass = currentClassInHierarchy;
 			do {
-				superClass = superClass.getSuperclass();
+				superClass = superClass != null ? superClass.getSuperclass() : null;
 				superclassState = inheritanceStatePerClass.get( superClass );
 			}
 			while ( superClass != null

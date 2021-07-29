@@ -831,7 +831,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		else {
 			Table table = namespace.locateTable( logicalName );
 			if ( table != null ) {
-				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, logicalName.toString() );
+				throw new DuplicateMappingException( DuplicateMappingException.Type.TABLE, String.valueOf( logicalName ) );
 			}
 			else {
 				table = namespace.createDenormalizedTable(
@@ -1052,8 +1052,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( physicalName == null ) {
+			String tableName = table != null ? table.getName() : "null";
 			throw new MappingException(
-					"Unable to find column with logical name " + logicalName.render() + " in table " + table.getName()
+					"Unable to find column with logical name " + logicalName.render() + " in table " + tableName
 			);
 		}
 		return physicalName;
@@ -1090,8 +1091,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 
 		if ( logicalName == null ) {
+			String tableName = table != null ? table.getName() : "null";
 			throw new MappingException(
-					"Unable to find column with physical name " + physicalNameString + " in table " + table.getName()
+					"Unable to find column with physical name " + physicalNameString + " in table " + tableName
 			);
 		}
 		return logicalName.render();
@@ -1884,15 +1886,18 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 				catch (RecoverableException e) {
 					failingSecondPasses.add( pass );
 					if ( originalException == null ) {
-						originalException = (RuntimeException) e.getCause();
+						originalException = (RuntimeException) ( e.getCause() != null ? e.getCause() : e );
+					}
+					else {
+						originalException.addSuppressed( e.getCause() != null ? e.getCause() : e );
 					}
 				}
 			}
-			stopProcess = failingSecondPasses.size() == 0 || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
+			stopProcess = failingSecondPasses.isEmpty() || failingSecondPasses.size() == endOfQueueFkSecondPasses.size();
 			endOfQueueFkSecondPasses = failingSecondPasses;
 		}
-		if ( endOfQueueFkSecondPasses.size() > 0 ) {
-			throw originalException;
+		if ( !endOfQueueFkSecondPasses.isEmpty() ) {
+			throw originalException != null ? originalException : new IllegalStateException();
 		}
 	}
 

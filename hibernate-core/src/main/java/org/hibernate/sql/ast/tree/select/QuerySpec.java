@@ -92,8 +92,8 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		return hasPositionalGroupItem;
 	}
 
-	public void setGroupByClauseExpressions(List<Expression> groupByClauseExpressions) {
-		this.groupByClauseExpressions = groupByClauseExpressions == null ? Collections.emptyList() : groupByClauseExpressions;
+	public void setGroupByClauseExpressions(final List<Expression> lgroupByClauseExpressions) {
+		this.groupByClauseExpressions = lgroupByClauseExpressions == null ? Collections.emptyList() : lgroupByClauseExpressions;
 		if ( isRoot() ) {
 			for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
 				final Expression groupItem = groupByClauseExpressions.get( i );

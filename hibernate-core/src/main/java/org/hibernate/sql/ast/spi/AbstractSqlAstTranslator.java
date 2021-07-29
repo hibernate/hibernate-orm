@@ -3973,7 +3973,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		appendSql( ", " );
-		firstWhenFragment.getResult().accept( this );
+		if ( firstWhenFragment != null ) {
+			firstWhenFragment.getResult().accept( this );
+		}
 
 		Expression otherwise = caseSearchedExpression.getOtherwise();
 		if ( otherwise != null ) {

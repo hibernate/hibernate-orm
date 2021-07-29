@@ -257,7 +257,7 @@ public class BinderHelper {
 		PersistentClass associatedClass = columns[0].getPropertyHolder() != null ?
 				columns[0].getPropertyHolder().getPersistentClass() :
 				null;
-		if ( Ejb3JoinColumn.NON_PK_REFERENCE == fkEnum ) {
+		if ( Ejb3JoinColumn.NON_PK_REFERENCE == fkEnum && associatedClass != null ) {
 			/**
 			 * Create a synthetic property to refer to including an
 			 * embedded component value containing all the properties

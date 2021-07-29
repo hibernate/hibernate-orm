@@ -110,7 +110,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		if ( insertTranslator != null ) {
 			jdbcInsert = insertTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
-		else {
+		else if ( jdbcInsert != null ) {
 			jdbcInsert.bindFilterJdbcParameters( jdbcParameterBindings );
 		}
 

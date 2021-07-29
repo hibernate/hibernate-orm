@@ -47,12 +47,12 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
-	public SqmPathSource getKeyPathSource() {
+	public SqmPathSource<K> getKeyPathSource() {
 		return keyPathSource;
 	}
 
 	@Override
-	public SqmPathSource getIndexPathSource() {
+	public SqmPathSource<K> getIndexPathSource() {
 		return getKeyPathSource();
 	}
 
@@ -62,7 +62,7 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
-	public SimpleDomainType getKeyGraphType() {
+	public SimpleDomainType<K> getKeyGraphType() {
 		return getKeyType();
 	}
 

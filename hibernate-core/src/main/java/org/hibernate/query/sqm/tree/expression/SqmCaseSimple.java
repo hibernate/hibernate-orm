@@ -22,11 +22,11 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 /**
  * @author Steve Ebersole
  */
-public class SqmCaseSimple<T,R>
+public class SqmCaseSimple<T, R>
 		extends AbstractSqmExpression<R>
-		implements JpaSimpleCase<T,R>, DomainResultProducer<R> {
+		implements JpaSimpleCase<T, R>, DomainResultProducer<R> {
 	private final SqmExpression<T> fixture;
-	private List<WhenFragment<T,R>> whenFragments = new ArrayList<>();
+	private final List<WhenFragment<T, R>> whenFragments;
 	private SqmExpression<R> otherwise;
 
 	public SqmCaseSimple(SqmExpression<T> fixture, NodeBuilder nodeBuilder) {
@@ -35,6 +35,13 @@ public class SqmCaseSimple<T,R>
 
 	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressable<R> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
+		this.whenFragments = new ArrayList<>( );
+		this.fixture = fixture;
+	}
+
+	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressable<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
+		this.whenFragments = new ArrayList<>( estimateWhenSize );
 		this.fixture = fixture;
 	}
 

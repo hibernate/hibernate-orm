@@ -116,7 +116,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 	}
 
 	private void validateQueryGroupFetchStructure(SqmQuerySpec<?> firstQuerySpec) {
-		final List<SqmSelection> firstSelections = firstQuerySpec.getSelectClause().getSelections();
+		final List<SqmSelection<?>> firstSelections = firstQuerySpec.getSelectClause().getSelections();
 		final int firstSelectionSize = firstSelections.size();
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			final SqmQueryPart<T> queryPart = queryParts.get( i );
@@ -125,12 +125,12 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 			}
 			else {
 				final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;
-				final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
+				final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 				if ( firstSelectionSize != selections.size() ) {
 					throw new SemanticException( "All query parts in a query group must have the same arity!" );
 				}
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
-					final SqmSelection firstSqmSelection = firstSelections.get( j );
+					final SqmSelection<?> firstSqmSelection = firstSelections.get( j );
 					final JavaTypeDescriptor<?> firstJavaTypeDescriptor = firstSqmSelection.getNodeJavaTypeDescriptor();
 					if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
 						throw new SemanticException(

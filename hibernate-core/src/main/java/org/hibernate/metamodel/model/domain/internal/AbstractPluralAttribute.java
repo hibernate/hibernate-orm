@@ -29,9 +29,9 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Emmanuel Bernard
  * @author Steve Ebersole
  */
-public abstract class AbstractPluralAttribute<D,C,E>
-		extends AbstractAttribute<D,C,E>
-		implements PluralPersistentAttribute<D,C,E>, Serializable {
+public abstract class AbstractPluralAttribute<D, C, E>
+		extends AbstractAttribute<D, C, E>
+		implements PluralPersistentAttribute<D, C, E>, Serializable {
 
 	private final CollectionClassification classification;
 	private final SqmPathSource<E> elementPathSource;
@@ -101,7 +101,7 @@ public abstract class AbstractPluralAttribute<D,C,E>
 	}
 
 	@Override
-	public SimpleDomainType getKeyGraphType() {
+	public SimpleDomainType<?> getKeyGraphType() {
 		return null;
 	}
 

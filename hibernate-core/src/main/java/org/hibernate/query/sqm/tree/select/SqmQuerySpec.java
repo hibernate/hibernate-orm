@@ -340,7 +340,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			if ( selectClause.isDistinct() ) {
 				sb.append( "distinct " );
 			}
-			final List<SqmSelection> selections = selectClause.getSelections();
+			final List<SqmSelection<?>> selections = selectClause.getSelections();
 			selections.get( 0 ).appendHqlString( sb );
 			for ( int i = 1; i < selections.size(); i++ ) {
 				sb.append( ", " );

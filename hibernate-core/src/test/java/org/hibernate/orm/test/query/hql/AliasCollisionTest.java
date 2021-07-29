@@ -93,7 +93,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
 
-		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 		assertThat( selections, hasSize( 1 ) );
 		assertThat( selections.get( 0 ).getAlias(), nullValue() );
 
@@ -122,7 +122,7 @@ public class AliasCollisionTest extends BaseSqmUnitTest {
 
 		final SqmQuerySpec<?> querySpec = sqm.getQuerySpec();
 
-		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 		assertThat( selections, hasSize( 1 ) );
 		assertThat( selections.get( 0 ).getAlias(), nullValue() );
 

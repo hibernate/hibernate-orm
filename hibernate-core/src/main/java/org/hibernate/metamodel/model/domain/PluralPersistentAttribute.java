@@ -21,16 +21,16 @@ import org.hibernate.query.sqm.SqmPathSource;
  *
  * @author Steve Ebersole
  */
-public interface PluralPersistentAttribute<D,C,E>
-		extends PersistentAttribute<D,C>, SqmPathSource<E>, SqmJoinable, PluralAttribute<D,C,E> {
+public interface PluralPersistentAttribute<D, C, E>
+		extends PersistentAttribute<D, C>, SqmPathSource<E>, SqmJoinable, PluralAttribute<D, C, E> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
 	CollectionClassification getCollectionClassification();
 
-	SqmPathSource getElementPathSource();
+	SqmPathSource<E> getElementPathSource();
 
-	default SqmPathSource getIndexPathSource() {
+	default SqmPathSource<?> getIndexPathSource() {
 		throw new NotIndexedCollectionException(
 				"Plural attribute [" +  getPathName() + "] is not indexed (list / map)"
 		);
@@ -42,7 +42,7 @@ public interface PluralPersistentAttribute<D,C,E>
 	@Override
 	SimpleDomainType<E> getValueGraphType();
 
-	default SimpleDomainType<E> getKeyGraphType() {
+	default SimpleDomainType<?> getKeyGraphType() {
 		throw new NotIndexedCollectionException(
 				"Plural attribute [" +  getPathName() + "] is not indexed (list / map)"
 		);

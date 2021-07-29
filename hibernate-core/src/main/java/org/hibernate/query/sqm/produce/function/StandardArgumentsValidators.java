@@ -28,7 +28,7 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NONE = new ArgumentsValidator() {
 		@Override
-		public void validate(List<SqmTypedNode<?>> arguments) {}
+		public void validate(List<? extends SqmTypedNode<?>> arguments) {}
 
 		@Override
 		public String getSignature() {
@@ -41,7 +41,7 @@ public final class StandardArgumentsValidators {
 	 */
 	public static final ArgumentsValidator NO_ARGS = new ArgumentsValidator() {
 		@Override
-		public void validate(List<SqmTypedNode<?>> arguments) {
+		public void validate(List<? extends SqmTypedNode<?>> arguments) {
 			if (!arguments.isEmpty()) {
 				throw new QueryException("Expecting no arguments, but found " + arguments.size());
 			}
@@ -59,7 +59,7 @@ public final class StandardArgumentsValidators {
 		}
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments) {
 				if (arguments.size() < minNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -92,7 +92,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator exactly(int number) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments) {
 				if (arguments.size() != number) {
 					throw new QueryException(
 							String.format(
@@ -127,7 +127,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator max(int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments) {
 				if (arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(
@@ -158,7 +158,7 @@ public final class StandardArgumentsValidators {
 	public static ArgumentsValidator between(int minNumOfArgs, int maxNumOfArgs) {
 		return new ArgumentsValidator() {
 			@Override
-			public void validate(List<SqmTypedNode<?>> arguments) {
+			public void validate(List<? extends SqmTypedNode<?>> arguments) {
 				if (arguments.size() < minNumOfArgs || arguments.size() > maxNumOfArgs) {
 					throw new QueryException(
 							String.format(

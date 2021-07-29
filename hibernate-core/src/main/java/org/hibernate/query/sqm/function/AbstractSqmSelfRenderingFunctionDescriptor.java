@@ -40,7 +40,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
@@ -60,7 +60,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 
 	@Override
 	public <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,

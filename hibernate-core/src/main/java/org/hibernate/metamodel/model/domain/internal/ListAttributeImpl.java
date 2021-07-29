@@ -28,7 +28,7 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 		super( builder, metadataContext );
 
 		//noinspection unchecked
-		this.indexPathSource = (SqmPathSource) SqmMappingModelHelper.resolveSqmKeyPathSource(
+		this.indexPathSource = (SqmPathSource<Integer>) SqmMappingModelHelper.resolveSqmKeyPathSource(
 				getName(),
 				builder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE

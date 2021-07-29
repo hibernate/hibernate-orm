@@ -23,6 +23,10 @@ public class SqmOrderByClause {
 	public SqmOrderByClause() {
 	}
 
+	public SqmOrderByClause(int estimateSize) {
+		this.sortSpecifications = new ArrayList<>( estimateSize );
+	}
+
 	public boolean hasPositionalSortItem() {
 		return hasPositionalSortItem;
 	}

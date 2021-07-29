@@ -80,13 +80,13 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	}
 
 
-	public static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+	public static List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
 		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
 			return emptyList();
 		}
 
 		final ArrayList<SqlAstNode> sqlAstArguments = new ArrayList<>();
-		for ( SqmTypedNode sqmArgument : sqmArguments ) {
+		for ( SqmTypedNode<?> sqmArgument : sqmArguments ) {
 			sqlAstArguments.add( toSqlAstNode( ((SqmVisitableNode) sqmArgument).accept( walker ), walker ) );
 		}
 		return sqlAstArguments;
@@ -94,7 +94,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 
 	@Override
 	public final <T> SelfRenderingSqmFunction<T> generateSqmExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
@@ -110,7 +110,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 
 	@Override
 	public final <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
@@ -135,7 +135,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected abstract <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration);
@@ -149,7 +149,7 @@ public abstract class AbstractSqmFunctionDescriptor implements SqmFunctionDescri
 	 * @param impliedResultType the function return type as inferred from its usage
 	 */
 	protected <T> SelfRenderingSqmAggregateFunction<T> generateSqmAggregateFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,

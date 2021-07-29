@@ -51,7 +51,7 @@ public class InsertSubstringOverlayEmulation
 
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {

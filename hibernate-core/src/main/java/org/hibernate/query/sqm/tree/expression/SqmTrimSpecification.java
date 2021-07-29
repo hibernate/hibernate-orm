@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  *
  * @author Steve Ebersole
  */
-public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNode, SqmVisitableNode {
+public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNode<Void>, SqmVisitableNode {
 	private final TrimSpec specification;
 
 	public SqmTrimSpecification(TrimSpec specification, NodeBuilder nodeBuilder) {
@@ -43,7 +43,7 @@ public class SqmTrimSpecification extends AbstractSqmNode implements SqmTypedNod
 	}
 
 	@Override
-	public SqmExpressable getNodeType() {
+	public SqmExpressable<Void> getNodeType() {
 		return null;
 	}
 

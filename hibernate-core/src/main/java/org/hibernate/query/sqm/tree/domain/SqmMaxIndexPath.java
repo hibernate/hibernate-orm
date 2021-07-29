@@ -32,11 +32,11 @@ public class SqmMaxIndexPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 
 		if ( getPluralAttribute() instanceof ListPersistentAttribute ) {
 			//noinspection unchecked
-			this.indexPathSource = getPluralAttribute().getIndexPathSource();
+			this.indexPathSource = (SqmPathSource<T>) getPluralAttribute().getIndexPathSource();
 		}
 		else if ( getPluralAttribute() instanceof MapPersistentAttribute ) {
 			//noinspection unchecked
-			this.indexPathSource = ( (MapPersistentAttribute) getPluralAttribute() ).getKeyPathSource();
+			this.indexPathSource = ( (MapPersistentAttribute<?, ?, ?>) getPluralAttribute() ).getKeyPathSource();
 		}
 		else {
 			throw new UnsupportedOperationException( "Plural attribute [" + getPluralAttribute() + "] is not indexed" );

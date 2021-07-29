@@ -47,7 +47,7 @@ public class StandardFunctionReturnTypeResolvers {
 			@Override
 			public AllowableFunctionReturnType<?> resolveFunctionReturnType(
 					AllowableFunctionReturnType<?> impliedType,
-					List<SqmTypedNode<?>> arguments,
+					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
 				return isAssignableTo( invariantType, impliedType )
 						? impliedType : invariantType;
@@ -68,7 +68,7 @@ public class StandardFunctionReturnTypeResolvers {
 	public static FunctionReturnTypeResolver useArgType(int argPosition) {
 		return new FunctionReturnTypeResolver() {
 			@Override
-			public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+			public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
 				AllowableFunctionReturnType<?> argType = extractArgumentType( arguments, argPosition );
 				return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 			}
@@ -101,7 +101,7 @@ public class StandardFunctionReturnTypeResolvers {
 			}
 
 			@Override
-			public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+			public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
 				for (SqmTypedNode<?> arg: arguments) {
 					if (arg!=null && arg.getNodeType() instanceof AllowableFunctionReturnType) {
 						AllowableFunctionReturnType<?> argType = (AllowableFunctionReturnType<?>) arg.getNodeType();
@@ -200,8 +200,10 @@ public class StandardFunctionReturnTypeResolvers {
 		return false;
 	}
 
-	public static AllowableFunctionReturnType<?> extractArgumentType(List<SqmTypedNode<?>> arguments, int position) {
-		final SqmTypedNode<?> specifiedArgument = arguments.get( position-1 );
+	public static AllowableFunctionReturnType<?> extractArgumentType(
+			List<? extends SqmTypedNode<?>> arguments,
+			int position) {
+		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressable<?> specifiedArgType = specifiedArgument.getNodeType();
 		if ( !(specifiedArgType instanceof AllowableFunctionReturnType) ) {
 			throw new QueryException(

@@ -34,7 +34,8 @@ stage('Configure') {
 		buildEnv('8', 'mssql'),
 		buildEnv('8', 'sybase'),
 		buildEnv('8', 'hana', 'HANA'),
-		buildEnv('8', 'edb')
+		// Disable EDB for now as the image is not available anymore
+// 		buildEnv('8', 'edb')
 	];
 
 	helper.configure {

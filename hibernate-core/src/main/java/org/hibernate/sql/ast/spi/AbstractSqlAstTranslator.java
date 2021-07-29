@@ -842,20 +842,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					columnReferences.get( 0 ).accept( this );
 					appendSql( " = " );
 					final Expression assignedValue = assignment.getAssignedValue();
-					if ( assignedValue instanceof SqlTupleContainer ) {
-						final SqlTuple sqlTuple = ( (SqlTupleContainer) assignedValue ).getSqlTuple();
-						if ( sqlTuple != null ) {
-							final Expression expression = sqlTuple
-									.getExpressions()
-									.get( 0 );
-							expression.accept( this );
-						}
-						else {
-							assignedValue.accept( this );
-						}
+					final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+					if ( sqlTuple != null ) {
+						final Expression expression = sqlTuple
+								.getExpressions()
+								.get( 0 );
+						expression.accept( this );
 					}
 					else {
-						assignment.getAssignedValue().accept( this );
+						assignedValue.accept( this );
 					}
 				}
 				else {
@@ -1604,8 +1599,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			Function<Expression, Expression> resolveAliasExpression) {
 		String separator = "";
 		for ( Expression partitionExpression : partitionExpressions ) {
-			if ( partitionExpression instanceof SqlTupleContainer ) {
-				for ( Expression e : ( (SqlTupleContainer) partitionExpression ).getSqlTuple().getExpressions() ) {
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( partitionExpression );
+			if ( sqlTuple != null ) {
+				for ( Expression e : sqlTuple.getExpressions() ) {
 					appendSql( separator );
 					renderPartitionItem( resolveAliasExpression.apply( e ) );
 					separator = COMA_SEPARATOR;
@@ -1971,10 +1967,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			case NOT_DISTINCT_FROM: {
 				appendSql( "exists (select " );
 				clauseStack.push( Clause.SELECT );
-				renderSelectExpression( lhs );
+				visitSqlSelectExpression( lhs );
 				appendSql( getFromDualForSelectOnly() );
 				appendSql( " intersect select " );
-				renderSelectExpression( rhs );
+				visitSqlSelectExpression( rhs );
 				appendSql( getFromDualForSelectOnly() );
 				clauseStack.pop();
 				appendSql( ")" );
@@ -1996,18 +1992,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		final Expression sortExpression = sortSpecification.getSortExpression();
 		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
 		final SortOrder sortOrder = sortSpecification.getSortOrder();
-		if ( sortExpression instanceof SqlTupleContainer ) {
-			final SqlTuple sqlTuple = ( (SqlTupleContainer) sortExpression ).getSqlTuple();
-			if ( sqlTuple != null ){
-				String separator = NO_SEPARATOR;
-				for ( Expression expression : sqlTuple.getExpressions() ) {
-					appendSql( separator );
-					visitSortSpecification( expression, sortOrder, nullPrecedence );
-					separator = COMA_SEPARATOR;
-				}
-			}
-			else {
-				visitSortSpecification( sortExpression, sortOrder, nullPrecedence );
+		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );
+		if ( sqlTuple != null ) {
+			String separator = NO_SEPARATOR;
+			for ( Expression expression : sqlTuple.getExpressions() ) {
+				appendSql( separator );
+				visitSortSpecification( expression, sortOrder, nullPrecedence );
+				separator = COMA_SEPARATOR;
 			}
 		}
 		else {
@@ -3051,10 +3042,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSqlSelection(SqlSelection sqlSelection) {
-		final Expression expression = sqlSelection.getExpression();
-		if ( expression instanceof SqlTupleContainer ) {
+		visitSqlSelectExpression( sqlSelection.getExpression() );
+	}
+
+	protected void visitSqlSelectExpression(Expression expression) {
+		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( expression );
+		if ( sqlTuple != null ) {
 			boolean isFirst = true;
-			for ( Expression e : ( (SqlTupleContainer) expression ).getSqlTuple().getExpressions() ) {
+			for ( Expression e : sqlTuple.getExpressions() ) {
 				if ( isFirst ) {
 					isFirst = false;
 				}
@@ -3556,11 +3551,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected final void renderCommaSeparatedSelectExpression(Iterable<? extends SqlAstNode> expressions) {
 		String separator = NO_SEPARATOR;
 		for ( SqlAstNode expression : expressions ) {
-			appendSql( separator );
-			if ( expression instanceof Expression ) {
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( expression );
+			if ( sqlTuple != null ) {
+				for ( Expression e : sqlTuple.getExpressions() ) {
+					appendSql( separator );
+					renderSelectExpression( e );
+					separator = COMA_SEPARATOR;
+				}
+			}
+			else if ( expression instanceof Expression ) {
+				appendSql( separator );
 				renderSelectExpression( (Expression) expression );
 			}
 			else {
+				appendSql( separator );
 				expression.accept( this );
 			}
 			separator = COMA_SEPARATOR;
@@ -4181,7 +4185,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return;
 		}
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = getTuple( inListPredicate.getTestExpression() ) ) != null ) {
+		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inListPredicate.getTestExpression() ) ) != null ) {
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 				lhsTuple.getExpressions().get( 0 ).accept( this );
@@ -4192,7 +4196,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				String separator = NO_SEPARATOR;
 				for ( Expression expression : listExpressions ) {
 					appendSql( separator );
-					getTuple( expression ).getExpressions().get( 0 ).accept( this );
+					SqlTupleContainer.getSqlTuple( expression ).getExpressions().get( 0 ).accept( this );
 					separator = COMA_SEPARATOR;
 				}
 				appendSql( CLOSE_PARENTHESIS );
@@ -4212,7 +4216,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					for ( Expression expression : listExpressions ) {
 						appendSql( separator );
 						renderExpressionsAsSubquery(
-								getTuple( expression ).getExpressions()
+								SqlTupleContainer.getSqlTuple( expression ).getExpressions()
 						);
 						separator = " union all ";
 					}
@@ -4224,7 +4228,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql( separator );
 						emulateTupleComparison(
 								lhsTuple.getExpressions(),
-								getTuple( expression ).getExpressions(),
+								SqlTupleContainer.getSqlTuple( expression ).getExpressions(),
 								comparisonOperator,
 								true
 						);
@@ -4253,18 +4257,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected final SqlTuple getTuple(Expression expression) {
-		if ( expression instanceof SqlTupleContainer ) {
-			return ( (SqlTupleContainer) expression ).getSqlTuple();
-		}
-
-		return null;
-	}
-
 	@Override
 	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
 		final SqlTuple lhsTuple;
-		if ( ( lhsTuple = getTuple( inSubQueryPredicate.getTestExpression() ) ) != null ) {
+		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null ) {
 			if ( lhsTuple.getExpressions().size() == 1 ) {
 				// Special case for tuples with arity 1 as any DBMS supports scalar IN predicates
 				lhsTuple.getExpressions().get( 0 ).accept( this );
@@ -4532,7 +4528,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			predicateValue = " is null";
 		}
 		final SqlTuple tuple;
-		if ( ( tuple = getTuple( expression ) ) != null ) {
+		if ( ( tuple = SqlTupleContainer.getSqlTuple( expression ) ) != null ) {
 			String separator = NO_SEPARATOR;
 			for ( Expression exp : tuple.getExpressions() ) {
 				appendSql( separator );
@@ -4561,7 +4557,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final SqlTuple lhsTuple;
 		final SqlTuple rhsTuple;
-		if ( ( lhsTuple = getTuple( comparisonPredicate.getLeftHandExpression() ) ) != null ) {
+		if ( ( lhsTuple = SqlTupleContainer.getSqlTuple( comparisonPredicate.getLeftHandExpression() ) ) != null ) {
 			final Expression rhsExpression = comparisonPredicate.getRightHandExpression();
 			final boolean all;
 			final QueryPart subquery;
@@ -4591,7 +4587,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					renderComparison(
 							lhsTuple.getExpressions().get( 0 ),
 							operator,
-							getTuple( comparisonPredicate.getRightHandExpression() ).getExpressions().get( 0 )
+							SqlTupleContainer.getSqlTuple( comparisonPredicate.getRightHandExpression() ).getExpressions().get( 0 )
 					);
 				}
 				else {
@@ -4626,7 +4622,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				);
 			}
 			else if ( !supportsRowValueConstructorSyntax() ) {
-				rhsTuple = getTuple( rhsExpression );
+				rhsTuple = SqlTupleContainer.getSqlTuple( rhsExpression );
 				assert rhsTuple != null;
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
 				if ( ( operator == ComparisonOperator.EQUAL || operator == ComparisonOperator.NOT_EQUAL ) && supportsRowValueConstructorSyntaxInInSubQuery() ) {
@@ -4651,7 +4647,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderComparison( comparisonPredicate.getLeftHandExpression(), operator, rhsExpression );
 			}
 		}
-		else if ( ( rhsTuple = getTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
+		else if ( ( rhsTuple = SqlTupleContainer.getSqlTuple( comparisonPredicate.getRightHandExpression() ) ) != null ) {
 			final Expression lhsExpression = comparisonPredicate.getLeftHandExpression();
 
 			if ( lhsExpression instanceof QueryGroup ) {

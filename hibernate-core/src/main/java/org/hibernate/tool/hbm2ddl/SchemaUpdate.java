@@ -179,7 +179,9 @@ public class SchemaUpdate {
 
 		if ( parsedArgs.propertiesFile != null ) {
 			Properties props = new Properties();
-			props.load( new FileInputStream( parsedArgs.propertiesFile ) );
+			try ( final FileInputStream fis = new FileInputStream( parsedArgs.propertiesFile ) ) {
+				props.load( fis );
+			}
 			ssrBuilder.applySettings( props );
 		}
 

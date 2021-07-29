@@ -10,6 +10,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 import org.hibernate.internal.log.ConnectionAccessLogger;
+import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
 import org.hibernate.tool.schema.internal.exec.JdbcContext;
 
@@ -81,29 +82,46 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	@Override
 	public void release() {
 		if ( jdbcConnection != null ) {
+			Throwable originalException = null;
 			try {
 				if ( unsetAutoCommit ) {
 					try {
 						jdbcConnection.setAutoCommit( false );
 					}
 					catch (SQLException e) {
-						throw jdbcContext.getSqlExceptionHelper().convert(
+						originalException = jdbcContext.getSqlExceptionHelper().convert(
 								e,
-								"Unable to set auto commit to false for JDBC Connection used for DDL execution"
-						);
+								"Unable to set auto commit to false for JDBC Connection used for DDL execution" );
+					}
+					catch (Throwable t1) {
+						originalException = t1;
 					}
 				}
 			}
 			finally {
+				Throwable suppressed = null;
 				try {
 					jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
 				}
 				catch (SQLException e) {
-					throw jdbcContext.getSqlExceptionHelper().convert(
+					suppressed = jdbcContext.getSqlExceptionHelper().convert(
 							e,
-							"Unable to release JDBC Connection used for DDL execution"
-					);
+							"Unable to release JDBC Connection used for DDL execution" );
 				}
+				catch (Throwable t2) {
+					suppressed = t2;
+				}
+				if ( suppressed != null ) {
+					if ( originalException == null ) {
+						originalException = suppressed;
+					}
+					else {
+						originalException.addSuppressed( suppressed );
+					}
+				}
+			}
+			if ( originalException != null ) {
+				ExceptionHelper.doThrow( originalException );
 			}
 		}
 	}

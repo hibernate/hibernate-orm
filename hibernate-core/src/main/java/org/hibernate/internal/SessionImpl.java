@@ -111,6 +111,7 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
@@ -712,6 +713,7 @@ public class SessionImpl
 	}
 
 	private void firePersist(final PersistEvent event) {
+		Throwable originalException = null;
 		try {
 			checkTransactionSynchStatus();
 			checkNoUnresolvedActionsBeforeOperation();
@@ -719,18 +721,36 @@ public class SessionImpl
 			fastSessionServices.eventListenerGroup_PERSIST.fireEventOnEachListener( event, PersistEventListener::onPersist );
 		}
 		catch (MappingException e) {
-			throw getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) );
+			originalException = getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) );
 		}
 		catch (RuntimeException e) {
-			throw getExceptionConverter().convert( e );
+			originalException = getExceptionConverter().convert( e );
+		}
+		catch (Throwable t1) {
+			originalException = t1;
 		}
 		finally {
+			Throwable suppressed = null;
 			try {
 				checkNoUnresolvedActionsAfterOperation();
 			}
 			catch (RuntimeException e) {
-				throw getExceptionConverter().convert( e );
+				suppressed = getExceptionConverter().convert( e );
 			}
+			catch (Throwable t2) {
+				suppressed = t2;
+			}
+			if ( suppressed != null ) {
+				if ( originalException == null ) {
+					originalException = suppressed;
+				}
+				else {
+					originalException.addSuppressed( suppressed );
+				}
+			}
+		}
+		if ( originalException != null ) {
+			ExceptionHelper.doThrow( originalException );
 		}
 	}
 

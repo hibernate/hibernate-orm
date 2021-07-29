@@ -81,29 +81,49 @@ public class DdlTransactionIsolatorNonJtaImpl implements DdlTransactionIsolator 
 	@Override
 	public void release() {
 		if ( jdbcConnection != null ) {
+			Throwable originalException = null;
 			try {
 				if ( unsetAutoCommit ) {
 					try {
 						jdbcConnection.setAutoCommit( false );
 					}
 					catch (SQLException e) {
-						throw jdbcContext.getSqlExceptionHelper().convert(
+						originalException = jdbcContext.getSqlExceptionHelper().convert(
 								e,
-								"Unable to set auto commit to false for JDBC Connection used for DDL execution"
-						);
+								"Unable to set auto commit to false for JDBC Connection used for DDL execution" );
+					}
+					catch (Throwable t1) {
+						originalException = t1;
 					}
 				}
 			}
 			finally {
+				Throwable suppressed = null;
 				try {
 					jdbcContext.getJdbcConnectionAccess().releaseConnection( jdbcConnection );
 				}
 				catch (SQLException e) {
-					throw jdbcContext.getSqlExceptionHelper().convert(
+					suppressed = jdbcContext.getSqlExceptionHelper().convert(
 							e,
-							"Unable to release JDBC Connection used for DDL execution"
-					);
+							"Unable to release JDBC Connection used for DDL execution" );
 				}
+				catch (Throwable t2) {
+					suppressed = t2;
+				}
+				if ( suppressed != null ) {
+					if ( originalException == null ) {
+						originalException = suppressed;
+					}
+					else {
+						originalException.addSuppressed( suppressed );
+					}
+				}
+			}
+			if ( originalException instanceof Error ) {
+				throw (Error) originalException;
+			}
+			if ( originalException instanceof RuntimeException ) {
+				throw (RuntimeException) originalException;
 			}
 		}
 	}

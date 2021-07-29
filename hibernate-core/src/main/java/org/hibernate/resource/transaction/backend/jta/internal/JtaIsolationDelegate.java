@@ -103,36 +103,42 @@ public class JtaIsolationDelegate implements IsolationDelegate {
 	}
 
 	private <T> T doInSuspendedTransaction(HibernateCallable<T> callable) {
+		Throwable originalException = null;
 		try {
 			// First we suspend any current JTA transaction
 			Transaction surroundingTransaction = transactionManager.suspend();
 			LOG.debugf( "Surrounding JTA transaction suspended [%s]", surroundingTransaction );
 
-			boolean hadProblems = false;
 			try {
 				return callable.call();
 			}
-			catch (HibernateException e) {
-				hadProblems = true;
-				throw e;
+			catch (Throwable t1) {
+				originalException = t1;
 			}
 			finally {
 				try {
 					transactionManager.resume( surroundingTransaction );
 					LOG.debugf( "Surrounding JTA transaction resumed [%s]", surroundingTransaction );
 				}
-				catch (Throwable t) {
+				catch (Throwable t2) {
 					// if the actually work had an error use that, otherwise error based on t
-					if ( !hadProblems ) {
-						//noinspection ThrowFromFinallyBlock
-						throw new HibernateException( "Unable to resume previously suspended transaction", t );
+					if ( originalException == null ) {
+						originalException = new HibernateException( "Unable to resume previously suspended transaction", t2 );
+					}
+					else {
+						originalException.addSuppressed( t2 ); // No extra nesting, directly t2
 					}
 				}
 			}
 		}
 		catch (SystemException e) {
-			throw new HibernateException( "Unable to suspend current JTA transaction", e );
+				originalException = new HibernateException( "Unable to suspend current JTA transaction", e );
 		}
+
+		if ( originalException instanceof Error ) {
+			throw (Error) originalException;
+		}
+		throw (RuntimeException) originalException;
 	}
 
 	private <T> T doInNewTransaction(HibernateCallable<T> callable, TransactionManager transactionManager) {

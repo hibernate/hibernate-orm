@@ -72,6 +72,6 @@ public class EmbeddableWithDeclaredDataTest extends BaseEnversJPAFunctionalTestC
 		// only value.codeArt should be audited because it is the only audited field in EmbeddableWithDeclaredData;
 		// fields in AbstractEmbeddable should not be audited.
 		Assert.assertEquals( entityLoaded.getValue().getCodeart(), entityRev1.getValue().getCodeart() );
-		Assert.assertNull( entityRev1.getValue().getCode() );
+		Assert.assertEquals(0, entityRev1.getValue().getCode() );
 	}
 }

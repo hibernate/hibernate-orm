@@ -61,8 +61,8 @@ public class BasicTypeColumnDefinitionTest extends BaseEnversJPAFunctionalTestCa
 	@Priority(10)
 	public void testMetadataBindings() {
 		final Long expectedDefaultLength = new Long( DEFAULT_LENGTH );
-		final Long expectedDefaultPrecision = new Long( DEFAULT_PRECISION );
-		final Long expectedDefaultScale = new Long( DEFAULT_SCALE );
+		final Integer expectedDefaultPrecision = Integer.valueOf( DEFAULT_PRECISION );
+		final Integer expectedDefaultScale = Integer.valueOf( DEFAULT_SCALE );
 
 		final Table auditTable = metadata().getEntityBinding( BasicTypeContainer.class.getName() + "_AUD" ).getTable();
 

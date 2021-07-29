@@ -66,7 +66,7 @@ public class StaticMetadataTest {
 
 		// Cat (hierarchy)
 		assertNotNull( Cat_.id );
-		assertNotNull( Cat_.id.isId() );
+		assertTrue( Cat_.id.isId() );
 		assertEquals( Animal.class, Cat_.id.getJavaMember().getDeclaringClass() );
 		assertNotNull( Cat_.nickname );
 

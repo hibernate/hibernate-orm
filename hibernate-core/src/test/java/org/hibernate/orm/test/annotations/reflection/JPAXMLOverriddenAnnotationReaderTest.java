@@ -278,7 +278,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 
 		field = BusTripPk.class.getDeclaredField( "busDriver" );
 		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
-		assertNotNull( reader.isAnnotationPresent( Basic.class ) );
+		assertTrue( reader.isAnnotationPresent( Basic.class ) );
 	}
 
 	@Test

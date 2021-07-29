@@ -142,6 +142,9 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 				catch ( Throwable ignore ) {
 				}
 			}
+			if ( expected instanceof AssertionError ) {
+				throw (AssertionError) expected;
+			}
 		}
 		finally {
 			if ( s != null && s.isOpen() ) {

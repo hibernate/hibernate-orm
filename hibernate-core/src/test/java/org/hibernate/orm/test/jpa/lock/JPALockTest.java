@@ -199,12 +199,25 @@ public class JPALockTest extends AbstractJPATest {
 			t2.commit();
 			fail( "optimistic lock should have failed" );
 		}
-		catch (Throwable ignore) {
+		catch (Throwable t) {
 			// expected behavior
-			t2.rollback();
+			try {
+				t2.rollback();
+			}
+			catch (Throwable ignore) {
+				// ignore
+			}
+			if ( t instanceof AssertionError ) {
+				throw (AssertionError) t;
+			}
 		}
 		finally {
-			s2.close();
+			try {
+				s2.close();
+			}
+			catch (Throwable ignore) {
+				// ignore
+			}
 		}
 
 		s1 = sessionFactory().openSession();

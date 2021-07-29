@@ -13,6 +13,7 @@ import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
@@ -313,28 +314,30 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 			s.createQuery( "from Silly" ).list();
 			fail( "allowed to create query on closed session" );
 		}
-		catch( Throwable ignore ) {
+		catch (AssertionError testFailed) {
+			throw testFailed;
+		}
+		catch (Throwable ignore) {
 		}
 
-		try {
-			s.getTransaction();
-			fail( "allowed to access transaction on closed session" );
-		}
-		catch( Throwable ignore ) {
-		}
+		// you should be able to access the transaction on a closed EM. that is a change from what we used to do. we changed it
+		// to better align with JPA.
+		Transaction tran = s.getTransaction();
+		assertNotNull( tran );
 
-		try {
-			s.close();
-			fail( "allowed to close already closed session" );
-		}
-		catch( Throwable ignore ) {
-		}
+		// Session implements both AutoCloseable and Closeable
+		// Closable requires an idempotent behaviour, a closed resource must not throw an Exception
+		// when close is called twice.
+		s.close();
 
 		try {
 			s.isDirty();
 			fail( "allowed to check dirtiness of closed session" );
 		}
-		catch( Throwable ignore ) {
+		catch (AssertionError testFailed) {
+			throw testFailed;
+		}
+		catch (Throwable ignore) {
 		}
 	}
 }

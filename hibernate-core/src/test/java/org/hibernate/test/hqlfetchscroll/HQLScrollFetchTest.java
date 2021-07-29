@@ -257,6 +257,8 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
+	final String errMsg = "should have failed because data is ordered incorrectly.";
+
 	@Test
 	public void testScrollOrderChildrenDesc() {
 		Session s = openSession();
@@ -271,12 +273,16 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		while ( results.next() ) {
 			list.add( results.get( ) );
 		}
+
 		try {
 			assertResultFromAllUsers( list );
-			fail( "should have failed because data is ordered incorrectly." );
+			fail( errMsg );
 		}
 		catch ( AssertionError ex ) {
-			// expected
+			if ( errMsg.equalsIgnoreCase( ex.getMessage() ) ) {
+				throw ex;
+			}
+			// Other AssertionErrors expected
 		}
 		finally {
 			s.close();
@@ -295,10 +301,13 @@ public class HQLScrollFetchTest extends BaseCoreFunctionalTestCase {
 		List results = s.createQuery( QUERY + " order by c.name desc" ).list();
 		try {
 			assertResultFromAllUsers( results );
-			fail( "should have failed because data is ordered incorrectly." );
+			fail( errMsg );
 		}
 		catch ( AssertionError ex ) {
-			// expected
+			if ( errMsg.equalsIgnoreCase( ex.getMessage() ) ) {
+				throw ex;
+			}
+			// Other AssertionErrors expected
 		}
 		finally {
 			s.close();

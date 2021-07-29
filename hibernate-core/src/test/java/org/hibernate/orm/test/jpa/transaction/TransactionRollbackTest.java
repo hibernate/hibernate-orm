@@ -91,6 +91,9 @@ public class TransactionRollbackTest {
 						if ( entityManager.getTransaction().isActive() ) {
 							entityManager.getTransaction().rollback();
 						}
+						if ( e instanceof AssertionError ) {
+							throw (AssertionError) e;
+						}
 					}
 				}
 		);

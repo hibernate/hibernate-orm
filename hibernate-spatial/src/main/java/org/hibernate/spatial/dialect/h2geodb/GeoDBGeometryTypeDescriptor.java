@@ -36,7 +36,7 @@ public class GeoDBGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	public static final GeoDBGeometryTypeDescriptor INSTANCE = new GeoDBGeometryTypeDescriptor();
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.ARRAY;
 	}
 

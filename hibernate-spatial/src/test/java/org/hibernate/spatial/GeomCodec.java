@@ -5,11 +5,14 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.testing.dialects.postgis;
+package org.hibernate.spatial;
 
-import org.hibernate.spatial.testing.NativeSqlTemplates;
+import org.geolatte.geom.Geometry;
 
-public class PostgisNativeSqlTemplates extends NativeSqlTemplates {
+public interface GeomCodec {
 
+	Geometry<?> toGeometry(Object in) ;
+
+	Object fromGeometry(Geometry<?> in);
 
 }

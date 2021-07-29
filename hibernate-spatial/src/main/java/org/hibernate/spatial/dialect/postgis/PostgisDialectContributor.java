@@ -7,8 +7,8 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
-import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
+import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.GeolatteGeometryType;
@@ -36,13 +36,13 @@ public class PostgisDialectContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeFunctions(FunctionContributions functionContributions) {
+	public void contributeFunctions(SqmFunctionRegistry functionRegistry) {
 		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
 		PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( getServiceRegistry() );
 
 		postgisFunctions.asMap().forEach( (key, desc) -> {
-			functionContributions.contributeFunction( key.getName(), desc );
-			key.getAltName().ifPresent( altName -> functionContributions.contributeFunction( altName, desc ) );
+			functionRegistry.register( key.getName(), desc );
+			key.getAltName().ifPresent( altName -> functionRegistry.register( altName, desc ) );
 		} );
 	}
 

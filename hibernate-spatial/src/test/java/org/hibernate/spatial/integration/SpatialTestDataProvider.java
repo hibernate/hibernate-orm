@@ -10,30 +10,30 @@ package org.hibernate.spatial.integration;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.NativeSqlTemplates;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
+import org.hibernate.spatial.testing.NativeSQLTemplates;
 import org.hibernate.spatial.testing.TestSupportFactories;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.domain.GeomEntityLike;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 
+@Deprecated
 public class SpatialTestDataProvider {
 	protected final static String JTS = "jts";
-
+	protected final  NativeSQLTemplates templates;
 	protected TestData testData;
+	protected GeomCodec codec;
 	protected JTSGeometryEquality geometryEquality;
-	protected NativeSqlTemplates templates;
-
-
 
 	public SpatialTestDataProvider() {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( DialectContext.getDialect() );
-			templates = support.getNativeSqlTemplates();
+			templates = support.templates();
+			codec = support.codec();
 			testData = support.createTestData( TestSupport.TestDataPurpose.StoreRetrieveData );
 			geometryEquality = support.createGeometryEquality();
 		}

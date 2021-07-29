@@ -8,7 +8,6 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.Mapping;
@@ -88,7 +87,7 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 
 	@Override
 	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
@@ -97,7 +96,7 @@ class SDOObjectProperty implements SqmFunctionDescriptor {
 
 	@Override
 	public <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,

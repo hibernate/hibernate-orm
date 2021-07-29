@@ -8,17 +8,17 @@
 package org.hibernate.spatial.testing.dialects.postgis;
 
 
-import org.hibernate.spatial.integration.TestGeolatteSpatialPredicates;
-import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
-import org.hibernate.spatial.integration.TestSpatialFunctions;
+import org.hibernate.spatial.GeomCodec;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.NativeSqlTemplates;
+import org.hibernate.spatial.testing.NativeSQLTemplates;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -26,9 +26,10 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class PostgisTestSupport extends TestSupport {
 
+
 	@Override
-	public NativeSqlTemplates getNativeSqlTemplates() {
-		return new PostgisNativeSqlTemplates();
+	public NativeSQLTemplates templates() {
+		return new PostgisNativeSQLTemplates();
 	}
 
 	@Override
@@ -50,5 +51,18 @@ public class PostgisTestSupport extends TestSupport {
 		return new PostgisExpressionTemplate();
 	}
 
+	public GeomCodec codec() {
+		return new GeomCodec() {
+			@Override
+			public Geometry<?> toGeometry(Object in) {
+				return PGGeometryTypeDescriptor.INSTANCE_WKB_1.toGeometry( in );
+			}
+
+			@Override
+			public Object fromGeometry(Geometry<?> in) {
+				return Wkt.toWkt( in, Wkt.Dialect.POSTGIS_EWKT_1 );
+			}
+		};
+	}
 
 }

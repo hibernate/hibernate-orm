@@ -17,6 +17,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.spatial.testing.GeometryEquality;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.domain.GeomEntity;
+import org.hibernate.spatial.testing.domain.GeomEntityLike;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 
 import org.hibernate.testing.orm.junit.DomainModel;

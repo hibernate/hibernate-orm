@@ -11,6 +11,7 @@ import javax.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
+import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 
@@ -37,6 +38,11 @@ public interface MutableQueryOptions extends QueryOptions {
 	 * Corollary to {@link #getCacheMode()}
 	 */
 	default void setCacheMode(CacheMode cacheMode) {
+		if ( cacheMode == null ) {
+			QueryLogging.QUERY_LOGGER.debug( "Null CacheMode passed to #setCacheMode; falling back to `NORMAL`" );
+			cacheMode = CacheMode.NORMAL;
+		}
+
 		setCacheRetrieveMode( cacheMode.getJpaRetrieveMode() );
 		setCacheStoreMode( cacheMode.getJpaStoreMode() );
 	}

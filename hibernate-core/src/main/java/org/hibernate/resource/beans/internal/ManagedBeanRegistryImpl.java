@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.container.spi.FallbackContainedBean;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.spi.Stoppable;
@@ -48,6 +49,11 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ManagedBean<T> getBean(Class<T> beanClass) {
+		return getBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
+	}
+
+	@Override
+	public <T> ManagedBean<T> getBean(Class<T> beanClass, BeanInstanceProducer fallbackBeanInstanceProducer) {
 		final ManagedBean existing = registrations.get( beanClass.getName() );
 		if ( existing != null ) {
 			return existing;
@@ -55,13 +61,13 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 
 		final ManagedBean bean;
 		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean( beanClass, FallbackBeanInstanceProducer.INSTANCE );
+			bean = new FallbackContainedBean( beanClass, fallbackBeanInstanceProducer );
 		}
 		else {
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanClass,
 					this,
-					FallbackBeanInstanceProducer.INSTANCE
+					fallbackBeanInstanceProducer
 			);
 
 			if ( containedBean instanceof ManagedBean ) {
@@ -78,8 +84,16 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public <T> ManagedBean<T> getBean(String beanName, Class<T> beanContract) {
+		return getBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public <T> ManagedBean<T> getBean(
+			String beanName,
+			Class<T> beanContract,
+			BeanInstanceProducer fallbackBeanInstanceProducer) {
 		final String key = beanContract.getName() + ':' + beanName;
 
 		final ManagedBean existing = registrations.get( key );
@@ -89,14 +103,14 @@ public class ManagedBeanRegistryImpl implements ManagedBeanRegistry, BeanContain
 
 		final ManagedBean bean;
 		if ( beanContainer == null ) {
-			bean = new FallbackContainedBean( beanName, beanContract, FallbackBeanInstanceProducer.INSTANCE );
+			bean = new FallbackContainedBean( beanName, beanContract, fallbackBeanInstanceProducer );
 		}
 		else {
 			final ContainedBean<T> containedBean = beanContainer.getBean(
 					beanName,
 					beanContract,
 					this,
-					FallbackBeanInstanceProducer.INSTANCE
+					fallbackBeanInstanceProducer
 			);
 
 			if ( containedBean instanceof ManagedBean ) {

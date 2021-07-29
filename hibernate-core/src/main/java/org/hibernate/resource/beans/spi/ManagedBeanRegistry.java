@@ -29,6 +29,19 @@ public interface ManagedBeanRegistry extends Service {
 	<T> ManagedBean<T> getBean(String beanName, Class<T> beanContract);
 
 	/**
+	 * Get a bean reference by class with an explicit fallback bean instance producer.
+	 */
+	<T> ManagedBean<T> getBean(Class<T> beanContract, BeanInstanceProducer fallbackBeanInstanceProducer);
+
+	/**
+	 * Get a bean reference by name and contract with an explicit fallback bean instance producer.
+	 */
+	<T> ManagedBean<T> getBean(
+			String beanName,
+			Class<T> beanContract,
+			BeanInstanceProducer fallbackBeanInstanceProducer);
+
+	/**
 	 * Get a reference to the underlying BeanContainer.  May return {@code null}
 	 * indicating that no back-end container has been configured
 	 */

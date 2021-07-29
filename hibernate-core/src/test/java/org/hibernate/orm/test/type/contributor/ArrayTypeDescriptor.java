@@ -1,4 +1,4 @@
-package org.hibernate.test.type.contributor;
+package org.hibernate.orm.test.type.contributor;
 
 import java.util.Arrays;
 

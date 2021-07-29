@@ -22,6 +22,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
@@ -135,7 +136,7 @@ public class TypeDefinition implements Serializable {
 			JdbcTypeDescriptorIndicators indicators,
 			MetadataBuildingContext context) {
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-
+		final TypeBeanInstanceProducer instanceProducer = new TypeBeanInstanceProducer( typeConfiguration );
 		final boolean isKnownType = Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
 
@@ -146,13 +147,13 @@ public class TypeDefinition implements Serializable {
 				typeBean = context.getBootstrapContext()
 						.getServiceRegistry()
 						.getService( ManagedBeanRegistry.class )
-						.getBean( name, typeImplementorClass );
+						.getBean( name, typeImplementorClass, instanceProducer );
 			}
 			else {
 				typeBean = context.getBootstrapContext()
 						.getServiceRegistry()
 						.getService( ManagedBeanRegistry.class )
-						.getBean( typeImplementorClass );
+						.getBean( typeImplementorClass, instanceProducer );
 			}
 
 			final Object typeInstance = typeBean.getBeanInstance();

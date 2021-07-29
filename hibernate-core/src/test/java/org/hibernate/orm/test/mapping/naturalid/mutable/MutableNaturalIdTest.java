@@ -160,21 +160,19 @@ public class MutableNaturalIdTest {
 								.load();
 						assertNotNull( loaded );
 					}
-					catch( HibernateException expected ) {
-						session.getTransaction().markRollbackOnly();
-					}
-					catch( Throwable t ) {
+					catch (Throwable t) {
 						try {
 							session.getTransaction().markRollbackOnly();
 						}
-						catch ( Throwable ignore ) {
+						catch (Throwable ignore) {
+							// ignore
 						}
-						fail();
+						if ( t instanceof AssertionError ) {
+							throw (AssertionError) t;
+						}
 					}
-				}
-		);
-	}
-	
+				} );
+	}	
 
 	@Test
 	public void testNonexistentNaturalIdCache(SessionFactoryScope scope) {

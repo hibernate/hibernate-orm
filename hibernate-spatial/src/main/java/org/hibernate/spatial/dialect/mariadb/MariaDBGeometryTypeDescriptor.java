@@ -35,7 +35,7 @@ public class MariaDBGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	final WkbDecoder decoder = Wkb.newDecoder( Wkb.Dialect.MYSQL_WKB );
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.ARRAY;
 	}
 

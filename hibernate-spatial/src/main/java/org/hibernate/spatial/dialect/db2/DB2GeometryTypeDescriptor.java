@@ -40,7 +40,7 @@ public class DB2GeometryTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.CLOB;
 	}
 

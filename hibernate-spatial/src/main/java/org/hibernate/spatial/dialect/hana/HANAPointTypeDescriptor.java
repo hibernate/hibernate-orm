@@ -31,7 +31,7 @@ public class HANAPointTypeDescriptor implements JdbcTypeDescriptor {
 	private static final long serialVersionUID = -6978798264716544804L;
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.STRUCT;
 	}
 

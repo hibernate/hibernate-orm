@@ -51,7 +51,7 @@ public class PostgisSupport implements SpatialDialect, Serializable {
 	}
 
 	public boolean isSpatial(int typeCode){
-		return typeCode == Types.OTHER || typeCode == PGGeometryTypeDescriptor.INSTANCE_WKB_1.getJdbcType();
+		return typeCode == Types.OTHER || typeCode == PGGeometryTypeDescriptor.INSTANCE_WKB_1.getJdbcTypeCode();
 	}
 
 	/**

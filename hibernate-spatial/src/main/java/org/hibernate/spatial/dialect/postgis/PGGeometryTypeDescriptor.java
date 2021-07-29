@@ -80,7 +80,12 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
+		return Types.OTHER;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode(){
 		return 5432;
 	}
 

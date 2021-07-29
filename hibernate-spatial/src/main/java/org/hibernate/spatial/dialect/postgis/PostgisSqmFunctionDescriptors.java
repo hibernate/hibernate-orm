@@ -56,6 +56,14 @@ public class PostgisSqmFunctionDescriptors implements KeyedSqmFunctionDescriptor
 				)
 		);
 
+		map.put(
+				ST_ENVELOPE.getKey(), new NamedSqmFunctionDescriptor(
+						ST_ENVELOPE.getKey().getName(),
+						true,
+						StandardArgumentsValidators.exactly( 1 ),
+						StandardFunctionReturnTypeResolvers.useArgType(1 )
+				)
+		);
 	}
 
 	public Map<FunctionKey, SqmFunctionDescriptor> asMap() {

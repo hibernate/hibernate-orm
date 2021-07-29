@@ -19,7 +19,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.spatial.integration.GeomEntityLike;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 import org.geolatte.geom.Geometry;

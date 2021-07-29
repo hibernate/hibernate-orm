@@ -14,17 +14,15 @@
 
 package org.hibernate.spatial.testing.datareader;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.NativeSqlTemplates;
+import org.hibernate.spatial.testing.NativeSQLTemplates;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import junit.framework.TestCase;
 
 
 /**
@@ -36,7 +34,7 @@ public abstract class TestSupport {
 
 	//TODO -- make this abstract
 
-	public NativeSqlTemplates getNativeSqlTemplates() {
+	public NativeSQLTemplates templates() {
 		return null;
 	};
 
@@ -54,6 +52,10 @@ public abstract class TestSupport {
 	}
 
 	public abstract TestData createTestData(TestDataPurpose purpose);
+
+	public GeomCodec codec() {
+		throw new NotYetImplementedFor6Exception();
+	};
 
 	public abstract AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils);
 

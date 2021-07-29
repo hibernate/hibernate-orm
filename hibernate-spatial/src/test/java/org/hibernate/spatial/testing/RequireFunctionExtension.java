@@ -60,8 +60,8 @@ public class RequireFunctionExtension implements ExecutionCondition {
 		if ( requiresFunctions.isPresent() ) {
 			String functionKey = requiresFunctions.get().key();
 			SpatialFunctionContributor contributor = new SpatialFunctionContributor();
-			contributor.contributeTypes(
-					functionRegistry::register,
+			contributor.contributeFunctions(
+					functionRegistry,
 					existing.getSessionFactory().getServiceRegistry()
 			);
 			if ( functionRegistry.findFunctionDescriptor( functionKey ) == null ) {

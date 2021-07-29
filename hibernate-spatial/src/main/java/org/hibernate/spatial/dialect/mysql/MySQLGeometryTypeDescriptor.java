@@ -41,7 +41,7 @@ public class MySQLGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	public static final MySQLGeometryTypeDescriptor INSTANCE = new MySQLGeometryTypeDescriptor();
 
 	@Override
-	public int getJdbcType() {
+	public int getJdbcTypeCode() {
 		return Types.ARRAY;
 	}
 

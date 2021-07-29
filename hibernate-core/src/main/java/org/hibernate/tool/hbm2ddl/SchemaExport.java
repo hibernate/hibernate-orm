@@ -416,7 +416,9 @@ public class SchemaExport {
 
 		Properties properties = new Properties();
 		if ( commandLineArgs.propertiesFile != null ) {
-			properties.load( new FileInputStream( commandLineArgs.propertiesFile ) );
+			try ( final FileInputStream fis = new FileInputStream( commandLineArgs.propertiesFile ) ) {
+				properties.load( fis );
+			}
 		}
 		ssrBuilder.applySettings( properties );
 

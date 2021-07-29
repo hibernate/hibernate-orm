@@ -35,13 +35,13 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	private final String functionName;
 	private final SqmFunctionDescriptor functionDescriptor;
 
-	private final List<SqmTypedNode<?>> arguments;
+	private final List<? extends SqmTypedNode<?>> arguments;
 
 	public SqmFunction(
 			String functionName,
 			SqmFunctionDescriptor functionDescriptor,
 			SqmExpressable<T> type,
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.functionName = functionName;
@@ -58,7 +58,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 		return functionName;
 	}
 
-	public List<SqmTypedNode<?>> getArguments() {
+	public List<? extends SqmTypedNode<?>> getArguments() {
 		return arguments;
 	}
 

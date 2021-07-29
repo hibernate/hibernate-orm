@@ -244,7 +244,7 @@ public class QuerySqmImpl<R>
 			SessionFactoryImplementor factory) {
 		if ( queryPart instanceof SqmQuerySpec<?> ) {
 			final SqmQuerySpec<R> sqmQuerySpec = (SqmQuerySpec<R>) queryPart;
-			final List<SqmSelection> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
+			final List<SqmSelection<?>> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
 
 			// make sure there is at least one root
 			final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
@@ -281,7 +281,7 @@ public class QuerySqmImpl<R>
 			return;
 		}
 
-		final List<SqmSelection> selections = querySpec.getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections = querySpec.getSelectClause().getSelections();
 
 		if ( resultClass.isArray() ) {
 			// todo (6.0) : implement

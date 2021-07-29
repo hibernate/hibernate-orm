@@ -25,7 +25,7 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 public class SqmCaseSearched<R>
 		extends AbstractSqmExpression<R>
 		implements JpaSearchedCase<R>, DomainResultProducer<R> {
-	private List<WhenFragment<R>> whenFragments = new ArrayList<>();
+	private final List<WhenFragment<R>> whenFragments;
 	private SqmExpression<R> otherwise;
 
 	public SqmCaseSearched(NodeBuilder nodeBuilder) {
@@ -34,6 +34,12 @@ public class SqmCaseSearched<R>
 
 	public SqmCaseSearched(SqmExpressable<R> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
+		this.whenFragments = new ArrayList<>();
+	}
+
+	public SqmCaseSearched(SqmExpressable<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
+		this.whenFragments = new ArrayList<>( estimateWhenSize );
 	}
 
 	public List<WhenFragment<R>> getWhenFragments() {

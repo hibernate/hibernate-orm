@@ -331,7 +331,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 					Query<?> query = session.createQuery( "select a.class from Animal a where a.class = Dog" );
 					query.list();
 					SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) query.unwrap( QuerySqmImpl.class ).getSqmStatement();
-					List<SqmSelection> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
+					List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 					assertEquals( 1, selections.size() );
 					SqmSelection<?> typeSelection = selections.get( 0 );
 					// always integer for joined
@@ -2627,7 +2627,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 		Query<?> q = s.createQuery( "select a.bodyWeight as abw, a.description from Animal a" );
 		SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) q.unwrap( QuerySqmImpl.class ).getSqmStatement();
-		List<SqmSelection> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
+		List<SqmSelection<?>> selections = sqmStatement.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is( 2 ) );
 		assertThat( selections.get( 0 ).getAlias(), is( "abw" ) );
 		assertThat( selections.get( 1 ).getAlias(), nullValue() );

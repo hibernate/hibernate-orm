@@ -40,7 +40,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 
 	public SqmInListPredicate(
 			SqmExpression<T> testExpression,
-			List<SqmExpression<T>> listExpressions,
+			List<? extends SqmExpression<T>> listExpressions,
 			NodeBuilder nodeBuilder) {
 		this( testExpression, listExpressions, false, nodeBuilder );
 	}
@@ -48,13 +48,14 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	@SuppressWarnings("WeakerAccess")
 	public SqmInListPredicate(
 			SqmExpression<T> testExpression,
-			List<SqmExpression<T>> listExpressions,
+			List<? extends SqmExpression<T>> listExpressions,
 			boolean negated,
 			NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.testExpression = testExpression;
-		this.listExpressions = listExpressions;
-		for ( SqmExpression listExpression : listExpressions ) {
+		//noinspection unchecked
+		this.listExpressions = (List<SqmExpression<T>>) listExpressions;
+		for ( SqmExpression<T> listExpression : listExpressions ) {
 			implyListElementType( listExpression );
 		}
 
@@ -87,30 +88,30 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	@Override
-	public SqmInPredicate<T> value(Expression value) {
+	public SqmInPredicate<T> value(Expression<? extends T> value) {
+		//noinspection unchecked
 		addExpression( (SqmExpression<T>) value );
 		return this;
 	}
 
 	@Override
-	public SqmInPredicate<T> value(JpaExpression value) {
-		addExpression( (SqmExpression) value );
+	public SqmInPredicate<T> value(JpaExpression<? extends T> value) {
+		//noinspection unchecked
+		addExpression( (SqmExpression<T>) value );
 		return this;
 	}
 
-	public List<SqmExpression<T>> getListExpressions() {
+	public List<? extends SqmExpression<T>> getListExpressions() {
 		return listExpressions;
 	}
 
-	public <X> void addExpression(SqmExpression<X> expression) {
+	public void addExpression(SqmExpression<T> expression) {
 		implyListElementType( expression );
 
-		//noinspection unchecked
-		listExpressions.add( (SqmExpression<T>) expression );
+		listExpressions.add( expression );
 	}
 
-	private void implyListElementType(SqmExpression expression) {
-		//noinspection unchecked
+	private void implyListElementType(SqmExpression<?> expression) {
 		expression.applyInferableType(
 				QueryHelper.highestPrecedenceType2(
 						getTestExpression().getNodeType(),

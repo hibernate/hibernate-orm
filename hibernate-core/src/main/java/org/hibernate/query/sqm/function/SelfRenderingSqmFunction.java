@@ -40,7 +40,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	public SelfRenderingSqmFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			FunctionReturnTypeResolver returnTypeResolver,
 			NodeBuilder nodeBuilder,
@@ -55,7 +55,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return renderingSupport;
 	}
 
-	protected static List<SqlAstNode> resolveSqlAstArguments(List<SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
+	protected static List<SqlAstNode> resolveSqlAstArguments(List<? extends SqmTypedNode<?>> sqmArguments, SqmToSqlAstConverter walker) {
 		if ( sqmArguments == null || sqmArguments.isEmpty() ) {
 			return emptyList();
 		}

@@ -59,7 +59,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 //		assertPropertyPath( space.getRoot(), "com.acme.Something(s)" );
 //		assertPropertyPath( space.getJoins().get( 0 ), "com.acme.Something(s).entity" );
 
-		final List<SqmSelection> selections = statement.getQuerySpec().getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections = statement.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is(2) );
 
 		// expression paths
@@ -136,7 +136,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 	@Test
 	public void testManyToOneReference() {
 		final SqmSelectStatement<?> sqm = interpretSelect( "select s.mate from Person s" );
-		final List<SqmSelection> selections = sqm.getQuerySpec().getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections = sqm.getQuerySpec().getSelectClause().getSelections();
 		assertThat( selections.size(), is( 1 ) );
 		final SqmSelection<?> selection = selections.get( 0 );
 		final SqmSelectableNode<?> selectableNode = selection.getSelectableNode();

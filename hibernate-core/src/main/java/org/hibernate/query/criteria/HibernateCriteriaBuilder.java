@@ -258,7 +258,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaExpression<T> literal(T value);
-	<T> SqmExpression<T> literal(T value, SqmExpression<T> typeInferenceSource);
+	<T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource);
 
 	<T> List<? extends JpaExpression<T>> literals(T[] values);
 
@@ -368,7 +368,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> SqmExpression<T> value(T value);
 
-	<T> SqmExpression<T> value(T value, SqmExpression<T> typeInferenceSource);
+	<T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource);
 
 	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 

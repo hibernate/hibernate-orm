@@ -1479,7 +1479,7 @@ public class CommonFunctionFactory {
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder("sum")
 				.setReturnTypeResolver( new FunctionReturnTypeResolver() {
 					@Override
-					public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
+					public AllowableFunctionReturnType<?> resolveFunctionReturnType(AllowableFunctionReturnType<?> impliedType, List<? extends SqmTypedNode<?>> arguments, TypeConfiguration typeConfiguration) {
 						final AllowableFunctionReturnType<?> argType = StandardFunctionReturnTypeResolvers.extractArgumentType(
 								arguments,
 								1

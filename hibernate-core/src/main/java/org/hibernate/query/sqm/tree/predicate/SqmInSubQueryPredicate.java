@@ -79,7 +79,7 @@ public class SqmInSubQueryPredicate<T> extends AbstractNegatableSqmPredicate imp
 	}
 
 	@Override
-	public SqmInPredicate<T> value(JpaExpression value) {
+	public SqmInPredicate<T> value(JpaExpression<? extends T> value) {
 		throw new UnsupportedOperationException(  );
 	}
 

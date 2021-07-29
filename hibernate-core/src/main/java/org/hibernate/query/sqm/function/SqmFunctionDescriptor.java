@@ -41,7 +41,7 @@ public interface SqmFunctionDescriptor {
 	 * portable between databases.
 	 */
 	<T> SelfRenderingSqmFunction<T> generateSqmExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration);
@@ -51,7 +51,7 @@ public interface SqmFunctionDescriptor {
 	 * but also accepts a filter predicate. This method is intended for aggregate functions.
 	 */
 	default <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,

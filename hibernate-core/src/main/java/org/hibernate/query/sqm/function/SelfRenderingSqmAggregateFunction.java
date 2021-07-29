@@ -29,7 +29,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 	public SelfRenderingSqmAggregateFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			SqmPredicate filter,
 			AllowableFunctionReturnType<T> impliedResultType,
 			FunctionReturnTypeResolver returnTypeResolver,
@@ -57,7 +57,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
-		final List<SqmTypedNode<?>> arguments = getArguments();
+		final List<? extends SqmTypedNode<?>> arguments = getArguments();
 		sb.append( getFunctionName() );
 		sb.append( '(' );
 		int i = 1;

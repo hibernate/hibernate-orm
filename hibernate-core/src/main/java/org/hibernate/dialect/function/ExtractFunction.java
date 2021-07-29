@@ -48,7 +48,7 @@ public class ExtractFunction
 
 	@Override
 	protected <T> SelfRenderingSqmFunction generateSqmFunctionExpression(
-			List<SqmTypedNode<?>> arguments,
+			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {

@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.SqmVisitableNode;
  */
 public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T>, SqmVisitableNode {
 	private final TemporalUnit unit;
-	private final AllowableFunctionReturnType type;
+	private final AllowableFunctionReturnType<T> type;
 
 	public SqmExtractUnit(TemporalUnit unit, AllowableFunctionReturnType<T> type, NodeBuilder nodeBuilder) {
 		super( nodeBuilder );
@@ -32,7 +32,7 @@ public class SqmExtractUnit<T> extends AbstractSqmNode implements SqmTypedNode<T
 		return unit;
 	}
 
-	public AllowableFunctionReturnType getType() {
+	public AllowableFunctionReturnType<T> getType() {
 		return type;
 	}
 

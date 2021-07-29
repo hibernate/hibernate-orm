@@ -1717,11 +1717,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private boolean selectClauseContains(SqmFrom<?, ?> from) {
 		final SqmQuerySpec<?> sqmQuerySpec = (SqmQuerySpec<?>) currentSqmQueryPart;
-		final List<SqmSelection> selections = sqmQuerySpec.getSelectClause().getSelections();
+		final List<SqmSelection<?>> selections = sqmQuerySpec.getSelectClause().getSelections();
 		if ( selections.isEmpty() && from instanceof SqmRoot<?> ) {
 			return true;
 		}
-		for ( SqmSelection selection : selections ) {
+		for ( SqmSelection<?> selection : selections ) {
 			if ( selection.getSelectableNode() == from ) {
 				return true;
 			}

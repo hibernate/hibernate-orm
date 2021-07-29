@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpressionContainer<SqmSelection>, JpaSelection<Object> {
+public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpressionContainer<SqmSelection<?>>, JpaSelection<Object> {
 	private boolean distinct;
 	private List<SqmSelection<?>> selections;
 
@@ -50,7 +50,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 		this.distinct = distinct;
 	}
 
-	public List<SqmSelection> getSelections() {
+	public List<SqmSelection<?>> getSelections() {
 		if ( selections == null ) {
 			return Collections.emptyList();
 		}
@@ -59,7 +59,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 		}
 	}
 
-	public void addSelection(SqmSelection selection) {
+	public void addSelection(SqmSelection<?> selection) {
 		if ( selections == null ) {
 			selections = new ArrayList<>();
 		}
@@ -67,18 +67,18 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	}
 
 	@Override
-	public SqmSelection add(SqmExpression<?> expression, String alias) {
-		final SqmSelection selection = new SqmSelection<>( expression, alias, nodeBuilder()  );
+	public SqmSelection<?> add(SqmExpression<?> expression, String alias) {
+		final SqmSelection<?> selection = new SqmSelection<>( expression, alias, nodeBuilder()  );
 		addSelection( selection );
 		return selection;
 	}
 
 	@Override
-	public void add(SqmSelection aliasExpression) {
+	public void add(SqmSelection<?> aliasExpression) {
 		addSelection( aliasExpression );
 	}
 
-	public void setSelection(SqmSelection sqmSelection) {
+	public void setSelection(SqmSelection<?> sqmSelection) {
 		if ( selections != null ) {
 			selections.clear();
 		}

@@ -76,14 +76,21 @@ public class CollectionAsBasicTypeTest extends CompilationTest {
 	@TestForIssue(jiraKey = "HHH-12338")
 	@WithClasses({PhoneBook.class})
 	public void testMapType() throws ClassNotFoundException, NoSuchFieldException {
-		assertMetamodelClassGeneratedFor(PhoneBook.class);
+		assertMetamodelClassGeneratedFor( PhoneBook.class );
 
 		assertAttributeTypeInMetaModelFor(
 				PhoneBook.class,
 				"phones",
-				PhoneBook.class.getDeclaredField("phones").getGenericType(),
+				PhoneBook.class.getDeclaredField( "phones" ).getGenericType(),
 				"Wrong meta model type"
 		);
 
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14724")
+	@WithClasses({ Like.class, ConcreteLike.class })
+	public void testIntersectionType() {
+		assertMetamodelClassGeneratedFor( ConcreteLike.class );
 	}
 }

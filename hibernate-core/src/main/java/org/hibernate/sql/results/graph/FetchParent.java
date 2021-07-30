@@ -13,6 +13,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 
 /**
@@ -43,7 +44,13 @@ public interface FetchParent extends DomainResultGraphNode {
 	}
 
 	default NavigablePath resolveNavigablePath(Fetchable fetchable) {
-		return getNavigablePath().append( fetchable.getFetchableName() );
+		final String fetchableName = fetchable.getFetchableName();
+		if ( NavigablePath.IDENTIFIER_MAPPER_PROPERTY.equals( fetchableName ) ) {
+			return new EntityIdentifierNavigablePath( getNavigablePath(), fetchableName );
+		}
+		else {
+			return getNavigablePath().append( fetchableName );
+		}
 	}
 
 	/**

@@ -7,6 +7,7 @@
 package org.hibernate.query.results.complete;
 
 import java.util.HashMap;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
@@ -117,5 +118,10 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 		finally {
 			impl.popExplicitFetchMementoResolver();
 		}
+	}
+
+	@Override
+	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+		explicitFetchBuilderMap.forEach( consumer );
 	}
 }

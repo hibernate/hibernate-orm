@@ -13,7 +13,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.extralazy">
+<hibernate-mapping package="org.hibernate.orm.test.extralazy">
 	
 	<class name="Group" table="groups_">
 		<id name="name"/>
@@ -67,7 +67,6 @@
 		from users u 
 		join session_attributes s on lower(s.userName) = lower(u.name)
 		where u.name like :uname
-	</sql-query>	
-	
+	</sql-query>
 
 </hibernate-mapping>

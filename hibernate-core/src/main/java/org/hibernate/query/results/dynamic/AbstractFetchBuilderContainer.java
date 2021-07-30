@@ -74,6 +74,9 @@ public abstract class AbstractFetchBuilderContainer<T extends AbstractFetchBuild
 	}
 
 	public void addFetchBuilder(String propertyName, DynamicFetchBuilder fetchBuilder) {
+		if ( fetchBuilderMap == null ) {
+			fetchBuilderMap = new HashMap<>();
+		}
 		fetchBuilderMap.put( propertyName, fetchBuilder );
 	}
 }

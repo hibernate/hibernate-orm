@@ -7,10 +7,12 @@
 package org.hibernate.query.results.complete;
 
 import java.util.HashMap;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
@@ -25,7 +27,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 /**
  * @author Steve Ebersole
  */
-public class CompleteResultBuilderEntityStandard implements CompleteResultBuilderEntityValued {
+public class CompleteResultBuilderEntityStandard implements CompleteResultBuilderEntityValued, NativeQuery.RootReturn {
+	private final String tableAlias;
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
@@ -33,11 +36,13 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityStandard(
+			String tableAlias,
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
 			ResultBuilderBasicValued discriminatorResultBuilder,
 			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
+		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
@@ -53,6 +58,46 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	@Override
 	public EntityMappingType getReferencedPart() {
 		return entityDescriptor;
+	}
+
+	@Override
+	public String getTableAlias() {
+		return tableAlias;
+	}
+
+	@Override
+	public String getDiscriminatorAlias() {
+		return null;
+	}
+
+	@Override
+	public EntityMappingType getEntityMapping() {
+		return entityDescriptor;
+	}
+
+	@Override
+	public NativeQuery.RootReturn setLockMode(LockMode lockMode) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.RootReturn addIdColumnAliases(String... aliases) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.RootReturn setDiscriminatorAlias(String columnAlias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.RootReturn addProperty(String propertyName, String columnAlias) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public NativeQuery.ReturnProperty addProperty(String propertyName) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -106,5 +151,10 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 		finally {
 			impl.popExplicitFetchMementoResolver();
 		}
+	}
+
+	@Override
+	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+		explicitFetchBuilderMap.forEach( consumer );
 	}
 }

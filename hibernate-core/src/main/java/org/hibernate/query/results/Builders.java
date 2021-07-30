@@ -239,7 +239,7 @@ public class Builders {
 	}
 
 	public static DynamicFetchBuilderLegacy fetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, null );
+		return new DynamicFetchBuilderLegacy( tableAlias, ownerTableAlias, joinPropertyName, null, null );
 	}
 
 	public static ResultBuilder implicitEntityResultBuilder(

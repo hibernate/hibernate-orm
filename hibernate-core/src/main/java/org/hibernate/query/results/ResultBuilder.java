@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results;
 
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
@@ -27,4 +28,7 @@ public interface ResultBuilder {
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
+
+	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+	}
 }

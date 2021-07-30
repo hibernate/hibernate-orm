@@ -7,6 +7,8 @@
 package org.hibernate.query.results.dynamic;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
@@ -18,6 +20,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
+import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
 import org.hibernate.sql.ast.SqlAstJoinType;
@@ -46,17 +49,20 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	private final String fetchableName;
 
 	private final List<String> columnNames;
+	private final Map<String, FetchBuilder> fetchBuilderMap;
 	private final DynamicResultBuilderEntityStandard resultBuilderEntity;
 
 	public DynamicFetchBuilderLegacy(
 			String tableAlias,
 			String ownerTableAlias,
 			String fetchableName,
-			List<String> columnNames) {
+			List<String> columnNames,
+			Map<String, FetchBuilder> fetchBuilderMap) {
 		this.tableAlias = tableAlias;
 		this.ownerTableAlias = ownerTableAlias;
 		this.fetchableName = fetchableName;
 		this.columnNames = columnNames;
+		this.fetchBuilderMap = fetchBuilderMap;
 		this.resultBuilderEntity = null;
 	}
 
@@ -65,11 +71,13 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			String ownerTableAlias,
 			String fetchableName,
 			List<String> columnNames,
+			Map<String, FetchBuilder> fetchBuilderMap,
 			DynamicResultBuilderEntityStandard resultBuilderEntity) {
 		this.tableAlias = tableAlias;
 		this.ownerTableAlias = ownerTableAlias;
 		this.fetchableName = fetchableName;
 		this.columnNames = columnNames;
+		this.fetchBuilderMap = fetchBuilderMap;
 		this.resultBuilderEntity = resultBuilderEntity;
 	}
 
@@ -198,5 +206,10 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 	@Override
 	public NativeQuery.ReturnProperty addProperty(String propertyName) {
 		return null;
+	}
+
+	@Override
+	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+		fetchBuilderMap.forEach( consumer );
 	}
 }

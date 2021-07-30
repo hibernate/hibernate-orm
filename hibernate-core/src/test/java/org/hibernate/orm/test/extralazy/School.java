@@ -1,4 +1,4 @@
-package org.hibernate.test.extralazy;
+package org.hibernate.orm.test.extralazy;
 
 import java.util.HashMap;
 import java.util.HashSet;

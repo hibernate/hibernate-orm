@@ -6,7 +6,7 @@
  */
 
 //$Id: Group.java 7628 2005-07-24 06:55:01Z oneovthafew $
-package org.hibernate.test.extralazy;
+package org.hibernate.orm.test.extralazy;
 import java.util.HashMap;
 import java.util.Map;
 

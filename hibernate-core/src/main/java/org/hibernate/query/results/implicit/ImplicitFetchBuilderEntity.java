@@ -9,6 +9,7 @@ package org.hibernate.query.results.implicit;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -118,6 +119,11 @@ public class ImplicitFetchBuilderEntity implements ImplicitFetchBuilder {
 //		);
 
 		return fetch;
+	}
+
+	@Override
+	public void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
+		fetchBuilders.forEach( (k, v) -> consumer.accept( k.getUnaliasedLocalName(), v ) );
 	}
 
 	@Override

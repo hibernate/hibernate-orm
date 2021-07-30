@@ -6,7 +6,7 @@
  */
 
 //$Id: Document.java 7635 2005-07-24 23:04:30Z oneovthafew $
-package org.hibernate.test.extralazy;
+package org.hibernate.orm.test.extralazy;
 
 
 public class Document {

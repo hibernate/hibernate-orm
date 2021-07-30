@@ -29,7 +29,6 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
@@ -161,7 +160,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 		}
 
-		final String ownerTableAlias = fullPropertyPath.substring( 0, firstDot - 1 );
+		final String ownerTableAlias = fullPropertyPath.substring( 0, firstDot );
 		final String propertyPath = fullPropertyPath.substring( firstDot + 1 );
 		final String tableAlias = jaxbHbmJoin.getAlias();
 
@@ -394,7 +393,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			final Map<String,FetchMemento> fetchDescriptorMap = new HashMap<>();
+			final Map<String, FetchMemento> fetchDescriptorMap = new HashMap<>();
 			propertyFetchDescriptors.forEach(
 					hbmFetchDescriptor -> fetchDescriptorMap.put(
 							hbmFetchDescriptor.getFetchablePath(),
@@ -403,6 +402,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 
 			return new ResultMementoEntityStandard(
+					tableAlias,
 					entityDescriptor,
 					lockMode,
 					discriminatorMemento,
@@ -462,7 +462,10 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					(fetchableName, joinDescriptor) -> {
 						final boolean added = processedFetchableNames.add( fetchableName );
 
-						if ( ! added ) {
+						if ( added ) {
+							propertyFetchDescriptors.add( joinDescriptor );
+						}
+						else {
 							// the fetch is most likely more complete of a mapping so replace the original
 							for ( int i = 0; i < propertyFetchDescriptors.size(); i++ ) {
 								final HbmFetchDescriptor propertyFetchDescriptor = propertyFetchDescriptors.get( i );
@@ -587,7 +590,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				);
 			}
 
-			this.ownerTableAlias = fullPropertyPath.substring( 0, firstDot - 1 );
+			this.ownerTableAlias = fullPropertyPath.substring( 0, firstDot );
 
 			this.propertyPath = fullPropertyPath.substring( firstDot + 1 );
 			this.tableAlias = hbmJoinReturn.getAlias();
@@ -628,9 +631,20 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 				applyFetchJoins( joinDescriptorsAccess, tableAlias, propertyFetchDescriptors );
 
+				final Map<String, FetchMemento> fetchDescriptorMap = new HashMap<>();
+				propertyFetchDescriptors.forEach(
+						hbmFetchDescriptor -> fetchDescriptorMap.put(
+								hbmFetchDescriptor.getFetchablePath(),
+								hbmFetchDescriptor.resolve( resolutionContext )
+						)
+				);
 				memento = new FetchMementoHbmStandard(
 						thisAsParentMemento.getNavigablePath(),
+						ownerTableAlias,
+						tableAlias,
+						lockMode,
 						thisAsParentMemento,
+						fetchDescriptorMap,
 						(Fetchable) thisAsParentMemento.getFetchableContainer()
 				);
 			}

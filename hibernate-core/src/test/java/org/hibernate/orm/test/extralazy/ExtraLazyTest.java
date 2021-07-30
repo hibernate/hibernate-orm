@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.extralazy;
+package org.hibernate.orm.test.extralazy;
 
 import java.util.List;
 import java.util.Map;
@@ -36,9 +36,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 		annotatedClasses = { School.class, Student.class, Championship.class },
 		xmlMappings =
 				{
-						"org/hibernate/test/extralazy/UserGroup.hbm.xml",
-						"org/hibernate/test/extralazy/Parent.hbm.xml",
-						"org/hibernate/test/extralazy/Child.hbm.xml"
+						"org/hibernate/orm/test/extralazy/UserGroup.hbm.xml",
+						"org/hibernate/orm/test/extralazy/Parent.hbm.xml",
+						"org/hibernate/orm/test/extralazy/Child.hbm.xml"
 				}
 )
 @SessionFactory
@@ -269,7 +269,7 @@ public class ExtraLazyTest {
 					session.persist( turin );
 					session.flush();
 					session.clear();
-					List results = session.getNamedQuery( "userData" ).setParameter( "uname", "%in" ).list();
+					List results = session.getNamedQuery( "userSessionData" ).setParameter( "uname", "%in" ).list();
 					assertThat( results.size(), is( 2 ) );
 					gavin = (User) results.get( 0 );
 					assertThat( gavin.getName(), is( "gavin" ) );

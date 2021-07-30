@@ -75,7 +75,7 @@ public class DynamicFetchBuilderStandard
 							state -> {
 								final int resultSetPosition = jdbcResultsMetadata.resolveColumnPosition( columnAlias );
 								final int valuesArrayPosition = resultSetPosition - 1;
-								return new SqlSelectionImpl( valuesArrayPosition, (BasicValuedMapping) selectableMapping );
+								return new SqlSelectionImpl( valuesArrayPosition, selectableMapping.getJdbcMapping() );
 							}
 					),
 					selectableMapping.getJdbcMapping().getMappedJavaTypeDescriptor(),

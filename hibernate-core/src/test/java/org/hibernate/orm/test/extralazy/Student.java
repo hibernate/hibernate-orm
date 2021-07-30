@@ -1,4 +1,4 @@
-package org.hibernate.test.extralazy;
+package org.hibernate.orm.test.extralazy;
 
 import java.util.Objects;
 import javax.persistence.Entity;

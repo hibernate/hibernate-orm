@@ -26,6 +26,7 @@ import org.hibernate.query.results.complete.CompleteResultBuilderEntityStandard;
  * @author Steve Ebersole
  */
 public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMemento.Parent {
+	private final String tableAlias;
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
@@ -33,10 +34,12 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 	private final Map<String, FetchMemento> fetchMementoMap;
 
 	public ResultMementoEntityStandard(
+			String tableAlias,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
 			ResultMementoBasic discriminatorMemento,
 			Map<String, FetchMemento> fetchMementoMap) {
+		this.tableAlias = tableAlias;
 		this.navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
@@ -72,6 +75,7 @@ public class ResultMementoEntityStandard implements ResultMementoEntity, FetchMe
 		);
 
 		return new CompleteResultBuilderEntityStandard(
+				tableAlias,
 				navigablePath,
 				entityDescriptor,
 				lockMode,

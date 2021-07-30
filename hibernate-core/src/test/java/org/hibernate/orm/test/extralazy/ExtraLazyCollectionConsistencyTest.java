@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.extralazy;
+package org.hibernate.orm.test.extralazy;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 @DomainModel(
 		xmlMappings = {
-				"org/hibernate/test/extralazy/UserGroup.hbm.xml"
+				"org/hibernate/orm/test/extralazy/UserGroup.hbm.xml"
 		}
 )
 @SessionFactory

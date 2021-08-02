@@ -195,24 +195,18 @@ else {
 
 task compile(dependsOn: [compileJava, processResources, compileTestJava, processTestResources] )
 
+
 convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet ->
 	JavaCompile javaCompileTask = project.tasks.findByName( sourceSet.compileJavaTaskName ) as JavaCompile
 
 	// NOTE : this aptDir stuff is needed until we can have IntelliJ run annotation processors for us
 	//		which cannot happen until we can fold hibernate-testing back into hibernate-core/src/test
 	//		which cannot happen until... ugh
-	File aptDir = file( "${buildDir}/generated-src/apt/${sourceSet.name}" )
-	sourceSet.allJava.srcDir( aptDir )
 
 	javaCompileTask.options.compilerArgs += [
 			"-nowarn",
-			"-encoding", "UTF-8",
-			"-s", "${aptDir.absolutePath}"
+			"-encoding", "UTF-8"
 	]
-
-	javaCompileTask.doFirst {
-		aptDir.mkdirs()
-	}
 }
 
 

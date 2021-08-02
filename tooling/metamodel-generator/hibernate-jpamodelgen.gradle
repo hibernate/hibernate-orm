@@ -13,7 +13,7 @@ apply plugin: 'org.hibernate.build.gradle.xjc'
 
 
 ext {
-	xjcTargetDir = file( "${buildDir}/generated-src/xjc/main" )
+	xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
 	xsdDir = file( "${projectDir}/src/main/xsd" )
 }
 

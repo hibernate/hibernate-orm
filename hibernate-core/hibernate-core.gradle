@@ -17,7 +17,7 @@ apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
 
 ext {
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+    jaxbTargetDir = file( "${buildDir}/generated/sources/jaxb/main" )
 }
 
 configurations {

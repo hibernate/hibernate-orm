@@ -28,7 +28,7 @@ public class Antlr4Spec {
 		grammarBaseDirectory.convention( layout.getProjectDirectory().dir( "src/main/antlr" ) );
 
 		outputBaseDirectory = objectFactory.directoryProperty();
-		outputBaseDirectory.convention( layout.getBuildDirectory().dir( "generated-src/antlr/main" ) );
+		outputBaseDirectory.convention( layout.getBuildDirectory().dir( "generated/sources/antlr/main" ) );
 
 		grammarDescriptors = objectFactory.domainObjectContainer( GrammarDescriptor.class );
 	}

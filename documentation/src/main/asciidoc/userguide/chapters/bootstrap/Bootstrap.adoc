@@ -1,7 +1,7 @@
 [[bootstrap]]
 == Bootstrap
 :sourcedir: ../../../../../test/java/org/hibernate/userguide/bootstrap
-:boot-spi-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/boot/spi
+:boot-spi-sourcedir: ../../../../../../../hibernate-core/src/test/java/org/hibernate/orm/test/bootstrap/spi
 :extrasdir: extras
 
 The term bootstrapping refers to initializing and starting a software component.
@@ -328,6 +328,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 include::{boot-spi-sourcedir}/metadatabuildercontributor/SqlFunctionMetadataBuilderContributor.java[tags=bootstrap-jpa-compliant-MetadataBuilderContributor-example]
 ----
 ====
+org.hibernate.orm.test.bootstrap.spi.metadatabuildercontributor
 
 The above `MetadataBuilderContributor` is used to register a `SqlFuction` which is not defined by the currently running Hibernate `Dialect`, but which we need to reference in our JPQL queries.
 

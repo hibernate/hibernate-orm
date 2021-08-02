@@ -6,7 +6,9 @@
  */
 package org.hibernate.jpamodelgen.util;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeParameterElement;
@@ -30,6 +32,7 @@ import javax.lang.model.util.SimpleTypeVisitor8;
 public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Object> {
 
 	private final StringBuilder sb = new StringBuilder();
+	private final Set<TypeVariable> visitedTypeVariables = new HashSet<>();
 
 	private TypeRenderingVisitor() {
 	}
@@ -129,9 +132,10 @@ public final class TypeRenderingVisitor extends SimpleTypeVisitor8<Object, Objec
 		if ( typeVariableElement instanceof TypeParameterElement ) {
 			final TypeParameterElement typeParameter = (TypeParameterElement) typeVariableElement;
 			sb.append( typeParameter );
-			if ( !"java.lang.Object".equals( t.getUpperBound().toString() ) ) {
+			if ( !"java.lang.Object".equals( t.getUpperBound().toString() ) && visitedTypeVariables.add( t ) ) {
 				sb.append( " extends " );
 				t.getUpperBound().accept( this, null );
+				visitedTypeVariables.remove( t );
 			}
 		}
 		else {

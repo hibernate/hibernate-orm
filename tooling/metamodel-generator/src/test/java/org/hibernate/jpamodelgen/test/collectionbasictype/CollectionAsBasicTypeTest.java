@@ -93,4 +93,11 @@ public class CollectionAsBasicTypeTest extends CompilationTest {
 	public void testIntersectionType() {
 		assertMetamodelClassGeneratedFor( ConcreteLike.class );
 	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-14724")
+	@WithClasses({ EnumHolder.class })
+	public void testRecursiveTypeVariable() {
+		assertMetamodelClassGeneratedFor( EnumHolder.class );
+	}
 }

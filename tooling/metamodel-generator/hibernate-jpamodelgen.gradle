@@ -29,6 +29,7 @@ dependencies {
 
     testImplementation project( ':hibernate-core' )
     testImplementation libraries.junit
+    testImplementation libraries.validation
 }
 
 sourceSets.main {

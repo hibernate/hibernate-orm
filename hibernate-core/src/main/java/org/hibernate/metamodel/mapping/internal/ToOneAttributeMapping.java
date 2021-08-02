@@ -150,7 +150,9 @@ public class ToOneAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess
+				propertyAccess,
+				// can never be a generated value
+				NoValueGeneration.INSTANCE
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = bootValue.isNullable();
@@ -271,7 +273,8 @@ public class ToOneAttributeMapping
 				original.getAttributeMetadataAccess(),
 				original,
 				original.getDeclaringType(),
-				original.getPropertyAccess()
+				original.getPropertyAccess(),
+				original.getValueGeneration()
 		);
 		this.navigableRole = original.navigableRole;
 		this.sqlAliasStem = original.sqlAliasStem;

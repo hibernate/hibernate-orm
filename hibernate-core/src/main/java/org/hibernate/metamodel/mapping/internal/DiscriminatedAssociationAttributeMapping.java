@@ -75,7 +75,8 @@ public class DiscriminatedAssociationAttributeMapping
 				fetchTiming,
 				FetchStyle.SELECT,
 				declaringType,
-				propertyAccess
+				propertyAccess,
+				null
 		);
 		this.navigableRole = attributeRole;
 

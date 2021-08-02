@@ -13,12 +13,12 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
@@ -39,6 +39,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -77,8 +78,9 @@ public class BasicAttributeMapping
 			BasicValueConverter valueConverter,
 			JdbcMapping jdbcMapping,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
-		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchTiming, mappedFetchStyle, declaringType, propertyAccess );
+			PropertyAccess propertyAccess,
+			ValueGeneration valueGeneration) {
+		super( attributeName, stateArrayPosition, attributeMetadataAccess, mappedFetchTiming, mappedFetchStyle, declaringType, propertyAccess, valueGeneration );
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
@@ -106,6 +108,7 @@ public class BasicAttributeMapping
 	public static BasicAttributeMapping withSelectableMapping(
 			BasicValuedModelPart original,
 			PropertyAccess propertyAccess,
+			ValueGeneration valueGeneration,
 			SelectableMapping selectableMapping) {
 		String attributeName = null;
 		int stateArrayPosition = 0;
@@ -143,7 +146,8 @@ public class BasicAttributeMapping
 				valueConverter,
 				selectableMapping.getJdbcMapping(),
 				declaringType,
-				propertyAccess
+				propertyAccess,
+				valueGeneration
 		);
 	}
 

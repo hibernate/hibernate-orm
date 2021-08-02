@@ -7,8 +7,15 @@
 package org.hibernate.metamodel.mapping;
 
 /**
+ * Provides access to details about an attribute specific to a particular
+ * entity in the hierarchy.  Accounts for attribute/association overrides, etc
+ *
  * @author Steve Ebersole
  */
+@FunctionalInterface
 public interface AttributeMetadataAccess {
+	/**
+	 * Resolve the details about the attribute
+	 */
 	AttributeMetadata resolveAttributeMetadata(EntityMappingType entityMappingType);
 }

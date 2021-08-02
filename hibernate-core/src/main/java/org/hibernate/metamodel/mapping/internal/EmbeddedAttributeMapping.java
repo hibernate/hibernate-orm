@@ -50,6 +50,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
+import org.hibernate.tuple.ValueGeneration;
 
 /**
  * @author Steve Ebersole
@@ -75,7 +76,8 @@ public class EmbeddedAttributeMapping
 			FetchStyle mappedFetchStyle,
 			EmbeddableMappingType embeddableMappingType,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			PropertyAccess propertyAccess,
+			ValueGeneration valueGeneration) {
 		super(
 				name,
 				stateArrayPosition,
@@ -83,7 +85,8 @@ public class EmbeddedAttributeMapping
 				mappedFetchTiming,
 				mappedFetchStyle,
 				declaringType,
-				propertyAccess
+				propertyAccess,
+				valueGeneration
 		);
 		this.navigableRole = navigableRole;
 
@@ -107,7 +110,7 @@ public class EmbeddedAttributeMapping
 			SelectableMappings selectableMappings,
 			EmbeddableValuedModelPart inverseModelPart,
 			MappingModelCreationProcess creationProcess) {
-		super( inverseModelPart.getFetchableName(), -1, null, inverseModelPart.getMappedFetchOptions(), null, null );
+		super( inverseModelPart.getFetchableName(), -1, null, inverseModelPart.getMappedFetchOptions(), null, null, null );
 
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
 

@@ -20,6 +20,11 @@ public enum GenerationTiming {
 		public boolean includesUpdate() {
 			return false;
 		}
+
+		@Override
+		public boolean includes(GenerationTiming timing) {
+			return false;
+		}
 	},
 	INSERT {
 		@Override
@@ -30,6 +35,11 @@ public enum GenerationTiming {
 		@Override
 		public boolean includesUpdate() {
 			return false;
+		}
+
+		@Override
+		public boolean includes(GenerationTiming timing) {
+			return timing.includesInsert();
 		}
 	},
 	ALWAYS {
@@ -42,10 +52,16 @@ public enum GenerationTiming {
 		public boolean includesUpdate() {
 			return true;
 		}
+
+		@Override
+		public boolean includes(GenerationTiming timing) {
+			return timing != NEVER;
+		}
 	};
 
 	public abstract boolean includesInsert();
 	public abstract boolean includesUpdate();
+	public abstract boolean includes(GenerationTiming timing);
 
 	public static GenerationTiming parseFromName(String name) {
 		if ( "insert".equalsIgnoreCase( name ) ) {

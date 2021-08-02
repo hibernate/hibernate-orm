@@ -289,7 +289,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	protected final T nullSafeGet(ResultSet rs, String name, WrapperOptions options) throws SQLException {
 //		return remapSqlTypeDescriptor( options ).getExtractor( javaTypeDescriptor ).extract( rs, name, options );
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException( "Reading JDBC results by name/alias is no longer supported (" + getClass().getTypeName() + ")" );
 	}
 
 	public Object get(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException {

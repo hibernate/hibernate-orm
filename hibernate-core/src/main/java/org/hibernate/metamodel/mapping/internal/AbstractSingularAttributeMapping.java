@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.StateArrayContributorMetadataAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.FetchOptions;
+import org.hibernate.tuple.ValueGeneration;
 
 /**
  * @author Steve Ebersole
@@ -22,6 +23,7 @@ public abstract class AbstractSingularAttributeMapping
 		implements SingularAttributeMapping {
 
 	private final PropertyAccess propertyAccess;
+	private final ValueGeneration valueGeneration;
 
 	public AbstractSingularAttributeMapping(
 			String name,
@@ -29,9 +31,13 @@ public abstract class AbstractSingularAttributeMapping
 			StateArrayContributorMetadataAccess attributeMetadataAccess,
 			FetchOptions mappedFetchOptions,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			PropertyAccess propertyAccess,
+			ValueGeneration valueGeneration) {
 		super( name, attributeMetadataAccess, mappedFetchOptions, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
+		this.valueGeneration = valueGeneration != null
+				? valueGeneration
+				: NoValueGeneration.INSTANCE;
 	}
 
 	public AbstractSingularAttributeMapping(
@@ -41,13 +47,22 @@ public abstract class AbstractSingularAttributeMapping
 			FetchTiming fetchTiming,
 			FetchStyle fetchStyle,
 			ManagedMappingType declaringType,
-			PropertyAccess propertyAccess) {
+			PropertyAccess propertyAccess,
+			ValueGeneration valueGeneration) {
 		super( name, attributeMetadataAccess, fetchTiming, fetchStyle, stateArrayPosition, declaringType );
 		this.propertyAccess = propertyAccess;
+		this.valueGeneration = valueGeneration != null
+				? valueGeneration
+				: NoValueGeneration.INSTANCE;
 	}
 
 	@Override
 	public PropertyAccess getPropertyAccess() {
 		return propertyAccess;
+	}
+
+	@Override
+	public ValueGeneration getValueGeneration() {
+		return valueGeneration;
 	}
 }

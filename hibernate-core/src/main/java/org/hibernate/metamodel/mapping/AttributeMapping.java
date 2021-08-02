@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
 
@@ -28,7 +29,17 @@ public interface AttributeMapping extends ModelPart, ValueMapping, Fetchable, Pr
 
 	ManagedMappingType getDeclaringType();
 
+	/**
+	 * The getter/setter access to this attribute
+	 */
 	PropertyAccess getPropertyAccess();
+
+	/**
+	 * The value generation strategy to use for this attribute.
+	 *
+	 * @apiNote Only relevant for non-id attributes
+	 */
+	ValueGeneration getValueGeneration();
 
 	@Override
 	default EntityMappingType findContainingEntityMapping() {

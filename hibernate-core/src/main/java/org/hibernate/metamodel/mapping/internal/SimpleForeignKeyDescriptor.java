@@ -82,6 +82,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 		keyModelPart = BasicAttributeMapping.withSelectableMapping(
 				keyModelPart,
 				keyPropertyAccess,
+				NoValueGeneration.INSTANCE,
 				keySelectableMapping
 		);
 		if ( swapDirection ) {

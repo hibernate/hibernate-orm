@@ -195,6 +195,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 							attributeMapping = BasicAttributeMapping.withSelectableMapping(
 									original,
 									original.getPropertyAccess(),
+									original.getValueGeneration(),
 									selectableMapping
 							);
 							currentIndex++;

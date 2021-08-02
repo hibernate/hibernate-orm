@@ -61,7 +61,7 @@ public class PropertyAccessException extends HibernateException {
 	@Override
 	public String getMessage() {
 		return originalMessage()
-				+ ( wasSetter ? " setter of " : " getter of " )
-				+ StringHelper.qualify( persistentClass.getName(), propertyName );
+				+ " : `" + StringHelper.qualify( persistentClass.getName(), propertyName )
+				+ ( wasSetter ? "` (setter)" : "` (getter)" );
 	}
 }

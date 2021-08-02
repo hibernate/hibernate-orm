@@ -71,9 +71,10 @@ public class SetterFieldImpl implements Setter {
 						e,
 						String.format(
 								Locale.ROOT,
-								"Could not set field value [%s] value by reflection : [%s.%s]",
+								"Could not set value [%s (`%s`)] by reflection",
 								value,
-								containerClass,
+								value == null ? "<null>" : value.getClass().getTypeName(),
+								containerClass == null ? "<dynamic>" : containerClass.getTypeName(),
 								propertyName
 						),
 						true,

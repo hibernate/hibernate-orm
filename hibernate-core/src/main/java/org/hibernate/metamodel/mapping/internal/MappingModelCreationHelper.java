@@ -55,6 +55,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionMappingType;
 import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.mapping.GeneratedValueResolver;
 import org.hibernate.metamodel.mapping.PropertyBasedMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -83,6 +84,7 @@ import org.hibernate.property.access.internal.ChainedPropertyAccessImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
+import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -349,9 +351,9 @@ public class MappingModelCreationHelper {
 
 		final FetchTiming fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 		final FetchStyle fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+		final ValueGeneration valueGeneration = bootProperty.getValueGenerationStrategy();
 
 		if ( valueConverter != null ) {
-
 			if ( isAttrFormula ) {
 				throw new MappingException( String.format(
 						"Value converter should not be set for column [%s] annotated with @Formula [%s]",
@@ -367,11 +369,15 @@ public class MappingModelCreationHelper {
 					.getDomainModel()
 					.getTypeConfiguration()
 					.getBasicTypeRegistry()
-					.resolve(
-							valueConverter.getRelationalJavaDescriptor(),
-							resolution.getJdbcTypeDescriptor()
-					);
+					.resolve( valueConverter.getRelationalJavaDescriptor(), resolution.getJdbcTypeDescriptor() );
 
+			final GeneratedValueResolver generatedValueResolver;
+			if ( valueGeneration == null ) {
+				generatedValueResolver = NoGeneratedValueResolver.INSTANCE;
+			}
+			else if ( valueGeneration.getValueGenerator() == null ) {
+				// in-db generation
+			}
 
 			return new BasicAttributeMapping(
 					attrName,
@@ -388,7 +394,8 @@ public class MappingModelCreationHelper {
 					valueConverter,
 					mappingBasicType.getJdbcMapping(),
 					declaringType,
-					propertyAccess
+					propertyAccess,
+					valueGeneration
 			);
 		}
 		else {
@@ -407,7 +414,8 @@ public class MappingModelCreationHelper {
 					null,
 					attrType,
 					declaringType,
-					propertyAccess
+					propertyAccess,
+					valueGeneration
 			);
 		}
 	}
@@ -449,7 +457,8 @@ public class MappingModelCreationHelper {
 						FetchStyle.JOIN,
 						attributeMappingType,
 						declaringType,
-						propertyAccess
+						propertyAccess,
+						bootProperty.getValueGenerationStrategy()
 				),
 				creationProcess
 		);

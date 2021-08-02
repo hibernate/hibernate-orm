@@ -19,7 +19,7 @@ public interface ValueGeneration extends Serializable {
 	 *
 	 * @return When the value is generated.
 	 */
-	public GenerationTiming getGenerationTiming();
+	GenerationTiming getGenerationTiming();
 
 	/**
 	 * Obtain the in-VM value generator.
@@ -29,7 +29,7 @@ public interface ValueGeneration extends Serializable {
 	 *
 	 * @return The strategy for performing in-VM value generation
 	 */
-	public ValueGenerator<?> getValueGenerator();
+	ValueGenerator<?> getValueGenerator();
 
 	/**
 	 * For values which are generated in the database ({@link #getValueGenerator()} == {@code null}), should the
@@ -39,7 +39,7 @@ public interface ValueGeneration extends Serializable {
 	 *
 	 * @return {@code true} indicates the column should be included in the SQL.
 	 */
-	public boolean referenceColumnInSql();
+	boolean referenceColumnInSql();
 
 	/**
 	 * For values which are generated in the database ({@link #getValueGenerator} == {@code null}), if the
@@ -52,7 +52,7 @@ public interface ValueGeneration extends Serializable {
 	 *
 	 * @return The column value to be used in the SQL.
 	 */
-	public String getDatabaseGeneratedReferencedColumnValue();
+	String getDatabaseGeneratedReferencedColumnValue();
 
 	/**
 	 * Does this value generation occur with the given timing?
@@ -61,5 +61,6 @@ public interface ValueGeneration extends Serializable {
 		GenerationTiming generationTiming = getGenerationTiming();
 		return timing == GenerationTiming.INSERT && generationTiming.includesInsert()
 			|| timing == GenerationTiming.ALWAYS && generationTiming.includesUpdate();
+//		return timing.includes( getGenerationTiming() );
 	}
 }

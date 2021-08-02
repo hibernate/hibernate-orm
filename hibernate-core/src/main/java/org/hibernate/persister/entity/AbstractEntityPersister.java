@@ -107,6 +107,7 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
+import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -169,6 +170,7 @@ import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
+import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -242,7 +244,6 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
@@ -378,8 +379,8 @@ public abstract class AbstractEntityPersister
 	private String[] sqlUpdateStrings;
 	private String[] sqlLazyUpdateStrings;
 
-	private String sqlInsertGeneratedValuesSelectString;
-	private String sqlUpdateGeneratedValuesSelectString;
+	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
+	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
 
 	//Custom SQL (would be better if these were private)
 	protected boolean[] insertCallable;
@@ -2008,12 +2009,8 @@ public abstract class AbstractEntityPersister
 		return propertyUniqueness;
 	}
 
-	public String generateInsertGeneratedValuesSelectString() {
-		return generateGeneratedValuesSelectString( GenerationTiming.INSERT );
-	}
-
-	public String generateUpdateGeneratedValuesSelectString() {
-		return generateGeneratedValuesSelectString( GenerationTiming.ALWAYS );
+	private GeneratedValuesProcessor createGeneratedValuesProcessor(GenerationTiming timing) {
+		return new GeneratedValuesProcessor( this, timing, getFactory() );
 	}
 
 	private String generateGeneratedValuesSelectString(final GenerationTiming generationTimingToMatch) {
@@ -2899,35 +2896,58 @@ public abstract class AbstractEntityPersister
 			final int j,
 			final Object[] oldFields,
 			final boolean useRowId) {
+		final Update update = createUpdate().setTableName( getTableName( j ) );
 
-		Update update = createUpdate().setTableName( getTableName( j ) );
+		final MutableBoolean hasColumnsRef = new MutableBoolean();
+		forEachAttributeMapping( (index, attributeMapping) -> {
+			if ( isPropertyOfTable( index, j ) ) {
+				// `attributeMapping` is an attribute of the table we are updating
 
-		boolean hasColumns = false;
-		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, j )
-					&& !lobProperties.contains( i ) ) {
-				// this is a property of the table, which we are updating
-				update.addColumns(
-						getPropertyColumnNames( i ),
-						propertyColumnUpdateable[i], propertyColumnWriters[i]
-				);
-				hasColumns = hasColumns || getPropertyColumnSpan( i ) > 0;
+				if ( ! lobProperties.contains( index ) ) {
+					// HHH-4635
+					// Oracle expects all Lob properties to be last in inserts
+					// and updates.  Insert them at the end - see below
+
+					if ( includeProperty[ index ] ) {
+						update.addColumns(
+								getPropertyColumnNames( index ),
+								propertyColumnUpdateable[index ],
+								propertyColumnWriters[index]
+						);
+						hasColumnsRef.setValue( true );
+					}
+					else {
+						final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
+						if ( valueGeneration.getGenerationTiming().includesUpdate()
+								&& valueGeneration.getValueGenerator() == null
+								&& valueGeneration.referenceColumnInSql() ) {
+							update.addColumns(
+									getPropertyColumnNames( index ),
+									new boolean[] { true },
+									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
+							);
+							hasColumnsRef.setValue( true );
+						}
+					}
+				}
 			}
-		}
 
-		// HHH-4635
-		// Oracle expects all Lob properties to be last in inserts
-		// and updates.  Insert them at the end.
-		for ( int i : lobProperties ) {
-			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
-				// this property belongs on the table and is to be inserted
-				update.addColumns(
-						getPropertyColumnNames( i ),
-						propertyColumnUpdateable[i], propertyColumnWriters[i]
-				);
-				hasColumns = true;
+
+			// HHH-4635
+			// Oracle expects all Lob properties to be last in inserts
+			// and updates.  Insert them at the end.
+			for ( int i : lobProperties ) {
+				if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+					// this property belongs on the table and is to be inserted
+					update.addColumns(
+							getPropertyColumnNames( i ),
+							propertyColumnUpdateable[i], propertyColumnWriters[i]
+					);
+					hasColumnsRef.setValue( true );
+				}
 			}
-		}
+		} );
+
 
 		// select the correct row by either pk or row id
 		if ( useRowId ) {
@@ -2943,7 +2963,7 @@ public abstract class AbstractEntityPersister
 			// check it (unless this is a "generated" version column)!
 			if ( checkVersion( includeProperty ) ) {
 				update.setVersionColumnName( getVersionColumnName() );
-				hasColumns = true;
+				hasColumnsRef.setValue( true );
 			}
 		}
 		else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
@@ -2984,7 +3004,7 @@ public abstract class AbstractEntityPersister
 			update.setComment( "update " + getEntityName() );
 		}
 
-		return hasColumns ? update.toStatementString() : null;
+		return hasColumnsRef.getValue() ? update.toStatementString() : null;
 	}
 
 	public final boolean checkVersion(final boolean[] includeProperty) {
@@ -3000,6 +3020,9 @@ public abstract class AbstractEntityPersister
 		return generateInsertString( identityInsert, includeProperty, 0 );
 	}
 
+	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
+	private static final boolean[] SINGLE_FALSE = new boolean[] { false };
+
 	/**
 	 * Generate the SQL that inserts a row
 	 */
@@ -3008,47 +3031,54 @@ public abstract class AbstractEntityPersister
 		// todo : remove the identityInsert param and variations;
 		//   identity-insert strings are now generated from generateIdentityInsertString()
 
-		Insert insert = createInsert().setTableName( getTableName( j ) );
+		final Insert insert = createInsert().setTableName( getTableName( j ) );
 
-		// add normal properties
-		for ( int i = 0; i < entityMetamodel.getPropertySpan(); i++ ) {
-			// the incoming 'includeProperty' array only accounts for insertable defined at the root level, it
-			// does not account for partially generated composites etc.  We also need to account for generation
-			// values
-			if ( isPropertyOfTable( i, j ) ) {
-				if ( !lobProperties.contains( i ) ) {
-					final InDatabaseValueGenerationStrategy generationStrategy = entityMetamodel.getInDatabaseValueGenerationStrategies()[i];
-					if ( generationStrategy != null && generationStrategy.getGenerationTiming().includesInsert() ) {
-						if ( generationStrategy.referenceColumnsInSql() ) {
-							final String[] values;
-							if ( generationStrategy.getReferencedColumnValues() == null ) {
-								values = propertyColumnWriters[i];
-							}
-							else {
-								final int numberOfColumns = propertyColumnWriters[i].length;
-								values = new String[numberOfColumns];
-								for ( int x = 0; x < numberOfColumns; x++ ) {
-									if ( generationStrategy.getReferencedColumnValues()[x] != null ) {
-										values[x] = generationStrategy.getReferencedColumnValues()[x];
-									}
-									else {
-										values[x] = propertyColumnWriters[i][x];
-									}
-								}
-							}
-							insert.addColumns( getPropertyColumnNames( i ), propertyColumnInsertable[i], values );
-						}
-					}
-					else if ( includeProperty[i] ) {
+		forEachAttributeMapping( (index, attributeMapping) -> {
+			if ( isPropertyOfTable( index, j ) ) {
+				// `attributeMapping` is an attribute of the table we are updating
+
+				if ( ! lobProperties.contains( index ) ) {
+					// HHH-4635
+					// Oracle expects all Lob properties to be last in inserts
+					// and updates.  Insert them at the end - see below
+
+					if ( includeProperty[ index ] ) {
 						insert.addColumns(
-								getPropertyColumnNames( i ),
-								propertyColumnInsertable[i],
-								propertyColumnWriters[i]
+								getPropertyColumnNames( index ),
+								propertyColumnInsertable[index ],
+								propertyColumnWriters[index]
 						);
+					}
+					else {
+						final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
+						if ( valueGeneration.getGenerationTiming().includesInsert()
+								&& valueGeneration.getValueGenerator() == null
+								&& valueGeneration.referenceColumnInSql() ) {
+							insert.addColumns(
+									getPropertyColumnNames( index ),
+									SINGLE_TRUE,
+									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
+							);
+						}
 					}
 				}
 			}
-		}
+
+
+			// HHH-4635
+			// Oracle expects all Lob properties to be last in inserts
+			// and updates.  Insert them at the end.
+			for ( int i : lobProperties ) {
+				if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+					// this property belongs on the table and is to be inserted
+					insert.addColumns(
+							getPropertyColumnNames( i ),
+							propertyColumnInsertable[i],
+							propertyColumnWriters[i]
+					);
+				}
+			}
+		} );
 
 		// add the discriminator
 		if ( j == 0 ) {
@@ -4168,12 +4198,6 @@ public abstract class AbstractEntityPersister
 			if ( sqlLazyUpdateByRowIdString != null ) {
 				LOG.debugf( " Update by row id (non-lazy fields): %s", sqlLazyUpdateByRowIdString );
 			}
-			if ( sqlInsertGeneratedValuesSelectString != null ) {
-				LOG.debugf( " Insert-generated property select: %s", sqlInsertGeneratedValuesSelectString );
-			}
-			if ( sqlUpdateGeneratedValuesSelectString != null ) {
-				LOG.debugf( " Update-generated property select: %s", sqlUpdateGeneratedValuesSelectString );
-			}
 		}
 	}
 
@@ -4532,18 +4556,18 @@ public abstract class AbstractEntityPersister
 				generateUpdateString( getNonLazyPropertyUpdateability(), 0, true );
 
 		for ( int j = 0; j < joinSpan; j++ ) {
-			sqlInsertStrings[j] = customSQLInsert[j] == null ?
-					generateInsertString( getPropertyInsertability(), j ) :
-						substituteBrackets( customSQLInsert[j]);
-			sqlUpdateStrings[j] = customSQLUpdate[j] == null ?
-					generateUpdateString( getPropertyUpdateability(), j, false ) :
-						substituteBrackets( customSQLUpdate[j]);
-			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null ?
-					generateUpdateString( getNonLazyPropertyUpdateability(), j, false ) :
-						substituteBrackets( customSQLUpdate[j]);
-			sqlDeleteStrings[j] = customSQLDelete[j] == null ?
-					generateDeleteString( j ) :
-						substituteBrackets( customSQLDelete[j]);
+			sqlInsertStrings[j] = customSQLInsert[j] == null
+					? generateInsertString( getPropertyInsertability(), j )
+					: substituteBrackets( customSQLInsert[j]);
+			sqlUpdateStrings[j] = customSQLUpdate[j] == null
+					? generateUpdateString( getPropertyUpdateability(), j, false )
+					: substituteBrackets( customSQLUpdate[j]);
+			sqlLazyUpdateStrings[j] = customSQLUpdate[j] == null
+					? generateUpdateString( getNonLazyPropertyUpdateability(), j, false )
+					: substituteBrackets( customSQLUpdate[j]);
+			sqlDeleteStrings[j] = customSQLDelete[j] == null
+					? generateDeleteString( j )
+					: substituteBrackets( customSQLDelete[j]);
 		}
 
 		tableHasColumns = new boolean[joinSpan];
@@ -4555,12 +4579,6 @@ public abstract class AbstractEntityPersister
 		sqlSnapshotSelectString = generateSnapshotSelectString();
 		sqlLazySelectStringsByFetchGroup = generateLazySelectStringsByFetchGroup();
 		sqlVersionSelectString = generateSelectVersionString();
-		if ( hasInsertGeneratedProperties() ) {
-			sqlInsertGeneratedValuesSelectString = generateInsertGeneratedValuesSelectString();
-		}
-		if ( hasUpdateGeneratedProperties() ) {
-			sqlUpdateGeneratedValuesSelectString = generateUpdateGeneratedValuesSelectString();
-		}
 		if ( isIdentifierAssignedByInsert() ) {
 			identityDelegate = ( (PostInsertIdentifierGenerator) getIdentifierGenerator() )
 					.getInsertGeneratedIdentifierDelegate(
@@ -5593,16 +5611,15 @@ public abstract class AbstractEntityPersister
 			Object entity,
 			Object[] state,
 			SharedSessionContractImplementor session) {
-		if ( !hasInsertGeneratedProperties() ) {
-			throw new AssertionFailure( "no insert-generated properties" );
+		if ( insertGeneratedValuesProcessor == null ) {
+			throw new UnsupportedOperationException( "Entity has no insert-generated properties - `" + getEntityName() + "`" );
 		}
-		processGeneratedProperties(
-				id,
+
+		insertGeneratedValuesProcessor.processGeneratedValues(
 				entity,
+				id,
 				state,
-				session,
-				sqlInsertGeneratedValuesSelectString,
-				GenerationTiming.INSERT
+				session
 		);
 	}
 
@@ -5611,110 +5628,15 @@ public abstract class AbstractEntityPersister
 			Object entity,
 			Object[] state,
 			SharedSessionContractImplementor session) {
-		if ( !hasUpdateGeneratedProperties() ) {
-			throw new AssertionFailure( "no update-generated properties" );
+		if ( updateGeneratedValuesProcessor == null ) {
+			throw new AssertionFailure( "Entity has no update-generated properties - `" + getEntityName() + "`" );
 		}
-		processGeneratedProperties(
-				id,
+		updateGeneratedValuesProcessor.processGeneratedValues(
 				entity,
+				id,
 				state,
-				session,
-				sqlUpdateGeneratedValuesSelectString,
-				GenerationTiming.ALWAYS
+				session
 		);
-	}
-
-	private void processGeneratedProperties(
-			Object id,
-			Object entity,
-			Object[] state,
-			SharedSessionContractImplementor session,
-			String selectionSQL,
-			GenerationTiming matchTiming) {
-		// force immediate execution of the insert batch (if one)
-		session.getJdbcCoordinator().executeBatch();
-
-		try {
-			PreparedStatement ps = session
-					.getJdbcCoordinator()
-					.getStatementPreparer()
-					.prepareStatement( selectionSQL );
-			try {
-				getIdentifierType().nullSafeSet( ps, id, 1, session );
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( ps );
-				try {
-					if ( !rs.next() ) {
-						throw new HibernateException(
-								"Unable to locate row for retrieval of generated properties: " +
-										MessageHelper.infoString( this, id, getFactory() )
-						);
-					}
-					int propertyIndex = -1;
-					for ( NonIdentifierAttribute attribute : entityMetamodel.getProperties() ) {
-						propertyIndex++;
-						if ( isValueGenerationRequired( attribute, matchTiming ) ) {
-							final Object hydratedState = attribute.getType().hydrate(
-									rs, getPropertyAliases(
-											"",
-											propertyIndex
-									), session, entity
-							);
-							state[propertyIndex] = attribute.getType().resolve( hydratedState, session, entity );
-							setPropertyValue( entity, propertyIndex, state[propertyIndex] );
-						}
-					}
-
-//					for ( int i = 0; i < getPropertySpan(); i++ ) {
-//						if ( includeds[i] != ValueInclusion.NONE ) {
-//							Object hydratedState = getPropertyTypes()[i].hydrate( rs, getPropertyAliases( "", i ), session, entity );
-//							state[i] = getPropertyTypes()[i].resolve( hydratedState, session, entity );
-//							setPropertyValue( entity, i, state[i] );
-//						}
-//					}
-				}
-				finally {
-					if ( rs != null ) {
-						session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, ps );
-					}
-				}
-			}
-			finally {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( ps );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
-		catch (SQLException e) {
-			throw getFactory().getJdbcServices().getSqlExceptionHelper().convert(
-					e,
-					"unable to select generated column values",
-					selectionSQL
-			);
-		}
-
-	}
-
-	public static boolean isValueGenerationRequired(NonIdentifierAttribute attribute, GenerationTiming matchTiming) {
-		if ( attribute.getType() instanceof ComponentType) {
-			final ComponentType type = (ComponentType) attribute.getType();
-			for ( ValueGeneration valueGenerationStrategy : type.getPropertyValueGenerationStrategies() ) {
-				if ( isReadRequired( valueGenerationStrategy, matchTiming ) ) {
-					return true;
-				}
-			}
-			return false;
-		}
-		else {
-			return isReadRequired( attribute.getValueGenerationStrategy(), matchTiming );
-		}
-	}
-
-	/**
-	 * Whether the given value generation strategy requires to read the value from the database or not.
-	 */
-	private static boolean isReadRequired(ValueGeneration valueGeneration, GenerationTiming matchTiming) {
-		return valueGeneration != null
-				&& valueGeneration.getValueGenerator() == null
-				&& valueGeneration.timingMatches( matchTiming );
 	}
 
 	public String getIdentifierPropertyName() {
@@ -6129,6 +6051,13 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			naturalIdMapping = null;
+		}
+
+		if ( hasInsertGeneratedProperties() ) {
+			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.INSERT );
+		}
+		if ( hasUpdateGeneratedProperties() ) {
+			updateGeneratedValuesProcessor = createGeneratedValuesProcessor( GenerationTiming.ALWAYS );
 		}
 	}
 

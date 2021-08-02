@@ -1,13 +1,11 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.generated;
+package org.hibernate.orm.test.mapping.generated;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -24,9 +22,8 @@ import java.util.Calendar;
 import java.util.Date;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
@@ -35,47 +32,47 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.tuple.AnnotationValueGeneration;
-import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGenerator;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-@SkipForDialect(value = SybaseDialect.class, comment = "CURRENT_TIMESTAMP not supported as default value in Sybase")
-@SkipForDialect(value = MySQLDialect.class, comment = "See HHH-10196", strictMatching = false)
-@RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { TheEntity.class };
-	}
-
-	@Override
-	protected boolean isCleanupTestDataUsingBulkDelete() {
-		return true;
-	}
-
+/**
+ * Test for the generation of column values using different
+ * {@link org.hibernate.tuple.ValueGeneration} implementations.
+ *
+ * @author Steve Ebersole
+ * @author Gunnar Morling
+ */
+@SkipForDialect( dialectClass = SybaseDialect.class, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase" )
+@SkipForDialect( dialectClass = MySQLDialect.class, reason = "See HHH-10196" )
+@NotImplementedYet(
+		strict = false,
+		reason = "Support for `java.sql.Date` and `java.sql.Time` is currently fubar"
+)
+@DomainModel( annotatedClasses = DefaultGeneratedValueTest.TheEntity.class )
+@SessionFactory
+public class DefaultGeneratedValueTest {
 	@Test
-	@TestForIssue( jiraKey = "HHH-12671" )
-	public void testGenerationWithIdentityInsert() {
-		final TheEntity theEntity = new TheEntity( 1 );
-
-		doInHibernate( this::sessionFactory, session -> {
+	@TestForIssue( jiraKey = "HHH-2907" )
+	public void testGeneration(SessionFactoryScope scope) {
+		final TheEntity created = scope.fromTransaction( (s) -> {
+			final TheEntity theEntity = new TheEntity( 1 );
 			assertNull( theEntity.createdDate );
 			assertNull( theEntity.alwaysDate );
 			assertNull( theEntity.vmCreatedDate );
@@ -92,11 +89,36 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 			assertNull( theEntity.vmCreatedSqlYear );
 			assertNull( theEntity.vmCreatedSqlYearMonth );
 			assertNull( theEntity.vmCreatedSqlZonedDateTime );
-			assertNull( theEntity.dbCreatedDate );
 
 			assertNull( theEntity.name );
-			session.save( theEntity );
+			s.save( theEntity );
+			//TODO: Actually the values should be non-null after save
+			assertNull( theEntity.createdDate );
+			assertNull( theEntity.alwaysDate );
+			assertNull( theEntity.vmCreatedDate );
+			assertNull( theEntity.vmCreatedSqlDate );
+			assertNull( theEntity.vmCreatedSqlTime );
+			assertNull( theEntity.vmCreatedSqlTimestamp );
+			assertNull( theEntity.vmCreatedSqlLocalDate );
+			assertNull( theEntity.vmCreatedSqlLocalTime );
+			assertNull( theEntity.vmCreatedSqlLocalDateTime );
+			assertNull( theEntity.vmCreatedSqlMonthDay );
+			assertNull( theEntity.vmCreatedSqlOffsetDateTime );
+			assertNull( theEntity.vmCreatedSqlOffsetTime );
+			assertNull( theEntity.vmCreatedSqlYear );
+			assertNull( theEntity.vmCreatedSqlYearMonth );
+			assertNull( theEntity.vmCreatedSqlZonedDateTime );
+			assertNull( theEntity.name );
 
+			return theEntity;
+		} );
+
+		assertNotNull( created.createdDate );
+		assertNotNull( created.alwaysDate );
+		assertEquals( "Bob", created.name );
+
+		scope.inTransaction( (s) -> {
+			final TheEntity theEntity = s.get( TheEntity.class, 1 );
 			assertNotNull( theEntity.createdDate );
 			assertNotNull( theEntity.alwaysDate );
 			assertNotNull( theEntity.vmCreatedDate );
@@ -112,42 +134,49 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 			assertNotNull( theEntity.vmCreatedSqlYear );
 			assertNotNull( theEntity.vmCreatedSqlYearMonth );
 			assertNotNull( theEntity.vmCreatedSqlZonedDateTime );
-			assertNotNull( theEntity.dbCreatedDate );
-			assertNotNull( theEntity.name );
-		} );
+			assertEquals( "Bob", theEntity.name );
 
-		assertNotNull( theEntity.createdDate );
-		assertNotNull( theEntity.alwaysDate );
-		assertEquals( "Bob", theEntity.name );
-
-		doInHibernate( this::sessionFactory, session -> {
-			TheEntity _theEntity = session.get( TheEntity.class, 1 );
-			assertNotNull( _theEntity.createdDate );
-			assertNotNull( _theEntity.alwaysDate );
-			assertNotNull( _theEntity.vmCreatedDate );
-			assertNotNull( _theEntity.vmCreatedSqlDate );
-			assertNotNull( _theEntity.vmCreatedSqlTime );
-			assertNotNull( _theEntity.vmCreatedSqlTimestamp );
-			assertNotNull( _theEntity.vmCreatedSqlLocalDate );
-			assertNotNull( _theEntity.vmCreatedSqlLocalTime );
-			assertNotNull( _theEntity.vmCreatedSqlLocalDateTime );
-			assertNotNull( _theEntity.vmCreatedSqlMonthDay );
-			assertNotNull( _theEntity.vmCreatedSqlOffsetDateTime );
-			assertNotNull( _theEntity.vmCreatedSqlOffsetTime );
-			assertNotNull( _theEntity.vmCreatedSqlYear );
-			assertNotNull( _theEntity.vmCreatedSqlYearMonth );
-			assertNotNull( _theEntity.vmCreatedSqlZonedDateTime );
-			assertNotNull( _theEntity.dbCreatedDate );
-			assertEquals( "Bob", _theEntity.name );
-
-			_theEntity.lastName = "Smith";
+			s.delete( theEntity );
 		} );
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-2907")
+	public void testUpdateTimestampGeneration(SessionFactoryScope scope) {
+		final TheEntity created = scope.fromTransaction( (s) -> {
+			TheEntity theEntity = new TheEntity( 1 );
+			assertNull( theEntity.updated );
+			s.save( theEntity );
+			assertNull( theEntity.updated );
+
+			return theEntity;
+		} );
+
+		assertNotNull( created.vmCreatedSqlTimestamp );
+		assertNotNull( created.updated );
+
+		scope.inTransaction( (s) -> {
+			final TheEntity theEntity = s.get( TheEntity.class, 1 );
+			theEntity.lastName = "Smith";
+		} );
+
+		scope.inTransaction( (s) -> {
+			final TheEntity theEntity = s.get( TheEntity.class, 1 );
+
+			assertEquals( "Creation timestamp should not change on update", created, theEntity.vmCreatedSqlTimestamp );
+			assertTrue( "Update timestamp should have changed due to update", theEntity.updated.after( created.updated ) );
+		} );
+	}
+
+	@AfterEach
+	public void dropTestData(SessionFactoryScope scope) {
+		scope.inTransaction( (s) -> s.createQuery( "delete TheEntity" ).executeUpdate() );
+	}
+
 	@Entity( name = "TheEntity" )
-	private static class TheEntity {
+	@Table( name = "T_ENT_GEN_DEF" )
+	public static class TheEntity {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
 		private Integer id;
 
 		@Generated( GenerationTime.INSERT )
@@ -205,9 +234,6 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 		@CreationTimestamp
 		private ZonedDateTime vmCreatedSqlZonedDateTime;
 
-		@FunctionCreationTimestamp
-		private Date dbCreatedDate;
-
 		@UpdateTimestamp
 		private Timestamp updated;
 
@@ -232,36 +258,4 @@ public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCas
 			return "Bob";
 		}
 	}
-
-	@ValueGenerationType(generatedBy = FunctionCreationValueGeneration.class)
-	@Retention(RetentionPolicy.RUNTIME)
-	public @interface FunctionCreationTimestamp {
-	}
-
-	public static class FunctionCreationValueGeneration
-			implements AnnotationValueGeneration<FunctionCreationTimestamp> {
-
-		@Override
-		public void initialize(FunctionCreationTimestamp annotation, Class<?> propertyType) {
-		}
-
-		public GenerationTiming getGenerationTiming() {
-			// its creation...
-			return GenerationTiming.INSERT;
-		}
-
-		public ValueGenerator<?> getValueGenerator() {
-			// no in-memory generation
-			return null;
-		}
-
-		public boolean referenceColumnInSql() {
-			return true;
-		}
-
-		public String getDatabaseGeneratedReferencedColumnValue() {
-			return "current_timestamp";
-		}
-	}
-
 }

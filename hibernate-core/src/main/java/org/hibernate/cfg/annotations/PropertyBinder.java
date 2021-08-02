@@ -348,13 +348,15 @@ public class PropertyBinder {
 			return NoValueGeneration.INSTANCE;
 		}
 
-		final GenerationTiming when = valueGeneration.getGenerationTiming();
-
 		if ( valueGeneration.getValueGenerator() == null ) {
+			// if we have an in-db generator, mark it as not insertable nor updatable
 			insertable = false;
-			if ( when == GenerationTiming.ALWAYS ) {
-				updatable = false;
-			}
+			updatable = false;
+//			final GenerationTiming when = valueGeneration.getGenerationTiming();
+//			if ( when == GenerationTiming.ALWAYS ) {
+//				// it should also be not-updatable
+//				updatable = false;
+//			}
 		}
 
 		return valueGeneration;
@@ -394,21 +396,18 @@ public class PropertyBinder {
 	private <A extends Annotation> AnnotationValueGeneration<A> getValueGenerationFromAnnotation(
 			XProperty property,
 			A annotation) {
-		ValueGenerationType generatorAnnotation = annotation.annotationType()
-				.getAnnotation( ValueGenerationType.class );
+		final ValueGenerationType generatorAnnotation = annotation.annotationType().getAnnotation( ValueGenerationType.class );
 
 		if ( generatorAnnotation == null ) {
 			return null;
 		}
 
-		Class<? extends AnnotationValueGeneration<?>> generationType = generatorAnnotation.generatedBy();
-		AnnotationValueGeneration<A> valueGeneration = instantiateAndInitializeValueGeneration(
-				annotation, generationType, property
-		);
+		final Class<? extends AnnotationValueGeneration<?>> generationType = generatorAnnotation.generatedBy();
+		final AnnotationValueGeneration<A> valueGeneration = instantiateAndInitializeValueGeneration( annotation, generationType, property );
 
-		if ( annotation.annotationType() == Generated.class &&
-				property.isAnnotationPresent( javax.persistence.Version.class ) &&
-				valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
+		if ( annotation.annotationType() == Generated.class
+				&& property.isAnnotationPresent( javax.persistence.Version.class )
+				&& valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
 
 			throw new AnnotationException(
 					"@Generated(INSERT) on a @Version property not allowed, use ALWAYS (or NEVER): "

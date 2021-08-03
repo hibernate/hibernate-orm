@@ -164,7 +164,7 @@ public class SchemaUpdateTest {
 	@Table(name = "`testentity`")
 	public static class LowercaseTableNameEntity {
 		@Id
-				@GeneratedValue
+		@GeneratedValue
 		long id;
 		String field1;
 
@@ -230,7 +230,6 @@ public class SchemaUpdateTest {
 	public static class Match {
 		@Id
 		@GeneratedValue
-
 		long id;
 		String match;
 
@@ -244,7 +243,6 @@ public class SchemaUpdateTest {
 	public static class InheritanceRootEntity {
 		@Id
 		@GeneratedValue
-
 		protected Long id;
 	}
 

@@ -122,6 +122,10 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		return extractionContext;
 	}
 
+	// The following methods purposely return the column labels that are defined by
+	// DatabaseMetaData methods that return a ResultSet. Subclasses that do not rely
+	// on DatabaseMetaData may override these methods to use different column labels.
+
 	protected String getResultSetCatalogLabel() {
 		return "TABLE_CAT";
 	}
@@ -186,24 +190,25 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		return "FKCOLUMN_NAME" ;
 	}
 
-	protected String determineCatalogFilter(Identifier catalog) {
-		Identifier identifierToUse = catalog;
-		if ( identifierToUse == null ) {
-			identifierToUse = extractionContext.getDefaultCatalog();
-		}
-
-		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataCatalogName( identifierToUse );
-	}
-
-	protected String determineSchemaFilter(Identifier schema) {
-		Identifier identifierToUse = schema;
-		if ( identifierToUse == null ) {
-			identifierToUse = extractionContext.getDefaultSchema();
-		}
-
-		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
-	}
-
+	/**
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a column of existing catalog
+	 *         names. The column label must be the same as returned by
+	 *         {@link #getResultSetCatalogLabel}.
+	 *     </li>
+	 *     <li>execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
+	 */
 	protected abstract <T> T processCatalogsResultSet(ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
 
 	@Override
@@ -230,9 +235,41 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
+	/**
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for any existing
+	 *         catalog/schema combination as specified by the {@code catalog}
+	 *         and {@code schemaPattern} parameters described below. The row
+	 *         contents will not be examined by {@code processor.process( resultSet )},
+	 *         so column label names are not specified;
+	 *     </li>
+	 *     <li>execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * <p/>
+	 * The {@code catalog} and {@code schemaPattern} parameters are as
+	 * specified by {@link DatabaseMetaData#getSchemas(String, String)},
+	 * and are copied here:
+	 * @param catalog – a catalog name; must match the catalog name as it is
+	 *                   stored in the database; "" retrieves those without
+	 *                   a catalog; null means catalog name should not be
+	 *                   used to narrow down the search.
+	 * @param schemaPattern – a schema name; must match the schema name as
+	 *                         it is stored in the database; null means schema
+	 *                         name should not be used to narrow down the search.
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
+	 */
 	protected abstract <T> T processSchemaResultSet(
-			String catalogFilter,
-			String schemaFilter,
+			String catalog,
+			String schemaPattern,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
 
 	@Override
@@ -267,6 +304,24 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		catch (SQLException sqlException) {
 			throw convertSQLException( sqlException, "Unable to query ResultSet for existing schemas" );
 		}
+	}
+
+	protected String determineCatalogFilter(Identifier catalog) {
+		Identifier identifierToUse = catalog;
+		if ( identifierToUse == null ) {
+			identifierToUse = extractionContext.getDefaultCatalog();
+		}
+
+		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataCatalogName( identifierToUse );
+	}
+
+	protected String determineSchemaFilter(Identifier schema) {
+		Identifier identifierToUse = schema;
+		if ( identifierToUse == null ) {
+			identifierToUse = extractionContext.getDefaultSchema();
+		}
+
+		return extractionContext.getJdbcEnvironment().getIdentifierHelper().toMetaDataSchemaName( identifierToUse );
 	}
 
 	private TableInformation extractTableInformation(ResultSet resultSet) throws SQLException {
@@ -329,10 +384,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			}
 
 			// 3) look in all namespaces
-
-			final String tableNameFilter = toMetaDataObjectName( tableName );
-
 			try {
+				final String tableNameFilter = toMetaDataObjectName( tableName );
+
 				return processTableResultSet(
 						null,
 						null,
@@ -495,7 +549,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			return processTableResultSet(
 					catalogFilter,
 					schemaFilter,
-					null,
+					"%",
 					tableTypes,
 					resultSet -> {
 						final NameSpaceTablesInformation tablesInformation = extractNameSpaceTablesInformation( resultSet );
@@ -508,10 +562,62 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		}
 	}
 
+	/**
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for any existing
+	 *         catalog/schema/table/column combination as specified by the
+	 *         {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
+	 *         and {@code columnNamePattern} parameters described below.
+	 *         The {@link ResultSet} must contain the following, consistent with the
+	 *         corresponding columns returned by {@link DatabaseMetaData#getColumns}
+	 *         <ul>
+	 *             <li>column label {@link #getResultSetTableNameLabel} for table name</li>
+	 *             <li>column label {@link #getResultSetColumnNameLabel} for column name</li>
+	 *             <li>column label {@link #getResultSetSqlTypeCodeLabel} SQL type code from java.sql.Types</li>
+	 *             <li>column label {@link #getResultSetTypeNameLabel} for database column type name</li>
+	 *             <li>column label {@link #getResultSetColumnSizeLabel} for column size</li>
+	 *             <li>column label {@link #getResultSetDecimalDigitsLabel} for number of fractional digits</li>
+	 *             <li>column label {@link #getResultSetIsNullableLabel} for nullability</li>
+	 *         </ul>
+	 *         Rows must be ordered by catalog, schema, table name, and column position.
+	 *     </li>
+	 *     <li> execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * <p/>
+	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
+	 * and {@code columnNamePattern} parameters are as
+	 * specified by {@link DatabaseMetaData#getColumns(String, String, String, String)},
+	 * and are copied here:
+	 * <p/>
+	 * @param catalog – a catalog name; must match the catalog name as it is
+	 *                   stored in the database; "" retrieves those without
+	 *                   a catalog; null means that the catalog name should
+	 *                   not be used to narrow the search
+	 * @param schemaPattern – a schema name pattern; must match the schema
+	 *                         name as it is stored in the database; ""
+	 *                         retrieves those without a schema; null means
+	 *                         that the schema name should not be used to
+	 *                         narrow the search
+	 * @param tableNamePattern – a table name pattern; must match the table
+	 *                            name as it is stored in the database
+	 * @param columnNamePattern – a column name pattern; must match the
+	 *                             column name as it is stored in the database
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
+	 */
 	protected abstract <T> T processColumnsResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			String tableFilter,
+			String catalog,
+			String schemaPattern,
+			String tableNamePattern,
+			String columnNamePattern,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
 
 	private void populateTablesWithColumns(
@@ -523,6 +629,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					catalogFilter,
 					schemaFilter,
 					null,
+					"%",
 					resultSet -> {
 						String currentTableName = "";
 						TableInformation currentTable = null;
@@ -571,29 +678,54 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	/**
-	 * Returns a {@link ResultSet} having the following column aliases:
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for any existing
+	 *         catalog/schema/table/table type combination as specified by the
+	 *         {@code catalogFilter}, {@code schemaFilter}, {@code tableNameFilter},
+	 *         and {@code tableTypes} parameters described below.
+	 *         The {@link ResultSet} must contain the following, consistent with the
+	 *         corresponding columns returned by {@link DatabaseMetaData#getTables(String, String, String, String[])}
+	 *         <ul>
+	 *             <li>column label {@link #getResultSetTableNameLabel} for table name</li>
+	 *             <li>column label {@link #getResultSetTableTypeLabel} for table type</li>
+	 *             <li>column label {@link #getResultSetRemarksLabel} for table comment</li>
+	 *         </ul>
+	 *     </li>
+	 *     <li> execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
 	 * <p/>
-	 * TABLE_CAT String => table catalog (may be null)
-	 * TABLE_SCHEM String => table schema (may be null)
-	 * TABLE_NAME String => table name
-	 * TABLE_TYPE String => table type. Typical types are "TABLE", "VIEW", "SYSTEM TABLE", "GLOBAL TEMPORARY", "LOCAL TEMPORARY", "ALIAS", "SYNONYM".
-	 * REMARKS String => explanatory comment on the table (may be null)
-	 * <p/>
-	 * These column aliases are purposely consistent with those defined by {@link DatabaseMetaData#getTables},
-	 * although the {@link ResultSet} need not have been returned by that method.
+	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
+	 * and {@code columnNamePattern} parameters are as
+	 * specified by {@link DatabaseMetaData#getTables(String, String, String, String[])},
+	 * and are copied here:
 	 *
-	 * @param catalogFilter
-	 * @param schemaFilter
-	 * @param tableNameFilter
-	 * @param tableTypes
-	 * @return results of type {@code T}
-	 * @throws SQLException
+	 * @param catalog - a catalog name; must match the catalog name as it is
+	 *                   stored in the database; "" retrieves those without a
+	 *                   catalog; null means that the catalog name should not
+	 *                   be used to narrow the search
+	 * @param schemaPattern - a schema name pattern; must match the schema name
+	 *                        as it is stored in the database; "" retrieves
+	 *                        those without a schema; null means that the schema
+	 *                        name should not be used to narrow the search
+	 * @param tableNamePattern - a table name pattern; must match the table name
+	 *                           as it is stored in the database
+	 * @param types - a list of table types
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
 	 */
 	protected abstract <T> T processTableResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			String tableNameFilter,
-			String[] tableTypes,
+			String catalog,
+			String schemaPattern,
+			String tableNamePattern,
+			String[] types,
 			ExtractionContext.ResultSetProcessor<T> processor
 	) throws SQLException;
 
@@ -741,6 +873,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 					catalogFilter,
 					schemaFilter,
 					tableName.getTableName().getText(),
+					"%",
 					resultSet -> {
 
 						while ( resultSet.next() ) {
@@ -780,6 +913,7 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		return TruthValue.UNKNOWN;
 	}
 
+	// This method is not currently used.
 	protected abstract <T> T processPrimaryKeysResultSet(
 			String catalogFilter,
 			String schemaFilter,
@@ -877,24 +1011,83 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	/**
-	 * Requires the following:
-	 *
-	 * index_type result must be one of the constants from DatabaseMetaData
-	 * (e.g., #tableIndexStatistic, tableIndexClustered, tableIndexHashed, or tableIndexOther)
-	 * index_name
-	 * column_name
-	 *
-	 * @param catalogFilter
-	 * @param schemaFilter
-	 * @param tableName
-	 * @param approximate
-	 * @return results of type {@code T}
-	 * @throws SQLException
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for each column
+	 *         defined in an index. The {@link ResultSet} must contain the
+	 *         following, consistent with the corresponding columns returned
+	 *         by {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)}
+	 *         <ul>
+	 *             <li>column label {@link #getResultSetIndexNameLabel} for index name;
+	 *             null when TYPE is tableIndexStatistic</li>
+	 *             <li>column label {@link #getResultSetIndexTypeLabel} index type:
+	 *                 <ul>
+	 *                     <li>
+	 *                         {@link DatabaseMetaData#tableIndexStatistic} -
+	 *                         this identifies table statistics that are returned
+	 *                         in conjunction with a table's index descriptions
+	 *                     </li>
+	 *                     <li>
+	 *                         {@link DatabaseMetaData#tableIndexClustered} -
+	 *                         this is a clustered index
+	 *                     </li>
+	 *                     <li>
+	 *                         {@link DatabaseMetaData#tableIndexHashed} -
+	 *                         this is a hashed index
+	 *                     </li>
+	 *                     <li>
+	 *                         {@link DatabaseMetaData#tableIndexOther} -
+	 *                         this is some other style of index
+	 *                     </li>
+	 *                 </ul>
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetColumnNameLabel} -
+	 *                 column name; <code>null</code> when TYPE is
+	 *                 {@link DatabaseMetaData#tableIndexStatistic}
+	 *             </li>
+	 *         </ul>
+	 *         The ResultSet must be ordered by non-uniqueness, index type,
+	 *         index name, and index column position.
+	 *     </li>
+	 *     <li> execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * <p/>
+	 * The {@code catalog}, {@code schemaPattern}, {@code tableNamePattern},
+	 * and {@code columnNamePattern} parameters are as
+	 * specified by {@link DatabaseMetaData#getIndexInfo(String, String, String, boolean, boolean)},
+	 * and are copied here:
+	 * <p/>
+	 * @param catalog – a catalog name; must match the catalog name as it is
+	 *                   stored in this database; "" retrieves those without
+	 *                   a catalog; null means that the catalog name should
+	 *                   not be used to narrow the search
+	 * @param schema – a schema name; must match the schema name as it is
+	 *                  stored in this database; "" retrieves those without
+	 *                  a schema; null means that the schema name should not
+	 *                  be used to narrow the search
+	 * @param table – a table name; must match the table name as it is stored
+	 *                in this database
+	 * @param unique – when true, return only indices for unique values; when
+	 *                 false, return indices regardless of whether unique or not
+	 * @param approximate – when true, result is allowed to reflect approximate
+	 *                       or out of data values; when false, results are
+	 *                       requested to be accurate
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
 	 */
 	protected abstract <T> T processIndexInfoResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			Identifier tableName,
+			String catalog,
+			String schema,
+			String table,
+			boolean unique,
 			boolean approximate,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException;
 
@@ -926,7 +1119,8 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 			processIndexInfoResultSet(
 					catalogFilter,
 					schemaFilter,
-					tableName.getTableName(),
+					tableName.getTableName().getText(),
+					false,        // DO NOT limit to just unique
 					true,        // DO require up-to-date results
 					resultSet -> {
 						while ( resultSet.next() ) {
@@ -976,10 +1170,76 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 		return indexes;
 	}
 
+	/**
+	 * Must do the following:
+	 * <ol>
+	 *     <li>
+	 *         obtain a {@link ResultSet} containing a row for each foreign key/
+	 *         primary key column making up a foreign key for any existing
+	 *         catalog/schema/table combination as specified by the
+	 *         {@code catalog}, {@code schema}, and {@code table}
+	 *         parameters described below.
+	 *         The {@link ResultSet} must contain the following, consistent
+	 *         with the corresponding columns returned by {@link DatabaseMetaData#getImportedKeys}:
+	 *         <ul>
+	 *             <li>
+	 *                 column label {@link #getResultSetForeignKeyLabel} -
+	 *                 foreign key name (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyCatalogLabel} -
+	 *                 primary key table catalog being imported (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeySchemaLabel} -
+	 *                 primary key table schema being imported (may be null)
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyTableLabel} -
+	 *                 primary key table name being imported
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetForeignKeyColumnNameLabel} -
+	 *                 foreign key column name
+	 *             </li>
+	 *             <li>
+	 *                 column label {@link #getResultSetPrimaryKeyColumnNameLabel} -
+	 *                 primary key column name being imported
+	 *             </li>
+	 *         </ul>,
+	 *         The ResultSet must be ordered by the primary key
+	 *         catalog/schema/table and column position within the key.
+	 *     </li>
+	 *     <li> execute {@code processor.process( resultSet )};</li>
+	 *     <li>
+	 *         release resources whether {@code processor.process( resultSet )}
+	 *         executes successfully or not.
+	 *     </li>
+	 * </ol>
+	 * <p/>
+	 * The {@code catalog}, {@code schema}, and {@code table}
+	 * parameters are as specified by {@link DatabaseMetaData#getImportedKeys(String, String, String)}
+	 * and are copied here:
+	 *
+	 * @param catalog – a catalog name; must match the catalog name as it is
+	 *                   stored in the database; "" retrieves those without a
+	 *                   catalog; null means that the catalog name should not
+	 *                   be used to narrow the search
+	 * @param schema – a schema name; must match the schema name as it is
+	 *                  stored in the database; "" retrieves those without a
+	 *                  schema; null means that the schema name should not be
+	 *                  used to narrow the search
+	 * @param table – a table name; must match the table name as it is stored
+	 *                in the database
+	 * @param processor - the provided ResultSetProcessor.
+	 * @param <T> - defined by {@code processor}
+	 * @return - defined by {@code processor}
+	 * @throws SQLException - if a database error occurs
+	 */
 	protected abstract <T> T processImportedKeysResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			String tableName,
+			String catalog,
+			String schema,
+			String table,
 			ExtractionContext.ResultSetProcessor<T> processor
 	) throws SQLException;
 

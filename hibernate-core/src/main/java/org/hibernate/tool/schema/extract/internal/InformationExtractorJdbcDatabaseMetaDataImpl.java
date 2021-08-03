@@ -17,7 +17,7 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
 /**
- * Implementation of the SchemaMetaDataExtractor contract which uses the standard JDBC {@link java.sql.DatabaseMetaData}
+ * Implementation of the InformationExtractor contract which uses the standard JDBC {@link java.sql.DatabaseMetaData}
  * API for extraction.
  *
  * @author Steve Ebersole
@@ -43,44 +43,45 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	@Override
 	protected <T> T processSchemaResultSet(
-			String catalogFilter,
-			String schemaFilter,
+			String catalog,
+			String schemaPattern,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
 		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getSchemas(
-				catalogFilter,
-				schemaFilter ) ) {
+				catalog,
+				schemaPattern ) ) {
 			return processor.process( resultSet );
 		}
 	}
 
 	@Override
 	protected <T> T processTableResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			String tableNameFilter,
-			String[] tableTypes,
+			String catalog,
+			String schemaPattern,
+			String tableNamePattern,
+			String[] types,
 			ExtractionContext.ResultSetProcessor<T> processor
 	) throws SQLException {
 		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getTables(
-				catalogFilter,
-				schemaFilter,
-				tableNameFilter,
-				tableTypes)) {
+				catalog,
+				schemaPattern,
+				tableNamePattern,
+				types)) {
 			return processor.process( resultSet );
 		}
 	}
 
 	@Override
 	protected <T> T processColumnsResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			String tableFilter,
+			String catalog,
+			String schemaPattern,
+			String tableNamePattern,
+			String columnNamePattern,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
 		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getColumns(
-				catalogFilter,
-				schemaFilter,
-				tableFilter,
-				"%" )) {
+				catalog,
+				schemaPattern,
+				tableNamePattern,
+				columnNamePattern )) {
 			return processor.process( resultSet );
 		}
 	}
@@ -101,17 +102,18 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	@Override
 	protected <T> T processIndexInfoResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			Identifier tableName,
+			String catalog,
+			String schema,
+			String table,
+			boolean unique,
 			boolean approximate,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
 
 		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getIndexInfo(
-				catalogFilter,
-				schemaFilter,
-				tableName.getText(),
-				false, // DO NOT limit to just unique
+				catalog,
+				schema,
+				table,
+				unique,
 				approximate ) ) {
 			return processor.process( resultSet );
 		}
@@ -119,14 +121,14 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 
 	@Override
 	protected <T> T processImportedKeysResultSet(
-			String catalogFilter,
-			String schemaFilter,
-			String tableName,
+			String catalog,
+			String schema,
+			String table,
 			ExtractionContext.ResultSetProcessor<T> processor) throws SQLException {
 		try (ResultSet resultSet = getExtractionContext().getJdbcDatabaseMetaData().getImportedKeys(
-				catalogFilter,
-				schemaFilter,
-				tableName ) ) {
+				catalog,
+				schema,
+				table ) ) {
 			return processor.process( resultSet );
 		}
 	}

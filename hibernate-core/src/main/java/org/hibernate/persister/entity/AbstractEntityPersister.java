@@ -2898,8 +2898,9 @@ public abstract class AbstractEntityPersister
 			final boolean useRowId) {
 		final Update update = createUpdate().setTableName( getTableName( j ) );
 
-		final MutableBoolean hasColumnsRef = new MutableBoolean();
-		forEachAttributeMapping( (index, attributeMapping) -> {
+		boolean hasColumns = false;
+		for ( int index = 0; index < attributeMappings.size(); index++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( index );
 			if ( isPropertyOfTable( index, j ) ) {
 				// `attributeMapping` is an attribute of the table we are updating
 
@@ -2914,7 +2915,7 @@ public abstract class AbstractEntityPersister
 								propertyColumnUpdateable[index ],
 								propertyColumnWriters[index]
 						);
-						hasColumnsRef.setValue( true );
+						hasColumns = true;
 					}
 					else {
 						final ValueGeneration valueGeneration = attributeMapping.getValueGeneration();
@@ -2926,28 +2927,26 @@ public abstract class AbstractEntityPersister
 									new boolean[] { true },
 									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
 							);
-							hasColumnsRef.setValue( true );
+							hasColumns = true;
 						}
 					}
 				}
 			}
+		}
 
-
-			// HHH-4635
-			// Oracle expects all Lob properties to be last in inserts
-			// and updates.  Insert them at the end.
-			for ( int i : lobProperties ) {
-				if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
-					// this property belongs on the table and is to be inserted
-					update.addColumns(
-							getPropertyColumnNames( i ),
-							propertyColumnUpdateable[i], propertyColumnWriters[i]
-					);
-					hasColumnsRef.setValue( true );
-				}
+		// HHH-4635
+		// Oracle expects all Lob properties to be last in inserts
+		// and updates.  Insert them at the end.
+		for ( int i : lobProperties ) {
+			if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
+				// this property belongs on the table and is to be inserted
+				update.addColumns(
+						getPropertyColumnNames( i ),
+						propertyColumnUpdateable[i], propertyColumnWriters[i]
+				);
+				hasColumns = true;
 			}
-		} );
-
+		}
 
 		// select the correct row by either pk or row id
 		if ( useRowId ) {
@@ -2963,7 +2962,7 @@ public abstract class AbstractEntityPersister
 			// check it (unless this is a "generated" version column)!
 			if ( checkVersion( includeProperty ) ) {
 				update.setVersionColumnName( getVersionColumnName() );
-				hasColumnsRef.setValue( true );
+				hasColumns = true;
 			}
 		}
 		else if ( isAllOrDirtyOptLocking() && oldFields != null ) {
@@ -3004,7 +3003,7 @@ public abstract class AbstractEntityPersister
 			update.setComment( "update " + getEntityName() );
 		}
 
-		return hasColumnsRef.getValue() ? update.toStatementString() : null;
+		return hasColumns ? update.toStatementString() : null;
 	}
 
 	public final boolean checkVersion(final boolean[] includeProperty) {
@@ -3033,7 +3032,8 @@ public abstract class AbstractEntityPersister
 
 		final Insert insert = createInsert().setTableName( getTableName( j ) );
 
-		forEachAttributeMapping( (index, attributeMapping) -> {
+		for ( int index = 0; index < attributeMappings.size(); index++ ) {
+			final AttributeMapping attributeMapping = attributeMappings.get( index );
 			if ( isPropertyOfTable( index, j ) ) {
 				// `attributeMapping` is an attribute of the table we are updating
 
@@ -3063,22 +3063,7 @@ public abstract class AbstractEntityPersister
 					}
 				}
 			}
-
-
-			// HHH-4635
-			// Oracle expects all Lob properties to be last in inserts
-			// and updates.  Insert them at the end.
-			for ( int i : lobProperties ) {
-				if ( includeProperty[i] && isPropertyOfTable( i, j ) ) {
-					// this property belongs on the table and is to be inserted
-					insert.addColumns(
-							getPropertyColumnNames( i ),
-							propertyColumnInsertable[i],
-							propertyColumnWriters[i]
-					);
-				}
-			}
-		} );
+		}
 
 		// add the discriminator
 		if ( j == 0 ) {

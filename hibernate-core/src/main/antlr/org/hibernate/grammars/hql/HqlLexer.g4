@@ -197,6 +197,7 @@ HOUR				: [hH] [oO] [uU] [rR];
 IFNULL				: [iI] [fF] [nN] [uU] [lL] [lL];
 IN					: [iI] [nN];
 INDEX				: [iI] [nN] [dD] [eE] [xX];
+INDICES				: [iI] [nN] [dD] [iI] [cC] [eE] [sS];
 INNER				: [iI] [nN] [nN] [eE] [rR];
 INSERT				: [iI] [nN] [sS] [eE] [rR] [tT];
 INSTANT				: [iI] [nN] [sS] [tT] [aA] [nN] [tT];

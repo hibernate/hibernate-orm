@@ -20,6 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -328,10 +329,21 @@ public class SqmUtil {
 		if ( parameterType == null ) {
 			throw new SqlTreeCreationException( "Unable to interpret mapping-model type for Query parameter : " + domainParam );
 		}
+		if ( parameterType instanceof CollectionPart && ( (CollectionPart) parameterType ).getPartMappingType() instanceof Bindable ) {
+			parameterType = (Bindable) ( (CollectionPart) parameterType ).getPartMappingType();
+		}
 
 		if ( parameterType instanceof EntityIdentifierMapping ) {
 			final EntityIdentifierMapping identifierMapping = (EntityIdentifierMapping) parameterType;
 			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
+			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
+				bindValue = identifierMapping.getIdentifier( bindValue, session );
+			}
+		}
+		else if ( parameterType instanceof EntityMappingType ) {
+			final EntityIdentifierMapping identifierMapping = ( (EntityMappingType) parameterType ).getIdentifierMapping();
+			final EntityMappingType entityMapping = identifierMapping.findContainingEntityMapping();
+			parameterType = identifierMapping;
 			if ( entityMapping.getRepresentationStrategy().getInstantiator().isInstance( bindValue, session.getFactory() ) ) {
 				bindValue = identifierMapping.getIdentifier( bindValue, session );
 			}

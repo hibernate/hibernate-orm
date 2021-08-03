@@ -14,7 +14,6 @@ import org.hibernate.query.sqm.SqmPathSource;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implements SqmSimplePath<T> {
-	private final NavigablePath navigablePath;
 
 	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSimplePath(
@@ -32,15 +31,9 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 			SqmPath lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
-		super( referencedPathSource, lhs, nodeBuilder );
-		this.navigablePath = navigablePath;
+		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
 		setExplicitAlias( explicitAlias );
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		return navigablePath;
 	}
 
 	@Override

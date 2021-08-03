@@ -30,7 +30,6 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 		super( xceBuilder, metadataContext );
 
 		this.keyPathSource = SqmMappingModelHelper.resolveSqmKeyPathSource(
-				CollectionPart.Nature.INDEX.getName(),
 				xceBuilder.getListIndexOrMapKeyType(),
 				BindableType.PLURAL_ATTRIBUTE
 		);

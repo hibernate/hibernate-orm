@@ -7,8 +7,7 @@
 package org.hibernate.query;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.junit.Test;
 
@@ -30,7 +29,7 @@ import static org.junit.Assert.assertNotNull;
  * @author Jan-Willem Gmelig Meyling
  * @author Sayra Ranjha
  */
-@RequiresDialectFeature(value = DialectChecks.SupportsSelectAliasInGroupByClause.class, jiraKey = "HHH-9301")
+@TestForIssue( jiraKey = "HHH-9301" )
 public class GroupByAliasTest extends BaseEntityManagerFunctionalTestCase {
 
 	public static final int MAX_COUNT = 15;

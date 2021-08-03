@@ -1693,8 +1693,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.JpaCollectionJoinContext ctx,
 			SqmRoot<?> sqmRoot) {
 		final HqlParser.IdentificationVariableDefContext identificationVariableDefContext;
-		if ( ctx.getChildCount() > 1 ) {
-			identificationVariableDefContext = (HqlParser.IdentificationVariableDefContext) ctx.getChild( 1 );
+		if ( ctx.getChildCount() > 5 ) {
+			identificationVariableDefContext = (HqlParser.IdentificationVariableDefContext) ctx.getChild( 5 );
 		}
 		else {
 			identificationVariableDefContext = null;
@@ -2047,11 +2047,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					creationContext.getNodeBuilder()
 			);
 		}
+		else if ( inListContext instanceof HqlParser.PersistentCollectionReferenceInListContext ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+			}
+			final HqlParser.PersistentCollectionReferenceInListContext collectionReferenceInListContext = (HqlParser.PersistentCollectionReferenceInListContext) inListContext;
+			return new SqmInSubQueryPredicate<>(
+					testExpression,
+					createCollectionReferenceSubQuery(
+							(HqlParser.DotIdentifierSequenceContext) collectionReferenceInListContext.getChild( 2 ),
+							(TerminalNode) collectionReferenceInListContext.getChild( 0 )
+					),
+					negated,
+					creationContext.getNodeBuilder()
+			);
+		}
 		else {
-			// todo : handle PersistentCollectionReferenceInList labeled branch
-
 			throw new ParsingException( "Unexpected IN predicate type [" + ctx.getClass().getSimpleName() + "] : " + ctx.getText() );
 		}
+	}
+
+	@Override
+	public SqmPredicate visitExistsCollectionPartPredicate(HqlParser.ExistsCollectionPartPredicateContext ctx) {
+		final SqmSubQuery<Object> subQuery = createCollectionReferenceSubQuery(
+				(HqlParser.DotIdentifierSequenceContext) ctx.getChild( 3 ),
+				null
+		);
+		return new SqmExistsPredicate( subQuery, creationContext.getNodeBuilder() );
 	}
 
 	@Override
@@ -3764,23 +3786,35 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPredicate filterExpression = getFilterExpression( ctx );
 		final ParseTree argumentChild = ctx.getChild( 2 );
 		if ( argumentChild instanceof HqlParser.SubQueryContext ) {
-			SqmSubQuery<?> subquery = (SqmSubQuery<?>) argumentChild.accept(this);
+			final SqmSubQuery<?> subquery = (SqmSubQuery<?>) argumentChild.accept( this );
 			return new SqmEvery<>( subquery, creationContext.getNodeBuilder() );
 		}
+		else if ( argumentChild instanceof HqlParser.PredicateContext ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.FUNCTION_CALL );
+			}
+			final SqmExpression<?> argument = (SqmExpression<?>) argumentChild.accept( this );
 
-		final SqmExpression<?> argument = (SqmExpression<?>) argumentChild.accept( this );
-
-		if ( argument instanceof SqmSubQuery<?> && ctx.getChild( ctx.getChildCount() - 1) instanceof HqlParser.FilterClauseContext ) {
-			throw new SemanticException( "Quantified expression cannot have a filter clause!" );
+			return getFunctionDescriptor( "every" ).generateAggregateSqmExpression(
+					singletonList( argument ),
+					filterExpression,
+					resolveExpressableTypeBasic( Boolean.class ),
+					creationContext.getQueryEngine(),
+					creationContext.getJpaMetamodel().getTypeConfiguration()
+			);
 		}
-
-		return getFunctionDescriptor("every").generateAggregateSqmExpression(
-				singletonList( argument ),
-				filterExpression,
-				resolveExpressableTypeBasic( Boolean.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
+		else {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+			}
+			return new SqmEvery<>(
+					createCollectionReferenceSubQuery(
+							(HqlParser.DotIdentifierSequenceContext) ctx.getChild( 3 ),
+							(TerminalNode) ctx.getChild( 1 )
+					),
+					creationContext.getNodeBuilder()
+			);
+		}
 	}
 
 	@Override
@@ -3788,23 +3822,87 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPredicate filterExpression = getFilterExpression( ctx );
 		final ParseTree argumentChild = ctx.getChild( 2 );
 		if ( argumentChild instanceof HqlParser.SubQueryContext ) {
-			SqmSubQuery<?> subquery = (SqmSubQuery<?>) argumentChild.accept(this);
+			final SqmSubQuery<?> subquery = (SqmSubQuery<?>) argumentChild.accept( this );
 			return new SqmAny<>( subquery, creationContext.getNodeBuilder() );
 		}
+		else if ( argumentChild instanceof HqlParser.PredicateContext ) {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.FUNCTION_CALL );
+			}
+			final SqmExpression<?> argument = (SqmExpression<?>) argumentChild.accept( this );
 
-		final SqmExpression<?> argument = (SqmExpression<?>) argumentChild.accept( this );
-
-		if ( argument instanceof SqmSubQuery<?> && ctx.getChild( ctx.getChildCount() - 1) instanceof HqlParser.FilterClauseContext ) {
-			throw new SemanticException( "Quantified expression cannot have a filter clause!" );
+			return getFunctionDescriptor( "any" ).generateAggregateSqmExpression(
+					singletonList( argument ),
+					filterExpression,
+					resolveExpressableTypeBasic( Boolean.class ),
+					creationContext.getQueryEngine(),
+					creationContext.getJpaMetamodel().getTypeConfiguration()
+			);
 		}
+		else {
+			if ( getCreationOptions().useStrictJpaCompliance() ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+			}
+			return new SqmAny<>(
+					createCollectionReferenceSubQuery(
+							(HqlParser.DotIdentifierSequenceContext) ctx.getChild( 3 ),
+							(TerminalNode) ctx.getChild( 1 )
+					),
+					creationContext.getNodeBuilder()
+			);
+		}
+	}
 
-		return getFunctionDescriptor("any").generateAggregateSqmExpression(
-				singletonList( argument ),
-				filterExpression,
-				resolveExpressableTypeBasic( Boolean.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
+	private <X> SqmSubQuery<X> createCollectionReferenceSubQuery(
+			HqlParser.DotIdentifierSequenceContext pathCtx,
+			TerminalNode collectionReferenceCtx) {
+		final SqmPath<?> pluralAttributePath = consumeDomainPath( pathCtx );
+		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
+
+		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
+			throw new PathException(
+					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
+			);
+		}
+		final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
+		final SqmSubQuery<?> subQuery = new SqmSubQuery<>(
+				processingStateStack.getCurrent().getProcessingQuery(),
+				creationContext.getNodeBuilder()
 		);
+		final SqmSelectClause selectClause = new SqmSelectClause( false, 1, creationContext.getNodeBuilder() );
+		final SqmFromClause fromClause = new SqmFromClause( 1 );
+		final SqmCorrelation<?, ?> correlation = ( (AbstractSqmFrom<?, ?>) pluralAttributePath.getLhs() ).createCorrelation();
+		final SqmAttributeJoin<?, ?> collectionJoin = correlation.join( pluralAttributePath.getNavigablePath().getUnaliasedLocalName() );
+		fromClause.addRoot( correlation.getCorrelatedRoot() );
+		if ( collectionReferenceCtx == null ) {
+			final SqmLiteral<Integer> literal = new SqmLiteral<>(
+					1,
+					StandardBasicTypes.INTEGER,
+					creationContext.getNodeBuilder()
+			);
+			subQuery.applyInferableType( literal.getNodeType() );
+			selectClause.setSelection( literal );
+		}
+		else {
+			final SqmPathSource<?> pathSource;
+			switch ( collectionReferenceCtx.getSymbol().getType() ) {
+				case HqlParser.ELEMENTS:
+					pathSource = attribute.getElementPathSource();
+					break;
+				case HqlParser.INDICES:
+					pathSource = attribute.getIndexPathSource();
+					break;
+				default:
+					throw new ParsingException( "Unexpected collection reference : " + collectionReferenceCtx.getText() );
+			}
+			subQuery.applyInferableType( pathSource.getSqmPathType() );
+			selectClause.setSelection( pathSource.createSqmPath( collectionJoin ) );
+		}
+		final SqmQuerySpec<?> querySpec = subQuery.getQuerySpec();
+		querySpec.setFromClause( fromClause );
+		querySpec.setSelectClause( selectClause );
+		//noinspection unchecked
+		return (SqmSubQuery<X>) subQuery;
 	}
 
 	@Override
@@ -4216,6 +4314,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else if ( firstChild instanceof HqlParser.CollectionElementNavigablePathContext ) {
 			return visitCollectionElementNavigablePath( (HqlParser.CollectionElementNavigablePathContext) firstChild );
 		}
+		else if ( firstChild instanceof HqlParser.CollectionIndexNavigablePathContext ) {
+			return visitCollectionIndexNavigablePath( (HqlParser.CollectionIndexNavigablePathContext) firstChild );
+		}
 		else if ( firstChild instanceof HqlParser.MapKeyNavigablePathContext ) {
 			return visitMapKeyNavigablePath( (HqlParser.MapKeyNavigablePathContext) firstChild );
 		}
@@ -4383,6 +4484,30 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return result;
 	}
 
+
+	@Override
+	public SqmPath<?> visitCollectionIndexNavigablePath(HqlParser.CollectionIndexNavigablePathContext ctx) {
+		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
+
+		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
+			throw new PathException(
+					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
+			);
+		}
+
+		final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
+
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			if ( attribute.getCollectionClassification() != CollectionClassification.MAP ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
+			}
+		}
+
+		return attribute.getIndexPathSource().createSqmPath(
+				pluralAttributePath
+		);
+	}
 
 	@Override
 	@SuppressWarnings({ "rawtypes" })

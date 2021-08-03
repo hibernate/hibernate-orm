@@ -45,6 +45,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -52,6 +53,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -2747,17 +2749,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			MappingModelExpressable valueMapping,
 			BiConsumer<Integer,JdbcParameter> jdbcParameterConsumer) {
 		sqmParameterMappingModelTypes.put( expression, valueMapping );
-
+		final Bindable bindable;
 		if ( valueMapping instanceof Association ) {
-			( (Association) valueMapping ).getForeignKeyDescriptor().forEachJdbcType(
-					(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )
-			);
+			bindable = ( (Association) valueMapping ).getForeignKeyDescriptor();
+		}
+		else if ( valueMapping instanceof EntityMappingType ) {
+			bindable = ( (EntityMappingType) valueMapping ).getIdentifierMapping();
 		}
 		else {
-			valueMapping.forEachJdbcType(
-					(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )
-			);
+			bindable = valueMapping;
 		}
+		bindable.forEachJdbcType(
+				(index, jdbcMapping) -> jdbcParameterConsumer.accept( index, new JdbcParameterImpl( jdbcMapping ) )
+		);
 	}
 
 	@Override
@@ -4098,26 +4102,47 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final CollectionPart collectionPart = index
 					? mappingModelExpressable.getIndexDescriptor()
 					: mappingModelExpressable.getElementDescriptor();
-			final List<SqlAstNode> arguments = new ArrayList<>( 1 );
+			final ModelPart modelPart;
+			if ( collectionPart instanceof EntityAssociationMapping ) {
+				modelPart = ( (EntityAssociationMapping) collectionPart ).getKeyTargetMatchPart();
+			}
+			else {
+				modelPart = collectionPart;
+			}
+			final List<Expression> arguments = new ArrayList<>( 1 );
 			final NavigablePath navigablePath = pluralPartPath.getNavigablePath();
-			collectionPart.forEachSelectable(
+			final int jdbcTypeCount = modelPart.getJdbcTypeCount();
+			final List<Expression> tupleElements;
+			if ( jdbcTypeCount == 1 ) {
+				tupleElements = arguments;
+			}
+			else {
+				tupleElements = new ArrayList<>( jdbcTypeCount );
+			}
+			modelPart.forEachSelectable(
 					(selectionIndex, selectionMapping) -> {
-						arguments.add(
+						tupleElements.add(
 								new ColumnReference(
-										tableGroup.getTableReference( navigablePath, selectionMapping.getContainingTableExpression() ),
+										tableGroup.getTableReference(
+												navigablePath,
+												selectionMapping.getContainingTableExpression()
+										),
 										selectionMapping,
 										creationContext.getSessionFactory()
 								)
 						);
 					}
 			);
+			if ( jdbcTypeCount != 1 ) {
+				arguments.add( new SqlTuple( tupleElements, modelPart ) );
+			}
 			final Expression expression = new SelfRenderingAggregateFunctionSqlAstExpression(
 					functionDescriptor.getName(),
 					functionDescriptor::render,
-					arguments,
+					(List<SqlAstNode>) (List<?>) arguments,
 					null,
-					(AllowableFunctionReturnType<?>) collectionPart.getJdbcMappings().get( 0 ),
-					collectionPart
+					(AllowableFunctionReturnType<?>) modelPart.getJdbcMappings().get( 0 ),
+					modelPart
 			);
 			subQuerySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, expression ) );
 

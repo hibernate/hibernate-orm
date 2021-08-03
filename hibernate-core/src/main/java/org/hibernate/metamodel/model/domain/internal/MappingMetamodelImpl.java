@@ -747,6 +747,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 			return (MappingModelExpressable) sqmExpressable;
 		}
 
+		if ( sqmExpressable instanceof EntityDomainType<?> ) {
+			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressable ).getHibernateEntityName() );
+		}
+
 		throw new UnsupportedOperationException( "Cannot determine proper mapping model expressable for " + sqmExpressable );
 	}
 

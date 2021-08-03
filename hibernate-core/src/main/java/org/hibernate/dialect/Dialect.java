@@ -3810,8 +3810,8 @@ public abstract class Dialect implements ConversionContext {
 		return null;
 	}
 
-	public boolean supportsSelectAliasInGroupByClause() {
-		return false;
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.EXPRESSION;
 	}
 
 	public SizeStrategy getSizeStrategy() {

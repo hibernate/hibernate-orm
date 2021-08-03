@@ -11,9 +11,11 @@ import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -61,11 +63,13 @@ public class SqmMappingModelHelper {
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmKeyPathSource(
-			String name,
 			DomainType<J> valueDomainType,
 			Bindable.BindableType jpaBindableType) {
-		// todo (6.0): the key path source must create a special path for the key
-		return resolveSqmPathSource( name, valueDomainType, jpaBindableType );
+		return resolveSqmPathSource(
+				CollectionPart.Nature.INDEX.getName(),
+				valueDomainType,
+				jpaBindableType
+		);
 	}
 
 	public static <J> SqmPathSource<J> resolveSqmPathSource(
@@ -149,7 +153,11 @@ public class SqmMappingModelHelper {
 		// Plural path parts are not joined and thus also have no table group
 		if ( sqmPath instanceof AbstractSqmSpecificPluralPartPath<?> ) {
 			final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getLhs().getNavigablePath() );
-			return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
+			final ModelPartContainer pluralPart = (ModelPartContainer) lhsTableGroup.getModelPart().findSubPart(
+					sqmPath.getLhs().getReferencedPathSource().getPathName(),
+					null
+			);
+			return pluralPart.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 		}
 
 		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );

@@ -429,8 +429,8 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSelectAliasInGroupByClause() {
-		return true;
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.ALIAS;
 	}
 
 	@Override

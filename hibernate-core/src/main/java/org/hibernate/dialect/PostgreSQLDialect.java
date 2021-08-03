@@ -646,8 +646,8 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsSelectAliasInGroupByClause() {
-		return true;
+	public SelectItemReferenceStrategy getGroupBySelectItemReferenceStrategy() {
+		return SelectItemReferenceStrategy.POSITION;
 	}
 
 	@Override

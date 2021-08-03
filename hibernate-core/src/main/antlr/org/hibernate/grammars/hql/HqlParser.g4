@@ -255,6 +255,7 @@ pathContinuation
  *
  * 		* TREAT( path )
  * 		* ELEMENTS( path )
+ * 		* INDICES( path )
  *		* VALUE( path )
  * 		* KEY( path )
  * 		* path[ selector ]
@@ -262,6 +263,7 @@ pathContinuation
 syntacticDomainPath
 	: treatedNavigablePath
 	| collectionElementNavigablePath
+	| collectionIndexNavigablePath
 	| mapKeyNavigablePath
 	| dotIdentifierSequence indexedPathAccessFragment
 	;
@@ -287,6 +289,10 @@ treatedNavigablePath
 
 collectionElementNavigablePath
 	: (VALUE | ELEMENTS) LEFT_PAREN path RIGHT_PAREN pathContinuation?
+	;
+
+collectionIndexNavigablePath
+	: INDICES LEFT_PAREN path RIGHT_PAREN
 	;
 
 mapKeyNavigablePath
@@ -394,19 +400,20 @@ whereClause
 
 predicate
 	//highest to lowest precedence
-	: LEFT_PAREN predicate RIGHT_PAREN						# GroupedPredicate
-	| expression IS (NOT)? NULL								# IsNullPredicate
-	| expression IS (NOT)? EMPTY							# IsEmptyPredicate
-	| expression (NOT)? IN inList							# InPredicate
-	| expression (NOT)? BETWEEN expression AND expression	# BetweenPredicate
-	| expression (NOT)? LIKE expression (likeEscape)?		# LikePredicate
-	| expression comparisonOperator expression				# ComparisonPredicate
-	| EXISTS expression										# ExistsPredicate
-	| expression (NOT)? MEMBER OF path						# MemberOfPredicate
-	| NOT predicate											# NegatedPredicate
-	| predicate AND predicate								# AndPredicate
-	| predicate OR predicate								# OrPredicate
-	| expression											# BooleanExpressionPredicate
+	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
+	| expression IS (NOT)? NULL													# IsNullPredicate
+	| expression IS (NOT)? EMPTY												# IsEmptyPredicate
+	| expression (NOT)? IN inList												# InPredicate
+	| expression (NOT)? BETWEEN expression AND expression						# BetweenPredicate
+	| expression (NOT)? LIKE expression (likeEscape)?							# LikePredicate
+	| expression comparisonOperator expression									# ComparisonPredicate
+	| EXISTS (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN	# ExistsCollectionPartPredicate
+	| EXISTS expression															# ExistsPredicate
+	| expression (NOT)? MEMBER OF path											# MemberOfPredicate
+	| NOT predicate																# NegatedPredicate
+	| predicate AND predicate													# AndPredicate
+	| predicate OR predicate													# OrPredicate
+	| expression																# BooleanExpressionPredicate
 	;
 
 comparisonOperator
@@ -421,10 +428,10 @@ comparisonOperator
 	;
 
 inList
-	: ELEMENTS? LEFT_PAREN dotIdentifierSequence RIGHT_PAREN		# PersistentCollectionReferenceInList
-	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN			# ExplicitTupleInList
-	| LEFT_PAREN subQuery RIGHT_PAREN								# SubQueryInList
-	| parameter 													# ParamInList
+	: (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN		# PersistentCollectionReferenceInList
+	| LEFT_PAREN expression (COMMA expression)*	RIGHT_PAREN					# ExplicitTupleInList
+	| LEFT_PAREN subQuery RIGHT_PAREN										# SubQueryInList
+	| parameter 															# ParamInList
 	;
 
 likeEscape
@@ -713,11 +720,13 @@ countFunction
 everyFunction
 	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause?
 	| (EVERY|ALL) LEFT_PAREN subQuery RIGHT_PAREN
+	| (EVERY|ALL) (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN
 	;
 
 anyFunction
 	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause?
 	| (ANY|SOME) LEFT_PAREN subQuery RIGHT_PAREN
+	| (ANY|SOME) (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN
 	;
 
 filterClause
@@ -1170,6 +1179,7 @@ identifier
 	| IFNULL
 	| IN
 	| INDEX
+	| INDICES
 	| INNER
 	| INSERT
 	| INSTANT

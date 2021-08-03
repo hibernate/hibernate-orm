@@ -1048,8 +1048,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *                 {@link DatabaseMetaData#tableIndexStatistic}
 	 *             </li>
 	 *         </ul>
-	 *         The ResultSet must be ordered by non-uniqueness, index type,
-	 *         index name, and index column position.
+	 *         The ResultSet must be ordered so that the columns for a
+	 *         particular index are in contiguous rows in order of column
+	 *         position.
 	 *     </li>
 	 *     <li> execute {@code processor.process( resultSet )};</li>
 	 *     <li>

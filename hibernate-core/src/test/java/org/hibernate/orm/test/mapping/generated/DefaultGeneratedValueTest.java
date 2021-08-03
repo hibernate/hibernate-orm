@@ -59,7 +59,7 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  * @author Gunnar Morling
  */
-@SkipForDialect( dialectClass = SybaseDialect.class, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase" )
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase" )
 @SkipForDialect( dialectClass = MySQLDialect.class, reason = "See HHH-10196" )
 @NotImplementedYet(
 		strict = false,

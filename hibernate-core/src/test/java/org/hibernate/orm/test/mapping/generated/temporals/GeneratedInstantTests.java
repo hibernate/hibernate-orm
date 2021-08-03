@@ -14,7 +14,9 @@ import javax.persistence.Table;
 import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.tuple.GenerationTiming;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = GeneratedInstantTests.GeneratedInstantEntity.class )
 @SessionFactory
+@RequiresDialectFeature(feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class, comment = "We rely on current_timestamp being the SQL function name")
+@RequiresDialectFeature(feature = DialectFeatureChecks.CurrentTimestampHasMicrosecondPrecision.class, comment = "Without this, we might not see an update to the timestamp")
 public class GeneratedInstantTests {
 	@Test
 	public void test(SessionFactoryScope scope) {

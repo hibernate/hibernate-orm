@@ -22,6 +22,12 @@ import static org.junit.Assert.assertTrue;
  * @author Steve Ebersole
  */
 public abstract class AbstractGeneratedPropertyTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
+	}
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-2627" )
 	public final void testGeneratedProperty() {

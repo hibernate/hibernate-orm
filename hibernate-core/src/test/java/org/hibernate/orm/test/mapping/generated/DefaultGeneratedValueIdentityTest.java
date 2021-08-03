@@ -36,8 +36,10 @@ import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGenerator;
@@ -58,7 +60,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @SkipForDialect(value = SybaseDialect.class, comment = "CURRENT_TIMESTAMP not supported as default value in Sybase")
-@SkipForDialect(value = MySQLDialect.class, comment = "See HHH-10196", strictMatching = false)
+@SkipForDialect(value = MySQLDialect.class, comment = "See HHH-10196")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
 @FailureExpected(
 		jiraKey = "",

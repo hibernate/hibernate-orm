@@ -17,7 +17,12 @@ public class SqmCorrelatedRoot<T> extends SqmRoot<T> implements SqmPathWrapper<T
 	private final SqmRoot<T> correlationParent;
 
 	public SqmCorrelatedRoot(SqmRoot<T> correlationParent) {
-		super( correlationParent.getReferencedPathSource(), null, correlationParent.nodeBuilder() );
+		super(
+				correlationParent.getNavigablePath(),
+				correlationParent.getReferencedPathSource(),
+				null,
+				correlationParent.nodeBuilder()
+		);
 		this.correlationParent = correlationParent;
 	}
 

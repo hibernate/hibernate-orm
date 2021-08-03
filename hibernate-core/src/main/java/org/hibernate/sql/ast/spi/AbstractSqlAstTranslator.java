@@ -24,6 +24,7 @@ import java.util.function.Function;
 import org.hibernate.LockMode;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.RowLockStrategy;
+import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -1480,7 +1481,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			visitSelectClause( querySpec.getSelectClause() );
 			visitFromClause( querySpec.getFromClause() );
 			visitWhereClause( querySpec );
-			visitGroupByClause( querySpec, dialect.supportsSelectAliasInGroupByClause() );
+			visitGroupByClause( querySpec, dialect.getGroupBySelectItemReferenceStrategy() );
 			visitHavingClause( querySpec );
 			visitOrderBy( querySpec.getSortSpecifications() );
 			visitOffsetFetchClause( querySpec );
@@ -1556,13 +1557,38 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return expression;
 	}
 
-	protected final void visitGroupByClause(QuerySpec querySpec, boolean supportsSelectAliases) {
+	protected Expression resolveExpressionToAlias(Expression expression) {
+		int index = -1;
+		if ( expression instanceof SqlSelectionExpression ) {
+			index = ( (SqlSelectionExpression) expression ).getSelection().getValuesArrayPosition();
+		}
+		else if ( expression instanceof SqmPathInterpretation<?> ) {
+			final Expression sqlExpression = ( (SqmPathInterpretation<?>) expression ).getSqlExpression();
+			if ( sqlExpression instanceof SqlSelectionExpression ) {
+				index = ( (SqlSelectionExpression) sqlExpression ).getSelection().getValuesArrayPosition();
+			}
+		}
+		if ( index == -1 ) {
+			return expression;
+		}
+		return new ColumnReference(
+				(String) null,
+				"c" + index,
+				false,
+				null,
+				null,
+				expression.getExpressionType().getJdbcMappings().get( 0 ),
+				sessionFactory
+		);
+	}
+
+	protected final void visitGroupByClause(QuerySpec querySpec, SelectItemReferenceStrategy referenceStrategy) {
 		final List<Expression> partitionExpressions = querySpec.getGroupByClauseExpressions();
 		if ( !partitionExpressions.isEmpty() ) {
 			try {
 				clauseStack.push( Clause.GROUP );
 				appendSql( " group by " );
-				visitPartitionExpressions( partitionExpressions, supportsSelectAliases );
+				visitPartitionExpressions( partitionExpressions, referenceStrategy );
 			}
 			finally {
 				clauseStack.pop();
@@ -1575,7 +1601,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			try {
 				clauseStack.push( Clause.PARTITION );
 				appendSql( "partition by " );
-				visitPartitionExpressions( partitionExpressions, false );
+				visitPartitionExpressions( partitionExpressions, SelectItemReferenceStrategy.EXPRESSION );
 			}
 			finally {
 				clauseStack.pop();
@@ -1585,13 +1611,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected final void visitPartitionExpressions(
 			List<Expression> partitionExpressions,
-			boolean supportsSelectAliases) {
-		if ( supportsSelectAliases ) {
-			visitPartitionExpressions( partitionExpressions, expression -> expression );
+			SelectItemReferenceStrategy referenceStrategy) {
+		final Function<Expression, Expression> resolveAliasExpression;
+		switch ( referenceStrategy ) {
+			case POSITION:
+				resolveAliasExpression = Function.identity();
+				break;
+			case ALIAS:
+				resolveAliasExpression = this::resolveExpressionToAlias;
+				break;
+			case EXPRESSION:
+			default:
+				resolveAliasExpression = this::resolveAliasedExpression;
+				break;
 		}
-		else {
-			visitPartitionExpressions( partitionExpressions, expression -> resolveAliasedExpression( expression ) );
-		}
+		visitPartitionExpressions( partitionExpressions, resolveAliasExpression );
 	}
 
 	protected final void visitPartitionExpressions(
@@ -2862,7 +2896,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitSqlSelections(SelectClause selectClause) {
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
 		final int size = sqlSelections.size();
-		if ( needsSelectAliases ) {
+		if ( needsSelectAliases || needsSelectAliasesForGroupOrOrderByClause() ) {
 			String separator = NO_SEPARATOR;
 			for ( int i = 0; i < size; i++ ) {
 				final SqlSelection sqlSelection = sqlSelections.get( i );
@@ -2885,6 +2919,40 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				separator = COMA_SEPARATOR;
 			}
 		}
+	}
+
+	private boolean needsSelectAliasesForGroupOrOrderByClause() {
+		if ( dialect.getGroupBySelectItemReferenceStrategy() == SelectItemReferenceStrategy.ALIAS ) {
+			final QuerySpec querySpec = (QuerySpec) getQueryPartStack().getCurrent();
+			for ( Expression groupByClauseExpression : querySpec.getGroupByClauseExpressions() ) {
+				if ( isSelectItemReference( groupByClauseExpression ) ) {
+					return true;
+				}
+			}
+			if ( querySpec.hasSortSpecifications() ) {
+				for ( SortSpecification sortSpecification : querySpec.getSortSpecifications() ) {
+					if ( isSelectItemReference( sortSpecification.getSortExpression() ) ) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	protected final boolean isSelectItemReference(Expression expression) {
+		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( expression );
+		if ( sqlTuple != null ) {
+			for ( Expression e : sqlTuple.getExpressions() ) {
+				if ( e instanceof SqlSelectionExpression ) {
+					return true;
+				}
+			}
+		}
+		else if ( expression instanceof SqlSelectionExpression ) {
+			return true;
+		}
+		return false;
 	}
 
 	protected void renderRowNumberingSelectItems(SelectClause selectClause, QueryPart queryPart) {
@@ -4329,7 +4397,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						.isEmpty() || subQuery.getHavingClauseRestrictions() != null ) {
 					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause
 					visitWhereClause( subQuery );
-					visitGroupByClause( subQuery, false );
+					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
 
 					appendSql( " having " );
 					clauseStack.push( Clause.HAVING );
@@ -4421,7 +4489,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				visitSelectClause( subQuery.getSelectClause() );
 				visitFromClause( subQuery.getFromClause() );
 				visitWhereClause( subQuery );
-				visitGroupByClause( subQuery, dialect.supportsSelectAliasInGroupByClause() );
+				visitGroupByClause( subQuery, dialect.getGroupBySelectItemReferenceStrategy() );
 				visitHavingClause( subQuery );
 
 				appendSql( " order by " );

@@ -85,7 +85,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
 			final List<Expression> expressions = new ArrayList<>(
-					mapping.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount()
+					entityMappingType.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount()
 							+ ( discriminatorMapping == null ? 0 : 1 )
 			);
 			final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
@@ -111,8 +111,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			if ( discriminatorMapping != null ) {
 				discriminatorMapping.forEachSelectable( selectableConsumer );
 			}
-			mapping.forEachSelectable( selectableConsumer );
-			sqlExpression = new SqlTuple( expressions, mapping );
+			entityMappingType.forEachSelectable( selectableConsumer );
+			sqlExpression = new SqlTuple( expressions, entityMappingType );
 		}
 		else if ( mapping instanceof EntityAssociationMapping ) {
 			final EntityAssociationMapping associationMapping = (EntityAssociationMapping) mapping;

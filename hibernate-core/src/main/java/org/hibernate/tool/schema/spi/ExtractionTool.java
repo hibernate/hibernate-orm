@@ -6,6 +6,7 @@
  */
 package org.hibernate.tool.schema.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
@@ -14,8 +15,12 @@ import org.hibernate.tool.schema.extract.spi.ExtractionContext;
 import org.hibernate.tool.schema.extract.spi.InformationExtractor;
 
 /**
+ * Encapsulates the functionality for extracting database metadata used by
+ * {@link SchemaManagementTool}.
+ *
  * @author Gail Badner
  */
+@Incubating
 public interface ExtractionTool {
 
 	ExtractionContext createExtractionContext(

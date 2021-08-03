@@ -41,10 +41,12 @@ public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
 		tableTypesList.add( "PARTITIONED TABLE" );
 	}
 
+	@Override
 	public IdentifierHelper buildIdentifierHelper(
 			IdentifierHelperBuilder builder,
 			DatabaseMetaData dbMetaData) throws SQLException {
-
+		// This method is overridden so the information will be set properly when
+		// DatabaseMetaData is not available.
 		if ( dbMetaData != null ) {
 			builder.applyIdentifierCasing( dbMetaData );
 			builder.applyReservedWords( dbMetaData );
@@ -63,9 +65,10 @@ public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
 
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
+		// This method is overridden so the correct value will be returned when
+		// DatabaseMetaData is not available.
 		return NameQualifierSupport.SCHEMA;
 	}
-
 
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {

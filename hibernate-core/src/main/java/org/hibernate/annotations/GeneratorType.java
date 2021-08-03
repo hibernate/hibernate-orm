@@ -11,6 +11,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 import org.hibernate.tuple.VmValueGeneration;
 
@@ -20,10 +21,13 @@ import org.hibernate.tuple.VmValueGeneration;
  * annotated property.
  *
  * @author Gunnar Morling
+ *
+ * @deprecated Most uses can be changed to use {@link ValueGenerationType} + {@link AnnotationValueGeneration}
  */
 @ValueGenerationType( generatedBy = VmValueGeneration.class )
 @Retention( RetentionPolicy.RUNTIME )
 @Target( value = { ElementType.FIELD, ElementType.METHOD } )
+@Deprecated
 public @interface GeneratorType {
 
 	/**

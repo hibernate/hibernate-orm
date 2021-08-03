@@ -53,7 +53,7 @@ public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	//tag::mapping-generated-UpdateTimestamp-example[]
+	//tag::mapping-generated-provided-update-ex1[]
 	@Entity(name = "Bid")
 	public static class Bid {
 
@@ -72,7 +72,7 @@ public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
 
 		//Getters and setters are omitted for brevity
 
-	//end::mapping-generated-UpdateTimestamp-example[]
+	//end::mapping-generated-provided-update-ex1[]
 
 		public Long getId() {
 			return id;
@@ -101,7 +101,7 @@ public class UpdateTimestampTest extends BaseEntityManagerFunctionalTestCase {
 		public void setCents(Long cents) {
 			this.cents = cents;
 		}
-	//tag::mapping-generated-UpdateTimestamp-example[]
+	//tag::mapping-generated-provided-update-ex1[]
 	}
-	//end::mapping-generated-UpdateTimestamp-example[]
+	//end::mapping-generated-provided-update-ex1[]
 }

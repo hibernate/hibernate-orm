@@ -11,7 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.orm.test.mapping.generated.temporals.CurrentTimestamp;
+import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.tuple.GenerationTiming;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,9 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = GeneratedValueAnnotationTests.AuditedEntity.class )
+@DomainModel( annotatedClasses = CurrentTimestampAnnotationTests.AuditedEntity.class )
 @SessionFactory
-public class GeneratedValueAnnotationTests {
+public class CurrentTimestampAnnotationTests {
 	@Test
 	public void test(SessionFactoryScope scope) {
 		final AuditedEntity created = scope.fromTransaction( (session) -> {
@@ -71,11 +71,13 @@ public class GeneratedValueAnnotationTests {
 		public Integer id;
 		public String name;
 
+		//tag::mapping-generated-CurrentTimestamp-ex1[]
 		@CurrentTimestamp( timing = GenerationTiming.INSERT )
 		public Instant createdAt;
 
 		@CurrentTimestamp( timing = GenerationTiming.ALWAYS )
 		public Instant lastUpdatedAt;
+		//end::mapping-generated-CurrentTimestamp-ex1[]
 
 		public AuditedEntity() {
 		}

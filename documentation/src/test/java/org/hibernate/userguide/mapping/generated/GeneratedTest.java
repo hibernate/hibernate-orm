@@ -65,7 +65,7 @@ public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	//tag::mapping-generated-Generated-example[]
+	//tag::mapping-generated-provided-generated[]
 	@Entity(name = "Person")
 	public static class Person {
 
@@ -99,7 +99,7 @@ public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
 			")")
 		private String fullName;
 
-	//end::mapping-generated-Generated-example[]
+	//end::mapping-generated-provided-generated[]
 		public Person() {}
 
 		public Long getId() {
@@ -169,7 +169,7 @@ public class GeneratedTest extends BaseEntityManagerFunctionalTestCase {
 		public String getFullName() {
 			return fullName;
 		}
-	//tag::mapping-generated-Generated-example[]
+	//tag::mapping-generated-provided-generated[]
 	}
-	//end::mapping-generated-Generated-example[]
+	//end::mapping-generated-provided-generated[]
 }

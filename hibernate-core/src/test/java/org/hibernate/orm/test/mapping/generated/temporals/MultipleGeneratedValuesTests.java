@@ -11,6 +11,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import org.hibernate.annotations.CurrentTimestamp;
 import org.hibernate.tuple.GenerationTiming;
 
 import org.hibernate.testing.orm.junit.DomainModel;

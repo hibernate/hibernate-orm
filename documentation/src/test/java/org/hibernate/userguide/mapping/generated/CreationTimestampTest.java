@@ -41,7 +41,7 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	//tag::mapping-generated-CreationTimestamp-example[]
+	//tag::mapping-generated-provided-creation-ex1[]
 	@Entity(name = "Event")
 	public static class Event {
 
@@ -54,7 +54,7 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 		private Date timestamp;
 
 		//Constructors, getters, and setters are omitted for brevity
-	//end::mapping-generated-CreationTimestamp-example[]
+	//end::mapping-generated-provided-creation-ex1[]
 
 		public Event() {}
 
@@ -65,7 +65,7 @@ public class CreationTimestampTest extends BaseEntityManagerFunctionalTestCase {
 		public Date getTimestamp() {
 			return timestamp;
 		}
-	//tag::mapping-generated-CreationTimestamp-example[]
+	//tag::mapping-generated-provided-creation-ex1[]
 	}
-	//end::mapping-generated-CreationTimestamp-example[]
+	//end::mapping-generated-provided-creation-ex1[]
 }

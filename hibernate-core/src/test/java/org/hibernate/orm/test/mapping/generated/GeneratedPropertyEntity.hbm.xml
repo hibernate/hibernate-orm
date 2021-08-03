@@ -9,7 +9,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.generated">
+<hibernate-mapping package="org.hibernate.orm.test.mapping.generated">
 
     <class name="GeneratedPropertyEntity" table="gen_prop">
 
@@ -41,9 +41,7 @@
         <drop>
             <![CDATA[DROP TRIGGER t_iu_gen_prop]]>
         </drop>
-        <dialect-scope name="org.hibernate.dialect.Oracle9iDialect"/>
-        <dialect-scope name="org.hibernate.dialect.Oracle10gDialect"/>
-        <dialect-scope name="org.hibernate.dialect.Oracle12cDialect"/>
+        <dialect-scope name="org.hibernate.dialect.OracleDialect"/>
     </database-object>
 
 </hibernate-mapping>

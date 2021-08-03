@@ -372,4 +372,16 @@ abstract public class DialectFeatureChecks {
 			return ! dialect.doesRepeatableReadCauseReadersToBlockWriters();
 		}
 	}
+
+	public static class CurrentTimestampHasMicrosecondPrecision implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !dialect.currentTimestamp().contains( "6" );
+		}
+	}
+
+	public static class UsesStandardCurrentTimestampFunction implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.currentTimestamp().startsWith( "current_timestamp" );
+		}
+	}
 }

@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.fetch;
+package org.hibernate.orm.test.annotations.fetch;
 import java.util.HashSet;
 import java.util.Set;
 import javax.persistence.Entity;

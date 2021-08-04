@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.fetch;
+package org.hibernate.orm.test.annotations.fetch;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;

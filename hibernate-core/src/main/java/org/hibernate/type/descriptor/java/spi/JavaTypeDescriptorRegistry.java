@@ -159,6 +159,40 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		);
 	}
 
+	@SuppressWarnings("unchecked")
+	public <J> JavaTypeDescriptor<J> resolveManagedTypeDescriptor(Type javaType) {
+		return resolveDescriptor(
+				javaType,
+				() -> {
+					final Class<J> javaTypeClass;
+					if ( javaType instanceof Class<?> ) {
+						javaTypeClass = (Class<J>) javaType;
+					}
+					else {
+						final ParameterizedType parameterizedType = (ParameterizedType) javaType;
+						javaTypeClass = (Class<J>) parameterizedType.getRawType();
+					}
+					final MutabilityPlan<J> mutabilityPlan;
+					final MutabilityPlan<J> determinedPlan = RegistryHelper.INSTANCE.determineMutabilityPlan(
+							javaType,
+							typeConfiguration
+					);
+					if ( determinedPlan != null ) {
+						mutabilityPlan = determinedPlan;
+					}
+					else {
+						mutabilityPlan = new MutableMutabilityPlan<J>() {
+							@Override
+							protected J deepCopyNotNull(J value) {
+								return value;
+							}
+						};
+					}
+					return new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, mutabilityPlan );
+				}
+		);
+	}
+
 	public JavaTypeDescriptor<?> resolveDynamicEntityDescriptor(String typeName) {
 		return new DynamicModelJtd();
 	}

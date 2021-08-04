@@ -583,7 +583,7 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 		else {
 			javaTypeDescriptor = context.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry()
-					.getDescriptor( javaType );
+					.resolveManagedTypeDescriptor( javaType );
 		}
 
 		final EntityTypeImpl<?> entityType = new EntityTypeImpl(
@@ -636,10 +636,10 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 					? null
 					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
-		final JavaTypeDescriptor javaTypeDescriptor = context.getTypeConfiguration()
+		final JavaTypeDescriptor<?> javaTypeDescriptor = context.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
-				.getDescriptor( mappedSuperclass.getMappedClass() );
-		final MappedSuperclassTypeImpl mappedSuperclassType = new MappedSuperclassTypeImpl(
+				.resolveManagedTypeDescriptor( mappedSuperclass.getMappedClass() );
+		final MappedSuperclassTypeImpl<?> mappedSuperclassType = new MappedSuperclassTypeImpl(
 				javaTypeDescriptor,
 				mappedSuperclass,
 				superType,

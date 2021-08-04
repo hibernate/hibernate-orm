@@ -144,7 +144,7 @@ public class BasicAttributeMapping
 				selectableMapping.getCustomReadExpression(),
 				selectableMapping.getCustomWriteExpression(),
 				valueConverter,
-				selectableMapping.getJdbcMapping(),
+				original.getJdbcMapping(),
 				declaringType,
 				propertyAccess,
 				valueGeneration

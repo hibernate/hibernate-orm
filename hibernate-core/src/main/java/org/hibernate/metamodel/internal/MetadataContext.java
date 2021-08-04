@@ -424,7 +424,7 @@ public class MetadataContext {
 		final JavaTypeDescriptorRegistry registry = getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 		final Class<?> componentClass = identifier.getComponentClass();
-		final JavaTypeDescriptor<?> javaTypeDescriptor = registry.resolveDescriptor( componentClass );
+		final JavaTypeDescriptor<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
 
 		final EmbeddableRepresentationStrategy representationStrategy = getTypeConfiguration()
 				.getMetadataBuildingContext()

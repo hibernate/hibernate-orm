@@ -38,6 +38,7 @@ import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToMany;
 import org.hibernate.mapping.OneToOne;
 import org.hibernate.mapping.PersistentClass;
@@ -1509,8 +1510,9 @@ public class MappingModelCreationHelper {
 			final FetchTiming fetchTiming;
 
 			if ( fetchStyle == FetchStyle.JOIN
-					|| ( value instanceof OneToOne && value.isNullable() )
-					|| !( value ).isLazy() ) {
+					|| !value.isLazy()
+					|| value instanceof OneToOne && value.isNullable()
+					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 			}
 			else {

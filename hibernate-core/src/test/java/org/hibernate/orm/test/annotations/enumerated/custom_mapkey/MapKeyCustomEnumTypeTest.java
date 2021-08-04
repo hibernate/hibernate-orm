@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.enumerated.custom_mapkey;
+package org.hibernate.orm.test.annotations.enumerated.custom_mapkey;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -22,11 +22,11 @@ import org.hibernate.type.EnumType;
 import org.hibernate.type.Type;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType;
-import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
-import org.hibernate.test.annotations.enumerated.enums.Common;
-import org.hibernate.test.annotations.enumerated.enums.FirstLetter;
-import org.hibernate.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.orm.test.annotations.enumerated.custom_types.FirstLetterType;
+import org.hibernate.orm.test.annotations.enumerated.custom_types.LastNumberType;
+import org.hibernate.orm.test.annotations.enumerated.enums.Common;
+import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

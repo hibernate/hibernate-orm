@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.enumerated;
+package org.hibernate.orm.test.annotations.enumerated;
 
 import java.sql.Types;
 import javax.persistence.Entity;
@@ -75,7 +75,7 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 		final org.hibernate.type.EnumType hibernateMappingEnumType = (org.hibernate.type.EnumType) customType.getUserType();
 		assertThat( hibernateMappingEnumType.isOrdinal(), is(expectedJpaEnumType==EnumType.ORDINAL) );
 		assertThat( hibernateMappingEnumType.sqlTypes().length, is(1) );
-		assertThat( hibernateMappingEnumType.sqlTypes()[0], is(expectedJpaEnumType==EnumType.ORDINAL? Types.INTEGER:Types.VARCHAR) );
+		assertThat( hibernateMappingEnumType.sqlTypes()[0], is(expectedJpaEnumType==EnumType.ORDINAL? Types.TINYINT:Types.VARCHAR) );
 	}
 
 	@Entity

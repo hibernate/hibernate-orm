@@ -33,6 +33,30 @@ public interface ClassLoaderService extends Service, Stoppable {
 	 */
 	<T> Class<T> classForName(String className);
 
+	@SuppressWarnings("unchecked")
+	default <T> Class<T> classForTypeName(String className) {
+		switch ( className ) {
+			case "boolean":
+				return (Class<T>) boolean.class;
+			case "byte":
+				return (Class<T>) byte.class;
+			case "char":
+				return (Class<T>) char.class;
+			case "short":
+				return (Class<T>) short.class;
+			case "int":
+				return (Class<T>) int.class;
+			case "float":
+				return (Class<T>) float.class;
+			case "long":
+				return (Class<T>) long.class;
+			case "double":
+				return (Class<T>) double.class;
+			default:
+				return classForName( className );
+		}
+	}
+
 	/**
 	 * Locate a resource by name (classpath lookup).
 	 *

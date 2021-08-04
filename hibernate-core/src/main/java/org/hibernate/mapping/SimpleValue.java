@@ -818,7 +818,7 @@ public abstract class SimpleValue implements KeyValue {
 		this.attributeConverterDescriptor = descriptor;
 	}
 
-	private void createParameterImpl() {
+	protected void createParameterImpl() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];
 			final Long[] columnLengths = new Long[ columns.size() ];
@@ -845,7 +845,7 @@ public abstract class SimpleValue implements KeyValue {
 			typeParameters.put(
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
-							classLoaderService.classForName(
+							classLoaderService.classForTypeName(
 									typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS )
 							),
 							annotations,

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.enumerated;
+package org.hibernate.orm.test.annotations.enumerated;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -12,13 +12,12 @@ import java.sql.Statement;
 import java.util.List;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.query.Query;
@@ -28,12 +27,12 @@ import org.hibernate.type.Type;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType;
-import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
-import org.hibernate.test.annotations.enumerated.enums.Common;
-import org.hibernate.test.annotations.enumerated.enums.FirstLetter;
-import org.hibernate.test.annotations.enumerated.enums.LastNumber;
-import org.hibernate.test.annotations.enumerated.enums.Trimmed;
+import org.hibernate.orm.test.annotations.enumerated.custom_types.FirstLetterType;
+import org.hibernate.orm.test.annotations.enumerated.custom_types.LastNumberType;
+import org.hibernate.orm.test.annotations.enumerated.enums.Common;
+import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.orm.test.annotations.enumerated.enums.Trimmed;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -249,8 +248,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 		CriteriaQuery<EntityEnum> criteria = criteriaBuilder.createQuery( EntityEnum.class );
 		Root<EntityEnum> root = criteria.from( EntityEnum.class );
-		Join<Object, Object> ordinal = root.join( "ordinal", JoinType.INNER );
-		criteria.where( criteriaBuilder.equal( ordinal, Common.A1 ) );
+		criteria.where( criteriaBuilder.equal( root.get( "ordinal" ), Common.A1 ) );
 		entityEnum = session.createQuery( criteria ).uniqueResult();
 
 //		entityEnum = (EntityEnum) session.createCriteria( EntityEnum.class )
@@ -385,7 +383,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 	
 	@Test
 	@TestForIssue(jiraKey = "HHH-4699")
-	@SkipForDialect(value = { Oracle8iDialect.class, AbstractHANADialect.class }, jiraKey = "HHH-8516",
+	@SkipForDialect(value = { OracleDialect.class, AbstractHANADialect.class }, jiraKey = "HHH-8516",
 			comment = "HHH-4699 was specifically for using a CHAR, but Oracle/HANA do not handle the 2nd query correctly without VARCHAR. ")
 	public void testTrimmedEnumChar() throws SQLException {
 		// use native SQL to insert, forcing whitespace to occur

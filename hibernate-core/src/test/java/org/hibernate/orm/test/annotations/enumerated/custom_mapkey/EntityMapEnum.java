@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.enumerated.custom_mapkey;
+package org.hibernate.orm.test.annotations.enumerated.custom_mapkey;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,11 +20,11 @@ import javax.persistence.MapKeyEnumerated;
 import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+import org.hibernate.orm.test.annotations.enumerated.custom_types.LastNumberType;
 
-import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
-import org.hibernate.test.annotations.enumerated.enums.Common;
-import org.hibernate.test.annotations.enumerated.enums.FirstLetter;
-import org.hibernate.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.orm.test.annotations.enumerated.enums.Common;
+import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
 
 /**
  * @author Janario Oliveira
@@ -42,7 +42,7 @@ public class EntityMapEnum {
 	@MapKeyEnumerated(EnumType.STRING)
 	Map<Common, String> stringMap = new HashMap<Common, String>();
 	@ElementCollection
-	@MapKeyType(@Type(type = "org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType"))
+	@MapKeyType(@Type(type = "org.hibernate.orm.test.annotations.enumerated.custom_types.FirstLetterType"))
 	Map<FirstLetter, String> firstLetterMap = new HashMap<FirstLetter, String>();
 	@ElementCollection
 	Map<LastNumber, String> lastNumberMap = new HashMap<LastNumber, String>();

@@ -61,6 +61,7 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.DynamicParameterizedType;
 
 import org.jboss.logging.Logger;
 
@@ -103,6 +104,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
+	private XProperty xproperty;
 	private AccessType accessType;
 
 	private ConverterDescriptor converterDescriptor;
@@ -225,6 +227,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			XClass modelPropertyTypeXClass,
 			String declaringClassName,
 			ConverterDescriptor converterDescriptor) {
+		this.xproperty = modelXProperty;
 		boolean isArray = modelXProperty.isArray();
 		if ( modelPropertyTypeXClass == null && !isArray ) {
 			// we cannot guess anything
@@ -365,10 +368,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		if ( implicitJavaType.isEnum() ) {
 			final MapKeyEnumerated enumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
-			if ( enumeratedAnn == null ) {
-				enumType = EnumType.ORDINAL;
-			}
-			else {
+			if ( enumeratedAnn != null ) {
 				enumType = enumeratedAnn.value();
 				//noinspection ConstantConditions
 				if ( enumType == null ) {
@@ -428,10 +428,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		if ( javaType.isEnum() ) {
 			final Enumerated enumeratedAnn = attributeXProperty.getAnnotation( Enumerated.class );
-			if ( enumeratedAnn == null ) {
-				enumType = EnumType.ORDINAL;
-			}
-			else {
+			if ( enumeratedAnn != null ) {
 				enumType = enumeratedAnn.value();
 				if ( enumType == null ) {
 					throw new IllegalStateException(
@@ -474,10 +471,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		if ( javaType.isEnum() ) {
 			final Enumerated enumeratedAnn = attributeDescriptor.getAnnotation( Enumerated.class );
-			if ( enumeratedAnn == null ) {
-				this.enumType = EnumType.ORDINAL;
-			}
-			else {
+			if ( enumeratedAnn != null ) {
 				this.enumType = enumeratedAnn.value();
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
@@ -812,6 +806,26 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		basicValue.setExplicitTypeName( explicitBasicTypeName );
 		basicValue.setExplicitTypeParams( explicitLocalTypeParams );
+		// todo (6.0): Ideally we could check the type class like we did in 5.5 but that is unavailable at this point
+		java.lang.reflect.Type type = implicitJavaTypeAccess == null ? null : implicitJavaTypeAccess.apply( getTypeConfiguration() );
+		if ( xproperty != null && returnedClassName != null && ( !(type instanceof Class<?>) || !( (Class<?>) type ).isPrimitive() ) ) {
+//		if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
+			final Map<String, Object> parameters = new HashMap<>();
+			parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
+			parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
+			parameters.put( DynamicParameterizedType.IS_PRIMARY_KEY, Boolean.toString( kind == Kind.MAP_KEY ) );
+
+			parameters.put( DynamicParameterizedType.ENTITY, persistentClassName );
+			parameters.put( DynamicParameterizedType.XPROPERTY, xproperty );
+			parameters.put( DynamicParameterizedType.PROPERTY, xproperty.getName() );
+			if ( accessType != null ) {
+				parameters.put( DynamicParameterizedType.ACCESS_TYPE, accessType.getType() );
+			}
+			if ( explicitLocalTypeParams != null ) {
+				parameters.putAll( explicitLocalTypeParams );
+			}
+			basicValue.setTypeParameters( (Map) parameters );
+		}
 
 		basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 

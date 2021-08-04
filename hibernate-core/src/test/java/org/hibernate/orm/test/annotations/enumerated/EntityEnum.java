@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.enumerated;
+package org.hibernate.orm.test.annotations.enumerated;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -23,11 +23,11 @@ import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 
-import org.hibernate.test.annotations.enumerated.custom_types.LastNumberType;
-import org.hibernate.test.annotations.enumerated.enums.Common;
-import org.hibernate.test.annotations.enumerated.enums.FirstLetter;
-import org.hibernate.test.annotations.enumerated.enums.LastNumber;
-import org.hibernate.test.annotations.enumerated.enums.Trimmed;
+import org.hibernate.orm.test.annotations.enumerated.custom_types.LastNumberType;
+import org.hibernate.orm.test.annotations.enumerated.enums.Common;
+import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
+import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
+import org.hibernate.orm.test.annotations.enumerated.enums.Trimmed;
 
 /**
  * @author Janario Oliveira
@@ -43,7 +43,7 @@ public class EntityEnum {
 	private Common ordinal;
 	@Enumerated(EnumType.STRING)
 	private Common string;
-	@Type(type = "org.hibernate.test.annotations.enumerated.custom_types.FirstLetterType")
+	@Type(type = "org.hibernate.orm.test.annotations.enumerated.custom_types.FirstLetterType")
 	private FirstLetter firstLetter;
 	private LastNumber lastNumber;
 	@Enumerated(EnumType.STRING)

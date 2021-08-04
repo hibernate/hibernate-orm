@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.enumerated.custom_types;
+package org.hibernate.orm.test.annotations.enumerated.custom_types;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * @author Janario Oliveira
  */
-public class LastNumberType extends org.hibernate.type.EnumType {
+public class FirstLetterType extends org.hibernate.type.EnumType {
 
 	@Override
 	public int[] sqlTypes() {
@@ -30,7 +30,7 @@ public class LastNumberType extends org.hibernate.type.EnumType {
 		if ( rs.wasNull() ) {
 			return null;
 		}
-		return Enum.valueOf( returnedClass(), "NUMBER_" + persistValue );
+		return Enum.valueOf( returnedClass(), persistValue + "_LETTER" );
 	}
 
 	@Override
@@ -40,12 +40,11 @@ public class LastNumberType extends org.hibernate.type.EnumType {
 			st.setNull( index, sqlTypes()[0] );
 		}
 		else {
-
 			String enumString = ( (Enum<?>) value ).name();
 			// Using setString here, rather than setObject.  A few JDBC drivers
 			// (Oracle, DB2, and SQLServer) were having trouble converting
 			// the char to VARCHAR.
-			st.setString( index, enumString.substring( enumString.length() - 1 ) );
+			st.setString( index, enumString.substring( 0, 1 ) );
 		}
 	}
 }

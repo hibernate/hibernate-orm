@@ -7,6 +7,7 @@
 package org.hibernate.mapping;
 
 import java.util.Map;
+import java.util.Properties;
 import java.util.function.Function;
 import javax.persistence.AttributeConverter;
 import javax.persistence.EnumType;
@@ -48,6 +49,7 @@ import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
  * @author Steve Ebersole
@@ -277,6 +279,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	}
 
 	protected Resolution<?> buildResolution() {
+		Properties typeParameters = getTypeParameters();
+		if ( typeParameters != null
+				&& Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
+				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+			createParameterImpl();
+		}
 		if ( explicitTypeName != null ) {
 			return interpretExplicitlyNamedType(
 					explicitTypeName,
@@ -286,7 +294,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					explicitSqlTypeAccess,
 					explicitMutabilityPlanAccess,
 					getAttributeConverterDescriptor(),
-					explicitLocalTypeParams,
+					typeParameters,
 					this,
 					typeConfiguration,
 					getBuildingContext()
@@ -363,10 +371,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
 		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
-		if ( autoAppliedTypeDef != null ) {
+		if ( autoAppliedTypeDef != null && ( !jtd.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			log.debug( "BasicValue resolution matched auto-applied type-definition" );
 			return autoAppliedTypeDef.resolve(
-					getTypeParameters(),
+					typeParameters,
 					null,
 					getBuildingContext(),
 					this

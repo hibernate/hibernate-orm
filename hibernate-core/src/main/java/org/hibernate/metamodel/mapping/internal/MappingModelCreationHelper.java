@@ -352,14 +352,6 @@ public class MappingModelCreationHelper {
 		final ValueGeneration valueGeneration = bootProperty.getValueGenerationStrategy();
 
 		if ( valueConverter != null ) {
-			if ( isAttrFormula ) {
-				throw new MappingException( String.format(
-						"Value converter should not be set for column [%s] annotated with @Formula [%s]",
-						attrName,
-						attrColumnName
-				) );
-			}
-
 			// we want to "decompose" the "type" into its various pieces as expected by the mapping
 			assert valueConverter.getRelationalJavaDescriptor() == resolution.getRelationalJavaDescriptor();
 
@@ -386,7 +378,7 @@ public class MappingModelCreationHelper {
 					fetchStyle,
 					tableExpression,
 					attrColumnName,
-					false,
+					isAttrFormula,
 					null,
 					null,
 					valueConverter,

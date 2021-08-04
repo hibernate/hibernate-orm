@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.formula;
+package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
 import java.util.List;
@@ -80,7 +80,7 @@ public class JoinFormulaOneToOneNotIgnoreLazyFetchingTest extends BaseEntityMana
 	@Test
 	public void testLazyLoading() {
 
-		assertEquals( "HHH000491: The [code] association in the [org.hibernate.test.annotations.formula.JoinFormulaOneToOneNotIgnoreLazyFetchingTest$Stock] entity uses both @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY. The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", triggerable.triggerMessage() );
+		assertEquals( "HHH000491: The [code] association in the [" + Stock.class.getName() + "] entity uses both @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY. The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", triggerable.triggerMessage() );
 
 		List<Stock> stocks = doInJPA( this::entityManagerFactory, entityManager -> {
 			return entityManager.createQuery(

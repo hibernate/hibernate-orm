@@ -4,12 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.formula;
+package org.hibernate.orm.test.annotations.formula;
 
 import java.io.Serializable;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
@@ -20,37 +21,18 @@ import javax.persistence.ManyToOne;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.model.process.internal.ScanningCoordinator;
-import org.hibernate.cfg.AnnotationBinder;
-import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.logger.LoggerInspectionRule;
-import org.hibernate.testing.logger.Triggerable;
-import org.junit.Rule;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
 @TestForIssue(jiraKey = "HHH-12770")
-public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Rule
-	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, AnnotationBinder.class.getName() )
-	);
-
-	private Triggerable triggerable = logInspection.watchForLogMessages( "HHH000491" );
-
+public class JoinFormulaManyToOneLazyFetchingTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -82,9 +64,6 @@ public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityMan
 
 	@Test
 	public void testLazyLoading() {
-
-		assertEquals( "HHH000491: The [code] association in the [org.hibernate.test.annotations.formula.JoinFormulaManyToOneNotIgnoreLazyFetchingTest$Stock] entity uses both @NotFound(action = NotFoundAction.IGNORE) and FetchType.LAZY. The NotFoundAction.IGNORE @ManyToOne and @OneToOne associations are always fetched eagerly.", triggerable.triggerMessage() );
-
 		List<Stock> stocks = doInJPA( this::entityManagerFactory, entityManager -> {
 			return entityManager.createQuery(
 					"SELECT s FROM Stock s", Stock.class )
@@ -92,8 +71,36 @@ public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityMan
 		} );
 		assertEquals( 2, stocks.size() );
 
-		assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
-		assertNull( stocks.get( 1 ).getCode() );
+		try {
+			assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
+
+			fail( "Should have thrown LazyInitializationException" );
+		}
+		catch (LazyInitializationException expected) {
+
+		}
+	}
+
+	@Test
+	public void testEagerLoading() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			List<Stock> stocks =  entityManager.createQuery(
+					"SELECT s FROM Stock s", Stock.class )
+					.getResultList();
+
+			assertEquals( 2, stocks.size() );
+			assertEquals( "ABC", stocks.get( 0 ).getCode().getRefNumber() );
+
+			try {
+				stocks.get( 1 ).getCode().getRefNumber();
+
+				fail( "Should have thrown EntityNotFoundException" );
+			}
+			catch (EntityNotFoundException expected) {
+
+			}
+
+		} );
 	}
 
 	@Entity(name = "Stock")
@@ -104,7 +111,6 @@ public class JoinFormulaManyToOneNotIgnoreLazyFetchingTest extends BaseEntityMan
 		private Long id;
 
 		@ManyToOne(fetch = FetchType.LAZY)
-		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumnOrFormula(column = @JoinColumn(name = "CODE_ID", referencedColumnName = "ID"))
 		@JoinColumnOrFormula(formula = @JoinFormula(referencedColumnName = "TYPE", value = "'TYPE_A'"))
 		private StockCode code;

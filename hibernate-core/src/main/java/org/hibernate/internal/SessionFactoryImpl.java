@@ -328,7 +328,9 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 						failingQueries.append( sep ).append( entry.getKey() );
 						sep = ", ";
 					}
-					throw new HibernateException( failingQueries.toString() );
+					final HibernateException exception = new HibernateException( failingQueries.toString() );
+					errors.values().forEach( exception::addSuppressed );
+					throw exception;
 				}
 			}
 

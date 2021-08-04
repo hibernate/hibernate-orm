@@ -17,7 +17,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.annotations.loader">
+<hibernate-mapping package="org.hibernate.orm.test.annotations.loader">
 
     <sql-query name="loadByTeam">
         <load-collection alias="p" role="Team.players"/>

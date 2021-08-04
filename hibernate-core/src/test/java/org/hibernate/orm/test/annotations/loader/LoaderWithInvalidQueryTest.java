@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.loader;
+package org.hibernate.orm.test.annotations.loader;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -20,6 +20,7 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -41,8 +42,10 @@ public class LoaderWithInvalidQueryTest extends BaseEntityManagerFunctionalTestC
 		}
 		catch (Exception expected) {
 			HibernateException rootCause = (HibernateException) ExceptionUtil.rootCause( expected );
-			assertTrue(rootCause.getMessage().contains( "could not resolve property: valid" ));
-			assertTrue(rootCause.getMessage().contains( "_Person is not mapped" ));
+			Throwable[] suppressed = rootCause.getSuppressed();
+			assertEquals( 2, suppressed.length );
+			assertTrue( ExceptionUtil.rootCause( suppressed[0] ).getMessage().contains( "Could not resolve attribute named `valid`" ) );
+			assertTrue( ExceptionUtil.rootCause( suppressed[1] ).getMessage().contains( "Could not resolve entity reference: _Person" ) );
 		}
 	}
 

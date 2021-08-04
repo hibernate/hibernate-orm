@@ -11,31 +11,31 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.spi.QueryImplementor;
 
 /**
  * @author Steve Ebersole
  */
 public class CollectionLoaderNamedQuery implements CollectionLoader {
-	private final String loaderQueryName;
 	private final CollectionPersister persister;
-	private final PluralAttributeMapping attributeMapping;
+	private final NamedQueryMemento namedQueryMemento;
 
-	public CollectionLoaderNamedQuery(
-			String loaderQueryName,
-			CollectionPersister persister,
-			PluralAttributeMapping attributeMapping) {
-		this.loaderQueryName = loaderQueryName;
+	public CollectionLoaderNamedQuery(CollectionPersister persister, NamedQueryMemento namedQueryMemento) {
 		this.persister = persister;
-		this.attributeMapping = attributeMapping;
+		this.namedQueryMemento = namedQueryMemento;
 	}
 
 	@Override
 	public PluralAttributeMapping getLoadable() {
-		return attributeMapping;
+		return persister.getAttributeMapping();
 	}
 
 	@Override
+	@SuppressWarnings("rawtypes")
 	public PersistentCollection load(Object key, SharedSessionContractImplementor session) {
-		return null;
+		final QueryImplementor<PersistentCollection> query = namedQueryMemento.toQuery( session );
+		query.setParameter( 1, key );
+		return query.getResultList().get( 0 );
 	}
 }

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.immutable;
+package org.hibernate.orm.test.annotations.immutable;
 
 import java.util.Map;
 
@@ -122,12 +122,8 @@ public class ImmutableEntityUpdateQueryHandlingModeExceptionTest extends BaseNon
 			String statement = "Update ImmutableEntity e set e.selector = :changeable where e.id in " +
 					"(select i.id from MutableEntity i where i.changeable = :selector)";
 
-			Query query = session.createQuery(statement);
-			query.setParameter("changeable", "end");
-			query.setParameter("selector", "foo");
-
 			try {
-				query.executeUpdate();
+				session.createQuery(statement);
 
 				fail("Should have throw exception");
 			}

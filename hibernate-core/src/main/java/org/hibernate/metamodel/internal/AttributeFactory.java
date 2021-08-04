@@ -260,7 +260,7 @@ public class AttributeFactory {
 
 					final JavaTypeDescriptorRegistry registry = context.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
-					final JavaTypeDescriptor<Y> javaTypeDescriptor = registry.resolveDescriptor( embeddableClass );
+					final JavaTypeDescriptor<Y> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( embeddableClass );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,

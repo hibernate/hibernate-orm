@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sql.internal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -20,18 +21,22 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.collection.SQLLoadableCollection;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.entity.SQLLoadable;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.type.EntityType;
@@ -107,6 +112,16 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 						alias2Return.put( rootReturn.getTableAlias(), rootReturn );
 						resultBuilder.visitFetchBuilders( this::processFetchBuilder );
 					}
+					else if ( resultBuilder instanceof NativeQuery.CollectionReturn ) {
+						final NativeQuery.CollectionReturn collectionReturn = (NativeQuery.CollectionReturn) resultBuilder;
+						alias2Return.put( collectionReturn.getTableAlias(), collectionReturn );
+						Map<String, String[]> propertyResultsMap = Collections.emptyMap();//fetchReturn.getPropertyResultsMap()
+						addCollection(
+								collectionReturn.getNavigablePath().getFullPath(),
+								collectionReturn.getTableAlias(),
+								propertyResultsMap
+						);
+					}
 				}
 		);
 		resultSetMapping.visitLegacyFetchBuilders(
@@ -159,6 +174,23 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 
 							resultSetMapping.addResultBuilder( resultBuilderEntity );
 							alias2Return.put( rootReturn.getTableAlias(), resultBuilderEntity );
+						}
+					}
+					else if ( resultBuilder instanceof NativeQuery.CollectionReturn ) {
+						final NativeQuery.CollectionReturn collectionReturn = (NativeQuery.CollectionReturn) resultBuilder;
+						final String suffix = alias2CollectionSuffix.get( collectionReturn.getTableAlias() );
+						if ( suffix == null ) {
+							resultSetMapping.addResultBuilder( resultBuilder );
+						}
+						else {
+							final CompleteResultBuilderCollectionStandard resultBuilderCollection = createSuffixedResultBuilder(
+									collectionReturn,
+									suffix,
+									alias2Suffix.get( collectionReturn.getTableAlias() )
+							);
+
+							resultSetMapping.addResultBuilder( resultBuilderCollection );
+							alias2Return.put( collectionReturn.getTableAlias(), resultBuilderCollection );
 						}
 					}
 					else {
@@ -299,6 +331,44 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			}
 		}
 		return resultBuilderEntity;
+	}
+
+	private CompleteResultBuilderCollectionStandard createSuffixedResultBuilder(
+			NativeQuery.CollectionReturn collectionReturn,
+			String suffix,
+			String entitySuffix) {
+		final CollectionPersister collectionPersister = collectionReturn.getPluralAttribute().getCollectionDescriptor();
+		final String[] elementColumnAliases;
+		if ( collectionPersister.getElementType().isEntityType() ) {
+			final Loadable elementPersister = (Loadable) ( ( QueryableCollection ) collectionPersister).getElementPersister();
+			final String[] propertyNames = elementPersister.getPropertyNames();
+			final String[] identifierAliases = elementPersister.getIdentifierAliases( entitySuffix );
+			final String discriminatorAlias = elementPersister.getDiscriminatorAlias( entitySuffix );
+			final List<String> aliases = new ArrayList<>(
+					propertyNames.length + identifierAliases.length + ( discriminatorAlias == null ? 0 : 1 )
+			);
+			Collections.addAll( aliases, identifierAliases );
+			if ( discriminatorAlias != null ) {
+				aliases.add( discriminatorAlias );
+			}
+			for ( int i = 0; i < propertyNames.length; i++ ) {
+				Collections.addAll( aliases, elementPersister.getPropertyAliases( entitySuffix, i ) );
+			}
+			elementColumnAliases = ArrayHelper.toStringArray( aliases );
+		}
+		else {
+			elementColumnAliases = collectionPersister.getElementColumnAliases( suffix );
+		}
+		return new CompleteResultBuilderCollectionStandard(
+				collectionReturn.getTableAlias(),
+				collectionReturn.getNavigablePath(),
+				collectionReturn.getPluralAttribute(),
+				collectionPersister.getKeyColumnAliases( suffix ),
+				collectionPersister.hasIndex()
+						? collectionPersister.getIndexColumnAliases( suffix )
+						: null,
+				elementColumnAliases
+		);
 	}
 
 	private SQLLoadable getSQLLoadable(String entityName) throws MappingException {

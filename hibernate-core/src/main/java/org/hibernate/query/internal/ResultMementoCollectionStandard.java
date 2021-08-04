@@ -18,12 +18,15 @@ import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStand
  * @author Steve Ebersole
  */
 public class ResultMementoCollectionStandard implements ModelPartResultMementoCollection {
+	private final String tableAlias;
 	private final NavigablePath navigablePath;
 	private final PluralAttributeMapping pluralAttributeDescriptor;
 
 	public ResultMementoCollectionStandard(
+			String tableAlias,
 			NavigablePath navigablePath,
 			PluralAttributeMapping pluralAttributeDescriptor) {
+		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.pluralAttributeDescriptor = pluralAttributeDescriptor;
 	}
@@ -43,6 +46,7 @@ public class ResultMementoCollectionStandard implements ModelPartResultMementoCo
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		return new CompleteResultBuilderCollectionStandard(
+				tableAlias,
 				navigablePath,
 				pluralAttributeDescriptor
 		);

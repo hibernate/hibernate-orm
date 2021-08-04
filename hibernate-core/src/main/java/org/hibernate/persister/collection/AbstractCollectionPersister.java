@@ -97,6 +97,7 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
@@ -649,6 +650,14 @@ public abstract class AbstractCollectionPersister
 			this.indexConverter = null;
 			this.convertedIndexType = null;
 		}
+		if ( queryLoaderName != null ) {
+			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
+			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
+					.resolve( factory, collectionBootDescriptor.getMetadata(), queryLoaderName );
+			if ( namedQueryMemento == null ) {
+				throw new IllegalArgumentException( "Could not resolve named load-query [" + navigableRole + "] : " + queryLoaderName );
+			}
+		}
 	}
 
 	@Override
@@ -724,9 +733,15 @@ public abstract class AbstractCollectionPersister
 
 	@Override
 	public void postInstantiate() throws MappingException {
-		collectionLoader = queryLoaderName == null
-				? createCollectionLoader( LoadQueryInfluencers.NONE )
-				: new CollectionLoaderNamedQuery( queryLoaderName, this, attributeMapping );
+		if ( queryLoaderName == null ) {
+			collectionLoader = createCollectionLoader( LoadQueryInfluencers.NONE );
+		}
+		else {
+			// We pass null as metamodel because we did the initialization during construction already
+			final NamedQueryMemento namedQueryMemento = factory.getQueryEngine().getNamedObjectRepository()
+					.resolve( factory, null, queryLoaderName );
+			collectionLoader = new CollectionLoaderNamedQuery( this, namedQueryMemento );
+		}
 		if ( attributeMapping.getIndexDescriptor() != null ) {
 			collectionElementLoaderByIndex = new CollectionElementLoaderByIndex(
 					attributeMapping,

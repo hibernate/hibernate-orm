@@ -27,6 +27,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.transform.ResultTransformer;
@@ -429,6 +430,15 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 		 * @return The config object for further control.
 		 */
 		ReturnProperty addProperty(String propertyName);
+	}
+
+	interface CollectionReturn extends ReturnableResultNode {
+
+		String getTableAlias();
+
+		PluralAttributeMapping getPluralAttribute();
+
+		NavigablePath getNavigablePath();
 	}
 
 	/**

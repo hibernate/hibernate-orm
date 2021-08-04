@@ -24,6 +24,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryPropertyReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmResultSetMappingType;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
@@ -702,7 +703,14 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				Supplier<Map<String, Map<String, JoinDescriptor>>> joinDescriptorsAccess,
 				String registrationName,
 				MetadataBuildingContext context) {
-			this.collectionPath = new NavigablePath( hbmCollectionReturn.getRole() );
+			final String role = hbmCollectionReturn.getRole();
+			final int dotIndex = role.indexOf( '.' );
+			final String entityName = role.substring( 0, dotIndex );
+			final InFlightMetadataCollector metadataCollector = context.getMetadataCollector();
+			final String fullEntityName = metadataCollector.getImports().get( entityName );
+			this.collectionPath = new NavigablePath(
+					fullEntityName + "." + role.substring( dotIndex + 1 )
+			);
 			this.tableAlias = hbmCollectionReturn.getAlias();
 			if ( tableAlias == null ) {
 				throw new MappingException(
@@ -744,6 +752,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				final FetchParentMemento thisAsParentMemento = resolveParentMemento( resolutionContext );
 
 				memento = new ResultMementoCollectionStandard(
+						tableAlias,
 						thisAsParentMemento.getNavigablePath(),
 						(PluralAttributeMapping) thisAsParentMemento.getFetchableContainer()
 				);

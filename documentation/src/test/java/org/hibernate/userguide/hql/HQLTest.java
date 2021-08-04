@@ -1179,6 +1179,22 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void test_hql_aggregate_functions_filter_example() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			//tag::hql-aggregate-functions-filter-example[]
+
+			List<Object[]> callCount = entityManager.createQuery(
+				"select p.number, count(c) filter(where c.duration < 30) " +
+				"from Call c " +
+				"join c.phone p " +
+				"group by p.number", Object[].class )
+			.getResultList();
+			//end::hql-aggregate-functions-filter-example[]
+			assertNotNull(callCount.get( 0 ));
+		});
+	}
+
+	@Test
 	@SkipForDialect(value = DerbyDialect.class, comment = "See https://issues.apache.org/jira/browse/DERBY-2072")
 	public void test_hql_concat_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {

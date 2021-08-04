@@ -400,20 +400,20 @@ whereClause
 
 predicate
 	//highest to lowest precedence
-	: LEFT_PAREN predicate RIGHT_PAREN							# GroupedPredicate
-	| expression IS (NOT)? NULL									# IsNullPredicate
-	| expression IS (NOT)? EMPTY								# IsEmptyPredicate
-	| expression (NOT)? IN inList								# InPredicate
-	| expression (NOT)? BETWEEN expression AND expression		# BetweenPredicate
-	| expression (NOT)? (LIKE | ILIKE) expression (likeEscape)?	# LikePredicate
-	| expression comparisonOperator expression					# ComparisonPredicate
+	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
+	| expression IS (NOT)? NULL													# IsNullPredicate
+	| expression IS (NOT)? EMPTY												# IsEmptyPredicate
+	| expression (NOT)? IN inList												# InPredicate
+	| expression (NOT)? BETWEEN expression AND expression						# BetweenPredicate
+	| expression (NOT)? (LIKE | ILIKE) expression (likeEscape)?					# LikePredicate
+	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS (ELEMENTS|INDICES) LEFT_PAREN dotIdentifierSequence RIGHT_PAREN	# ExistsCollectionPartPredicate
-	| EXISTSexpression											# ExistsPredicate
-	| expression (NOT)? MEMBER OF path							# MemberOfPredicate
-	| NOT predicate												# NegatedPredicate
-	| predicate AND predicate									# AndPredicate
-	| predicate OR predicate									# OrPredicate
-	| expression												# BooleanExpressionPredicate
+	| EXISTS expression															# ExistsPredicate
+	| expression (NOT)? MEMBER OF path											# MemberOfPredicate
+	| NOT predicate																# NegatedPredicate
+	| predicate AND predicate													# AndPredicate
+	| predicate OR predicate													# OrPredicate
+	| expression																# BooleanExpressionPredicate
 	;
 
 comparisonOperator
@@ -1060,4 +1060,3 @@ identifier
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );
 	}
 	;
-

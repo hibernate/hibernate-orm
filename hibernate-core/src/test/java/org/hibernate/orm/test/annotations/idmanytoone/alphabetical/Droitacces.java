@@ -5,26 +5,18 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$Id$
-package org.hibernate.test.annotations.idmanytoone;
+//$
+package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
+import java.math.BigInteger;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
-/**
- * @author Emmanuel Bernard
- */
 @Entity
-public class CardKey {
+public class Droitacces {
 	@Id
-	@GeneratedValue
-	private int id;
+	private BigInteger idpk;
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
+	@ManyToOne
+	private Benefserv idpkbenef;
 }

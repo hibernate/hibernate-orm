@@ -6,33 +6,29 @@
  */
 
 //$
-package org.hibernate.test.annotations.idmanytoone.alphabetical;
+package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
 import java.io.Serializable;
 import javax.persistence.Embeddable;
 import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
 import javax.persistence.ManyToOne;
 
 @Embeddable
-public class BId implements Serializable {
+public class CId implements Serializable {
 
 	@ManyToOne
-	@JoinColumns( {
-	@JoinColumn( name = "aId", nullable = false ),
-	@JoinColumn( name = "bSequenceNumber", nullable = false )
-			} )
-	private C parent;
+	@JoinColumn( name = "aId", nullable = false )
+	private A parent;
 
 	private int sequenceNumber;
 
-	public BId() {
+	public CId() {
 	}
 
-	public C getParent() {
+	public A getParent() {
 		return parent;
 	}
 
-	public void setParent(C parent) {
+	public void setParent(A parent) {
 		this.parent = parent;
 	}
 
@@ -61,7 +57,7 @@ public class BId implements Serializable {
 			return false;
 		if ( getClass() != obj.getClass() )
 			return false;
-		final BId other = (BId) obj;
+		final CId other = (CId) obj;
 		if ( parent == null ) {
 			if ( other.parent != null )
 				return false;
@@ -72,4 +68,6 @@ public class BId implements Serializable {
 			return false;
 		return true;
 	}
+
+
 }

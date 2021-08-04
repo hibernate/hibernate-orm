@@ -1202,8 +1202,9 @@ public class MappingModelCreationHelper {
 		// A value that came from the annotation model is already sorted appropriately
 		// so we use an "identity mapping"
 		else {
-			final int[] propertyReordering = new int[componentType.getSubtypes().length];
-			for ( int i = 0; i < propertyReordering.length; i++ ) {
+			final int columnSpan = componentType.getColumnSpan( creationProcess.getCreationContext().getBootModel() );
+			final int[] propertyReordering = new int[columnSpan];
+			for ( int i = 0; i < columnSpan; i++ ) {
 				propertyReordering[i] = i;
 			}
 			return propertyReordering;

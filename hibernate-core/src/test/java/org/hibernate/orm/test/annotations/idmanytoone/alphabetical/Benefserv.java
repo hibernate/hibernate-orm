@@ -6,18 +6,17 @@
  */
 
 //$
-package org.hibernate.test.annotations.idmanytoone.alphabetical;
-import java.io.Serializable;
+package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
 import java.math.BigInteger;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
 @Entity
-public class Acces implements Serializable {
+public class Benefserv {
 	@Id
 	private BigInteger idpk;
 
 	@ManyToOne
-	private Droitacces idpkdracc;
+	private Service idpkser;
 }

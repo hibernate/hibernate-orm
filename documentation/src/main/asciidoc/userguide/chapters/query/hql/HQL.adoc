@@ -1148,6 +1148,8 @@ The supported aggregate functions are:
 For floating point values (other than `BigDecimal`) the result type is `Double`.
 For `BigInteger` values, the result type is `BigInteger`. For `BigDecimal` values, the result type is `BigDecimal`.
 
+Aggregations often appear with grouping. For information on grouping see <<hql-group-by>>.
+
 [[hql-aggregate-functions-example]]
 .Aggregate function examples
 ====
@@ -1157,7 +1159,16 @@ include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-example]
 ----
 ====
 
-Aggregations often appear with grouping. For information on grouping see <<hql-group-by>>.
+All of these aggregate functions also support the inclusion of a specific *filter clause*
+
+[[hql-aggregate-functions-filter-example]]
+.Filter clause example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/HQLTest.java[tags=hql-aggregate-functions-filter-example]
+----
+====
 
 [[hql-exp-functions]]
 === Scalar functions
@@ -1779,6 +1790,20 @@ So, if `|` is the escape symbol and we want to match all stored procedures prefi
 include::{sourcedir}/HQLTest.java[tags=hql-like-predicate-escape-example]
 ----
 ====
+
+[[hql-ilike-predicate]]
+=== Ilike predicate
+
+Performs a case-insensitive like comparison on string values. The syntax is:
+
+[[hql-ilike-predicate-bnf]]
+[source, JAVA, indent=0]
+----
+include::{extrasdir}/predicate_ilike_bnf.txt[]
+----
+
+The semantics are identical to those of the aforementioned <<hql-like-predicate>>, with the sole difference that the comparison is now case insensitive.
+
 
 [[hql-between-predicate]]
 === Between predicate

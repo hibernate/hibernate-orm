@@ -215,6 +215,15 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 					&& roots.get( 0 ).getPrimaryTableReference() instanceof UnionTableReference ) {
 				appendSql( columnReference.getExpressionText() );
 			}
+			// for now, use the unqualified form
+			else if ( columnReference.isColumnExpressionFormula() ) {
+				// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
+				// This is fine for now as this is only temporary anyway until we render aliases for table references
+				appendSql(
+						columnReference.getColumnExpression()
+								.replaceAll( "(\\b)(" + getDmlTargetTableAlias() + "\\.)(\\b)", "$1$3" )
+				);
+			}
 			else {
 				appendSql( ( (MutationStatement) getStatement() ).getTargetTable().getTableExpression() );
 				appendSql( '.' );

@@ -107,22 +107,24 @@ afterEvaluate {
 }
 
 gradle.taskGraph.whenReady { tg ->
-	// look for sys-prop or env-var overrides of the tokens used for publishing
-	if ( System.properties.containsKey( 'gradle.publish.key' )
-			|| System.properties.containsKey( 'gradle.publish.secret' )
-			|| System.getenv().containsKey( 'GRADLE_PUBLISH_KEY' )
-			|| System.getenv().containsKey( 'GRADLE_PUBLISH_SECRET' ) ) {
-		// nothing to do - already explicitly set
-	}
-	else {
-		// use the values from the credentials provider, if any
-		if ( credentials.hibernatePluginPortalUsername == null ) {
-			throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
+	if ( tg.hasTask( project.tasks.publishPlugins ) ) {
+		// look for sys-prop or env-var overrides of the tokens used for publishing
+		if ( System.properties.containsKey( 'gradle.publish.key' )
+				|| System.properties.containsKey( 'gradle.publish.secret' )
+				|| System.getenv().containsKey( 'GRADLE_PUBLISH_KEY' )
+				|| System.getenv().containsKey( 'GRADLE_PUBLISH_SECRET' ) ) {
+			// nothing to do - already explicitly set
 		}
-		if ( credentials.hibernatePluginPortalPassword == null ) {
-			throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
+		else {
+			// use the values from the credentials provider, if any
+			if ( credentials.hibernatePluginPortalUsername == null ) {
+				throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
+			}
+			if ( credentials.hibernatePluginPortalPassword == null ) {
+				throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
+			}
+			System.setProperty( 'gradle.publish.key', credentials.hibernatePluginPortalUsername )
+			System.setProperty( 'gradle.publish.secret', credentials.hibernatePluginPortalPassword )
 		}
-		System.setProperty( 'gradle.publish.key', credentials.hibernatePluginPortalUsername )
-		System.setProperty( 'gradle.publish.secret', credentials.hibernatePluginPortalPassword )
 	}
 }

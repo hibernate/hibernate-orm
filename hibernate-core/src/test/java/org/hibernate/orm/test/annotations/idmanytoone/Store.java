@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.idmanytoone;
+package org.hibernate.orm.test.annotations.idmanytoone;
 import java.io.Serializable;
 import java.util.Set;
 import javax.persistence.Entity;

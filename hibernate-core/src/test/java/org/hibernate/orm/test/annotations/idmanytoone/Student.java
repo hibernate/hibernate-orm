@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.idmanytoone;
+package org.hibernate.orm.test.annotations.idmanytoone;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -18,8 +18,8 @@ import javax.persistence.Table;
  * @author Alex Kalashnikov
  */
 @Entity
-@Table(name = "idmanytoone_course")
-public class Course implements Serializable {
+@Table(name = "idmanytoone_student")
+public class Student implements Serializable {
 
     @Id
     @GeneratedValue
@@ -27,10 +27,10 @@ public class Course implements Serializable {
 
     private String name;
 
-    @OneToMany(mappedBy = "course")
-    private Set<CourseStudent> students;
+    @OneToMany(mappedBy = "student")
+    private Set<CourseStudent> courses;
 
-    public Course() {
+    public Student() {
     }
 
     public int getId() {
@@ -49,11 +49,11 @@ public class Course implements Serializable {
         this.name = name;
     }
 
-    public Set<CourseStudent> getStudents() {
-        return students;
+    public Set<CourseStudent> getCourses() {
+        return courses;
     }
 
-    public void setStudents(Set<CourseStudent> students) {
-        this.students = students;
+    public void setCourses(Set<CourseStudent> courses) {
+        this.courses = courses;
     }
 }

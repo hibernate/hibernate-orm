@@ -5,24 +5,20 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$
-package org.hibernate.test.annotations.idmanytoone.alphabetical;
-import java.util.List;
+//$Id$
+package org.hibernate.orm.test.annotations.idmanytoone;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 
+/**
+ * @author Emmanuel Bernard
+ */
 @Entity
-public class A {
-
+public class CardKey {
 	@Id
+	@GeneratedValue
 	private int id;
-
-	@OneToMany( mappedBy = "parent" )
-	List<C> children;
-
-	public A() {
-	}
 
 	public int getId() {
 		return id;
@@ -31,15 +27,4 @@ public class A {
 	public void setId(int id) {
 		this.id = id;
 	}
-
-	public List<C> getChildren() {
-		return children;
-	}
-
-	public void setChildren(List<C> children) {
-		this.children = children;
-	}
-
-
 }
-

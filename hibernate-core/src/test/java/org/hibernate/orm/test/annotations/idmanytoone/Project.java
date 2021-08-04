@@ -5,15 +5,27 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-//$
-package org.hibernate.test.annotations.idmanytoone.alphabetical;
-import java.math.BigInteger;
+//$Id$
+package org.hibernate.orm.test.annotations.idmanytoone;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-
+/**
+ * @author Emmanuel Bernard
+ */
 @Entity
-public class Service {
-    @Id
-    private BigInteger idpk;
+public class Project {
+
+	@Id
+	@GeneratedValue
+	private int id;
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
 }

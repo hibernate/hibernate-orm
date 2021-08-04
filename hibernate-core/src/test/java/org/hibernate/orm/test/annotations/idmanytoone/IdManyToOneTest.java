@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.idmanytoone;
+package org.hibernate.orm.test.annotations.idmanytoone;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -64,7 +64,7 @@ public class IdManyToOneTest extends BaseCoreFunctionalTestCase {
 			Join<Object, Object> students = root.join( "students", JoinType.INNER );
 			Join<Object, Object> student = students.join( "student", JoinType.INNER );
 			criteria.where( criteriaBuilder.equal( student.get( "name" ), "Foo" ) );
-			session.createQuery( criteria ).list();
+			s.createQuery( criteria ).list();
 //		Criteria criteria = s.createCriteria( Course.class );
 //        criteria.createCriteria( "students" ).createCriteria( "student" ).add( Restrictions.eq( "name", "Foo" ) );
 //        criteria.list();

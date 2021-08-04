@@ -6,34 +6,29 @@
  */
 
 //$
-package org.hibernate.test.annotations.idmanytoone.alphabetical;
-import java.util.List;
+package org.hibernate.orm.test.annotations.idmanytoone.alphabetical;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
-import javax.persistence.OneToMany;
 
 @Entity
-@IdClass( CId.class )
-public class C {
+@IdClass( BId.class )
+public class B {
 
 	@Id
-	private A parent;
+	private C parent;
 
 	@Id
 	private int sequenceNumber;
 
-	@OneToMany( mappedBy = "parent" )
-	List<B> children;
-
-	public C() {
+	public B() {
 	}
 
-	public A getParent() {
+	public C getParent() {
 		return parent;
 	}
 
-	public void setParent(A parent) {
+	public void setParent(C parent) {
 		this.parent = parent;
 	}
 
@@ -43,14 +38,6 @@ public class C {
 
 	public void setSequenceNumber(int sequenceNumber) {
 		this.sequenceNumber = sequenceNumber;
-	}
-
-	public List<B> getChildren() {
-		return children;
-	}
-
-	public void setChildren(List<B> children) {
-		this.children = children;
 	}
 
 

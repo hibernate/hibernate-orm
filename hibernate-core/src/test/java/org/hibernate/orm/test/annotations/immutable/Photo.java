@@ -4,29 +4,29 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+package org.hibernate.orm.test.annotations.immutable;
 
-//$Id$
-package org.hibernate.test.annotations.immutable;
 import java.io.Serializable;
-import java.util.List;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToMany;
 
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.Immutable;
-
+/**
+ *
+ * @author soldierkam
+ */
 @Entity
-@Immutable
 @SuppressWarnings("serial")
-public class Country implements Serializable {
+public class Photo implements Serializable {
+
 	private Integer id;
-	
+
 	private String name;
-	
-	private List<State> states;
+
+	private Exif metadata;
+
+	private Caption caption;
 
 	@Id
 	@GeneratedValue
@@ -46,14 +46,20 @@ public class Country implements Serializable {
 		name = string;
 	}
 
-	@OneToMany(fetch = FetchType.LAZY)
-	@Cascade(org.hibernate.annotations.CascadeType.ALL)
-	@Immutable
-	public List<State> getStates() {
-		return states;
+	public Exif getMetadata() {
+		return metadata;
 	}
-	
-	public void setStates(List<State> states) {
-		this.states = states;
+
+	public void setMetadata(Exif metadata) {
+		this.metadata = metadata;
+	}
+
+	@Convert(converter = CaptionConverter.class)
+	public Caption getCaption() {
+		return caption;
+	}
+
+	public void setCaption(Caption caption) {
+		this.caption = caption;
 	}
 }

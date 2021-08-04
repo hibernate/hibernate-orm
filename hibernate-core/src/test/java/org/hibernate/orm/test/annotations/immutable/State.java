@@ -6,23 +6,20 @@
  */
 
 // $Id$
-package org.hibernate.test.annotations.immutable;
+package org.hibernate.orm.test.annotations.immutable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-
-import org.hibernate.annotations.Immutable;
 
 /**
  * @author Hardy Ferentschik
  */
 @Entity
-public class Foobar {
+public class State {
 	@Id
 	@GeneratedValue
 	private Integer id;
 	
-	@Immutable
 	private String name;
 
 	public Integer getId() {

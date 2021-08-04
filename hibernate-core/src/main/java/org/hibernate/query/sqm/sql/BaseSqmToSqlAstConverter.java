@@ -260,9 +260,11 @@ import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
+import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
@@ -662,9 +664,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		consumeReusablePaths( sqmPath, correspondingTableGroup, BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin );
 	}
 
-	private static void verifyManipulationImplicitJoin(SqmPath<?> joinedPath) {
+	private static void verifyManipulationImplicitJoin(TableGroup tableGroup) {
 		//noinspection StatementWithEmptyBody
-		if ( joinedPath instanceof SqmEmbeddedValuedSimplePath<?> ) {
+		if ( tableGroup instanceof LazyTableGroup && ( (LazyTableGroup) tableGroup ).getUnderlyingTableGroup() == null
+				|| tableGroup instanceof VirtualTableGroup ) {
 			// this is fine
 		}
 		else {
@@ -2155,13 +2158,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private void consumeReusablePaths(SqmPath<?> sqmPath, TableGroup tableGroup) {
-		consumeReusablePaths( sqmPath, tableGroup, (sqmSubPath) -> {} );
+		consumeReusablePaths( sqmPath, tableGroup, tg -> {} );
 	}
 
 	private void consumeReusablePaths(
 			SqmPath<?> sqmPath,
 			TableGroup parentTableGroup,
-			Consumer<SqmPath<?>> implicitJoinChecker) {
+			Consumer<TableGroup> implicitJoinChecker) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Visiting implicit joins for `%s`", sqmPath.getNavigablePath() );
 		}
@@ -2187,7 +2190,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 					final TableGroup tableGroup;
 					if ( subPart instanceof TableGroupJoinProducer ) {
-						implicitJoinChecker.accept( joinedPath );
 						final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
 						final SqlAstJoinType defaultSqlAstJoinType = joinProducer.getDefaultSqlAstJoinType(
 								parentTableGroup );
@@ -2207,6 +2209,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						tableGroup = null;
 					}
 					consumeReusablePaths( joinedPath, tableGroup, implicitJoinChecker );
+					if ( tableGroup != null ) {
+						implicitJoinChecker.accept( tableGroup );
+					}
 				}
 		);
 	}

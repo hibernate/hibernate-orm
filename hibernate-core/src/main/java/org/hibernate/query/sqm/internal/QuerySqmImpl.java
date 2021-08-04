@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
@@ -128,6 +130,9 @@ public class QuerySqmImpl<R>
 				throw new IllegalArgumentException( "Non-select queries cannot be typed" );
 			}
 		}
+		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
+			verifyImmutableEntityUpdate( hqlString, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
+		}
 		this.resultType = resultType;
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
@@ -182,6 +187,9 @@ public class QuerySqmImpl<R>
 					producer.getFactory()
 			);
 		}
+		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
+			verifyImmutableEntityUpdate( hqlString, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
+		}
 
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
@@ -208,6 +216,9 @@ public class QuerySqmImpl<R>
 					resultType,
 					producer.getFactory()
 			);
+		}
+		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
+			verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
 		}
 
 		this.hqlString = CRITERIA_HQL_STRING;
@@ -336,6 +347,37 @@ public class QuerySqmImpl<R>
 			else {
 				throw new QueryTypeMismatchException( errorMessage );
 			}
+		}
+	}
+
+	private void verifyImmutableEntityUpdate(
+			String hqlString,
+			SqmUpdateStatement<R> sqmStatement,
+			SessionFactoryImplementor factory) {
+		final EntityPersister entityDescriptor = factory.getDomainModel()
+				.getEntityDescriptor( sqmStatement.getTarget().getEntityName() );
+		if ( entityDescriptor.isMutable() ) {
+			return;
+		}
+		final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode = factory
+				.getSessionFactoryOptions()
+				.getImmutableEntityUpdateQueryHandlingMode();
+
+		String querySpaces = Arrays.toString( entityDescriptor.getQuerySpaces() );
+
+		switch ( immutableEntityUpdateQueryHandlingMode ) {
+			case WARNING:
+				LOG.immutableEntityUpdateQuery( hqlString, querySpaces );
+				break;
+			case EXCEPTION:
+				throw new HibernateException(
+						"The query: [" + hqlString + "] attempts to update an immutable entity: " + querySpaces
+				);
+			default:
+				throw new UnsupportedOperationException(
+						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported!"
+				);
+
 		}
 	}
 

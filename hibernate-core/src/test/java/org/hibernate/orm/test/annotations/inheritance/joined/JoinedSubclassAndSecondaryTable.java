@@ -14,9 +14,9 @@ import org.hibernate.Session;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.test.annotations.inheritance.joined.Pool;
-import org.hibernate.test.annotations.inheritance.joined.PoolAddress;
-import org.hibernate.test.annotations.inheritance.joined.SwimmingPool;
+import org.hibernate.orm.test.annotations.inheritance.joined.Pool;
+import org.hibernate.orm.test.annotations.inheritance.joined.PoolAddress;
+import org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(
 		annotatedClasses = {
 				Pool.class,
-				org.hibernate.test.annotations.inheritance.joined.SwimmingPool.class
+				org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool.class
 		}
 )
 @SessionFactory
@@ -52,7 +52,7 @@ public class JoinedSubclassAndSecondaryTable {
 	public void testSecondaryTableAndJoined(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					org.hibernate.test.annotations.inheritance.joined.SwimmingPool sp = new org.hibernate.test.annotations.inheritance.joined.SwimmingPool();
+					org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool sp = new org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool();
 					session.persist( sp );
 					session.flush();
 					session.clear();
@@ -72,17 +72,17 @@ public class JoinedSubclassAndSecondaryTable {
 							"The address table is marked as optional. For null values no database row should be created"
 					);
 
-					org.hibernate.test.annotations.inheritance.joined.SwimmingPool sp2 = session.get( org.hibernate.test.annotations.inheritance.joined.SwimmingPool.class, sp.getId() );
+					org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool sp2 = session.get( org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool.class, sp.getId() );
 					assertNull( sp.getAddress() );
 
-					org.hibernate.test.annotations.inheritance.joined.PoolAddress address = new org.hibernate.test.annotations.inheritance.joined.PoolAddress();
+					org.hibernate.orm.test.annotations.inheritance.joined.PoolAddress address = new org.hibernate.orm.test.annotations.inheritance.joined.PoolAddress();
 					address.setAddress( "Park Avenue" );
 					sp2.setAddress( address );
 
 					session.flush();
 					session.clear();
 
-					sp2 = session.get( org.hibernate.test.annotations.inheritance.joined.SwimmingPool.class, sp.getId() );
+					sp2 = session.get( org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool.class, sp.getId() );
 //					rowCount = getTableRowCount( session, "POOL_ADDRESS" );
 //					assertEquals(
 //
@@ -107,7 +107,7 @@ public class JoinedSubclassAndSecondaryTable {
 	public void testSecondaryTableAndJoinedInverse(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					org.hibernate.test.annotations.inheritance.joined.SwimmingPool sp = new org.hibernate.test.annotations.inheritance.joined.SwimmingPool();
+					org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool sp = new org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool();
 					session.persist( sp );
 					session.flush();
 					session.clear();
@@ -125,10 +125,10 @@ public class JoinedSubclassAndSecondaryTable {
 							"The address table is marked as optional. For null values no database row should be created"
 					);
 
-					org.hibernate.test.annotations.inheritance.joined.SwimmingPool sp2 = session.get( org.hibernate.test.annotations.inheritance.joined.SwimmingPool.class, sp.getId() );
+					org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool sp2 = session.get( org.hibernate.orm.test.annotations.inheritance.joined.SwimmingPool.class, sp.getId() );
 					assertNull( sp.getSecondaryAddress() );
 
-					org.hibernate.test.annotations.inheritance.joined.PoolAddress address = new PoolAddress();
+					org.hibernate.orm.test.annotations.inheritance.joined.PoolAddress address = new PoolAddress();
 					address.setAddress( "Park Avenue" );
 					sp2.setSecondaryAddress( address );
 

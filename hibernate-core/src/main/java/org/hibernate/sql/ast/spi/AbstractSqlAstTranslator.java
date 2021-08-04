@@ -3471,7 +3471,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			//			or neither for its qualifier
 
 			// for now, use the unqualified form
-			appendSql( columnReference.getColumnExpression() );
+			if ( columnReference.isColumnExpressionFormula() ) {
+				// For formulas, we have to replace the qualifier as the alias was already rendered into the formula
+				// This is fine for now as this is only temporary anyway until we render aliases for table references
+				appendSql(
+						columnReference.getColumnExpression()
+								.replaceAll( "(\\b)(" + dmlTargetTableAlias + "\\.)(\\b)", "$1$3" )
+				);
+			}
+			else {
+				appendSql( columnReference.getColumnExpression() );
+			}
 		}
 		else {
 			appendSql( columnReference.getExpressionText() );

@@ -107,7 +107,7 @@ afterEvaluate {
 }
 
 gradle.taskGraph.whenReady { tg ->
-	if ( tg.hasTask( project.tasks.publishPlugins ) ) {
+	if ( tg.hasTask( project.tasks.publishPlugins ) && project.tasks.publishPlugins.enabled  ) {
 		// look for sys-prop or env-var overrides of the tokens used for publishing
 		if ( System.properties.containsKey( 'gradle.publish.key' )
 				|| System.properties.containsKey( 'gradle.publish.secret' )

@@ -21,22 +21,6 @@ description = "Gradle plugin for integrating Hibernate aspects into your build"
 ext {
 	pluginId = 'org.hibernate.orm'
 	pluginVersion = project.version
-
-	// look for command-line overrides of the username/password pairs for publishing
-	if ( project.hasProperty( 'hibernatePluginPortalUsername' ) ) {
-		if ( ! project.hasProperty( 'hibernatePluginPortalPassword' ) ) {
-			throw new GradleException( "Should specify both `hibernatePluginPortalUsername` and `hibernatePluginPortalPassword` as project properties" );
-		}
-		credentials.hibernatePluginPortalUsername = project.property( 'hibernatePluginPortalUsername' )
-		credentials.hibernatePluginPortalPassword = project.property( 'hibernatePluginPortalPassword' )
-	}
-	else if ( System.properties.hibernatePluginPortalUsername != null ) {
-		if ( System.properties.hibernatePluginPortalPassword == null ) {
-			throw new GradleException( "Should specify both `hibernatePluginPortalUsername` and `hibernatePluginPortalPassword` as system properties" );
-		}
-		credentials.hibernatePluginPortalUsername = System.properties.hibernatePluginPortalUsername
-		credentials.hibernatePluginPortalPassword = System.properties.hibernatePluginPortalPassword
-	}
 }
 
 dependencies {
@@ -123,12 +107,22 @@ afterEvaluate {
 }
 
 gradle.taskGraph.whenReady { tg ->
-	if ( tg.hasTask( project.tasks.publishPlugins ) ) {
+	// look for sys-prop or env-var overrides of the tokens used for publishing
+	if ( System.properties.hasProperty( 'gradle.publish.key' )
+			|| System.properties.hasProperty( 'gradle.publish.secret' )
+			|| System.getenv().containsKey( 'GRADLE_PUBLISH_KEY' )
+			|| System.getenv().containsKey( 'GRADLE_PUBLISH_SECRET' ) ) {
+		// nothing to do - already explicitly set
+	}
+	else {
+		// use the values from the credentials provider, if any
 		if ( credentials.hibernatePluginPortalUsername == null ) {
 			throw new RuntimeException( "`hibernatePluginPortalUsername` not found" )
 		}
 		if ( credentials.hibernatePluginPortalPassword == null ) {
 			throw new RuntimeException( "`hibernatePluginPortalPassword` not found" )
 		}
+		System.setProperty( 'gradle.publish.key', credentials.hibernatePluginPortalUsername )
+		System.setProperty( 'gradle.publish.secret', credentials.hibernatePluginPortalPassword )
 	}
 }

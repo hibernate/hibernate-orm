@@ -108,8 +108,8 @@ afterEvaluate {
 
 gradle.taskGraph.whenReady { tg ->
 	// look for sys-prop or env-var overrides of the tokens used for publishing
-	if ( System.properties.hasProperty( 'gradle.publish.key' )
-			|| System.properties.hasProperty( 'gradle.publish.secret' )
+	if ( System.properties.containsKey( 'gradle.publish.key' )
+			|| System.properties.containsKey( 'gradle.publish.secret' )
 			|| System.getenv().containsKey( 'GRADLE_PUBLISH_KEY' )
 			|| System.getenv().containsKey( 'GRADLE_PUBLISH_SECRET' ) ) {
 		// nothing to do - already explicitly set

@@ -26,9 +26,11 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -76,6 +78,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.UnknownEntityException;
+import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
@@ -177,6 +180,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -220,6 +224,35 @@ import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implements SqmCreationState {
 
 	private static final Logger log = Logger.getLogger( SemanticQueryBuilder.class );
+	private static final Set<String> JPA_STANDARD_FUNCTIONS;
+
+	static {
+		final Set<String> jpaStandardFunctions = new HashSet<>();
+		// Extracted from the BNF in JPA spec 4.14.
+		jpaStandardFunctions.add( "avg" );
+		jpaStandardFunctions.add( "max" );
+		jpaStandardFunctions.add( "min" );
+		jpaStandardFunctions.add( "sum" );
+		jpaStandardFunctions.add( "count" );
+		jpaStandardFunctions.add( "length" );
+		jpaStandardFunctions.add( "locate" );
+		jpaStandardFunctions.add( "abs" );
+		jpaStandardFunctions.add( "sqrt" );
+		jpaStandardFunctions.add( "mod" );
+		jpaStandardFunctions.add( "size" );
+		jpaStandardFunctions.add( "index" );
+		jpaStandardFunctions.add( "current_date" );
+		jpaStandardFunctions.add( "current_time" );
+		jpaStandardFunctions.add( "current_timestamp" );
+		jpaStandardFunctions.add( "concat" );
+		jpaStandardFunctions.add( "substring" );
+		jpaStandardFunctions.add( "trim" );
+		jpaStandardFunctions.add( "lower" );
+		jpaStandardFunctions.add( "upper" );
+		jpaStandardFunctions.add( "coalesce" );
+		jpaStandardFunctions.add( "nullif" );
+		JPA_STANDARD_FUNCTIONS = jpaStandardFunctions;
+	}
 
 	/**
 	 * Main entry point into analysis of HQL/JPQL parse tree - producing a semantic model of the
@@ -2192,7 +2225,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
 						(SqmExpression<?>) ctx.getChild( 2 ).accept( this )
 				),
-				resolveExpressableTypeBasic( String.class ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);
@@ -2264,7 +2297,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			return getFunctionDescriptor("mod").generateSqmExpression(
 					asList( left, right ),
-					(AllowableFunctionReturnType<?>) left.getNodeType(),
+					null,
 					creationContext.getQueryEngine(),
 					creationContext.getJpaMetamodel().getTypeConfiguration()
 			);
@@ -2503,68 +2536,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						creationContext.getQueryEngine(),
 						creationContext.getJpaMetamodel().getTypeConfiguration()
 				);
-	}
-
-	@Override
-	public Object visitLeastFunction(HqlParser.LeastFunctionContext ctx) {
-		final List<SqmExpression<?>> arguments = visitExpressions( ctx );
-		return getFunctionDescriptor("least")
-				.generateSqmExpression(
-						arguments,
-						(AllowableFunctionReturnType<?>) arguments.get( 0 ).getNodeType(),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
-				);
-	}
-
-	@Override
-	public Object visitGreatestFunction(HqlParser.GreatestFunctionContext ctx) {
-		final List<SqmExpression<?>> arguments = visitExpressions( ctx );
-		return getFunctionDescriptor("greatest")
-				.generateSqmExpression(
-						arguments,
-						(AllowableFunctionReturnType<?>) arguments.get( 0 ).getNodeType(),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
-				);
-	}
-
-	@Override
-	public SqmExpression<?> visitCoalesceFunction(HqlParser.CoalesceFunctionContext ctx) {
-		final List<SqmExpression<?>> arguments = visitExpressions( ctx );
-		return getFunctionDescriptor("coalesce")
-				.generateSqmExpression(
-						arguments,
-						(AllowableFunctionReturnType<?>) arguments.get( 0 ).getNodeType(),
-						creationContext.getQueryEngine(),
-						creationContext.getJpaMetamodel().getTypeConfiguration()
-				);
-	}
-
-	@Override
-	public SqmExpression<?> visitNullifFunction(HqlParser.NullifFunctionContext ctx) {
-		final SqmExpression<?> arg1 = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> arg2 = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("nullif").generateSqmExpression(
-				asList( arg1, arg2 ),
-				(AllowableFunctionReturnType<?>) arg1.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitIfnullFunction(HqlParser.IfnullFunctionContext ctx) {
-		final SqmExpression<?> arg1 = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> arg2 = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("ifnull").generateSqmExpression(
-				asList( arg1, arg2 ),
-				(AllowableFunctionReturnType<?>) arg1.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
 	}
 
 	@Override
@@ -3129,39 +3100,66 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmExpression<?> visitNonStandardFunction(HqlParser.NonStandardFunctionContext ctx) {
-		if ( creationOptions.useStrictJpaCompliance() ) {
+	public Object visitGenericFunction(HqlParser.GenericFunctionContext ctx) {
+		final String originalFunctionName = ctx.getChild( 0 ).getText();
+		final String functionName = originalFunctionName.toLowerCase();
+		if ( creationOptions.useStrictJpaCompliance() && !JPA_STANDARD_FUNCTIONS.contains( functionName ) ) {
 			throw new StrictJpaComplianceViolation(
 					"Encountered non-compliant non-standard function call [" +
-							ctx.nonStandardFunctionName() + "], but strict JPA " +
+							originalFunctionName + "], but strict JPA " +
 							"compliance was requested; use JPA's FUNCTION(functionName[,...]) " +
 							"syntax name instead",
 					StrictJpaComplianceViolation.Type.FUNCTION_CALL
 			);
 		}
 
-		final String functionName = ctx.getChild( 0 ).getText().toLowerCase();
-		//noinspection unchecked
-		final List<SqmTypedNode<?>> functionArguments = ctx.getChildCount() == 3
-				? emptyList()
-				: (List<SqmTypedNode<?>>) ctx.getChild( 2 ).accept( this );
+		final ParseTree argumentChild = ctx.getChild( 2 );
+		final List<SqmTypedNode<?>> functionArguments;
+		if ( argumentChild instanceof HqlParser.NonStandardFunctionArgumentsContext ) {
+			functionArguments = (List<SqmTypedNode<?>>) argumentChild.accept( this );
+		}
+		else if ( "*".equals( argumentChild.getText() ) ) {
+			functionArguments = Collections.singletonList( new SqmStar( getCreationContext().getNodeBuilder() ) );
+		}
+		else {
+			functionArguments = emptyList();
+		}
 
+		final SqmPredicate filterExpression = getFilterExpression( ctx );
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( functionName );
 		if ( functionTemplate == null ) {
 			functionTemplate = new NamedSqmFunctionDescriptor(
 					functionName,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE )
+					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE ),
+					functionName,
+					filterExpression != null ? FunctionKind.AGGREGATE : FunctionKind.NORMAL,
+					null,
+					SqlAstNodeRenderingMode.DEFAULT
 			);
 		}
 
-		return functionTemplate.generateSqmExpression(
-				functionArguments,
-				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
+		if ( functionTemplate.getFunctionKind() == FunctionKind.AGGREGATE ) {
+			return functionTemplate.generateAggregateSqmExpression(
+					functionArguments,
+					filterExpression,
+					null,
+					creationContext.getQueryEngine(),
+					creationContext.getJpaMetamodel().getTypeConfiguration()
+			);
+		}
+		else {
+			if ( filterExpression != null ) {
+				throw new ParsingException( "Illegal use of a FILTER clause for non-aggregate function: " + originalFunctionName );
+			}
+			return functionTemplate.generateSqmExpression(
+					functionArguments,
+					null,
+					creationContext.getQueryEngine(),
+					creationContext.getJpaMetamodel().getTypeConfiguration()
+			);
+		}
 	}
 
 	@Override
@@ -3173,10 +3171,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final List<SqmTypedNode<?>> arguments = new ArrayList<>( estimateArgumentCount );
 		int i = 0;
 
+		boolean distinct = false;
 		final ParseTree firstChild = ctx.getChild( 0 );
 		if ( firstChild instanceof HqlParser.DatetimeFieldContext ) {
 			arguments.add( toDurationUnit( (SqmExtractUnit<?>) firstChild.accept( this ) ) );
 			i += 2;
+		}
+		else if ( firstChild instanceof TerminalNode ) {
+			distinct = true;
+			i++;
 		}
 
 		for ( ; i < size; i += 2 ) {
@@ -3189,6 +3192,22 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 
+		if ( distinct ) {
+			final NodeBuilder nodeBuilder = getCreationContext().getNodeBuilder();
+			if ( arguments.size() == 1 ) {
+				arguments.set( 0, new SqmDistinct<>( (SqmExpression<?>) arguments.get( 0 ), nodeBuilder ) );
+			}
+			else {
+				final List<SqmTypedNode<?>> newArguments = new ArrayList<>( 1 );
+				//noinspection unchecked
+				newArguments.add(
+						new SqmDistinct<>(
+								new SqmTuple<>( (List<SqmExpression<?>>) (List<?>) arguments, nodeBuilder ), nodeBuilder
+						)
+				);
+				return newArguments;
+			}
+		}
 		return arguments;
 	}
 
@@ -3204,161 +3223,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	@Override
-	public SqmExpression<?> visitCeilingFunction(HqlParser.CeilingFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("ceiling").generateSqmExpression(
-				arg,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitFloorFunction(HqlParser.FloorFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("floor").generateSqmExpression(
-				arg,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
 	private SqmFunctionDescriptor getFunctionDescriptor(String name) {
 		return creationContext.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor(name);
 	}
 
 	@Override
-	public SqmExpression<?> visitAbsFunction(HqlParser.AbsFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("abs").generateSqmExpression(
-				arg,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitSignFunction(HqlParser.SignFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("sign").generateSqmExpression(
-				arg,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitModFunction(HqlParser.ModFunctionContext ctx) {
-		final SqmExpression<?> dividend = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> divisor = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("mod").generateSqmExpression(
-				asList( dividend, divisor ),
-				(AllowableFunctionReturnType<?>) dividend.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitPowerFunction(HqlParser.PowerFunctionContext ctx) {
-		final SqmExpression<?> base = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> power = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("power").generateSqmExpression(
-				asList( base, power ),
-				(AllowableFunctionReturnType<?>) base.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitTrigFunction(HqlParser.TrigFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor( ctx.getChild( 0 ).getText() ).generateSqmExpression(
-				arg,
-				resolveExpressableTypeBasic( Double.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitSqrtFunction(HqlParser.SqrtFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("sqrt").generateSqmExpression(
-				arg,
-				null,
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitRoundFunction(HqlParser.RoundFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> precision = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("round").generateSqmExpression(
-				asList(arg, precision),
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitAtan2Function(HqlParser.Atan2FunctionContext ctx) {
-		final SqmExpression<?> sin = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> cos = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("atan2").generateSqmExpression(
-				asList(sin, cos),
-				(AllowableFunctionReturnType<?>) sin.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitLnFunction(HqlParser.LnFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("ln").generateSqmExpression(
-				arg,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-
-	}
-
-	@Override
-	public SqmExpression<?> visitExpFunction(HqlParser.ExpFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("exp").generateSqmExpression(
-				arg,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public Object visitDatetimeField(HqlParser.DatetimeFieldContext ctx) {
+	public SqmExtractUnit<?> visitDatetimeField(HqlParser.DatetimeFieldContext ctx) {
 		final NodeBuilder nodeBuilder = creationContext.getNodeBuilder();
 		switch ( ( (TerminalNode) ctx.getChild( 0 ) ).getSymbol().getType() ) {
 			case HqlParser.DAY:
@@ -3416,7 +3286,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						nodeBuilder
 				);
 		}
-		throw new ParsingException("Unsupported datetime field [" + ctx.getText() + "]");
+		throw new ParsingException( "Unsupported datetime field [" + ctx.getText() + "]" );
 	}
 
 	@Override
@@ -3551,7 +3421,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		return getFunctionDescriptor("format").generateSqmExpression(
 				asList( expressionToCast, format ),
-				resolveExpressableTypeBasic( String.class ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);
@@ -3600,89 +3470,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmExpression<?> visitUpperFunction(HqlParser.UpperFunctionContext ctx) {
-		final SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		return getFunctionDescriptor("upper").generateSqmExpression(
-				expression,
-				(AllowableFunctionReturnType<?>) expression.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitLowerFunction(HqlParser.LowerFunctionContext ctx) {
-		// todo (6.0) : why pass both the expression and its expression-type?
-		//			can't we just pass the expression?
-		final SqmExpression<?> expression = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		return getFunctionDescriptor("lower").generateSqmExpression(
-				expression,
-				(AllowableFunctionReturnType<?>) expression.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitConcatFunction(HqlParser.ConcatFunctionContext ctx) {
-		final int size = ctx.getChildCount();
-		// Shift 1 bit instead of division by 2
-		final int estimateArgumentCount = (size >> 1) - 1;
-		final List<SqmTypedNode<?>> arguments = new ArrayList<>( estimateArgumentCount );
-		for ( int i = 2; i < size; i += 2 ) {
-			arguments.add( (SqmTypedNode<?>) ctx.getChild( i ).accept( this ) );
-		}
-
-		return getFunctionDescriptor("concat").generateSqmExpression(
-				arguments,
-				resolveExpressableTypeBasic( String.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public Object visitLengthFunction(HqlParser.LengthFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-
-		return getFunctionDescriptor("length").generateSqmExpression(
-				arg,
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
 	public Object visitPositionFunction(HqlParser.PositionFunctionContext ctx) {
 		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
 		final SqmExpression<?> string = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
 
 		return getFunctionDescriptor("position").generateSqmExpression(
 				asList( pattern, string ),
-				resolveExpressableTypeBasic( Integer.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public Object visitLocateFunction(HqlParser.LocateFunctionContext ctx) {
-		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> string = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-		final SqmExpression<?> start;
-		if ( ctx.getChildCount() == 8 ) {
-			start = (SqmExpression<?>) ctx.getChild( 6 ).accept( this );
-		}
-		else {
-			start = null;
-		}
-
-		return getFunctionDescriptor("locate").generateSqmExpression(
-				start == null
-						? asList( pattern, string )
-						: asList( pattern, string, start ),
-				resolveExpressableTypeBasic( Integer.class ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);
@@ -3705,76 +3499,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				length == null
 						? asList( string, replacement, start )
 						: asList( string, replacement, start, length ),
-				resolveExpressableTypeBasic( String.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public Object visitReplaceFunction(HqlParser.ReplaceFunctionContext ctx) {
-		final SqmExpression<?> string = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> pattern = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-		final SqmExpression<?> replacement = (SqmExpression<?>) ctx.getChild( 6 ).accept( this );
-
-		return getFunctionDescriptor("replace").generateSqmExpression(
-				asList( string, pattern, replacement ),
-				resolveExpressableTypeBasic( String.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public Object visitStrFunction(HqlParser.StrFunctionContext ctx) {
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		return getFunctionDescriptor("str").generateSqmExpression(
-				singletonList( arg ),
-				resolveExpressableTypeBasic( String.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitMaxFunction(HqlParser.MaxFunctionContext ctx) {
-		final SqmPredicate filterExpression = getFilterExpression( ctx );
-		final int expressionIndex = ctx.getChildCount() - ( filterExpression == null ? 2 : 3 );
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( expressionIndex ).accept( this );
-		//ignore DISTINCT
-		return getFunctionDescriptor("max").generateAggregateSqmExpression(
-				singletonList( arg ),
-				filterExpression,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitMinFunction(HqlParser.MinFunctionContext ctx) {
-		final SqmPredicate filterExpression = getFilterExpression( ctx );
-		final int expressionIndex = ctx.getChildCount() - ( filterExpression == null ? 2 : 3 );
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( expressionIndex ).accept( this );
-		//ignore DISTINCT
-		return getFunctionDescriptor("min").generateAggregateSqmExpression(
-				singletonList( arg ),
-				filterExpression,
-				(AllowableFunctionReturnType<?>) arg.getNodeType(),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitSumFunction(HqlParser.SumFunctionContext ctx) {
-		final SqmPredicate filterExpression = getFilterExpression( ctx );
-		final int expressionIndex = ctx.getChildCount() - ( filterExpression == null ? 2 : 3 );
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( expressionIndex ).accept( this );
-
-		return getFunctionDescriptor("sum").generateAggregateSqmExpression(
-				singletonList( applyDistinct( arg, ctx ) ),
-				filterExpression,
 				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
@@ -3905,51 +3629,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return (SqmSubQuery<X>) subQuery;
 	}
 
-	@Override
-	public SqmExpression<?> visitAvgFunction(HqlParser.AvgFunctionContext ctx) {
-		final SqmPredicate filterExpression = getFilterExpression( ctx );
-		final int expressionIndex = ctx.getChildCount() - ( filterExpression == null ? 2 : 3 );
-		final SqmExpression<?> arg = (SqmExpression<?>) ctx.getChild( expressionIndex ).accept( this );
-
-		return getFunctionDescriptor("avg").generateAggregateSqmExpression(
-				singletonList( applyDistinct( arg, ctx ) ),
-				filterExpression,
-				resolveExpressableTypeBasic( Double.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitCountFunction(HqlParser.CountFunctionContext ctx) {
-		final SqmPredicate filterExpression = getFilterExpression( ctx );
-		final int expressionIndex = ctx.getChildCount() - ( filterExpression == null ? 2 : 3 );
-		final ParseTree argumentChild = ctx.getChild( expressionIndex );
-		final SqmExpression<?> arg;
-		if ( argumentChild instanceof TerminalNode ) {
-			arg = new SqmStar( getCreationContext().getNodeBuilder() );
-		}
-		else {
-			arg = (SqmExpression<?>) argumentChild.accept( this );
-		}
-
-		return getFunctionDescriptor("count").generateAggregateSqmExpression(
-				singletonList( applyDistinct( arg, ctx ) ),
-				filterExpression,
-				resolveExpressableTypeBasic( Long.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	private SqmTypedNode<?> applyDistinct(SqmExpression<?> expression, ParseTree functionCtx) {
-		final ParseTree node = functionCtx.getChild( 2 );
-		if ( node instanceof TerminalNode && ( (TerminalNode) node ).getSymbol().getType() == HqlParser.DISTINCT ) {
-			return new SqmDistinct<>( expression, getCreationContext().getNodeBuilder() );
-		}
-		return expression;
-	}
-
 	private SqmPredicate getFilterExpression(ParseTree functionCtx) {
 		final ParseTree lastChild = functionCtx.getChild( functionCtx.getChildCount() - 1 );
 		if ( lastChild instanceof HqlParser.FilterClauseContext ) {
@@ -3990,35 +3669,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		return getFunctionDescriptor("substring").generateSqmExpression(
 				length == null ? asList( source, start ) : asList( source, start, length ),
-				resolveExpressableTypeBasic( String.class ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitLeftFunction(HqlParser.LeftFunctionContext ctx) {
-		final SqmExpression<?> source = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> length = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("left").generateSqmExpression(
-				asList( source, length ),
-				resolveExpressableTypeBasic( String.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getNodeBuilder().getTypeConfiguration()
-		);
-	}
-
-	@Override
-	public SqmExpression<?> visitRightFunction(HqlParser.RightFunctionContext ctx) {
-		final SqmExpression<?> source = (SqmExpression<?>) ctx.getChild( 2 ).accept( this );
-		final SqmExpression<?> length = (SqmExpression<?>) ctx.getChild( 4 ).accept( this );
-
-		return getFunctionDescriptor("right").generateSqmExpression(
-				asList( source, length ),
-				resolveExpressableTypeBasic( String.class ),
-				creationContext.getQueryEngine(),
-				creationContext.getNodeBuilder().getTypeConfiguration()
 		);
 	}
 
@@ -4038,7 +3691,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				padChar != null
 						? asList( source, length, padSpec, padChar )
 						: asList( source, length, padSpec ),
-				resolveExpressableTypeBasic( String.class ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);
@@ -4100,7 +3753,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						trimChar,
 						source
 				),
-				resolveExpressableTypeBasic( String.class ),
+				null,
 				creationContext.getQueryEngine(),
 				creationContext.getJpaMetamodel().getTypeConfiguration()
 		);

@@ -112,7 +112,7 @@ public class SqmFunctionRegistry {
 	 * @return The builder
 	 */
 	public PatternFunctionDescriptorBuilder patternDescriptorBuilder(String registrationKey, String pattern) {
-		return new PatternFunctionDescriptorBuilder( this, registrationKey, false, pattern );
+		return new PatternFunctionDescriptorBuilder( this, registrationKey, FunctionKind.NORMAL, pattern );
 	}
 
 	/**
@@ -124,7 +124,7 @@ public class SqmFunctionRegistry {
 	 * @return The builder
 	 */
 	public PatternFunctionDescriptorBuilder patternAggregateDescriptorBuilder(String registrationKey, String pattern) {
-		return new PatternFunctionDescriptorBuilder( this, registrationKey, true, pattern );
+		return new PatternFunctionDescriptorBuilder( this, registrationKey, FunctionKind.AGGREGATE, pattern );
 	}
 
 	/**
@@ -184,7 +184,7 @@ public class SqmFunctionRegistry {
 	 * @return The builder
 	 */
 	public NamedFunctionDescriptorBuilder namedDescriptorBuilder(String registrationKey, String name) {
-		return new NamedFunctionDescriptorBuilder( this, registrationKey, false, name );
+		return new NamedFunctionDescriptorBuilder( this, registrationKey, FunctionKind.NORMAL, name );
 	}
 
 	/**
@@ -196,7 +196,7 @@ public class SqmFunctionRegistry {
 	 * @return The builder
 	 */
 	public NamedFunctionDescriptorBuilder namedAggregateDescriptorBuilder(String registrationKey, String name) {
-		return new NamedFunctionDescriptorBuilder( this, registrationKey, true, name );
+		return new NamedFunctionDescriptorBuilder( this, registrationKey, FunctionKind.AGGREGATE, name );
 	}
 
 	public NamedFunctionDescriptorBuilder noArgsBuilder(String name) {

@@ -118,4 +118,8 @@ public interface SqmFunctionDescriptor {
 	default String getSignature(String name) {
 		return name;
 	}
+
+	default FunctionKind getFunctionKind() {
+		return FunctionKind.NORMAL;
+	}
 }

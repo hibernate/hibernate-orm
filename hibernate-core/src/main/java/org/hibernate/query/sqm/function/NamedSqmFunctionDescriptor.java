@@ -46,7 +46,7 @@ public class NamedSqmFunctionDescriptor
 				argumentsValidator,
 				returnTypeResolver,
 				functionName,
-				false,
+				FunctionKind.NORMAL,
 				null,
 				SqlAstNodeRenderingMode.DEFAULT
 		);
@@ -58,10 +58,10 @@ public class NamedSqmFunctionDescriptor
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			String name,
-			boolean isAggregate,
+			FunctionKind functionKind,
 			String argumentListSignature,
 			SqlAstNodeRenderingMode argumentRenderingMode) {
-		super( name, isAggregate, argumentsValidator, returnTypeResolver );
+		super( name, functionKind, argumentsValidator, returnTypeResolver );
 
 		this.functionName = functionName;
 		this.useParenthesesWhenNoArgs = useParenthesesWhenNoArgs;

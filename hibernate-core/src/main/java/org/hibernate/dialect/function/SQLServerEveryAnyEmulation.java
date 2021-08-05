@@ -9,6 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.List;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -27,7 +28,7 @@ public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunction
 	public SQLServerEveryAnyEmulation(boolean every) {
 		super(
 				every ? "every" : "any",
-				true,
+				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.BOOLEAN )
 		);

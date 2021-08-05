@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -218,6 +219,35 @@ public class StandardFunctionReturnTypeResolvers {
 		}
 
 		return (AllowableFunctionReturnType<?>) specifiedArgType;
+	}
+
+	public static JdbcMapping extractArgumentJdbcMapping(
+			TypeConfiguration typeConfiguration,
+			List<? extends SqmTypedNode<?>> arguments,
+			int position) {
+		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
+		final SqmExpressable<?> specifiedArgType = specifiedArgument.getNodeType();
+		if ( specifiedArgType instanceof BasicType<?> ) {
+			return ( (BasicType<?>) specifiedArgType ).getJdbcMapping();
+		}
+		else {
+			final BasicType<?> basicType = typeConfiguration.getBasicTypeForJavaType(
+					specifiedArgType.getExpressableJavaTypeDescriptor().getJavaTypeClass()
+			);
+			if ( basicType == null ) {
+				throw new QueryException(
+						String.format(
+								Locale.ROOT,
+								"Function argument [%s] of type [%s] at specified position [%d] in call arguments was not typed as basic type",
+								specifiedArgument,
+								specifiedArgType,
+								position
+						)
+				);
+			}
+
+			return basicType.getJdbcMapping();
+		}
 	}
 
 	public static BasicValuedMapping extractArgumentValuedMapping(List<? extends SqlAstNode> arguments, int position) {

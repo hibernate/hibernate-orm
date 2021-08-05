@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -34,7 +35,7 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 	public EveryAnyEmulation(boolean every) {
 		super(
 				every ? "every" : "any",
-				true,
+				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.BOOLEAN )
 		);

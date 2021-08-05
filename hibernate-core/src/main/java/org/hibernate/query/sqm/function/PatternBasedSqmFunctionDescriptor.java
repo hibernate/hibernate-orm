@@ -48,11 +48,11 @@ public class PatternBasedSqmFunctionDescriptor
 			ArgumentsValidator argumentsValidator,
 			FunctionReturnTypeResolver returnTypeResolver,
 			String name,
-			boolean isAggregate,
+			FunctionKind functionKind,
 			String argumentListSignature) {
 		super(
 				name,
-				isAggregate,
+				functionKind,
 				argumentsValidator != null
 						? argumentsValidator
 						// If no validator is given, it's still better to

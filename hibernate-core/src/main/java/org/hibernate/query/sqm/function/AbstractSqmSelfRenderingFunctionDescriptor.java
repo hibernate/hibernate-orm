@@ -26,16 +26,28 @@ import java.util.List;
 public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 		extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
 
-	private final boolean isAggregate;
+	private final FunctionKind functionKind;
 
-	public AbstractSqmSelfRenderingFunctionDescriptor(String name, ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
+	public AbstractSqmSelfRenderingFunctionDescriptor(
+			String name,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver );
-		this.isAggregate = false;
+		this.functionKind = FunctionKind.NORMAL;
 	}
 
-	public AbstractSqmSelfRenderingFunctionDescriptor(String name, boolean isAggregate, ArgumentsValidator argumentsValidator, FunctionReturnTypeResolver returnTypeResolver) {
+	public AbstractSqmSelfRenderingFunctionDescriptor(
+			String name,
+			FunctionKind functionKind,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver );
-		this.isAggregate = isAggregate;
+		this.functionKind = functionKind;
+	}
+
+	@Override
+	public FunctionKind getFunctionKind() {
+		return functionKind;
 	}
 
 	@Override
@@ -44,7 +56,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		if ( isAggregate ) {
+		if ( functionKind == FunctionKind.AGGREGATE ) {
 			return generateAggregateSqmExpression( arguments, null, impliedResultType, queryEngine, typeConfiguration );
 		}
 		return new SelfRenderingSqmFunction<>(
@@ -65,7 +77,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		if ( !isAggregate ) {
+		if ( functionKind != FunctionKind.AGGREGATE ) {
 			throw new UnsupportedOperationException( "The function " + getName() + " is not an aggregate function!" );
 		}
 		return new SelfRenderingSqmAggregateFunction<>(

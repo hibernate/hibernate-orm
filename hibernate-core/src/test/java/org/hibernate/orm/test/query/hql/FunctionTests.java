@@ -27,6 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import org.hamcrest.Matchers;
+
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -41,6 +43,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @DomainModel( standardModels = StandardDomainModel.GAMBIT )
 @SessionFactory
 public class FunctionTests {
+
+	public static final double ERROR = 0.00001d;
 
 	@BeforeAll
 	public void prepareData(SessionFactoryScope scope) {
@@ -163,7 +167,13 @@ public class FunctionTests {
 							.list();
 					assertThat( session.createQuery("select abs(-2)").getSingleResult(), is(2) );
 					assertThat( session.createQuery("select sign(-2)").getSingleResult(), is(-1) );
-					assertThat( session.createQuery("select power(3.0,2.0)").getSingleResult(), is(9.0f) );
+					assertThat(
+							session.createQuery("select power(3.0,2.0)", Double.class).getSingleResult(),
+							// The LN/EXP emulation can cause some precision loss
+							// i.e. on Derby the 16th decimal for LN(3.0) is off by 1 when compared to e.g. PostgreSQL
+							// Fetching the result as float would "hide" the error as that would do some rounding
+							Matchers.closeTo( 9.0d, ERROR )
+					);
 					assertThat( session.createQuery("select round(32.12345,2)").getSingleResult(), is(32.12f) );
 					assertThat( session.createQuery("select mod(3,2)").getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2").getSingleResult(), is(1) );

@@ -25,12 +25,12 @@ Many release steps have been automated, but some still need to be done manually:
 1. Mark version released in Jira
 2. Bulk close all the version's Jira tickets
 3. Get changelog from Jira and add to `../changelog.txt`
-4. Change version (`ext.hibernateTargetVersion`) in `gradle/base-information.gradle` to the release version
+4. Change version in `gradle/version.properties` to the release version
 5. Commit - do not push, because pushing will cause CI to upload another staging repository
 6. Do the release - from the root-dir, `./gradlew release`.  This relies on Gradle's UP-TO-DATE checks, assuming you have verified the build already.  `./gradlew cleanAndRelease` can be used instead to trigger a full clean+build for the release
 7. Verify / trigger the sync to Central from BinTray happened.  This never seems to happen automatically so plan on triggering the sync manually.
 8. Create the release tag
-9. Change version in `gradle/base-information.gradle` to the next development version
+9. Change version in `gradle/version.properties` to the next development version
 10. Commit
 11. Push (both the branch and tag) upstream
 

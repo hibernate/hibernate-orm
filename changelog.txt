@@ -3,6 +3,39 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Alpha9 (August 4, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31944
+
+** Bug
+    * [HHH-14719] - Hibernate has a dependency on apache-derby:10.11.1.1 that is vulnerable to CVE-2015-1832 with a CVSS of 9.1 and CVE-2018-1313 with a CVSS of 5.3
+    * [HHH-14715 - Hibernate has a dependency to maven-core:3.0.5 that is vulnerable to CVE-2021-26291 with a CVSS of 9.1]
+    * [HHH-14704] - Union \+ OneToOne is broken in Hibernate 6
+
+** Improvement
+    * [HHH-14745] - Add FunctionContributor contract
+    * [HHH-14678] - Drop ResultSetWrapper and friends
+    * [HHH-14617] - Remove `QueryLiteralRendering` and `LiteralHandlingMode` from v6 codebase
+    * [HHH-14512] - Add Jenkinsfile for ORM
+    * [HHH-2407] - rework HQL translator
+    * [HHH-1615] - GROUP BY entity does not work
+
+** New Feature
+    * [HHH-14693] - Introduce hibernate-community-dialects module
+    * [HHH-10668] - Add SQL dialect for SQLite 3
+
+** Sub-task
+    * [HHH-14718] - Drop deprecated generator implementations
+    * [HHH-14495] - Use table name, rather than entity name, as base for per-entity implicit sequence naming
+    * [HHH-3688] - Formalize new HQL normalize phase
+    * [HHH-3687] - Formalize new HQL parse phase
+
+** Task
+    * [HHH-14605] - Handling for BLOB, CLOB and NCLOB relative to JavaTypeDescriptor `#isString` and `#isBinary`
+
+
+
 Changes in 6.0.0.Alpha8 (May 18, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

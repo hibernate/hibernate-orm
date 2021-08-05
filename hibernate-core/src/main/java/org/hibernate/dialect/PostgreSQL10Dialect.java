@@ -42,28 +42,6 @@ public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
 	}
 
 	@Override
-	public IdentifierHelper buildIdentifierHelper(
-			IdentifierHelperBuilder builder,
-			DatabaseMetaData dbMetaData) throws SQLException {
-		// This method is overridden so the information will be set properly when
-		// DatabaseMetaData is not available.
-		if ( dbMetaData != null ) {
-			builder.applyIdentifierCasing( dbMetaData );
-			builder.applyReservedWords( dbMetaData );
-		}
-		else {
-			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.LOWER );
-			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
-		}
-		builder.applyReservedWords( AnsiSqlKeywords.INSTANCE.sql2003() );
-		builder.applyReservedWords( getKeywords() );
-
-		builder.setNameQualifierSupport( getNameQualifierSupport() );
-
-		return builder.build();
-	}
-
-	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
 		// This method is overridden so the correct value will be returned when
 		// DatabaseMetaData is not available.

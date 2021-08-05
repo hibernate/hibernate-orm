@@ -252,8 +252,9 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 
 	@Override
 	public void afterStatementExecution() {
-		LOG.tracev( "Starting after statement execution processing [{0}]", getConnectionReleaseMode() );
-		if ( getConnectionReleaseMode() == ConnectionReleaseMode.AFTER_STATEMENT ) {
+		final ConnectionReleaseMode connectionReleaseMode = getConnectionReleaseMode();
+		LOG.tracev( "Starting after statement execution processing [{0}]", connectionReleaseMode );
+		if ( connectionReleaseMode == ConnectionReleaseMode.AFTER_STATEMENT ) {
 			if ( ! releasesEnabled ) {
 				LOG.debug( "Skipping aggressive release due to manual disabling" );
 				return;

@@ -54,6 +54,13 @@ pluginBundle {
 	vcsUrl = 'https://github.com/hibernate/hibernate-orm/tree/main/tooling/hibernate-gradle-plugin'
 	tags = ['hibernate','orm','bytecode','enhancement','bytebuddy']
 
+	// sigh
+	mavenCoordinates {
+		groupId = project.group.toString()
+		artifactId = project.name
+		version = project.version.toString()
+	}
+
 	plugins {
 		ormPlugin {
 			id = project.pluginId

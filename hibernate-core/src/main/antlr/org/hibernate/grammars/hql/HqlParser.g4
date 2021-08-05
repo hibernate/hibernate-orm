@@ -525,26 +525,6 @@ searchedCaseWhen
 	: WHEN predicate THEN expression
 	;
 
-greatestFunction
-	: GREATEST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
-	;
-
-leastFunction
-	: LEAST LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
-	;
-
-coalesceFunction
-	: COALESCE LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
-	;
-
-ifnullFunction
-	: IFNULL LEFT_PAREN expression COMMA expression RIGHT_PAREN
-	;
-
-nullifFunction
-	: NULLIF LEFT_PAREN expression COMMA expression RIGHT_PAREN
-	;
-
 literal
 	: STRING_LITERAL
 	| INTEGER_LITERAL
@@ -652,7 +632,7 @@ function
 	| jpaCollectionFunction
 	| hqlCollectionFunction
 	| jpaNonStandardFunction
-	| nonStandardFunction
+	| genericFunction
 	;
 
 jpaNonStandardFunction
@@ -663,16 +643,16 @@ jpaNonStandardFunctionName
 	: STRING_LITERAL
 	;
 
-nonStandardFunction
-	: nonStandardFunctionName LEFT_PAREN nonStandardFunctionArguments? RIGHT_PAREN
+genericFunction
+	: genericFunctionName LEFT_PAREN (nonStandardFunctionArguments | ASTERISK)? RIGHT_PAREN filterClause?
 	;
 
-nonStandardFunctionName
+genericFunctionName
 	: dotIdentifierSequence
 	;
 
 nonStandardFunctionArguments
-	: (datetimeField COMMA)? expression (COMMA expression)*
+	: (DISTINCT | datetimeField COMMA)? expression (COMMA expression)*
 	;
 
 jpaCollectionFunction
@@ -688,33 +668,8 @@ hqlCollectionFunction
 	;
 
 aggregateFunction
-	: avgFunction
-	| sumFunction
-	| minFunction
-	| maxFunction
-	| countFunction
-	| everyFunction
+	: everyFunction
 	| anyFunction
-	;
-
-avgFunction
-	: AVG LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
-	;
-
-sumFunction
-	: SUM LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
-	;
-
-minFunction
-	: MIN LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
-	;
-
-maxFunction
-	: MAX LEFT_PAREN DISTINCT? expression RIGHT_PAREN filterClause?
-	;
-
-countFunction
-	: COUNT LEFT_PAREN DISTINCT? (expression | ASTERISK) RIGHT_PAREN filterClause?
 	;
 
 everyFunction
@@ -736,38 +691,12 @@ filterClause
 standardFunction
 	:	castFunction
 	|	extractFunction
-	|	coalesceFunction
-	|	nullifFunction
-	|	ifnullFunction
 	|	formatFunction
-	|	concatFunction
 	|	substringFunction
-	|	leftFunction
-	|	rightFunction
 	|	overlayFunction
-	|	replaceFunction
 	|	trimFunction
 	|	padFunction
-	|	upperFunction
-	|	lowerFunction
-	|	locateFunction
 	|	positionFunction
-	|	lengthFunction
-	|	absFunction
-	|	signFunction
-	|	sqrtFunction
-	|	lnFunction
-	|	expFunction
-	|	modFunction
-	|	powerFunction
-	|	ceilingFunction
-	|	floorFunction
-	|	roundFunction
-	|	trigFunction
-	|	atan2Function
-	|	strFunction
-	|	greatestFunction
-	|	leastFunction
 	|	currentDateFunction
 	|	currentTimeFunction
 	|	currentTimestampFunction
@@ -795,17 +724,6 @@ castTarget
 castTargetType
 	returns [String fullTargetName]
 	: (i=identifier { $fullTargetName = _localctx.i.getText(); }) (DOT c=identifier { $fullTargetName += ("." + _localctx.c.getText() ); })*
-	;
-
-concatFunction
-	: CONCAT LEFT_PAREN expression (COMMA expression)+ RIGHT_PAREN
-	;
-
-leftFunction
-	: LEFT LEFT_PAREN expression COMMA expression RIGHT_PAREN
-	;
-rightFunction
-	: RIGHT LEFT_PAREN expression COMMA expression RIGHT_PAREN
 	;
 
 substringFunction
@@ -852,30 +770,6 @@ padLength
 	: expression
 	;
 
-upperFunction
-	: UPPER LEFT_PAREN expression RIGHT_PAREN
-	;
-
-lowerFunction
-	: LOWER LEFT_PAREN expression RIGHT_PAREN
-	;
-
-locateFunction
-	: LOCATE LEFT_PAREN locateFunctionPatternArgument COMMA locateFunctionStringArgument (COMMA locateFunctionStartArgument)? RIGHT_PAREN
-	;
-
-locateFunctionPatternArgument
-	: expression
-	;
-
-locateFunctionStringArgument
-	: expression
-	;
-
-locateFunctionStartArgument
-	: expression
-	;
-
 overlayFunction
 	: OVERLAY LEFT_PAREN overlayFunctionStringArgument PLACING overlayFunctionReplacementArgument FROM overlayFunctionStartArgument (FOR overlayFunctionLengthArgument)? RIGHT_PAREN
 	;
@@ -894,108 +788,6 @@ overlayFunctionStartArgument
 
 overlayFunctionLengthArgument
 	: expression
-	;
-
-replaceFunction
-	: REPLACE LEFT_PAREN replaceFunctionStringArgument COMMA replaceFunctionPatternArgument COMMA replaceFunctionReplacementArgument RIGHT_PAREN
-	;
-
-replaceFunctionStringArgument
-	: expression
-	;
-
-replaceFunctionPatternArgument
-	: expression
-	;
-
-replaceFunctionReplacementArgument
-	: expression
-	;
-
-lengthFunction
-	:	LENGTH LEFT_PAREN expression RIGHT_PAREN
-	;
-
-absFunction
-	:	ABS LEFT_PAREN expression RIGHT_PAREN
-	;
-
-signFunction
-	:	SIGN LEFT_PAREN expression RIGHT_PAREN
-	;
-
-sqrtFunction
-	:	SQRT LEFT_PAREN expression RIGHT_PAREN
-	;
-
-lnFunction
-	:	LN LEFT_PAREN expression RIGHT_PAREN
-	;
-
-expFunction
-	:	EXP LEFT_PAREN expression RIGHT_PAREN
-	;
-
-powerFunction
-	:	POWER LEFT_PAREN powerBaseArgument COMMA powerPowerArgument RIGHT_PAREN
-	;
-
-powerBaseArgument
-	: expression
-	;
-
-powerPowerArgument
-	: expression
-	;
-
-modFunction
-	:	MOD LEFT_PAREN modDividendArgument COMMA modDivisorArgument RIGHT_PAREN
-	;
-
-modDividendArgument
-	: expression
-	;
-
-modDivisorArgument
-	: expression
-	;
-
-ceilingFunction
-	:	CEILING LEFT_PAREN expression RIGHT_PAREN
-	;
-
-floorFunction
-	:	FLOOR LEFT_PAREN expression RIGHT_PAREN
-	;
-
-roundFunction
-	:	ROUND LEFT_PAREN expression COMMA roundFunctionPrecision RIGHT_PAREN
-	;
-
-roundFunctionPrecision
-	: expression
-	;
-
-trigFunction
-	:	trigFunctionName LEFT_PAREN expression RIGHT_PAREN
-	;
-
-trigFunctionName
-    : COS
-    | SIN
-    | TAN
-    | ACOS
-    | ASIN
-    | ATAN
-    //ATAN2 is different!
-    ;
-
-atan2Function
-	:	ATAN2 LEFT_PAREN expression COMMA expression RIGHT_PAREN
-	;
-
-strFunction
-	:   STR LEFT_PAREN expression RIGHT_PAREN
 	;
 
 currentDateFunction
@@ -1125,16 +917,19 @@ rollup
 identifier
 	: IDENTIFIER
 	| (ABS
+	| ACOS
 	| ALL
 	| AND
 	| ANY
 	| AS
 	| ASC
+	| ASIN
+	| ATAN
 	| ATAN2
 	| AVG
-	| BY
 	| BETWEEN
 	| BOTH
+	| BY
 	| CASE
 	| CAST
 	| CEILING
@@ -1142,14 +937,15 @@ identifier
 	| COALESCE
 	| COLLATE
 	| CONCAT
+	| COS
 	| COUNT
 	| CROSS
 	| CURRENT_DATE
 	| CURRENT_INSTANT
 	| CURRENT_TIME
 	| CURRENT_TIMESTAMP
-	| DAY
 	| DATE
+	| DAY
 	| DAY
 	| DELETE
 	| DESC
@@ -1159,17 +955,17 @@ identifier
 	| EMPTY
 	| END
 	| ENTRY
-	| EVERY
 	| ESCAPE
+	| EVERY
 	| EXISTS
 	| EXP
 	| EXTRACT
 	| FETCH
 	| FILTER
 	| FLOOR
-	| FROM
 	| FOR
 	| FORMAT
+	| FROM
 	| FULL
 	| FUNCTION
 	| GREATEST
@@ -1202,13 +998,13 @@ identifier
 	| MAXELEMENT
 	| MAXINDEX
 	| MEMBER
+	| MEMBER
 	| MICROSECOND
 	| MILLISECOND
 	| MIN
 	| MINELEMENT
 	| MININDEX
 	| MINUTE
-	| MEMBER
 	| MOD
 	| MONTH
 	| NANOSECOND
@@ -1228,18 +1024,20 @@ identifier
 	| QUARTER
 	| REPLACE
 	| RIGHT
-	| ROUND
 	| RIGHT
+	| ROUND
 	| SECOND
 	| SELECT
 	| SET
 	| SIGN
+	| SIN
 	| SIZE
 	| SOME
 	| SQRT
 	| STR
 	| SUBSTRING
 	| SUM
+	| TAN
 	| THEN
 	| TIME
 	| TIMESTAMP
@@ -1257,8 +1055,7 @@ identifier
 	| WEEK
 	| WHERE
 	| WITH
-	| YEAR
-	| trigFunctionName) {
+	| YEAR) {
 		logUseOfReservedWordAsIdentifier( getCurrentToken() );
 	}
 	;

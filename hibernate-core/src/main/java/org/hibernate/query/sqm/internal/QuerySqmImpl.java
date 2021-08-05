@@ -246,13 +246,12 @@ public class QuerySqmImpl<R>
 			final SqmQuerySpec<R> sqmQuerySpec = (SqmQuerySpec<R>) queryPart;
 			final List<SqmSelection<?>> sqmSelections = sqmQuerySpec.getSelectClause().getSelections();
 
-			// make sure there is at least one root
-			final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
-			if ( sqmRoots == null || sqmRoots.isEmpty() ) {
-				throw new IllegalArgumentException( "Criteria did not define any query roots" );
-			}
-
 			if ( sqmSelections == null || sqmSelections.isEmpty() ) {
+				// make sure there is at least one root
+				final List<SqmRoot<?>> sqmRoots = sqmQuerySpec.getFromClause().getRoots();
+				if ( sqmRoots == null || sqmRoots.isEmpty() ) {
+					throw new IllegalArgumentException( "Criteria did not define any query roots" );
+				}
 				// if there is a single root, use that as the selection
 				if ( sqmRoots.size() == 1 ) {
 					final SqmRoot<?> sqmRoot = sqmRoots.get( 0 );

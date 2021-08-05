@@ -242,6 +242,10 @@ void runBuildOnNode(String label, Closure body) {
         	timeout( [time: 90, unit: 'MINUTES'], body )
         }
         finally {
+        	// If this is a PR, we clean the workspace at the end
+        	if ( env.CHANGE_BRANCH != null ) {
+        		cleanWs()
+        	}
         	pruneDockerContainers()
         }
 	}

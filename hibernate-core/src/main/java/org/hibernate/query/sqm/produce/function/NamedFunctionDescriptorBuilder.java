@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.produce.function;
 
+import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -19,7 +20,7 @@ public class NamedFunctionDescriptorBuilder {
 
 	private final SqmFunctionRegistry registry;
 	private final String registrationKey;
-	private final boolean isAggregate;
+	private final FunctionKind functionKind;
 
 	private final String functionName;
 
@@ -33,11 +34,11 @@ public class NamedFunctionDescriptorBuilder {
 	public NamedFunctionDescriptorBuilder(
 			SqmFunctionRegistry registry,
 			String registrationKey,
-			boolean isAggregate,
+			FunctionKind functionKind,
 			String functionName) {
 		this.registry = registry;
 		this.registrationKey = registrationKey;
-		this.isAggregate = isAggregate;
+		this.functionKind = functionKind;
 		this.functionName = functionName;
 	}
 
@@ -94,7 +95,7 @@ public class NamedFunctionDescriptorBuilder {
 				argumentsValidator,
 				returnTypeResolver,
 				registrationKey,
-				isAggregate,
+				functionKind,
 				argumentListSignature,
 				argumentRenderingMode
 		);

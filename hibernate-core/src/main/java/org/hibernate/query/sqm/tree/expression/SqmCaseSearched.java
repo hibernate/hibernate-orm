@@ -50,14 +50,16 @@ public class SqmCaseSearched<R>
 		return otherwise;
 	}
 
-	public void when(SqmPredicate predicate, SqmExpression<R> result) {
+	public SqmCaseSearched<R> when(SqmPredicate predicate, SqmExpression<R> result) {
 		whenFragments.add( new WhenFragment<>( predicate, result ) );
 		applyInferableResultType( result.getNodeType() );
+		return this;
 	}
 
-	public void otherwise(SqmExpression<R> otherwiseExpression) {
+	public SqmCaseSearched<R> otherwise(SqmExpression<R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 		applyInferableResultType( otherwiseExpression.getNodeType() );
+		return this;
 	}
 
 	private void applyInferableResultType(SqmExpressable<?> type) {
@@ -144,20 +146,20 @@ public class SqmCaseSearched<R>
 	}
 
 	@Override
-	public JpaSearchedCase<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
+	public SqmCaseSearched<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
 		//noinspection unchecked
 		when( nodeBuilder().wrap( condition ), (SqmExpression) result );
 		return this;
 	}
 
 	@Override
-	public JpaExpression<R> otherwise(R result) {
+	public SqmExpression<R> otherwise(R result) {
 		otherwise( nodeBuilder().value( result ) );
 		return this;
 	}
 
 	@Override
-	public JpaExpression<R> otherwise(Expression<? extends R> result) {
+	public SqmExpression<R> otherwise(Expression<? extends R> result) {
 		//noinspection unchecked
 		otherwise( (SqmExpression) result );
 		return this;

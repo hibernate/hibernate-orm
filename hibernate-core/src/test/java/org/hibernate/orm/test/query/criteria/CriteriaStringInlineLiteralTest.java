@@ -1,4 +1,10 @@
-package org.hibernate.query.criteria;
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.query.criteria;
 
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -29,7 +35,7 @@ public class CriteriaStringInlineLiteralTest extends BaseEntityManagerFunctional
 	public void testCriteriaInlineStringLiteralRendering() {
 		EntityManager entityManager = getOrCreateEntityManager();
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		CriteriaQuery<Animal> criteriaQuery = cb.createQuery( Animal.class );
+		CriteriaQuery<String> criteriaQuery = cb.createQuery( String.class );
 
 		Root<Animal> animalRoot = criteriaQuery.from( Animal.class );
 		CriteriaBuilder.Case<String> sCase = cb.selectCase();

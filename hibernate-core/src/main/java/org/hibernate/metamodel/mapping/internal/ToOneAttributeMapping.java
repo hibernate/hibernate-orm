@@ -91,6 +91,7 @@ public class ToOneAttributeMapping
 
 	private final String sqlAliasStem;
 	private final boolean isNullable;
+	private final boolean isIgnoreNotFound;
 	private final boolean unwrapProxy;
 	private final EntityMappingType entityMappingType;
 
@@ -164,6 +165,7 @@ public class ToOneAttributeMapping
 
 		if ( bootValue instanceof ManyToOne ) {
 			final ManyToOne manyToOne = (ManyToOne) bootValue;
+			this.isIgnoreNotFound = ( (ManyToOne) bootValue ).isIgnoreNotFound();
 			if ( manyToOne.isLogicalOneToOne() ) {
 				cardinality = Cardinality.LOGICAL_ONE_TO_ONE;
 			}
@@ -220,8 +222,9 @@ public class ToOneAttributeMapping
 				so in order to recognize the bidirectionality the "primaryKey." is removed from the otherSidePropertyName value.
 		 	*/
 			// todo (6.0): find a better solution for the embeddable part name not in the NavigablePath
+			final OneToOne oneToOne = (OneToOne) bootValue;
 			String bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
-					( (OneToOne) bootValue ).getMappedByProperty(),
+					oneToOne.getMappedByProperty(),
 					'.'
 			);
 
@@ -234,6 +237,7 @@ public class ToOneAttributeMapping
 			else {
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
+			isIgnoreNotFound = isNullable();
 		}
 
 		this.navigableRole = navigableRole;
@@ -296,6 +300,7 @@ public class ToOneAttributeMapping
 		this.navigableRole = original.navigableRole;
 		this.sqlAliasStem = original.sqlAliasStem;
 		this.isNullable = original.isNullable;
+		this.isIgnoreNotFound = original.isIgnoreNotFound;
 		this.unwrapProxy = original.unwrapProxy;
 		this.entityMappingType = original.entityMappingType;
 		this.referencedPropertyName = original.referencedPropertyName;
@@ -753,7 +758,6 @@ public class ToOneAttributeMapping
 			return new EntityFetchSelectImpl(
 					fetchParent,
 					this,
-					isNullable,
 					fetchablePath,
 					keyResult,
 					selectByUniqueKey,
@@ -999,6 +1003,10 @@ public class ToOneAttributeMapping
 
 	public boolean isNullable() {
 		return isNullable;
+	}
+
+	public boolean isIgnoreNotFound(){
+		return isIgnoreNotFound;
 	}
 
 	public boolean isUnwrapProxy() {

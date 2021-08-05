@@ -28,9 +28,8 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 			ToOneAttributeMapping fetchedAttribute,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler,
-			boolean nullable) {
-		super( parentAccess, fetchedAttribute, fetchedNavigable, concreteDescriptor, identifierAssembler, nullable );
+			DomainResultAssembler identifierAssembler) {
+		super( parentAccess, fetchedAttribute, fetchedNavigable, concreteDescriptor, identifierAssembler );
 		this.fetchedAttribute = fetchedAttribute;
 	}
 

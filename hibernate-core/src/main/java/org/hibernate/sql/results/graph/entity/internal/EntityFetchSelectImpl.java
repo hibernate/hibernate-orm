@@ -24,20 +24,17 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
  * @author Andrea Boriero
  */
 public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
-	private final boolean nullable;
 	private final DomainResult result;
 	private final boolean selectByUniqueKey;
 
 	public EntityFetchSelectImpl(
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchedAttribute,
-			boolean nullable,
 			NavigablePath navigablePath,
 			DomainResult result,
 			boolean selectByUniqueKey,
 			DomainResultCreationState creationState) {
 		super( navigablePath, fetchedAttribute, fetchParent );
-		this.nullable = nullable;
 		this.result = result;
 		this.selectByUniqueKey = selectByUniqueKey;
 	}
@@ -61,23 +58,22 @@ public class EntityFetchSelectImpl extends AbstractNonJoinedEntityFetch {
 
 					EntityPersister entityPersister = getReferencedMappingContainer().getEntityPersister();
 
+					final ToOneAttributeMapping fetchedAttribute = (ToOneAttributeMapping) getFetchedMapping();
 					if ( selectByUniqueKey ) {
 						return new EntitySelectFetchByUniqueKeyInitializer(
 								parentAccess,
-								(ToOneAttributeMapping) getFetchedMapping(),
+								fetchedAttribute,
 								getNavigablePath(),
 								entityPersister,
-								result.createResultAssembler( creationState ),
-								nullable
+								result.createResultAssembler( creationState )
 						);
 					}
 					return new EntitySelectFetchInitializer(
 							parentAccess,
-							(ToOneAttributeMapping) getFetchedMapping(),
+							fetchedAttribute,
 							getNavigablePath(),
 							entityPersister,
-							result.createResultAssembler( creationState ),
-							nullable
+							result.createResultAssembler( creationState )
 					);
 				}
 		);

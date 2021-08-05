@@ -143,6 +143,35 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 		}
 	}
 
+	@Test
+	public void testEnityWithNotExistingAssociation() {
+		doInHibernate( this::sessionFactory, session -> {
+			final Employee employee = new Employee();
+			employee.id = 1;
+			session.persist( employee );
+
+			final Task task = new Task();
+			task.id = 2;
+			task.employeeEagerNotFoundIgnore = employee;
+			session.persist( task );
+
+			session.flush();
+
+			session.createNativeQuery( "update Employee set locationId = 3 where id = 1" )
+					.executeUpdate();
+		});
+
+		try {
+			doInHibernate( this::sessionFactory, session -> {
+				session.createQuery( "from Employee", Employee.class ).getSingleResult();
+			});
+			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
+					"and is not mapped with @NotFound(IGNORE)" );
+		}
+		catch (EntityNotFoundException expected) {
+		}
+	}
+
 	@After
 	public void deleteData() {
 		doInHibernate( this::sessionFactory, session -> {

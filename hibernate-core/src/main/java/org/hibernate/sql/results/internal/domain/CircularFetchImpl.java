@@ -108,8 +108,7 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 								(ToOneAttributeMapping) referencedModelPart,
 								getReferencedPath(),
 								entityMappingType.getEntityPersister(),
-								resultAssembler,
-								fetchable.isNullable()
+								resultAssembler
 						);
 					}
 					else {

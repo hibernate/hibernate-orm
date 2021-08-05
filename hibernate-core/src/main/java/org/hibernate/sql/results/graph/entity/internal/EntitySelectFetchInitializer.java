@@ -42,7 +42,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	private FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
 	private final boolean isEnhancedForLazyLoading;
-	private final boolean nullable;
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler identifierAssembler;
@@ -55,14 +54,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			ToOneAttributeMapping referencedModelPart,
 			NavigablePath fetchedNavigable,
 			EntityPersister concreteDescriptor,
-			DomainResultAssembler identifierAssembler,
-			boolean nullable) {
+			DomainResultAssembler identifierAssembler) {
 		this.parentAccess = parentAccess;
 		this.referencedModelPart = referencedModelPart;
 		this.navigablePath = fetchedNavigable;
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
-		this.nullable = nullable;
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 	}
 
@@ -192,7 +189,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				entityName,
 				entityIdentifier,
 				true,
-				nullable
+				referencedModelPart.isNullable() || referencedModelPart.isIgnoreNotFound()
 		);
 
 		if ( EntityLoadingLogger.DEBUG_ENABLED ) {

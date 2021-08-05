@@ -16,9 +16,6 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
 
-ext {
-    jaxbTargetDir = file( "${buildDir}/generated/sources/jaxb/main" )
-}
 
 configurations {
     tests {
@@ -30,27 +27,6 @@ configurations {
     }
 }
 
-sourceSets {
-    main {
-        // add the XJC generated JAXB classes to the main source-set
-        java.srcDir project.jaxbTargetDir
-    }
-
-    // resources inherently exclude sources
-    test {
-        resources {
-            setSrcDirs( ['src/test/java','src/test/resources','src/test/bundles'] )
-        }
-    }
-
-    testJavassist {
-        // define the testJavassist source-set
-        java {
-            compileClasspath += main.output + test.output + configurations.javassist
-            runtimeClasspath += main.output + test.output + configurations.javassist
-        }
-    }
-}
 
 dependencies {
     api libraries.jpa
@@ -168,26 +144,32 @@ jar {
 }
 
 ext {
-    jaxbTargetDir = file( "${buildDir}/generated-src/jaxb/main" )
+    jaxbTargetDir = project.file( "${buildDir}/generated/sources/xjc/main" )
 }
 
 sourceSets {
     main {
-        java {
+        // add the XJC generated JAXB classes to the main source-set
+        java{
             srcDir project.jaxbTargetDir
         }
     }
+
+    // resources inherently exclude sources
     test {
         resources {
-            // resources inherently exclude Java sources
             srcDir 'src/test/java'
+            srcDir 'src/test/resources'
+            srcDir 'src/test/bundles'
         }
     }
-}
 
-idea {
-    module {
-        sourceDirs += file( "${buildDir}/generated-src/antlr/main" )
+    testJavassist {
+        // define the testJavassist source-set
+        java {
+            compileClasspath += main.output + test.output + configurations.javassist
+            runtimeClasspath += main.output + test.output + configurations.javassist
+        }
     }
 }
 

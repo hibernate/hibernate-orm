@@ -295,9 +295,9 @@ test {
 	jvmArgs '-XX:+StartAttachListener'
 }
 
-// Enable the experimental features of ByteBuddy with JDK 18+
+// Enable the experimental features of ByteBuddy with JDK 19+
 test {
-	if ( gradle.ext.javaVersions.test.release.asInt() >= 18 ) {
+	if ( gradle.ext.javaVersions.test.release.asInt() >= 19 ) {
 		logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
 				 " Setting 'net.bytebuddy.experimental=true'." )
 		systemProperty 'net.bytebuddy.experimental', true

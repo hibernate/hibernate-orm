@@ -185,14 +185,11 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
     sourceDir = file( 'src/main/asciidoc/topical' )
 	outputDir = new File("$buildDir/asciidoc/topical/html_single")
 
-	baseDirFollowsSourceDir()
-
 	resources {
 		from('src/main/asciidoc/topical/') {
 			include '**/images/**'
 		}
 	}
-
 }
 
 
@@ -206,8 +203,6 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
         include 'index.adoc'
     }
     outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
-
-	baseDirFollowsSourceDir()
 }
 
 
@@ -235,8 +230,6 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
         include 'Hibernate_User_Guide.adoc'
     }
     outputDir = new File("$buildDir/asciidoc/userguide/html_single")
-
-	baseDirFollowsSourceDir()
 
 	attributes linkcss: true,
 			   stylesheet: "css/hibernate.css",
@@ -271,8 +264,6 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 
 	outputDir = new File("$buildDir/asciidoc/integrationguide/html_single")
 
-	baseDirFollowsSourceDir()
-
 	attributes linkcss: true,
 				stylesheet: "css/hibernate.css"
 
@@ -286,6 +277,14 @@ task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
 		from('src/main/style/asciidoctor') {
 			include 'css/**'
 		}
+	}
+}
+
+tasks.withType(AsciidoctorTask).all {
+	baseDirFollowsSourceDir()
+	outputOptions {
+		separateOutputDirs = false
+		backends 'html5'
 	}
 }
 

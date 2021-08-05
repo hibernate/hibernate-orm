@@ -2646,6 +2646,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( selectionNodeType instanceof PluralPersistentAttribute ) {
 						sqmExpressable = ( (PluralPersistentAttribute<?,?,?>) selectionNodeType ).getElementPathSource();
 					}
+					else if ( selectionNodeType instanceof SqmPathSource<?>) {
+						final SqmPathSource<?> pathSource = (SqmPathSource<?>) selectionNodeType;
+						final CollectionPart.Nature partNature = CollectionPart.Nature.fromName(
+								pathSource.getPathName()
+						);
+						if ( partNature == null ) {
+							sqmExpressable = selectionNodeType;
+						}
+						else {
+							final SqmPath<?> sqmPath = (SqmPath<?>) subQuerySelection.getSelectableNode();
+							final NavigablePath navigablePath = sqmPath.getNavigablePath().getParent();
+							if ( navigablePath.getParent() != null ) {
+								final TableGroup parentTableGroup = findTableGroup( navigablePath.getParent() );
+								final PluralAttributeMapping pluralPart = (PluralAttributeMapping) parentTableGroup.getModelPart()
+										.findSubPart( navigablePath.getUnaliasedLocalName(), null );
+								return pluralPart.findSubPart( pathSource.getPathName(), null );
+							}
+							return findTableGroup( navigablePath ).getModelPart();
+						}
+					}
 					else {
 						sqmExpressable = selectionNodeType;
 					}

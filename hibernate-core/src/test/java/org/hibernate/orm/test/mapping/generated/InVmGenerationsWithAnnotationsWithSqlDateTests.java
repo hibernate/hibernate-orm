@@ -47,6 +47,13 @@ public class InVmGenerationsWithAnnotationsWithSqlDateTests {
 			assertThat( saved.lastUpdatedOn ).isNotNull();
 
 			saved.name = "changed";
+			// Let's sleep a millisecond to make sure we actually generate a different timestamp
+			try {
+				Thread.sleep( 1L );
+			}
+			catch (InterruptedException e) {
+				// Ignore
+			}
 
 			// then changing
 			final AuditedEntity merged = scope.fromTransaction( session, (s) -> {

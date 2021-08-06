@@ -19,7 +19,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SharedSessionContract;
-import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.internal.StandardBagSemantics;
 import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
@@ -45,7 +44,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -1032,12 +1030,7 @@ public class MappingModelCreationHelper {
 			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
 		}
 		else {
-			// TODO: need some kind of virtual model part for this
-//			fkTarget = attributeMapping;//bootValueMapping.;
-			throw new NotYetImplementedFor6Exception(
-					"Support for non-pk foreign-keys not yet implemented: " +
-							bootProperty.getPersistentClass().getEntityName() + " -> " + bootProperty.getName()
-			);
+			fkTarget = referencedEntityDescriptor.findAttributeMapping( bootValueMapping.getReferencedPropertyName() );
 		}
 
 		if ( fkTarget instanceof BasicValuedModelPart ) {
@@ -1198,27 +1191,19 @@ public class MappingModelCreationHelper {
 
 	private static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
 		final ComponentType componentType;
-		final boolean fromXml;
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
-			fromXml = collectionBootValueMapping.getBuildingContext() instanceof MappingDocument;
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
 		}
 		else {
-			if ( bootValueMapping instanceof OneToMany ) {
-				fromXml = ( (OneToMany) bootValueMapping ).getBuildingContext() instanceof MappingDocument;
-			}
-			else {
-				fromXml = ( (SimpleValue) bootValueMapping ).getBuildingContext() instanceof MappingDocument;
-			}
 			final EntityType entityType = (EntityType) bootValueMapping.getType();
 			final Type identifierOrUniqueKeyType = entityType.getIdentifierOrUniqueKeyType(
 					creationProcess.getCreationContext().getSessionFactory()
 			);
 			componentType = (ComponentType) identifierOrUniqueKeyType;
 		}
-		// If the value comes from XML, we need to consider the reordering
-		if ( fromXml ) {
+		// Consider the reordering if available
+		if ( componentType.getOriginalPropertyOrder() != null ) {
 			return componentType.getOriginalPropertyOrder();
 		}
 		// A value that came from the annotation model is already sorted appropriately

@@ -30,7 +30,6 @@ import javax.persistence.Table;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
 import org.junit.jupiter.api.Test;
@@ -45,7 +44,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		MultiLevelCascadeCollectionEmbeddableTest.AnotherSubSubEntity.class,
 		MultiLevelCascadeCollectionEmbeddableTest.SubSubEntity.class
 })
-@NotImplementedYet(reason = "NotImplementedYetException thrown in the initialization method, by NativeNonSelectQueryPlanImpl.executeUpdate()")
 public class MultiLevelCascadeCollectionEmbeddableTest {
 
 	private boolean initialized = false;

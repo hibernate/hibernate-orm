@@ -54,7 +54,9 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 
 		final Object parentKey = parentAccess.getParentKey();
 
-		if ( parentKey != null ) {
+		// We can only use the parent key if the key descriptor uses the primary key of the owner i.e. refersToPrimaryKey
+		if ( parentKey != null && collectionAttributeMapping.getKeyDescriptor().getKeyPart().getNavigableRole().equals(
+				collectionAttributeMapping.findContainingEntityMapping().getIdentifierMapping().getNavigableRole() ) ) {
 			collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),
 					parentKey

@@ -29,7 +29,6 @@ import javax.persistence.Table;
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 
 import org.jboss.logging.Logger;
@@ -46,7 +45,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 		MultiLevelCascadeCollectionIdClassTest.AnotherSubSubEntity.class,
 		MultiLevelCascadeCollectionIdClassTest.SubSubEntity.class
 })
-@NotImplementedYet(reason = "NotImplementedYetException thrown in the initialization method, by NativeNonSelectQueryPlanImpl.executeUpdate()")
 public class MultiLevelCascadeCollectionIdClassTest {
 
 	private static final Logger log = Logger.getLogger( MultiLevelCascadeCollectionIdClassTest.class );

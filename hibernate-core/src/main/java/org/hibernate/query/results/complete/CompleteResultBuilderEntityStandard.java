@@ -120,7 +120,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 							true,
 							navigablePath,
 							null,
-							() -> predicate -> {},
+							null,
 							impl,
 							impl.getCreationContext()
 					)

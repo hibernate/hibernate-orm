@@ -15,9 +15,8 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
-import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
-import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -103,18 +102,14 @@ public class DynamicResultBuilderEntityCalculated implements DynamicResultBuilde
 			DomainResultCreationState domainResultCreationState) {
 		final DomainResultCreationStateImpl creationStateImpl = ResultsHelper.impl( domainResultCreationState );
 
-		final TableReference tableReference = entityMapping.createPrimaryTableReference(
-				new SqlAliasBaseConstant( tableAlias ),
-				creationStateImpl.getSqlExpressionResolver(),
-				creationStateImpl.getCreationContext()
-		);
-
-		final TableGroupImpl tableGroup = new TableGroupImpl(
+		final TableGroup tableGroup = entityMapping.createRootTableGroup(
+				true,
 				navigablePath,
 				tableAlias,
-				tableReference,
-				entityMapping,
-				tableAlias
+				null,
+				new SqlAliasBaseConstant( tableAlias ),
+				creationStateImpl,
+				creationStateImpl.getCreationContext()
 		);
 
 		creationStateImpl.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );

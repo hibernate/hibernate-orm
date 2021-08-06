@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -127,43 +128,55 @@ public class DynamicFetchBuilderLegacy implements DynamicFetchBuilder, NativeQue
 			tableGroup = ownerTableGroup;
 		}
 
-		final ForeignKeyDescriptor keyDescriptor;
-		if ( attributeMapping instanceof PluralAttributeMapping ) {
-			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
-			keyDescriptor = pluralAttributeMapping.getKeyDescriptor();
+		if ( columnNames != null ) {
+			final ForeignKeyDescriptor keyDescriptor;
+			if ( attributeMapping instanceof PluralAttributeMapping ) {
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+				keyDescriptor = pluralAttributeMapping.getKeyDescriptor();
+			}
+			else {
+				// Not sure if this fetch builder can also be used with other attribute mappings
+				assert attributeMapping instanceof ToOneAttributeMapping;
+
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
+				keyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+			}
+
+			keyDescriptor.forEachSelectable(
+					(selectionIndex, selectableMapping) -> {
+						resolveSqlSelection(
+								columnNames.get( selectionIndex ),
+								createColumnReferenceKey(
+										tableGroup.getTableReference( selectableMapping.getContainingTableExpression() ),
+										selectableMapping.getSelectionExpression()
+								),
+								selectableMapping.getJdbcMapping(),
+								jdbcResultsMetadata,
+								domainResultCreationState
+						);
+					}
+			);
+
+			// We process the fetch builder such that it contains a resultBuilderEntity before calling this method in ResultSetMappingProcessor
+			assert resultBuilderEntity != null;
+
+			return resultBuilderEntity.buildFetch(
+					parent,
+					attributeMapping,
+					jdbcResultsMetadata,
+					creationState
+			);
 		}
 		else {
-			// Not sure if this fetch builder can also be used with other attribute mappings
-			assert attributeMapping instanceof ToOneAttributeMapping;
-
-			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
-			keyDescriptor = toOneAttributeMapping.getForeignKeyDescriptor();
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.IMMEDIATE,
+					true,
+					null,
+					domainResultCreationState
+			);
 		}
-
-		keyDescriptor.forEachSelectable(
-				(selectionIndex, selectableMapping) -> {
-					resolveSqlSelection(
-							columnNames.get( selectionIndex ),
-							createColumnReferenceKey(
-									tableGroup.getTableReference( selectableMapping.getContainingTableExpression() ),
-									selectableMapping.getSelectionExpression()
-							),
-							selectableMapping.getJdbcMapping(),
-							jdbcResultsMetadata,
-							domainResultCreationState
-					);
-				}
-		);
-
-		// We process the fetch builder such that it contains a resultBuilderEntity before calling this method in ResultSetMappingProcessor
-		assert resultBuilderEntity != null;
-
-		return resultBuilderEntity.buildFetch(
-				parent,
-				attributeMapping,
-				jdbcResultsMetadata,
-				creationState
-		);
 	}
 
 	private void resolveSqlSelection(

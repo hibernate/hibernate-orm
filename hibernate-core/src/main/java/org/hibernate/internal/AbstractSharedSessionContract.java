@@ -26,6 +26,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SessionEventListener;
@@ -705,7 +706,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			NativeQueryImplementor query = createNativeQuery( sqlString );
-//			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
 			return query;
 		}
 		catch (RuntimeException he) {

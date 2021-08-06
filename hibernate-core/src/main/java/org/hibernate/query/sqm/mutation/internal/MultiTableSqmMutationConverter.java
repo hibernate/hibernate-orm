@@ -106,8 +106,9 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				true,
 				navigablePath,
 				sourceAlias,
-				() -> predicate -> {
-				},
+				// We don't care about the discriminator predicate,
+				// but we pass non-null to ensure table reference join predicates are generated
+				() -> predicate -> {},
 				this,
 				creationContext.getSessionFactory() );
 

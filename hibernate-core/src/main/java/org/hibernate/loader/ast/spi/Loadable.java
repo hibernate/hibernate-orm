@@ -13,6 +13,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
@@ -41,6 +42,17 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	default TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState, SqlAstCreationContext creationContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}

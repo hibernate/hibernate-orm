@@ -282,11 +282,32 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
+		return createRootTableGroup(
+				canUseInnerJoins,
+				navigablePath,
+				explicitSourceAlias,
+				additionalPredicateCollectorAccess,
+				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
+				creationState,
+				creationContext
+		);
+	}
+
+	@Override
+	default TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
+			SqlAstCreationState creationState,
+			SqlAstCreationContext creationContext) {
 		return getEntityPersister().createRootTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,
+				sqlAliasBase,
 				creationState,
 				creationContext
 		);

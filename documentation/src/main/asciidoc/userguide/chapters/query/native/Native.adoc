@@ -182,8 +182,8 @@ include::{extrasdir}/sql-hibernate-entity-associations-query-many-to-one-join-ex
 As seen in the associated SQL query, Hibernate manages to construct the entity hierarchy without requiring any extra database roundtrip.
 ====
 
-By default, when using the `addJoin()` method, the result set will contain both entities that are joined.
-To construct the entity hierarchy, you need to use a `ROOT_ENTITY` or `DISTINCT_ROOT_ENTITY` `ResultTransformer`.
+Even when using the `addJoin()` method, the result list will only contain the root entity.
+Joined entities will only be present for their respective association.
 
 [[sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example]]
 .Hibernate native query selecting entities with joined many-to-one association and `ResultTransformer`
@@ -192,11 +192,6 @@ To construct the entity hierarchy, you need to use a `ROOT_ENTITY` or `DISTINCT_
 ----
 include::{sourcedir}/SQLTest.java[tags=sql-hibernate-entity-associations-query-many-to-one-join-result-transformer-example]
 ----
-====
-
-[NOTE]
-====
-Because of the `ROOT_ENTITY` `ResultTransformer`, the query above will return the parent-side as root entities.
 ====
 
 Notice that you added an alias name _pr_ to be able to specify the target property path of the join.

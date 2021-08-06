@@ -92,7 +92,7 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 				false,
 				navigablePath,
 				tableAlias,
-				() -> predicate -> {},
+				null,
 				creationStateImpl,
 				sessionFactory
 		);

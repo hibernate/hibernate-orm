@@ -1372,11 +1372,10 @@ public abstract class AbstractEntityPersister
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlExpressionResolver();
-		final SqlAliasBaseGenerator aliasBaseGenerator = creationState.getSqlAliasBaseGenerator();
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
 		final TableReference primaryTableReference = createPrimaryTableReference(
 				sqlAliasBase,
@@ -1411,7 +1410,9 @@ public abstract class AbstractEntityPersister
 											Collections.emptySet()
 									),
 									joinedTableReference,
-									generateJoinPredicate(
+									additionalPredicateCollectorAccess == null
+											? null
+											: generateJoinPredicate(
 											primaryTableReference,
 											joinedTableReference,
 											getSubclassTableKeyColumns( i ),

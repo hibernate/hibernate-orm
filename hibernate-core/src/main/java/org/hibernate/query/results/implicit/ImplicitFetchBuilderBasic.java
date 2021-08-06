@@ -53,11 +53,22 @@ public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
 				.getFromClauseAccess()
 				.getTableGroup( parent.getNavigablePath() );
 
-		final String column = fetchable.getSelectionExpression();
 		final String table = fetchable.getContainingTableExpression();
+		final String column;
+
+		// In case of a formula we look for a result set position with the fetchable name
+		if ( fetchable.isFormula() ) {
+			column = fetchable.getFetchableName();
+		}
+		else {
+			column = fetchable.getSelectionExpression();
+		}
 
 		final Expression expression = creationStateImpl.resolveSqlExpression(
-				createColumnReferenceKey( parentTableGroup.getTableReference( fetchPath, table ), column ),
+				createColumnReferenceKey(
+						parentTableGroup.getTableReference( fetchPath, table ),
+						fetchable.getSelectionExpression()
+				),
 				processingState -> {
 					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( column );
 					final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );

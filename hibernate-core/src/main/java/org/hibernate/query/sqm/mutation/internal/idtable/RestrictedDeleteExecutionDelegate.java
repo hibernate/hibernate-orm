@@ -331,7 +331,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 							SqlExpressionResolver.createColumnReferenceKey( targetTableReference, selection.getSelectionExpression() ),
 							sqlAstProcessingState -> new ColumnReference(
-									rootTableGroup.getPrimaryTableReference(),
+									targetTableReference,
 									selection,
 									sessionFactory
 							)

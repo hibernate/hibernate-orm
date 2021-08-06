@@ -84,7 +84,7 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 							true,
 							navigablePath,
 							null,
-							() -> predicate -> {},
+							null,
 							impl.getSqlAstCreationState(),
 							impl.getSqlAstCreationState().getCreationContext()
 					)

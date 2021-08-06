@@ -67,7 +67,7 @@ public abstract class AbstractResultSetAccess implements ResultSetAccess {
 		catch (SQLException e) {
 			throw getFactory().getJdbcServices().getJdbcEnvironment().getSqlExceptionHelper().convert(
 					e,
-					"Unable to find column position by name"
+					"Unable to find column position by name: " + columnName
 			);
 		}
 	}

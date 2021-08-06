@@ -238,7 +238,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 			final List<String> columnNames;
 			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases(
 					fetchBuilder.getFetchableName(),
-					suffix
+					alias2Suffix.get( fetchBuilder.getOwnerAlias() )
 			);
 			if ( columnAliases.length == 0 ) {
 				final CollectionPersister collectionPersister = alias2CollectionPersister.get( fetchBuilder.getTableAlias() );

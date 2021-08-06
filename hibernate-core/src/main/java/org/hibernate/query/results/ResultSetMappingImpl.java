@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -19,15 +20,22 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
+import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
@@ -183,8 +191,90 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 
 			domainResults.add( domainResult );
 		}
+		// We only need this check when we actually have result builders
+		// As people should be able to just run native queries and work with tuples
+		if ( resultBuilders != null ) {
+			final Set<String> knownDuplicateAliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+			if ( resultBuilders.size() == 1 && domainResults.size()  == 1 && domainResults.get( 0 ) instanceof EntityResult ) {
+				// Special case for result set mappings that just fetch a single polymorphic entity
+				final EntityResult entityResult = (EntityResult) domainResults.get( 0 );
+				final boolean polymorphic = entityResult.getReferencedMappingContainer()
+						.getEntityPersister()
+						.getEntityMetamodel()
+						.isPolymorphic();
+				// We only need to check for duplicate aliases if we have join fetches,
+				// otherwise we assume that even if there are duplicate aliases, the values are equivalent.
+				// If we don't do that, there is no way to fetch joined inheritance entities
+				if ( polymorphic && ( legacyFetchBuilders == null || legacyFetchBuilders.isEmpty() )
+						&& !hasJoinFetches( entityResult.getFetches() ) ) {
+					final Set<String> aliases = new TreeSet<>( String.CASE_INSENSITIVE_ORDER );
+					final AbstractEntityPersister entityPersister = (AbstractEntityPersister) entityResult.getReferencedMappingContainer()
+							.getEntityPersister();
+					for ( String[] columns : entityPersister.getContraintOrderedTableKeyColumnClosure() ) {
+						addColumns( aliases, knownDuplicateAliases, columns );
+					}
+					addColumn( aliases, knownDuplicateAliases, entityPersister.getDiscriminatorColumnName() );
+					addColumn( aliases, knownDuplicateAliases, entityPersister.getVersionColumnName() );
+					for ( int i = 0; i < entityPersister.countSubclassProperties(); i++ ) {
+						addColumns(
+								aliases,
+								knownDuplicateAliases,
+								entityPersister.getSubclassPropertyColumnNames( i )
+						);
+					}
+				}
+			}
+			final String[] aliases = new String[rowSize];
+			final Map<String, Boolean> aliasHasDuplicates = new HashMap<>( rowSize );
+			for ( int i = 0; i < rowSize; i++ ) {
+				aliasHasDuplicates.compute(
+						aliases[i] = jdbcResultsMetadata.resolveColumnName( i + 1 ),
+						(k, v) -> v == null ? Boolean.FALSE : Boolean.TRUE
+				);
+			}
+			// Only check for duplicates for the selections that we actually use
+			for ( SqlSelection sqlSelection : sqlSelections ) {
+				final String alias = aliases[sqlSelection.getValuesArrayPosition()];
+				if ( !knownDuplicateAliases.contains( alias ) && aliasHasDuplicates.get( alias ) == Boolean.TRUE ) {
+					throw new NonUniqueDiscoveredSqlAliasException(
+							"Encountered a duplicated sql alias [" + alias + "] during auto-discovery of a native-sql query"
+					);
+				}
+			}
+		}
 		final Map<String, LockMode> registeredLockModes = creationState.getRegisteredLockModes();
 		return new JdbcValuesMappingImpl( sqlSelections, domainResults, rowSize, registeredLockModes );
+	}
+
+	private static void addColumns(Set<String> aliases, Set<String> knownDuplicateAliases, String[] columns) {
+		for ( int i = 0; i < columns.length; i++ ) {
+			addColumn( aliases, knownDuplicateAliases, columns[i] );
+		}
+	}
+
+	private static void addColumn(Set<String> aliases, Set<String> knownDuplicateAliases, String column) {
+		if ( column != null && !aliases.add( column ) ) {
+			knownDuplicateAliases.add( column );
+		}
+	}
+
+	private static boolean hasJoinFetches(List<Fetch> fetches) {
+		for ( int i = 0; i < fetches.size(); i++ ) {
+			final Fetch fetch = fetches.get( i );
+			if ( fetch instanceof BasicFetch<?> || fetch.getTiming() == FetchTiming.DELAYED ) {
+				// That's fine
+			}
+			else if ( fetch instanceof EmbeddableResultGraphNode ) {
+				// Check all these fetches as well
+				if ( hasJoinFetches( ( (EmbeddableResultGraphNode) fetch ).getFetches() ) ) {
+					return true;
+				}
+			}
+			else {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private DomainResult<?> makeImplicitDomainResult(

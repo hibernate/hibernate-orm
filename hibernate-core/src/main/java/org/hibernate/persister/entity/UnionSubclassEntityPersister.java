@@ -245,11 +245,10 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
-
-		final TableReference tableReference = resolvePrimaryTableReference(sqlAliasBase);
+		final TableReference tableReference = resolvePrimaryTableReference( sqlAliasBase );
 
 		return new UnionTableGroup( canUseInnerJoins, navigablePath, tableReference, this, explicitSourceAlias );
 	}

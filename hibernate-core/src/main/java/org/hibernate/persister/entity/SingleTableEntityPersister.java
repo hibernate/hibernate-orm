@@ -47,6 +47,7 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
 import org.hibernate.sql.SelectFragment;
+import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -931,6 +932,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			NavigablePath navigablePath,
 			String explicitSourceAlias,
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
 		final TableGroup tableGroup = super.createRootTableGroup(
@@ -938,11 +940,12 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				navigablePath,
 				explicitSourceAlias,
 				additionalPredicateCollectorAccess,
+				sqlAliasBase,
 				creationState,
 				creationContext
 		);
 
-		if ( needsDiscriminator() ) {
+		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
 			final Predicate discriminatorPredicate = createDiscriminatorPredicate(
 					tableGroup,
 					creationState.getSqlExpressionResolver(),

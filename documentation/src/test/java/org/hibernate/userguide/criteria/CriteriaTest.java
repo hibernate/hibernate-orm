@@ -326,7 +326,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 
 			List<Phone> phones = entityManager.createQuery( criteria ).getResultList();
 			//end::criteria-from-join-example[]
-			assertEquals(2, phones.size());
+			assertEquals( 1, phones.size() );
 		});
 	}
 
@@ -349,7 +349,7 @@ public class CriteriaTest extends BaseEntityManagerFunctionalTestCase {
 
 			List<Phone> phones = entityManager.createQuery( criteria ).getResultList();
 			//end::criteria-from-fetch-example[]
-			assertEquals(2, phones.size());
+			assertEquals( 1, phones.size() );
 		});
 	}
 

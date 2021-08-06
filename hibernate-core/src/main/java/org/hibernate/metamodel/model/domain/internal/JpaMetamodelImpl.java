@@ -49,6 +49,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJtd;
@@ -460,7 +461,12 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 			visitEntityTypes(
 					entityDomainType -> {
 						if ( javaType.isAssignableFrom( entityDomainType.getJavaType() ) ) {
-							matchingDescriptors.add( entityDomainType );
+							final Queryable entityPersister = (Queryable) typeConfiguration.getSessionFactory()
+									.getMetamodel()
+									.getEntityDescriptor( entityDomainType.getHibernateEntityName() );
+							if ( !entityPersister.isExplicitPolymorphism() ) {
+								matchingDescriptors.add( entityDomainType );
+							}
 						}
 					}
 			);

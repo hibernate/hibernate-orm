@@ -112,7 +112,8 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
                     AuditReaderFactory
                     .get( entityManager )
                     .getCrossTypeRevisionChangesReader()
-                    .findEntityTypes( 2 )
+                    // 52 is the next id on the DB due to allocationSize defaulting to 50
+                    .findEntityTypes( 52 )
                     .iterator().next()
                     .getFirst()
                 );

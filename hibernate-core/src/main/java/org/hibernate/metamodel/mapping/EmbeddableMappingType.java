@@ -186,6 +186,8 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 					if ( inverseMappingType.attributeMappings.isEmpty() ) {
 						return false;
 					}
+					// Reset the attribute mappings that were added in previous attempts
+					this.attributeMappings.clear();
 					int currentIndex = 0;
 					// We copy the attributes from the inverse mappings and replace the selection mappings
 					for ( AttributeMapping attributeMapping : inverseMappingType.attributeMappings ) {
@@ -252,6 +254,9 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 
 		int attributeIndex = 0;
 		int columnPosition = 0;
+
+		// Reset the attribute mappings that were added in previous attempts
+		this.attributeMappings.clear();
 
 		final Iterator<Property> propertyIterator = bootDescriptor.getPropertyIterator();
 		while ( propertyIterator.hasNext() ) {

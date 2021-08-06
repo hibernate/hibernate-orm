@@ -533,9 +533,11 @@ public class Component extends SimpleValue implements MetaAttributable {
 			return;
 		}
 		final int[] originalPropertyOrder;
-		// We need to capture the original property order the source is a XML mapping
+		// We need to capture the original property order if this is an alternate unique key
+		// to be able to sort the other side of the foreign key accordingly
+		// and also if the source is a XML mapping
 		// because XML mappings might refer to this through the defined order
-		if ( getBuildingContext() instanceof MappingDocument ) {
+		if ( isAlternateUniqueKey() || getBuildingContext() instanceof MappingDocument ) {
 			final Object[] originalProperties = properties.toArray();
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];

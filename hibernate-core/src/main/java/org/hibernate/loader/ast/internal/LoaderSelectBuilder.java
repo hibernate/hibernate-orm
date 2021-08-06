@@ -16,7 +16,6 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
@@ -598,10 +597,10 @@ public class LoaderSelectBuilder {
 			QuerySpec querySpec,
 			TableGroup tableGroup,
 			PluralAttributeMapping pluralAttributeMapping) {
-		final Joinable joinable = pluralAttributeMapping
-				.getCollectionDescriptor()
-				.getCollectionType()
-				.getAssociatedJoinable( creationContext.getSessionFactory() );
+		final CollectionPersister collectionPersister = pluralAttributeMapping.getCollectionDescriptor();
+		final Joinable joinable = collectionPersister
+					.getCollectionType()
+					.getAssociatedJoinable( creationContext.getSessionFactory() );
 		final Predicate filterPredicate = FilterHelper.createFilterPredicate(
 				loadQueryInfluencers,
 				joinable,
@@ -610,7 +609,7 @@ public class LoaderSelectBuilder {
 		if ( filterPredicate != null ) {
 			querySpec.applyPredicate( filterPredicate );
 		}
-		if ( pluralAttributeMapping.getCollectionDescriptor().isManyToMany() ) {
+		if ( collectionPersister.isManyToMany() ) {
 			assert joinable instanceof CollectionPersister;
 			final Predicate manyToManyFilterPredicate = FilterHelper.createManyToManyFilterPredicate(
 					loadQueryInfluencers,

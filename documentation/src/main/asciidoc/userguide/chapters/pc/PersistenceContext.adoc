@@ -540,9 +540,9 @@ include::{extrasdir}/pc-filter-entity-query-example.sql[]
 
 [IMPORTANT]
 ====
-Filters apply to entity queries, but not to direct fetching.
+Filters apply to entity queries and to direct fetching.
 
-Therefore, in the following example, the filter is not taken into consideration when fetching an entity from the Persistence Context.
+Therefore, even in the following example, the filter is taken into consideration when fetching an entity from the Persistence Context.
 
 [[pc-filter-entity-example]]
 .Fetching entities mapped with `@Filter`

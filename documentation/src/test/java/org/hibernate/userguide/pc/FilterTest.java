@@ -24,13 +24,9 @@ import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.Where;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -104,7 +100,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
             Account account2 = entityManager.find( Account.class, 2L );
 
             assertNotNull( account1 );
-            assertNotNull( account2 );
+            assertNull( account2 );
         } );
 
         doInJPA( this::entityManagerFactory, entityManager -> {
@@ -140,7 +136,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
             Account account = entityManager.find( Account.class, 2L );
 
-            assertFalse( account.isActive() );
+            assertNull( account );
             //end::pc-filter-entity-example[]
         } );
 
@@ -189,7 +185,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
             Client client = entityManager.find( Client.class, 1L );
 
-            assertEquals( 1, client.getAccounts().size() );
+            assertEquals( 2, client.getAccounts().size() );
             //end::pc-filter-collection-query-example[]
         } );
     }
@@ -217,11 +213,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         )
         @Filter(
             name="activeAccount",
-            condition="{a}.active_status = :active and {a}.type = {c}.type",
-            aliases = {
-                    @SqlFragmentAlias( alias = "a", table= "account"),
-                    @SqlFragmentAlias( alias = "c", table= "client"),
-            }
+            condition="{a}.active_status = :active"
         )
         private List<Account> accounts = new ArrayList<>( );
 

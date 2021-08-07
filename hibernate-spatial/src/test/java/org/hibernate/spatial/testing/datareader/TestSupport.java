@@ -14,9 +14,13 @@
 
 package org.hibernate.spatial.testing.datareader;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
@@ -37,6 +41,10 @@ public abstract class TestSupport {
 	public NativeSQLTemplates templates() {
 		return null;
 	};
+
+	public Map<CommonSpatialFunction, String> hqlOverrides() {
+		return new HashMap<>();
+	}
 
 	public enum TestDataPurpose {
 		SpatialFunctionsData,

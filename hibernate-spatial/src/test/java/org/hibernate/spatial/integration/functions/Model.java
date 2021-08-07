@@ -9,8 +9,12 @@ package org.hibernate.spatial.integration.functions;
 
 import java.util.function.Function;
 
+import org.hibernate.spatial.GeolatteGeometryType;
+import org.hibernate.spatial.JTSGeometryType;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
+import org.hibernate.type.Type;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.jts.JTS;
@@ -33,6 +37,7 @@ enum Model {
 	final Class<?> entityClass;
 	final Function<Object, Geometry> to;
 	final Function<Geometry, Object> from;
+
 
 	Model(
 			Class<?> entityClass,

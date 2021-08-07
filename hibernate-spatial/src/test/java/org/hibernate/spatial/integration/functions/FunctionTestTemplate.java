@@ -14,7 +14,6 @@
 
 package org.hibernate.spatial.integration.functions;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -23,13 +22,17 @@ import java.util.stream.Stream;
 import org.hibernate.Session;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Query;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.HQLTemplate;
 import org.hibernate.spatial.testing.NativeSQLTemplate;
-import org.hibernate.type.Type;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class FunctionTestTemplate {
@@ -39,8 +42,9 @@ public class FunctionTestTemplate {
 	final private NativeSQLTemplate sqlTemplate;
 	final private RowObjectMapper rowObjectMapper;
 	final private Model model;
-	final private List<Param> parameters;
+	final private Geometry<?> testGeometry;
 	final private GeomCodec codec;
+
 
 	FunctionTestTemplate(
 			CommonSpatialFunction function,
@@ -48,14 +52,14 @@ public class FunctionTestTemplate {
 			NativeSQLTemplate sqlTemplate,
 			RowObjectMapper rowObjectMapper,
 			Model model,
-			List<Param> params,
+			Geometry<?> testGeometry,
 			GeomCodec codec) {
 		this.spatialFunction = function;
 		this.hqlTemplate = hqlTemplate;
 		this.sqlTemplate = sqlTemplate;
 		this.rowObjectMapper = rowObjectMapper;
 		this.model = model;
-		this.parameters = params;
+		this.testGeometry = testGeometry;
 		this.codec = codec;
 	}
 
@@ -81,8 +85,17 @@ public class FunctionTestTemplate {
 		return map( results.get() );
 	}
 
-	private NativeQuery<Object> createNativeQuery(Session session, String table) {
-		return session.createNativeQuery( sqlTemplate.mkNativeSQLString( table ) );
+	private NativeQuery createNativeQuery(Session session, String table) {
+		NativeQuery query = session.createNativeQuery( sqlTemplate.mkNativeSQLString( table ) );
+		if ( spatialFunction.getReturnType() != null ) {
+			query.addScalar( "id", StandardBasicTypes.INTEGER );
+			query.addScalar( "result", spatialFunction.getReturnType() );
+		}
+		if ( testGeometry != null ) {
+			query.setParameter( "filter", Wkt.toWkt( testGeometry ) );
+		}
+
+		return query;
 	}
 
 	private List<Object> map(List<Object> list) {
@@ -105,43 +118,53 @@ public class FunctionTestTemplate {
 		final AtomicReference<List> results = new AtomicReference<>();
 		final String entity = model.entityClass.getCanonicalName();
 		scope.inSession(
-				session -> results.set( session.createQuery(
-						hqlTemplate.mkHQLString( functionName, entity ) ).getResultList() ) );
+				session -> {
+					Query query = session.createQuery( hqlTemplate.mkHQLString( functionName, entity ) );
+					if ( testGeometry != null ) {
+						query.setParameter(
+								"filter",
+								getModel().from.apply( testGeometry )
+						);
+					}
+					results.set( query.getResultList() );
+				} );
 		return (List) results.get().stream().map( rowObjectMapper::apply ).collect( Collectors.toList() );
 	}
 
-	static class Param {
-		final Object value;
-		final Type type;
-
-		public Param(Object value, Type type) {
-			this.value = value;
-			this.type = type;
-		}
-	}
-
 	static class Builder {
-		CommonSpatialFunction key;
-		HQLTemplate hql = new HQLTemplate( "select id, %s(geom) from %s" );
+		CommonSpatialFunction function;
+		HQLTemplate hql;
 		NativeSQLTemplate sql;
 		RowObjectMapper mapper;
-		List<Param> params = new ArrayList<>();
+		Geometry<?> testGeometry;
+
+		public Builder(CommonSpatialFunction function) {
+			this.function = function;
+		}
 
 		FunctionTestTemplate build(Model model, GeomCodec codec) {
+			if ( hql == null ) {
+				if ( testGeometry != null ) {
+					hql = new HQLTemplate( "select id, %s(geom, :filter) from %s" );
+				}
+				else if ( function == CommonSpatialFunction.ST_BUFFER ) {
+					hql = new HQLTemplate( "select id, %s(geom, 2) from %s" );
+				}
+				else {
+					hql = new HQLTemplate( "select id, %s(geom) from %s" );
+				}
+			}
 			if ( this.mapper == null ) {
 				this.mapper = new RowObjectMapper() {
 				};
 			}
-			return new FunctionTestTemplate( key, hql, sql, mapper, model, params, codec );
-		}
-
-		Builder key(CommonSpatialFunction key) {
-			this.key = key;
-			return this;
+			return new FunctionTestTemplate( function, hql, sql, mapper, model, testGeometry, codec );
 		}
 
 		Builder hql(String hqlString) {
-			this.hql = new HQLTemplate( hqlString );
+			if ( hqlString != null ) {
+				this.hql = new HQLTemplate( hqlString );
+			}
 			return this;
 		}
 
@@ -150,8 +173,10 @@ public class FunctionTestTemplate {
 			return this;
 		}
 
-		Builder parameter(Object value, Type type) {
-			this.params.add( new Param( value, type ) );
+		Builder geometry(Geometry<?> value) {
+			if ( value != null ) {
+				this.testGeometry = value;
+			}
 			return this;
 		}
 	}

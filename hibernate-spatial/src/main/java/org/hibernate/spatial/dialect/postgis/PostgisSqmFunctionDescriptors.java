@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.dialect.postgis;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.KeyedSqmFunctionDescriptors;
 import org.hibernate.spatial.FunctionKey;
 
@@ -27,46 +29,22 @@ public class PostgisSqmFunctionDescriptors implements KeyedSqmFunctionDescriptor
 	private final Map<FunctionKey, SqmFunctionDescriptor> map = new HashMap<>();
 
 	PostgisSqmFunctionDescriptors(ServiceRegistry serviceRegistry) {
-
-		map.put(
-				ST_GEOMETRYTYPE.getKey(), new NamedSqmFunctionDescriptor(
-						ST_GEOMETRYTYPE.getKey().getName(),
-						true,
-						StandardArgumentsValidators.exactly( 1 ),
-						StandardFunctionReturnTypeResolvers.invariant( ST_GEOMETRYTYPE.getReturnType() )
-				)
-		);
-
-
-		map.put(
-				ST_ASTEXT.getKey(), new NamedSqmFunctionDescriptor(
-						ST_ASTEXT.getKey().getName(),
-						true,
-						StandardArgumentsValidators.exactly( 1 ),
-						StandardFunctionReturnTypeResolvers.invariant( ST_ASTEXT.getReturnType() )
-				)
-		);
-
-		map.put(
-				ST_DIMENSION.getKey(), new NamedSqmFunctionDescriptor(
-						ST_DIMENSION.getKey().getName(),
-						true,
-						StandardArgumentsValidators.exactly( 1 ),
-						StandardFunctionReturnTypeResolvers.invariant( ST_DIMENSION.getReturnType() )
-				)
-		);
-
-		map.put(
-				ST_ENVELOPE.getKey(), new NamedSqmFunctionDescriptor(
-						ST_ENVELOPE.getKey().getName(),
-						true,
-						StandardArgumentsValidators.exactly( 1 ),
-						StandardFunctionReturnTypeResolvers.useArgType(1 )
-				)
-		);
+		Arrays.stream( values() )
+				.forEach( cf -> map.put( cf.getKey(), toPGFunction( cf ) ) );
 	}
 
 	public Map<FunctionKey, SqmFunctionDescriptor> asMap() {
 		return Collections.unmodifiableMap( map );
 	}
+
+	private SqmFunctionDescriptor toPGFunction(CommonSpatialFunction func) {
+		return new NamedSqmFunctionDescriptor(
+				func.getKey().getName(),
+				true,
+				StandardArgumentsValidators.exactly( func.getNumArgs() ),
+				func.getReturnType() != null ? StandardFunctionReturnTypeResolvers.invariant( func.getReturnType() ) :
+						StandardFunctionReturnTypeResolvers.useArgType( 1 )
+		);
+	}
+
 }

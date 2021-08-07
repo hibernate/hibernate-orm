@@ -12,7 +12,7 @@ import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;

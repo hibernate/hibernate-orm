@@ -11,32 +11,38 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
- * TODO -- documentation
+ * Functions commonly expected in databases, as defined
+ * by the SQL/MM specs
+ *
+ * @author Karel Maesen
  */
 public enum CommonSpatialFunction {
 
-	ST_ASTEXT( FunctionKey.apply( "st_astext", "astext" ), StandardBasicTypes.STRING ),
-	ST_GEOMETRYTYPE( FunctionKey.apply( "st_geometrytype", "geometrytype" ), StandardBasicTypes.STRING ),
-	ST_DIMENSION( FunctionKey.apply( "st_dimension", "dimension" ), StandardBasicTypes.INTEGER ),
-	ST_SRID( FunctionKey.apply("st_srid", "srid"), StandardBasicTypes.INTEGER),
-	ST_ENVELOPE( FunctionKey.apply("st_envelope", "envelope"))
+	ST_ASTEXT( FunctionKey.apply( "st_astext", "astext" ), 1, StandardBasicTypes.STRING ),
+	ST_GEOMETRYTYPE( FunctionKey.apply( "st_geometrytype", "geometrytype" ), 1, StandardBasicTypes.STRING ),
+	ST_DIMENSION( FunctionKey.apply( "st_dimension", "dimension" ), 1, StandardBasicTypes.INTEGER ),
+	ST_SRID( FunctionKey.apply( "st_srid", "srid" ), 1, StandardBasicTypes.INTEGER ),
+	ST_ENVELOPE( FunctionKey.apply( "st_envelope", "envelope" ), 1 ),
 	;
 
 
 	private final FunctionKey key;
 	private final BasicType<?> ReturnType;
 	private final boolean spatialReturnType;
+	private final int numArgs;
 
-	CommonSpatialFunction(FunctionKey key, BasicType<?> returnType) {
+	CommonSpatialFunction(FunctionKey key, int numArgs, BasicType<?> returnType) {
 		this.key = key;
 		ReturnType = returnType;
 		spatialReturnType = false;
+		this.numArgs = numArgs;
 	}
 
-	CommonSpatialFunction(FunctionKey key) {
+	CommonSpatialFunction(FunctionKey key, int numArgs) {
 		this.key = key;
 		ReturnType = null;
 		spatialReturnType = true;
+		this.numArgs = numArgs;
 	}
 
 
@@ -50,5 +56,9 @@ public enum CommonSpatialFunction {
 
 	public boolean returnsGeometry() {
 		return spatialReturnType;
+	}
+
+	public int getNumArgs() {
+		return numArgs;
 	}
 }

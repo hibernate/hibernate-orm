@@ -14,8 +14,8 @@
 
 package org.hibernate.spatial.integration.functions;
 
+import java.util.Arrays;
 import java.util.Objects;
-import java.util.function.Function;
 
 public interface RowObjectMapper<T> {
 	default Data apply(Object obj) {
@@ -42,7 +42,19 @@ class Data {
 			return false;
 		}
 		Data data = (Data) o;
-		return Objects.equals( id, data.id ) && Objects.equals( datum, data.datum );
+		return Objects.equals( id, data.id ) && isEquals( datum, data.datum );
+	}
+
+	private boolean isEquals(Object thisDatum, Object thatDatum) {
+		if ( thisDatum instanceof byte[] ) {
+			if ( !( thatDatum instanceof byte[] ) ) {
+				return false;
+			}
+			return Arrays.equals( (byte[]) thisDatum, (byte[]) thatDatum );
+		}
+
+		return Objects.equals( thisDatum, thatDatum );
+
 	}
 
 	@Override

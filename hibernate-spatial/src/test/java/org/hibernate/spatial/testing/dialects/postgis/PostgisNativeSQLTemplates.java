@@ -7,6 +7,13 @@
 
 package org.hibernate.spatial.testing.dialects.postgis;
 
+import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 
-public class PostgisNativeSQLTemplates extends NativeSQLTemplates{}
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ISSIMPLE;
+
+public class PostgisNativeSQLTemplates extends NativeSQLTemplates {
+	public PostgisNativeSQLTemplates() {
+		super();
+	}
+}

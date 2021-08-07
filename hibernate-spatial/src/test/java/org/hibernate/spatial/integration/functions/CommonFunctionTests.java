@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.stream.Stream;
 
 import org.hibernate.spatial.integration.SpatialTestDataProvider;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
@@ -52,8 +53,15 @@ public class CommonFunctionTests extends SpatialTestDataProvider
 
 	@BeforeEach
 	public void beforeEach() {
-		scope.inTransaction( session -> super.entities( JtsGeomEntity.class ).forEach( session::save ) );
-		scope.inTransaction( session -> super.entities( GeomEntity.class ).forEach( session::save ) );
+		scope.inTransaction( session -> super.entities(
+						JtsGeomEntity.class,
+						TestSupport.TestDataPurpose.SpatialFunctionsData
+				)
+				.forEach( session::save ) );
+		scope.inTransaction( session -> super.entities(
+				GeomEntity.class,
+				TestSupport.TestDataPurpose.SpatialFunctionsData
+		).forEach( session::save ) );
 	}
 
 	@AfterEach
@@ -65,7 +73,7 @@ public class CommonFunctionTests extends SpatialTestDataProvider
 	@TestFactory
 	public Stream<DynamicTest> testFunction() {
 		return
-				TestTemplates.all( templates)
+				TestTemplates.all( templates, hqlOverrides )
 						// TODO -- filter for supported functions
 						.flatMap( t -> Stream.of(
 								t.build( Model.JTSMODEL, codec ),
@@ -98,9 +106,9 @@ public class CommonFunctionTests extends SpatialTestDataProvider
 	protected <T> Executable executableTest(FunctionTestTemplate template, String fnName) {
 		Executable testF = () -> {
 			expected = template.executeNativeQuery( scope );
-			received = template.executeHQL( scope, fnName);
+			received = template.executeHQL( scope, fnName );
 			assertEquals( expected, received );
-			};
+		};
 		return testF;
 	}
 }

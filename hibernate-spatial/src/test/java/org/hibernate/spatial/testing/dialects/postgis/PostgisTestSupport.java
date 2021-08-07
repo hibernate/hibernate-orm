@@ -8,14 +8,18 @@
 package org.hibernate.spatial.testing.dialects.postgis;
 
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
@@ -24,12 +28,20 @@ import org.geolatte.geom.codec.Wkt;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
+@Deprecated
 public class PostgisTestSupport extends TestSupport {
 
 
 	@Override
 	public NativeSQLTemplates templates() {
 		return new PostgisNativeSQLTemplates();
+	}
+
+	//TODO  put this in its own class (analogous to NativeSQLTemplates)
+	@Override
+	public Map<CommonSpatialFunction, String> hqlOverrides() {
+		Map<CommonSpatialFunction, String> overrides = new HashMap<>();
+		return overrides;
 	}
 
 	@Override

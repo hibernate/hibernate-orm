@@ -18,8 +18,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import org.hibernate.spatial.CommonSpatialFunction;
-import org.hibernate.spatial.FunctionKey;
-import org.hibernate.spatial.testing.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 
 
 public abstract class TestTemplates {

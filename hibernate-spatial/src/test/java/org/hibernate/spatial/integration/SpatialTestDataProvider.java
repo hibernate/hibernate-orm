@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.TestSupportFactories;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestDataElement;

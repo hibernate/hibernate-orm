@@ -27,6 +27,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,6 +61,31 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 		@Setting(name = AvailableSettings.FORMAT_SQL, value = "true")
 })
 public class OptionalEagerInEmbeddableNotFoundTest {
+
+	@AfterEach
+	public void cleanUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from " + PersonManyToOneJoinIgnore.class.getName() )
+							.executeUpdate();
+					session.createQuery( "delete from " + PersonManyToOneSelectIgnore.class.getName() ).executeUpdate();
+					session.createQuery( "delete from " + PersonOneToOneJoinIgnore.class.getName() )
+							.executeUpdate();
+					session.createQuery( "delete from " + PersonOneToOneSelectIgnore.class.getName() ).executeUpdate();
+					session.createQuery( "delete from " + PersonMapsIdJoinIgnore.class.getName() ).executeUpdate();
+					session.createQuery( "delete from " + PersonMapsIdSelectIgnore.class.getName() ).executeUpdate();
+					session.createQuery( "delete from " + PersonPkjcJoinException.class.getName() ).executeUpdate();
+					session.createQuery( "delete from " + PersonPkjcJoinIgnore.class.getName() ).executeUpdate();
+					session.createQuery( "delete from " + PersonPkjcSelectException.class.getName() )
+							.executeUpdate();
+					session.createQuery( "delete from " + PersonPkjcSelectIgnore.class.getName() )
+							.executeUpdate();session.createQuery( "delete from " + PersonMapsIdColumnJoinIgnore.class.getName() )
+							.executeUpdate();session.createQuery( "delete from " + PersonMapsIdColumnSelectIgnore.class.getName() )
+							.executeUpdate();
+					session.createQuery( "delete from " + City.class.getName() ).executeUpdate();
+				}
+		);
+	}
 
 	@Test
 	public void testOneToOneJoinIgnore(SessionFactoryScope scope) {

@@ -20,178 +20,191 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.proxy.HibernateProxy;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
  */
 @TestForIssue(jiraKey = "HHH-14537")
-public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				EagerProxyNotFoundTest.Task.class,
+				EagerProxyNotFoundTest.Employee.class,
+				EagerProxyNotFoundTest.Location.class
+		}
+)
+@SessionFactory
+public class EagerProxyNotFoundTest {
 
 	@Test
-	public void testNoProxyInSession() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Task task = new Task();
-			task.id = 1;
-			task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
-			session.persist( task );
-		});
+	public void testNoProxyInSession(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Task task = new Task();
+					task.id = 1;
+					task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
+					session.persist( task );
+				} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
-			assertNotNull( task );
-			assertNull( task.employeeEagerNotFoundIgnore );
-		});
+		scope.inTransaction(
+				session -> {
+					final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
+					assertNotNull( task );
+					assertNull( task.employeeEagerNotFoundIgnore );
+				} );
 	}
 
 	@Test
-	public void testNonExistingProxyInSession() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Task task = new Task();
-			task.id = 1;
-			task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
-			session.persist( task );
-		});
+	public void testNonExistingProxyInSession(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Task task = new Task();
+					task.id = 1;
+					task.employeeEagerNotFoundIgnore = session.load( Employee.class, 2 );
+					session.persist( task );
+				} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.load( Employee.class, 2 );
-			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
-			assertNotNull( task );
-			assertNull( task.employeeEagerNotFoundIgnore );
-		});
+		scope.inTransaction(
+				session -> {
+					session.load( Employee.class, 2 );
+					final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
+					assertNotNull( task );
+					assertNull( task.employeeEagerNotFoundIgnore );
+				} );
 	}
 
 	@Test
-	public void testEagerIgnoreLazyProxy() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Task task = new Task();
-			task.id = 1;
-			task.employeeLazy = session.load( Employee.class, 2 );
-			task.employeeEagerNotFoundIgnore = task.employeeLazy;
-			session.persist( task );
-		});
+	public void testEagerIgnoreLazyProxy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Task task = new Task();
+					task.id = 1;
+					task.employeeLazy = session.load( Employee.class, 2 );
+					task.employeeEagerNotFoundIgnore = task.employeeLazy;
+					session.persist( task );
+				} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
-			assertNotNull( task );
-			assertNull( task.employeeEagerNotFoundIgnore );
-			assertNotNull( task.employeeLazy );
-			assertTrue( HibernateProxy.class.isInstance( task.employeeLazy ) );
-			assertEquals( 2, task.employeeLazy.getId() );
-		});
+		scope.inTransaction(
+				session -> {
+					final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
+					assertNotNull( task );
+					assertNull( task.employeeEagerNotFoundIgnore );
+					assertNotNull( task.employeeLazy );
+					assertTrue( HibernateProxy.class.isInstance( task.employeeLazy ) );
+					assertEquals( 2, task.employeeLazy.getId() );
+				} );
 	}
 
 	@Test
-	public void testProxyInSessionEagerIgnoreLazyProxy() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Task task = new Task();
-			task.id = 1;
-			task.employeeLazy = session.load( Employee.class, 2 );
-			task.employeeEagerNotFoundIgnore = task.employeeLazy;
-			session.persist( task );
-		});
+	public void testProxyInSessionEagerIgnoreLazyProxy(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Task task = new Task();
+					task.id = 1;
+					task.employeeLazy = session.load( Employee.class, 2 );
+					task.employeeEagerNotFoundIgnore = task.employeeLazy;
+					session.persist( task );
+				} );
 
-		doInHibernate( this::sessionFactory, session -> {
-			final Employee employeeProxy = session.load( Employee.class, 2 );
-			final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
-			assertNotNull( task );
-			assertNull( task.employeeEagerNotFoundIgnore );
-			assertNotNull( task.employeeLazy );
-			assertTrue( HibernateProxy.class.isInstance( task.employeeLazy ) );
-			assertEquals( 2, task.employeeLazy.getId() );
-			assertSame( employeeProxy, task.employeeLazy );
-		});
+		scope.inTransaction(
+				session -> {
+					final Employee employeeProxy = session.load( Employee.class, 2 );
+					final Task task = session.createQuery( "from Task", Task.class ).getSingleResult();
+					assertNotNull( task );
+					assertNull( task.employeeEagerNotFoundIgnore );
+					assertNotNull( task.employeeLazy );
+					assertTrue( HibernateProxy.class.isInstance( task.employeeLazy ) );
+					assertEquals( 2, task.employeeLazy.getId() );
+					assertSame( employeeProxy, task.employeeLazy );
+				} );
 	}
 
 	@Test
-	public void testExistingProxyWithNonExistingAssociation() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Employee employee = new Employee();
-			employee.id = 1;
-			session.persist( employee );
+	public void testExistingProxyWithNonExistingAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Employee employee = new Employee();
+					employee.id = 1;
+					session.persist( employee );
 
-			final Task task = new Task();
-			task.id = 2;
-			task.employeeEagerNotFoundIgnore = employee;
-			session.persist( task );
+					final Task task = new Task();
+					task.id = 2;
+					task.employeeEagerNotFoundIgnore = employee;
+					session.persist( task );
 
-			session.flush();
+					session.flush();
 
-			session.createNativeQuery( "update Employee set locationId = 3 where id = 1" )
-					.executeUpdate();
-		});
+					session.createNativeQuery( "update Employee set locationId = 3 where id = 1" )
+							.executeUpdate();
+				} );
 
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.load( Employee.class, 1 );
-				session.createQuery( "from Task", Task.class ).getSingleResult();
-			});
+			scope.inTransaction(
+					session -> {
+						session.load( Employee.class, 1 );
+						session.createQuery( "from Task", Task.class ).getSingleResult();
+					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
-					"and is not mapped with @NotFound(IGNORE)" );
+						  "and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
 	}
 
 	@Test
-	public void testEnityWithNotExistingAssociation() {
-		doInHibernate( this::sessionFactory, session -> {
-			final Employee employee = new Employee();
-			employee.id = 1;
-			session.persist( employee );
+	public void testEnityWithNotExistingAssociation(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final Employee employee = new Employee();
+					employee.id = 1;
+					session.persist( employee );
 
-			final Task task = new Task();
-			task.id = 2;
-			task.employeeEagerNotFoundIgnore = employee;
-			session.persist( task );
+					final Task task = new Task();
+					task.id = 2;
+					task.employeeEagerNotFoundIgnore = employee;
+					session.persist( task );
 
-			session.flush();
+					session.flush();
 
-			session.createNativeQuery( "update Employee set locationId = 3 where id = 1" )
-					.executeUpdate();
-		});
+					session.createNativeQuery( "update Employee set locationId = 3 where id = 1" )
+							.executeUpdate();
+				} );
 
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createQuery( "from Employee", Employee.class ).getSingleResult();
-			});
+			scope.inTransaction(
+					session -> {
+						session.createQuery( "from Employee", Employee.class ).getSingleResult();
+					} );
 			fail( "EntityNotFoundException should have been thrown because Task.employee.location is not found " +
-					"and is not mapped with @NotFound(IGNORE)" );
+						  "and is not mapped with @NotFound(IGNORE)" );
 		}
 		catch (EntityNotFoundException expected) {
 		}
 	}
 
-	@After
-	public void deleteData() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery( "delete from Task" ).executeUpdate();
-			session.createQuery( "delete from Employee" ).executeUpdate();
-			session.createQuery( "delete from Location" ).executeUpdate();
-		});
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Task.class,
-				Employee.class,
-				Location.class
-		};
+	@AfterEach
+	public void deleteData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from Task" ).executeUpdate();
+					session.createQuery( "delete from Employee" ).executeUpdate();
+					session.createQuery( "delete from Location" ).executeUpdate();
+				} );
 	}
 
 	@Entity(name = "Task")
-	public static class Task  {
+	public static class Task {
 
 		@Id
 		private int id;
@@ -226,6 +239,7 @@ public class EagerProxyNotFoundTest extends BaseNonConfigCoreFunctionalTestCase 
 		public int getId() {
 			return id;
 		}
+
 		public void setId(int id) {
 			this.id = id;
 		}

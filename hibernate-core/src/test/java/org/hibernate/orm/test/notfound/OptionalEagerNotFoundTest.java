@@ -1,4 +1,4 @@
-package org.hibernate.test.notfound;
+package org.hibernate.orm.test.notfound;
 
 import java.io.Serializable;
 import javax.persistence.CascadeType;
@@ -19,142 +19,138 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-12436")
-public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12436")
+@DomainModel(
+		annotatedClasses = {
+				OptionalEagerNotFoundTest.PersonManyToOneJoinIgnore.class,
+				OptionalEagerNotFoundTest.PersonManyToOneSelectIgnore.class,
+				OptionalEagerNotFoundTest.PersonOneToOneJoinIgnore.class,
+				OptionalEagerNotFoundTest.PersonOneToOneSelectIgnore.class,
+				OptionalEagerNotFoundTest.PersonMapsIdJoinIgnore.class,
+				OptionalEagerNotFoundTest.PersonMapsIdSelectIgnore.class,
+				OptionalEagerNotFoundTest.PersonPkjcJoinException.class,
+				OptionalEagerNotFoundTest.PersonPkjcJoinIgnore.class,
+				OptionalEagerNotFoundTest.PersonPkjcSelectException.class,
+				OptionalEagerNotFoundTest.PersonPkjcSelectIgnore.class,
+				OptionalEagerNotFoundTest.PersonMapsIdColumnJoinIgnore.class,
+				OptionalEagerNotFoundTest.PersonMapsIdColumnSelectIgnore.class,
+				OptionalEagerNotFoundTest.City.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(settings = {
+		@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
+		@Setting(name = AvailableSettings.FORMAT_SQL, value = "true")
+})
+public class OptionalEagerNotFoundTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				PersonManyToOneJoinIgnore.class,
-				PersonManyToOneSelectIgnore.class,
-				PersonOneToOneJoinIgnore.class,
-				PersonOneToOneSelectIgnore.class,
-				PersonMapsIdJoinIgnore.class,
-				PersonMapsIdSelectIgnore.class,
-				PersonPkjcJoinException.class,
-				PersonPkjcJoinIgnore.class,
-				PersonPkjcSelectException.class,
-				PersonPkjcSelectIgnore.class,
-				PersonMapsIdColumnJoinIgnore.class,
-				PersonMapsIdColumnSelectIgnore.class,
-				City.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
+	@Test
+	public void testOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneJoinIgnore.class, 1L, false, scope );
+		executeIgnoreTest( PersonOneToOneJoinIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testOneToOneJoinIgnore() {
-		setupTest( PersonOneToOneJoinIgnore.class, 1L, false );
-		executeIgnoreTest( PersonOneToOneJoinIgnore.class, 1L );
+	public void testOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneSelectIgnore.class, 1L, false, scope );
+		executeIgnoreTest( PersonOneToOneSelectIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testOneToOneSelectIgnore() {
-		setupTest( PersonOneToOneSelectIgnore.class, 1L, false );
-		executeIgnoreTest( PersonOneToOneSelectIgnore.class, 1L );
+	public void testManyToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonManyToOneJoinIgnore.class, 1L, false, scope );
+		executeIgnoreTest( PersonManyToOneJoinIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testManyToOneJoinIgnore() {
-		setupTest( PersonManyToOneJoinIgnore.class, 1L, false );
-		executeIgnoreTest( PersonManyToOneJoinIgnore.class, 1L );
+	public void testManyToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonManyToOneSelectIgnore.class, 1L, false, scope );
+		executeIgnoreTest( PersonManyToOneSelectIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testManyToOneSelectIgnore() {
-		setupTest( PersonManyToOneSelectIgnore.class, 1L, false );
-		executeIgnoreTest( PersonManyToOneSelectIgnore.class, 1L );
-	}
-
-	@Test
-	public void testPkjcOneToOneJoinException() {
-		setupTest( PersonPkjcJoinException.class, 1L, false );
+	public void testPkjcOneToOneJoinException(SessionFactoryScope scope) {
+		setupTest( PersonPkjcJoinException.class, 1L, false, scope );
 		// optional @OneToOne @PKJC implicitly maps @NotFound(IGNORE)
-		executeIgnoreTest( PersonPkjcJoinException.class, 1L );
+		executeIgnoreTest( PersonPkjcJoinException.class, 1L, scope );
 	}
 
 	@Test
-	public void testPkjcOneToOneJoinIgnore() {
-		setupTest( PersonPkjcJoinIgnore.class, 1L, false );
-		executeIgnoreTest( PersonPkjcJoinIgnore.class, 1L );
+	public void testPkjcOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonPkjcJoinIgnore.class, 1L, false, scope );
+		executeIgnoreTest( PersonPkjcJoinIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testPkjcOneToOneSelectException() {
-		setupTest( PersonPkjcSelectException.class, 1L, false );
+	public void testPkjcOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonPkjcSelectException.class, 1L, false, scope );
 		// optional @OneToOne @PKJC implicitly maps @NotFound(IGNORE)
-		executeIgnoreTest( PersonPkjcSelectException.class, 1L );
+		executeIgnoreTest( PersonPkjcSelectException.class, 1L, scope );
 	}
 
 	@Test
-	public void testPkjcOneToOneSelectIgnore() {
-		setupTest( PersonPkjcSelectIgnore.class, 1L, false );
-		executeIgnoreTest( PersonPkjcSelectIgnore.class, 1L );
+	public void testPkjcOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonPkjcSelectIgnore.class, 1L, false, scope );
+		executeIgnoreTest( PersonPkjcSelectIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testMapsIdOneToOneJoinIgnore() {
-		setupTest( PersonMapsIdJoinIgnore.class, 1L, true );
-		executeIgnoreTest( PersonMapsIdJoinIgnore.class, 1L );
+	public void testMapsIdOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdJoinIgnore.class, 1L, true, scope );
+		executeIgnoreTest( PersonMapsIdJoinIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testMapsIdOneToOneSelectIgnore() {
-		setupTest( PersonMapsIdSelectIgnore.class, 1L, true );
-		executeIgnoreTest( PersonMapsIdSelectIgnore.class, 1L );
+	public void testMapsIdOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdSelectIgnore.class, 1L, true, scope );
+		executeIgnoreTest( PersonMapsIdSelectIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testMapsIdJoinColumnOneToOneJoinIgnore() {
-		setupTest( PersonMapsIdColumnJoinIgnore.class, 1L, true );
-		executeIgnoreTest( PersonMapsIdColumnJoinIgnore.class, 1L );
+	public void testMapsIdJoinColumnOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdColumnJoinIgnore.class, 1L, true, scope );
+		executeIgnoreTest( PersonMapsIdColumnJoinIgnore.class, 1L, scope );
 	}
 
 	@Test
-	public void testMapsIdJoinColumnOneToOneSelectIgnore() {
-		setupTest( PersonMapsIdColumnSelectIgnore.class, 1L, true );
-		executeIgnoreTest( PersonMapsIdColumnSelectIgnore.class, 1L );
+	public void testMapsIdJoinColumnOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdColumnSelectIgnore.class, 1L, true, scope );
+		executeIgnoreTest( PersonMapsIdColumnSelectIgnore.class, 1L, scope );
 	}
 
-	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId ) {
-		persistData( clazz, id, isMapsId );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
+		persistData( clazz, id, isMapsId, scope );
+		scope.inTransaction(
+				session -> {
 					Person p = session.find( clazz, id );
 					assertEquals( "New York", p.getCity().getName() );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.createNativeQuery( "delete from City where id = " + id )
-							.executeUpdate();
-				}
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "delete from City where id = " + id )
+								.executeUpdate()
 		);
 	}
 
-	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId) {
+	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
 		final Person person;
 		try {
 			person = clazz.newInstance();
@@ -163,8 +159,8 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 			throw new RuntimeException( ex );
 		}
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					City city = new City();
 					city.setId( id );
 					city.setName( "New York" );
@@ -179,24 +175,24 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	private <T extends Person> void executeIgnoreTest(Class<T> clazz, long id) {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	private <T extends Person> void executeIgnoreTest(Class<T> clazz, long id, SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( clazz, id );
 					checkResult( pCheck );
 					pCheck.setName( "Jane Doe" );
 				}
 		);
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( clazz, id );
 					assertEquals( "Jane Doe", pCheck.getName() );
 					checkResult( pCheck );
 					pCheck.setCity( null );
 				}
 		);
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( clazz, id );
 					assertEquals( "Jane Doe", pCheck.getName() );
 					checkResult( pCheck );
@@ -216,25 +212,28 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
 
 		public abstract void setId(Long id);
+
 		public abstract City getCity();
+
 		public abstract void setCity(City city);
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneJoinIgnore" )
+	@Table(name = "PersonOneToOneJoinIgnore")
 	public static class PersonOneToOneJoinIgnore extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private City city;
 
 		public Long getId() {
@@ -256,15 +255,15 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneSelectIgnore" )
+	@Table(name = "PersonOneToOneSelectIgnore")
 	public static class PersonOneToOneSelectIgnore extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private City city;
 
 		public Long getId() {
@@ -286,15 +285,15 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneJoinIgnore" )
+	@Table(name = "PersonManyToOneJoinIgnore")
 	public static class PersonManyToOneJoinIgnore extends Person {
 		@Id
 		private Long id;
 
 		@ManyToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private City city;
 
 		public Long getId() {
@@ -316,15 +315,15 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneSelectIgnore" )
+	@Table(name = "PersonManyToOneSelectIgnore")
 	public static class PersonManyToOneSelectIgnore extends Person {
 		@Id
 		private Long id;
 
 		@ManyToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private City city;
 
 		public Long getId() {
@@ -346,14 +345,14 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcJoinException" )
+	@Table(name = "PersonPkjcJoinException")
 	public static class PersonPkjcJoinException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
 
@@ -376,7 +375,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcJoinIgnore" )
+	@Table(name = "PersonPkjcJoinIgnore")
 	public static class PersonPkjcJoinIgnore extends Person {
 		@Id
 		private Long id;
@@ -384,7 +383,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
 
@@ -407,14 +406,14 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcSelectException" )
+	@Table(name = "PersonPkjcSelectException")
 	public static class PersonPkjcSelectException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
 
@@ -437,7 +436,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcSelectIgnore" )
+	@Table(name = "PersonPkjcSelectIgnore")
 	public static class PersonPkjcSelectIgnore extends Person {
 		@Id
 		private Long id;
@@ -445,7 +444,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
 
@@ -468,7 +467,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdJoinIgnore" )
+	@Table(name = "PersonMapsIdJoinIgnore")
 	public static class PersonMapsIdJoinIgnore extends Person {
 		@Id
 		private Long id;
@@ -476,7 +475,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 		@OneToOne
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
 
@@ -499,7 +498,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdSelectIgnore" )
+	@Table(name = "PersonMapsIdSelectIgnore")
 	public static class PersonMapsIdSelectIgnore extends Person {
 		@Id
 		private Long id;
@@ -507,7 +506,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 		@OneToOne
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private City city;
 
@@ -530,7 +529,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnJoinIgnore" )
+	@Table(name = "PersonMapsIdColumnJoinIgnore")
 	public static class PersonMapsIdColumnJoinIgnore extends Person {
 		@Id
 		private Long id;
@@ -561,7 +560,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnSelectIgnore" )
+	@Table(name = "PersonMapsIdColumnSelectIgnore")
 	public static class PersonMapsIdColumnSelectIgnore extends Person {
 		@Id
 		private Long id;
@@ -592,7 +591,7 @@ public class OptionalEagerNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "City" )
+	@Table(name = "City")
 	public static class City implements Serializable {
 
 		@Id

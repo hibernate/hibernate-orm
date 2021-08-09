@@ -1,4 +1,4 @@
-package org.hibernate.test.notfound;
+package org.hibernate.orm.test.notfound;
 
 import java.io.Serializable;
 import javax.persistence.CascadeType;
@@ -14,47 +14,46 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-12436")
-public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12436")
+@DomainModel(
+		annotatedClasses = {
+				OptionalEagerMappedByNotFoundTest.PersonOneToOneJoinException.class,
+				OptionalEagerMappedByNotFoundTest.PersonOneToOneJoinIgnore.class,
+				OptionalEagerMappedByNotFoundTest.PersonOneToOneSelectException.class,
+				OptionalEagerMappedByNotFoundTest.PersonOneToOneSelectIgnore.class,
+				OptionalEagerMappedByNotFoundTest.Employment.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "true")
+		}
+)
+public class OptionalEagerMappedByNotFoundTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				PersonOneToOneJoinException.class,
-				PersonOneToOneJoinIgnore.class,
-				PersonOneToOneSelectException.class,
-				PersonOneToOneSelectIgnore.class,
-				Employment.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
-	}
-
-	@After
-	public void deleteData() {
-		doInHibernate(
-				this::sessionFactory, session -> {
+	@AfterEach
+	public void deleteData(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery( "delete from Person" ).executeUpdate();
 					session.createQuery( "delete from Employment" ).executeUpdate();
 				}
@@ -62,10 +61,10 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void  testOneToOneJoinException() {
-		setupTest( PersonOneToOneJoinException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneJoinException(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneJoinException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneJoinException.class, 1L );
 					checkResult( pCheck );
 				}
@@ -73,10 +72,10 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testOneToOneJoinIgnore() {
-		setupTest( PersonOneToOneJoinIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneJoinIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneJoinIgnore.class, 1L );
 					checkResult( pCheck );
 				}
@@ -84,10 +83,10 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testOneToOneSelectException() {
-		setupTest( PersonOneToOneSelectException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneSelectException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneSelectException.class, 1L );
 					checkResult( pCheck );
 				}
@@ -95,34 +94,33 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testOneToOneSelectIgnore() {
-		setupTest( PersonOneToOneSelectIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneSelectIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneSelectIgnore.class, 1L );
 					checkResult( pCheck );
 				}
 		);
 	}
 
-	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId ) {
-		persistData( clazz, id, isMapsId );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
+		persistData( clazz, id, isMapsId, scope );
+		scope.inTransaction(
+				session -> {
 					Person p = session.find( clazz, id );
 					assertEquals( "New York", p.getEmployment().getName() );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.createNativeQuery( "delete from Employment where id = " + id )
-							.executeUpdate();
-				}
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "delete from Employment where id = " + id )
+								.executeUpdate()
 		);
 	}
 
-	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId) {
+	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
 		final Person person;
 		try {
 			person = clazz.newInstance();
@@ -131,8 +129,8 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 			throw new RuntimeException( ex );
 		}
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					Employment employment = new Employment();
 					employment.setId( id );
 					employment.setName( "New York" );
@@ -164,6 +162,7 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
@@ -177,15 +176,16 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 		}
 
 		public abstract Employment getEmployment();
+
 		public abstract void setEmployment(Employment employment);
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneJoinException" )
+	@Table(name = "PersonOneToOneJoinException")
 	public static class PersonOneToOneJoinException extends Person {
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
 		@NotFound(action = NotFoundAction.EXCEPTION)
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private Employment employment;
 
 		public Employment getEmployment() {
@@ -199,14 +199,14 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneJoinIgnore" )
+	@Table(name = "PersonOneToOneJoinIgnore")
 	public static class PersonOneToOneJoinIgnore extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
-		@Fetch( FetchMode.JOIN )
+		@NotFound(action = NotFoundAction.IGNORE)
+		@Fetch(FetchMode.JOIN)
 		private Employment employment;
 
 		public Long getId() {
@@ -228,14 +228,14 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneSelectException" )
+	@Table(name = "PersonOneToOneSelectException")
 	public static class PersonOneToOneSelectException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
 		@NotFound(action = NotFoundAction.EXCEPTION)
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private Employment employment;
 
 		public Long getId() {
@@ -257,14 +257,14 @@ public class OptionalEagerMappedByNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneSelectIgnore" )
+	@Table(name = "PersonOneToOneSelectIgnore")
 	public static class PersonOneToOneSelectIgnore extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(mappedBy = "person", cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
-		@Fetch( FetchMode.SELECT )
+		@NotFound(action = NotFoundAction.IGNORE)
+		@Fetch(FetchMode.SELECT)
 		private Employment employment;
 
 		public Long getId() {

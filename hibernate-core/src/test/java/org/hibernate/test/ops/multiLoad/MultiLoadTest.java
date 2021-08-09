@@ -7,12 +7,15 @@
 package org.hibernate.test.ops.multiLoad;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Objects;
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.PostLoad;
 import javax.persistence.SharedCacheMode;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 
 import org.hibernate.CacheMode;
 import org.hibernate.annotations.BatchSize;
@@ -27,6 +30,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;
@@ -59,7 +63,7 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
-		return new Class[] { SimpleEntity.class };
+		return new Class[] { SimpleEntity.class, SimpleEntityWithMappingProblem.class };
 	}
 
 	@Override
@@ -447,6 +451,61 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-14775")
+	public void testMultiloadWithMappingError() {
+		final int numEntities = 10;
+		//create some entities
+		inTransaction(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					for (int i = 1; i <= numEntities; i++ ) {
+						session.save( new SimpleEntityWithMappingProblem( i, EnumWithMissingValue.EXISTING ) );
+					}
+				}
+		);
+		//simulate that there are some leftover enum values, possibly from a missing database migration
+		inTransaction(
+				session -> {
+					//1 is the ordinal of the "missing" value
+					final NativeQuery<?> nativeQuery = session.createNativeQuery(
+							"UPDATE SimpleEntityWithMappingProblem " +
+									"SET enumValue = 1 WHERE id = " + (numEntities / 2));
+					nativeQuery.executeUpdate();
+				}
+		);
+		inTransaction(
+				session -> {
+					session.setCacheMode( CacheMode.IGNORE );
+					sqlStatementInterceptor.getSqlQueries().clear();
+
+					try {
+						//load entities by multiload
+						session.byMultipleIds(SimpleEntityWithMappingProblem.class).multiLoad(ids(numEntities));
+					} catch (Exception e) {
+						log.error("We have a bad mapping here!", e);
+						//ignore error
+						// (in the current implementation happens on hydrating entity with nonexisting enum case)
+					}
+					List<SimpleEntityWithMappingProblem> list = new ArrayList<>();
+					//load entities in a different way
+					for (int i = 1; i <= numEntities; i++) {
+						try {
+							SimpleEntityWithMappingProblem entity =
+									session.find(SimpleEntityWithMappingProblem.class, i);
+							list.add(entity);
+						} catch (Exception e) {
+							log.error("We have a bad mapping here!", e);
+							//ignore error
+							// (does not happen in the current implementation)
+						}
+					}
+					assertTrue("PostLoad should have been executed on all loaded entities",
+							list.stream().filter(Objects::nonNull).allMatch(e -> e.postLoadExecuted));
+				}
+		);
+	}
+
 	private Integer[] ids(int count) {
 		Integer[] ids = new Integer[count];
 		for ( int i = 1; i <= count; i++ ) {
@@ -487,5 +546,53 @@ public class MultiLoadTest extends BaseNonConfigCoreFunctionalTestCase {
 		public void setText(String text) {
 			this.text = text;
 		}
+	}
+
+	@Entity( name = "SimpleEntityWithMappingProblem" )
+	@Table( name = "SimpleEntityWithMappingProblem" )
+	@Cacheable()
+	@BatchSize( size = 15 )
+	public static class SimpleEntityWithMappingProblem {
+		Integer id;
+
+		EnumWithMissingValue enumValue;
+
+		@Transient
+		boolean postLoadExecuted = false;
+
+		public SimpleEntityWithMappingProblem() {
+		}
+
+		public SimpleEntityWithMappingProblem(Integer id, EnumWithMissingValue enumValue) {
+			this.id = id;
+			this.enumValue = enumValue;
+		}
+
+		@Id
+		public Integer getId() {
+			return id;
+		}
+
+		public void setId(Integer id) {
+			this.id = id;
+		}
+
+		public EnumWithMissingValue getEnumValue() {
+			return enumValue;
+		}
+
+		public void setEnumValue(EnumWithMissingValue enumValue) {
+			this.enumValue = enumValue;
+		}
+
+		@PostLoad
+		public void postLoad() {
+			postLoadExecuted = true;
+		}
+	}
+
+	public enum EnumWithMissingValue {
+		EXISTING
+		/*, MISSING */ //possibly deleted by some developer in a real-world scenario
 	}
 }

@@ -318,7 +318,7 @@ public abstract class AbstractCollectionPersister
 			spaces[i] = (String) iter.next();
 		}
 
-		sqlWhereString = StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ? "( " + collectionBootDescriptor.getWhere() + ") " : null;
+		sqlWhereString = StringHelper.isNotEmpty( collectionBootDescriptor.getWhere() ) ? "(" + collectionBootDescriptor.getWhere() + ") " : null;
 		hasWhere = sqlWhereString != null;
 		sqlWhereStringTemplate = hasWhere ?
 				Template.renderWhereStringTemplate( sqlWhereString, dialect, factory.getQueryEngine().getSqmFunctionRegistry() ) :
@@ -1949,7 +1949,11 @@ public abstract class AbstractCollectionPersister
 			Set<String> treatAsDeclarations) {
 		StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator(alias), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+		final String filterFragment = filterFragment( alias, treatAsDeclarations );
+		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
+			sessionFilterFragment.append( " and " );
+		}
+		return sessionFilterFragment.append( filterFragment ).toString();
 	}
 
 	@Override
@@ -1982,7 +1986,11 @@ public abstract class AbstractCollectionPersister
 		}
 		StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, getFilterAliasGenerator( tableGroup ), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+		final String filterFragment = filterFragment( alias, treatAsDeclarations );
+		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
+			sessionFilterFragment.append( " and " );
+		}
+		return sessionFilterFragment.append( filterFragment ).toString();
 	}
 
 	@Override

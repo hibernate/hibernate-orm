@@ -69,7 +69,9 @@ import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclas
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.tuple.IdentifierProperty;
+import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
+import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 /**
@@ -168,7 +170,7 @@ public class ToOneAttributeMapping
 			else {
 				cardinality = Cardinality.MANY_TO_ONE;
 			}
-			this.bidirectionalAttributeName = null;
+			this.bidirectionalAttributeName = manyToOne.getReferencedPropertyName();
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -260,9 +262,24 @@ public class ToOneAttributeMapping
 			addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, identifierProperty.getType() );
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
-		else {
+		else if ( bootValue.isReferenceToPrimaryKey() ) {
 			this.targetKeyPropertyName = referencedPropertyName;
 			this.targetKeyPropertyNames = Collections.singleton( targetKeyPropertyName );
+		}
+		else {
+			final EntityMetamodel entityMetamodel = entityMappingType.getEntityPersister().getEntityMetamodel();
+			final int propertyIndex = entityMetamodel.getPropertyIndex( referencedPropertyName );
+			final Type propertyType = entityMetamodel.getPropertyTypes()[propertyIndex];
+			final CompositeType compositeType;
+			if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+					&& compositeType.getPropertyNames().length == 1 ) {
+				this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
+				this.targetKeyPropertyNames = Collections.singleton( targetKeyPropertyName );
+			}
+			else {
+				this.targetKeyPropertyName = referencedPropertyName;
+				this.targetKeyPropertyNames = Collections.singleton( targetKeyPropertyName );
+			}
 		}
 	}
 
@@ -724,7 +741,8 @@ public class ToOneAttributeMapping
 		boolean selectByUniqueKey;
 		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			// case 1.2
-			selectByUniqueKey = false;
+			selectByUniqueKey = !getKeyTargetMatchPart().getNavigableRole()
+					.equals( entityMappingType.getIdentifierMapping().getNavigableRole() );
 		}
 		else {
 			// case 1.1

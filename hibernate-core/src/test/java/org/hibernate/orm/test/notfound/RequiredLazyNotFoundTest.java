@@ -1,4 +1,4 @@
-package org.hibernate.test.notfound;
+package org.hibernate.orm.test.notfound;
 
 import java.io.Serializable;
 import javax.persistence.CascadeType;
@@ -17,54 +17,49 @@ import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-12436")
-public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				PersonManyToOneSelectException.class,
-				PersonOneToOneSelectException.class,
-				PersonMapsIdSelectException.class,
-				PersonPkjcSelectException.class,
-				PersonMapsIdColumnSelectException.class,
-				City.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
-	}
+@TestForIssue(jiraKey = "HHH-12436")
+@DomainModel(
+		annotatedClasses = {
+				RequiredLazyNotFoundTest.PersonManyToOneSelectException.class,
+				RequiredLazyNotFoundTest.PersonOneToOneSelectException.class,
+				RequiredLazyNotFoundTest.PersonMapsIdSelectException.class,
+				RequiredLazyNotFoundTest.PersonPkjcSelectException.class,
+				RequiredLazyNotFoundTest.PersonMapsIdColumnSelectException.class,
+				RequiredLazyNotFoundTest.City.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "true")
+		}
+)
+public class RequiredLazyNotFoundTest {
 
 	@Test
-	public void testOneToOneSelectException() {
-		setupTest( PersonOneToOneSelectException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneSelectException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneSelectException.class, 1L );
 					assertNotNull( pCheck );
 					assertFalse( Hibernate.isInitialized( pCheck.getCity() ) );
@@ -80,10 +75,10 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testManyToOneSelectException() {
-		setupTest( PersonManyToOneSelectException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testManyToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonManyToOneSelectException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonManyToOneSelectException.class, 1L );
 					assertNotNull( pCheck );
 					assertFalse( Hibernate.isInitialized( pCheck.getCity() ) );
@@ -99,10 +94,10 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testPkjcOneToOneSelectException() {
-		setupTest( PersonPkjcSelectException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testPkjcOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonPkjcSelectException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonPkjcSelectException.class, 1L );
 					assertNotNull( pCheck );
 					assertFalse( Hibernate.isInitialized( pCheck.getCity() ) );
@@ -118,10 +113,10 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMapsIdOneToOneSelectException() {
-		setupTest( PersonMapsIdSelectException.class, 1L, true );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testMapsIdOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdSelectException.class, 1L, true, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonMapsIdSelectException.class, 1L );
 					assertNotNull( pCheck );
 					assertFalse( Hibernate.isInitialized( pCheck.getCity() ) );
@@ -137,10 +132,10 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testMapsIdJoinColumnOneToOneSelectException() {
-		setupTest( PersonMapsIdColumnSelectException.class, 1L, true );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testMapsIdJoinColumnOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdColumnSelectException.class, 1L, true, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonMapsIdColumnSelectException.class, 1L );
 					assertNotNull( pCheck );
 					assertFalse( Hibernate.isInitialized( pCheck.getCity() ) );
@@ -155,24 +150,23 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId ) {
-		persistData( clazz, id, isMapsId );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
+		persistData( clazz, id, isMapsId, scope );
+		scope.inTransaction(
+				session -> {
 					Person p = session.find( clazz, id );
 					assertEquals( "New York", p.getCity().getName() );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.createNativeQuery( "delete from City where id = " + id )
-							.executeUpdate();
-				}
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "delete from City where id = " + id )
+								.executeUpdate()
 		);
 	}
 
-	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId) {
+	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
 		final Person person;
 		try {
 			person = clazz.newInstance();
@@ -181,8 +175,8 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 			throw new RuntimeException( ex );
 		}
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					City city = new City();
 					city.setId( id );
 					city.setName( "New York" );
@@ -204,17 +198,20 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
 
 		public abstract void setId(Long id);
+
 		public abstract City getCity();
+
 		public abstract void setCity(City city);
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneSelectException" )
+	@Table(name = "PersonOneToOneSelectException")
 	public static class PersonOneToOneSelectException extends Person {
 		@Id
 		private Long id;
@@ -242,7 +239,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneSelectException" )
+	@Table(name = "PersonManyToOneSelectException")
 	public static class PersonManyToOneSelectException extends Person {
 		@Id
 		private Long id;
@@ -270,7 +267,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcSelectException" )
+	@Table(name = "PersonPkjcSelectException")
 	public static class PersonPkjcSelectException extends Person {
 		@Id
 		private Long id;
@@ -299,7 +296,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdJoinException" )
+	@Table(name = "PersonMapsIdJoinException")
 	public static class PersonMapsIdJoinException extends Person {
 		@Id
 		private Long id;
@@ -328,7 +325,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdSelectException" )
+	@Table(name = "PersonMapsIdSelectException")
 	public static class PersonMapsIdSelectException extends Person {
 		@Id
 		private Long id;
@@ -357,7 +354,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnJoinException" )
+	@Table(name = "PersonMapsIdColumnJoinException")
 	public static class PersonMapsIdColumnJoinException extends Person {
 		@Id
 		private Long id;
@@ -386,7 +383,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnSelectExcept" )
+	@Table(name = "PersonMapsIdColumnSelectExcept")
 	public static class PersonMapsIdColumnSelectException extends Person {
 		@Id
 		private Long id;
@@ -415,7 +412,7 @@ public class RequiredLazyNotFoundTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity
-	@Table( name = "City" )
+	@Table(name = "City")
 	public static class City implements Serializable {
 
 		@Id

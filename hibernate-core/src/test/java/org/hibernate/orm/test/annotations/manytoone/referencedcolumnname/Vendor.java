@@ -6,10 +6,9 @@
  */
 
 //$
-package org.hibernate.test.annotations.manytoone.referencedcolumnname;
+package org.hibernate.orm.test.annotations.manytoone.referencedcolumnname;
 import javax.persistence.Entity;
 
-
 @Entity
-public class Item extends GenericObject {
+public class Vendor extends GenericObject {
 }

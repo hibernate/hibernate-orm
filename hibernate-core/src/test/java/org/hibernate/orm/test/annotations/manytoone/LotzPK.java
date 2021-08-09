@@ -6,24 +6,22 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytoone;
+package org.hibernate.orm.test.annotations.manytoone;
+import java.io.Serializable;
 import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import javax.persistence.Embeddable;
 
 /**
- * Color showing a surrogate key and a unique constraint to ensure business rule
- *
  * @author Emmanuel Bernard
  */
-@Entity
-public class Color {
+@Embeddable
+public class LotzPK implements Serializable {
+	@Column( name = "id", nullable = false )
 	private Integer id;
-	private String name;
 
-	@Id
-	@GeneratedValue
+	@Column( name = "loc_code", nullable = false, unique = true )
+	private String locCode;
+
 	public Integer getId() {
 		return id;
 	}
@@ -32,12 +30,11 @@ public class Color {
 		this.id = id;
 	}
 
-	@Column(unique = true)
-	public String getName() {
-		return name;
+	public String getLocCode() {
+		return locCode;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setLocCode(String locCode) {
+		this.locCode = locCode;
 	}
 }

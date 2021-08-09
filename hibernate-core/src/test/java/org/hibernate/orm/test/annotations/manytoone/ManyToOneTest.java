@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.manytoone;
+package org.hibernate.orm.test.annotations.manytoone;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -311,9 +311,9 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 		//2 many to one non pk pointing to the same referencedColumnName should not fail
 		Session s = openSession();
 		Transaction tx = s.beginTransaction();
-		org.hibernate.test.annotations.manytoone.Customer customer = new org.hibernate.test.annotations.manytoone.Customer();
+		org.hibernate.orm.test.annotations.manytoone.Customer customer = new org.hibernate.orm.test.annotations.manytoone.Customer();
 		customer.userId="123";
-		org.hibernate.test.annotations.manytoone.Customer customer2 = new org.hibernate.test.annotations.manytoone.Customer();
+		org.hibernate.orm.test.annotations.manytoone.Customer customer2 = new org.hibernate.orm.test.annotations.manytoone.Customer();
 		customer2.userId="124";
 		s.persist( customer2 );
 		s.persist( customer );
@@ -365,7 +365,7 @@ public class ManyToOneTest extends BaseCoreFunctionalTestCase {
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{
 				Deal.class,
-				org.hibernate.test.annotations.manytoone.Customer.class,
+				org.hibernate.orm.test.annotations.manytoone.Customer.class,
 				Car.class,
 				Color.class,
 				Flight.class,

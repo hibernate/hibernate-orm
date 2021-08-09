@@ -6,7 +6,7 @@
  */
 
 //$
-package org.hibernate.test.annotations.manytoone.referencedcolumnname;
+package org.hibernate.orm.test.annotations.manytoone.referencedcolumnname;
 import java.math.BigDecimal;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;

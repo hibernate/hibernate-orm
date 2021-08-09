@@ -233,9 +233,13 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	public SqmAliasedNode<?> findAliasedNodeByAlias(String alias) {
 		assert alias != null;
 
+		final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
+				? alias.toLowerCase( Locale.getDefault() )
+				: alias;
+
 		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
 			final SqmAliasedNode<?> node = simpleSelectionNodes.get( i );
-			if ( alias.equals( node.getAlias() ) ) {
+			if ( aliasToUse.equals( node.getAlias() ) ) {
 				return node;
 			}
 		}
@@ -249,11 +253,15 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			return null;
 		}
 
+		final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
+				? alias.toLowerCase( Locale.getDefault() )
+				: alias;
+
 		// NOTE : 1-based
 
 		for ( int i = 0; i < simpleSelectionNodes.size(); i++ ) {
 			final SqmAliasedNode<?> node = simpleSelectionNodes.get( i );
-			if ( alias.equals( node.getAlias() ) ) {
+			if ( aliasToUse.equals( node.getAlias() ) ) {
 				return i + 1;
 			}
 		}

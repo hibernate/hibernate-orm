@@ -62,17 +62,22 @@ import org.hibernate.type.UrlType;
 import org.hibernate.type.YesNoType;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
-public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctionalTestCase {
+@NotImplementedYet
+@DomainModel
+@SessionFactory
+public class StoredProcedureParameterTypeTest {
 
 	private static final String TEST_STRING = "test_string";
 	private static final char[] TEST_CHAR_ARRAY = TEST_STRING.toCharArray();
@@ -80,322 +85,322 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testNumericBooleanTypeInParameter() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createStoredProcedureQuery( "test" )
-					.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
-					.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
-					.setParameter( 1, false );
-		} );
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testYesNoTypeInParameter() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createStoredProcedureQuery( "test" )
-					.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
-					.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
-					.setParameter( 1, false );
-		} );
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testStringTypeInParameter() {
-		inTransaction(
-				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, StringType.class, ParameterMode.IN)
-						.setParameter(1, TEST_STRING)
+	public void testNumericBooleanTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery( "test" )
+							.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
+							.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
+							.setParameter( 1, false )
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testMaterializedClobTypeInParameter() {
-		inTransaction(
-				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, MaterializedClobType.class, ParameterMode.IN)
-						.setParameter(1, TEST_STRING)
+	public void testYesNoTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery( "test" )
+							.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
+							.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
+							.setParameter( 1, false )
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTextTypeInParameter() {
-		inTransaction(
+	public void testStringTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, TextType.class, ParameterMode.IN)
-						.setParameter(1, TEST_STRING)
+							.registerStoredProcedureParameter( 1, StringType.class, ParameterMode.IN)
+							.setParameter(1, TEST_STRING)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testCharacterTypeInParameter() {
-		inTransaction(
+	public void testMaterializedClobTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, CharacterType.class, ParameterMode.IN)
-						.setParameter(1, 'a')
+							.registerStoredProcedureParameter( 1, MaterializedClobType.class, ParameterMode.IN)
+							.setParameter(1, TEST_STRING)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTrueFalseTypeInParameter() {
-		inTransaction(
+	public void testTextTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, TrueFalseType.class, ParameterMode.IN)
-						.setParameter(1, false)
+							.registerStoredProcedureParameter( 1, TextType.class, ParameterMode.IN)
+							.setParameter(1, TEST_STRING)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testBooleanTypeInParameter() {
-		inTransaction(
+	public void testCharacterTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, BooleanType.class, ParameterMode.IN)
-						.setParameter(1, false)
+							.registerStoredProcedureParameter( 1, CharacterType.class, ParameterMode.IN)
+							.setParameter(1, 'a')
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testByteTypeInParameter() {
-		inTransaction(
+	public void testTrueFalseTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, ByteType.class, ParameterMode.IN)
-						.setParameter(1, (byte) 'a')
+							.registerStoredProcedureParameter( 1, TrueFalseType.class, ParameterMode.IN)
+							.setParameter(1, false)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testShortTypeInParameter() {
-		inTransaction(
+	public void testBooleanTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, ShortType.class, ParameterMode.IN)
-						.setParameter(1, (short) 2)
+							.registerStoredProcedureParameter( 1, BooleanType.class, ParameterMode.IN)
+							.setParameter(1, false)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testIntegerTypeInParameter() {
-		inTransaction(
+	public void testByteTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, IntegerType.class, ParameterMode.IN)
-						.setParameter(1, 2)
+							.registerStoredProcedureParameter( 1, ByteType.class, ParameterMode.IN)
+							.setParameter(1, (byte) 'a')
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testLongTypeInParameter() {
-		inTransaction(
+	public void testShortTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, LongType.class, ParameterMode.IN)
-						.setParameter(1, 2L)
-		);
-	}
-
-	@Test
-	public void testFloatTypeInParameter() {
-		inTransaction(
-				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, FloatType.class, ParameterMode.IN)
-						.setParameter(1, 2.0F)
+							.registerStoredProcedureParameter( 1, ShortType.class, ParameterMode.IN)
+							.setParameter(1, (short) 2)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testDoubleTypeInParameter() {
-		inTransaction(
+	public void testIntegerTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, DoubleType.class, ParameterMode.IN)
-						.setParameter(1, 2.0D)
+							.registerStoredProcedureParameter( 1, IntegerType.class, ParameterMode.IN)
+							.setParameter(1, 2)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testBigIntegerTypeInParameter() {
-		inTransaction(
+	public void testLongTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, BigIntegerType.class, ParameterMode.IN)
-						.setParameter( 1, BigInteger.ONE)
+							.registerStoredProcedureParameter( 1, LongType.class, ParameterMode.IN)
+							.setParameter(1, 2L)
+		);
+	}
+
+	@Test
+	public void testFloatTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery("test")
+							.registerStoredProcedureParameter( 1, FloatType.class, ParameterMode.IN)
+							.setParameter(1, 2.0F)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testBigDecimalTypeInParameter() {
-		inTransaction(
+	public void testDoubleTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, BigDecimalType.class, ParameterMode.IN)
-						.setParameter( 1, BigDecimal.ONE)
+							.registerStoredProcedureParameter( 1, DoubleType.class, ParameterMode.IN)
+							.setParameter(1, 2.0D)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTimestampTypeDateInParameter() {
-		inTransaction(
+	public void testBigIntegerTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, TimestampType.class, ParameterMode.IN)
-						.setParameter(1, new Date())
+							.registerStoredProcedureParameter( 1, BigIntegerType.class, ParameterMode.IN)
+							.setParameter( 1, BigInteger.ONE)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTimestampTypeTimestampInParameter() {
-		inTransaction(
+	public void testBigDecimalTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter(1, TimestampType.class, ParameterMode.IN)
-						.setParameter( 1, Timestamp.valueOf( LocalDateTime.now()))
+							.registerStoredProcedureParameter( 1, BigDecimalType.class, ParameterMode.IN)
+							.setParameter( 1, BigDecimal.ONE)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTimeTypeInParameter() {
-		inTransaction(
+	public void testTimestampTypeDateInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, TimeType.class, ParameterMode.IN)
-						.setParameter( 1, Time.valueOf( LocalTime.now()))
+							.registerStoredProcedureParameter( 1, TimestampType.class, ParameterMode.IN)
+							.setParameter(1, new Date())
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testDateTypeInParameter() {
-		inTransaction(
+	public void testTimestampTypeTimestampInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, DateType.class, ParameterMode.IN)
-						.setParameter(1, java.sql.Date.valueOf( LocalDate.now()))
+							.registerStoredProcedureParameter(1, TimestampType.class, ParameterMode.IN)
+							.setParameter( 1, Timestamp.valueOf( LocalDateTime.now()))
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testCalendarTypeCalendarInParameter() {
-		inTransaction(
+	public void testTimeTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, CalendarType.class, ParameterMode.IN)
-						.setParameter( 1, Calendar.getInstance())
+							.registerStoredProcedureParameter( 1, TimeType.class, ParameterMode.IN)
+							.setParameter( 1, Time.valueOf( LocalTime.now()))
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testCurrencyTypeInParameter() {
-		inTransaction(
+	public void testDateTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, CurrencyType.class, ParameterMode.IN)
-						.setParameter( 1, Currency.getAvailableCurrencies().iterator().next())
+							.registerStoredProcedureParameter( 1, DateType.class, ParameterMode.IN)
+							.setParameter(1, java.sql.Date.valueOf( LocalDate.now()))
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testLocaleTypeInParameter() {
-		inTransaction(
+	public void testCalendarTypeCalendarInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, LocaleType.class, ParameterMode.IN)
-						.setParameter( 1, Locale.ENGLISH)
+							.registerStoredProcedureParameter( 1, CalendarType.class, ParameterMode.IN)
+							.setParameter( 1, Calendar.getInstance())
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTimeZoneTypeInParameter() {
-		inTransaction(
+	public void testCurrencyTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, TimeZoneType.class, ParameterMode.IN)
-						.setParameter( 1, TimeZone.getTimeZone( ZoneId.systemDefault()))
+							.registerStoredProcedureParameter( 1, CurrencyType.class, ParameterMode.IN)
+							.setParameter( 1, Currency.getAvailableCurrencies().iterator().next())
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testUrlTypeInParameter() throws MalformedURLException {
+	public void testLocaleTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery("test")
+							.registerStoredProcedureParameter( 1, LocaleType.class, ParameterMode.IN)
+							.setParameter( 1, Locale.ENGLISH)
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
+	public void testTimeZoneTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery("test")
+							.registerStoredProcedureParameter( 1, TimeZoneType.class, ParameterMode.IN)
+							.setParameter( 1, TimeZone.getTimeZone( ZoneId.systemDefault()))
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
+	public void testUrlTypeInParameter(SessionFactoryScope scope) throws MalformedURLException {
 		final URL url = new URL( "http://example.com");
-		inTransaction(
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, UrlType.class, ParameterMode.IN)
-						.setParameter(1, url)
+							.registerStoredProcedureParameter( 1, UrlType.class, ParameterMode.IN)
+							.setParameter(1, url)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testClassTypeInParameter() {
-		inTransaction(
+	public void testClassTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, ClassType.class, ParameterMode.IN)
-						.setParameter(1, Class.class)
+							.registerStoredProcedureParameter( 1, ClassType.class, ParameterMode.IN)
+							.setParameter(1, Class.class)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testBlobTypeInParameter() throws SQLException {
+	public void testBlobTypeInParameter(SessionFactoryScope scope) throws SQLException {
 		final Blob blob = new SerialBlob( TEST_BYTE_ARRAY);
-		inTransaction(
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, BlobType.class, ParameterMode.IN)
-						.setParameter(1, blob)
+							.registerStoredProcedureParameter( 1, BlobType.class, ParameterMode.IN)
+							.setParameter(1, blob)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testClobTypeInParameter() throws SQLException {
+	public void testClobTypeInParameter(SessionFactoryScope scope) throws SQLException {
 		final Clob clob = new SerialClob( TEST_CHAR_ARRAY);
-		inTransaction(
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, ClobType.class, ParameterMode.IN)
-						.setParameter(1, clob)
+							.registerStoredProcedureParameter( 1, ClobType.class, ParameterMode.IN)
+							.setParameter(1, clob)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testBinaryTypeInParameter() {
-		inTransaction(
+	public void testBinaryTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, BinaryType.class, ParameterMode.IN)
-						.setParameter(1, TEST_BYTE_ARRAY)
+							.registerStoredProcedureParameter( 1, BinaryType.class, ParameterMode.IN)
+							.setParameter(1, TEST_BYTE_ARRAY)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testCharArrayTypeInParameter() {
-		inTransaction(
+	public void testCharArrayTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, CharArrayType.class, ParameterMode.IN)
-						.setParameter(1, TEST_CHAR_ARRAY)
+							.registerStoredProcedureParameter( 1, CharArrayType.class, ParameterMode.IN)
+							.setParameter(1, TEST_CHAR_ARRAY)
 		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testUUIDBinaryTypeInParameter() {
-		inTransaction(
+	public void testUUIDBinaryTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-						.registerStoredProcedureParameter( 1, UUIDBinaryType.class, ParameterMode.IN)
-						.setParameter( 1, UUID.randomUUID())
+							.registerStoredProcedureParameter( 1, UUIDBinaryType.class, ParameterMode.IN)
+							.setParameter( 1, UUID.randomUUID())
 		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12905")
-	public void testStringTypeInParameterIsNull() {
-		inTransaction(
+	public void testStringTypeInParameterIsNull(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
 					procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
@@ -406,8 +411,8 @@ public class StoredProcedureParameterTypeTest extends BaseNonConfigCoreFunctiona
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12905")
-	public void testStringTypeInParameterIsNullWithoutEnablePassingNulls() {
-		inTransaction(
+	public void testStringTypeInParameterIsNullWithoutEnablePassingNulls(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );

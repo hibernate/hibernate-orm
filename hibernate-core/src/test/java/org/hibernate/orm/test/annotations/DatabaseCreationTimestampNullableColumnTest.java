@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations;
+package org.hibernate.orm.test.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -14,33 +14,33 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Assert;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-11096" )
-public class DatabaseCreationTimestampNullableColumnTest extends BaseEntityManagerFunctionalTestCase {
-
-    @Override
-    protected Class<?>[] getAnnotatedClasses() {
-        return new Class<?>[]{
-                Person.class
-        };
-    }
+@RequiresDialectFeature( feature = DialectFeatureChecks.UsesStandardCurrentTimestampFunction.class )
+@Jpa(
+        annotatedClasses = {
+                DatabaseCreationTimestampNullableColumnTest.Person.class
+        }
+)
+public class DatabaseCreationTimestampNullableColumnTest {
 
     @Entity(name = "Person")
     public class Person {
@@ -119,14 +119,16 @@ public class DatabaseCreationTimestampNullableColumnTest extends BaseEntityManag
     }
 
     @Test
-    public void generatesCurrentTimestamp() {
-        doInJPA(this::entityManagerFactory, entityManager -> {
-            Person person = new Person();
-            person.setName("John Doe");
-            entityManager.persist(person);
+    public void generatesCurrentTimestamp(EntityManagerFactoryScope scope) {
+        scope.inTransaction(
+                entityManager -> {
+                    Person person = new Person();
+                    person.setName("John Doe");
+                    entityManager.persist(person);
 
-            entityManager.flush();
-            Assert.assertNotNull(person.getCreationDate());
-        });
+                    entityManager.flush();
+                    Assertions.assertNotNull(person.getCreationDate());
+                }
+        );
     }
 }

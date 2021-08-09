@@ -6,34 +6,36 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations;
+package org.hibernate.orm.test.annotations;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.InterpretationException;
 
-import org.junit.Test;
+import org.hibernate.test.annotations.Boat;
+import org.hibernate.test.annotations.Ferry;
+import org.hibernate.test.annotations.Port;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
 public class ConfigurationTest {
-    @Test
-	public void testDeclarativeMix() throws Exception {
+	@Test
+	public void testDeclarativeMix()  {
 		Configuration cfg = new Configuration();
-		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
+		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		SessionFactory sf = cfg.buildSessionFactory();
 		assertNotNull( sf );
@@ -47,10 +49,11 @@ public class ConfigurationTest {
 		s.close();
 		sf.close();
 	}
-     @Test
-	public void testIgnoringHbm() throws Exception {
+
+	@Test
+	public void testIgnoringHbm()  {
 		Configuration cfg = new Configuration();
-		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
+		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class" );
 
@@ -65,7 +68,7 @@ public class ConfigurationTest {
 							fail( "Boat should not be mapped" );
 						}
 						catch (IllegalArgumentException expected) {
-							assertTyping( SemanticException.class, expected.getCause() );
+							assertEquals( InterpretationException.class, expected.getCause().getClass() );
 							// expected outcome
 
 							// see org.hibernate.test.jpa.compliance.tck2_2.QueryApiTest#testInvalidQueryMarksTxnForRollback
@@ -84,10 +87,10 @@ public class ConfigurationTest {
 		}
 	}
 
-    @Test
-	public void testPrecedenceHbm() throws Exception {
+	@Test
+	public void testPrecedenceHbm()  {
 		Configuration cfg = new Configuration();
-		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
+		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAnnotatedClass( Boat.class );
 		SessionFactory sf = cfg.buildSessionFactory();
@@ -102,17 +105,18 @@ public class ConfigurationTest {
 		s.clear();
 		Transaction tx = s.beginTransaction();
 		boat = (Boat) s.get( Boat.class, boat.getId() );
-		assertTrue( "Annotation has precedence", 34 != boat.getWeight() );
+		assertTrue( 34 != boat.getWeight(), "Annotation has precedence" );
 		s.delete( boat );
 		//s.getTransaction().commit();
 		tx.commit();
 		s.close();
 		sf.close();
 	}
-     @Test
-	public void testPrecedenceAnnotation() throws Exception {
+
+	@Test
+	public void testPrecedenceAnnotation()  {
 		Configuration cfg = new Configuration();
-		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
+		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
 		cfg.addAnnotatedClass( Boat.class );
@@ -128,16 +132,17 @@ public class ConfigurationTest {
 		s.clear();
 		Transaction tx = s.beginTransaction();
 		boat = (Boat) s.get( Boat.class, boat.getId() );
-		assertTrue( "Annotation has precedence", 34 == boat.getWeight() );
+		assertTrue( 34 == boat.getWeight(), "Annotation has precedence" );
 		s.delete( boat );
 		tx.commit();
 		s.close();
 		sf.close();
 	}
-     @Test
-	public void testHbmWithSubclassExtends() throws Exception {
+
+	@Test
+	public void testHbmWithSubclassExtends()  {
 		Configuration cfg = new Configuration();
-		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
+		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.addClass( Ferry.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		SessionFactory sf = cfg.buildSessionFactory();
@@ -152,10 +157,11 @@ public class ConfigurationTest {
 		s.close();
 		sf.close();
 	}
-      @Test
-	public void testAnnReferencesHbm() throws Exception {
+
+	@Test
+	public void testAnnReferencesHbm()  {
 		Configuration cfg = new Configuration();
-		cfg.configure( "org/hibernate/test/annotations/hibernate.cfg.xml" );
+		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.addAnnotatedClass( Port.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		SessionFactory sf = cfg.buildSessionFactory();

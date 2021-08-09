@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.internal.StandardArraySemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 
 /**
  * A primitive array has a primary key consisting of the key columns + index column.
@@ -18,6 +20,11 @@ public class PrimitiveArray extends Array {
 
 	public boolean isPrimitiveArray() {
 		return true;
+	}
+
+	@Override
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		return StandardArraySemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {

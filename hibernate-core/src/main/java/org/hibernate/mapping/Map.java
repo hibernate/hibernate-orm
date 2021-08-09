@@ -8,6 +8,10 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.internal.StandardMapSemantics;
+import org.hibernate.collection.internal.StandardOrderedMapSemantics;
+import org.hibernate.collection.internal.StandardSortedMapSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.OrderedMapType;
@@ -24,6 +28,19 @@ public class Map extends IndexedCollection {
 	
 	public boolean isMap() {
 		return true;
+	}
+
+	@Override
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		if ( isSorted() ) {
+			return StandardSortedMapSemantics.INSTANCE;
+		}
+
+		if ( hasOrder() ) {
+			return StandardOrderedMapSemantics.INSTANCE;
+		}
+
+		return StandardMapSemantics.INSTANCE;
 	}
 
 	public CollectionType getDefaultCollectionType() {

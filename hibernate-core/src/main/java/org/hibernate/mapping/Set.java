@@ -10,6 +10,10 @@ import java.util.Iterator;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.internal.StandardOrderedSetSemantics;
+import org.hibernate.collection.internal.StandardSetSemantics;
+import org.hibernate.collection.internal.StandardSortedSetSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.OrderedSetType;
@@ -41,6 +45,19 @@ public class Set extends Collection {
 
 	public boolean isSet() {
 		return true;
+	}
+
+	@Override
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		if ( isSorted() ) {
+			return StandardSortedSetSemantics.INSTANCE;
+		}
+
+		if ( hasOrder() ) {
+			return StandardOrderedSetSemantics.INSTANCE;
+		}
+
+		return StandardSetSemantics.INSTANCE;
 	}
 
 	public CollectionType getDefaultCollectionType() {

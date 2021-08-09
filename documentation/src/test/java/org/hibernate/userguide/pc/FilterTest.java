@@ -213,7 +213,7 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
         )
         @Filter(
             name="activeAccount",
-            condition="{a}.active_status = :active"
+            condition="active_status = :active"
         )
         private List<Account> accounts = new ArrayList<>( );
 

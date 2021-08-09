@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.internal.StandardBagSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.type.BagType;
 import org.hibernate.type.CollectionType;
 
@@ -26,6 +28,11 @@ public class Bag extends Collection {
 
 	void createPrimaryKey() {
 		//create an index on the key columns??
+	}
+
+	@Override
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		return StandardBagSemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {

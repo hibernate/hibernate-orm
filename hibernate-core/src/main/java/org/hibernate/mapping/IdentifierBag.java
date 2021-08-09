@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.internal.StandardIdentifierBagSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.IdentifierBagType;
 
@@ -21,6 +23,11 @@ public class IdentifierBag extends IdentifierCollection {
 
 	public CollectionType getDefaultCollectionType() {
 		return new IdentifierBagType( getMetadata().getTypeConfiguration(), getRole(), getReferencedPropertyName() );
+	}
+
+	@Override
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		return StandardIdentifierBagSemantics.INSTANCE;
 	}
 
 	public Object accept(ValueVisitor visitor) {

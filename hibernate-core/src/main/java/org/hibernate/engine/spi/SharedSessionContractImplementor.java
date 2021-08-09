@@ -334,6 +334,13 @@ public interface SharedSessionContractImplementor
 	Object instantiate(String entityName, Serializable id) throws HibernateException;
 
 	/**
+	 * Instantiate the entity class of an EntityPersister, initializing with the given identifier.
+	 * This is more efficient than {@link #instantiate(String, Serializable)} but not always
+	 * interchangeable: a single persister might be responsible for multiple types.
+	 */
+	Object instantiate(EntityPersister persister, Serializable id) throws HibernateException;
+
+	/**
 	 * Execute an SQL Query
 	 */
 	List listCustomQuery(CustomQuery customQuery, QueryParameters queryParameters)

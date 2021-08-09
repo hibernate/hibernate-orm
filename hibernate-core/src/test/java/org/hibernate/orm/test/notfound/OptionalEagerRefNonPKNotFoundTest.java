@@ -1,4 +1,4 @@
-package org.hibernate.test.notfound;
+package org.hibernate.orm.test.notfound;
 
 import java.io.Serializable;
 import javax.persistence.CascadeType;
@@ -19,55 +19,55 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Gail Badner
  */
-@TestForIssue( jiraKey = "HHH-12436")
-public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12436")
+@DomainModel(
+		annotatedClasses = {
+				OptionalEagerRefNonPKNotFoundTest.PersonManyToOneJoinIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonManyToOneSelectIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonOneToOneJoinIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonOneToOneSelectIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonMapsIdJoinIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonMapsIdSelectIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonPkjcJoinException.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonPkjcJoinIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonPkjcSelectException.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonPkjcSelectIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonMapsIdColumnJoinIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.PersonMapsIdColumnSelectIgnore.class,
+				OptionalEagerRefNonPKNotFoundTest.City.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.SHOW_SQL, value = "true"),
+				@Setting(name = AvailableSettings.FORMAT_SQL, value = "true")
+		}
+)
+public class OptionalEagerRefNonPKNotFoundTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				PersonManyToOneJoinIgnore.class,
-				PersonManyToOneSelectIgnore.class,
-				PersonOneToOneJoinIgnore.class,
-				PersonOneToOneSelectIgnore.class,
-				PersonMapsIdJoinIgnore.class,
-				PersonMapsIdSelectIgnore.class,
-				PersonPkjcJoinException.class,
-				PersonPkjcJoinIgnore.class,
-				PersonPkjcSelectException.class,
-				PersonPkjcSelectIgnore.class,
-				PersonMapsIdColumnJoinIgnore.class,
-				PersonMapsIdColumnSelectIgnore.class,
-				City.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-
-		configuration.setProperty( AvailableSettings.SHOW_SQL, Boolean.TRUE.toString() );
-		configuration.setProperty( AvailableSettings.FORMAT_SQL, Boolean.TRUE.toString() );
-	}
 
 	@Test
-	public void testOneToOneJoinIgnore() {
-		setupTest( PersonOneToOneJoinIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneJoinIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneJoinIgnore.class, 1L );
 					checkIgnore( pCheck );
 				}
@@ -75,10 +75,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testOneToOneSelectIgnore() {
-		setupTest( PersonOneToOneSelectIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonOneToOneSelectIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonOneToOneSelectIgnore.class, 1L );
 					checkIgnore( pCheck );
 				}
@@ -86,10 +86,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testManyToOneJoinIgnore() {
-		setupTest( PersonManyToOneJoinIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testManyToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonManyToOneJoinIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonManyToOneJoinIgnore.class, 1L );
 					checkIgnore( pCheck );
 				}
@@ -97,10 +97,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testManyToOneSelectIgnore() {
-		setupTest( PersonManyToOneSelectIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testManyToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonManyToOneSelectIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonManyToOneSelectIgnore.class, 1L );
 					checkIgnore( pCheck );
 				}
@@ -108,10 +108,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testPkjcOneToOneJoinException() {
-		setupTest( PersonPkjcJoinException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testPkjcOneToOneJoinException(SessionFactoryScope scope) {
+		setupTest( PersonPkjcJoinException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonPkjcJoinException.class, 1L );
 					// @OneToOne @PrimaryKeyJoinColumn always assumes @NotFound(IGNORE)
 					checkIgnore( pCheck );
@@ -120,10 +120,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testPkjcOneToOneJoinIgnore() {
-		setupTest( PersonPkjcJoinIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testPkjcOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonPkjcJoinIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonPkjcJoinIgnore.class, 1L );
 					// Person is non-null and association is null.
 					checkIgnore( pCheck );
@@ -132,10 +132,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testPkjcOneToOneSelectException() {
-		setupTest( PersonPkjcSelectException.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testPkjcOneToOneSelectException(SessionFactoryScope scope) {
+		setupTest( PersonPkjcSelectException.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonPkjcSelectException.class, 1L );
 					// @OneToOne @PrimaryKeyJoinColumn always assumes @NotFound(IGNORE)
 					checkIgnore( pCheck );
@@ -144,10 +144,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testPkjcOneToOneSelectIgnore() {
-		setupTest( PersonPkjcSelectIgnore.class, 1L, false );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testPkjcOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonPkjcSelectIgnore.class, 1L, false, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonPkjcSelectIgnore.class, 1L );
 					// Person is non-null and association is null.
 					checkIgnore( pCheck );
@@ -156,10 +156,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testMapsIdOneToOneJoinIgnore() {
-		setupTest( PersonMapsIdJoinIgnore.class, 1L, true );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testMapsIdOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdJoinIgnore.class, 1L, true, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonMapsIdJoinIgnore.class, 1L );
 					// Person is non-null association is null.
 					checkIgnore( pCheck );
@@ -168,10 +168,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testMapsIdOneToOneSelectIgnore() {
-		setupTest( PersonMapsIdSelectIgnore.class, 1L, true );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testMapsIdOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdSelectIgnore.class, 1L, true, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonMapsIdSelectIgnore.class, 1L );
 					// Person is non-null association is null.
 					checkIgnore( pCheck );
@@ -180,10 +180,10 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testMapsIdJoinColumnOneToOneJoinIgnore() {
-		setupTest( PersonMapsIdColumnJoinIgnore.class, 1L, true );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testMapsIdJoinColumnOneToOneJoinIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdColumnJoinIgnore.class, 1L, true, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonMapsIdColumnJoinIgnore.class, 1L );
 					checkIgnore( pCheck );
 				}
@@ -191,34 +191,33 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Test
-	public void testMapsIdJoinColumnOneToOneSelectIgnore() {
-		setupTest( PersonMapsIdColumnSelectIgnore.class, 1L, true );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	public void testMapsIdJoinColumnOneToOneSelectIgnore(SessionFactoryScope scope) {
+		setupTest( PersonMapsIdColumnSelectIgnore.class, 1L, true, scope );
+		scope.inTransaction(
+				session -> {
 					Person pCheck = session.find( PersonMapsIdColumnSelectIgnore.class, 1L );
 					checkIgnore( pCheck );
 				}
 		);
 	}
 
-	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId ) {
-		persistData( clazz, id, isMapsId );
-		doInHibernate(
-				this::sessionFactory, session -> {
+	private <T extends Person> void setupTest(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
+		persistData( clazz, id, isMapsId, scope );
+		scope.inTransaction(
+				session -> {
 					Person p = session.find( clazz, id );
 					assertEquals( "New York", p.getCity().getName() );
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory, session -> {
-					session.createNativeQuery( "delete from City where id = " + id )
-							.executeUpdate();
-				}
+		scope.inTransaction(
+				session ->
+						session.createNativeQuery( "delete from City where id = " + id )
+								.executeUpdate()
 		);
 	}
 
-	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId) {
+	private <T extends Person> void persistData(Class<T> clazz, long id, boolean isMapsId, SessionFactoryScope scope) {
 		final Person person;
 		try {
 			person = clazz.newInstance();
@@ -227,8 +226,8 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 			throw new RuntimeException( ex );
 		}
 
-		doInHibernate(
-				this::sessionFactory, session -> {
+		scope.inTransaction(
+				session -> {
 					City city = new City();
 					city.setId( id );
 					city.setName( "New York" );
@@ -259,17 +258,20 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 		public String getName() {
 			return name;
 		}
+
 		public void setName(String name) {
 			this.name = name;
 		}
 
 		public abstract void setId(Long id);
+
 		public abstract City getCity();
+
 		public abstract void setCity(City city);
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneJoinException" )
+	@Table(name = "PersonOneToOneJoinException")
 	public static class PersonOneToOneJoinException extends Person {
 		@Id
 		private Long id;
@@ -280,7 +282,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private City city;
 
 		public Long getId() {
@@ -302,19 +304,19 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneJoinIgnore" )
+	@Table(name = "PersonOneToOneJoinIgnore")
 	public static class PersonOneToOneJoinIgnore extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private City city;
 
 		public Long getId() {
@@ -336,7 +338,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneSelectException" )
+	@Table(name = "PersonOneToOneSelectException")
 	public static class PersonOneToOneSelectException extends Person {
 		@Id
 		private Long id;
@@ -347,7 +349,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private City city;
 
 		public Long getId() {
@@ -369,19 +371,19 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonOneToOneSelectIgnore" )
+	@Table(name = "PersonOneToOneSelectIgnore")
 	public static class PersonOneToOneSelectIgnore extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private City city;
 
 		public Long getId() {
@@ -403,7 +405,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneJoinException" )
+	@Table(name = "PersonManyToOneJoinException")
 	public static class PersonManyToOneJoinException extends Person {
 		@Id
 		private Long id;
@@ -414,7 +416,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private City city;
 
 		public Long getId() {
@@ -436,19 +438,19 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneJoinIgnore" )
+	@Table(name = "PersonManyToOneJoinIgnore")
 	public static class PersonManyToOneJoinIgnore extends Person {
 		@Id
 		private Long id;
 
 		@ManyToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		private City city;
 
 		public Long getId() {
@@ -470,7 +472,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneSelectException" )
+	@Table(name = "PersonManyToOneSelectException")
 	public static class PersonManyToOneSelectException extends Person {
 		@Id
 		private Long id;
@@ -481,7 +483,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private City city;
 
 		public Long getId() {
@@ -503,19 +505,19 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonManyToOneSelectIgnore" )
+	@Table(name = "PersonManyToOneSelectIgnore")
 	public static class PersonManyToOneSelectIgnore extends Person {
 		@Id
 		private Long id;
 
 		@ManyToOne(cascade = CascadeType.PERSIST)
-		@NotFound( action = NotFoundAction.IGNORE )
+		@NotFound(action = NotFoundAction.IGNORE)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
 				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT)
 		)
-		@Fetch( FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		private City city;
 
 		public Long getId() {
@@ -537,14 +539,14 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcJoinException" )
+	@Table(name = "PersonPkjcJoinException")
 	public static class PersonPkjcJoinException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -571,7 +573,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcJoinIgnore" )
+	@Table(name = "PersonPkjcJoinIgnore")
 	public static class PersonPkjcJoinIgnore extends Person {
 		@Id
 		private Long id;
@@ -579,7 +581,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -606,14 +608,14 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcSelectException" )
+	@Table(name = "PersonPkjcSelectException")
 	public static class PersonPkjcSelectException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -640,7 +642,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonPkjcSelectIgnore" )
+	@Table(name = "PersonPkjcSelectIgnore")
 	public static class PersonPkjcSelectIgnore extends Person {
 		@Id
 		private Long id;
@@ -648,7 +650,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 		@OneToOne(cascade = CascadeType.PERSIST)
 		@PrimaryKeyJoinColumn
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -675,14 +677,14 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdJoinException" )
+	@Table(name = "PersonMapsIdJoinException")
 	public static class PersonMapsIdJoinException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne
 		@MapsId
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -709,7 +711,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdJoinIgnore" )
+	@Table(name = "PersonMapsIdJoinIgnore")
 	public static class PersonMapsIdJoinIgnore extends Person {
 		@Id
 		private Long id;
@@ -717,7 +719,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 		@OneToOne
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.JOIN )
+		@Fetch(FetchMode.JOIN)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -744,14 +746,14 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdSelectException" )
+	@Table(name = "PersonMapsIdSelectException")
 	public static class PersonMapsIdSelectException extends Person {
 		@Id
 		private Long id;
 
 		@OneToOne
 		@MapsId
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -778,7 +780,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdSelectIgnore" )
+	@Table(name = "PersonMapsIdSelectIgnore")
 	public static class PersonMapsIdSelectIgnore extends Person {
 		@Id
 		private Long id;
@@ -786,7 +788,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 		@OneToOne
 		@MapsId
 		@NotFound(action = NotFoundAction.IGNORE)
-		@Fetch(FetchMode.SELECT )
+		@Fetch(FetchMode.SELECT)
 		@JoinColumn(
 				name = "cityName",
 				referencedColumnName = "name",
@@ -813,7 +815,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnJoinException" )
+	@Table(name = "PersonMapsIdColumnJoinException")
 	public static class PersonMapsIdColumnJoinException extends Person {
 		@Id
 		private Long id;
@@ -847,7 +849,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnJoinIgnore" )
+	@Table(name = "PersonMapsIdColumnJoinIgnore")
 	public static class PersonMapsIdColumnJoinIgnore extends Person {
 		@Id
 		private Long id;
@@ -882,7 +884,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnSelectException" )
+	@Table(name = "PersonMapsIdColumnSelectException")
 	public static class PersonMapsIdColumnSelectException extends Person {
 		@Id
 		private Long id;
@@ -916,7 +918,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "PersonMapsIdColumnSelectIgnore" )
+	@Table(name = "PersonMapsIdColumnSelectIgnore")
 	public static class PersonMapsIdColumnSelectIgnore extends Person {
 		@Id
 		private Long id;
@@ -951,7 +953,7 @@ public class OptionalEagerRefNonPKNotFoundTest extends BaseCoreFunctionalTestCas
 	}
 
 	@Entity
-	@Table( name = "City" )
+	@Table(name = "City")
 	public static class City implements Serializable {
 
 		@Id

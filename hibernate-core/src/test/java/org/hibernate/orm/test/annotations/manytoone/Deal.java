@@ -6,17 +6,20 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytoone;
-import java.io.Serializable;
+package org.hibernate.orm.test.annotations.manytoone;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 /**
  * @author Emmanuel Bernard
  */
-@Entity(name="DealedCustomer")
-public class Customer implements Serializable {
+@Entity
+public class Deal {
 	@Id @GeneratedValue public Integer id;
-	public String userId;
+	@ManyToOne @JoinColumn(referencedColumnName = "userId") public Customer from;
+	@ManyToOne @JoinColumn(referencedColumnName = "userId") public Customer to;
+
 }

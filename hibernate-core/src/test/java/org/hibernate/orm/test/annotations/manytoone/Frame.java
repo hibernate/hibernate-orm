@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytoone;
+package org.hibernate.orm.test.annotations.manytoone;
 import java.io.Serializable;
 import java.util.Set;
 

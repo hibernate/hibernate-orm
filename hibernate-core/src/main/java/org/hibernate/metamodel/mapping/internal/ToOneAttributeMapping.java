@@ -890,14 +890,15 @@ public class ToOneAttributeMapping
 						sqlExpressionResolver,
 						creationContext
 				),
-				np -> {
+				(np, tableExpression) -> {
 					if ( !canUseParentTableGroup ) {
 						return false;
 					}
 					NavigablePath path = np.getParent();
 					// Fast path
 					if ( path != null && navigablePath.equals( path ) ) {
-						return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() );
+						return targetKeyPropertyNames.contains( np.getUnaliasedLocalName() )
+								&& identifyingColumnsTableExpression.equals( tableExpression );
 					}
 					final StringBuilder sb = new StringBuilder( np.getFullPath().length() );
 					sb.append( np.getUnaliasedLocalName() );
@@ -906,9 +907,9 @@ public class ToOneAttributeMapping
 						sb.insert( 0, path.getUnaliasedLocalName() );
 						path = path.getParent();
 					}
-					return path != null && navigablePath.equals( path ) && targetKeyPropertyNames.contains(
-							sb.toString()
-					);
+					return path != null && navigablePath.equals( path )
+							&& targetKeyPropertyNames.contains( sb.toString() )
+							&& identifyingColumnsTableExpression.equals( tableExpression );
 				},
 				this,
 				explicitSourceAlias,

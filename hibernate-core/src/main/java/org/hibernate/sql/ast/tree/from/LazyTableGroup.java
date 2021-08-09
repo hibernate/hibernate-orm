@@ -9,7 +9,7 @@ package org.hibernate.sql.ast.tree.from;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
+import java.util.function.BiPredicate;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -30,7 +30,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	private final SessionFactoryImplementor sessionFactory;
 	private final Supplier<TableGroup> tableGroupSupplier;
 	private final TableGroup parentTableGroup;
-	private final Predicate<NavigablePath> navigablePathChecker;
+	private final BiPredicate<NavigablePath, String> navigablePathChecker;
 	private Consumer<TableGroup> tableGroupConsumer;
 	private TableGroup tableGroup;
 
@@ -38,7 +38,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
 			Supplier<TableGroup> tableGroupSupplier,
-			Predicate<NavigablePath> navigablePathChecker,
+			BiPredicate<NavigablePath, String> navigablePathChecker,
 			TableGroupProducer tableGroupProducer,
 			String sourceAlias,
 			SqlAliasBase sqlAliasBase,
@@ -159,7 +159,28 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	public TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
 			String tableExpression) {
-		if ( navigablePath == null || navigablePathChecker.test( navigablePath ) ) {
+		/*
+		 todo (6.0): I think this could still return the wrong table reference in the following scenario
+		  a self-referential many-to-one association with a non-PK FK is join fetched
+		  The fetch for the property which is the FK target would be read from the parent which is wrong
+
+		 @Entity
+		 class Book {
+		   @Id int id;
+		   String isbn;
+		   @ManyToOne
+		   @JoinColumn(name = "parentIsbn", referenceColumnName = "isbn")
+		   Book parentBook;
+		 }
+
+		 For data [Book(isbn=123),Book(isbn=456, parentBook=123)] the query
+		 `from Book b join fetch b.parentBook where b.isbn = '456'`
+		 would lead to to fetching [Book(isbn=123),Book(isbn=123, parentBook=123)].
+		 I think the solution for this would be to pass a boolean flag to skip the parent table group,
+		 which is always set when resolving for a fetch since the fetch needs the target property value
+		*/
+
+		if ( navigablePath == null || navigablePathChecker.test( navigablePath, tableExpression ) ) {
 			final TableReference reference = parentTableGroup.getTableReference(
 					navigablePath,
 					tableExpression

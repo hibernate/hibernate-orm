@@ -6,7 +6,7 @@
  */
 
 //$
-package org.hibernate.test.annotations.manytoone.referencedcolumnname;
+package org.hibernate.orm.test.annotations.manytoone.referencedcolumnname;
 import java.io.Serializable;
 import java.rmi.server.UID;
 import javax.persistence.GeneratedValue;

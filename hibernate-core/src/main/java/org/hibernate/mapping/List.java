@@ -8,6 +8,8 @@ package org.hibernate.mapping;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.collection.internal.StandardListSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ListType;
 
@@ -26,6 +28,11 @@ public class List extends IndexedCollection {
 
 	public List(MetadataBuildingContext buildingContext, PersistentClass owner) {
 		super( buildingContext, owner );
+	}
+
+	@Override
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		return StandardListSemantics.INSTANCE;
 	}
 
 	public CollectionType getDefaultCollectionType() throws MappingException {

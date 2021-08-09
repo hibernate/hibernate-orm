@@ -31,53 +31,6 @@ public class StandardCollectionSemanticsResolver implements CollectionSemanticsR
 
 	@Override
 	public CollectionSemantics resolveRepresentation(Collection bootDescriptor) {
-		if ( bootDescriptor instanceof PrimitiveArray ) {
-			return StandardArraySemantics.INSTANCE;
-		}
-
-		if ( bootDescriptor instanceof Array ) {
-			return StandardArraySemantics.INSTANCE;
-		}
-
-		if ( bootDescriptor instanceof Bag ) {
-			return StandardBagSemantics.INSTANCE;
-		}
-
-		if ( bootDescriptor instanceof IdentifierBag ) {
-			return StandardIdentifierBagSemantics.INSTANCE;
-		}
-		
-		if ( bootDescriptor instanceof List ) {
-			return StandardListSemantics.INSTANCE;
-		}
-
-		if ( bootDescriptor instanceof Map ) {
-			if ( bootDescriptor.isSorted() ) {
-				return StandardSortedMapSemantics.INSTANCE;
-			}
-
-			if ( bootDescriptor.hasOrder() ) {
-				return StandardOrderedMapSemantics.INSTANCE;
-			}
-
-			return StandardMapSemantics.INSTANCE;
-		}
-
-		if ( bootDescriptor instanceof Set ) {
-			if ( bootDescriptor.isSorted() ) {
-				return StandardSortedSetSemantics.INSTANCE;
-			}
-
-			if ( bootDescriptor.hasOrder() ) {
-				return StandardOrderedSetSemantics.INSTANCE;
-			}
-
-			return StandardSetSemantics.INSTANCE;
-		}
-
-		throw new MappingException(
-				"Unexpected org.hibernate.mapping.Collection impl ["
-						+  bootDescriptor + "]; unknown CollectionSemantics"
-		);
+		return bootDescriptor.getCollectionSemantics();
 	}
 }

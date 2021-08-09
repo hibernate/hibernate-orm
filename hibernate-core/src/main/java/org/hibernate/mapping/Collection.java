@@ -20,6 +20,8 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.collection.internal.CustomCollectionTypeSemantics;
+import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
@@ -386,6 +388,29 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 
 	public Type getType() throws MappingException {
 		return getCollectionType();
+	}
+
+	public CollectionSemantics getCollectionSemantics() {
+		if ( typeName == null ) {
+			return getDefaultCollectionSemantics();
+		}
+		else {
+			final CollectionType collectionType = MappingHelper.customCollection(
+					typeName,
+					typeParameters,
+					role,
+					referencedPropertyName,
+					getMetadata()
+			);
+			return new CustomCollectionTypeSemantics( collectionType );
+		}
+	}
+
+	public CollectionSemantics getDefaultCollectionSemantics() {
+		throw new MappingException(
+				"Unexpected org.hibernate.mapping.Collection impl ["
+						+  this + "]; unknown CollectionSemantics"
+		);
 	}
 
 	public CollectionType getCollectionType() {

@@ -1765,7 +1765,14 @@ public abstract class Loader {
 		}
 		else {
 			// instantiate a new instance
-			object = session.instantiate( instanceClass, key.getIdentifier() );
+			if ( persister.hasSubclasses() ) {
+				object = session.instantiate( instanceClass , key.getIdentifier() );
+			}
+			else {
+				//When there are no subclasses, use the persister instance directly
+				//so to short-circuit the persister lookup:
+				object = session.instantiate( persister, key.getIdentifier() );
+			}
 		}
 
 		//need to hydrate it.

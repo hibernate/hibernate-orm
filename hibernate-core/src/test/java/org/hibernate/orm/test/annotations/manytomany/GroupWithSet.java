@@ -6,13 +6,12 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytomany;
-import java.util.Collection;
+package org.hibernate.orm.test.annotations.manytomany;
+
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
@@ -29,9 +28,9 @@ import org.hibernate.annotations.WhereJoinTable;
 @Entity
 @Table(name = "tbl_group")
 @FilterDef(name="Groupfilter")
-public class Group {
+public class GroupWithSet {
 	private Integer id;
-	private Collection<Permission> permissions;
+	private Set<Permission> permissions;
 
 	@Id
 	public Integer getId() {
@@ -48,11 +47,11 @@ public class Group {
 	@WhereJoinTable(clause = "2=2")
 	@Filter(name="Groupfilter", condition = "3=3")
 	@FilterJoinTable(name="Groupfilter", condition = "4=4")
-	public Collection<Permission> getPermissions() {
+	public Set<Permission> getPermissions() {
 		return permissions;
 	}
 
-	public void setPermissions(Collection<Permission> permissions) {
+	public void setPermissions(Set<Permission> permissions) {
 		this.permissions = permissions;
 	}
 }

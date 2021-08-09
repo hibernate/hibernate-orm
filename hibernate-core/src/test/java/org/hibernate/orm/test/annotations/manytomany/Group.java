@@ -6,9 +6,8 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytomany;
-
-import java.util.Set;
+package org.hibernate.orm.test.annotations.manytomany;
+import java.util.Collection;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -28,9 +27,9 @@ import org.hibernate.annotations.WhereJoinTable;
 @Entity
 @Table(name = "tbl_group")
 @FilterDef(name="Groupfilter")
-public class GroupWithSet {
+public class Group {
 	private Integer id;
-	private Set<Permission> permissions;
+	private Collection<Permission> permissions;
 
 	@Id
 	public Integer getId() {
@@ -47,11 +46,11 @@ public class GroupWithSet {
 	@WhereJoinTable(clause = "2=2")
 	@Filter(name="Groupfilter", condition = "3=3")
 	@FilterJoinTable(name="Groupfilter", condition = "4=4")
-	public Set<Permission> getPermissions() {
+	public Collection<Permission> getPermissions() {
 		return permissions;
 	}
 
-	public void setPermissions(Set<Permission> permissions) {
+	public void setPermissions(Collection<Permission> permissions) {
 		this.permissions = permissions;
 	}
 }

@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytomany;
+package org.hibernate.orm.test.annotations.manytomany;
 import java.io.Serializable;
 import javax.persistence.Column;
 

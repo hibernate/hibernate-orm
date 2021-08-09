@@ -811,7 +811,7 @@ public abstract class AbstractEntityPersister
 		//WHERE STRING
 
 		sqlWhereString = StringHelper.isNotEmpty( bootDescriptor.getWhere() ) ?
-				"( " + bootDescriptor.getWhere() + ") " :
+				"(" + bootDescriptor.getWhere() + ") " :
 				null;
 		sqlWhereStringTemplate = sqlWhereString == null ?
 				null :
@@ -4191,7 +4191,11 @@ public abstract class AbstractEntityPersister
 	public String filterFragment(String alias, Map<String, Filter> enabledFilters, Set<String> treatAsDeclarations) {
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, alias == null ? null : getFilterAliasGenerator( alias ), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+		final String filterFragment = filterFragment( alias, treatAsDeclarations );
+		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
+			sessionFilterFragment.append( " and " );
+		}
+		return sessionFilterFragment.append( filterFragment ).toString();
 	}
 
 	@Override
@@ -4212,7 +4216,11 @@ public abstract class AbstractEntityPersister
 		}
 		final StringBuilder sessionFilterFragment = new StringBuilder();
 		filterHelper.render( sessionFilterFragment, !useIdentificationVariable || tableGroup == null ? null : getFilterAliasGenerator( tableGroup ), enabledFilters );
-		return sessionFilterFragment.append( filterFragment( alias, treatAsDeclarations ) ).toString();
+		final String filterFragment = filterFragment( alias, treatAsDeclarations );
+		if ( sessionFilterFragment.length() != 0 && !filterFragment.isEmpty() ) {
+			sessionFilterFragment.append( " and " );
+		}
+		return sessionFilterFragment.append( filterFragment ).toString();
 	}
 
 	public String generateFilterConditionAlias(String rootAlias) {

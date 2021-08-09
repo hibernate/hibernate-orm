@@ -11,12 +11,10 @@ import java.util.Date;
 import java.util.List;
 
 import org.hibernate.Hibernate;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +34,6 @@ public class AuctionTest {
 
 	@Test
 	@SuppressWarnings({ "unchecked" })
-	@SkipForDialect(dialectClass = PostgreSQL81Dialect.class, matchSubTypes = true, reason = "doesn't like boolean=1")
 	public void testLazy(SessionFactoryScope scope) {
 		Auction auction = new Auction();
 		auction.setEnd( new Date() );

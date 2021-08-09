@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytomany;
+package org.hibernate.orm.test.annotations.manytomany;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -36,7 +36,7 @@ public class Employer implements Serializable {
 	private List contractors;
 
 	@ManyToMany(
-			targetEntity = org.hibernate.test.annotations.manytomany.Contractor.class,
+			targetEntity = Contractor.class,
 			cascade = {CascadeType.PERSIST, CascadeType.MERGE}
 	)
 	@JoinTable(
@@ -55,7 +55,7 @@ public class Employer implements Serializable {
 	}
 
 	@ManyToMany(
-			targetEntity = org.hibernate.test.annotations.manytomany.Employee.class,
+			targetEntity = Employee.class,
 			cascade = {CascadeType.PERSIST, CascadeType.MERGE}
 	)
 	@JoinTable(

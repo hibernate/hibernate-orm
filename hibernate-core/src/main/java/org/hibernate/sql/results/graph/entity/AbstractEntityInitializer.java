@@ -501,9 +501,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				}
 			}
 		}
-		notifyParentResolutionListeners( entityInstance );
-
-		preLoad( rowProcessingState );
 	}
 
 	/**
@@ -636,6 +633,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		if ( missing ) {
 			return;
 		}
+		notifyParentResolutionListeners( entityInstance );
+		preLoad( rowProcessingState );
+
 		final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState().getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
 

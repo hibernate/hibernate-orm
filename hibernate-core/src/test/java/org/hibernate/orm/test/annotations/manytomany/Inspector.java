@@ -6,18 +6,31 @@
  */
 
 //$Id$
-package org.hibernate.test.annotations.manytomany;
+package org.hibernate.orm.test.annotations.manytomany;
 import java.io.Serializable;
 import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 
 /**
  * @author Emmanuel Bernard
  */
-@MappedSuperclass
-public class Company implements Serializable {
-	@Column
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED)
+class Inspector implements Serializable {
+	@Id
+	@GeneratedValue
+	@Column(name = "id")
+	private Long _id;
+
 	private String name;
+
+	public Long getId() {
+		return _id;
+	}
 
 	public String getName() {
 		return name;
@@ -27,3 +40,4 @@ public class Company implements Serializable {
 		this.name = name;
 	}
 }
+

@@ -321,7 +321,7 @@ public interface SharedSessionContractImplementor
 
 	/**
 	 * Instantiate the entity class of an EntityPersister, initializing with the given identifier.
-	 * This is more efficient than {@link #instantiate(String, Serializable)} but not always
+	 * This is more efficient than {@link #instantiate(String, Object)} but not always
 	 * interchangeable: a single persister might be responsible for multiple types.
 	 */
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;

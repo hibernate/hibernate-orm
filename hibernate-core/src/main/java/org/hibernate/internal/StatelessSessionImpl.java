@@ -171,7 +171,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return get( getFactory().getMetamodel().entityPersister( entityName ), id, lockMode );
 	}
 
-	protected Object get(final EntityPersister ep, final Serializable id, final LockMode lockMode) {
+	protected Object get(final EntityPersister ep, final Object id, final LockMode lockMode) {
 		checkOpen();
 
 		Object result = ep.load( id, null, getNullSafeLockMode( lockMode ), this );

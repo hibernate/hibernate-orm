@@ -167,12 +167,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object get(Class entityClass, Serializable id) {
-		return get( entityClass, id, LockMode.NONE );
+		return get( entityClass.getName(), id );
 	}
 
 	@Override
 	public Object get(Class entityClass, Serializable id, LockMode lockMode) {
-		return get( getFactory().getMetamodel().entityPersister( entityClass ), id, lockMode );
+		return get( entityClass.getName(), id, lockMode );
 	}
 
 	@Override
@@ -182,13 +182,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object get(String entityName, Serializable id, LockMode lockMode) {
-		return get( getFactory().getMetamodel().entityPersister( entityName ), id, lockMode );
-	}
-
-	protected Object get(final EntityPersister ep, final Serializable id, final LockMode lockMode) {
 		checkOpen();
 
-		Object result = ep.load( id, null, getNullSafeLockMode( lockMode ), this );
+		Object result = getFactory().getMetamodel().entityPersister( entityName )
+				.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -499,7 +496,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			throws HibernateException {
 		checkOpen();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( object.getClass() );
+			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
 		}
 		else {
 			return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );

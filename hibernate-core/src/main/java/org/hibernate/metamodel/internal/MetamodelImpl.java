@@ -142,29 +142,6 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 
-	// EntityPersister by Class is very hot: optimize access with a ClassValue
-	private final ClassValue<EntityPersister> entityPersisterMapByClass = new ClassValue() {
-		@Override
-		protected EntityPersister computeValue(final Class type) {
-			return entityPersisterMap.get( type.getName() );
-		}
-	};
-
-	// "full location" of an EntityPersister by Class is also hot: optimize access with a ClassValue
-	private final ClassValue<EntityPersister> locateEntityPersisterMapByClass = new ClassValue() {
-		@Override
-		protected EntityPersister computeValue(final Class type) {
-			EntityPersister entityPersister = entityPersisterMapByClass.get( type );
-			if ( entityPersister == null ) {
-				String mappedEntityName = entityProxyInterfaceMap.get( type );
-				if ( mappedEntityName != null ) {
-					entityPersister = entityPersisterMap.get( mappedEntityName );
-				}
-			}
-			return entityPersister;
-		}
-	};
-
 	public MetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
 		this.typeConfiguration = typeConfiguration;
@@ -717,7 +694,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	@Override
 	public EntityPersister entityPersister(Class entityClass) {
-		return entityPersisterMapByClass.get( entityClass );
+		return entityPersister( entityClass.getName() );
 	}
 
 	@Override
@@ -729,12 +706,21 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		return result;
 	}
 
+
 	@Override
-	public EntityPersister locateEntityPersister(final Class byClass) {
-		EntityPersister entityPersister = locateEntityPersisterMapByClass.get( byClass );
+	public EntityPersister locateEntityPersister(Class byClass) {
+		EntityPersister entityPersister = entityPersisterMap.get( byClass.getName() );
+		if ( entityPersister == null ) {
+			String mappedEntityName = entityProxyInterfaceMap.get( byClass );
+			if ( mappedEntityName != null ) {
+				entityPersister = entityPersisterMap.get( mappedEntityName );
+			}
+		}
+
 		if ( entityPersister == null ) {
 			throw new UnknownEntityTypeException( "Unable to locate persister: " + byClass.getName() );
 		}
+
 		return entityPersister;
 	}
 

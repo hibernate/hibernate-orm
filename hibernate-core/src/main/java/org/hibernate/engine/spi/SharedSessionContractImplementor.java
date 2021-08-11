@@ -320,6 +320,13 @@ public interface SharedSessionContractImplementor
 	Object instantiate(String entityName, Object id) throws HibernateException;
 
 	/**
+	 * Instantiate the entity class of an EntityPersister, initializing with the given identifier.
+	 * This is more efficient than {@link #instantiate(String, Serializable)} but not always
+	 * interchangeable: a single persister might be responsible for multiple types.
+	 */
+	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
+
+	/**
 	 * Execute a native SQL query, and return the results as a fully built list.
 	 *
 	 * @param spec The specification of the native SQL query to execute.

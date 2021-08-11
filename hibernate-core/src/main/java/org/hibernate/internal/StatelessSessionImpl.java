@@ -153,12 +153,12 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object get(Class entityClass, Object id) {
-		return get( entityClass.getName(), id );
+		return get( entityClass.getName(), id, LockMode.NONE );
 	}
 
 	@Override
 	public Object get(Class entityClass, Object id, LockMode lockMode) {
-		return get( entityClass.getName(), id, lockMode );
+		return get( getFactory().getMetamodel().entityPersister( entityClass ), id, lockMode );
 	}
 
 	@Override
@@ -168,10 +168,13 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public Object get(String entityName, Object id, LockMode lockMode) {
+		return get( getFactory().getMetamodel().entityPersister( entityName ), id, lockMode );
+	}
+
+	protected Object get(final EntityPersister ep, final Serializable id, final LockMode lockMode) {
 		checkOpen();
 
-		Object result = getFactory().getMetamodel().entityPersister( entityName )
-				.load( id, null, getNullSafeLockMode( lockMode ), this );
+		Object result = ep.load( id, null, getNullSafeLockMode( lockMode ), this );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
 		}
@@ -255,9 +258,16 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
-	public Object instantiate(String entityName, Object id) throws HibernateException {
+	public Object instantiate(
+			String entityName,
+			Object id) throws HibernateException {
+		return instantiate( getFactory().getMetamodel().entityPersister( entityName ), id );
+	}
+
+	@Override
+	public Object instantiate(EntityPersister persister, Object id) throws HibernateException {
 		checkOpen();
-		return getFactory().getMetamodel().entityPersister( entityName ).instantiate( id, this );
+		return persister.instantiate( id, this );
 	}
 
 	@Override
@@ -458,7 +468,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			throws HibernateException {
 		checkOpen();
 		if ( entityName == null ) {
-			return getFactory().getMetamodel().entityPersister( guessEntityName( object ) );
+			return getFactory().getMetamodel().entityPersister( object.getClass() );
 		}
 		else {
 			return getFactory().getMetamodel().entityPersister( entityName ).getSubclassEntityPersister( object, getFactory() );

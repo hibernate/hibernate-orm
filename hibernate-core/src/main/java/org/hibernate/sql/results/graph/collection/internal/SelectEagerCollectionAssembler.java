@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
@@ -21,13 +22,19 @@ public class SelectEagerCollectionAssembler extends AbstractCollectionAssembler 
 			NavigablePath fetchPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
+			DomainResultAssembler keyCollectionResultAssembler,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedMapping,
 				() -> (CollectionInitializer) creationState.resolveInitializer(
 						fetchPath,
 						fetchedMapping,
-						() -> new SelectEagerCollectionInitializer( fetchPath, fetchedMapping, parentAccess )
+						() -> new SelectEagerCollectionInitializer(
+								fetchPath,
+								fetchedMapping,
+								parentAccess,
+								keyCollectionResultAssembler
+						)
 				)
 		);
 	}

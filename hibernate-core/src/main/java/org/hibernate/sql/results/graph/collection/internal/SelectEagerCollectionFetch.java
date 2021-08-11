@@ -6,27 +6,29 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Andrea Boriero
  */
 public class SelectEagerCollectionFetch extends CollectionFetch {
+	private final DomainResult keyDomainResult;
+
 	public SelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
+			DomainResult<?> keyDomainResult,
 			FetchParent fetchParent) {
 		super( fetchedPath, fetchedAttribute, fetchParent );
+		this.keyDomainResult = keyDomainResult;
 	}
 
 	@Override
@@ -47,6 +49,7 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 				getNavigablePath(),
 				getFetchedMapping(),
 				parentAccess,
+				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( creationState ),
 				creationState
 		);
 	}

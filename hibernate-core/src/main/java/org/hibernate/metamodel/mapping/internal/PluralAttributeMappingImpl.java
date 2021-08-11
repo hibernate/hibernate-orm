@@ -94,6 +94,7 @@ public class PluralAttributeMappingImpl
 	private final int stateArrayPosition;
 	private final PropertyAccess propertyAccess;
 	private final StateArrayContributorMetadataAccess stateArrayContributorMetadataAccess;
+	private final String referencedPropertyName;
 
 	private final CollectionPart elementDescriptor;
 	private final CollectionPart indexDescriptor;
@@ -178,6 +179,7 @@ public class PluralAttributeMappingImpl
 		this.fetchTiming = fetchTiming;
 		this.fetchStyle = fetchStyle;
 		this.collectionDescriptor = collectionDescriptor;
+		this.referencedPropertyName = bootDescriptor.getReferencedPropertyName();
 
 		this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
@@ -492,22 +494,11 @@ public class PluralAttributeMappingImpl
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE) {
 			if ( selected ) {
-				final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-				final TableGroup collectionTableGroup = fromClauseAccess.resolveTableGroup(
+				final TableGroup collectionTableGroup = resolveCollectionTableGroup(
+						fetchParent,
 						fetchablePath,
-						p -> {
-							final TableGroup lhsTableGroup = fromClauseAccess.getTableGroup(
-									fetchParent.getNavigablePath() );
-							final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-									fetchablePath,
-									lhsTableGroup,
-									null,
-									SqlAstJoinType.LEFT,
-									true,
-									creationState.getSqlAstCreationState()
-							);
-							return tableGroupJoin.getJoinedGroup();
-						}
+						creationState,
+						sqlAstCreationState
 				);
 
 				return new EagerCollectionFetch(
@@ -519,15 +510,67 @@ public class PluralAttributeMappingImpl
 				);
 			}
 			else {
-				return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
+				return createSelectEagerCollectionFetch(
+						fetchParent,
+						fetchablePath,
+						creationState,
+						sqlAstCreationState
+				);
 			}
 		}
 
 		if ( getCollectionDescriptor().getCollectionType().hasHolder() || !getCollectionDescriptor().isLazy() ) {
-			return new SelectEagerCollectionFetch( fetchablePath, this, fetchParent );
+			return createSelectEagerCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
 		}
 
 		return createDelayedCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
+	}
+
+	private Fetch createSelectEagerCollectionFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState, SqlAstCreationState sqlAstCreationState) {
+		if ( referencedPropertyName != null ) {
+			final TableGroup collectionTableGroup = resolveCollectionTableGroup(
+					fetchParent,
+					fetchablePath,
+					creationState,
+					sqlAstCreationState
+			);
+
+			final DomainResult<?> keyDomainResult = getKeyDescriptor().createKeyDomainResult(
+					fetchablePath,
+					collectionTableGroup,
+					creationState
+			);
+
+			return new SelectEagerCollectionFetch( fetchablePath, this, keyDomainResult, fetchParent );
+
+		}
+		return new SelectEagerCollectionFetch( fetchablePath, this, null, fetchParent );
+	}
+
+	private TableGroup resolveCollectionTableGroup(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			DomainResultCreationState creationState, SqlAstCreationState sqlAstCreationState) {
+		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
+		return fromClauseAccess.resolveTableGroup(
+				fetchablePath,
+				p -> {
+					final TableGroup lhsTableGroup = fromClauseAccess.getTableGroup(
+							fetchParent.getNavigablePath() );
+					final TableGroupJoin tableGroupJoin = createTableGroupJoin(
+							fetchablePath,
+							lhsTableGroup,
+							null,
+							SqlAstJoinType.LEFT,
+							true,
+							creationState.getSqlAstCreationState()
+					);
+					return tableGroupJoin.getJoinedGroup();
+				}
+		);
 	}
 
 	private Fetch createDelayedCollectionFetch(

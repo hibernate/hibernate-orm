@@ -11,14 +11,12 @@
  * Created on May 3, 2005, 9:42 AM
  */
 
-package org.hibernate.test.orphan;
+package org.hibernate.orm.test.collection.propertyref;
+
 import java.util.HashSet;
 import java.util.Set;
 
 
-/**
- * @author Kevin
- */
 public class User {
 
 	private Integer id;

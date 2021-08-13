@@ -42,19 +42,7 @@ public class PostgreSQL10Dialect extends PostgreSQL95Dialect {
 	}
 
 	@Override
-	public NameQualifierSupport getNameQualifierSupport() {
-		// This method is overridden so the correct value will be returned when
-		// DatabaseMetaData is not available.
-		return NameQualifierSupport.SCHEMA;
-	}
-
-	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorPostgresSQLDatabaseImpl.INSTANCE;
-	}
-
-	@Override
-	public String getCurrentSchemaCommand() {
-		return "select current_schema from sys.dummy";
 	}
 }

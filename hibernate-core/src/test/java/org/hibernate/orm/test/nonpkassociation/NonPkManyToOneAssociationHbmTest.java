@@ -4,43 +4,35 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.nonpkassociation;
+package org.hibernate.orm.test.nonpkassociation;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author pholvs
  */
-public class NonPkManyToOneAssociationTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Parent.class,
-				Child.class,
-		};
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/nonpkassociation/NonPkManyToOneAssociationHbmTest.hbm.xml"
+)
+@SessionFactory
+public class NonPkManyToOneAssociationHbmTest {
 
 	private Parent parent;
 
-	@Before
-	public void createTestData() {
-		inTransaction(
+	@BeforeEach
+	public void createTestData(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					parent = new Parent( 99999L );
 					s.persist( parent );
@@ -52,27 +44,33 @@ public class NonPkManyToOneAssociationTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-
-	@Test
-	public void testHqlWithFetch() {
-		inTransaction(
-				s -> {
-					Parent parent = s.find( Parent.class, this.parent.getId() );
-					assertEquals( 1, parent.getChildren().size() );
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from NonPkManyToOneAssociationHbmTest$Child" ).executeUpdate();
+					session.createQuery( "delete from NonPkManyToOneAssociationHbmTest$Parent" ).executeUpdate();
 				}
 		);
 	}
 
-	@Entity(name = "Parent")
-	public static class Parent implements Serializable {
 
-		@Id
-		@GeneratedValue
+	@Test
+	public void testHqlWithFetch(SessionFactoryScope scope) {
+		scope.inTransaction(
+				s -> {
+					Parent dbParent = s.find( Parent.class, this.parent.getId() );
+					Set<Child> children = dbParent.getChildren();
+					assertEquals( 1, children.size() );
+				}
+		);
+	}
+
+	public static class Parent {
 		private Long id;
 
 		private Long collectionKey;
 
-		@OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
 		private Set<Child> children = new HashSet<>();
 
 		public Parent(Long collectionKey) {
@@ -107,15 +105,20 @@ public class NonPkManyToOneAssociationTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity(name = "Child")
 	public static class Child {
 
-		@Id
-		@GeneratedValue
 		private Long id;
 
-		@ManyToOne
-		@JoinColumn(name = "parentVal", referencedColumnName = "collectionKey")
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		private String name;
+
 		private Parent parent;
 
 		public Child(Parent parent) {

@@ -4013,6 +4013,17 @@ public abstract class Dialect implements ConversionContext {
 				case Types.FLOAT:
 				case Types.DOUBLE:
 				case Types.REAL:
+					// The given precision and scale are in decimal numbers as per Javadoc of javax.persistence.Column
+					// but the SQL type FLOAT takes the precision in binary digits,
+					// so we have to calculate the number of binary digits necessary.
+					// If the precision and a scale are given, we assume the values are given as decimal digits.
+					// If just the precision is given, we assume the value is in binary digits already.
+					if ( precision != null && scale != null ) {
+						scale = null;
+						// See https://stackoverflow.com/questions/17415847/how-does-float-map-relate-to-number-in-oracle-10g/17416421
+						// for the formula which was inverted to calculate the binary digit count
+						precision = (int) Math.ceil( precision * Math.log( 10 ) );
+					}
 				case Types.TIMESTAMP:
 				case Types.TIMESTAMP_WITH_TIMEZONE:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );

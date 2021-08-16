@@ -280,7 +280,10 @@ public enum Database {
 				final int minorVersion = info.getDatabaseMinorVersion();
 
 				if ( majorVersion == 10 ) {
-					if ( minorVersion >= 3 ) {
+					if ( minorVersion >= 6 ) {
+						return new MariaDB106Dialect();
+					}
+					else if ( minorVersion >= 3 ) {
 						return new MariaDB103Dialect();
 					}
 					else if ( minorVersion == 2 ) {

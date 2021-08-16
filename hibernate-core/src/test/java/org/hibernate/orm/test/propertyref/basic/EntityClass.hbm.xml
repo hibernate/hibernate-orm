@@ -11,7 +11,7 @@
 
 <hibernate-mapping>
 <class
-    name="org.hibernate.test.propertyref.basic.EntityClass"
+    name="org.hibernate.orm.test.propertyref.basic.EntityClass"
     table="table1" lazy="false">
     <id
         name="key"

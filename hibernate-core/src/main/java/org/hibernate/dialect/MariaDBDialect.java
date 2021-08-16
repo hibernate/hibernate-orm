@@ -144,8 +144,8 @@ public class MariaDBDialect extends MySQLDialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		//only supported on MySQL
-		return false;
+		//only supported on MySQL and as of 10.6
+		return getVersion() >= 1060;
 	}
 
 	@Override

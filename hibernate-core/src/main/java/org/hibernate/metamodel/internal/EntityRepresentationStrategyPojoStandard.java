@@ -230,14 +230,42 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		Iterator properties = bootDescriptor.getPropertyIterator();
 		Class clazz = bootDescriptor.getMappedClass();
-		while ( properties.hasNext() ) {
-			Property property = (Property) properties.next();
-			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
-			ProxyFactoryHelper.validateGetterSetterMethodProxyability( "Setter", property.getSetter( clazz ).getMethod() );
-		}
+		final Method idGetterMethod;
+		final Method idSetterMethod;
 
-		final Method idGetterMethod = identifierPropertyAccess == null ? null : identifierPropertyAccess.getGetter().getMethod();
-		final Method idSetterMethod = identifierPropertyAccess == null ? null : identifierPropertyAccess.getSetter().getMethod();
+		try {
+			while ( properties.hasNext() ) {
+				Property property = (Property) properties.next();
+				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
+						"Getter",
+						property.getGetter( clazz ).getMethod()
+				);
+				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
+						"Setter",
+						property.getSetter( clazz ).getMethod()
+				);
+			}
+			if ( identifierPropertyAccess != null ) {
+				idGetterMethod = identifierPropertyAccess.getGetter().getMethod();
+				idSetterMethod = identifierPropertyAccess.getSetter().getMethod();
+				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
+						"Getter",
+						idGetterMethod
+				);
+				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
+						"Setter",
+						idSetterMethod
+				);
+			}
+			else {
+				idGetterMethod = null;
+				idSetterMethod = null;
+			}
+		}
+		catch (HibernateException he) {
+			LOG.unableToCreateProxyFactory( clazz.getName(), he );
+			return null;
+		}
 
 		final Method proxyGetIdentifierMethod = idGetterMethod == null || proxyInterface == null
 				? null

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.proxy;
+package org.hibernate.orm.test.proxy;
 
 import java.util.Objects;
 import javax.persistence.CascadeType;
@@ -15,35 +15,45 @@ import javax.persistence.Id;
 import javax.persistence.OneToOne;
 
 import org.hibernate.Hibernate;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = { HibernateUnproxyTest.Parent.class, HibernateUnproxyTest.Child.class }
+)
+public class HibernateUnproxyTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { Parent.class, Child.class };
+	@AfterEach
+	public void tearDown(EntityManagerFactoryScope scope){
+		scope.inTransaction(
+				entityManager -> {
+					entityManager.createQuery( "update Parent p set p.child = null" ).executeUpdate();
+					entityManager.createQuery( "delete from Child" ).executeUpdate();
+					entityManager.createQuery( "delete from Parent" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testInitializedProxyCanBeUnproxied() {
+	public void testInitializedProxyCanBeUnproxied(EntityManagerFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.setChild( c );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
-			entityManager.persist( p );
-		} ) );
+		scope.inTransaction( entityManager ->
+									 entityManager.persist( p )
+		);
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent parent = entityManager.find( Parent.class, p.getId() );
 			Child child = parent.getChild();
 
@@ -52,9 +62,9 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 
 			Child unproxiedChild = (Child) Hibernate.unproxy( child );
 			assertEquals( Child.class, unproxiedChild.getClass() );
-		} ) );
+		} );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent parent = entityManager.find( Parent.class, p.getId() );
 			Child child = parent.getChild();
 
@@ -64,20 +74,21 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 			Child unproxiedChild = Hibernate.unproxy( child, Child.class );
 
 			assertEquals( Child.class, unproxiedChild.getClass() );
-		} ) );
+		} );
 	}
 
 	@Test
-	public void testNotInitializedProxyCanBeUnproxiedWithInitialization() {
+	public void testNotInitializedProxyCanBeUnproxiedWithInitialization(EntityManagerFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.setChild( c );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
-			entityManager.persist( p );
-		} ) );
+		scope.inTransaction( entityManager ->
+									 entityManager.persist( p )
+		);
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
+
 			Parent parent = entityManager.find( Parent.class, p.getId() );
 			Child child = parent.getChild();
 
@@ -87,9 +98,10 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertTrue( Hibernate.isInitialized( child ) );
 			assertEquals( Child.class, unproxiedChild.getClass() );
-		} ) );
+		} );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
+
 			Parent parent = entityManager.find( Parent.class, p.getId() );
 			Child child = parent.getChild();
 
@@ -99,28 +111,28 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 
 			assertTrue( Hibernate.isInitialized( child ) );
 			assertEquals( Child.class, unproxiedChild.getClass() );
-		} ) );
+		} );
 	}
 
 	@Test
-	public void testNotHibernateProxyShouldThrowException() {
+	public void testNotHibernateProxyShouldThrowException(EntityManagerFactoryScope scope) {
 		Parent p = new Parent();
 		Child c = new Child();
 		p.setChild( c );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
-			entityManager.persist( p );
-		} ) );
+		scope.inTransaction( entityManager ->
+									 entityManager.persist( p )
+		);
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent parent = entityManager.find( Parent.class, p.getId() );
 			assertSame( parent, Hibernate.unproxy( parent ) );
-		} ) );
+		} );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent parent = entityManager.find( Parent.class, p.getId() );
 			assertSame( parent, Hibernate.unproxy( parent, Parent.class ) );
-		} ) );
+		} );
 	}
 
 	@Test
@@ -131,25 +143,25 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	public void testProxyEquality() {
-		Parent parent = doInJPA( this::entityManagerFactory, ( entityManager -> {
+	public void testProxyEquality(EntityManagerFactoryScope scope) {
+		Parent parent = scope.fromTransaction( entityManager -> {
 			Parent p = new Parent();
 			p.name = "John Doe";
 			entityManager.persist( p );
 			return p;
-		} ) );
+		} );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent p = entityManager.getReference( Parent.class, parent.getId() );
 			assertFalse( parent.equals( p ) );
 			assertTrue( parent.equals( Hibernate.unproxy( p ) ) );
-		} ) );
+		} );
 
-		doInJPA( this::entityManagerFactory, ( entityManager -> {
+		scope.inTransaction( entityManager -> {
 			Parent p = entityManager.getReference( Parent.class, parent.getId() );
 			assertFalse( parent.equals( p ) );
 			assertTrue( parent.equals( Hibernate.unproxy( p, Parent.class ) ) );
-		} ) );
+		} );
 	}
 
 	@Entity(name = "Parent")
@@ -199,6 +211,8 @@ public class HibernateUnproxyTest extends BaseEntityManagerFunctionalTestCase {
 		@Id
 		@GeneratedValue
 		private Integer id;
+
+		private String name;
 
 		@OneToOne(fetch = FetchType.LAZY)
 		private Parent parent;

@@ -4,29 +4,33 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.proxy.narrow;
+package org.hibernate.orm.test.proxy.narrow;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 
 /**
  * @author Yoann Rodière
  * @author Guillaume Smet
  */
 @Entity
-public class ConcreteEntity extends AbstractEntity {
+public abstract class AbstractEntity {
 
-	private String content = "text";
+	@Id
+	@GeneratedValue
+	private Integer id;
 
-	public ConcreteEntity() {
+	public AbstractEntity() {
 		super();
 	}
 
-	public String getContent() {
-		return content;
+	public Integer getId() {
+		return id;
 	}
 
-	public void setContent(String content) {
-		this.content = content;
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
 }

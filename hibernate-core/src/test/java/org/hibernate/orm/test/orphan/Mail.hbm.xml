@@ -10,23 +10,25 @@
         '-//Hibernate/Hibernate Mapping DTD 3.0//EN'
         'http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd'>
 
-<hibernate-mapping package="org.hibernate.test.orphan" >
+<hibernate-mapping package="org.hibernate.orm.test.orphan" >
 
-    <class name="User" table="t_user">
+    <class name="Mail" table="t_mail">
 
         <id name="id" type="integer" column="id">
-            <generator class="native" />
+            <generator class="native" />     
         </id>
 
-        <property name="userid">
-            <column name="userid" length="32" not-null="true"/>
+        <property name="alias">
+            <column name="`alias`" length="20"/>
         </property>
 
-        <set name="mail" table="mail" cascade="all, delete-orphan" inverse="true" lazy="false">
-            <key column="userid" property-ref="userid" not-null="false"/>
-            <one-to-many class="Mail"/>
-        </set>
-
+        <many-to-one name="user"
+                 class="User"
+                 cascade="save-update"
+                 column="userid"
+                 not-null="true"
+                 property-ref="userid"/>
+       
     </class>
 
 </hibernate-mapping>

@@ -11,7 +11,7 @@
  * Created on May 3, 2005, 9:42 AM
  */
 
-package org.hibernate.test.orphan;
+package org.hibernate.orm.test.orphan;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,7 +23,7 @@ public class User {
 
 	private Integer id;
 	private String userid;
-	private Set<Mail> mail = new HashSet();
+	private Set<Mail> mails = new HashSet();
 
 	public User() {
 	}
@@ -48,21 +48,21 @@ public class User {
 		this.userid = userid;
 	}
 
-	public Set<Mail> getMail() {
-		return mail;
+	public Set<Mail> getMails() {
+		return mails;
 	}
 
-	private void setMail(Set<Mail> mail) {
-		this.mail = mail;
+	private void setMails(Set<Mail> mails) {
+		this.mails = mails;
 	}
 
 	public Mail addMail(String alias) {
 		Mail mail = new Mail( alias, this );
-		getMail().add( mail );
+		getMails().add( mail );
 		return mail;
 	}
 
 	public void removeMail(Mail mail) {
-		getMail().remove( mail );
+		getMails().remove( mail );
 	}
 }

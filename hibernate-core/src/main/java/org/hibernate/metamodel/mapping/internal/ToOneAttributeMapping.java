@@ -225,7 +225,7 @@ public class ToOneAttributeMapping
 
 			if ( bidirectionalAttributeName == null ) {
 				this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty(
-						bootValue.getReferencedPropertyName(),
+						referencedPropertyName,
 						'.'
 				);
 			}

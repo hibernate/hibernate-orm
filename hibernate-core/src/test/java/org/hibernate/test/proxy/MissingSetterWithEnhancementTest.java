@@ -64,7 +64,7 @@ public class MissingSetterWithEnhancementTest {
 		catch (MappingException e) {
 			assertEquals(
 					"Could not locate setter method for property [" + EntityWithMissingSetter.class.getName() + "#name]",
-					e.getCause().getCause().getCause().getMessage()
+					e.getMessage()
 			);
 		}
 	}

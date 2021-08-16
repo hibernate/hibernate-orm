@@ -366,8 +366,8 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 		Container proxy = ( Container ) s.load( Container.class, lastContainerId );
 		assertFalse( Hibernate.isInitialized( proxy ) );
 		// load the rest back into the PC
-		List all = s.createQuery( "from Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :last" )
-				.setParameter( "last", lastContainerId.longValue() )
+		List all = s.createQuery( "from Container as c inner join fetch c.owner inner join fetch c.dataPoints where c.id <> :l" )
+				.setParameter( "l", lastContainerId.longValue() )
 				.list();
 		Container container = ( Container ) all.get( 0 );
 		s.delete( container );

@@ -4,50 +4,55 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.proxy;
+package org.hibernate.orm.test.proxy;
 
 import java.util.List;
-
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
-
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Christian Beikov
  */
 @TestForIssue(jiraKey = "HHH-9638")
-public class ProxyReferenceEqualityTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				ProxyReferenceEqualityTest.A.class,
+				ProxyReferenceEqualityTest.B.class
+		}
+)
+@SessionFactory
+public class ProxyReferenceEqualityTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				A.class,
-				B.class
-		};
-	}
 
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from A" ).executeUpdate();
+					session.createQuery( "delete from B" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
-	public void testProxyFromQuery() {
-		doInHibernate( this::sessionFactory, s -> {
+	public void testProxyFromQuery(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			A a = new A();
 			a.id = 1L;
 			a.b = new B();
@@ -55,7 +60,7 @@ public class ProxyReferenceEqualityTest extends BaseCoreFunctionalTestCase {
 			s.persist( a );
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			A a = s.find( A.class, 1L );
 			List<B> result = s.createQuery( "FROM " + B.class.getName() + " b", B.class ).getResultList();
 			assertEquals( 1, result.size() );
@@ -67,14 +72,20 @@ public class ProxyReferenceEqualityTest extends BaseCoreFunctionalTestCase {
 	public static class A {
 		@Id
 		Long id;
+
 		@ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 		@LazyToOne(LazyToOneOption.NO_PROXY)
 		B b;
+
+		String name;
+
 	}
 
 	@Entity(name = "B")
 	public static class B {
 		@Id
 		Long id;
+
+		String name;
 	}
 }

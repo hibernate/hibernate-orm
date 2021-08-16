@@ -10,6 +10,7 @@ import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.Association;
@@ -18,8 +19,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -43,7 +46,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Association {
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
-	private final Fetchable fetchable;
+	private final ToOneAttributeMapping fetchable;
 
 	private final FetchParent fetchParent;
 	private final LockMode lockMode;
@@ -53,7 +56,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			FetchTiming timing,
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
-			Fetchable fetchable,
+			ToOneAttributeMapping fetchable,
 			LockMode lockMode,
 			NavigablePath referencedNavigablePath) {
 		this.timing = timing;
@@ -174,10 +177,10 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	private static class CircularFetchAssembler implements DomainResultAssembler {
 		private final NavigablePath circularPath;
 		private final JavaTypeDescriptor javaTypeDescriptor;
-		private final Fetchable fetchable;
+		private final ToOneAttributeMapping fetchable;
 
 		public CircularFetchAssembler(
-				Fetchable fetchable,
+				ToOneAttributeMapping fetchable,
 				NavigablePath circularPath,
 				JavaTypeDescriptor javaTypeDescriptor) {
 			this.fetchable = fetchable;
@@ -196,22 +199,28 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				else {
 					assert parentInitializer instanceof CollectionInitializer;
 					final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
+					final EntityPersister entityPersister = (EntityPersister) ( (AttributeMapping) fetchable ).getMappedType();
 					final CollectionKey collectionKey = circ.resolveCollectionKey( rowProcessingState );
-					final EntityKey entityKey = new EntityKey(
-							collectionKey.getKey(),
-							(EntityPersister) ( (AttributeMapping) fetchable ).getMappedType()
-					);
+					final Object key = collectionKey.getKey();
+
 
 					final SharedSessionContractImplementor session = rowProcessingState.getJdbcValuesSourceProcessingState()
 							.getSession();
 					final PersistenceContext persistenceContext = session.getPersistenceContext();
-					final Object proxy = persistenceContext.getProxy( entityKey );
-					// it is conceivable there is a proxy, so check that first
-					if ( proxy == null ) {
-						// otherwise look for an initialized version
-						return persistenceContext.getEntity( entityKey );
+					if ( fetchable.getReferencedPropertyName() != null ) {
+						return loadByUniqueKey( entityPersister, key, session, persistenceContext );
 					}
-					return proxy;
+					else {
+						final EntityKey entityKey = new EntityKey( key, entityPersister );
+
+						final Object proxy = persistenceContext.getProxy( entityKey );
+						// it is conceivable there is a proxy, so check that first
+						if ( proxy == null ) {
+							// otherwise look for an initialized version
+							return persistenceContext.getEntity( entityKey );
+						}
+						return proxy;
+					}
 				}
 			}
 			if ( initializer.getInitializedInstance() == null ) {
@@ -219,6 +228,37 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 				initializer.resolveInstance( rowProcessingState );
 			}
 			return initializer.getInitializedInstance();
+		}
+
+		private Object loadByUniqueKey(
+				EntityPersister entityPersister,
+				Object key,
+				SharedSessionContractImplementor session,
+				PersistenceContext persistenceContext) {
+			String uniqueKeyPropertyName = fetchable.getReferencedPropertyName();
+			EntityUniqueKey euk = new EntityUniqueKey(
+					entityPersister.getEntityName(),
+					uniqueKeyPropertyName,
+					key,
+					entityPersister.getIdentifierType(),
+					entityPersister.getEntityMode(),
+					session.getFactory()
+			);
+			Object entityInstance = persistenceContext.getEntity( euk );
+			if ( entityInstance == null ) {
+				entityInstance = ( (UniqueKeyLoadable) entityPersister ).loadByUniqueKey(
+						uniqueKeyPropertyName,
+						key,
+						session
+				);
+
+				// If the entity was not in the Persistence Context, but was found now,
+				// add it to the Persistence Context
+				if ( entityInstance != null ) {
+					persistenceContext.addEntity( euk, entityInstance );
+				}
+			}
+			return entityInstance;
 		}
 
 		private EntityInitializer resolveCircularInitializer(RowProcessingState rowProcessingState) {

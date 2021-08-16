@@ -12,9 +12,9 @@
 <!--
     Demonstrates use of a class-level where restriction
  -->
-<hibernate-mapping package="org.hibernate.test.nonpkassociation">
+<hibernate-mapping package="org.hibernate.orm.test.nonpkassociation">
 
-    <class name="org.hibernate.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Parent" table="T_PARENT">
+    <class name="org.hibernate.orm.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Parent" table="T_PARENT">
     	<id name="id">
     		<generator class="increment"/>
     	</id>
@@ -25,14 +25,16 @@
 
     	<set name="children" inverse="true" cascade="all-delete-orphan">
     		<key column="parentVal"/>
-    		<one-to-many class="org.hibernate.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Child"/>
+    		<one-to-many class="org.hibernate.orm.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Child"/>
     	</set>
     </class>
 
-    <class name="org.hibernate.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Child" table="T_CHILD">
+    <class name="org.hibernate.orm.test.nonpkassociation.NonPkManyToOneAssociationHbmTest$Child" table="T_CHILD">
     	<id name="id">
     		<generator class="increment"/>
     	</id>
+
+		<property name="name"/>
 
     	<many-to-one name="parent" property-ref="collectionKey" not-null="true">
 			<column name="parentVal" />

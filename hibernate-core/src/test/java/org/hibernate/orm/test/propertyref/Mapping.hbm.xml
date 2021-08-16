@@ -9,7 +9,7 @@
         "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.propertyref">
+<hibernate-mapping package="org.hibernate.orm.test.propertyref">
     <class name="DoesNotWork" table="vgras007_v031">
         <composite-id name="doesNotWorkPk" class="DoesNotWorkPk">
             <key-property name="id1" column="track_no"/>

@@ -1,0 +1,53 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+package org.hibernate.orm.test.propertyref.basic;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+
+/**
+ * @author Brett Meyer
+ */
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/propertyref/basic/EntityClass.hbm.xml"
+)
+@SessionFactory
+public class BasicPropertiesTest {
+
+	/**
+	 * Really simple regression test for HHH-8689.
+	 */
+	@Test
+	@TestForIssue(jiraKey = "HHH-8689")
+	public void testProperties(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					EntityClass ec = new EntityClass();
+					ec.setKey( 1l );
+					ec.setField1( "foo1" );
+					ec.setField2( "foo2" );
+					session.persist( ec );
+				}
+		);
+
+		EntityClass ec = scope.fromTransaction(
+				session ->
+						session.get( EntityClass.class, 1l )
+		);
+
+		assertNotNull( ec );
+		assertEquals( ec.getField1(), "foo1" );
+		assertEquals( ec.getField2(), "foo2" );
+	}
+}
+

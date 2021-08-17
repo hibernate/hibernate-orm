@@ -1029,18 +1029,13 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	 *                         in conjunction with a table's index descriptions
 	 *                     </li>
 	 *                     <li>
-	 *                         {@link DatabaseMetaData#tableIndexClustered} -
-	 *                         this is a clustered index
-	 *                     </li>
-	 *                     <li>
-	 *                         {@link DatabaseMetaData#tableIndexHashed} -
-	 *                         this is a hashed index
-	 *                     </li>
-	 *                     <li>
-	 *                         {@link DatabaseMetaData#tableIndexOther} -
-	 *                         this is some other style of index
+	 *                         Any value other than {@link DatabaseMetaData#tableIndexStatistic} -
+	 *                         this indicates that a table's index description
+	 *                         (not statisics) is being returned.
 	 *                     </li>
 	 *                 </ul>
+	 *                 NOTE: Hibernate ignores statistics and does not
+	 *                       care about the actual type of index.
 	 *             </li>
 	 *             <li>
 	 *                 column label {@link #getResultSetColumnNameLabel} -

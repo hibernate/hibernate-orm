@@ -24,7 +24,7 @@
 
 -->
 
-<hibernate-mapping package="org.hibernate.test.propertyref.basic">
+<hibernate-mapping package="org.hibernate.orm.test.propertyref.basic">
 
     <class name="Person" table="PROPREF_PERS">
         <id name="id">

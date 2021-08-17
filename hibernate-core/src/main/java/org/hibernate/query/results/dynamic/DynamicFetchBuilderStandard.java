@@ -12,6 +12,7 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NativeQuery;
@@ -96,12 +97,22 @@ public class DynamicFetchBuilderStandard
 					creationStateImpl
 			);
 		}
-		else {
-			// Not sure if this fetch builder can also be used with other attribute mappings
-			assert attributeMapping instanceof ToOneAttributeMapping;
-
+		else if ( attributeMapping instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) attributeMapping;
 			toOneAttributeMapping.getForeignKeyDescriptor().visitKeySelectables( selectableConsumer );
+			return parent.generateFetchableFetch(
+					attributeMapping,
+					fetchPath,
+					FetchTiming.DELAYED,
+					false,
+					null,
+					creationStateImpl
+			);
+		}
+		else {
+			assert attributeMapping instanceof PluralAttributeMapping;
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) attributeMapping;
+			pluralAttributeMapping.getKeyDescriptor().visitTargetSelectables( selectableConsumer );
 			return parent.generateFetchableFetch(
 					attributeMapping,
 					fetchPath,

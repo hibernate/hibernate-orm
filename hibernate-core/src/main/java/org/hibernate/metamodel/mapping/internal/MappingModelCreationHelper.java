@@ -1184,9 +1184,11 @@ public class MappingModelCreationHelper {
 
 	private static int[] getPropertyOrder(Value bootValueMapping, MappingModelCreationProcess creationProcess) {
 		final ComponentType componentType;
+		final boolean sorted;
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
 			componentType = (ComponentType) collectionBootValueMapping.getKey().getType();
+			sorted = false;
 		}
 		else {
 			final EntityType entityType = (EntityType) bootValueMapping.getType();
@@ -1194,9 +1196,16 @@ public class MappingModelCreationHelper {
 					creationProcess.getCreationContext().getSessionFactory()
 			);
 			componentType = (ComponentType) identifierOrUniqueKeyType;
+			if ( bootValueMapping instanceof ToOne ) {
+				sorted = ( (ToOne) bootValueMapping ).isSorted();
+			}
+			else {
+				// Assume one-to-many is sorted, because it always uses the primary key value
+				sorted = true;
+			}
 		}
 		// Consider the reordering if available
-		if ( componentType.getOriginalPropertyOrder() != null ) {
+		if ( !sorted && componentType.getOriginalPropertyOrder() != null ) {
 			return componentType.getOriginalPropertyOrder();
 		}
 		// A value that came from the annotation model is already sorted appropriately

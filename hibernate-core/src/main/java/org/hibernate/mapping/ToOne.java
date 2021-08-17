@@ -10,9 +10,9 @@ import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.Type;
 
 import java.util.Objects;
@@ -27,6 +27,7 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	private String referencedEntityName;
 	private String propertyName;
 	private boolean lazy = true;
+	private boolean sorted;
 	protected boolean unwrapProxy;
 	protected boolean isUnwrapProxyImplicit;
 	protected boolean referenceToPrimaryKey = true;
@@ -143,5 +144,34 @@ public abstract class ToOne extends SimpleValue implements Fetchable {
 	public void setReferenceToPrimaryKey(boolean referenceToPrimaryKey) {
 		this.referenceToPrimaryKey = referenceToPrimaryKey;
 	}
-	
+
+	public boolean isSorted() {
+		return sorted;
+	}
+
+	public void setSorted(boolean sorted) {
+		this.sorted = sorted;
+	}
+
+	public void sortProperties() {
+		if ( sorted ) {
+			return;
+		}
+		sorted = true;
+		final PersistentClass entityBinding = getMetadata().getEntityBinding( getReferencedEntityName() );
+		final Value value;
+		if ( getReferencedPropertyName() == null ) {
+			value = entityBinding.getIdentifier();
+		}
+		else {
+			value = entityBinding.getProperty( getReferencedPropertyName() ).getValue();
+		}
+		if ( value instanceof Component ) {
+			final Component component = (Component) value;
+			final int[] originalPropertyOrder = component.sortProperties();
+			if ( originalPropertyOrder != null ) {
+				sortColumns( originalPropertyOrder );
+			}
+		}
+	}
 }

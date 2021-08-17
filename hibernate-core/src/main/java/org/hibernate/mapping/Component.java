@@ -199,12 +199,15 @@ public class Component extends SimpleValue implements MetaAttributable {
 		if ( localType == null ) {
 			synchronized ( this ) {
 				if ( type == null ) {
+					// Make sure this is sorted which is important especially for synthetic components
+					// Other components should be sorted already
+					sortProperties( true );
+
 					// TODO : temporary initial step towards HHH-1907
 					final ComponentMetamodel metamodel = new ComponentMetamodel(
 							this,
 							getMetadata().getMetadataBuildingOptions()
 					);
-
 					localType = isEmbedded()
 							? new EmbeddedComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel, originalPropertyOrder )
 							: new ComponentType( getBuildingContext().getBootstrapContext().getTypeConfiguration(), metamodel, originalPropertyOrder );
@@ -528,16 +531,20 @@ public class Component extends SimpleValue implements MetaAttributable {
 		getType();
 	}
 
-	public void sortProperties() {
-		if ( this.originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
-			return;
+	public int[] sortProperties() {
+		return sortProperties( false );
+	}
+
+	private int[] sortProperties(boolean forceRetainOriginalOrder) {
+		if ( originalPropertyOrder != ArrayHelper.EMPTY_INT_ARRAY ) {
+			return originalPropertyOrder;
 		}
 		final int[] originalPropertyOrder;
-		// We need to capture the original property order if this is an alternate unique key
+		// We need to capture the original property order if this is an alternate unique key or embedded component property
 		// to be able to sort the other side of the foreign key accordingly
 		// and also if the source is a XML mapping
 		// because XML mappings might refer to this through the defined order
-		if ( isAlternateUniqueKey() || getBuildingContext() instanceof MappingDocument ) {
+		if ( forceRetainOriginalOrder || isAlternateUniqueKey() || isEmbedded() || getBuildingContext() instanceof MappingDocument ) {
 			final Object[] originalProperties = properties.toArray();
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = new int[originalProperties.length];
@@ -549,7 +556,24 @@ public class Component extends SimpleValue implements MetaAttributable {
 			properties.sort( Comparator.comparing( Property::getName ) );
 			originalPropertyOrder = null;
 		}
-		this.originalPropertyOrder = originalPropertyOrder;
+		if ( isKey ) {
+			final PrimaryKey primaryKey = getOwner().getTable().getPrimaryKey();
+			if ( primaryKey != null ) {
+				// We have to re-order the primary key accordingly
+				final List<Column> columns = primaryKey.getColumns();
+				columns.clear();
+				for ( int i = 0; i < properties.size(); i++ ) {
+					final Iterator<Selectable> columnIterator = properties.get( i ).getColumnIterator();
+					while ( columnIterator.hasNext() ) {
+						final Selectable selectable = columnIterator.next();
+						if ( selectable instanceof Column ) {
+							columns.add( (Column) selectable );
+						}
+					}
+				}
+			}
+		}
+		return this.originalPropertyOrder = originalPropertyOrder;
 	}
 
 }

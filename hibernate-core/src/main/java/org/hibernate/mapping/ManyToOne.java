@@ -49,6 +49,8 @@ public class ManyToOne extends ToOne {
 	}
 
 	public void createForeignKey() throws MappingException {
+		// Ensure properties are sorted before we create a foreign key
+		sortProperties();
 		// the case of a foreign key to something other than the pk is handled in createPropertyRefConstraints
 		if (referencedPropertyName==null && !hasFormula() ) {
 			createForeignKeyOfEntity( ( (EntityType) getType() ).getAssociatedEntityName() );
@@ -59,6 +61,8 @@ public class ManyToOne extends ToOne {
 
 	public void createPropertyRefConstraints(Map persistentClasses) {
 		if (referencedPropertyName!=null) {
+			// Ensure properties are sorted before we create a foreign key
+			sortProperties();
 			PersistentClass pc = (PersistentClass) persistentClasses.get(getReferencedEntityName() );
 			
 			Property property = pc.getReferencedProperty( getReferencedPropertyName() );
@@ -72,6 +76,10 @@ public class ManyToOne extends ToOne {
 					);
 			} 
 			else {
+				// Make sure synthetic properties are sorted
+				if ( property.getValue() instanceof Component ) {
+					( (Component) property.getValue() ).sortProperties();
+				}
 				// todo : if "none" another option is to create the ForeignKey object still	but to set its #disableCreation flag
 				if ( !hasFormula() && !"none".equals( getForeignKeyName() ) ) {
 					java.util.List refColumns = new ArrayList();

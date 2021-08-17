@@ -43,6 +43,7 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -162,6 +163,22 @@ public abstract class SimpleValue implements KeyValue {
 		columns.add( formula );
 		insertability.add( false );
 		updatability.add( false );
+	}
+
+	protected void sortColumns(int[] originalOrder) {
+		final Selectable[] originalColumns = columns.toArray(new Selectable[0]);
+		final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
+		final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
+		for ( int i = 0; i < originalOrder.length; i++ ) {
+			final int originalIndex = originalOrder[i];
+			final Selectable selectable = originalColumns[originalIndex];
+			if ( selectable instanceof Column ) {
+				( (Column) selectable ).setTypeIndex( i );
+			}
+			columns.set( i, selectable );
+			insertability.set( i, originalInsertability[originalIndex] );
+			updatability.set( i, originalUpdatability[originalIndex] );
+		}
 	}
 
 	@Override

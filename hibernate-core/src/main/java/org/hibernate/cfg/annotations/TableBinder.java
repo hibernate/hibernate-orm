@@ -28,12 +28,15 @@ import org.hibernate.cfg.Ejb3JoinColumn;
 import org.hibernate.cfg.IndexOrUniqueKeySecondPass;
 import org.hibernate.cfg.JPAIndexHolder;
 import org.hibernate.cfg.ObjectNameSource;
+import org.hibernate.cfg.SimpleToOneFkSecondPass;
+import org.hibernate.cfg.ToOneFkSecondPass;
 import org.hibernate.cfg.UniqueConstraintHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
@@ -656,6 +659,10 @@ public class TableBinder {
 					);
 				}
 				else {
+					// Ensure the component is sorted so that we can simply set sorted to true on the to-one
+					if ( referencedEntity.getKey() instanceof Component ) {
+						( (Component) referencedEntity.getKey() ).sortProperties();
+					}
 					//explicit referencedColumnName
 					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
 					org.hibernate.mapping.Column col;
@@ -697,6 +704,10 @@ public class TableBinder {
 											+ referencedEntity.getEntityName() + " not found in JoinColumns.referencedColumnName"
 							);
 						}
+					}
+
+					if ( value instanceof ToOne ) {
+						( (ToOne) value ).setSorted( true );
 					}
 				}
 			}

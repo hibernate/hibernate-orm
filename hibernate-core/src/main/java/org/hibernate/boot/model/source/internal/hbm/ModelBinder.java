@@ -97,6 +97,7 @@ import org.hibernate.boot.spi.NaturalIdUniqueKeyBinder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.FkSecondPass;
 import org.hibernate.cfg.SecondPass;
+import org.hibernate.cfg.SimpleToOneFkSecondPass;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.config.spi.ConfigurationService;
@@ -2042,7 +2043,9 @@ public class ModelBinder {
 			);
 		}
 
-		oneToOneBinding.createForeignKey();
+		// Defer the creation of the foreign key as we need the associated entity persister to be initialized
+		// so that we can observe the properties/columns of a possible component in the correct order
+		metadataBuildingContext.getMetadataCollector().addSecondPass( new SimpleToOneFkSecondPass( oneToOneBinding ) );
 
 		Property prop = new Property();
 		prop.setValue( oneToOneBinding );

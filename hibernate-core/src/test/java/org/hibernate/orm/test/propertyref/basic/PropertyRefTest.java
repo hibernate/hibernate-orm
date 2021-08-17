@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.propertyref.basic;
+package org.hibernate.orm.test.propertyref.basic;
 
 import java.util.Iterator;
 import java.util.List;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * @author Gavin King
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/test/propertyref/basic/Person.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/propertyref/basic/Person.hbm.xml"
 
 )
 @SessionFactory(

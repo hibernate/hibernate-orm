@@ -59,7 +59,7 @@ public class TypeUtils {
 
 		if(wantedType!=null) {
 
-			int[] wantedSqlTypes = wantedType.sqlTypes(metadataCollector);
+			int[] wantedSqlTypes = wantedType.getSqlTypeCodes(metadataCollector);
 
 			if(wantedSqlTypes.length>1) {
 				throw new RuntimeException("The type " + preferredHibernateType + " found on " + location + " spans multiple columns. Only single column types allowed.");

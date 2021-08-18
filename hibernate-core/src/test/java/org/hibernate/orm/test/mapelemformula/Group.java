@@ -6,7 +6,7 @@
  */
 
 //$Id: Group.java 5686 2005-02-12 07:27:32Z steveebersole $
-package org.hibernate.test.mapelemformula;
+package org.hibernate.orm.test.mapelemformula;
 import java.util.HashMap;
 import java.util.Map;
 

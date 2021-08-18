@@ -13,7 +13,7 @@
      
 -->
 
-<hibernate-mapping package="org.hibernate.test.mapelemformula">
+<hibernate-mapping package="org.hibernate.orm.test.mapelemformula">
 	
 	<class name="Group" table="groups_">
 		<id name="name"/>

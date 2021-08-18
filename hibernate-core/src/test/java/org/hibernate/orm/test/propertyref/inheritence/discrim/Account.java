@@ -6,7 +6,7 @@
  */
 
 //$Id: Account.java 6029 2005-03-06 16:34:16Z oneovthafew $
-package org.hibernate.test.propertyref.inheritence.discrim;
+package org.hibernate.orm.test.propertyref.inheritence.discrim;
 
 
 /**

@@ -6,7 +6,7 @@
  */
 
 // $Id: SQLExceptionConversionTest.java 6847 2005-05-21 15:46:41Z oneovthafew $
-package org.hibernate.test.mappingexception;
+package org.hibernate.orm.test.mappingexception;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -24,20 +24,22 @@ import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.internal.util.ConfigHelper;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Test for various mapping exceptions thrown when mappings are not found or invalid.
  *
  * @author Max Rydahl Andersen
  */
-public class MappingExceptionTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class MappingExceptionTest {
 	@Test
 	public void testNotFound() throws MappingException, MalformedURLException {
 		Configuration cfg = new Configuration();
@@ -47,8 +49,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.FILE );
-			assertEquals( e.getOrigin().getName(), "completelybogus.hbm.xml" );
+			assertEquals( SourceType.FILE, e.getOrigin().getType() );
+			assertEquals( "completelybogus.hbm.xml", e.getOrigin().getName() );
 		}
 
 		try {
@@ -56,8 +58,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.FILE );
-			assertEquals( e.getOrigin().getName(), "completelybogus.hbm.xml" );
+			assertEquals( SourceType.FILE, e.getOrigin().getType() );
+			assertEquals( "completelybogus.hbm.xml", e.getOrigin().getName() );
 		}
 
 		try {
@@ -65,8 +67,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
-			assertEquals( e.getOrigin().getName(), "org/hibernate/Hibernate.hbm.xml" );
+			assertEquals( SourceType.RESOURCE, e.getOrigin().getType() );
+			assertEquals( "org/hibernate/Hibernate.hbm.xml", e.getOrigin().getName() );
 		}
 
 		try {
@@ -74,8 +76,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.FILE );
-			assertEquals( e.getOrigin().getName(), "completelybogus.hbm.xml" );
+			assertEquals( SourceType.FILE, e.getOrigin().getType() );
+			assertEquals( "completelybogus.hbm.xml", e.getOrigin().getName() );
 		}
 
 		try {
@@ -83,21 +85,21 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.FILE );
-			assertEquals( e.getOrigin().getName(), "completelybogus.hbm.xml" );
+			assertEquals( SourceType.FILE, e.getOrigin().getType() );
+			assertEquals( "completelybogus.hbm.xml", e.getOrigin().getName() );
 		}
 
 		try {
 			cfg.addInputStream( new ByteArrayInputStream( new byte[0] ) );
 			fail();
 		}
-		catch ( org.hibernate.boot.InvalidMappingException e ) {
+		catch (org.hibernate.boot.InvalidMappingException e) {
 			assertEquals( SourceType.INPUT_STREAM, e.getOrigin().getType() );
-			assertEquals( null, e.getOrigin().getName() );
+			assertNull( null, e.getOrigin().getName() );
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "input stream" );
-			assertEquals( inv.getPath(), null );
+		catch (InvalidMappingException inv) {
+			assertEquals( "input stream", inv.getType() );
+			assertNull( inv.getPath() );
 		}
 
 		try {
@@ -105,8 +107,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
-			assertEquals( e.getOrigin().getName(), "nothere" );
+			assertEquals( SourceType.RESOURCE, e.getOrigin().getType() );
+			assertEquals( "nothere", e.getOrigin().getName() );
 		}
 
 		try {
@@ -114,8 +116,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.RESOURCE );
-			assertEquals( e.getOrigin().getName(), "nothere" );
+			assertEquals( SourceType.RESOURCE, e.getOrigin().getType() );
+			assertEquals( "nothere", e.getOrigin().getName() );
 		}
 
 		try {
@@ -123,22 +125,22 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			fail();
 		}
 		catch (org.hibernate.boot.MappingNotFoundException e) {
-			assertEquals( e.getOrigin().getType(), SourceType.URL );
-			assertEquals( e.getOrigin().getName(), "file://nothere" );
+			assertEquals( SourceType.URL, e.getOrigin().getType() );
+			assertEquals( "file://nothere", e.getOrigin().getName() );
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "URL" );
-			assertEquals( inv.getPath(), "file://nothere" );
+		catch (InvalidMappingException inv) {
+			assertEquals( "URL", inv.getType() );
+			assertEquals( "file://nothere", inv.getPath() );
 		}
 		catch (org.hibernate.boot.MappingException me) {
-			assertEquals( me.getOrigin().getType(), SourceType.URL );
-			assertEquals( me.getOrigin().getName(), "file://nothere" );
+			assertEquals( SourceType.URL, me.getOrigin().getType() );
+			assertEquals( "file://nothere", me.getOrigin().getName() );
 		}
 	}
 
 	@Test
 	public void testInvalidMapping() throws MappingException, IOException {
-		String resourceName = "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml";
+		String resourceName = "org/hibernate/orm/test/mappingexception/InvalidMapping.hbm.xml";
 		File file = File.createTempFile( "TempInvalidMapping", ".hbm.xml" );
 		file.deleteOnExit();
 		copy( ConfigHelper.getConfigStream( resourceName ), file );
@@ -148,8 +150,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addCacheableFile( file.getAbsolutePath() );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
+		catch (InvalidMappingException inv) {
+			assertEquals( "file", inv.getType() );
 			assertNotNull( inv.getPath() );
 			assertTrue( inv.getPath().endsWith( ".hbm.xml" ) );
 		}
@@ -158,8 +160,8 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addCacheableFile( file );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
+		catch (InvalidMappingException inv) {
+			assertEquals( "file", inv.getType() );
 			assertNotNull( inv.getPath() );
 			assertTrue( inv.getPath().endsWith( ".hbm.xml" ) );
 		}
@@ -168,63 +170,62 @@ public class MappingExceptionTest extends BaseUnitTestCase {
 			cfg.addClass( InvalidMapping.class );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), "org/hibernate/test/mappingexception/InvalidMapping.hbm.xml" );
+		catch (InvalidMappingException inv) {
+			assertEquals( "resource", inv.getType() );
+			assertEquals( "org/hibernate/orm/test/mappingexception/InvalidMapping.hbm.xml", inv.getPath() );
 		}
 
 		try {
 			cfg.addFile( file.getAbsolutePath() );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), file.getPath() );
+		catch (InvalidMappingException inv) {
+			assertEquals( "file", inv.getType() );
+			assertEquals( file.getPath(), inv.getPath() );
 		}
 
 		try {
 			cfg.addFile( file );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "file" );
-			assertEquals( inv.getPath(), file.getPath() );
+		catch (InvalidMappingException inv) {
+			assertEquals( "file", inv.getType() );
+			assertEquals( file.getPath(), inv.getPath() );
 		}
-
 
 		try {
 			cfg.addInputStream( ConfigHelper.getResourceAsStream( resourceName ) );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "input stream" );
-			assertEquals( inv.getPath(), null );
+		catch (InvalidMappingException inv) {
+			assertEquals( "input stream", inv.getType() );
+			assertNull( inv.getPath() );
 		}
 
 		try {
 			cfg.addResource( resourceName );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), resourceName );
+		catch (InvalidMappingException inv) {
+			assertEquals( "resource", inv.getType() );
+			assertEquals( resourceName, inv.getPath() );
 		}
 
 		try {
 			cfg.addResource( resourceName, getClass().getClassLoader() );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "resource" );
-			assertEquals( inv.getPath(), resourceName );
+		catch (InvalidMappingException inv) {
+			assertEquals( "resource", inv.getType() );
+			assertEquals( resourceName, inv.getPath() );
 		}
 
 		try {
 			cfg.addURL( ConfigHelper.findAsResource( resourceName ) );
 			fail();
 		}
-		catch ( InvalidMappingException inv ) {
-			assertEquals( inv.getType(), "URL" );
+		catch (InvalidMappingException inv) {
+			assertEquals( "URL", inv.getType() );
 			assertTrue( inv.getPath().endsWith( "InvalidMapping.hbm.xml" ) );
 		}
 	}

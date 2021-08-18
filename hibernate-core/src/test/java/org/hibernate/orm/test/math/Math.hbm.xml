@@ -11,7 +11,7 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 
-<hibernate-mapping package="org.hibernate.test.math">
+<hibernate-mapping package="org.hibernate.orm.test.math">
 
     <class name="MathEntity" table="MathEntity">
         <id name="id">

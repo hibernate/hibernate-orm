@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping
-		package="org.hibernate.test.unconstrained"
+		package="org.hibernate.orm.test.unconstrained"
 		default-access="field">
 	
 	<class name="Person" 

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.unconstrained;
+package org.hibernate.orm.test.unconstrained;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -12,36 +12,55 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
+import org.hibernate.cache.spi.CacheImplementor;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * @author Gavin King
  */
-public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "unconstrained/Person.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/unconstrained/Person.hbm.xml"
+)
+@SessionFactory
+public class UnconstrainedTest {
 
-	@Test
-	public void testUnconstrainedNoCache() {
-		inTransaction(
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					Person p = new Person( "gavin" );
 					p.setEmployeeId( "123456" );
 					session.persist( p );
 				}
 		);
+	}
 
-		sessionFactory().getCache().evictEntityRegion( Person.class );
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session ->
+						session.createQuery( "delete from Person" ).executeUpdate()
+		);
+	}
 
-		inTransaction(
+	@Test
+	public void testUnconstrainedNoCache(SessionFactoryScope scope) {
+
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
+		cache.evictEntityRegion( Person.class );
+
+		scope.inTransaction(
 				session -> {
 					Person p = session.get( Person.class, "gavin" );
 					assertNull( p.getEmployee() );
@@ -49,9 +68,9 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		sessionFactory().getCache().evictEntityRegion( Person.class );
+		cache.evictEntityRegion( Person.class );
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person p = session.get( Person.class, "gavin" );
 					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );
@@ -62,18 +81,13 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUnconstrainedOuterJoinFetch() {
-		inTransaction(
-				session -> {
-					Person p = new Person( "gavin" );
-					p.setEmployeeId( "123456" );
-					session.persist( p );
-				}
-		);
+	public void testUnconstrainedOuterJoinFetch(SessionFactoryScope scope) {
 
-		sessionFactory().getCache().evictEntityRegion( Person.class );
+		final CacheImplementor cache = scope.getSessionFactory().getCache();
 
-		inTransaction(
+		cache.evictEntityRegion( Person.class );
+
+		scope.inTransaction(
 				session -> {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
@@ -90,10 +104,9 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
+		cache.evictEntityRegion( Person.class );
 
-		sessionFactory().getCache().evictEntityRegion( Person.class );
-
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 					CriteriaQuery<Person> criteria = criteriaBuilder.createQuery( Person.class );
@@ -114,16 +127,9 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testUnconstrained() {
-		inTransaction(
-				session -> {
-					Person p = new Person( "gavin" );
-					p.setEmployeeId( "123456" );
-					session.persist( p );
-				}
-		);
+	public void testUnconstrained(SessionFactoryScope scope) {
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person p = session.get( Person.class, "gavin" );
 					assertNull( p.getEmployee() );
@@ -131,7 +137,7 @@ public class UnconstrainedTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				session -> {
 					Person p = session.get( Person.class, "gavin" );
 					assertTrue( Hibernate.isInitialized( p.getEmployee() ) );

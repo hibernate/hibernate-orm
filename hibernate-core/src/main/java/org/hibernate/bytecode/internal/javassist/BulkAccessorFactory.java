@@ -71,7 +71,7 @@ class BulkAccessorFactory {
 				FactoryHelper.writeFile( classfile, writeDirectory );
 			}
 
-			beanClass = FactoryHelper.toClass( classfile, loader, getDomain() );
+			beanClass = FactoryHelper.toClass( classfile, null, loader, getDomain() );
 			return (BulkAccessor) this.newInstance( beanClass );
 		}
 		catch ( Exception e ) {

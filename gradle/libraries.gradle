@@ -35,7 +35,7 @@ ext {
     shrinkwrapDescriptorsVersion = '2.0.0'
     wildflyArquillianContainerVersion = '2.2.0.Final'
 
-    jodaTimeVersion = '2.3'
+    jodaTimeVersion = '2.9.7'
 
     jaxbApiVersion = '2.3.1'
     // We can't upgrade JAXB in Karaf (yet), but fortunately everything works fine with the version built in Karaf

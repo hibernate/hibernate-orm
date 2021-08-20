@@ -32,7 +32,7 @@ gradlePlugin {
 		}
 		antlrPlugin {
 			id = 'org.hibernate.orm.antlr'
-			implementationClass = 'org.hibernate.orm.antlr.Antlr4Plugin'
+			implementationClass = 'org.hibernate.orm.antlr.AntlrPlugin'
 		}
 		jakartaPlugin {
 			id = 'org.hibernate.orm.jakarta'

@@ -6,7 +6,11 @@
  */
 package org.hibernate.orm.antlr;
 
+import javax.inject.Inject;
+
 import org.gradle.api.NamedDomainObjectContainer;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
@@ -14,23 +18,30 @@ import org.gradle.api.model.ObjectFactory;
 /**
  * @author Steve Ebersole
  */
-public class Antlr4Spec {
+public class AntlrSpec {
 	public static final String REGISTRATION_NAME = "antlr4";
 
 	private final DirectoryProperty grammarBaseDirectory;
 	private final DirectoryProperty outputBaseDirectory;
 
-	private final NamedDomainObjectContainer<GrammarDescriptor> grammarDescriptors;
+	private final NamedDomainObjectContainer<SplitGrammarDescriptor> grammarDescriptors;
 
+	@Inject
 	@SuppressWarnings("UnstableApiUsage")
-	public Antlr4Spec(ObjectFactory objectFactory, ProjectLayout layout) {
+	public AntlrSpec(Project project, Task groupingTask) {
+		final ObjectFactory objectFactory = project.getObjects();
+		final ProjectLayout layout = project.getLayout();
+
 		grammarBaseDirectory = objectFactory.directoryProperty();
 		grammarBaseDirectory.convention( layout.getProjectDirectory().dir( "src/main/antlr" ) );
 
 		outputBaseDirectory = objectFactory.directoryProperty();
 		outputBaseDirectory.convention( layout.getBuildDirectory().dir( "generated/sources/antlr/main" ) );
 
-		grammarDescriptors = objectFactory.domainObjectContainer( GrammarDescriptor.class );
+		grammarDescriptors = objectFactory.domainObjectContainer(
+				SplitGrammarDescriptor.class,
+				new GrammarDescriptorFactory( this, groupingTask, project )
+		);
 	}
 
 	public DirectoryProperty getGrammarBaseDirectory() {
@@ -41,7 +52,7 @@ public class Antlr4Spec {
 		return outputBaseDirectory;
 	}
 
-	public NamedDomainObjectContainer<GrammarDescriptor> getGrammarDescriptors() {
+	public NamedDomainObjectContainer<SplitGrammarDescriptor> getGrammarDescriptors() {
 		return grammarDescriptors;
 	}
 }

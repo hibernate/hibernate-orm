@@ -195,10 +195,6 @@ xjc {
 }
 
 
-//sourceSets.main.sourceGeneratorsTask.dependsOn xjc
-//sourceSets.main.sourceGeneratorsTask.dependsOn antlr
-tasks.compile.dependsOn antlr
-
 task copyBundleResources (type: Copy) {
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )

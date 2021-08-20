@@ -78,7 +78,7 @@ public class NegatedPredicateWrapper extends ExpressionImpl<Boolean> implements 
 
 	@Override
 	public Predicate not() {
-		return new NegatedPredicateWrapper( this );
+		return predicate;
 	}
 
 	@Override

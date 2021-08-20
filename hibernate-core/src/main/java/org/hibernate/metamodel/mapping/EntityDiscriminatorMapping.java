@@ -73,10 +73,4 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 		// can never be circular
 		return null;
 	}
-
-	<T> DomainResult<T> createUnderlyingDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState);
 }

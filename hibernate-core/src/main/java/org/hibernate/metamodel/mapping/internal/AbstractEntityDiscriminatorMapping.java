@@ -89,23 +89,6 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public <T> DomainResult<T> createUnderlyingDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, true, creationState );
-
-		//noinspection unchecked
-		return new BasicResult(
-				sqlSelection.getValuesArrayPosition(),
-				resultVariable,
-				mappingType.getUnderlyingType().getJavaTypeDescriptor(),
-				navigablePath
-		);
-	}
-
-	@Override
 	public void applySqlSelections(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,

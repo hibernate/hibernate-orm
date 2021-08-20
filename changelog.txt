@@ -3,6 +3,28 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.22.Final (August 20, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31962
+
+** Task
+    * [HHH-14788] - Upgrade to Byteman 4.0.16
+    * [HHH-14787] - Upgrade ORM 5.3 to Javassist 3.27.0-GA
+    * [HHH-14786] - Upgrade ORM 5.3 to Weld 3.1.8.Final
+    * [HHH-14785] - Upgrade ORM 5.3 to Hibernate Validator 6.0.22.Final
+    * [HHH-14784] - Upgrade ORM 5.3 to Hibernate Commons Annotations 5.0.5.Final
+    * [HHH-14783] - Upgrade Hibernate ORM 5.3 to Joda Time 2.9.7
+    * [HHH-14782] - Upgrade Hibernate ORM 5.3 to Classmate 1.5.1
+    * [HHH-14781] - Upgrade to JBoss Logging 3.4.2.Final
+    * [HHH-14771] - Upgrade to Byte Buddy 1.11.12
+    * [HHH-14709] - Upgrade to Gradle 6.7.1 and move to Gradle's built-in way of testing Java modules
+    * [HHH-14372] - Upgrade to Weld 3.1.5.Final in tests
+    * [HHH-14371] - Add --add-opens options required for tests
+    * [HHH-14370] - Add --add-opens options required for Gradle
+    * [HHH-13821] - Update to Byte Buddy 1.10.7
+
+
 Changes in 5.3.21.Final (July 16, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

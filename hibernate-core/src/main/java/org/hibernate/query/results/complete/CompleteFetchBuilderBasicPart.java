@@ -11,6 +11,7 @@ import java.util.function.BiFunction;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.MissingSqlSelectionException;
 import org.hibernate.query.results.PositionalSelectionsNotAllowedException;
@@ -19,8 +20,8 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
@@ -30,7 +31,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 /**
  * @author Steve Ebersole
  */
-public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, ModelPartReferenceBasic {
+public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, BasicValuedFetchBuilder, ModelPartReferenceBasic {
 	private final NavigablePath navigablePath;
 	private final BasicValuedModelPart referencedModelPart;
 	private final String selectionAlias;
@@ -55,7 +56,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Mode
 	}
 
 	@Override
-	public Fetch buildFetch(
+	public BasicFetch<?> buildFetch(
 			FetchParent parent,
 			NavigablePath fetchPath,
 			JdbcValuesMetadata jdbcResultsMetadata,
@@ -103,7 +104,7 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Mode
 				processingState -> new SqlSelectionImpl( valuesArrayPosition, referencedModelPart )
 		);
 
-		return parent.generateFetchableFetch(
+		return (BasicFetch<?>) parent.generateFetchableFetch(
 				referencedModelPart,
 				fetchPath,
 				FetchTiming.IMMEDIATE,

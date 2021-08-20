@@ -36,16 +36,15 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard;
 import org.hibernate.query.internal.FetchMementoHbmStandard.FetchParentMemento;
-import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoBasicStandard;
 import org.hibernate.query.internal.ResultMementoCollectionStandard;
 import org.hibernate.query.internal.ResultMementoEntityStandard;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.FetchMemento;
+import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
-import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.BasicType;
@@ -375,7 +374,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			final NavigablePath entityPath = new NavigablePath( entityName );
 
-			final ResultMementoBasic discriminatorMemento;
+			final FetchMementoBasic discriminatorMemento;
 			if ( discriminatorColumnAlias == null ) {
 				discriminatorMemento = null;
 			}
@@ -387,7 +386,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 					);
 				}
 
-				discriminatorMemento = new ModelPartResultMementoBasicImpl(
+				discriminatorMemento = new FetchMementoBasicStandard(
 						entityPath.append( EntityDiscriminatorMapping.ROLE_NAME ),
 						entityDescriptor.getDiscriminatorMapping(),
 						discriminatorColumnAlias

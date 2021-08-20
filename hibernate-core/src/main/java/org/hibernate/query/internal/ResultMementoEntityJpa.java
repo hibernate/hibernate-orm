@@ -15,13 +15,13 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.FetchMemento;
-import org.hibernate.query.named.ResultMementoBasic;
+import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.ResultMementoEntity;
+import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityJpa;
-import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderBasic;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
 
 /**
  * @author Steve Ebersole
@@ -30,14 +30,13 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
-//	private final ResultMemento identifierMemento;
-	private final ResultMementoBasic discriminatorMemento;
+	private final FetchMementoBasic discriminatorMemento;
 	private final Map<String, FetchMemento> explicitFetchMementoMap;
 
 	public ResultMementoEntityJpa(
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
-			ResultMementoBasic discriminatorMemento,
+			FetchMementoBasic discriminatorMemento,
 			Map<String, FetchMemento> explicitFetchMementoMap) {
 		this.navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
 		this.entityDescriptor = entityDescriptor;
@@ -56,17 +55,17 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-		final ResultBuilderBasicValued discriminatorResultBuilder;
+		final BasicValuedFetchBuilder discriminatorFetchBuilder;
 		if ( discriminatorMapping == null ) {
 			assert discriminatorMemento == null;
-			discriminatorResultBuilder = null;
+			discriminatorFetchBuilder = null;
 		}
 		else {
 			if ( discriminatorMemento != null ) {
-				discriminatorResultBuilder = discriminatorMemento.resolve( querySpaceConsumer, context );
+				discriminatorFetchBuilder = (BasicValuedFetchBuilder) discriminatorMemento.resolve( this, querySpaceConsumer, context );
 			}
 			else {
-				discriminatorResultBuilder = new ImplicitModelPartResultBuilderBasic( navigablePath, discriminatorMapping );
+				discriminatorFetchBuilder = new ImplicitFetchBuilderBasic( navigablePath, discriminatorMapping );
 			}
 		}
 
@@ -83,7 +82,7 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 				navigablePath,
 				entityDescriptor,
 				lockMode,
-				discriminatorResultBuilder,
+				discriminatorFetchBuilder,
 				explicitFetchBuilderMap
 		);
 	}

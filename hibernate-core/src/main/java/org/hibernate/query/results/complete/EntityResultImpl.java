@@ -7,6 +7,7 @@
 package org.hibernate.query.results.complete;
 
 import java.util.List;
+import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.MutableObject;
@@ -22,7 +23,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
@@ -36,11 +37,28 @@ public class EntityResultImpl implements EntityResult {
 	private final EntityValuedModelPart entityValuedModelPart;
 
 	private final DomainResult identifierResult;
-	private final BasicResult discriminatorResult;
+	private final Fetch discriminatorFetch;
 	private final List<Fetch> fetches;
 
 	private final String resultAlias;
 	private final LockMode lockMode;
+
+	public EntityResultImpl(
+			NavigablePath navigablePath,
+			EntityValuedModelPart entityValuedModelPart,
+			String resultAlias,
+			LockMode lockMode,
+			BasicFetch<?> discriminatorFetch,
+			DomainResultCreationState creationState) {
+		this(
+				navigablePath,
+				entityValuedModelPart,
+				resultAlias,
+				lockMode,
+				entityResult -> discriminatorFetch,
+				creationState
+		);
+	}
 
 	@SuppressWarnings( { "PointlessNullCheck" } )
 	public EntityResultImpl(
@@ -48,13 +66,14 @@ public class EntityResultImpl implements EntityResult {
 			EntityValuedModelPart entityValuedModelPart,
 			String resultAlias,
 			LockMode lockMode,
-			BasicResult<?> discriminatorResult,
+			Function<EntityResultImpl, BasicFetch> discriminatorFetchBuilder,
 			DomainResultCreationState creationState) {
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.resultAlias = resultAlias;
 		this.lockMode = lockMode;
-		this.discriminatorResult = discriminatorResult;
+
+		this.discriminatorFetch = discriminatorFetchBuilder.apply( this );
 
 		this.fetches = creationState.visitFetches( this );
 
@@ -141,7 +160,7 @@ public class EntityResultImpl implements EntityResult {
 						getNavigablePath(),
 						lockMode,
 						identifierResult,
-						discriminatorResult,
+						discriminatorFetch,
 						null,
 						null,
 						creationState

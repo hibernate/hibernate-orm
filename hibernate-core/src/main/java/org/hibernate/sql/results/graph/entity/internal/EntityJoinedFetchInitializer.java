@@ -19,6 +19,8 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -38,7 +40,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 			NavigablePath navigablePath,
 			LockMode lockMode,
 			DomainResult<?> identifierResult,
-			DomainResult<?> discriminatorResult,
+			Fetch discriminatorResult,
 			DomainResult<?> versionResult,
 			AssemblerCreationState creationState) {
 		super(

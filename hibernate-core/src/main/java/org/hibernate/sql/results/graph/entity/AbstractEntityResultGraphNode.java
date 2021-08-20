@@ -6,7 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
-import org.hibernate.LockMode;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -24,6 +24,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.results.ResultsHelper.attributeName;
@@ -36,7 +37,7 @@ import static org.hibernate.query.results.ResultsHelper.attributeName;
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
 	private final EntityValuedModelPart referencedModelPart;
 	private final DomainResult identifierResult;
-	private final DomainResult discriminatorResult;
+	private final Fetch discriminatorFetch;
 	private final DomainResult versionResult;
 	private final DomainResult<Object> rowIdResult;
 
@@ -104,15 +105,17 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		final EntityDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping( entityDescriptor, entityTableGroup );
 		// No need to fetch the discriminator if this type does not have subclasses
 		if ( discriminatorMapping != null && entityDescriptor.getEntityPersister().getEntityMetamodel().hasSubclasses() ) {
-			discriminatorResult = discriminatorMapping.createUnderlyingDomainResult(
+			discriminatorFetch = discriminatorMapping.generateFetch(
+					this,
 					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
-					entityTableGroup,
+					FetchTiming.IMMEDIATE,
+					true,
 					null,
 					creationState
 			);
 		}
 		else {
-			discriminatorResult = null;
+			discriminatorFetch = null;
 		}
 
 		final EntityVersionMapping versionDescriptor = entityDescriptor.getVersionMapping();
@@ -205,8 +208,8 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		return identifierResult;
 	}
 
-	public DomainResult getDiscriminatorResult() {
-		return discriminatorResult;
+	public Fetch getDiscriminatorFetch() {
+		return discriminatorFetch;
 	}
 
 	public DomainResult getVersionResult() {

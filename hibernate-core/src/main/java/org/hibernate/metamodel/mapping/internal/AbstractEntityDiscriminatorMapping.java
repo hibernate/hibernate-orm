@@ -6,20 +6,18 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -28,7 +26,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscriminatorMapping, FetchOptions {
+public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscriminatorMapping {
 	private final EntityPersister entityDescriptor;
 	private final String tableExpression;
 	private final String mappedColumnExpression;
@@ -69,23 +67,8 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public String getFetchableName() {
-		return ROLE_NAME;
-	}
-
-	@Override
-	public FetchOptions getMappedFetchOptions() {
-		return this;
-	}
-
-	@Override
-	public FetchStyle getStyle() {
-		return FetchStyle.JOIN;
-	}
-
-	@Override
-	public FetchTiming getTiming() {
-		return FetchTiming.IMMEDIATE;
+	public String getConcreteEntityNameForDiscriminatorValue(Object value) {
+		return ( (Loadable) getEntityDescriptor() ).getSubclassForDiscriminatorValue( value );
 	}
 
 	@Override
@@ -131,7 +114,7 @@ public abstract class AbstractEntityDiscriminatorMapping implements EntityDiscri
 	}
 
 	@Override
-	public Fetch generateFetch(
+	public BasicFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
 			FetchTiming fetchTiming,

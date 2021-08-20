@@ -41,13 +41,10 @@ import org.hibernate.query.internal.ResultMementoEntityJpa;
 import org.hibernate.query.internal.ResultMementoInstantiationStandard;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.FetchMemento;
-import org.hibernate.query.named.ModelPartResultMementoBasic;
+import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
-import org.hibernate.query.named.ResultMementoBasic;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
-import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -275,7 +272,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityDescriptor = runtimeMetamodels.getEntityMappingType( entityName );
 
-			final ResultMementoBasic discriminatorMemento = resolveDiscriminatorMemento(
+			final FetchMementoBasic discriminatorMemento = resolveDiscriminatorMemento(
 					entityDescriptor,
 					discriminatorColumn,
 					navigablePath
@@ -297,7 +294,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 		}
 
-		private static ModelPartResultMementoBasic resolveDiscriminatorMemento(
+		private static FetchMementoBasic resolveDiscriminatorMemento(
 				EntityMappingType entityMapping,
 				String discriminatorColumn,
 				NavigablePath entityPath) {
@@ -310,7 +307,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				return null;
 			}
 
-			return new ModelPartResultMementoBasicImpl(
+			return new FetchMementoBasicStandard(
 					entityPath.append( EntityDiscriminatorMapping.ROLE_NAME ),
 					discriminatorMapping,
 					discriminatorColumn

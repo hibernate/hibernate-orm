@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.SqlSelectionImpl;
@@ -31,7 +32,7 @@ import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnRefere
 /**
  * @author Steve Ebersole
  */
-public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder {
+public class ImplicitFetchBuilderBasic implements ImplicitFetchBuilder, BasicValuedFetchBuilder {
 	private final NavigablePath fetchPath;
 	private final BasicValuedModelPart fetchable;
 

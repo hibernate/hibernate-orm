@@ -14,13 +14,12 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -38,20 +37,29 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
-	private final ResultBuilderBasicValued discriminatorResultBuilder;
+	private final BasicValuedFetchBuilder discriminatorFetchBuilder;
 	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityJpa(
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
-			ResultBuilderBasicValued discriminatorResultBuilder,
+			BasicValuedFetchBuilder discriminatorFetchBuilder,
 			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
-		this.discriminatorResultBuilder = discriminatorResultBuilder;
+		this.discriminatorFetchBuilder = discriminatorFetchBuilder;
 		this.explicitFetchBuilderMap = explicitFetchBuilderMap;
+
+		if ( entityDescriptor.getDiscriminatorMapping() == null ) {
+			// not discriminated
+			assert discriminatorFetchBuilder == null;
+		}
+		else {
+			// discriminated
+			assert discriminatorFetchBuilder != null;
+		}
 	}
 
 	@Override
@@ -90,28 +98,24 @@ public class CompleteResultBuilderEntityJpa implements CompleteResultBuilderEnti
 					)
 			);
 
-			final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
-			final BasicResult<?> discriminatorResult;
-			if ( discriminatorMapping == null ) {
-				assert discriminatorResultBuilder == null;
-				discriminatorResult = null;
-			}
-			else {
-				assert discriminatorResultBuilder != null;
-				discriminatorResult = discriminatorResultBuilder.buildResult(
-						jdbcResultsMetadata,
-						resultPosition,
-						legacyFetchResolver,
-						domainResultCreationState
-				);
-			}
-
 			return new EntityResultImpl(
 					navigablePath,
 					entityDescriptor,
 					null,
 					lockMode,
-					discriminatorResult,
+					(entityResult) -> {
+						if ( discriminatorFetchBuilder == null ) {
+							return null;
+						}
+
+						return discriminatorFetchBuilder.buildFetch(
+								entityResult,
+								navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+								jdbcResultsMetadata,
+								legacyFetchResolver,
+								domainResultCreationState
+						);
+					},
 					domainResultCreationState
 			);
 		}

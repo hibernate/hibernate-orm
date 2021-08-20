@@ -57,7 +57,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						getNavigablePath(),
 						creationState.determineEffectiveLockMode( sourceAlias ),
 						entityResult.getIdentifierResult(),
-						entityResult.getDiscriminatorResult(),
+						entityResult.getDiscriminatorFetch(),
 						entityResult.getVersionResult(),
 						creationState
 				)

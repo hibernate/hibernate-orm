@@ -11,16 +11,16 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
 import org.hibernate.query.results.FetchBuilder;
-import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
@@ -32,7 +32,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
 	private final LockMode lockMode;
-	private final ResultBuilderBasicValued discriminatorResultBuilder;
+	private final BasicValuedFetchBuilder discriminatorFetchBuilder;
 	private final HashMap<String, FetchBuilder> explicitFetchBuilderMap;
 
 	public CompleteResultBuilderEntityStandard(
@@ -40,13 +40,13 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 			NavigablePath navigablePath,
 			EntityMappingType entityDescriptor,
 			LockMode lockMode,
-			ResultBuilderBasicValued discriminatorResultBuilder,
+			BasicValuedFetchBuilder discriminatorFetchBuilder,
 			HashMap<String, FetchBuilder> explicitFetchBuilderMap) {
 		this.tableAlias = tableAlias;
 		this.navigablePath = navigablePath;
 		this.entityDescriptor = entityDescriptor;
 		this.lockMode = lockMode;
-		this.discriminatorResultBuilder = discriminatorResultBuilder;
+		this.discriminatorFetchBuilder = discriminatorFetchBuilder;
 		this.explicitFetchBuilderMap = explicitFetchBuilderMap;
 	}
 
@@ -126,25 +126,24 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 					)
 			);
 
-			final BasicResult<?> discriminatorResult;
-			if ( discriminatorResultBuilder != null ) {
-				discriminatorResult = discriminatorResultBuilder.buildResult(
-						jdbcResultsMetadata,
-						resultPosition,
-						legacyFetchResolver,
-						domainResultCreationState
-				);
-			}
-			else {
-				discriminatorResult = null;
-			}
-
 			return new EntityResultImpl(
 					navigablePath,
 					entityDescriptor,
 					null,
 					lockMode,
-					discriminatorResult,
+					(entityResult) -> {
+						if ( discriminatorFetchBuilder == null ) {
+							return null;
+						}
+
+						return discriminatorFetchBuilder.buildFetch(
+								entityResult,
+								navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+								jdbcResultsMetadata,
+								legacyFetchResolver,
+								domainResultCreationState
+						);
+					},
 					domainResultCreationState
 			);
 		}

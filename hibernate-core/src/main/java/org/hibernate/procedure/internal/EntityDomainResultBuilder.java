@@ -12,34 +12,33 @@ import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.ResultBuilder;
-import org.hibernate.query.results.ResultBuilderBasicValued;
 import org.hibernate.query.results.complete.EntityResultImpl;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
-import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderBasic;
+import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 
 /**
  * @author Christian Beikov
  */
-public class EntityDomainResultBuilder<T> implements ResultBuilder {
+public class EntityDomainResultBuilder implements ResultBuilder {
 
 	private final NavigablePath navigablePath;
 	private final EntityMappingType entityDescriptor;
-	private final ResultBuilderBasicValued discriminatorResultBuilder;
+	private final BasicValuedFetchBuilder discriminatorFetchBuilder;
 
 	public EntityDomainResultBuilder(EntityMappingType entityDescriptor) {
 		this.entityDescriptor = entityDescriptor;
 		this.navigablePath = new NavigablePath( entityDescriptor.getEntityName() );
 		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		if ( discriminatorMapping == null ) {
-			this.discriminatorResultBuilder = null;
+			this.discriminatorFetchBuilder = null;
 		}
 		else {
-			this.discriminatorResultBuilder = new ImplicitModelPartResultBuilderBasic(
+			this.discriminatorFetchBuilder = new ImplicitFetchBuilderBasic(
 					navigablePath,
 					discriminatorMapping
 			);
@@ -52,25 +51,24 @@ public class EntityDomainResultBuilder<T> implements ResultBuilder {
 			int resultPosition,
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState) {
-		final BasicResult<?> discriminatorResult;
-		if ( discriminatorResultBuilder == null ) {
-			discriminatorResult = null;
-		}
-		else {
-			discriminatorResult = discriminatorResultBuilder.buildResult(
-					jdbcResultsMetadata,
-					resultPosition,
-					legacyFetchResolver,
-					domainResultCreationState
-			);
-		}
 
 		return new EntityResultImpl(
 				navigablePath,
 				entityDescriptor,
 				null,
 				LockMode.NONE,
-				discriminatorResult,
+				entityResult -> {
+					if ( discriminatorFetchBuilder == null ) {
+						return null;
+					}
+					return discriminatorFetchBuilder.buildFetch(
+							entityResult,
+							navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+							jdbcResultsMetadata,
+							legacyFetchResolver,
+							domainResultCreationState
+					);
+				},
 				domainResultCreationState
 		);
 	}

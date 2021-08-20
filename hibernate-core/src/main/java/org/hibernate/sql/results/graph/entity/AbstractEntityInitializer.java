@@ -35,7 +35,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.proxy.map.MapProxy;
@@ -99,7 +98,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			NavigablePath navigablePath,
 			LockMode lockMode,
 			DomainResult<?> identifierResult,
-			DomainResult<?> discriminatorResult,
+			Fetch discriminatorFetch,
 			DomainResult<?> versionResult,
 			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
@@ -170,8 +169,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			this.identifierAssembler = null;
 		}
 
-		if ( discriminatorResult != null ) {
-			discriminatorAssembler = discriminatorResult.createResultAssembler( creationState );
+		if ( discriminatorFetch != null ) {
+			discriminatorAssembler = discriminatorFetch.createAssembler( this, creationState );
 		}
 		else {
 			discriminatorAssembler = null;
@@ -337,7 +336,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 		);
 
-		final String concreteEntityName = ( (Loadable) entityDescriptor.getRootEntityDescriptor() ).getSubclassForDiscriminatorValue( discriminatorValue );
+		final String concreteEntityName = entityDescriptor.getDiscriminatorMapping().getConcreteEntityNameForDiscriminatorValue( discriminatorValue );
+
 		if ( concreteEntityName == null ) {
 			return entityDescriptor;
 		}

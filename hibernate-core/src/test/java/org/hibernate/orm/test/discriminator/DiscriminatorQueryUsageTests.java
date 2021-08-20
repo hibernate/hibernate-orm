@@ -50,7 +50,7 @@ public class DiscriminatorQueryUsageTests {
 	@Test
 	public void testUsageAsPredicateOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Long id = session.createQuery( "select p.id from Person p where type(p) = 'P'", Long.class ).uniqueResult();
+			final Long id = session.createQuery( "select p.id from Person p where type(p) = 'E'", Long.class ).uniqueResult();
 			Assertions.assertThat( id ).isEqualTo( steveId );
 		} );
 	}
@@ -69,7 +69,7 @@ public class DiscriminatorQueryUsageTests {
 	public void testUsageAsPredicateWithParamOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Long id = session.createQuery( "select p.id from Person p where type(p) = :type", Long.class )
-					.setParameter( "type", "P" )
+					.setParameter( "type", "E" )
 					.uniqueResult();
 			Assertions.assertThat( id ).isEqualTo( steveId );
 		} );

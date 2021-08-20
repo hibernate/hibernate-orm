@@ -24,7 +24,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.results.ResultsHelper.attributeName;
@@ -36,9 +36,9 @@ import static org.hibernate.query.results.ResultsHelper.attributeName;
  */
 public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent implements EntityResultGraphNode {
 	private final EntityValuedModelPart referencedModelPart;
-	private final DomainResult identifierResult;
-	private final Fetch discriminatorFetch;
-	private final DomainResult versionResult;
+	private final DomainResult<?> identifierResult;
+	private final BasicFetch<?> discriminatorFetch;
+	private final DomainResult<?> versionResult;
 	private final DomainResult<Object> rowIdResult;
 
 	private final EntityMappingType targetType;
@@ -208,7 +208,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		return identifierResult;
 	}
 
-	public Fetch getDiscriminatorFetch() {
+	public BasicFetch<?> getDiscriminatorFetch() {
 		return discriminatorFetch;
 	}
 

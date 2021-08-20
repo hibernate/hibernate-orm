@@ -36,29 +36,12 @@ public class EntityResultImpl implements EntityResult {
 	private final NavigablePath navigablePath;
 	private final EntityValuedModelPart entityValuedModelPart;
 
-	private final DomainResult identifierResult;
-	private final Fetch discriminatorFetch;
+	private final DomainResult<?> identifierResult;
+	private final BasicFetch<?> discriminatorFetch;
 	private final List<Fetch> fetches;
 
 	private final String resultAlias;
 	private final LockMode lockMode;
-
-	public EntityResultImpl(
-			NavigablePath navigablePath,
-			EntityValuedModelPart entityValuedModelPart,
-			String resultAlias,
-			LockMode lockMode,
-			BasicFetch<?> discriminatorFetch,
-			DomainResultCreationState creationState) {
-		this(
-				navigablePath,
-				entityValuedModelPart,
-				resultAlias,
-				lockMode,
-				entityResult -> discriminatorFetch,
-				creationState
-		);
-	}
 
 	@SuppressWarnings( { "PointlessNullCheck" } )
 	public EntityResultImpl(
@@ -66,7 +49,7 @@ public class EntityResultImpl implements EntityResult {
 			EntityValuedModelPart entityValuedModelPart,
 			String resultAlias,
 			LockMode lockMode,
-			Function<EntityResultImpl, BasicFetch> discriminatorFetchBuilder,
+			Function<EntityResultImpl, BasicFetch<?>> discriminatorFetchBuilder,
 			DomainResultCreationState creationState) {
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
@@ -151,7 +134,7 @@ public class EntityResultImpl implements EntityResult {
 	}
 
 	@Override
-	public DomainResultAssembler createResultAssembler(AssemblerCreationState creationState) {
+	public DomainResultAssembler<?> createResultAssembler(AssemblerCreationState creationState) {
 		final EntityInitializer initializer = (EntityInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),

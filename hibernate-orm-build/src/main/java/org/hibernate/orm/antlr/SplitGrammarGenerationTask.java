@@ -14,6 +14,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
@@ -25,6 +26,7 @@ import static org.hibernate.orm.antlr.AntlrHelper.stripSillyGeneratedFromLines;
 /**
  * @author Steve Ebersole
  */
+@CacheableTask
 public abstract class SplitGrammarGenerationTask extends DefaultTask {
 	private final SplitGrammarDescriptor grammarDescriptor;
 

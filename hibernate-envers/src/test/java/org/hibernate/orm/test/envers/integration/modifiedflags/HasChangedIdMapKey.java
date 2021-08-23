@@ -11,7 +11,7 @@ import javax.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
-import org.hibernate.envers.test.integration.collection.mapkey.IdMapKeyEntity;
+import org.hibernate.orm.test.envers.integration.collection.mapkey.IdMapKeyEntity;
 
 import org.junit.Test;
 

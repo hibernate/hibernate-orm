@@ -109,18 +109,6 @@ include 'hibernate-jipijapa'
 
 include 'hibernate-orm-modules'
 
-// The plugin used to generate Java modules was compiled using JDK11.
-// This means even with toolchains, Gradle needs to be run with Java 11+ in order to run Java modules ITs.
-// We might be able to get rid of that limitation by relying on Gradle's built-in support for Java modules,
-// but I (Yoann) tried and failed to make it work.
-// See https://docs.gradle.org/current/samples/sample_java_modules_multi_project.html
-if ( JavaVersion.current().isJava11Compatible() && gradle.ext.javaVersions.test.release.asInt() >= 9 ) {
-    include 'hibernate-integrationtest-java-modules'
-}
-else {
-    logger.warn( '[WARN] Skipping Java module path integration tests because the JDK does not support it' )
-}
-
 include 'documentation'
 include 'release'
 

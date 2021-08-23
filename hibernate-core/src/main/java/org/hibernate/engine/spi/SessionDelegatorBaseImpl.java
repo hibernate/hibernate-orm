@@ -47,7 +47,6 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -55,7 +54,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.spi.QueryImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
@@ -189,16 +187,6 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Object instantiate(String entityName, Object id) throws HibernateException {
 		return delegate.instantiate( entityName, id );
-	}
-
-	@Override
-	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-		return delegate.list( spec, queryParameters );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) throws HibernateException {
-		return delegate.scroll( spec, queryParameters );
 	}
 
 	@Override

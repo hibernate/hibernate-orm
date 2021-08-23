@@ -6,9 +6,7 @@
  */
 package org.hibernate.engine.spi;
 
-import java.io.Serializable;
 import java.sql.Connection;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import javax.persistence.FlushModeType;
@@ -26,11 +24,9 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.LobCreationContext;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryProducerImplementor;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder.Options;
@@ -325,31 +321,6 @@ public interface SharedSessionContractImplementor
 	 * interchangeable: a single persister might be responsible for multiple types.
 	 */
 	Object instantiate(EntityPersister persister, Object id) throws HibernateException;
-
-	/**
-	 * Execute a native SQL query, and return the results as a fully built list.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The result list.
-	 *
-	 * @throws HibernateException
-	 */
-	List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters)
-			throws HibernateException;
-
-	/**
-	 * Execute a native SQL query, and return the results as a scrollable result.
-	 *
-	 * @param spec The specification of the native SQL query to execute.
-	 * @param queryParameters The parameters by which to perform the execution.
-	 *
-	 * @return The resulting scrollable result.
-	 *
-	 * @throws HibernateException
-	 */
-	ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters);
 
 	int getDontFlushFromFind();
 

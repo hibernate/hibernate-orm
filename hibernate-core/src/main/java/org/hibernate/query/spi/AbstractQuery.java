@@ -87,6 +87,7 @@ import static org.hibernate.jpa.QueryHints.HINT_FETCH_SIZE;
 import static org.hibernate.jpa.QueryHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_FOLLOW_ON_LOCKING;
 import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
+import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
@@ -511,6 +512,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
 				applied = applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
 			}
+			else if ( HINT_NATIVE_SPACES.equals( hintName ) ) {
+				applied = applySynchronizeSpacesHint( value );
+			}
 			else {
 				log.ignoringUnrecognizedQueryHint( hintName );
 			}
@@ -551,6 +555,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	protected boolean applyNativeQueryLockMode(Object value) {
+		return false;
+	}
+
+	protected boolean applySynchronizeSpacesHint(Object value) {
 		return false;
 	}
 

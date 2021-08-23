@@ -28,7 +28,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
 import org.hibernate.LockMode;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
@@ -43,7 +42,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.query.spi.sql.NativeSQLQuerySpecification;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
-import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -67,7 +65,6 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
-import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -909,18 +906,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	protected abstract Object load(String entityName, Object identifier);
-
-	@Override
-	public List list(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
-//		return listCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	public ScrollableResultsImplementor scroll(NativeSQLQuerySpecification spec, QueryParameters queryParameters) {
-//		return scrollCustomQuery( getNativeQueryPlan( spec ).getCustomQuery(), queryParameters );
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 
 	@Override
 	public ExceptionConverter getExceptionConverter() {

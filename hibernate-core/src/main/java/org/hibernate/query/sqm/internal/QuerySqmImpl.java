@@ -509,6 +509,11 @@ public class QuerySqmImpl<R>
 		);
 	}
 
+	protected boolean applySynchronizeSpacesHint(Object value) {
+		throw new IllegalStateException(
+				"Illegal attempt to set synchronized spaces on non-native query via hint"
+		);
+	}
 
 	@Override
 	protected void collectHints(Map<String, Object> hints) {

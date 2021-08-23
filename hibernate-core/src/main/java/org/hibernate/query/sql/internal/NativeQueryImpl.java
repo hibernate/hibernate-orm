@@ -936,6 +936,43 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	protected boolean applySynchronizeSpacesHint(Object value) {
+		if ( value instanceof String ) {
+			addSynchronizedQuerySpace( (String) value );
+		}
+		else if ( value instanceof String[] ) {
+			final String[] strings = (String[]) value;
+			for ( int i = 0; i < strings.length; i++ ) {
+				addSynchronizedQuerySpace( strings[i] );
+			}
+		}
+		else if ( value instanceof Class ) {
+			addSynchronizedEntityClass( (Class<?>) value );
+		}
+		else if ( value instanceof Class[] ) {
+			final Class<?>[] classes = (Class<?>[]) value;
+			for ( int i = 0; i < classes.length; i++ ) {
+				addSynchronizedEntityClass( classes[i] );
+			}
+		}
+		else if ( value instanceof List ) {
+			final List<?> list = (List<?>) value;
+			list.forEach( this::applySynchronizeSpacesHint );
+		}
+		else if ( value instanceof Collection ) {
+			final Collection<?> values = (Collection<?>) value;
+			for ( Object element : values ) {
+				applySynchronizeSpacesHint( element );
+			}
+		}
+		else {
+			return false;
+		}
+
+		return true;
+	}
+
+	@Override
 	protected boolean applyNativeQueryLockMode(Object value) {
 		if ( value instanceof LockMode ) {
 			applyHibernateLockModeHint( (LockMode) value );

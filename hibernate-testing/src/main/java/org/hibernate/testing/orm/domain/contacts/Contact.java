@@ -33,9 +33,6 @@ public class Contact {
 
 	private LocalDate birthDay;
 
-	// NOTE : because of the @OrderColumn `addresses` is a List, while `phoneNumbers` is a BAG
-	// 		which is a List with no persisted order
-	@OrderColumn
 	private List<Address> addresses;
 	private List<PhoneNumber> phoneNumbers;
 
@@ -86,6 +83,9 @@ public class Contact {
 
 	@ElementCollection
 	@CollectionTable( name = "contact_addresses" )
+	// NOTE : because of the @OrderColumn `addresses` is a List, while `phoneNumbers` is
+	// 		a BAG which is a List with no persisted order
+	@OrderColumn
 	public List<Address> getAddresses() {
 		return addresses;
 	}

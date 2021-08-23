@@ -37,7 +37,7 @@ import static org.junit.Assert.assertTrue;
  * @author Brett Meyer
  */
 @RequiresDialect( Oracle8iDialect.class )
-public class QueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
+public class OracleQueryHintTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private SQLStatementInterceptor sqlStatementInterceptor;
 

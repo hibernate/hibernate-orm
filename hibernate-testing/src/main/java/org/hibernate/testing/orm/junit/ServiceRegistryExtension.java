@@ -182,6 +182,12 @@ public class ServiceRegistryExtension
 				ssrb.applySetting( setting.name(), setting.value() );
 			}
 
+			for ( SettingProvider providerAnn : serviceRegistryAnn.settingProviders() ) {
+				final Class<? extends SettingProvider.Provider<?>> providerImpl = providerAnn.provider();
+				final SettingProvider.Provider<?> provider = providerImpl.getConstructor().newInstance();
+				ssrb.applySetting( providerAnn.settingName(), provider.getSetting() );
+			}
+
 			for ( Class<? extends ServiceContributor> contributorClass : serviceRegistryAnn.serviceContributors() ) {
 				final ServiceContributor serviceContributor = contributorClass.newInstance();
 				serviceContributor.contribute( ssrb );

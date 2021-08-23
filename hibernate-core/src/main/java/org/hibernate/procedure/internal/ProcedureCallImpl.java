@@ -855,7 +855,7 @@ public class ProcedureCallImpl<R>
 		return this;
 	}
 
-	// todo (5.3) : all of the parameter stuff here can be done in AbstractProducedQuery
+	// todo (5.3) : all of the parameter stuff here can be done in AbstractQuery
 	//		using #getParameterMetadata and #getQueryParameterBindings for abstraction.
 	//		this "win" is to define these in one place
 

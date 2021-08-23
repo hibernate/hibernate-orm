@@ -20,6 +20,9 @@ dependencies {
     api libraries.junit5_api
     api libraries.junit5_params
     api 'org.hamcrest:hamcrest-all:1.3'
+    api libraries.assertj
+    api libraries.mockito
+    api libraries.mockito_inline
     api libraries.byteman
     api libraries.byteman_install
     api libraries.byteman_bmunit

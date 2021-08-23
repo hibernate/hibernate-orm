@@ -525,8 +525,9 @@ public class QuerySqmImpl<R>
 	@Override
 	protected List<R> doList() {
 		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
-		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 		final SqmSelectStatement<?> selectStatement = (SqmSelectStatement<?>) getSqmStatement();
+
+		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 		final boolean containsCollectionFetches = selectStatement.containsCollectionFetches();
 		final boolean hasLimit = queryOptions.hasLimit();
 		final boolean needsDistincting = containsCollectionFetches && (
@@ -535,7 +536,7 @@ public class QuerySqmImpl<R>
 						hasLimit
 		);
 		final ExecutionContext executionContextToUse;
-		if ( queryOptions.hasLimit() && containsCollectionFetches ) {
+		if ( hasLimit && containsCollectionFetches ) {
 			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
 			if (fail) {
 				throw new HibernateException(

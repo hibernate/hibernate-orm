@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
-import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 
 /**
  * @author Jan Schatteman

@@ -14,7 +14,7 @@ import javax.persistence.LockModeType;
 import org.hibernate.Session;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;

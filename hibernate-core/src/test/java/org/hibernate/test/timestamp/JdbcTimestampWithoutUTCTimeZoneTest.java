@@ -23,7 +23,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.orm.test.util.jdbc.TimeZoneConnectionProvider;
+import org.hibernate.testing.orm.jdbc.TimeZoneConnectionProvider;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

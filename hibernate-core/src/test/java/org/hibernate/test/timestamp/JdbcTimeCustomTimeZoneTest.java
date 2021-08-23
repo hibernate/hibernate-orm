@@ -28,7 +28,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Test;
 
 import org.mockito.ArgumentCaptor;

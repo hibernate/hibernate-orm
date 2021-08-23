@@ -15,6 +15,7 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.StatementOptions;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;

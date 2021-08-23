@@ -19,6 +19,16 @@ public class PhoneNumber {
 
 	private Classification classification;
 
+	public PhoneNumber() {
+	}
+
+	public PhoneNumber(int areaCode, int prefix, int lineNumber, Classification classification) {
+		this.areaCode = areaCode;
+		this.prefix = prefix;
+		this.lineNumber = lineNumber;
+		this.classification = classification;
+	}
+
 	public int getAreaCode() {
 		return areaCode;
 	}

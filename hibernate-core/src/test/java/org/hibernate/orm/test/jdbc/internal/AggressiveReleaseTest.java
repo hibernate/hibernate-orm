@@ -21,7 +21,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.testing.boot.BasicTestingJdbcServiceImpl;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

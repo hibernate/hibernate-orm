@@ -191,6 +191,7 @@ ext {
             jakarta_weld: "org.jboss.weld.se:weld-se-shaded:${jakartaWeldVersion}",
 
             assertj: "org.assertj:assertj-core:${assertjVersion}",
+            assertj_api: "org.assertj:assertj-core-api:${assertjVersion}",
 
             // Shrinkwrap
             shrinkwrap_api: "org.jboss.shrinkwrap:shrinkwrap-api:${shrinkwrapVersion}",

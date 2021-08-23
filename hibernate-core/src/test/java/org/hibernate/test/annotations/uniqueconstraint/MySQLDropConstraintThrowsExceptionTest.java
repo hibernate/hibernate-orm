@@ -30,7 +30,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

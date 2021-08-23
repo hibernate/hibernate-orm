@@ -75,6 +75,8 @@ public @interface ServiceRegistry {
 
 	Setting[] settings() default {};
 
+	SettingProvider[] settingProviders() default {};
+
 	@interface Service {
 		Class<? extends org.hibernate.service.Service> role();
 		Class<? extends org.hibernate.service.Service> impl();

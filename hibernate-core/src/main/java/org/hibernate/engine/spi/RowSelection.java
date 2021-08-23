@@ -6,8 +6,17 @@
  */
 package org.hibernate.engine.spi;
 
+import org.hibernate.query.spi.QueryOptions;
+
 /**
+ * Encapsulates details related to the creation and execution of
+ * a JDBC statement
+ *
+ * Differs from {@link QueryOptions} in that this contract describes options
+ *
  * Represents a selection criteria for rows in a JDBC {@link java.sql.ResultSet}
+ *
+ *
  *
  * @author Gavin King
  * @deprecated todo (6.0): remove in favor of Limit within QueryOptions?

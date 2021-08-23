@@ -336,6 +336,14 @@ public class JdbcMocks {
 		return false;
 	}
 
+	public static class PreparedStatementHandler implements InvocationHandler {
+
+		@Override
+		public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+			return null;
+		}
+	}
+
 	public static class EmptyResultSetHandler implements InvocationHandler {
 		public static ResultSet makeProxy() {
 			final EmptyResultSetHandler handler = new EmptyResultSetHandler();

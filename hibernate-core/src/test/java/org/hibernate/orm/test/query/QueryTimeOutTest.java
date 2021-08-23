@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.querytimeout;
+package org.hibernate.orm.test.query;
 
 import java.sql.SQLException;
 import java.util.Map;
@@ -23,7 +23,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.orm.test.util.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.verify;
 public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( true, false );
-	private static final String QUERY = "update AnEntity set name='abc'";
+	private static final String QUERY = "update AnEntity set name = 'abc'";
 
 	@Override
 	protected Class[] getAnnotatedClasses() {

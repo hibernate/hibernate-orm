@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.envers.test.integration.inheritance.tableperclass.childrelation;
+package org.hibernate.orm.test.envers.integration.inheritance.tableperclass.childrelation;
 
 import javax.persistence.Basic;
 import javax.persistence.Entity;

@@ -13,7 +13,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.components.Component1;
 import org.hibernate.orm.test.envers.entities.components.Component2;
 import org.hibernate.orm.test.envers.entities.components.ComponentTestEntity;
-import org.hibernate.envers.test.integration.collection.mapkey.ComponentMapKeyEntity;
+import org.hibernate.orm.test.envers.integration.collection.mapkey.ComponentMapKeyEntity;
 
 import org.junit.Test;
 

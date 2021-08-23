@@ -291,7 +291,10 @@ tasks.withType(AsciidoctorTask).all {
 // Testing
 
 test {
-	include '**/mapping/basic/**'
+	include '**/**'
+	exclude '**/HQLTest**'
+	exclude '**/SQLTest**' //derby failures
+	exclude '**/PostgreSQLFunctionWhereClauseTest**'
 }
 
 // resources inherently exclude sources

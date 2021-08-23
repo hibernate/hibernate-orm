@@ -4,16 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.onetomany.idclass;
+package org.hibernate.orm.test.envers.integration.onetomany.idclass;
 
 import java.util.Arrays;
 
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.orm.test.envers.integration.onetomany.idclass.ManyToManyCompositeKey;
-import org.hibernate.orm.test.envers.integration.onetomany.idclass.ManyToOneOwned;
-import org.hibernate.orm.test.envers.integration.onetomany.idclass.OneToManyOwned;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;

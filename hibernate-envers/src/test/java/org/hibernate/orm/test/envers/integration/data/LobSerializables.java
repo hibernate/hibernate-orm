@@ -4,13 +4,15 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.envers.test.integration.data;
+package org.hibernate.orm.test.envers.integration.data;
 
 import java.util.Arrays;
 import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.envers.test.integration.data.LobSerializableTestEntity;
+import org.hibernate.envers.test.integration.data.SerObject;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
@@ -26,7 +28,7 @@ public class LobSerializables extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {LobSerializableTestEntity.class};
+		return new Class[] { LobSerializableTestEntity.class};
 	}
 
 	@Override

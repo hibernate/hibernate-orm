@@ -18,11 +18,9 @@ import javax.persistence.StoredProcedureParameter;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.QueryHintDefinition;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.procedure.internal.NamedCallableQueryMementoImpl;
@@ -84,7 +82,6 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 	@Override
 	public NamedCallableQueryMemento resolve(SessionFactoryImplementor sessionFactory) {
-		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<>();
 		final Set<String> collectedQuerySpaces = new HashSet<>();
 
 		final boolean specifiesResultClasses = resultClasses != null && resultClasses.length > 0;

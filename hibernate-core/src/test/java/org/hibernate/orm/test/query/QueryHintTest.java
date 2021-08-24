@@ -70,7 +70,7 @@ public class QueryHintTest {
 					1,
 					new Contact.Name( "John", "Jingleheimer-Schmidt"),
 					Contact.Gender.MALE,
-					LocalDate.EPOCH
+					LocalDate.of(1970, 1, 1)
 			);
 			contact.setPhoneNumbers(
 					Collections.singletonList(

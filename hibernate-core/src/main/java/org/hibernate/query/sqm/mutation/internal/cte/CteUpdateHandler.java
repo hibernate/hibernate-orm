@@ -140,7 +140,7 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		getEntityDescriptor().visitConstraintOrderedTables(
 				(tableExpression, tableColumnsVisitationSupplier) -> {
 					final CteTable dmlResultCte = new CteTable(
-							DML_RESULT_TABLE_NAME_PREFIX + tableExpression,
+							getCteTableName( tableExpression ),
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);

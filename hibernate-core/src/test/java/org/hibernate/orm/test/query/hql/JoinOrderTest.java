@@ -1,0 +1,74 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
+ */
+package org.hibernate.orm.test.query.hql;
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Christian Beikov
+ * @author Nathan Xu
+ */
+@TestForIssue( jiraKey = "HHH-14201" )
+@DomainModel( annotatedClasses = { JoinOrderTest.EntityA.class, JoinOrderTest.EntityB.class, JoinOrderTest.EntityC.class } )
+@SessionFactory( statementInspectorClass = SQLStatementInspector.class )
+public class JoinOrderTest {
+
+	@Test
+	public void testJoinOrder(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			final SQLStatementInspector sqlStatementInspector = (SQLStatementInspector) scope.getStatementInspector();
+			sqlStatementInspector.clear();
+
+			final String hql = "select 1"
+					+ " from EntityA a"
+					+ " join EntityB b on b.a = a "
+					+ " join a.c c on c.b = b";
+			session.createQuery( hql ).getResultList();
+
+			assertThat( sqlStatementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( sqlStatementInspector.getSqlQueries().get( 0 ) ).matches( "^.+(?: join EntityB ).+(?: join EntityC ).+$" );
+		} );
+	}
+
+	@Entity(name = "EntityA")
+	public static class EntityA {
+		@Id
+		int id;
+
+		@ManyToOne
+		EntityC c;
+	}
+
+	@Entity(name = "EntityB")
+	public static class EntityB {
+		@Id
+		int id;
+
+		@ManyToOne
+		EntityA a;
+	}
+
+	@Entity(name = "EntityC")
+	public static class EntityC {
+		@Id
+		int id;
+
+		@ManyToOne
+		EntityB b;
+	}
+}

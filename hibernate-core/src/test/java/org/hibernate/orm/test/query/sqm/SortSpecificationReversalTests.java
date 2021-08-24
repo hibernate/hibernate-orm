@@ -1,13 +1,14 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm.tree.select;
+package org.hibernate.orm.test.query.sqm;
 
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.mock;
  * @author seregamorph
  */
 @TestForIssue(jiraKey = "HHH-13884")
-public class HHH13884Test {
+public class SortSpecificationReversalTests {
 
 	@Test
 	public void testDefaultSqmSortSpecificationReverse() {

@@ -68,7 +68,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 							// collection table
 							final String tableExpression = pluralAttribute.getSeparateCollectionTable();
 							final CteTable dmlResultCte = new CteTable(
-									DML_RESULT_TABLE_NAME_PREFIX + tableExpression,
+									getCteTableName( tableExpression ),
 									idSelectCte.getCteTable().getCteColumns(),
 									factory
 							);
@@ -97,7 +97,7 @@ public class CteDeleteHandler extends AbstractCteMutationHandler implements Dele
 		getEntityDescriptor().visitConstraintOrderedTables(
 				(tableExpression, tableColumnsVisitationSupplier) -> {
 					final CteTable dmlResultCte = new CteTable(
-							DML_RESULT_TABLE_NAME_PREFIX + tableExpression,
+							getCteTableName( tableExpression ),
 							idSelectCte.getCteTable().getCteColumns(),
 							factory
 					);

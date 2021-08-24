@@ -15,6 +15,7 @@ import java.util.Map;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -297,5 +298,17 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		else {
 			return tableGroup.getTableReference( tableGroup.getNavigablePath(), tableExpression );
 		}
+	}
+
+	protected String getCteTableName(String tableExpression) {
+		if ( Identifier.isQuoted( tableExpression ) ) {
+			tableExpression = unquote( tableExpression );
+			return DML_RESULT_TABLE_NAME_PREFIX + tableExpression;
+		}
+		return DML_RESULT_TABLE_NAME_PREFIX + tableExpression;
+	}
+
+	private String unquote(String tableExpression) {
+		return tableExpression.substring( 1, tableExpression.length() - 1 );
 	}
 }

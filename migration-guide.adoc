@@ -20,6 +20,11 @@ Discuss `JdbcTypeCode`, `JdbcType`, `JdbcTypeRegistration`
 Discuss `@JavaType`, `@JavaTypeRegistration`
 
 
+==== Component Mapping
+
+Multiple component mappings for the same java class with different property mappings is not supported anymore. Every property mapping combination should have its own java class"
+
+
 === SQM
 
 * Functions

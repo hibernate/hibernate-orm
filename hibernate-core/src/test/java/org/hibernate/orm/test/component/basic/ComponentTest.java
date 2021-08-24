@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.component.basic;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -33,6 +34,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 
 /**
  * @author Gavin King
@@ -167,7 +169,9 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 		// The following fails on Sybase due to HHH-3510. When HHH-3510 
 		// is fixed, the check for SybaseASE15Dialect should be removed.
 		if ( ! ( getDialect() instanceof SybaseASE15Dialect ) ) {
-			s.createQuery( "from Employee e where e.person = (current_timestamp, 'steve')" ).list();
+			s.createQuery(
+							"from Employee e where e.person = ('', '', current_timestamp, 0.0, 'steve', '', 0)" )
+					.list();
 		}
 
 		s.delete( emp );

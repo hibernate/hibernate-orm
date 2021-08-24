@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.quote;
+package org.hibernate.orm.test.quote;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -20,6 +20,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentInitiator;
+import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 import org.hibernate.tool.schema.internal.SchemaDropperImpl;
@@ -27,28 +28,29 @@ import org.hibernate.tool.schema.internal.exec.GenerationTarget;
 import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
+
 
 /**
  * @author Steve Ebersole
  */
-public class TableGeneratorQuotingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class TableGeneratorQuotingTest {
 	private StandardServiceRegistry serviceRegistry;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, "true" )
 				.build();
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		if ( serviceRegistry != null ) {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );
@@ -58,7 +60,8 @@ public class TableGeneratorQuotingTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-7927")
 	public void testTableGeneratorQuoting() {
-		final Metadata metadata = new MetadataSources( serviceRegistry ).addAnnotatedClass( TestEntity.class ).buildMetadata();
+		final Metadata metadata = new MetadataSources( serviceRegistry ).addAnnotatedClass( TestEntity.class )
+				.buildMetadata();
 
 		final ConnectionProvider connectionProvider = serviceRegistry.getService( ConnectionProvider.class );
 

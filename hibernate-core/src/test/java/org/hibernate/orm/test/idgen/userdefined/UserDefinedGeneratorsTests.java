@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.idgen.userdefined;
+package org.hibernate.orm.test.idgen.userdefined;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -40,15 +40,18 @@ import org.hibernate.resource.beans.container.spi.ContainedBean;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+
+import org.junit.jupiter.api.Test;
+
 import org.mockito.Mockito;
 
 /**
  * @author Yanming Zhou
  */
 @TestForIssue(jiraKey = "HHH-14688")
-public class UserDefinedGeneratorsTests extends BaseUnitTestCase {
+@BaseUnitTest
+public class UserDefinedGeneratorsTests {
 
 	@Test
 	public void testCreateGeneratorsByBeanContainer() {
@@ -104,7 +107,7 @@ public class UserDefinedGeneratorsTests extends BaseUnitTestCase {
 	public static class Entity1 {
 		@Id
 		@GeneratedValue( generator = "test" )
-		@GenericGenerator( name = "test", strategy = "org.hibernate.test.idgen.userdefined.UserDefinedGeneratorsTests$TestIdentifierGenerator" )
+		@GenericGenerator( name = "test", strategy = "org.hibernate.orm.test.idgen.userdefined.UserDefinedGeneratorsTests$TestIdentifierGenerator" )
 		private Integer id;
 	}
 	
@@ -113,7 +116,7 @@ public class UserDefinedGeneratorsTests extends BaseUnitTestCase {
 	public static class Entity2 {
 		@Id
 		@GeneratedValue( generator = "test" )
-		@GenericGenerator( name = "test", strategy = "org.hibernate.test.idgen.userdefined.UserDefinedGeneratorsTests$TestIdentifierGenerator" )
+		@GenericGenerator( name = "test", strategy = "org.hibernate.orm.test.idgen.userdefined.UserDefinedGeneratorsTests$TestIdentifierGenerator" )
 		private Integer id;
 	}
 

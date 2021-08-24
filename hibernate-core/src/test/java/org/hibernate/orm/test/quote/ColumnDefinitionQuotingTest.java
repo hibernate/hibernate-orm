@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.quote;
+package org.hibernate.orm.test.quote;
 
 import java.util.Iterator;
 import javax.persistence.Column;
@@ -23,15 +23,17 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Steve Ebersole
  */
-public class ColumnDefinitionQuotingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class ColumnDefinitionQuotingTest {
+
 	@Test
 	@TestForIssue( jiraKey = "HHH-9491" )
 	public void testExplicitQuoting() {

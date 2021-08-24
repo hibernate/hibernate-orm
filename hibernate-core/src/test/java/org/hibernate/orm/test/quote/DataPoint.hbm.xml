@@ -10,9 +10,9 @@
         SYSTEM
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd" >
 
-<hibernate-mapping package="org.hibernate.test.quote">
+<hibernate-mapping package="org.hibernate.orm.test.quote">
 	<typedef name="enumType" class="org.hibernate.type.EnumType">
-		<param name="enumClass">org.hibernate.test.quote.DataPoint$DataPointEnum</param>
+		<param name="enumClass">org.hibernate.orm.test.quote.DataPoint$DataPointEnum</param>
 	</typedef>
 
 	<class name="DataPoint">

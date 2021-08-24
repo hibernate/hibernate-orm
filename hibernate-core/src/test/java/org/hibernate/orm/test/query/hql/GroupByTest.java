@@ -114,7 +114,7 @@ public class GroupByTest {
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( (em) -> {
-			Contact entity1 = new Contact( 123, new Contact.Name( "Johnny", "Lawrence" ), Contact.Gender.MALE, LocalDate.EPOCH );
+			Contact entity1 = new Contact( 123, new Contact.Name( "Johnny", "Lawrence" ), Contact.Gender.MALE, LocalDate.of(1970, 1, 1) );
 			em.persist( entity1 );
 		} );
 	}

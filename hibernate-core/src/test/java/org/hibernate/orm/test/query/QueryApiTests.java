@@ -75,7 +75,7 @@ public class QueryApiTests {
 					1,
 					new Contact.Name( "John", "Jingleheimer-Schmidt"),
 					Contact.Gender.MALE,
-					LocalDate.EPOCH
+					LocalDate.of(1970, 1, 1)
 			);
 			session.persist( contact );
 		} );

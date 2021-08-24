@@ -6,7 +6,7 @@
  */
 
 //$Id$
-package org.hibernate.test.quote;
+package org.hibernate.orm.test.quote;
 import java.io.Serializable;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;

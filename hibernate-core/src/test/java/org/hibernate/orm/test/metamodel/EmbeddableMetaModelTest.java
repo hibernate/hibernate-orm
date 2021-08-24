@@ -4,34 +4,32 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.metamodel;
+package org.hibernate.orm.test.metamodel;
 
-import javax.persistence.metamodel.Type;
-
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class EmbeddableMetaModelTest extends BaseEntityManagerFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-			ProductEntity.class,
-			Person.class,
-			Company.class
-		};
-	}
+
+@Jpa(
+		annotatedClasses = {
+				ProductEntity.class,
+				Person.class,
+				Company.class
+		}
+)
+public class EmbeddableMetaModelTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11111")
-	public void testEmbeddableCanBeResolvedWhenUsedAsInterface() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEmbeddableCanBeResolvedWhenUsedAsInterface(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			assertNotNull( entityManager.getMetamodel().embeddable( LocalizedValue.class ) );
 			assertEquals( LocalizedValue.class, ProductEntity_.description.getElementType().getJavaType() );
 			assertNotNull( LocalizedValue_.value );
@@ -41,8 +39,8 @@ public class EmbeddableMetaModelTest extends BaseEntityManagerFunctionalTestCase
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12124")
-	public void testEmbeddableEquality() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testEmbeddableEquality(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			assertTrue( entityManager.getMetamodel().getEmbeddables().contains( Company_.address.getType() ) );
 			assertTrue( entityManager.getMetamodel().getEmbeddables().contains( Person_.address.getType() ) );
 		} );

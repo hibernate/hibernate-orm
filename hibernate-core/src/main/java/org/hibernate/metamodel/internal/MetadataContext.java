@@ -678,9 +678,33 @@ public class MetadataContext {
 						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
 						break;
 					}
+					else if ( cachedComponent.getComponentClass().equals( component.getComponentClass() ) ) {
+						final int cachedComponentPropertySpan = cachedComponent.getPropertySpan();
+						if ( cachedComponentPropertySpan != component.getPropertySpan() ) {
+							throw new MappingException(
+									"Encountered multiple component mappings for the same java class "
+											+ embeddableClass.getName() +
+											" with different property mappings. Every property mapping combination should have its own java class" );
+						}
+						else {
+							for ( int i = 0; i < cachedComponentPropertySpan; i++ ) {
+								if ( !cachedComponent.getProperty( i ).getName()
+										.equals( component.getProperty( i ).getName() ) ) {
+									throw new MappingException(
+											"Encountered multiple component mappings for the same java class "
+													+ embeddableClass.getName() +
+													" with different property mappings. Every property mapping combination should have its own java class" );
+								}
+							}
+						}
+						//noinspection unchecked
+						domainType = (EmbeddableDomainType<J>) embeddableDomainType;
+						break;
+					}
 					else {
-						// See HHH-14660
-						DeprecationLogger.DEPRECATION_LOGGER.deprecatedComponentMapping( embeddableClass.getName() );
+						throw new MappingException( "Encountered multiple component mappings for the same java class "
+															+ embeddableClass.getName() +
+															" with different property mappings. Every property mapping combination should have its own java class" );
 					}
 				}
 			}

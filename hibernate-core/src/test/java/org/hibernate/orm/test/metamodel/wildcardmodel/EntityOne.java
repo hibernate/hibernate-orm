@@ -4,12 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.metamodel;
+package org.hibernate.orm.test.metamodel.wildcardmodel;
 
-import java.io.Serializable;
+import javax.persistence.Entity;
 
-interface ILocalizable extends Serializable {
-	String getValue();
+@Entity
+public class EntityOne extends AbstractEntity {
 
-	void setValue(String value);
 }

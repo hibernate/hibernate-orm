@@ -9,14 +9,14 @@ package org.hibernate.spatial.testing.dialects.db2;
 import java.sql.SQLException;
 import java.util.Map;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.dialect.db2.DB2GeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
+import org.geolatte.geom.jts.JTS;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
-import org.geolatte.geom.jts.JTS;
 
 /**
  * This class provides the DB2 native spatial queries to generate the
@@ -29,8 +29,8 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 
 	private final DB2GeometryTypeDescriptor desc = new DB2GeometryTypeDescriptor( 4326 );
 
-	public DB2ExpectationsFactory(DataSourceUtils utils) {
-		super( utils );
+	public DB2ExpectationsFactory() {
+		super();
 	}
 
 	/**
@@ -41,7 +41,7 @@ public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getExtent() throws SQLException {
-		return retrieveExpected( createNativeExtentStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	public NativeSQLStatement createNativeExtentStatement() {

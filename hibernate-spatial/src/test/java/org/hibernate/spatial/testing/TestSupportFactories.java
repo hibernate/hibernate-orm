@@ -10,7 +10,6 @@ package org.hibernate.spatial.testing;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -45,7 +44,7 @@ public class TestSupportFactories {
 
 	private static Class<? extends TestSupport> getSupportFactoryClass(Dialect dialect) {
 		String canonicalName = dialect.getClass().getCanonicalName();
-		if (  PostgreSQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+		if ( PostgreSQLDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			//this test works because all postgis dialects ultimately derive of the Postgresql82Dialect
 			return PostgisTestSupport.class;
 		}

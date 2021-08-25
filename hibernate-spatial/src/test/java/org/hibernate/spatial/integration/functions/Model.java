@@ -9,43 +9,47 @@ package org.hibernate.spatial.integration.functions;
 
 import java.util.function.Function;
 
-import org.hibernate.spatial.GeolatteGeometryType;
-import org.hibernate.spatial.JTSGeometryType;
-import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
-import org.hibernate.type.Type;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.jts.JTS;
 
+/**
+ * Captures the Geometry model dimension in the dynamic tests for spatial functions.
+ * <p>
+ * T
+ */
 @SuppressWarnings({ "unchecked", "rawtypes" })
 enum Model {
 
-
 	JTSMODEL(
 			JtsGeomEntity.class,
-			obj -> JTS.from( (org.locationtech.jts.geom.Geometry) obj ),
-			geom -> (Object) JTS.to( geom )
+			JTS::to
 	),
 	GLMODEL(
 			GeomEntity.class,
-			obj -> (Geometry) obj,
 			geom -> geom
 	);
 
+	/**
+	 * Test Entity class
+	 */
 	final Class<?> entityClass;
-	final Function<Object, Geometry> to;
+
+
+	/**
+	 * How to translate from Geolatte Geometry class to the object class
+	 * expected by the entity geom property
+	 */
 	final Function<Geometry, Object> from;
 
 
 	Model(
 			Class<?> entityClass,
-			Function<Object, Geometry> to,
 			Function<Geometry, Object> from
 	) {
 		this.entityClass = entityClass;
-		this.to = to;
 		this.from = from;
 	}
 

@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.integration.jts.hhh14523;
+package org.hibernate.spatial.dialect.postgis.hhh14523;
 
 import java.io.Serializable;
 import java.util.List;
@@ -21,7 +21,6 @@ import javax.persistence.Table;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

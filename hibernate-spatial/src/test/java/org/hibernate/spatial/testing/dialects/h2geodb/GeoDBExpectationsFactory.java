@@ -14,9 +14,9 @@ import org.hibernate.spatial.dialect.h2geodb.GeoDbWkb;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
+import org.geolatte.geom.jts.JTS;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
-import org.geolatte.geom.jts.JTS;
 
 
 /**
@@ -27,8 +27,8 @@ import org.geolatte.geom.jts.JTS;
  */
 public class GeoDBExpectationsFactory extends AbstractExpectationsFactory {
 
-	public GeoDBExpectationsFactory(GeoDBDataSourceUtils dataSourceUtils) {
-		super( dataSourceUtils );
+	public GeoDBExpectationsFactory() {
+		super();
 	}
 
 	@Override

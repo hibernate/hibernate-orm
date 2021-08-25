@@ -7,37 +7,16 @@
 
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Oct 2, 2010
  */
 public class GeoDBTestSupport extends TestSupport {
-
-	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
-
-		try {
-			return new GeoDBDataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
-		}
-		catch (SQLException e) {
-			throw new RuntimeException( e );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( e );
-		}
-	}
 
 	@Override
 	public TestData createTestData(TestDataPurpose purpose) {
@@ -48,17 +27,8 @@ public class GeoDBTestSupport extends TestSupport {
 		return new GeoDBGeometryEquality();
 	}
 
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		if ( dataSourceUtils instanceof GeoDBDataSourceUtils ) {
-			return new GeoDBExpectationsFactory( (GeoDBDataSourceUtils) dataSourceUtils );
-		}
-		else {
-			throw new IllegalArgumentException( "Requires a GeoDBDataSourceUtils instance" );
-		}
-	}
-
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new GeoDBExpressionTemplate();
+	public AbstractExpectationsFactory createExpectationsFactory() {
+		return new GeoDBExpectationsFactory();
 	}
 
 }

@@ -36,6 +36,18 @@ import org.junit.jupiter.api.function.Executable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+/**
+ * Dynamic tests for "common" spatial functions.
+ *
+ * <p>
+ *     The tests here are dynamic across several dimensions:
+ *     <ul>
+ *         <li>the spatial function (in so far as actually supported by the dialect)</li>
+ *         <li>the Geometry model (JTS or Geolatte)</li>
+ *         <li>the name for the function (pre-H6 style, or "st_*" style)</li>
+ *     </ul>
+ * </p>
+ */
 @SuppressWarnings("ALL")
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
 @SessionFactory

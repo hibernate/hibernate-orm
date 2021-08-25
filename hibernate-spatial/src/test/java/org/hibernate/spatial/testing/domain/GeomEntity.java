@@ -99,7 +99,7 @@ public class GeomEntity implements GeomEntityLike<Geometry> {
 	}
 
 	public void setGeomFromWkt(String wkt) {
-		this.geom =  Wkt.fromWkt( wkt );
+		this.geom = Wkt.fromWkt( wkt );
 	}
 
 

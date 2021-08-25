@@ -7,12 +7,8 @@
 
 package org.hibernate.spatial.testing.dialects.db2;
 
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author David Adler, Adtech Geospatial
@@ -30,13 +26,8 @@ public class DB2TestSupport extends TestSupport {
 	}
 
 
-	public DB2ExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new DB2ExpectationsFactory( dataSourceUtils );
-	}
-
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new DB2ExpressionTemplate();
+	public DB2ExpectationsFactory createExpectationsFactory() {
+		return new DB2ExpectationsFactory();
 	}
 
 }

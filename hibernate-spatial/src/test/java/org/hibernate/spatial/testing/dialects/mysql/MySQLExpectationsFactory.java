@@ -8,15 +8,14 @@
 package org.hibernate.spatial.testing.dialects.mysql;
 
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
 import org.geolatte.geom.ByteBuffer;
 import org.geolatte.geom.codec.Wkb;
 import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.jts.JTS;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 
 
 /**
@@ -27,8 +26,8 @@ import org.geolatte.geom.jts.JTS;
 
 public class MySQLExpectationsFactory extends AbstractExpectationsFactory {
 
-	public MySQLExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		super( dataSourceUtils );
+	public MySQLExpectationsFactory() {
+		super();
 	}
 
 	@Override

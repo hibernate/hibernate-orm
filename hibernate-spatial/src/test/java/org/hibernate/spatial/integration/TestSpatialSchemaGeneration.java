@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -30,7 +29,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.stringContainsInOrder;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
 @SessionFactory

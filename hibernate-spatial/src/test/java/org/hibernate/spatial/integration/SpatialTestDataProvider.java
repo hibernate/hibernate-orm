@@ -13,12 +13,11 @@ import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.TestSupportFactories;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
 import org.hibernate.spatial.testing.domain.GeomEntityLike;
 
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -34,7 +33,6 @@ public class SpatialTestDataProvider {
 	private final TestData funcTestData;
 	protected TestData testData;
 	protected GeomCodec codec;
-	protected JTSGeometryEquality geometryEquality;
 
 	public SpatialTestDataProvider() {
 		try {
@@ -44,7 +42,6 @@ public class SpatialTestDataProvider {
 			codec = support.codec();
 			testData = support.createTestData( StoreRetrieveData );
 			funcTestData = support.createTestData( SpatialFunctionsData );
-			geometryEquality = support.createGeometryEquality();
 		}
 		catch (InstantiationException | IllegalAccessException e) {
 			throw new RuntimeException( e );

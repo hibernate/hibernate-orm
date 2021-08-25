@@ -18,15 +18,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.JTSGeometryEquality;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 
 
 /**
@@ -37,10 +32,9 @@ import org.hibernate.spatial.testing.SQLExpressionTemplate;
 public abstract class TestSupport {
 
 	//TODO -- make this abstract
-
 	public NativeSQLTemplates templates() {
 		return null;
-	};
+	}
 
 	public Map<CommonSpatialFunction, String> hqlOverrides() {
 		return new HashMap<>();
@@ -51,37 +45,10 @@ public abstract class TestSupport {
 		StoreRetrieveData
 	}
 
-	protected ConfigurationService configurationService;
-
-
-
-	public JTSGeometryEquality createGeometryEquality() {
-		return new JTSGeometryEquality();
-	}
-
 	public abstract TestData createTestData(TestDataPurpose purpose);
 
 	public GeomCodec codec() {
 		throw new NotYetImplementedFor6Exception();
-	};
-
-	public abstract AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils);
-
-	public abstract SQLExpressionTemplate getSQLExpressionTemplate();
-
-	protected String driver() {
-		return configurationService.getSetting( AvailableSettings.DRIVER, String.class, "" );
 	}
 
-	protected String url() {
-		return configurationService.getSetting( AvailableSettings.URL, String.class, "" );
-	}
-
-	protected String user() {
-		return configurationService.getSetting( AvailableSettings.USER, String.class, "" );
-	}
-
-	protected String passwd() {
-		return configurationService.getSetting( AvailableSettings.PASS, String.class, "" );
-	}
 }

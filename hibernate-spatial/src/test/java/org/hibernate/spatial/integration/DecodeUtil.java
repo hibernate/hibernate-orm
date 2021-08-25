@@ -10,7 +10,6 @@ package org.hibernate.spatial.integration;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.spatial.dialect.db2.DB2SpatialDialect;
 
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecoder;

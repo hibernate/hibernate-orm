@@ -11,10 +11,7 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'hibernate-matrix-testing'
 
 dependencies {
-    compile( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        exclude group: "org.javassist", module: "javassist"
-    }
+    compile( project( ':hibernate-core' ) )
 
     // TODO HHH-13703: get rid of this dependency
     compile( libraries.dom4j )

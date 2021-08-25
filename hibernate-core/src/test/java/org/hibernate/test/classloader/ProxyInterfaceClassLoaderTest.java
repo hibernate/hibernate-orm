@@ -19,7 +19,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests if javassist instrumentation is done with the proper classloader for entities with proxy class. The classloader
+ * Tests if instrumentation is done with the proper classloader for entities with proxy class. The classloader
  * of {@link HibernateProxy} will not see {@link IPerson}, since it is only accessible from this package. But: the
  * classloader of {@link IPerson} will see {@link HibernateProxy}, so instrumentation will only work if this classloader
  * is chosen for creating the instrumented proxy class. We need to check the class of a loaded object though, since

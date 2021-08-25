@@ -16,10 +16,7 @@ configurations {
 }
 
 dependencies {
-	compile( project( ':hibernate-core-jakarta' ) ) {
-		// Exclude access to this to avoid future use.
-		exclude group: "org.javassist", module: "javassist"
-	}
+	compile( project( ':hibernate-core-jakarta' ) )
 
 	jakartaeeTransformJars 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
 			'commons-cli:commons-cli:1.4',

@@ -21,11 +21,4 @@ sourceSets {
             setSrcDirs( ['src/test/java','src/test/resources'] )
         }
     }
-
-    testJavassist {
-        java {
-            compileClasspath += main.output + test.output
-            runtimeClasspath += main.output + test.output
-        }
-    }
 }

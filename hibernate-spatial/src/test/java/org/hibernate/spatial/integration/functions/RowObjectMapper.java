@@ -4,19 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
-
 package org.hibernate.spatial.integration.functions;
 
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * Mapper to ensure that the results of the test queries can be compared for equality.
+ * 
+ * @param <T> the returned object by the test query
+ */
 public interface RowObjectMapper<T> {
 	default Data apply(Object obj) {
 		Object[] row = (Object[]) obj;

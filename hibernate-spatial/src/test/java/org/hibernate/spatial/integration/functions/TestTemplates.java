@@ -28,7 +28,9 @@ import static org.geolatte.geom.builder.DSL.polygon;
 import static org.geolatte.geom.builder.DSL.ring;
 import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 
-
+/**
+ * Makes available all the builders for FunctionTestTemplate
+ */
 public abstract class TestTemplates {
 
 	static FunctionTestTemplate.Builder builder(CommonSpatialFunction function) {

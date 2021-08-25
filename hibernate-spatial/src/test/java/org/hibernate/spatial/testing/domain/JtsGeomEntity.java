@@ -22,10 +22,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 
 import org.geolatte.geom.codec.Wkt;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 import org.geolatte.geom.codec.WktDecoder;
 import org.geolatte.geom.jts.JTS;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
 
 import static org.hibernate.spatial.integration.DecodeUtil.getWktDecoder;
 
@@ -44,7 +44,7 @@ public class JtsGeomEntity implements GeomEntityLike<Geometry> {
 
 	private Geometry geom;
 
-	public static JtsGeomEntity createFrom(TestDataElement element, Dialect dialect) throws ParseException {
+	public static JtsGeomEntity createFrom(TestDataElement element, Dialect dialect) {
 		WktDecoder decoder = getWktDecoder( dialect );
 		Geometry geom = JTS.to( decoder.decode( element.wkt ) );
 		JtsGeomEntity result = new JtsGeomEntity();

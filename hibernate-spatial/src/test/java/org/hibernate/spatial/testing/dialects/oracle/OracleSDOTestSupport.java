@@ -8,14 +8,9 @@
 package org.hibernate.spatial.testing.dialects.oracle;
 
 
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -28,18 +23,4 @@ public class OracleSDOTestSupport extends TestSupport {
 		return TestData.fromFile( "oracle10g/test-sdo-geometry-data-set-2D.xml", new SDOTestDataReader() );
 	}
 
-	@Override
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new SDOGeometryExpectationsFactory( dataSourceUtils );
-	}
-
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new SDOGeometryExpressionTemplate();
-	}
-
-
-	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
-		return new SDODataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
-	}
 }

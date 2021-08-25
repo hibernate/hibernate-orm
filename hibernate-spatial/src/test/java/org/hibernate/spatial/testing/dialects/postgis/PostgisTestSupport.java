@@ -15,8 +15,6 @@ import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -54,14 +52,6 @@ public class PostgisTestSupport extends TestSupport {
 		}
 	}
 
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new PostgisExpectationsFactory( dataSourceUtils );
-	}
-
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new PostgisExpressionTemplate();
-	}
 
 	public GeomCodec codec() {
 		return new GeomCodec() {

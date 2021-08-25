@@ -8,13 +8,12 @@
 package org.hibernate.spatial.testing.dialects.sqlserver;
 
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.Point;
 import org.geolatte.geom.codec.db.sqlserver.Decoders;
 import org.geolatte.geom.jts.JTS;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Point;
 
 
 /**
@@ -24,8 +23,8 @@ import org.geolatte.geom.jts.JTS;
 public class SqlServerExpectationsFactory extends AbstractExpectationsFactory {
 
 
-	public SqlServerExpectationsFactory(DataSourceUtils utils) {
-		super( utils );
+	public SqlServerExpectationsFactory() {
+		super();
 	}
 
 	@Override

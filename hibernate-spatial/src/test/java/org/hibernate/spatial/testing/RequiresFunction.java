@@ -13,7 +13,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.hibernate.testing.orm.junit.ServiceRegistryExtension;
 import org.hibernate.testing.orm.junit.SessionFactoryExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 

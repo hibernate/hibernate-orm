@@ -5,14 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial;
-
-import org.geolatte.geom.Geometry;
-
-public interface GeomCodec {
-
-	Geometry<?> toGeometry(Object in);
-
-	Object fromGeometry(Geometry<?> in);
-
-}
+/**
+ * Contains dialect specific tests
+ */
+package org.hibernate.spatial.dialect;

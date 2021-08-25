@@ -10,12 +10,11 @@ package org.hibernate.spatial.testing.dialects.oracle;
 import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.dialect.oracle.SDOGeometryValueExtractor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
+import org.geolatte.geom.jts.JTS;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
-import org.geolatte.geom.jts.JTS;
 
 /**
  * Expectations factory for Oracle 10g (SDOGeometry).
@@ -29,8 +28,8 @@ public class SDOGeometryExpectationsFactory extends AbstractExpectationsFactory 
 			null
 	);
 
-	public SDOGeometryExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		super( dataSourceUtils );
+	public SDOGeometryExpectationsFactory() {
+		super();
 	}
 
 	@Override

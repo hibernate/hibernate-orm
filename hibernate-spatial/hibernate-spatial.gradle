@@ -21,7 +21,11 @@ dependencies {
 
 
     testCompile(project(':hibernate-testing'))
+<<<<<<< HEAD
     testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )    
+=======
+    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
+>>>>>>> f70b7d7c50 (HHH-14738 Clean up obsolete test support code)
     testCompile(libraries.validation)
     testCompile(libraries.jandex)
     testCompile(libraries.classmate)

@@ -7,18 +7,9 @@
 
 package org.hibernate.spatial.testing.dialects.cockroachdb;
 
-import org.hibernate.spatial.integration.TestGeolatteSpatialPredicates;
-import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
-import org.hibernate.spatial.integration.TestSpatialFunctions;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
-import org.hibernate.spatial.testing.dialects.postgis.PostgisExpressionTemplate;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import junit.framework.TestCase;
 
 public class CockroachDBTestSupport extends TestSupport {
 
@@ -32,13 +23,4 @@ public class CockroachDBTestSupport extends TestSupport {
 		}
 	}
 
-	@Override
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new CockroachDBExpectationsFactory( dataSourceUtils );
-	}
-
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new PostgisExpressionTemplate();
-	}
 }

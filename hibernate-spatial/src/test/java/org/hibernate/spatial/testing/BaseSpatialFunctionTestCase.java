@@ -20,8 +20,6 @@ import java.util.stream.Collectors;
 
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.spatial.integration.SpatialTestDataProvider;
-import org.hibernate.spatial.testing.HQLTemplate;
-import org.hibernate.spatial.testing.NativeSQLTemplate;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;

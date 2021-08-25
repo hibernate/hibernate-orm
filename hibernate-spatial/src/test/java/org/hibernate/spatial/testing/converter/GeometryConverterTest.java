@@ -21,6 +21,7 @@ import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.geolatte.geom.Geometry;
@@ -32,6 +33,7 @@ import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 /**
  * @author Steve Ebersole
  */
+@Ignore
 public class GeometryConverterTest extends BaseUnitTestCase {
 
 	@Test

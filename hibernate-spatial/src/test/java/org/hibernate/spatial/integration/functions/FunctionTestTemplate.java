@@ -34,6 +34,9 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
 
+/**
+ * Represents the template from which a Dynamic test can be generated.
+ */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class FunctionTestTemplate {
 
@@ -44,7 +47,6 @@ public class FunctionTestTemplate {
 	final private Model model;
 	final private Geometry<?> testGeometry;
 	final private GeomCodec codec;
-
 
 	FunctionTestTemplate(
 			CommonSpatialFunction function,
@@ -98,6 +100,24 @@ public class FunctionTestTemplate {
 		return query;
 	}
 
+	public List executeHQL(SessionFactoryScope scope, String functionName) {
+		final String entity = model.entityClass.getCanonicalName();
+		final AtomicReference<List<Object>> results = new AtomicReference<>();
+		scope.inSession(
+				session -> {
+					Query query = session.createQuery( hqlTemplate.mkHQLString( functionName, entity ) );
+					if ( testGeometry != null ) {
+						query.setParameter(
+								"filter",
+								getModel().from.apply( testGeometry )
+						);
+					}
+					results.set( query.getResultList() );
+				} );
+		return (List) results.get().stream().map( rowObjectMapper::apply ).collect( Collectors.toList() );
+	}
+
+	//only for JtsGeometry because extra mapping of native Geometry object (where needed)
 	private List<Object> map(List<Object> list) {
 		Stream<Object> stream = list
 				.stream().map( this::mapRow );
@@ -114,23 +134,9 @@ public class FunctionTestTemplate {
 		return data;
 	}
 
-	public List executeHQL(SessionFactoryScope scope, String functionName) {
-		final AtomicReference<List> results = new AtomicReference<>();
-		final String entity = model.entityClass.getCanonicalName();
-		scope.inSession(
-				session -> {
-					Query query = session.createQuery( hqlTemplate.mkHQLString( functionName, entity ) );
-					if ( testGeometry != null ) {
-						query.setParameter(
-								"filter",
-								getModel().from.apply( testGeometry )
-						);
-					}
-					results.set( query.getResultList() );
-				} );
-		return (List) results.get().stream().map( rowObjectMapper::apply ).collect( Collectors.toList() );
-	}
-
+	/**
+	 * A Builder for a {@code FunctionTestTemplate}
+	 */
 	static class Builder {
 		CommonSpatialFunction function;
 		HQLTemplate hql;
@@ -142,6 +148,7 @@ public class FunctionTestTemplate {
 			this.function = function;
 		}
 
+		//on building the instance, inject the relevant Geometry model and context-specific native->Geometry codec
 		FunctionTestTemplate build(Model model, GeomCodec codec) {
 			if ( hql == null ) {
 				if ( testGeometry != null ) {

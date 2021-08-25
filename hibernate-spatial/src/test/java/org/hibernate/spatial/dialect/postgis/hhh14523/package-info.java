@@ -6,4 +6,4 @@
  */
 
 //test case for bug HHH-14523
-package org.hibernate.spatial.integration.jts.hhh14523;
+package org.hibernate.spatial.dialect.postgis.hhh14523;

@@ -20,7 +20,31 @@ import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 
-import static org.hibernate.spatial.CommonSpatialFunction.*;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ASBINARY;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ASTEXT;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_BOUNDARY;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_BUFFER;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CONTAINS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CONVEXHULL;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CROSSES;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_DIFFERENCE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_DIMENSION;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_DISJOINT;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_DISTANCE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ENVELOPE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_EQUALS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_GEOMETRYTYPE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_INTERSECTION;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_INTERSECTS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ISEMPTY;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_ISSIMPLE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_OVERLAPS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_RELATE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_SRID;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_SYMDIFFERENCE;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_TOUCHES;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_UNION;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_WITHIN;
 
 public class NativeSQLTemplates {
 
@@ -51,8 +75,14 @@ public class NativeSQLTemplates {
 		sqls.put( ST_BUFFER, "select id, st_buffer(geom, 2) as result from %s" );
 		sqls.put( ST_CONVEXHULL, "select id, st_convexhull(geom) as result from %s" );
 		sqls.put( ST_DIFFERENCE, "select id, st_difference(geom, st_geomfromtext(:filter, 4326)) as result from %s" );
-		sqls.put( ST_INTERSECTION, "select id, st_intersection(geom, st_geomfromtext(:filter, 4326)) as result from %s" );
-		sqls.put( ST_SYMDIFFERENCE, "select id, st_symdifference(geom, st_geomfromtext(:filter, 4326)) as result from %s" );
+		sqls.put(
+				ST_INTERSECTION,
+				"select id, st_intersection(geom, st_geomfromtext(:filter, 4326)) as result from %s"
+		);
+		sqls.put(
+				ST_SYMDIFFERENCE,
+				"select id, st_symdifference(geom, st_geomfromtext(:filter, 4326)) as result from %s"
+		);
 		sqls.put( ST_UNION, "select id, st_union(geom, st_geomfromtext(:filter, 4326)) as result from %s" );
 
 	}

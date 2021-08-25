@@ -7,32 +7,36 @@
 
 package org.hibernate.spatial.dialect.hana;
 
-import static java.lang.String.format;
-
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import javax.persistence.Query;
 
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.integration.TestSpatialFunctions;
+import org.hibernate.spatial.testing.SpatialFunctionalTestCase;
 import org.hibernate.spatial.testing.dialects.hana.HANAExpectationsFactory;
 
 import org.hibernate.testing.RequiresDialect;
+import org.junit.Ignore;
+import org.junit.Test;
 
 import org.jboss.logging.Logger;
-
-import org.junit.Test;
 
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKBWriter;
 import org.locationtech.jts.io.WKTWriter;
 
+import static java.lang.String.format;
+
 @RequiresDialect(value = HANASpatialDialect.class, comment = "This test tests the HANA spatial functions not covered by Hibernate Spatial", jiraKey = "HHH-12426")
+@Ignore
 @Deprecated
-public class TestHANASpatialFunctions extends TestSpatialFunctions {
+public class TestHANASpatialFunctions extends SpatialFunctionalTestCase {
 
 	private static final HSMessageLogger LOG = Logger.getMessageLogger(
 			HSMessageLogger.class,
@@ -1175,4 +1179,49 @@ public class TestHANASpatialFunctions extends TestSpatialFunctions {
 		params.put( filterParamName, value );
 		return params;
 	}
+
+	public <T> void retrieveHQLResultsAndCompare(Map<Integer, T> dbexpected, String hql, String geometryType) {
+		retrieveHQLResultsAndCompare( dbexpected, hql, null, geometryType );
+	}
+
+	protected <T> void retrieveHQLResultsAndCompare(
+			Map<Integer, T> dbexpected,
+			String hql,
+			Map<String, Object> params,
+			String geometryType) {
+		Map<Integer, T> hsreceived = new HashMap<Integer, T>();
+		doInSession( hql, hsreceived, params );
+		compare( dbexpected, hsreceived, geometryType );
+	}
+
+
+	private <T> void doInSession(String hql, Map<Integer, T> result, Map<String, Object> params) {
+		Session session = null;
+		Transaction tx = null;
+		try {
+			session = openSession();
+			tx = session.beginTransaction();
+			Query query = session.createQuery( hql );
+			setParameters( params, query );
+			addQueryResults( result, query );
+		}
+		finally {
+			if ( tx != null ) {
+				tx.rollback();
+			}
+			if ( session != null ) {
+				session.close();
+			}
+		}
+	}
+
+	private void setParameters(Map<String, Object> params, Query query) {
+		if ( params == null ) {
+			return;
+		}
+		for ( Map.Entry<String, Object> entry : params.entrySet() ) {
+			query.setParameter( entry.getKey(), entry.getValue() );
+		}
+	}
+
 }

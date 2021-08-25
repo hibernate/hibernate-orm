@@ -3,6 +3,25 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.5.7.Final (August 25, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31970
+
+** Bug
+    * [HHH-14760] - Close resource - potential resource leak
+
+** Improvement
+    * [HHH-14777] - Support LockOptions.SKIP_LOCKED for MariaDB 10.6+
+    * [HHH-14625] - Avoid performing a ServiceRegistryLookup in JtaTransactionCoordinatorImpl constructor
+
+** Task
+    * [HHH-14788] - Upgrade to Byteman 4.0.16
+    * [HHH-14776] - Optimize Loader instantiate when EntityPersister is known
+    * [HHH-14773] - JdbcCoordinatorImpl micro improvement: unguarded tracev parameters should be constant
+    * [HHH-14771] - Upgrade to Byte Buddy 1.11.12
+
+
 Changes in 5.5.6.Final (August 04, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

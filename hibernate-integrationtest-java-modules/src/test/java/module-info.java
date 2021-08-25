@@ -10,9 +10,7 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	 * Main configuration, necessary for real client applications.
 	 */
 
-	opens org.hibernate.orm.integrationtest.java.module.test.entity to
-			org.hibernate.orm.core,
-			javassist; // Necessary for javassist, but not for bytebuddy (the default)
+	opens org.hibernate.orm.integrationtest.java.module.test.entity to org.hibernate.orm.core;
 
 	requires java.persistence;
 	// IDEA will not find the modules below because it apparently doesn't support automatic module names
@@ -32,3 +30,4 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	opens org.hibernate.orm.integrationtest.java.module.test to junit;
 	requires junit;
 }
+

@@ -77,7 +77,7 @@ public abstract class EntityTools {
 			return null;
 		}
 		else if ( HibernateProxy.class.isAssignableFrom( clazz ) ) {
-			// Get the source class of Javassist proxy instance.
+			// Get the source class of the proxy instance.
 			return (Class<T>) clazz.getSuperclass();
 		}
 		return clazz;

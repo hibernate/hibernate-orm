@@ -14,7 +14,7 @@ import org.hibernate.service.Service;
  * An interface for factories of {@link ProxyFactory proxy factory} instances.
  * <p/>
  * Currently used to abstract from the tuplizer whether we are using Byte Buddy or
- * Javassist for lazy proxy generation.
+ * possibly another implementation (in the future?) for lazy proxy generation.
  *
  * @author Steve Ebersole
  */

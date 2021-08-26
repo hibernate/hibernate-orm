@@ -7,11 +7,23 @@
 
 package org.hibernate.spatial.testing.dialects.cockroachdb;
 
+import org.hibernate.spatial.GeomCodec;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.postgis.PostgisNativeSQLTemplates;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 
 public class CockroachDBTestSupport extends TestSupport {
+
+	@Override
+	public NativeSQLTemplates templates() {
+		return new PostgisNativeSQLTemplates();
+	}
 
 	@Override
 	public TestData createTestData(TestDataPurpose purpose) {
@@ -21,6 +33,20 @@ public class CockroachDBTestSupport extends TestSupport {
 			default:
 				return TestData.fromFile( "cockroachdb/test-data-set.xml" );
 		}
+	}
+
+	public GeomCodec codec() {
+		return new GeomCodec() {
+			@Override
+			public Geometry<?> toGeometry(Object in) {
+				return PGGeometryTypeDescriptor.INSTANCE_WKB_2.toGeometry( in );
+			}
+
+			@Override
+			public Object fromGeometry(Geometry<?> in) {
+				return Wkt.toWkt( in, Wkt.Dialect.POSTGIS_EWKT_1 );
+			}
+		};
 	}
 
 }

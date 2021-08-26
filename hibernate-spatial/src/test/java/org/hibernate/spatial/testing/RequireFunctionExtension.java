@@ -34,7 +34,7 @@ public class RequireFunctionExtension implements ExecutionCondition {
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
 		Optional<Object> testInstance = context.getTestInstance();
 
-		if ( testInstance.isEmpty() ) {
+		if ( !testInstance.isPresent() ) {
 			return ENABLED;
 		}
 

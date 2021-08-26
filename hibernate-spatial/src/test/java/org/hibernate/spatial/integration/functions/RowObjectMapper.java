@@ -17,15 +17,15 @@ import java.util.Objects;
 public interface RowObjectMapper<T> {
 	default Data apply(Object obj) {
 		Object[] row = (Object[]) obj;
-		return new Data( (Integer) row[0], (T) row[1] );
+		return new Data( (Number) row[0], (T) row[1] );
 	}
 }
 
 class Data {
-	final Integer id;
+	final Number id;
 	Object datum;
 
-	Data(Integer id, Object datum) {
+	Data(Number id, Object datum) {
 		this.id = id;
 		this.datum = datum;
 	}
@@ -39,7 +39,7 @@ class Data {
 			return false;
 		}
 		Data data = (Data) o;
-		return Objects.equals( id, data.id ) && isEquals( datum, data.datum );
+		return Objects.equals( id.intValue(), data.id.intValue() ) && isEquals( datum, data.datum );
 	}
 
 	private boolean isEquals(Object thisDatum, Object thatDatum) {

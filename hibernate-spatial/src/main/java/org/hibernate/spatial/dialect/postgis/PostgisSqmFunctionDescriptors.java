@@ -28,7 +28,7 @@ public class PostgisSqmFunctionDescriptors implements KeyedSqmFunctionDescriptor
 
 	private final Map<FunctionKey, SqmFunctionDescriptor> map = new HashMap<>();
 
-	PostgisSqmFunctionDescriptors(ServiceRegistry serviceRegistry) {
+	public PostgisSqmFunctionDescriptors(ServiceRegistry serviceRegistry) {
 		Arrays.stream( values() )
 				.forEach( cf -> map.put( cf.getKey(), toPGFunction( cf ) ) );
 	}

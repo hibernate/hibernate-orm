@@ -16,6 +16,7 @@ package org.hibernate.spatial.integration.functions;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.hibernate.spatial.integration.SpatialTestDataProvider;
@@ -40,7 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * Dynamic tests for "common" spatial functions.
  *
  * <p>
- *     The tests here are dynamic across several dimensions:
+ * The tests here are dynamic across several dimensions:
  *     <ul>
  *         <li>the spatial function (in so far as actually supported by the dialect)</li>
  *         <li>the Geometry model (JTS or Geolatte)</li>
@@ -55,12 +56,22 @@ public class CommonFunctionTests extends SpatialTestDataProvider
 		implements SessionFactoryScopeAware {
 
 	private SessionFactoryScope scope;
+	private Set<String> supportedFunctions;
 	List received;
 	List expected;
 
 	@Override
 	public void injectSessionFactoryScope(SessionFactoryScope scope) {
 		this.scope = scope;
+		//scope is set to null during test cleanup
+		if ( scope != null ) {
+			this.supportedFunctions = scope.getSessionFactory()
+					.getQueryEngine()
+					.getSqmFunctionRegistry()
+					.getFunctions()
+					.keySet();
+
+		}
 	}
 
 	@BeforeEach
@@ -84,15 +95,20 @@ public class CommonFunctionTests extends SpatialTestDataProvider
 
 	@TestFactory
 	public Stream<DynamicTest> testFunction() {
+
 		return
 				TestTemplates.all( templates, hqlOverrides )
-						// TODO -- filter for supported functions
+						.filter( this::isSupported )
 						.flatMap( t -> Stream.of(
 								t.build( Model.JTSMODEL, codec ),
 								t.build( Model.GLMODEL, codec )
 						) )
 						.flatMap( this::buildTests );
 
+	}
+
+	private boolean isSupported(FunctionTestTemplate.Builder builder) {
+		return supportedFunctions.contains( builder.function.name() );
 	}
 
 	protected Stream<DynamicTest> buildTests(FunctionTestTemplate template) {

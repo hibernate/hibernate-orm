@@ -5,26 +5,28 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-package org.hibernate.spatial.dialect.postgis;
+package org.hibernate.spatial.dialect.cockroachdb;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.spatial.FunctionKey;
 import org.hibernate.spatial.GeolatteGeometryType;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.JTSGeometryJavaTypeDescriptor;
 import org.hibernate.spatial.JTSGeometryType;
 import org.hibernate.spatial.contributor.ContributorImplementor;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
+import org.hibernate.spatial.dialect.postgis.PostgisSqmFunctionDescriptors;
 
-public class PostgisDialectContributor implements ContributorImplementor {
+public class CockroachDbContributor implements ContributorImplementor {
 
-	private final ServiceRegistry serviceRegistryegistry;
+	private final ServiceRegistry serviceRegistry;
 
-	public PostgisDialectContributor(ServiceRegistry serviceRegistry) {
-		this.serviceRegistryegistry = serviceRegistry;
+	public CockroachDbContributor(ServiceRegistry serviceRegistry) {
+		this.serviceRegistry = serviceRegistry;
 	}
 
+	@Override
 	public void contributeTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
 		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_2 ) );
@@ -36,15 +38,25 @@ public class PostgisDialectContributor implements ContributorImplementor {
 		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
 		PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( getServiceRegistry() );
 
-		postgisFunctions.asMap().forEach( (key, desc) -> {
-			functionRegistry.register( key.getName(), desc );
-			key.getAltName().ifPresent( altName -> functionRegistry.registerAlternateKey( altName, key.getName() ) );
-		} );
+		postgisFunctions.asMap()
+				.forEach( (key, desc) -> {
+					if ( isUnsupported( key ) ) {
+						return;
+					}
+					functionRegistry.register( key.getName(), desc );
+					key.getAltName().ifPresent( altName -> functionRegistry.registerAlternateKey(
+							altName,
+							key.getName()
+					) );
+				} );
 	}
 
+	private boolean isUnsupported(FunctionKey key) {
+		return key.getName().equalsIgnoreCase( "st_union" );
+	}
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return this.serviceRegistryegistry;
+		return this.serviceRegistry;
 	}
 }

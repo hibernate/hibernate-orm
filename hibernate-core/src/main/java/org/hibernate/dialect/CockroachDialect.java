@@ -87,6 +87,9 @@ public class CockroachDialect extends Dialect {
 		registerColumnType( Types.NCLOB, "string" );
 
 		registerColumnType( Types.JAVA_OBJECT, "json" );
+
+		//register geometry type
+		registerColumnType( 5432, "geometry" );
 	}
 
 	@Override

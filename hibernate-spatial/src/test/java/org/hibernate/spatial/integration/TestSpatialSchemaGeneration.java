@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -53,6 +55,7 @@ public class TestSpatialSchemaGeneration {
 				.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.BOTH, metadata );
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		String result = sqlLines.stream().collect( Collectors.joining( " " ) ).toLowerCase( Locale.ROOT );
-		assertThat( result, stringContainsInOrder( List.of( "geometry", "geom" ) ) );
+		Iterable<String> geomElems = Arrays.asList( "geometry", "geom" );
+		assertThat( result, stringContainsInOrder( geomElems ) );
 	}
 }

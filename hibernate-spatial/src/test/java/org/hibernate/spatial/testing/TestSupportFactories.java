@@ -53,7 +53,7 @@ public class TestSupportFactories {
 			return MariaDBTestSupport.class;
 		}
 
-		if ( ( dialect instanceof SpatialDialect ) && CockroachDialect.class.isAssignableFrom( dialect.getClass() ) ) {
+		if ( CockroachDialect.class.isAssignableFrom( dialect.getClass() ) ) {
 			return CockroachDBTestSupport.class;
 		}
 

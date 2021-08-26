@@ -192,7 +192,7 @@ The `GEOGRAPHY` type is not currently supported.
 ====
 
 CockroachDB::
-The dialect `CockroachDB202SpatialDialect` support the `GEOMETRY` type in CockroachDB v20.2 and later.
+The dialect `CockroachDB202` support the `GEOMETRY` type in CockroachDB v20.2 and later.
 
 [NOTE]
 ====

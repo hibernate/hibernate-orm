@@ -57,7 +57,7 @@ public class PostgisTestSupport extends TestSupport {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return PGGeometryTypeDescriptor.INSTANCE_WKB_1.toGeometry( in );
+				return PGGeometryTypeDescriptor.INSTANCE_WKB_2.toGeometry( in );
 			}
 
 			@Override

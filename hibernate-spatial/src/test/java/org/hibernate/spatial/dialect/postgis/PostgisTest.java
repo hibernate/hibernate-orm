@@ -20,8 +20,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.spatial.GeolatteGeometryType;
-import org.hibernate.spatial.dialect.postgis.PostgisPG95Dialect;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -30,7 +28,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import org.geolatte.geom.C2D;
-import org.geolatte.geom.Geometry;
 import org.geolatte.geom.Point;
 import org.geolatte.geom.Polygon;
 import org.geolatte.geom.crs.CoordinateReferenceSystem;

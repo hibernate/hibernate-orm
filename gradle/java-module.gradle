@@ -230,6 +230,20 @@ if ( gradle.ext.javaToolchainEnabled ) {
 		}
 	}
 }
+class HeapDumpPathProvider implements CommandLineArgumentProvider {
+//	@InputFile
+	@OutputFile
+	@PathSensitive(PathSensitivity.RELATIVE)
+//	@Optional
+	Provider<RegularFile> path
+//	File path
+
+	@Override
+	Iterable<String> asArguments() {
+		["-XX:HeapDumpPath=${path.get().asFile.absolutePath}"]
+//		["-XX:HeapDumpPath=${path.absolutePath}"]
+	}
+}
 
 tasks.withType( Test.class ).each { test ->
 	test.useJUnitPlatform()
@@ -240,9 +254,14 @@ tasks.withType( Test.class ).each { test ->
 		// Byteman needs this property to be set, https://developer.jboss.org/thread/274997
 		test.jvmArgs += ["-Djdk.attach.allowAttachSelf=true"]
 	}
+
+	test.jvmArgumentProviders.add(
+			new HeapDumpPathProvider( path: project.layout.buildDirectory.file("OOM-dump.hprof") )
+//			new HeapDumpPathProvider( path: project.file( "${buildDir}/OOM-dump.hprof" ) )
+	)
+
 	test.jvmArgs += [
 			'-XX:+HeapDumpOnOutOfMemoryError',
-			"-XX:HeapDumpPath=${file( "${buildDir}/OOM-dump.hprof" ).absolutePath}",
 			'-XX:MetaspaceSize=256M'
 	]
 

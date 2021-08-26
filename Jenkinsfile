@@ -87,10 +87,10 @@ stage('Build') {
 							case "postgresql":
 							    // use the postgis image to enable the PGSQL GIS (spatial) extension
 								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('postgis/postgis:11-2.5').pull()
+									docker.image('postgis:9.5-3.0').pull()
 								}
-								sh "./docker_db.sh postgresql_11"
-								containerName = "postgis"
+								sh "./docker_db.sh postgresql_9_5"
+								containerName = "postgres"
 								break;
 							case "oracle":
 								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {

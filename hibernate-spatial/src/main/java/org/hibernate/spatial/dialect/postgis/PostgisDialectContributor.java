@@ -42,7 +42,7 @@ public class PostgisDialectContributor implements ContributorImplementor {
 
 		postgisFunctions.asMap().forEach( (key, desc) -> {
 			functionRegistry.register( key.getName(), desc );
-			key.getAltName().ifPresent( altName -> functionRegistry.register( altName, desc ) );
+			key.getAltName().ifPresent( altName -> functionRegistry.registerAlternateKey( altName, key.getName() ) );
 		} );
 	}
 

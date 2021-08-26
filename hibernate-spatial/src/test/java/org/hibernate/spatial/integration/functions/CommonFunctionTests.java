@@ -16,24 +16,14 @@ package org.hibernate.spatial.integration.functions;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.stream.Stream;
 
-import org.hibernate.spatial.integration.SpatialTestDataProvider;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
+import org.hibernate.spatial.testing.SpatialTestBase;
 import org.hibernate.spatial.testing.datareader.TestSupport;
-import org.hibernate.spatial.testing.domain.GeomEntity;
-import org.hibernate.spatial.testing.domain.JtsGeomEntity;
-import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 
-import org.hibernate.testing.orm.junit.DialectFeatureChecks;
-import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
@@ -53,56 +43,28 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * </p>
  */
 @SuppressWarnings("ALL")
-@DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
-@RequiresDialectFeature( feature = IsSupportedBySpatial.class)
+@RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
-public class CommonFunctionTests extends SpatialTestDataProvider
-		implements SessionFactoryScopeAware {
+public class CommonFunctionTests extends SpatialTestBase {
 
-	private SessionFactoryScope scope;
-	private Set<String> supportedFunctions;
+	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;
+
+
 	List received;
 	List expected;
 
 	@Override
-	public void injectSessionFactoryScope(SessionFactoryScope scope) {
-		this.scope = scope;
-		//scope is set to null during test cleanup
-		if ( scope != null ) {
-			this.supportedFunctions = scope.getSessionFactory()
-					.getQueryEngine()
-					.getSqmFunctionRegistry()
-					.getFunctions()
-					.keySet();
-
-		}
+	public TestSupport.TestDataPurpose purpose() {
+		return PURPOSE;
 	}
 
-	@BeforeEach
-	public void beforeEach() {
-		scope.inTransaction( session -> super.entities(
-						JtsGeomEntity.class,
-						TestSupport.TestDataPurpose.SpatialFunctionsData
-				)
-				.forEach( session::save ) );
-		scope.inTransaction( session -> super.entities(
-				GeomEntity.class,
-				TestSupport.TestDataPurpose.SpatialFunctionsData
-		).forEach( session::save ) );
-	}
-
-	@AfterEach
-	public void cleanup() {
-		scope.inTransaction( session -> session.createQuery( "delete from GeomEntity" ).executeUpdate() );
-		scope.inTransaction( session -> session.createQuery( "delete from JtsGeomEntity" ).executeUpdate() );
-	}
 
 	@TestFactory
 	public Stream<DynamicTest> testFunction() {
 
 		return
 				TestTemplates.all( templates, hqlOverrides )
-						.filter( this::isSupported )
+						.filter( f -> isSupported( f.function ) )
 						.flatMap( t -> Stream.of(
 								t.build( Model.JTSMODEL, codec ),
 								t.build( Model.GLMODEL, codec )
@@ -111,9 +73,6 @@ public class CommonFunctionTests extends SpatialTestDataProvider
 
 	}
 
-	private boolean isSupported(FunctionTestTemplate.Builder builder) {
-		return supportedFunctions.contains( builder.function.name() );
-	}
 
 	protected Stream<DynamicTest> buildTests(FunctionTestTemplate template) {
 		return Stream.of(

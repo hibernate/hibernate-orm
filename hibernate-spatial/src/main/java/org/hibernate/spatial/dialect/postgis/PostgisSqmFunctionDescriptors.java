@@ -43,7 +43,7 @@ public class PostgisSqmFunctionDescriptors implements KeyedSqmFunctionDescriptor
 				true,
 				StandardArgumentsValidators.exactly( func.getNumArgs() ),
 				func.getReturnType() != null ? StandardFunctionReturnTypeResolvers.invariant( func.getReturnType() ) :
-						StandardFunctionReturnTypeResolvers.useArgType( 1 )
+						null
 		);
 	}
 

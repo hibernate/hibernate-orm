@@ -19,11 +19,13 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,6 +36,7 @@ import static org.hamcrest.Matchers.stringContainsInOrder;
 
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
 @SessionFactory
+@RequiresDialectFeature( feature = IsSupportedBySpatial.class)
 public class TestSpatialSchemaGeneration {
 
 	File output;
@@ -55,7 +58,6 @@ public class TestSpatialSchemaGeneration {
 				.execute( EnumSet.of( TargetType.SCRIPT ), SchemaExport.Action.BOTH, metadata );
 		final List<String> sqlLines = Files.readAllLines( output.toPath(), Charset.defaultCharset() );
 		String result = sqlLines.stream().collect( Collectors.joining( " " ) ).toLowerCase( Locale.ROOT );
-		Iterable<String> geomElems = Arrays.asList( "geometry", "geom" );
-		assertThat( result, stringContainsInOrder( geomElems ) );
+		assertThat( result, stringContainsInOrder( Arrays.asList( "geometry", "geom" ) ) );
 	}
 }

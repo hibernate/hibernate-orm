@@ -20,12 +20,15 @@ import java.util.Set;
 import java.util.stream.Stream;
 
 import org.hibernate.spatial.integration.SpatialTestDataProvider;
+import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.domain.GeomEntity;
 import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 import org.hibernate.spatial.testing.domain.SpatialDomainModel;
 
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SessionFactoryScopeAware;
@@ -51,6 +54,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  */
 @SuppressWarnings("ALL")
 @DomainModel(modelDescriptorClasses = SpatialDomainModel.class)
+@RequiresDialectFeature( feature = IsSupportedBySpatial.class)
 @SessionFactory
 public class CommonFunctionTests extends SpatialTestDataProvider
 		implements SessionFactoryScopeAware {

@@ -119,8 +119,7 @@ include 'hibernate-envers'
 include 'hibernate-envers-jakarta'
 
 include 'hibernate-community-dialects'
-// todo (6.0): re-enable hibernate-spatial
-//include 'hibernate-spatial'
+include 'hibernate-spatial'
 
 include 'hibernate-c3p0'
 include 'hibernate-proxool'

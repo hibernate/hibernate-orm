@@ -43,3 +43,7 @@ dependencies {
 sourceSets.test.resources {
     setSrcDirs(['src/test/java', 'src/test/resources'])
 }
+
+tasks.test {
+    enabled = project.db == 'pgsql'
+}

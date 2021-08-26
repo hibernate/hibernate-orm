@@ -81,7 +81,8 @@ postgresql_13() {
     docker run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgres:13.0
 }
 
-postgis(){
+postgresql_11() {
+    # use the postgis image to enable the PGSQL GIS (spatial) extension
     docker rm -f postgis || true
     docker run --name postgis -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d postgis/postgis:11-2.5
 }

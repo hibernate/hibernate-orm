@@ -118,8 +118,7 @@ include 'hibernate-transaction-client'
 include 'hibernate-envers'
 include 'hibernate-envers-jakarta'
 
-include 'hibernate-community-dialects'
-include 'hibernate-spatial'
+//include 'hibernate-spatial'
 
 include 'hibernate-c3p0'
 include 'hibernate-proxool'
@@ -164,6 +163,7 @@ project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir
 include 'hibernate-enhance-maven-plugin'
 project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
 
+include 'hibernate-community-dialects'
 
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"

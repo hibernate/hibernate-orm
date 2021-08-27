@@ -3,6 +3,16 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.0.Beta1 (August 27, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31974
+
+** Task
+    * [HHH-14792] - Remove support for bytecode enhancement via Javassist
+    * [HHH-14744] - Refactor contextual information for SchemaManagementTool to be more easily extended by Hibernate Reactive
+
+
 Changes in 5.5.7.Final (August 25, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

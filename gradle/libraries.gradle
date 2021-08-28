@@ -29,7 +29,7 @@ ext {
 
     assertjVersion = '3.14.0'
 
-    geolatteVersion = '1.8.0'
+    geolatteVersion = '1.8.2'
 
     // Wildfly version targeted by module ZIP; Arquillian/Shrinkwrap versions used for CDI testing and testing the module ZIP
     wildflyVersion = '17.0.1.Final'

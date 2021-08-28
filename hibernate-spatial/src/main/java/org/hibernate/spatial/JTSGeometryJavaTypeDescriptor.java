@@ -9,11 +9,11 @@ package org.hibernate.spatial;
 
 import java.util.Locale;
 
-import org.hibernate.spatial.jts.JTSUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
+import org.geolatte.geom.jts.JTSUtils;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;

@@ -406,6 +406,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	private Identifier getCurrentSchema(JdbcEnvironment jdbcEnvironment) {
+		if ( jdbcEnvironment.getNameQualifierSupport() == NameQualifierSupport.CATALOG ) {
+			return null;
+		}
 		if ( currentSchema != null ) {
 			return currentSchema;
 		}
@@ -427,6 +430,9 @@ public abstract class AbstractInformationExtractorImpl implements InformationExt
 	}
 
 	private Identifier getCurrentCatalog(JdbcEnvironment jdbcEnvironment) {
+		if ( jdbcEnvironment.getNameQualifierSupport() == NameQualifierSupport.SCHEMA ) {
+			return null;
+		}
 		if ( currentCatalog != null ) {
 			return currentCatalog;
 		}

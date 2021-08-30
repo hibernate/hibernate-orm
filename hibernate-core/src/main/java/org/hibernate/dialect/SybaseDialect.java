@@ -13,6 +13,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.CastType;
@@ -285,6 +286,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		}
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.CATALOG;
 	}
 
 }

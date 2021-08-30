@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.nationalized;
+package org.hibernate.orm.test.nationalized;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner

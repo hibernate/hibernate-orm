@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.nationalized;
+package org.hibernate.orm.test.nationalized;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -16,8 +16,8 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CharacterNCharType;
@@ -39,7 +39,7 @@ import static org.junit.Assert.assertSame;
  */
 public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 	@Test
-	@TestForIssue( jiraKey = "HHH-10528" )
+	@TestForIssue(jiraKey = "HHH-10528")
 	public void testSetting() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA, true )
@@ -52,11 +52,12 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "name" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
-					metadata.getDatabase().getDialect() instanceof CockroachDialect ){
+			final Dialect dialect = metadata.getDatabase().getDialect();
+			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				// See issue HHH-10693
 				assertSame( StringType.INSTANCE, nameAttribute.getType() );
-			}else {
+			}
+			else {
 				assertSame( StringNVarcharType.INSTANCE, nameAttribute.getType() );
 			}
 
@@ -67,7 +68,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11205" )
+	@TestForIssue(jiraKey = "HHH-11205")
 	public void testSettingOnCharType() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA, true )
@@ -80,10 +81,11 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 			final Metadata metadata = ms.buildMetadata();
 			final PersistentClass pc = metadata.getEntityBinding( NationalizedBySettingEntity.class.getName() );
 			final Property nameAttribute = pc.getProperty( "flag" );
-			if(metadata.getDatabase().getDialect() instanceof PostgreSQL81Dialect ||
-					metadata.getDatabase().getDialect() instanceof CockroachDialect ){
+			final Dialect dialect = metadata.getDatabase().getDialect();
+			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				assertSame( CharacterType.INSTANCE, nameAttribute.getType() );
-			}else {
+			}
+			else {
 				assertSame( CharacterNCharType.INSTANCE, nameAttribute.getType() );
 			}
 

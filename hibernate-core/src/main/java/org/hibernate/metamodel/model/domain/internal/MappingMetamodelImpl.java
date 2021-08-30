@@ -66,6 +66,7 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
@@ -739,6 +740,10 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 		if ( sqmExpressable instanceof BasicSqmPathSource<?> ) {
 			return getTypeConfiguration().getBasicTypeForJavaType(((BasicSqmPathSource<?>) sqmExpressable).getJavaType());
+		}
+
+		if ( sqmExpressable instanceof SqmFieldLiteral ) {
+			return getTypeConfiguration().getBasicTypeForJavaType( ( (SqmFieldLiteral<?>) sqmExpressable ).getJavaType() );
 		}
 
 		if ( sqmExpressable instanceof CompositeSqmPathSource ) {

@@ -50,7 +50,6 @@ task processPluginXml(type: Copy) {
             + generateMavenDependency(libraries.antlr)\
             + generateMavenDependency(libraries.jta)\
             + generateMavenDependency(libraries.commons_annotations)\
-            + generateMavenDependency(libraries.javassist)\
             + generateMavenDependency(libraries.byteBuddy)\
             + generateMavenDependency(libraries.logging)\
             + generateMavenDependency("org.hibernate:hibernate-core:" + project.version)])

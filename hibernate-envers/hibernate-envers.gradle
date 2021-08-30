@@ -13,8 +13,6 @@ apply plugin: 'org.hibernate.matrix-test'
 dependencies {
     api project( ':hibernate-core' )
 
-    implementation libraries.commons_annotations
-
     // TODO HHH-13703: get rid of this dependency
     implementation libraries.dom4j
 

@@ -59,7 +59,6 @@ dependencies {
 	testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
 	testRuntimeOnly libraries.jakarta_el
 	testRuntimeOnly 'jaxen:jaxen:1.1'
-	testRuntimeOnly libraries.javassist
 	testRuntimeOnly libraries.byteBuddy
 	testRuntimeOnly libraries.jakarta_weld
 	testRuntimeOnly libraries.atomikos

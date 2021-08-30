@@ -8,6 +8,9 @@ package org.hibernate.tool.schema.extract.spi;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.naming.Identifier;
@@ -21,6 +24,7 @@ import org.hibernate.service.ServiceRegistry;
  * well as to delegates needed in performing extraction.
  *
  * @author Steve Ebersole
+ * @author Gail Badner
  */
 @Incubating
 public interface ExtractionContext {
@@ -29,8 +33,30 @@ public interface ExtractionContext {
 	Connection getJdbcConnection();
 	DatabaseMetaData getJdbcDatabaseMetaData();
 
+	@Incubating
+	default <T> T getQueryResults(
+			String queryString,
+			Object[] positionalParameters,
+			ResultSetProcessor<T> resultSetProcessor) throws SQLException {
+		try (PreparedStatement statement = getJdbcConnection().prepareStatement( queryString )) {
+			if ( positionalParameters != null ) {
+				for ( int i = 0 ; i < positionalParameters.length ; i++ ) {
+					statement.setObject( i + 1, positionalParameters[i] );
+				}
+			}
+			try (ResultSet resultSet = statement.executeQuery()) {
+				return resultSetProcessor.process( resultSet );
+			}
+		}
+	}
+
 	Identifier getDefaultCatalog();
 	Identifier getDefaultSchema();
+
+	@Incubating
+	interface ResultSetProcessor<T> {
+		T process(ResultSet resultSet) throws SQLException;
+	}
 
 	/**
 	 * In conjunction with {@link #getDatabaseObjectAccess()} provides access to

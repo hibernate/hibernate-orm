@@ -21,10 +21,6 @@ configurations {
     tests {
         description = 'Configuration for the produced test jar'
     }
-
-    javassist {
-        description "Dependencies for compiling and running the Javassist tests in the `javassist` source-set"
-    }
 }
 
 
@@ -45,7 +41,6 @@ dependencies {
     compileOnly libraries.validation
     compileOnly libraries.ant
     compileOnly libraries.cdi
-    compileOnly libraries.javassist
 
     testImplementation project(':hibernate-testing')
     testImplementation libraries.shrinkwrap_api
@@ -71,7 +66,6 @@ dependencies {
     testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
     testRuntimeOnly libraries.expression_language
     testRuntimeOnly 'jaxen:jaxen:1.1'
-//    testRuntimeOnly libraries.javassist
     testRuntimeOnly libraries.byteBuddy
     testRuntimeOnly libraries.weld
     testRuntimeOnly libraries.atomikos
@@ -161,14 +155,6 @@ sourceSets {
             srcDir 'src/test/java'
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
-        }
-    }
-
-    testJavassist {
-        // define the testJavassist source-set
-        java {
-            compileClasspath += main.output + test.output + configurations.javassist
-            runtimeClasspath += main.output + test.output + configurations.javassist
         }
     }
 }

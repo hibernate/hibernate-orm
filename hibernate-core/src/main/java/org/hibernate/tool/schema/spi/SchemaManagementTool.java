@@ -32,4 +32,6 @@ public interface SchemaManagementTool extends Service {
 	 * @param generationTarget the custom instance to use.
 	 */
 	void setCustomDatabaseGenerationTarget(GenerationTarget generationTarget);
+
+	ExtractionTool getExtractionTool();
 }

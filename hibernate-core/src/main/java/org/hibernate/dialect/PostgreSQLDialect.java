@@ -33,6 +33,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -348,6 +349,18 @@ public class PostgreSQLDialect extends Dialect {
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
+	}
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		// This method is overridden so the correct value will be returned when
+		// DatabaseMetaData is not available.
+		return NameQualifierSupport.SCHEMA;
+	}
+
+	@Override
+	public String getCurrentSchemaCommand() {
+		return "select current_schema()";
 	}
 
 	@Override

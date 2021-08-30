@@ -77,7 +77,6 @@ dependencies {
 	testImplementation libraries.byteman_bmunit
 
 	testRuntimeOnly libraries.log4j2
-	testRuntimeOnly libraries.javassist
 	testRuntimeOnly libraries.byteBuddy
 
 	//Databases

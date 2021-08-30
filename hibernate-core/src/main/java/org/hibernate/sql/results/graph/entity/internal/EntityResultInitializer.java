@@ -28,7 +28,6 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 			LockMode lockMode,
 			DomainResult identifierResult,
 			BasicFetch<?> discriminatorFetch,
-			DomainResult versionResult,
 			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
 		super(
@@ -37,7 +36,6 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 				lockMode,
 				identifierResult,
 				discriminatorFetch,
-				versionResult,
 				rowIdResult,
 				creationState
 		);

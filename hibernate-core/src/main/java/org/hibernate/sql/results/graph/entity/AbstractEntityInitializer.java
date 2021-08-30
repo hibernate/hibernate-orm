@@ -33,6 +33,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
@@ -99,7 +100,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			LockMode lockMode,
 			DomainResult<?> identifierResult,
 			Fetch discriminatorFetch,
-			DomainResult<?> versionResult,
 			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
 		super();
@@ -176,8 +176,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			discriminatorAssembler = null;
 		}
 
-		if ( versionResult != null ) {
-			this.versionAssembler = versionResult.createResultAssembler( creationState );
+		final EntityVersionMapping versionMapping = entityDescriptor.getVersionMapping();
+		if ( versionMapping != null ) {
+			final Fetch versionFetch = resultDescriptor.findFetch( versionMapping );
+			// If there is a version mapping, there must be a fetch for it
+			assert versionFetch != null;
+			this.versionAssembler = versionFetch.createAssembler( this, creationState );
 		}
 		else {
 			this.versionAssembler = null;

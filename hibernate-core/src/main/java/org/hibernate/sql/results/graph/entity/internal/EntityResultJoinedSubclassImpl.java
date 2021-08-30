@@ -41,7 +41,6 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 						getLockMode( creationState ),
 						getIdentifierResult(),
 						getDiscriminatorFetch(),
-						getVersionResult(),
 						getRowIdResult(),
 						creationState
 				)

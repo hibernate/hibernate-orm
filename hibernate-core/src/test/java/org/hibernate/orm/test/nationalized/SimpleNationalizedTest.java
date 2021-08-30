@@ -19,6 +19,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CharacterArrayType;
@@ -31,6 +32,8 @@ import org.hibernate.type.NTextType;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 
@@ -100,7 +103,16 @@ public class SimpleNationalizedTest {
 			prop = pc.getProperty( "materializedNclobAtt" );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				// See issue HHH-10693
-				assertSame( MaterializedClobType.INSTANCE, prop.getType() );
+				if ( dialect instanceof SybaseDialect ) {
+					assertThat( prop.getType(), instanceOf( StandardBasicTypeImpl.class ) );
+					final StandardBasicTypeImpl type = (StandardBasicTypeImpl) prop.getType();
+					assertSame( StringTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
+					assertSame( ClobTypeDescriptor.CLOB_BINDING, type.getJdbcTypeDescriptor() );
+				}
+				else {
+					assertSame( MaterializedClobType.INSTANCE, prop.getType() );
+				}
+
 			}
 			else {
 				assertSame( MaterializedNClobType.INSTANCE, prop.getType() );

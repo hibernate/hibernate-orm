@@ -696,7 +696,12 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
+		public Object getDiscriminatorValue() {
+			return null;
+		}
+
+		@Override
+		public String getSubclassForDiscriminatorValue(Object value) {
 			return null;
 		}
 

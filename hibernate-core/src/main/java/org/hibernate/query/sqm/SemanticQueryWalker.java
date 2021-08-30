@@ -9,6 +9,8 @@ package org.hibernate.query.sqm;
 import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
+import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -144,6 +146,8 @@ public interface SemanticQueryWalker<T> {
 	T visitEntityValuedPath(SqmEntityValuedSimplePath<?> path);
 
 	T visitPluralValuedPath(SqmPluralValuedSimplePath<?> path);
+
+	T visitSelfInterpretingSqmPath(SelfInterpretingSqmPath sqmPath);
 	
 	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path);
 

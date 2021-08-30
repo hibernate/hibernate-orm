@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.discriminator.joined;
+package org.hibernate.orm.test.mapping.inheritance.discriminator;
 
 import javax.persistence.Tuple;
 
@@ -21,67 +21,80 @@ import org.assertj.core.api.Assertions;
  * @author Steve Ebersole
  */
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/discriminator/joined/JoinedSubclassInheritance.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/Person.hbm.xml"
 )
 @SessionFactory
 public class DiscriminatorQueryUsageTests {
+	private Long steveId;
+
 	@Test
 	public void testUsageAsSelection(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Tuple resultTuple = session
-					.createQuery( "select p.id as id, type(p) as type from ParentEntity p", Tuple.class )
+					.createQuery( "select p.id as id, type(p) as type from Person p", Tuple.class )
 					.uniqueResult();
 
-			Assertions.assertThat( resultTuple.get( "id" ) ).isEqualTo( 1 );
-			Assertions.assertThat( resultTuple.get( "type" ) ).isEqualTo( ChildEntity.class );
+			Assertions.assertThat( resultTuple.get( "id" ) ).isEqualTo( steveId );
+			Assertions.assertThat( resultTuple.get( "type" ) ).isEqualTo( Employee.class );
 		} );
 	}
 
 	@Test
 	public void testUsageAsPredicate(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Integer id = session.createQuery( "select p.id from ParentEntity p where type(p) = ChildEntity", Integer.class ).uniqueResult();
-			Assertions.assertThat( id ).isEqualTo( 1 );
+			final Long id = session.createQuery( "select p.id from Person p where type(p) = Employee", Long.class ).uniqueResult();
+			Assertions.assertThat( id ).isEqualTo( steveId );
 		} );
 	}
 
 	@Test
 	public void testUsageAsPredicateOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Integer id = session.createQuery( "select p.id from ParentEntity p where type(p) = 'ce'", Integer.class ).uniqueResult();
-			Assertions.assertThat( id ).isEqualTo( 1 );
+			final Long id = session.createQuery( "select p.id from Person p where type(p) = 'E'", Long.class ).uniqueResult();
+			Assertions.assertThat( id ).isEqualTo( steveId );
 		} );
 	}
 
 	@Test
 	public void testUsageAsPredicateWithParam(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Integer id = session.createQuery( "select p.id from ParentEntity p where type(p) = :type", Integer.class )
-					.setParameter( "type", ChildEntity.class )
+			final Long id = session.createQuery( "select p.id from Person p where type(p) = :type", Long.class )
+					.setParameter( "type", Employee.class )
 					.uniqueResult();
-			Assertions.assertThat( id ).isEqualTo( 1 );
+			Assertions.assertThat( id ).isEqualTo( steveId );
 		} );
 	}
 
 	@Test
 	public void testUsageAsPredicateWithParamOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Integer id = session.createQuery( "select p.id from ParentEntity p where type(p) = :type", Integer.class )
-					.setParameter( "type", "ce" )
+			final Long id = session.createQuery( "select p.id from Person p where type(p) = :type", Long.class )
+					.setParameter( "type", "E" )
 					.uniqueResult();
-			Assertions.assertThat( id ).isEqualTo( 1 );
+			Assertions.assertThat( id ).isEqualTo( steveId );
 		} );
 	}
 
 	@BeforeEach
 	public void createTestData(SessionFactoryScope scope) {
-		scope.inTransaction( (session) -> session.save( new ChildEntity( 1, "Child" ) ) );
+		final Employee created = scope.fromTransaction( (session) -> {
+			final Employee e = new Employee();
+			e.setName( "Steve" );
+			e.setSex( 'M' );
+			e.setTitle( "Gangster of love" );
+
+			session.save( e );
+
+			return e;
+		} );
+
+		steveId = created.getId();
 	}
 
 	@AfterEach
 	public void dropTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			session.createQuery( "delete from ParentEntity" ).executeUpdate();
+			session.createQuery( "delete from Person" ).executeUpdate();
 		} );
 	}
 }

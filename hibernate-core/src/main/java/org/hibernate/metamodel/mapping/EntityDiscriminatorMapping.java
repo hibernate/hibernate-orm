@@ -9,8 +9,9 @@ package org.hibernate.metamodel.mapping;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -39,6 +40,18 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 	}
 
 	String getConcreteEntityNameForDiscriminatorValue(Object value);
+
+	/**
+	 * Create the appropriate SQL expression for this discriminator
+	 *
+	 * @param jdbcMappingToUse The JDBC mapping to use.  This allows opting between
+	 * the "domain result type" (aka Class) and the "underlying type" (Integer, String, etc)
+	 */
+	Expression resolveSqlExpression(
+			NavigablePath navigablePath,
+			JdbcMapping jdbcMappingToUse,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState);
 
 	@Override
 	BasicFetch generateFetch(

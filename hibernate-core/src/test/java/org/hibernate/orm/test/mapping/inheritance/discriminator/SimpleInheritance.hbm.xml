@@ -11,7 +11,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping
-	package="org.hibernate.orm.test.discriminator"
+	package="org.hibernate.orm.test.mapping.inheritance.discriminator"
 	default-access="field">
 
 <!--

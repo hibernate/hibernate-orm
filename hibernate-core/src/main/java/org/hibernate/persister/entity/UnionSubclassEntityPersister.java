@@ -42,6 +42,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.SelectFragment;
@@ -405,9 +406,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping() {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
 		if ( hasSubclasses() ) {
-			return super.generateDiscriminatorMapping();
+			return super.generateDiscriminatorMapping( modelCreationProcess );
 		}
 		return null;
 	}

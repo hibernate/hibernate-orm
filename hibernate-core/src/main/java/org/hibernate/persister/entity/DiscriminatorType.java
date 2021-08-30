@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -48,6 +49,11 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 
 	public BasicType<?> getUnderlyingType() {
 		return underlyingType;
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping() {
+		return getUnderlyingType().getJdbcMapping();
 	}
 
 	@Override

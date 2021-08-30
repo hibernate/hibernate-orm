@@ -107,7 +107,6 @@ import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -167,9 +166,9 @@ import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
 import org.hibernate.metamodel.mapping.internal.DiscriminatedAssociationAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EntityDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityRowIdMappingImpl;
 import org.hibernate.metamodel.mapping.internal.EntityVersionMappingImpl;
+import org.hibernate.metamodel.mapping.internal.ExplicitColumnDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.GeneratedValuesProcessor;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
@@ -208,7 +207,6 @@ import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -6033,7 +6031,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 
-		discriminatorMapping = generateDiscriminatorMapping();
+		discriminatorMapping = generateDiscriminatorMapping( creationProcess );
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
@@ -6146,7 +6144,7 @@ public abstract class AbstractEntityPersister
 		return stateArrayPosition;
 	}
 
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping() {
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
 		if ( getDiscriminatorType() == null) {
 			return null;
 		}
@@ -6158,12 +6156,13 @@ public abstract class AbstractEntityPersister
 			else {
 				discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
 			}
-			return new EntityDiscriminatorMappingImpl(
+			return new ExplicitColumnDiscriminatorMappingImpl (
 					this,
+					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType(),
 					getTableName(),
 					discriminatorColumnExpression,
 					getDiscriminatorFormulaTemplate() != null,
-					(DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
+					modelCreationProcess
 			);
 		}
 	}
@@ -6588,11 +6587,6 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public EntityDiscriminatorMapping getDiscriminatorMapping() {
-		return discriminatorMapping;
-	}
-
-	@Override
-	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
 		return discriminatorMapping;
 	}
 

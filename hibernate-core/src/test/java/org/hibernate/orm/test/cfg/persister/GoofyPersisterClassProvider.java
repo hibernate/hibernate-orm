@@ -643,7 +643,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
+		public Object getDiscriminatorValue() {
+			return null;
+		}
+
+		@Override
+		public String getSubclassForDiscriminatorValue(Object value) {
 			return null;
 		}
 

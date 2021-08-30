@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.discriminator.joined;
+package org.hibernate.orm.test.mapping.inheritance.discriminator.joined;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,7 +21,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  */
 @TestForIssue(jiraKey = "HHH-11133")
 @DomainModel(
-		xmlMappings = "org/hibernate/orm/test/discriminator/joined/JoinedSubclassInheritance.hbm.xml"
+		xmlMappings = "org/hibernate/orm/test/mapping/inheritance/discriminator/joined/JoinedSubclassInheritance.hbm.xml"
 )
 @SessionFactory
 public class JoinedSubclassInheritanceTest {
@@ -37,9 +37,7 @@ public class JoinedSubclassInheritanceTest {
 	@Test
 	public void testConfiguredDiscriminatorValue(SessionFactoryScope scope) {
 		final ChildEntity childEntity = new ChildEntity( 1, "Child" );
-		scope.inTransaction( session ->
-									 session.save( childEntity )
-		);
+		scope.inTransaction( session -> session.save( childEntity ) );
 
 		scope.inTransaction( session -> {
 			ChildEntity ce = session.find( ChildEntity.class, 1 );

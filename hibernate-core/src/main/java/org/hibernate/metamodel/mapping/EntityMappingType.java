@@ -92,6 +92,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Inheritance
 
+	default boolean hasSubclasses() {
+		return getEntityPersister().getEntityMetamodel().hasSubclasses();
+	}
+
 	default AttributeMapping findDeclaredAttributeMapping(String name) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 		// or ?
@@ -144,15 +148,15 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	EntityIdentifierMapping getIdentifierMapping();
 
+	EntityDiscriminatorMapping getDiscriminatorMapping();
+	Object getDiscriminatorValue();
+	String getSubclassForDiscriminatorValue(Object value);
+
 	EntityVersionMapping getVersionMapping();
 
-	EntityRowIdMapping getRowIdMapping();
-
-	EntityDiscriminatorMapping getDiscriminatorMapping();
-
-	EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup);
-
 	NaturalIdMapping getNaturalIdMapping();
+
+	EntityRowIdMapping getRowIdMapping();
 
 	/**
 	 * Visit the mappings, but limited to just attributes defined
@@ -193,6 +197,10 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 
 	default TableReference locateTableReference(TableGroup tableGroup) {
 		return tableGroup.getPrimaryTableReference();
+	}
+
+	default boolean isAbstract() {
+		return getEntityPersister().getEntityMetamodel().isAbstract();
 	}
 
 	interface ConstraintOrderedTableConsumer {

@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import javax.persistence.AttributeConverter;
 import javax.persistence.PersistenceException;
 
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -24,11 +25,11 @@ public class ConvertedValueExtractor<O,R> implements ValueExtractor<O> {
 	private static final Logger log = Logger.getLogger( ConvertedValueExtractor.class );
 
 	private final ValueExtractor<R> relationalExtractor;
-	private final AttributeConverter<O,R> converter;
+	private final BasicValueConverter<O,R> converter;
 
 	public ConvertedValueExtractor(
 			ValueExtractor<R> relationalExtractor,
-			AttributeConverter<O, R> converter) {
+			BasicValueConverter<O, R> converter) {
 		this.relationalExtractor = relationalExtractor;
 		this.converter = converter;
 	}
@@ -50,7 +51,7 @@ public class ConvertedValueExtractor<O,R> implements ValueExtractor<O> {
 
 	private O doConversion(R extractedValue) {
 		try {
-			O convertedValue = converter.convertToEntityAttribute( extractedValue );
+			O convertedValue = converter.toDomainValue( extractedValue );
 			log.debugf( "Converted value on extraction: %s -> %s", extractedValue, convertedValue );
 			return convertedValue;
 		}

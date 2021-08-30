@@ -6,10 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity.internal;
 
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -49,16 +46,4 @@ public class EntityResultJoinedSubclassImpl extends EntityResultImpl {
 		return new EntityAssembler( getResultJavaTypeDescriptor(), initializer );
 	}
 
-	@Override
-	protected EntityDiscriminatorMapping getDiscriminatorMapping(
-			EntityMappingType entityDescriptor,
-			TableGroup entityTableGroup) {
-		final JoinedSubclassEntityPersister joinedSubclassEntityPersister = (JoinedSubclassEntityPersister) entityDescriptor;
-		if ( joinedSubclassEntityPersister.hasSubclasses() ) {
-			return joinedSubclassEntityPersister.getDiscriminatorMapping( entityTableGroup );
-		}
-		else {
-			return null;
-		}
-	}
 }

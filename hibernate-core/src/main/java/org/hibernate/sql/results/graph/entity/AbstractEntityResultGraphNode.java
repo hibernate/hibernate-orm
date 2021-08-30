@@ -39,24 +39,12 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private final BasicFetch<?> discriminatorFetch;
 	private final DomainResult<Object> rowIdResult;
 
-	private final EntityMappingType targetType;
-
 	public AbstractEntityResultGraphNode(
 			EntityValuedModelPart referencedModelPart,
 			NavigablePath navigablePath,
-			DomainResultCreationState creationState) {
-		this( referencedModelPart, navigablePath, null, creationState );
-	}
-
-	@SuppressWarnings("WeakerAccess")
-	public AbstractEntityResultGraphNode(
-			EntityValuedModelPart referencedModelPart,
-			NavigablePath navigablePath,
-			EntityMappingType targetType,
 			DomainResultCreationState creationState) {
 		super( referencedModelPart.getEntityMappingType(), navigablePath );
 		this.referencedModelPart = referencedModelPart;
-		this.targetType = targetType;
 
 		final EntityMappingType entityDescriptor = referencedModelPart.getEntityMappingType();
 
@@ -100,9 +88,9 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 			);
 		}
 
-		final EntityDiscriminatorMapping discriminatorMapping = getDiscriminatorMapping( entityDescriptor, entityTableGroup );
+		final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 		// No need to fetch the discriminator if this type does not have subclasses
-		if ( discriminatorMapping != null && entityDescriptor.getEntityPersister().getEntityMetamodel().hasSubclasses() ) {
+		if ( discriminatorMapping != null && entityDescriptor.hasSubclasses() ) {
 			discriminatorFetch = discriminatorMapping.generateFetch(
 					this,
 					navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
@@ -166,12 +154,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 					creationState
 			);
 		}
-	}
-
-	protected EntityDiscriminatorMapping getDiscriminatorMapping(
-			EntityMappingType entityDescriptor,
-			TableGroup entityTableGroup) {
-		return entityDescriptor.getDiscriminatorMapping( entityTableGroup );
 	}
 
 	@Override

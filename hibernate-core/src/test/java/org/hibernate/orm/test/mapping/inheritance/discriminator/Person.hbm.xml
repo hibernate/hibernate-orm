@@ -18,7 +18,7 @@
 -->
 
 <hibernate-mapping 
-	package="org.hibernate.orm.test.discriminator"
+	package="org.hibernate.orm.test.mapping.inheritance.discriminator"
 	default-access="field">
 	
 	<class name="Person"

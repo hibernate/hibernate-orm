@@ -12,6 +12,7 @@ import java.util.Locale;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -580,6 +581,13 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	@Override
 	public Object visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath path) {
 		logWithIndentation( "-> [non-aggregated-composite-path] - `%s`", path.getNavigablePath().getFullPath() );
+
+		return null;
+	}
+
+	@Override
+	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath sqmPath) {
+		logWithIndentation( "-> [self-interpreting-path] - `%s`", sqmPath.getNavigablePath().getFullPath() );
 
 		return null;
 	}

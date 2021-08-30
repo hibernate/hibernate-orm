@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
@@ -285,6 +286,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	@Override
 	public Object visitPluralValuedPath(SqmPluralValuedSimplePath<?> path) {
 		return path;
+	}
+
+	@Override
+	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath sqmPath) {
+		return sqmPath;
 	}
 
 	@Override

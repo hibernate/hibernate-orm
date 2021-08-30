@@ -48,7 +48,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
-import org.hibernate.metamodel.mapping.internal.JoinedSubclassDiscriminatorMappingImpl;
+import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -130,7 +130,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableSubclassTable;
 
 	// subclass discrimination works by assigning particular
-	// values to certain combinations of null primary key
+	// values to certain combinations of not-null primary key
 	// values in the outer join using an SQL CASE
 	private final Map<Object,String> subclassesByDiscriminatorValue = new HashMap<>();
 	private final String[] discriminatorValues;
@@ -580,7 +580,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			Subclass sc = siter.next();
 			subclassClosure[k] = sc.getEntityName();
 			final Table table = sc.getTable();
-			subclassNameByTableName.put( table.getName(), sc.getClassName() );
+			subclassNameByTableName.put( table.getName(), sc.getEntityName() );
 			try {
 				if ( persistentClass.isPolymorphic() ) {
 					final Object discriminatorValue;
@@ -1219,17 +1219,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityDiscriminatorMapping generateDiscriminatorMapping() {
-		EntityMappingType superMappingType = getSuperMappingType();
-		if ( superMappingType != null ) {
-			return superMappingType.getDiscriminatorMapping();
-		}
-		else {
-			return super.generateDiscriminatorMapping();
-		}
-	}
-
-	@Override
 	protected EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
 		final Type idType = getIdentifierType();
 
@@ -1266,6 +1255,40 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				(BasicType<?>) idType,
 				creationProcess
 		);
+	}
+
+	@Override
+	protected EntityDiscriminatorMapping generateDiscriminatorMapping(MappingModelCreationProcess modelCreationProcess) {
+		EntityMappingType superMappingType = getSuperMappingType();
+		if ( superMappingType != null ) {
+			return superMappingType.getDiscriminatorMapping();
+		}
+
+		if ( hasSubclasses() ) {
+			final String formula = getDiscriminatorFormulaTemplate();
+			if ( explicitDiscriminatorColumnName != null || formula != null ) {
+				// even though this is a joined-hierarchy the user has defined an
+				// explicit discriminator column - so we can use the normal
+				// discriminator mapping
+				return super.generateDiscriminatorMapping( modelCreationProcess );
+			}
+
+			org.hibernate.persister.entity.DiscriminatorType<?> discriminatorMetadataType = (org.hibernate.persister.entity.DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType();
+
+			// otherwise, we need to use the case-statement approach
+			return new CaseStatementDiscriminatorMappingImpl(
+					this,
+					subclassTableNameClosure,
+					notNullColumnTableNumbers,
+					notNullColumnNames,
+					discriminatorValues,
+					subclassNameByTableName,
+					discriminatorMetadataType,
+					modelCreationProcess
+			);
+		}
+
+		return null;
 	}
 
 	protected EntityIdentifierMapping generateNonEncapsulatedCompositeIdentifierMapping(
@@ -1308,35 +1331,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		else {
 			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 		}
-	}
-
-	@Override
-	public EntityDiscriminatorMapping getDiscriminatorMapping(TableGroup tableGroup) {
-		if ( hasSubclasses() ) {
-			if ( explicitDiscriminatorColumnName == null ) {
-				final String discriminatorColumnExpression;
-				if ( getDiscriminatorFormulaTemplate() == null ) {
-					discriminatorColumnExpression = getDiscriminatorColumnName();
-				}
-				else {
-					discriminatorColumnExpression = getDiscriminatorFormulaTemplate();
-				}
-				CaseSearchedExpressionInfo info = getCaseSearchedExpression( tableGroup );
-				return new JoinedSubclassDiscriminatorMappingImpl(
-						this,
-						getTableName(),
-						discriminatorColumnExpression,
-						getDiscriminatorFormulaTemplate() != null,
-						info.caseSearchedExpression,
-						info.columnReferences,
-						(org.hibernate.persister.entity.DiscriminatorType<?>) getTypeDiscriminatorMetadata().getResolutionType()
-				);
-			}
-			else {
-				return super.getDiscriminatorMapping( tableGroup );
-			}
-		}
-		return null;
 	}
 
 	@Override

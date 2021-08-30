@@ -72,6 +72,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPath;
 import org.hibernate.param.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -104,6 +105,7 @@ import org.hibernate.query.sqm.sql.internal.EmbeddableValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
+import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
@@ -2379,6 +2381,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public SqmPathInterpretation<?> visitPluralValuedPath(SqmPluralValuedSimplePath<?> sqmPath) {
 		return PluralValuedSimplePathInterpretation.from( sqmPath, this );
+	}
+
+	@Override
+	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath sqmPath) {
+		return sqmPath.interpret( this, this, jpaQueryComplianceEnabled );
 	}
 
 

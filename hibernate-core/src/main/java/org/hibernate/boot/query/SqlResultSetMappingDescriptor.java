@@ -24,16 +24,14 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.internal.FetchMementoBasicStandard;
-import org.hibernate.query.internal.ImplicitAttributeFetchMemento;
+import org.hibernate.query.internal.FetchMementoEntityStandard;
 import org.hibernate.query.internal.ModelPartResultMementoBasicImpl;
 import org.hibernate.query.internal.NamedResultSetMappingMementoImpl;
 import org.hibernate.query.internal.ResultMementoBasicStandard;
@@ -45,6 +43,7 @@ import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
+import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -421,8 +420,8 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
-			else if ( subPart instanceof EntityValuedModelPart ) {
-				return new ImplicitAttributeFetchMemento( navigablePath, (AttributeMapping) subPart );
+			else if ( subPart instanceof EntityValuedFetchable ) {
+				return new FetchMementoEntityStandard( navigablePath, (EntityValuedFetchable) subPart, columnNames );
 			}
 			throw new NotYetImplementedFor6Exception(
 					"Only support for basic-valued model-parts have been implemented : " + propertyPath

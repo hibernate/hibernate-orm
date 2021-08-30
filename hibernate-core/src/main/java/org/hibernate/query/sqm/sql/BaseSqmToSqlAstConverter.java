@@ -302,6 +302,7 @@ import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiati
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -2725,7 +2726,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					if ( inferredMapping instanceof PluralAttributeMapping ) {
 						return ( (PluralAttributeMapping) inferredMapping ).getElementDescriptor();
 					}
-					return inferredMapping;
+					else if ( !( inferredMapping instanceof JavaObjectType ) ) {
+						// Never report back the "object type" as inferred type and instead rely on the value type
+						return inferredMapping;
+					}
 				}
 			}
 		}

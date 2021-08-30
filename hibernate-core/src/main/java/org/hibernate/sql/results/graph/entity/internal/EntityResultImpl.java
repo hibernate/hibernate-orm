@@ -104,7 +104,6 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 						getLockMode( creationState ),
 						getIdentifierResult(),
 						getDiscriminatorFetch(),
-						getVersionResult(),
 						getRowIdResult(),
 						creationState
 				)

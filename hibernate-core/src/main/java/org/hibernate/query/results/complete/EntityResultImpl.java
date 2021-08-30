@@ -125,7 +125,7 @@ public class EntityResultImpl implements EntityResult {
 	@Override
 	public Fetch findFetch(Fetchable fetchable) {
 		for ( int i = 0; i < fetches.size(); i++ ) {
-			if ( fetches.get( i ).getFetchedMapping() == fetchable ) {
+			if ( fetches.get( i ).getFetchedMapping().getFetchableName().equals( fetchable.getFetchableName() ) ) {
 				return fetches.get( i );
 			}
 		}
@@ -144,7 +144,6 @@ public class EntityResultImpl implements EntityResult {
 						lockMode,
 						identifierResult,
 						discriminatorFetch,
-						null,
 						null,
 						creationState
 				)

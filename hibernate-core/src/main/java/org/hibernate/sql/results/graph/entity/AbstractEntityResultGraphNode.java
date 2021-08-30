@@ -12,7 +12,6 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -38,7 +37,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	private final EntityValuedModelPart referencedModelPart;
 	private final DomainResult<?> identifierResult;
 	private final BasicFetch<?> discriminatorFetch;
-	private final DomainResult<?> versionResult;
 	private final DomainResult<Object> rowIdResult;
 
 	private final EntityMappingType targetType;
@@ -116,19 +114,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		}
 		else {
 			discriminatorFetch = null;
-		}
-
-		final EntityVersionMapping versionDescriptor = entityDescriptor.getVersionMapping();
-		if ( versionDescriptor == null ) {
-			versionResult = null;
-		}
-		else {
-			versionResult = versionDescriptor.createDomainResult(
-					navigablePath.append( versionDescriptor.getFetchableName() ),
-					entityTableGroup,
-					null,
-					creationState
-			);
 		}
 
 		final EntityRowIdMapping rowIdMapping = entityDescriptor.getRowIdMapping();
@@ -210,10 +195,6 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	public BasicFetch<?> getDiscriminatorFetch() {
 		return discriminatorFetch;
-	}
-
-	public DomainResult getVersionResult() {
-		return versionResult;
 	}
 
 	public DomainResult<Object> getRowIdResult() {

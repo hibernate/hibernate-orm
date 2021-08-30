@@ -21,10 +21,8 @@ import javax.persistence.ManyToOne;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -32,14 +30,13 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 /**
  * @author Vlad Mihalcea
  */
-@SkipForDialect(Oracle8iDialect.class)
 public class EmbeddableOverrideTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-			Book.class,
-			Country.class
+				Book.class,
+				Country.class
 		};
 	}
 
@@ -73,24 +70,24 @@ public class EmbeddableOverrideTest extends BaseEntityManagerFunctionalTestCase 
 	//tag::embeddable-type-override-mapping-example[]
 	@Entity(name = "Book")
 	@AttributeOverrides({
-		@AttributeOverride(
-			name = "ebookPublisher.name",
-			column = @Column(name = "ebook_publisher_name")
-		),
-		@AttributeOverride(
-			name = "paperBackPublisher.name",
-			column = @Column(name = "paper_back_publisher_name")
-		)
+			@AttributeOverride(
+					name = "ebookPublisher.name",
+					column = @Column(name = "ebook_pub_name")
+			),
+			@AttributeOverride(
+					name = "paperBackPublisher.name",
+					column = @Column(name = "paper_back_pub_name")
+			)
 	})
 	@AssociationOverrides({
-		@AssociationOverride(
-			name = "ebookPublisher.country",
-			joinColumns = @JoinColumn(name = "ebook_publisher_country_id")
-		),
-		@AssociationOverride(
-			name = "paperBackPublisher.country",
-			joinColumns = @JoinColumn(name = "paper_back_publisher_country_id")
-		)
+			@AssociationOverride(
+					name = "ebookPublisher.country",
+					joinColumns = @JoinColumn(name = "ebook_pub_country_id")
+			),
+			@AssociationOverride(
+					name = "paperBackPublisher.country",
+					joinColumns = @JoinColumn(name = "paper_back_pub_country_id")
+			)
 	})
 	public static class Book {
 

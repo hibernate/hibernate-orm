@@ -292,7 +292,6 @@ tasks.withType(AsciidoctorTask).all {
 
 test {
 	include '**/**'
-	exclude '**/HQLTest**'
 }
 
 // resources inherently exclude sources

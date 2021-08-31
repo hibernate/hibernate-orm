@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.entity.DiscriminatorType;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
@@ -78,7 +77,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		return expressionResolver.resolveSqlExpression(
-				createColumnReferenceKey( tableGroup.getGroupAlias(), EntityDiscriminatorMapping.ROLE_NAME ),
+				createColumnReferenceKey( tableGroup.getPrimaryTableReference(), getSelectionExpression() ),
 				sqlAstProcessingState -> createCaseSearchedExpression( tableGroup )
 		);
 	}
@@ -87,13 +86,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 		final CaseSearchedExpression caseSearchedExpression = new CaseSearchedExpression( this );
 
 		tableDiscriminatorDetailsMap.forEach( (tableName, tableDiscriminatorDetails) -> {
-			TableReference tableReference;
-			try {
-				tableReference = entityTableGroup.resolveTableReference( entityTableGroup.getNavigablePath(), tableName );
-			}
-			catch (Exception e) {
-				tableReference = null;
-			}
+			final TableReference tableReference = entityTableGroup.getTableReference( entityTableGroup.getNavigablePath(), tableName );
 
 			if ( tableReference == null ) {
 				// assume this is because it is a table that is not part of the processing entity's sub-hierarchy
@@ -142,10 +135,9 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 	@Override
 	public String getSelectionExpression() {
-		throw new UnsupportedOperationException();
-//		// this *should* only be used to create the sql-expression key, so just
-//		// using the ROLE_NAME should be fine
-//		return ROLE_NAME;
+		// this *should* only be used to create the sql-expression key, so just
+		// using the ROLE_NAME should be fine
+		return ROLE_NAME;
 	}
 
 

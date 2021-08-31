@@ -27,7 +27,8 @@ stage('Configure') {
 		buildEnv('8', 'derby'),
 		buildEnv('8', 'mysql8'),
 		buildEnv('8', 'mariadb'),
-		buildEnv('8', 'postgresql'),
+		buildEnv('8', 'postgresql_9_5'),
+		buildEnv('8', 'postgresql_13'),
 		buildEnv('8', 'oracle'),
 		buildEnv('8', 'oracle_ee'),
 		buildEnv('8', 'db2'),
@@ -84,12 +85,20 @@ stage('Build') {
 								sh "./docker_db.sh mariadb"
 								containerName = "mariadb"
 								break;
-							case "postgresql":
+							case "postgresql_9_5":
 							    // use the postgis image to enable the PGSQL GIS (spatial) extension
 								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-									docker.image('postgis:9.5-3.0').pull()
+									docker.image('postgis/postgis:9.5-2.5').pull()
 								}
 								sh "./docker_db.sh postgresql_9_5"
+								containerName = "postgres"
+								break;
+							case "postgresql_13":
+							    // use the postgis image to enable the PGSQL GIS (spatial) extension
+								docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+									docker.image('postgis/postgis:13-3.1').pull()
+								}
+								sh "./docker_db.sh postgresql_13"
 								containerName = "postgres"
 								break;
 							case "oracle":
@@ -144,7 +153,8 @@ stage('Build') {
 							case "mysql8":
 								goal = "-Pdb=mysql_ci"
 								break;
-							case "postgresql":
+							case "postgresql_9_5":
+							case "postgresql_13":
 								goal = "-Pdb=pgsql_ci"
 								break;
 							case "oracle":

@@ -4,27 +4,28 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jcache.test;
+package org.hibernate.orm.test.jcache;
 
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
-import org.hibernate.jcache.test.domain.Event;
-import org.hibernate.jcache.test.domain.Item;
-import org.hibernate.jcache.test.domain.VersionedItem;
+import org.hibernate.orm.test.jcache.domain.Event;
+import org.hibernate.orm.test.jcache.domain.Item;
+import org.hibernate.orm.test.jcache.domain.VersionedItem;
 
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 
 /**
  * @author Steve Ebersole
  */
 public class DomainDataRegionTest extends BaseFunctionalTest {
-	@Override
+	@BeforeEach
 	public void createSessionFactory() {
 		TestHelper.createCache( "a.b.c" );
 		super.createSessionFactory();

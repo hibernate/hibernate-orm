@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.cache.jcache;
+package org.hibernate.orm.test.jcache;
 
 import java.util.Date;
 import java.util.List;
@@ -15,25 +15,24 @@ import org.hibernate.cache.spi.access.SoftLock;
 import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
 import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jcache.test.BaseFunctionalTest;
-import org.hibernate.jcache.test.domain.Event;
-import org.hibernate.jcache.test.domain.EventManager;
-import org.hibernate.jcache.test.domain.Item;
-import org.hibernate.jcache.test.domain.Person;
-import org.hibernate.jcache.test.domain.PhoneNumber;
-import org.hibernate.jcache.test.domain.VersionedItem;
+import org.hibernate.orm.test.jcache.domain.Event;
+import org.hibernate.orm.test.jcache.domain.EventManager;
+import org.hibernate.orm.test.jcache.domain.Item;
+import org.hibernate.orm.test.jcache.domain.Person;
+import org.hibernate.orm.test.jcache.domain.PhoneNumber;
+import org.hibernate.orm.test.jcache.domain.VersionedItem;
 import org.hibernate.stat.CacheRegionStatistics;
 import org.hibernate.stat.QueryStatistics;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.junit4.ExtraAssertions;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.ExtraAssertions;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Chris Dennis
@@ -41,7 +40,7 @@ import static org.junit.Assert.fail;
  */
 public class HibernateCacheTest extends BaseFunctionalTest {
 	@Test
-	public void testQueryCacheInvalidation() throws Exception {
+	public void testQueryCacheInvalidation() {
 		Session s = sessionFactory().openSession();
 		Transaction t = s.beginTransaction();
 		Item i = new Item();
@@ -60,7 +59,7 @@ public class HibernateCacheTest extends BaseFunctionalTest {
 
 		s = sessionFactory().openSession();
 		t = s.beginTransaction();
-		i = (Item) s.get( Item.class, i.getId() );
+		i = s.get( Item.class, i.getId() );
 
 		assertThat( slcs.getHitCount(), equalTo( 1L ) );
 		assertThat( slcs.getMissCount(), equalTo( 0L ) );

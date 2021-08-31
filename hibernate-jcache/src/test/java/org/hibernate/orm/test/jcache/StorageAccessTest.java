@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jcache.test;
+package org.hibernate.orm.test.jcache;
 
 import javax.cache.Cache;
 
@@ -13,21 +13,22 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil2.inSession;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests around {@link org.hibernate.cache.jcache.internal.JCacheAccessImpl}
  *
  * @author Steve Ebersole
  */
-public class StorageAccessTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class StorageAccessTest {
 
 	/**
 	 * Sort of the inverse test of {@link MissingCacheStrategyTest#testMissingCacheStrategyFail()}.

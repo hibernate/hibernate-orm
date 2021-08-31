@@ -37,7 +37,9 @@ jobs:
             experimental: false
           - rdbms: mariadb
             experimental: false
-          - rdbms: postgresql
+          - rdbms: postgresql_9_5
+            experimental: false
+          - rdbms: postgresql_13
             experimental: false
           - rdbms: oracle
             experimental: false

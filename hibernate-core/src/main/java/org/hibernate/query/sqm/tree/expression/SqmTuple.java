@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Models a tuple of values, generally defined as a series of values
@@ -38,43 +37,26 @@ public class SqmTuple<T>
 	}
 
 	public SqmTuple(NodeBuilder nodeBuilder, SqmExpressable<T> type, SqmExpression<?>... groupedExpressions) {
-		this( Arrays.asList( groupedExpressions ), nodeBuilder );
-		applyInferableType( type );
+		this( Arrays.asList( groupedExpressions ), type, nodeBuilder );
 	}
 
 	public SqmTuple(List<SqmExpression<?>> groupedExpressions, NodeBuilder nodeBuilder) {
-		super( null, nodeBuilder );
+		this( groupedExpressions, null, nodeBuilder );
+	}
+
+	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressable<T> type, NodeBuilder nodeBuilder) {
+		super( type, nodeBuilder );
 		if ( groupedExpressions.isEmpty() ) {
 			throw new QueryException( "tuple grouping cannot be constructed over zero expressions" );
 		}
 		this.groupedExpressions = groupedExpressions;
-	}
-
-	public SqmTuple(List<SqmExpression<?>> groupedExpressions, SqmExpressable<T> type, NodeBuilder nodeBuilder) {
-		this( groupedExpressions, nodeBuilder );
-		applyInferableType( type );
+		if ( type == null ) {
+			setExpressableType( nodeBuilder.getTypeConfiguration().resolveTupleType( groupedExpressions ) );
+		}
 	}
 
 	public List<SqmExpression<?>> getGroupedExpressions() {
 		return groupedExpressions;
-	}
-
-	@Override
-	public SqmExpressable<T> getNodeType() {
-		final SqmExpressable<T> expressableType = super.getNodeType();
-		if ( expressableType != null ) {
-			return expressableType;
-		}
-
-		for ( SqmExpression groupedExpression : groupedExpressions ) {
-			//noinspection unchecked
-			final SqmExpressable<T> groupedExpressionExpressableType = groupedExpression.getNodeType();
-			if ( groupedExpressionExpressableType != null ) {
-				return groupedExpressionExpressableType;
-			}
-		}
-
-		return null;
 	}
 
 	@Override
@@ -96,11 +78,6 @@ public class SqmTuple<T>
 	@Override
 	public String asLoggableText() {
 		return toString();
-	}
-
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override

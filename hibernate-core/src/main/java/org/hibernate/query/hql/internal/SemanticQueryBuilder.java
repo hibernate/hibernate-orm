@@ -2025,7 +2025,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final HqlParser.ExplicitTupleInListContext tupleExpressionListContext = (HqlParser.ExplicitTupleInListContext) inListContext;
 			final int size = tupleExpressionListContext.getChildCount();
 			final int estimatedSize = size >> 1;
-			final boolean isEnum = testExpression.getJavaType().isEnum();
+			final Class<?> testExpressionJavaType = testExpression.getJavaType();
+			final boolean isEnum = testExpressionJavaType != null && testExpressionJavaType.isEnum();
+			// Multi-valued bindings are only allowed if there is a single list item, hence size 3 (LP, RP and param)
 			parameterDeclarationContextStack.push( () -> size == 3 );
 			try {
 				final List<SqmExpression<?>> listExpressions = new ArrayList<>( estimatedSize );
@@ -2039,7 +2041,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 									resolveEnumShorthandLiteral(
 											expressionContext,
 											possibleEnumValues,
-											testExpression.getJavaType()
+											testExpressionJavaType
 									)
 							);
 						}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jcache.test;
+package org.hibernate.orm.test.jcache;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -19,18 +19,17 @@ import org.hibernate.cache.spi.support.DomainDataRegionTemplate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.orm.junit.ExtraAssertions;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.hibernate.testing.junit4.ExtraAssertions;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Tests for handling of data just inserted during a transaction being read from the database
@@ -39,12 +38,12 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Steve Ebersole
  */
-public class InsertedDataTest extends BaseUnitTestCase {
+public class InsertedDataTest {
 
 	private ServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
-	@Before
+	@BeforeEach
 	public void acquireResources() {
 		serviceRegistry = TestHelper.getStandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.CACHE_REGION_PREFIX, "" )
@@ -59,7 +58,7 @@ public class InsertedDataTest extends BaseUnitTestCase {
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 	}
 
-	@After
+	@AfterEach
 	public void releaseResources() {
 		if ( sessionFactory != null ) {
 			sessionFactory.close();
@@ -87,9 +86,7 @@ public class InsertedDataTest extends BaseUnitTestCase {
 
 		inTransaction(
 				sessionFactory,
-				s -> {
-					s.createQuery( "delete CacheableItem" ).executeUpdate();
-				}
+				s -> s.createQuery( "delete CacheableItem" ).executeUpdate()
 		);
 	}
 
@@ -215,7 +212,7 @@ public class InsertedDataTest extends BaseUnitTestCase {
 				sessionFactory,
 				s -> {
 					CacheableItem item = s.get( CacheableItem.class, 1L );
-					assertNull( "it should be null", item );
+					assertNull( item, "it should be null" );
 				}
 		);
 	}
@@ -266,7 +263,7 @@ public class InsertedDataTest extends BaseUnitTestCase {
 				sessionFactory,
 				s -> {
 					final CacheableItem item = s.get( CacheableItem.class, 1L );
-					assertNull( "it should be null", item );
+					assertNull( item, "it should be null" );
 				}
 		);
 	}

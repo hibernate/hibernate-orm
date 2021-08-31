@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jcache.test;
+package org.hibernate.orm.test.jcache;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,32 +22,36 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.SkipForDialect;
+
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.hibernate.tool.schema.Action;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Zhenlei Huang
  */
 @TestForIssue(jiraKey = "HHH-10649")
-public class RefreshUpdatedDataTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class RefreshUpdatedDataTest {
 	private ServiceRegistry serviceRegistry;
 	private SessionFactoryImplementor sessionFactory;
 
-	@Before
+	@BeforeEach
 	@SuppressWarnings("unused")
 	public void acquireResources() {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
@@ -76,7 +80,7 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 		sessionFactory = (SessionFactoryImplementor) metadata.buildSessionFactory();
 	}
 
-	@After
+	@AfterEach
 	@SuppressWarnings("unused")
 	public void releaseResources() {
 		if ( sessionFactory != null ) {
@@ -89,8 +93,10 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDialect.class, comment = "does not support nested transactions")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby does not support nested transactions")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "does not support nested transactions")
+	@SkipForDialect(dialectClass = DerbyDialect.class, matchSubTypes = true, reason = "Derby does not support nested transactions")
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, matchSubTypes = true)
+	@SkipForDialect(dialectClass = HSQLDialect.class, matchSubTypes = true)
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 

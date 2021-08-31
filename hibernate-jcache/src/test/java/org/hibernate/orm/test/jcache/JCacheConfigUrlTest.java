@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.cache.jcache.config;
+package org.hibernate.orm.test.jcache;
 
 import java.util.Map;
 
@@ -12,6 +12,7 @@ import org.hibernate.cache.jcache.ConfigSettings;
 import org.hibernate.cfg.Environment;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.orm.test.jcache.domain.Product;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.jcache.test;
+package org.hibernate.orm.test.jcache;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,9 +26,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jcache.test.domain.Item;
-import org.hibernate.jcache.test.domain.VersionedItem;
-import org.hibernate.jcache.test.domain.Event;
+import org.hibernate.orm.test.jcache.domain.Item;
+import org.hibernate.orm.test.jcache.domain.VersionedItem;
+import org.hibernate.orm.test.jcache.domain.Event;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tool.schema.Action;
@@ -45,7 +45,7 @@ public class TestHelper {
 			Event.class.getName()
 	};
 	public static String[] collectionRegionNames = new String[] {
-			org.hibernate.jcache.test.domain.Event.class.getName() + ".participants"
+			Event.class.getName() + ".participants"
 	};
 
 	public static String[] allDomainRegionNames =
@@ -117,7 +117,7 @@ public class TestHelper {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		if ( H2Dialect.class.equals( Dialect.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;MVCC=true" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
 		}
 		return ssrb;
 	}

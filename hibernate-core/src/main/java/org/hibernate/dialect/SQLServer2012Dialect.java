@@ -49,7 +49,18 @@ public class SQLServer2012Dialect extends SQLServer2008Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		// The upper-case name is necessary here so that both case-sensitive and case-insensitive collations work
-		return "select * from INFORMATION_SCHEMA.SEQUENCES";
+
+		// Internally, SQL server stores start_value, minimum_value, maximum_value, and increment
+		// in sql_variant columns. SQL Server's JDBC automatically converts these values
+		// to bigint. Vert.X does support sql_variant columns, so these columns need to be
+		// explicitly converted here.
+
+		return "select sequence_name, sequence_catalog, sequence_schema, " +
+				"convert( bigint, start_value ) as start_value, " +
+				"convert( bigint, minimum_value ) as minimum_value, " +
+				"convert( bigint, maximum_value ) as maximum_value, " +
+				"convert( bigint, increment ) as increment " +
+				"from INFORMATION_SCHEMA.SEQUENCES";
 	}
 
 	@Override

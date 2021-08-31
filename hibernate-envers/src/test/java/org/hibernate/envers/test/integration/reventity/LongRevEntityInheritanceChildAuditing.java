@@ -10,8 +10,8 @@ package org.hibernate.envers.test.integration.reventity;
 import java.util.Iterator;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
-import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
-import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ChildEntity;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;
 import org.hibernate.mapping.Column;
 import org.hibernate.orm.test.envers.integration.reventity.LongRevNumberRevEntity;
 

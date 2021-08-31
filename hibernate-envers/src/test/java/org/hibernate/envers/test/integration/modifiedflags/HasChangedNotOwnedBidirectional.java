@@ -11,9 +11,9 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.envers.test.integration.inheritance.joined.notownedrelation.Address;
-import org.hibernate.envers.test.integration.inheritance.joined.notownedrelation.Contact;
-import org.hibernate.envers.test.integration.inheritance.joined.notownedrelation.PersonalContact;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.notownedrelation.Address;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.notownedrelation.Contact;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.notownedrelation.PersonalContact;
 import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 
 import org.junit.Test;

@@ -11,8 +11,8 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.envers.test.integration.inheritance.joined.ChildEntity;
-import org.hibernate.envers.test.integration.inheritance.joined.ParentEntity;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ChildEntity;
+import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;
 import org.hibernate.orm.test.envers.integration.modifiedflags.AbstractModifiedFlagsEntityTest;
 
 import org.junit.Test;

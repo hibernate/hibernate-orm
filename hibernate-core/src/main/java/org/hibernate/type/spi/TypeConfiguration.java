@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Function;
 
 import org.hibernate.HibernateException;
@@ -42,13 +44,16 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -466,6 +471,37 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+	private final ConcurrentMap<ArrayCacheKey, ArrayTupleType> arrayTuples = new ConcurrentHashMap<>();
+
+	public SqmExpressable<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
+		final SqmExpressable<?>[] components = new SqmExpressable<?>[typedNodes.size()];
+		for ( int i = 0; i < typedNodes.size(); i++ ) {
+			final SqmExpressable<?> sqmExpressable = typedNodes.get( i ).getNodeType();
+			components[i] = sqmExpressable == null ? JavaObjectType.INSTANCE : sqmExpressable;
+		}
+		return arrayTuples.computeIfAbsent(
+				new ArrayCacheKey( components ),
+				key -> new ArrayTupleType( key.components )
+		);
+	}
+
+	private static class ArrayCacheKey {
+		final SqmExpressable<?>[] components;
+
+		public ArrayCacheKey(SqmExpressable<?>[] components) {
+			this.components = components;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			return Arrays.equals( components, ((ArrayCacheKey) o).components );
+		}
+
+		@Override
+		public int hashCode() {
+			return Arrays.hashCode( components );
+		}
+	}
 
 	/**
 	 * @see QueryHelper#highestPrecedenceType2

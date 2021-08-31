@@ -55,6 +55,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -151,6 +152,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	private final TypeConfiguration typeConfiguration;
 
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
+	private final Map<TupleType<?>, MappingModelExpressable<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
 	public MappingMetamodelImpl(SessionFactoryImplementor sessionFactory, TypeConfiguration typeConfiguration) {
 		this.sessionFactory = sessionFactory;
@@ -749,6 +751,26 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 		if ( sqmExpressable instanceof EntityDomainType<?> ) {
 			return getEntityDescriptor( ( (EntityDomainType<?>) sqmExpressable ).getHibernateEntityName() );
+		}
+
+		if ( sqmExpressable instanceof TupleType<?> ) {
+			final MappingModelExpressable<?> mappingModelExpressable = tupleTypeCache.get( sqmExpressable );
+			if ( mappingModelExpressable != null ) {
+				return mappingModelExpressable;
+			}
+			final TupleType<?> tupleType = (TupleType<?>) sqmExpressable;
+			final MappingModelExpressable<?>[] components = new MappingModelExpressable<?>[tupleType.componentCount()];
+			for ( int i = 0; i < components.length; i++ ) {
+				components[i] = resolveMappingExpressable( tupleType.get( i ), tableGroupLocator );
+			}
+			final MappingModelExpressable createdMappingModelExpressable = new TupleMappingModelExpressable( components );
+			final MappingModelExpressable<?> existingMappingModelExpressable = tupleTypeCache.putIfAbsent(
+					tupleType,
+					createdMappingModelExpressable
+			);
+			return existingMappingModelExpressable == null
+					? createdMappingModelExpressable
+					: existingMappingModelExpressable;
 		}
 
 		throw new UnsupportedOperationException( "Cannot determine proper mapping model expressable for " + sqmExpressable );

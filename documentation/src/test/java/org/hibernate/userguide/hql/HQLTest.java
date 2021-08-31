@@ -43,9 +43,7 @@ import org.hibernate.userguide.model.Phone;
 import org.hibernate.userguide.model.PhoneType;
 import org.hibernate.userguide.model.WireTransferPayment;
 
-import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Before;
 import org.junit.Test;
@@ -2285,7 +2283,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 
 	@Test
-	@RequiresDialectFeature(DialectChecks.SupportRowValueConstructorSyntaxInInList.class)
 	public void test_hql_in_predicate_example_6() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

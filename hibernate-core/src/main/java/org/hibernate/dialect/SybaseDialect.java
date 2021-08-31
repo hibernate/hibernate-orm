@@ -39,6 +39,8 @@ import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
@@ -91,8 +93,19 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				if ( precision == 19 && scale == 0 ) {
 					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
 				}
+			case Types.TINYINT:
+				if ( jtdsDriver ) {
+					return jdbcTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
+				}
 		}
 		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+	}
+
+	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
+		if ( jtdsDriver && TinyIntTypeDescriptor.INSTANCE == jdbcTypeDescriptor ) {
+			return SmallIntTypeDescriptor.INSTANCE;
+		}
+		return super.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 
 	@Override

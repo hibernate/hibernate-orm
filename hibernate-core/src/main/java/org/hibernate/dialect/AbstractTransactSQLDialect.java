@@ -8,6 +8,8 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.dialect.function.CastStrEmulation;
+import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
@@ -116,6 +118,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( "str", new TransactSQLStrFunction() );
 	}
 
 	@Override

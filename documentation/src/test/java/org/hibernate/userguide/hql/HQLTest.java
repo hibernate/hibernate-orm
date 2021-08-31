@@ -1459,6 +1459,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	public void test_hql_str_function_example_sql_server() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-str-function-example[]
+			// Special SQL Server function "str" that converts floats
 			List<String> timestamps = entityManager.createQuery(
 				"select str( cast(duration as float) / 60, 4, 2 ) " +
 				"from Call c ", String.class )

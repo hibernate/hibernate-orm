@@ -10,6 +10,8 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -35,13 +37,20 @@ public class CastStrEmulation
 		);
 	}
 
+	protected CastStrEmulation(
+			String name,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver) {
+		super( name, argumentsValidator, returnTypeResolver );
+	}
+
 	@Override
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			AllowableFunctionReturnType<T> impliedResultType,
 			QueryEngine queryEngine,
 			TypeConfiguration typeConfiguration) {
-		SqmTypedNode<?> argument = arguments.get(0);
+		final SqmTypedNode<?> argument = arguments.get( 0 );
 		return queryEngine.getSqmFunctionRegistry().findFunctionDescriptor( "cast" )
 				.generateSqmExpression(
 						asList(

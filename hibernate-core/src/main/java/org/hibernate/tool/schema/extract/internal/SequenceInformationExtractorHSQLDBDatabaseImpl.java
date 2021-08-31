@@ -17,7 +17,7 @@ public class SequenceInformationExtractorHSQLDBDatabaseImpl extends SequenceInfo
 
 	@Override
 	protected String sequenceStartValueColumn() {
-		return "start_with";
+		return "start_value";
 	}
 
 }

@@ -155,6 +155,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.Queryable;
@@ -809,7 +810,7 @@ public abstract class AbstractEntityPersister
 		//WHERE STRING
 
 		sqlWhereString = StringHelper.isNotEmpty( bootDescriptor.getWhere() ) ?
-				"(" + bootDescriptor.getWhere() + ") " :
+				"(" + bootDescriptor.getWhere() + ")" :
 				null;
 		sqlWhereStringTemplate = sqlWhereString == null ?
 				null :
@@ -5436,27 +5437,62 @@ public abstract class AbstractEntityPersister
 
 	@Override
 	public Object getPropertyValue(Object object, String propertyName) {
-		final AttributeMapping attributeMapping = findAttributeMapping( propertyName );
+		final int dotIndex = propertyName.indexOf( '.' );
+		final String basePropertyName = dotIndex == -1
+				? propertyName
+				: propertyName.substring( 0, dotIndex );
+		final AttributeMapping attributeMapping = findAttributeMapping( basePropertyName );
+		ManagedMappingType baseValueType = null;
+		Object baseValue = null;
 		if ( attributeMapping != null ) {
-			return attributeMapping.getAttributeMetadataAccess()
+			baseValue = attributeMapping.getAttributeMetadataAccess()
 					.resolveAttributeMetadata( this )
 					.getPropertyAccess()
 					.getGetter()
 					.get( object );
+			if ( dotIndex != -1 ) {
+				baseValueType = (ManagedMappingType) attributeMapping.getMappedType();
+			}
 		}
-		if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
+		else if ( identifierMapping instanceof NonAggregatedIdentifierMappingImpl ) {
 			final EmbeddedAttributeMapping embeddedAttributeMapping = (EmbeddedAttributeMapping) findAttributeMapping( NavigableRole.IDENTIFIER_MAPPER_PROPERTY );
 			final AttributeMapping mapping = embeddedAttributeMapping.getMappedType()
-					.findAttributeMapping( propertyName );
+					.findAttributeMapping( basePropertyName );
 			if ( mapping != null ) {
-				return mapping.getAttributeMetadataAccess()
+				baseValue = mapping.getAttributeMetadataAccess()
 						.resolveAttributeMetadata( this )
 						.getPropertyAccess()
 						.getGetter()
 						.get( object );
+				if ( dotIndex != -1 ) {
+					baseValueType = (ManagedMappingType) mapping.getMappedType();
+				}
 			}
 		}
-		return null;
+		return getPropertyValue( baseValue, baseValueType, propertyName, dotIndex );
+	}
+
+	private Object getPropertyValue(
+			Object baseValue,
+			ManagedMappingType baseValueType,
+			String propertyName,
+			int dotIndex) {
+		if ( baseValueType == null ) {
+			return baseValue;
+		}
+		final int nextDotIndex = propertyName.indexOf( '.', dotIndex + 1 );
+		final int endIndex = nextDotIndex == -1 ? propertyName.length() : nextDotIndex;
+		final AttributeMapping attributeMapping;
+		attributeMapping = baseValueType.findAttributeMapping(
+				propertyName.substring( dotIndex + 1, endIndex )
+		);
+		baseValue = attributeMapping.getAttributeMetadataAccess()
+				.resolveAttributeMetadata( this )
+				.getPropertyAccess()
+				.getGetter()
+				.get( baseValue );
+		baseValueType = nextDotIndex == -1 ? null : (ManagedMappingType) attributeMapping.getMappedType();
+		return getPropertyValue( baseValue, baseValueType, propertyName, nextDotIndex );
 	}
 
 	@Override

@@ -11,6 +11,7 @@ import java.util.List;
 import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 
@@ -47,7 +48,7 @@ public class ReadWriteExpressionChange extends BaseEnversJPAFunctionalTestCase {
 		List resultList = em.createNativeQuery( "select size_in_cm from t_staff_AUD where id =" + id ).getResultList();
 		Assert.assertEquals( 1, resultList.size() );
 		Double sizeInCm = null;
-		if ( getDialect() instanceof Oracle8iDialect ) {
+		if ( getDialect() instanceof OracleDialect ) {
 			sizeInCm = ((BigDecimal) resultList.get( 0 )).doubleValue();
 		}
 		else {

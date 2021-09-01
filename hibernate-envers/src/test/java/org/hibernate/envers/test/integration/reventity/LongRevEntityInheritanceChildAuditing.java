@@ -35,7 +35,7 @@ public class LongRevEntityInheritanceChildAuditing extends BaseEnversJPAFunction
 	public void testChildRevColumnType() {
 		// We need the second column
 		Iterator childEntityKeyColumnsIterator = metadata()
-				.getEntityBinding("org.hibernate.orm.test.envers.integration.inheritance.joined.ChildEntity_AUD" )
+				.getEntityBinding(ChildEntity.class.getName() + "_AUD" )
 				.getKey()
 				.getColumnIterator();
 		childEntityKeyColumnsIterator.next();

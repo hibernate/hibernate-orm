@@ -138,10 +138,9 @@ public class AssociationToOneInnerJoinQueryTest extends BaseEnversJPAFunctionalT
 
 		List<Address> list2 = auditReader.createQuery().forEntitiesAtRevision( Car.class, 2 ).traverseRelation( "owner", JoinType.INNER )
 				.addOrder( AuditEntity.property( "age" ).asc() ).traverseRelation( "address", JoinType.INNER ).addProjection( AuditEntity.selectEntity( false ) ).getResultList();
-		assertEquals( "Unexpected number of results", 3, list2.size() );
+		assertEquals( "Unexpected number of results", 2, list2.size() );
 		assertEquals( "Unexpected address at index 0", address1.getId(), list2.get( 0 ).getId() );
-		assertEquals( "Unexpected address at index 1", address1.getId(), list2.get( 1 ).getId() );
-		assertEquals( "Unexpected address at index 2", address2.getId(), list2.get( 2 ).getId() );
+		assertEquals( "Unexpected address at index 1", address2.getId(), list2.get( 1 ).getId() );
 
 		List<Address> list3 = auditReader.createQuery().forEntitiesAtRevision( Car.class, 2 ).traverseRelation( "owner", JoinType.INNER ).traverseRelation( "address", JoinType.INNER )
 				.addProjection( AuditEntity.selectEntity( true ) ).addOrder( AuditEntity.property( "number" ).asc() ).getResultList();

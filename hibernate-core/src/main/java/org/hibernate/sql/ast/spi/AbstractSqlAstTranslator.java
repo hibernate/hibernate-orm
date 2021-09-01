@@ -411,7 +411,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected boolean hasOffset(QueryPart queryPart) {
-		if ( queryPart.isRoot() && hasLimit() && limit.getFirstRowJpa() != 0 ) {
+		if ( queryPart.isRoot() && hasLimit() && limit.getFirstRow() != null ) {
 			return true;
 		}
 		else {

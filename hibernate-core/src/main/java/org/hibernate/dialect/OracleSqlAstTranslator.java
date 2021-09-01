@@ -78,7 +78,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 		}
 		if ( strategy != LockStrategy.FOLLOW_ON ) {
 			final boolean hasOffset;
-			if ( querySpec.isRoot() && hasLimit() && getLimit().getFirstRowJpa() != 0 ) {
+			if ( querySpec.isRoot() && hasLimit() && getLimit().getFirstRow() != null ) {
 				hasOffset = true;
 				// We must record that the generated SQL depends on the fact that there is an offset
 				addAppliedParameterBinding( getOffsetParameter(), null );

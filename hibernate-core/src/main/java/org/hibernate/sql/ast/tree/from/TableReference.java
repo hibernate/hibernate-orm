@@ -52,7 +52,10 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
 		if ( tableExpression.equals( getTableExpression() ) ) {
 			return this;
 		}
@@ -60,7 +63,10 @@ public class TableReference implements SqlAstNode, ColumnReferenceQualifier {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
 		if ( this.tableExpression.equals( tableExpression ) ) {
 			return this;
 		}

@@ -65,7 +65,10 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
 		if ( cteTableReference.getTableExpression().equals( tableExpression ) ) {
 			return cteTableReference;
 		}
@@ -73,7 +76,10 @@ public class CteTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
 		return cteTableReference;
 	}
 

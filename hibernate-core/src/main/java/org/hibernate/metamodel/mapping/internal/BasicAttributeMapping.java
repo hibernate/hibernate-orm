@@ -212,7 +212,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, true, creationState );
 
 		//noinspection unchecked
 		return new BasicResult(
@@ -224,12 +224,15 @@ public class BasicAttributeMapping
 		);
 	}
 
-	private SqlSelection resolveSqlSelection(TableGroup tableGroup, DomainResultCreationState creationState) {
+	private SqlSelection resolveSqlSelection(
+			TableGroup tableGroup,
+			boolean allowFkOptimization,
+			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference(
-				tableGroup.getNavigablePath()
-						.append( getNavigableRole().getNavigableName() ),
-				getContainingTableExpression()
+				tableGroup.getNavigablePath().append( getNavigableRole().getNavigableName() ),
+				getContainingTableExpression(),
+				allowFkOptimization
 		);
 		final String tableAlias = tableReference.getIdentificationVariable();
 		return expressionResolver.resolveSqlSelection(
@@ -254,7 +257,7 @@ public class BasicAttributeMapping
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( tableGroup, creationState );
+		resolveSqlSelection( tableGroup, true, creationState );
 	}
 
 	@Override
@@ -263,7 +266,7 @@ public class BasicAttributeMapping
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		selectionConsumer.accept( resolveSqlSelection( tableGroup, creationState ), getJdbcMapping() );
+		selectionConsumer.accept( resolveSqlSelection( tableGroup, true, creationState ), getJdbcMapping() );
 	}
 
 	@Override
@@ -291,7 +294,7 @@ public class BasicAttributeMapping
 
 			assert tableGroup != null;
 
-			final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, creationState );
+			final SqlSelection sqlSelection = resolveSqlSelection( tableGroup, false, creationState );
 			valuesArrayPosition = sqlSelection.getValuesArrayPosition();
 		}
 

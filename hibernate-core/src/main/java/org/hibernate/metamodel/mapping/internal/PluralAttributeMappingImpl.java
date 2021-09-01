@@ -25,6 +25,7 @@ import org.hibernate.mapping.IndexedCollection;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.List;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
@@ -338,12 +339,21 @@ public class PluralAttributeMappingImpl
 					dialect,
 					creationProcess.getSqmFunctionRegistry()
 			);
+			final boolean hasConstraint;
+			if ( fkBootDescriptorSource instanceof SimpleValue ) {
+				hasConstraint = ( (SimpleValue) fkBootDescriptorSource ).isConstrained();
+			}
+			else {
+				// We assume there is a constraint if the key is not nullable
+				hasConstraint = !fkBootDescriptorSource.isNullable();
+			}
 			return new SimpleForeignKeyDescriptor(
 					basicFkTargetPart,
 					null,
 					keySelectableMapping,
 					basicFkTargetPart,
-					entityType.isReferenceToPrimaryKey()
+					entityType.isReferenceToPrimaryKey(),
+					hasConstraint
 			);
 		}
 		else if ( fkTargetPart instanceof EmbeddableValuedModelPart ) {

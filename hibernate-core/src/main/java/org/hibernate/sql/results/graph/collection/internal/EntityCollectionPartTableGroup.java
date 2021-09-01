@@ -101,13 +101,19 @@ public class EntityCollectionPartTableGroup implements TableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return collectionTableGroup.getTableReference( navigablePath, tableExpression );
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		return collectionTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization );
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		return collectionTableGroup.resolveTableReference( navigablePath, tableExpression );
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		return collectionTableGroup.resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
 	}
 
 	@Override

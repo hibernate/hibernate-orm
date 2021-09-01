@@ -60,15 +60,21 @@ public class MutatingTableReferenceGroupWrapper implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
 		return mutatingTableReference.getTableExpression().equals( tableExpression )
 				? mutatingTableReference
 				: null;
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		return getTableReference( navigablePath, tableExpression );
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		return getTableReference( navigablePath, tableExpression, allowFkOptimization );
 	}
 
 	@Override

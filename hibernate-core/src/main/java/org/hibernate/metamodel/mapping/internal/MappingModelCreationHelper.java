@@ -45,6 +45,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Resolvable;
 import org.hibernate.mapping.Selectable;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
@@ -932,7 +933,8 @@ public class MappingModelCreationHelper {
 							null,
 							keySelectableMapping,
 							simpleFkTarget,
-							isReferenceToPrimaryKey
+							isReferenceToPrimaryKey,
+							( (SimpleValue) bootValueMappingKey ).isConstrained()
 					)
 			);
 		}
@@ -1077,6 +1079,7 @@ public class MappingModelCreationHelper {
 					keySelectableMapping,
 					simpleFkTarget,
 					bootValueMapping.isReferenceToPrimaryKey(),
+					bootValueMapping.isConstrained(),
 					swapDirection
 			);
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );
@@ -1119,10 +1122,12 @@ public class MappingModelCreationHelper {
 			boolean inverse,
 			Dialect dialect,
 			MappingModelCreationProcess creationProcess) {
+		final boolean hasConstraint;
 		final SelectableMappings keySelectableMappings;
 		final String keyTableExpression;
 		if ( bootValueMapping instanceof Collection ) {
 			final Collection collectionBootValueMapping = (Collection) bootValueMapping;
+			hasConstraint = ( (SimpleValue) collectionBootValueMapping.getKey() ).isConstrained();
 			keyTableExpression = getTableIdentifierExpression(
 					collectionBootValueMapping.getCollectionTable(),
 					creationProcess
@@ -1137,6 +1142,13 @@ public class MappingModelCreationHelper {
 			);
 		}
 		else {
+			if ( bootValueMapping instanceof OneToMany ) {
+				// We assume there is a constraint if the mapping is not nullable
+				hasConstraint = !bootValueMapping.isNullable();
+			}
+			else {
+				hasConstraint = ( (SimpleValue) bootValueMapping ).isConstrained();
+			}
 			keyTableExpression = getTableIdentifierExpression(
 					bootValueMapping.getTable(),
 					creationProcess
@@ -1162,6 +1174,7 @@ public class MappingModelCreationHelper {
 					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
 					keyTableExpression,
 					keySelectableMappings,
+					hasConstraint,
 					creationProcess
 			);
 		}
@@ -1177,6 +1190,7 @@ public class MappingModelCreationHelper {
 					keySelectableMappings,
 					embeddableValuedModelPart.getContainingTableExpression(),
 					embeddableValuedModelPart.getEmbeddableTypeDescriptor(),
+					hasConstraint,
 					creationProcess
 			);
 		}

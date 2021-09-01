@@ -469,6 +469,10 @@ public abstract class SimpleValue implements KeyValue {
 	public void setForeignKeyName(String foreignKeyName) {
 		this.foreignKeyName = foreignKeyName;
 	}
+
+	public boolean isConstrained() {
+		return !"none".equals( foreignKeyName ) && !hasFormula();
+	}
 	
 	public String getForeignKeyDefinition() {
 		return foreignKeyDefinition;

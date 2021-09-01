@@ -113,19 +113,25 @@ public class UnionTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return resolveTableReference( navigablePath, tableExpression );
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		return resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		if ( tableReference.getTableReference( navigablePath, tableExpression ) != null ) {
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		if ( tableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
 			return tableReference;
 		}
 		if ( tableGroupJoins != null ) {
 			for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
 				final TableReference tableReference = tableGroupJoin.getJoinedGroup()
-						.resolveTableReference( navigablePath, tableExpression );
+						.resolveTableReference( navigablePath, tableExpression, allowFkOptimization );
 				if ( tableReference != null ) {
 					return tableReference;
 				}

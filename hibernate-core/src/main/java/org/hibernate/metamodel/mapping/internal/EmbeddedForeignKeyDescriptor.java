@@ -58,6 +58,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	private final String targetTable;
 	private final SelectableMappings targetSelectableMappings;
 	private final AssociationKey associationKey;
+	private final boolean hasConstraint;
 
 	public EmbeddedForeignKeyDescriptor(
 			EmbeddableValuedModelPart keyMappingType,
@@ -66,6 +67,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			SelectableMappings keySelectableMappings,
 			String targetTable,
 			SelectableMappings targetSelectableMappings,
+			boolean hasConstraint,
 			MappingModelCreationProcess creationProcess) {
 		this.keyTable = keyTable;
 		this.keySelectableMappings = keySelectableMappings;
@@ -80,6 +82,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				}
 		);
 		this.associationKey = new AssociationKey( keyTable, columns );
+		this.hasConstraint = hasConstraint;
 
 		creationProcess.registerInitializationCallback(
 				"Embedded (composite) FK descriptor " + targetMappingType.getNavigableRole(),
@@ -121,6 +124,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 				}
 		);
 		this.associationKey = new AssociationKey( keyTable, columns );
+		this.hasConstraint = original.hasConstraint;
 	}
 
 	@Override
@@ -439,8 +443,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		}
 
 		final TableReference tableReference = lhs.resolveTableReference(
-				lhs.getNavigablePath()
-						.append( getNavigableRole().getNavigableName() ),
+				lhs.getNavigablePath().append( getNavigableRole().getNavigableName() ),
 				table
 		);
 		if ( tableReference != null ) {
@@ -458,6 +461,11 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	@Override
 	public int visitTargetSelectables(int offset, SelectableConsumer consumer) {
 		return targetSelectableMappings.forEachSelectable( offset, consumer );
+	}
+
+	@Override
+	public boolean hasConstraint() {
+		return hasConstraint;
 	}
 
 	@Override

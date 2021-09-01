@@ -12,9 +12,25 @@ import org.hibernate.query.NavigablePath;
  * @author Steve Ebersole
  */
 public interface ColumnReferenceQualifier {
-	TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression);
-	TableReference getTableReference(NavigablePath navigablePath, String tableExpression);
+	default TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+		return resolveTableReference( navigablePath, tableExpression, true );
+	}
+
+	TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization);
+
+	default TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
+		return getTableReference( navigablePath, tableExpression, true );
+	}
+
+	TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization);
+
 	default TableReference getTableReference(String tableExpression) {
-		return getTableReference( null, tableExpression );
+		return getTableReference( null, tableExpression, true );
 	}
 }

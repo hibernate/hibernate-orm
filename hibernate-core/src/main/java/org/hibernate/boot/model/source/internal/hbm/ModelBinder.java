@@ -153,6 +153,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.ClobType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
@@ -1829,7 +1830,7 @@ public class ModelBinder {
 
 		relationalObjectBinder.bindColumns(
 				mappingDocument,
-				secondaryTableSource.getPrimaryKeyColumnSources(),
+				sortColumns( secondaryTableSource.getPrimaryKeyColumnSources(), persistentClass.getIdentifier() ),
 				keyBinding,
 				secondaryTableSource.isOptional(),
 				new RelationalObjectBinder.ColumnNamingDelegate() {
@@ -1849,6 +1850,19 @@ public class ModelBinder {
 			secondaryTableJoin.createPrimaryKey();
 			secondaryTableJoin.createForeignKey();
 		}
+	}
+
+	private List<ColumnSource> sortColumns(List<ColumnSource> primaryKeyColumnSources, KeyValue identifier) {
+		if ( primaryKeyColumnSources.size() == 1 || !identifier.getType().isComponentType() ) {
+			return primaryKeyColumnSources;
+		}
+		final ComponentType componentType = (ComponentType) identifier.getType();
+		final List<ColumnSource> sortedColumnSource = new ArrayList<>( primaryKeyColumnSources.size() );
+		final int[] originalPropertyOrder = componentType.getOriginalPropertyOrder();
+		for ( int originalIndex : originalPropertyOrder ) {
+			sortedColumnSource.add( primaryKeyColumnSources.get( originalIndex ) );
+		}
+		return sortedColumnSource;
 	}
 
 	private Property createEmbeddedAttribute(

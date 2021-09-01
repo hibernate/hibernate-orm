@@ -44,7 +44,9 @@ public class JdbcTypeDescriptorBaseline {
 	}
 
 	public static void prime(BaselineTarget target) {
-		target.addDescriptor( BooleanTypeDescriptor .INSTANCE );
+		target.addDescriptor( BooleanTypeDescriptor.INSTANCE );
+		// ResultSetMetaData might report BIT on some DBs, so we need to register the boolean type descriptor for that code
+		target.addDescriptor( Types.BIT, BooleanTypeDescriptor.INSTANCE );
 		target.addDescriptor( BigIntTypeDescriptor.INSTANCE );
 		target.addDescriptor( DecimalTypeDescriptor.INSTANCE );
 		target.addDescriptor( DoubleTypeDescriptor.INSTANCE );

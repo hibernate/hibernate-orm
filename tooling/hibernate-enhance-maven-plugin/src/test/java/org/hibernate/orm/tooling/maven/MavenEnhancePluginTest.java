@@ -13,9 +13,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.sonatype.plexus.build.incremental.DefaultBuildContext;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -77,32 +74,6 @@ public class MavenEnhancePluginTest {
             }
         }
         return false;
-    }
-
-    // --- //
-
-    @MappedSuperclass
-    public static class ParentEntity {
-
-        String parentValue;
-
-    }
-
-    @MappedSuperclass
-    public static class ChildEntity extends ParentEntity {
-
-        String childValue;
-
-    }
-
-    @Entity
-    public static class TestEntity extends ChildEntity {
-
-        @Id
-        long id;
-
-        String testValue;
-
     }
 
 }

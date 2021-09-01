@@ -106,6 +106,6 @@ processResources.doLast {
 }
 
 processResources.dependsOn processPluginXml
-// Use the "old" junit platform for this module as the JUnit platform will do nested class loading
-// which is interfering with the enhancement test, as classes are loaded before enhancement
-test.useJUnit()
+// We need this filter here, otherwise Gradle or the JUnit Jupiter platform will load classes at a point
+// when they are not yet enhanced, leading to test failures
+test.include '**/*Test.class'

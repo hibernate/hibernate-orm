@@ -345,28 +345,9 @@ public class ToOneAttributeMapping
 				? ForeignKeyDescriptor.Nature.KEY
 				: ForeignKeyDescriptor.Nature.TARGET;
 
-		// Determine if the FK maps the id of the owner entity
-		final boolean[] mapsId = new boolean[1];
-		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
-		foreignKeyDescriptor.getKeyPart().forEachSelectable(
-				(fkIndex, fkMapping) -> {
-					if ( !mapsId[0] ) {
-						containingEntityMapping.getEntityPersister().getIdentifierMapping().forEachSelectable(
-								(idIndex, idMapping) -> {
-									if ( fkMapping.getContainingTableExpression()
-											.equals( idMapping.getContainingTableExpression() )
-											&& fkMapping.getSelectionExpression()
-											.equals( idMapping.getSelectionExpression() ) ) {
-										mapsId[0] = true;
-									}
-								}
-						);
-					}
-				}
-		);
-		// We can only use the parent table group if the FK is located there
-		// If this is not the case, the FK is on a join/secondary table, so we need a join
-		this.canUseParentTableGroup = !mapsId[0] && sideNature == ForeignKeyDescriptor.Nature.KEY
+		// We can only use the parent table group if the FK is located there and ignoreNotFound is false
+		// If this is not the case, the FK is not constrained or on a join/secondary table, so we need a join
+		this.canUseParentTableGroup = !isIgnoreNotFound && sideNature == ForeignKeyDescriptor.Nature.KEY
 				&& declaringTableGroupProducer.containsTableReference( identifyingColumnsTableExpression );
 	}
 
@@ -881,7 +862,7 @@ public class ToOneAttributeMapping
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( sqlAliasStem );
-		boolean canUseInnerJoin =  sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins() && !isNullable;
+		final boolean canUseInnerJoin = sqlAstJoinType == SqlAstJoinType.INNER || lhs.canUseInnerJoins() && !isNullable;
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,

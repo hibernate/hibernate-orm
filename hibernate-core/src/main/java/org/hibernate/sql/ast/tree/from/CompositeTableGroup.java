@@ -108,18 +108,30 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return underlyingTableGroup.getTableReference( navigablePath, tableExpression );
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		return underlyingTableGroup.getTableReference( navigablePath, tableExpression, allowFkOptimization );
 	}
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
-		TableReference tableReference = underlyingTableGroup.getTableReference( navigablePath, tableExpression );
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		final TableReference tableReference = underlyingTableGroup.getTableReference(
+				navigablePath,
+				tableExpression,
+				allowFkOptimization
+		);
 		if ( tableReference != null ) {
 			return tableReference;
 		}
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
-			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference().getTableReference( navigablePath, tableExpression );
+			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup()
+					.getPrimaryTableReference()
+					.getTableReference( navigablePath, tableExpression, allowFkOptimization );
 			if ( primaryTableReference != null ) {
 				return primaryTableReference;
 			}

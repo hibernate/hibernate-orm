@@ -135,4 +135,6 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 			MappingModelCreationProcess creationProcess);
 
 	AssociationKey getAssociationKey();
+
+	boolean hasConstraint();
 }

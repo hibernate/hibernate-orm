@@ -57,7 +57,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	private final SimpleForeignKeyDescriptorSide targetSide;
 
 	private final boolean refersToPrimaryKey;
-
+	private final boolean hasConstraint;
 	private AssociationKey associationKey;
 
 	public SimpleForeignKeyDescriptor(
@@ -65,8 +65,9 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			PropertyAccess keyPropertyAccess,
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
-			boolean refersToPrimaryKey) {
-		this( keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, false );
+			boolean refersToPrimaryKey,
+			boolean hasConstraint) {
+		this( keyModelPart, keyPropertyAccess, keySelectableMapping, targetModelPart, refersToPrimaryKey, hasConstraint, false );
 	}
 
 	public SimpleForeignKeyDescriptor(
@@ -75,6 +76,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			SelectableMapping keySelectableMapping,
 			BasicValuedModelPart targetModelPart,
 			boolean refersToPrimaryKey,
+			boolean hasConstraint,
 			boolean swapDirection) {
 		assert keySelectableMapping != null;
 		assert targetModelPart != null;
@@ -94,6 +96,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			this.targetSide = new SimpleForeignKeyDescriptorSide( Nature.TARGET, targetModelPart );
 		}
 		this.refersToPrimaryKey = refersToPrimaryKey;
+		this.hasConstraint = hasConstraint;
 	}
 
 	@Override
@@ -135,7 +138,8 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
 				selectableMappingAccess.apply( 0 ),
 				targetSide.getModelPart(),
-				refersToPrimaryKey
+				refersToPrimaryKey,
+				hasConstraint
 		);
 	}
 
@@ -424,6 +428,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public int visitTargetSelectables(int offset, SelectableConsumer consumer) {
 		consumer.accept( offset, targetSide.getModelPart() );
 		return getJdbcTypeCount();
+	}
+
+	@Override
+	public boolean hasConstraint() {
+		return hasConstraint;
 	}
 
 	@Override

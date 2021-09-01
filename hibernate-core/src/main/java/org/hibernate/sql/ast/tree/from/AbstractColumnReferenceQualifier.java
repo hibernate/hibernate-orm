@@ -25,10 +25,17 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	// TableReference handling
 
 	@Override
-	public TableReference resolveTableReference(NavigablePath navigablePath, String tableExpression) {
+	public TableReference resolveTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
 		assert tableExpression != null;
 
-		final TableReference tableReference = getTableReferenceInternal( navigablePath, tableExpression );
+		final TableReference tableReference = getTableReferenceInternal(
+				navigablePath,
+				tableExpression,
+				allowFkOptimization
+		);
 		if ( tableReference == null ) {
 			throw new IllegalStateException( "Could not resolve binding for table `" + tableExpression + "`" );
 		}
@@ -37,14 +44,22 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 	}
 
 	@Override
-	public TableReference getTableReference(NavigablePath navigablePath, String tableExpression) {
-		return getTableReferenceInternal( navigablePath, tableExpression );
+	public TableReference getTableReference(
+			NavigablePath navigablePath,
+			String tableExpression,
+			boolean allowFkOptimization) {
+		return getTableReferenceInternal( navigablePath, tableExpression, allowFkOptimization );
 	}
 
 	protected TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
-			String tableExpression) {
-		final TableReference primaryTableReference = getPrimaryTableReference().getTableReference( navigablePath , tableExpression );
+			String tableExpression,
+			boolean allowFkOptimization) {
+		final TableReference primaryTableReference = getPrimaryTableReference().getTableReference(
+				navigablePath,
+				tableExpression,
+				allowFkOptimization
+		);
 		if ( primaryTableReference != null) {
 			return primaryTableReference;
 		}
@@ -52,7 +67,9 @@ public abstract class AbstractColumnReferenceQualifier implements ColumnReferenc
 		for ( TableReferenceJoin tableJoin : getTableReferenceJoins() ) {
 			final TableReference tableReference = tableJoin.getJoinedTableReference().getTableReference(
 					navigablePath,
-					tableExpression );
+					tableExpression,
+					allowFkOptimization
+			);
 			if ( tableReference != null) {
 				return tableReference;
 			}

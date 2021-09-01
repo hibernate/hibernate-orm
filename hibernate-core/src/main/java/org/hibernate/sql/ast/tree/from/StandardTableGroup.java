@@ -133,8 +133,12 @@ public class StandardTableGroup extends AbstractTableGroup {
 	@Override
 	public TableReference getTableReferenceInternal(
 			NavigablePath navigablePath,
-			String tableExpression) {
-		TableReference tableReference = primaryTableReference.getTableReference( navigablePath, tableExpression );
+			String tableExpression, boolean allowFkOptimization) {
+		final TableReference tableReference = primaryTableReference.getTableReference(
+				navigablePath,
+				tableExpression,
+				allowFkOptimization
+		);
 		if ( tableReference != null ) {
 			return tableReference;
 		}
@@ -145,7 +149,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 					final TableReferenceJoin join = tableJoins.get( i );
 					assert join != null;
 					final TableReference resolveTableReference = join.getJoinedTableReference()
-							.getTableReference( navigablePath, tableExpression );
+							.getTableReference( navigablePath, tableExpression, allowFkOptimization );
 					if ( resolveTableReference != null ) {
 						return resolveTableReference;
 					}
@@ -157,7 +161,7 @@ public class StandardTableGroup extends AbstractTableGroup {
 
 		for ( TableGroupJoin tableGroupJoin : getTableGroupJoins() ) {
 			final TableReference primaryTableReference = tableGroupJoin.getJoinedGroup().getPrimaryTableReference();
-			if ( primaryTableReference.getTableReference( navigablePath, tableExpression ) != null ) {
+			if ( primaryTableReference.getTableReference( navigablePath, tableExpression, allowFkOptimization ) != null ) {
 				return primaryTableReference;
 			}
 		}

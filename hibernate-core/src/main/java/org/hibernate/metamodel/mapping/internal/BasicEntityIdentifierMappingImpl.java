@@ -175,7 +175,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, true, creationState );
 
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
@@ -190,18 +190,19 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		resolveSqlSelection( navigablePath, tableGroup, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, true, creationState );
 	}
 
 	private SqlSelection resolveSqlSelection(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
+			boolean allowFkOptimization,
 			DomainResultCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState()
 				.getSqlExpressionResolver();
 		final TableReference rootTableReference;
 		try {
-			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable );
+			rootTableReference = tableGroup.resolveTableReference( navigablePath, rootTable, allowFkOptimization );
 		}
 		catch (Exception e) {
 			throw new IllegalStateException(

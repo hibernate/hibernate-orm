@@ -6,6 +6,8 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.io.Serializable;
+import java.lang.reflect.ParameterizedType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +40,7 @@ import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
@@ -55,6 +58,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Table;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.SerializableToBlobType;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -806,10 +811,33 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		basicValue.setExplicitTypeName( explicitBasicTypeName );
 		basicValue.setExplicitTypeParams( explicitLocalTypeParams );
-		// todo (6.0): Ideally we could check the type class like we did in 5.5 but that is unavailable at this point
-		java.lang.reflect.Type type = implicitJavaTypeAccess == null ? null : implicitJavaTypeAccess.apply( getTypeConfiguration() );
-		if ( xproperty != null && returnedClassName != null && ( !(type instanceof Class<?>) || !( (Class<?>) type ).isPrimitive() ) ) {
-//		if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
+
+		Class<?> typeClass = null;
+		if ( explicitBasicTypeName != null ) {
+			final TypeDefinition typeDefinition = buildingContext.getTypeDefinitionRegistry()
+					.resolve( explicitBasicTypeName );
+			if ( typeDefinition == null ) {
+				final BasicType<?> registeredType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType(
+						explicitBasicTypeName
+				);
+				if ( registeredType == null ) {
+					typeClass = buildingContext.getBootstrapContext().getClassLoaderAccess()
+							.classForName( explicitBasicTypeName );
+				}
+			}
+			else {
+				typeClass = typeDefinition.getTypeImplementorClass();
+			}
+		}
+		// Enum type is parameterized and prior to Hibernate 6 we always resolved the type class
+		else if ( enumType != null || isEnum() ) {
+			typeClass = org.hibernate.type.EnumType.class;
+		}
+		// The Lob type is parameterized and prior to Hibernate 6 we always resolved the type class
+		else if ( isLob || isSerializable() ) {
+			typeClass = SerializableToBlobType.class;
+		}
+		if ( typeClass != null && DynamicParameterizedType.class.isAssignableFrom( typeClass ) ) {
 			final Map<String, Object> parameters = new HashMap<>();
 			parameters.put( DynamicParameterizedType.IS_DYNAMIC, Boolean.toString( true ) );
 			parameters.put( DynamicParameterizedType.RETURNED_CLASS, returnedClassName );
@@ -849,5 +877,33 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		if ( isNationalized ) {
 			basicValue.makeNationalized();
 		}
+	}
+
+	private boolean isEnum() {
+		Class<?> clazz = null;
+		if ( implicitJavaTypeAccess != null ) {
+			java.lang.reflect.Type type = implicitJavaTypeAccess.apply( getTypeConfiguration() );
+			if ( type instanceof ParameterizedType ) {
+				type = ( (ParameterizedType) type ).getRawType();
+			}
+			if ( type instanceof Class<?> ) {
+				clazz = (Class<?>) type;
+			}
+		}
+		return clazz != null && clazz.isEnum();
+	}
+
+	private boolean isSerializable() {
+		Class<?> clazz = null;
+		if ( implicitJavaTypeAccess != null ) {
+			java.lang.reflect.Type type = implicitJavaTypeAccess.apply( getTypeConfiguration() );
+			if ( type instanceof ParameterizedType ) {
+				type = ( (ParameterizedType) type ).getRawType();
+			}
+			if ( type instanceof Class<?> ) {
+				clazz = (Class<?>) type;
+			}
+		}
+		return clazz != null && Serializable.class.isAssignableFrom( clazz );
 	}
 }

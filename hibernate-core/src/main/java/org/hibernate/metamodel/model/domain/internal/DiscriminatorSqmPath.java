@@ -72,7 +72,9 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
-		// todo (6.0) : no idea
+		sb.append( "type(" );
+		getLhs().appendHqlString( sb );
+		sb.append( ')' );
 	}
 
 	@Override

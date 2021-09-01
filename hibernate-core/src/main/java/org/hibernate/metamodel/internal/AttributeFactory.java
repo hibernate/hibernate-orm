@@ -589,7 +589,10 @@ public class AttributeFactory {
 		final EmbeddableDomainType<?> ownerType = (EmbeddableDomainType) attributeContext.getOwnerType();
 
 		if ( ownerType.getRepresentationStrategy().getMode() == RepresentationMode.MAP ) {
-			return new MapMember( attributeContext.getPropertyMapping().getName(), ownerType.getExpressableJavaTypeDescriptor().getJavaTypeClass() );
+			return new MapMember(
+					attributeContext.getPropertyMapping().getName(),
+					attributeContext.getPropertyMapping().getType().getReturnedClass()
+			);
 		}
 		else {
 			return ownerType.getRepresentationStrategy()

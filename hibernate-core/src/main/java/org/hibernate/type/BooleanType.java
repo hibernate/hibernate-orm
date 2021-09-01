@@ -88,7 +88,7 @@ public class BooleanType
 			//noinspection unchecked
 			return (BasicType<X>) indicators.getTypeConfiguration()
 					.getBasicTypeRegistry()
-					.resolve( getJavaTypeDescriptor(), jdbcTypeDescriptor );
+					.resolve( getJavaTypeDescriptor(), jdbcTypeDescriptor, getName() );
 		}
 
 		//noinspection unchecked

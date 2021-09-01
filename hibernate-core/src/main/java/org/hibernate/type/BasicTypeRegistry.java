@@ -18,6 +18,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.internal.NamedStandardBasicTypeImpl;
 import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -72,6 +73,15 @@ public class BasicTypeRegistry implements Serializable {
 				jtdToUse,
 				stdToUse,
 				() -> new StandardBasicTypeImpl<>( jtdToUse, stdToUse )
+		);
+	}
+
+	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, JdbcTypeDescriptor stdToUse, String baseTypeName) {
+		//noinspection unchecked
+		return resolve(
+				jtdToUse,
+				stdToUse,
+				() -> new NamedStandardBasicTypeImpl<>( jtdToUse, stdToUse, baseTypeName )
 		);
 	}
 

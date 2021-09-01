@@ -57,6 +57,6 @@ public class CharArrayType
 		}
 
 		final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType );
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType, getName() );
 	}
 }

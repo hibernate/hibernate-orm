@@ -29,11 +29,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -243,11 +238,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final StandardBasicTypeImpl<String> MATERIALIZED_CLOB_CHAR_ARRAY = new StandardBasicTypeImpl(
-			PrimitiveCharacterArrayTypeDescriptor.INSTANCE,
-			ClobTypeDescriptor.CLOB_BINDING
-	);
+	public static final CharacterArrayClobType MATERIALIZED_CLOB_CHAR_ARRAY = PrimitiveCharacterArrayClobType.INSTANCE;
 
 
 	/**
@@ -256,11 +247,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final StandardBasicTypeImpl<String> MATERIALIZED_CLOB_CHARACTER_ARRAY = new StandardBasicTypeImpl(
-			CharacterArrayTypeDescriptor.INSTANCE,
-			ClobTypeDescriptor.CLOB_BINDING
-	);
+	public static final CharacterArrayClobType MATERIALIZED_CLOB_CHARACTER_ARRAY = CharacterArrayClobType.INSTANCE;
 
 
 	/**
@@ -269,11 +256,7 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_NCLOB
 	 * @see #TEXT
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final StandardBasicTypeImpl<String> MATERIALIZED_NCLOB_CHAR_ARRAY = new StandardBasicTypeImpl(
-			PrimitiveCharacterArrayTypeDescriptor.INSTANCE,
-			NClobTypeDescriptor.NCLOB_BINDING
-	);
+	public static final CharacterArrayNClobType MATERIALIZED_NCLOB_CHAR_ARRAY = PrimitiveCharacterArrayNClobType.INSTANCE;
 
 
 	/**
@@ -282,11 +265,7 @@ public final class StandardBasicTypes {
 	 * @see #NCLOB
 	 * @see #CHAR_ARRAY
 	 */
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	public static final StandardBasicTypeImpl<Character[]> MATERIALIZED_NCLOB_CHARACTER_ARRAY = new StandardBasicTypeImpl(
-			CharacterArrayTypeDescriptor.INSTANCE,
-			NClobTypeDescriptor.NCLOB_BINDING
-	);
+	public static final CharacterArrayNClobType MATERIALIZED_NCLOB_CHARACTER_ARRAY = CharacterArrayNClobType.INSTANCE;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Date / time data

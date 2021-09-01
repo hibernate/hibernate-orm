@@ -52,7 +52,8 @@ public class CharacterArrayClobType
 
 			return typeConfiguration.getBasicTypeRegistry().resolve(
 					typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( domainJtd.getJavaType() ),
-					jdbcType
+					jdbcType,
+					getName()
 			);
 		}
 

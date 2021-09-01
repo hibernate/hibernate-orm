@@ -8,6 +8,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -41,7 +42,7 @@ public class StringType
 	}
 
 	public String objectToSQLString(String value, Dialect dialect) throws Exception {
-		return '\'' + value + '\'';
+		return QueryLiteralHelper.toStringLiteral( value );
 	}
 
 	public String stringToObject(String xml) throws Exception {
@@ -78,7 +79,8 @@ public class StringType
 
 		return typeConfiguration.getBasicTypeRegistry().resolve(
 				domainJtd,
-				jdbcTypeRegistry.getDescriptor( jdbcTypeCode )
+				jdbcTypeRegistry.getDescriptor( jdbcTypeCode ),
+				getName()
 		);
 	}
 }

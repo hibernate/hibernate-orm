@@ -44,6 +44,6 @@ public interface PrimitiveType<T> extends LiteralType<T>, AdjustableBasicType<T>
 	@Override
 	default  <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<X> domainJtd) {
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, getJdbcTypeDescriptor() );
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, getJdbcTypeDescriptor(), getName() );
 	}
 }

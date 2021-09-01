@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -29,6 +29,7 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.OffsetDateTimeType;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.test.type.AbstractJavaTimeTypeTest;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 
@@ -161,7 +162,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 
 	@Override
 	protected OffsetDateTime getExpectedPropertyValueAfterHibernateRead() {
-		return getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() ).toOffsetDateTime();
+		return getOriginalOffsetDateTime();
 	}
 
 	@Override
@@ -171,25 +172,17 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 
 	@Override
 	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
-		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+		statement.setObject( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
 	}
 
 	@Override
-	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
-		LocalDateTime dateTimeInDefaultTimeZone = getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() )
-				.toLocalDateTime();
-		return new Timestamp(
-				dateTimeInDefaultTimeZone.getYear() - 1900, dateTimeInDefaultTimeZone.getMonthValue() - 1,
-				dateTimeInDefaultTimeZone.getDayOfMonth(),
-				dateTimeInDefaultTimeZone.getHour(), dateTimeInDefaultTimeZone.getMinute(),
-				dateTimeInDefaultTimeZone.getSecond(),
-				dateTimeInDefaultTimeZone.getNano()
-		);
+	protected OffsetDateTime getExpectedJdbcValueAfterHibernateWrite() {
+		return getOriginalOffsetDateTime();
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTimestamp( columnIndex );
+		return resultSet.getObject( columnIndex, OffsetDateTime.class );
 	}
 
 	@Test

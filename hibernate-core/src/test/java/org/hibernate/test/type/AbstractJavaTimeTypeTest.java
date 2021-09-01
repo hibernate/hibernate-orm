@@ -44,7 +44,7 @@ import static org.junit.Assert.assertEquals;
  * @param <E> The entity type used in tests.
  */
 @RunWith(CustomParameterized.class)
-abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase {
+public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase {
 
 	private static Dialect determineDialect() {
 		try {
@@ -60,7 +60,7 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 	}
 
-	protected static final String ENTITY_NAME = "theentity";
+	public static final String ENTITY_NAME = "theentity";
 	protected static final String ID_COLUMN_NAME = "theid";
 	protected static final String PROPERTY_COLUMN_NAME = "thevalue";
 

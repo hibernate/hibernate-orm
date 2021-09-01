@@ -7,7 +7,6 @@
 package org.hibernate.envers.internal.entities.mapper.relation.query;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.configuration.internal.AuditEntitiesConfiguration;
 import org.hibernate.envers.configuration.internal.GlobalConfiguration;
 import org.hibernate.envers.internal.entities.mapper.relation.MiddleComponentData;
@@ -42,7 +41,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 			MiddleIdData referencingIdData,
 			MiddleIdData referencedIdData,
 			boolean revisionTypeInId,
-			String orderBy,
+			String orderByCollectionRole,
 			MiddleComponentData... componentData) {
 		super(
 				globalCfg,
@@ -51,7 +50,7 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 				versionsMiddleEntityName,
 				referencingIdData,
 				revisionTypeInId,
-				orderBy
+				orderByCollectionRole
 		);
 
 		this.referencedIdData = referencedIdData;
@@ -109,8 +108,8 @@ public final class TwoEntityQueryGenerator extends AbstractRelationQueryGenerato
 		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( rootParameters, originalIdPropertyName, true );
 
 		// ORDER BY
-		if ( !StringHelper.isEmpty( orderBy ) ) {
-			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderBy );
+		if ( !StringHelper.isEmpty( orderByCollectionRole ) ) {
+			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderByCollectionRole );
 		}
 
 		return qb;

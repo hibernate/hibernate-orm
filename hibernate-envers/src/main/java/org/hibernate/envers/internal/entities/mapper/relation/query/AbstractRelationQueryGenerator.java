@@ -40,7 +40,7 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 	protected final MiddleIdData referencingIdData;
 	protected final boolean revisionTypeInId;
 	protected final String entityName;
-	protected final String orderBy;
+	protected final String orderByCollectionRole;
 
 	private String queryString;
 	private String queryRemovedString;
@@ -52,14 +52,14 @@ public abstract class AbstractRelationQueryGenerator implements RelationQueryGen
 			String entityName,
 			MiddleIdData referencingIdData,
 			boolean revisionTypeInId,
-			String orderBy) {
+			String orderByCollectionRole) {
 		this.globalCfg = globalCfg;
 		this.verEntCfg = verEntCfg;
 		this.entityName = entityName;
 		this.auditStrategy = auditStrategy;
 		this.referencingIdData = referencingIdData;
 		this.revisionTypeInId = revisionTypeInId;
-		this.orderBy = orderBy;
+		this.orderByCollectionRole = orderByCollectionRole;
 	}
 
 	@Override

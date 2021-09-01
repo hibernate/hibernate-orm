@@ -8,21 +8,23 @@ package org.hibernate.envers.internal.tools.query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javax.persistence.criteria.JoinType;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.envers.RevisionType;
+import org.hibernate.envers.function.OrderByFragmentFunction;
 import org.hibernate.envers.internal.entities.RevisionTypeType;
 import org.hibernate.envers.internal.tools.MutableInteger;
 import org.hibernate.envers.internal.tools.StringTools;
 import org.hibernate.envers.internal.tools.Triple;
 import org.hibernate.envers.tools.Pair;
 import org.hibernate.query.Query;
+import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.BasicType;
 
 /**
@@ -186,8 +188,8 @@ public class QueryBuilder {
 		orders.add( Triple.make( alias, propertyName, ascending ) );
 	}
 
-	public void addOrderFragment(String alias, String fragment) {
-		orderFragments.add( Pair.make( alias, fragment ) );
+	public void addOrderFragment(String alias, String orderByCollectionRole) {
+		orderFragments.add( Pair.make( alias, orderByCollectionRole ) );
 	}
 
 	public void addProjection(String function, String alias, String propertyName, boolean distinct) {
@@ -247,46 +249,24 @@ public class QueryBuilder {
 			StringTools.append( sb, getOrderList().iterator(), ", " );
 		}
 		else if ( !orderFragments.isEmpty() ) {
-			// todo (6.0) : How to backport HHH-12992 to use Template#translateOrderBy from main?
-			throw new NotYetImplementedFor6Exception( getClass() );
+			sb.append( " order by " );
 
-//			sb.append( " order by " );
-//
-//			final Iterator<Pair<String, String>> fragmentIterator = orderFragments.iterator();
-//			while( fragmentIterator.hasNext() ) {
-//				final Pair<String, String> fragment = fragmentIterator.next();
-//				final OrderByTranslation orderByFragmentTranslation = Template.translateOrderBy(
-//						fragment.getSecond(),
-//						new ColumnMapper() {
-//							@Override
-//							public SqlValueReference[] map(String reference) throws HibernateException {
-//								return new SqlValueReference[ 0 ];
-//							}
-//						},
-//						sessionFactory,
-//						sessionFactory.getJdbcServices().getDialect(),
-//						sessionFactory.getSqlFunctionRegistry()
-//				);
-//
-//				sb.append( orderByFragmentTranslation.injectAliases( new QueryOrderByAliasResolver( fragment.getFirst() ) ) );
-//				if ( fragmentIterator.hasNext() ) {
-//					sb.append( ", " );
-//				}
-//			}
+			final Iterator<Pair<String, String>> fragmentIterator = orderFragments.iterator();
+			while( fragmentIterator.hasNext() ) {
+				final Pair<String, String> fragment = fragmentIterator.next();
+				sb.append( OrderByFragmentFunction.FUNCTION_NAME ).append( '(' );
+				// The first argument is the sqm alias of the from node
+				QueryLiteralHelper.appendStringLiteral( sb, fragment.getFirst() );
+				sb.append( ", " );
+				// The second argument is the collection role that contains the order by fragment
+				QueryLiteralHelper.appendStringLiteral( sb, fragment.getSecond() );
+				sb.append( ')' );
+				if ( fragmentIterator.hasNext() ) {
+					sb.append( ", " );
+				}
+			}
 		}
 	}
-
-//	private class QueryOrderByAliasResolver implements OrderByAliasResolver {
-//		private String alias;
-//		public QueryOrderByAliasResolver(String alias) {
-//			this.alias = alias;
-//		}
-//
-//		@Override
-//		public String resolveTableAlias(String columnReference) {
-//			return alias;
-//		}
-//	}
 
 	private List<String> getSelectAliasList() {
 		final List<String> aliasList = new ArrayList<>();

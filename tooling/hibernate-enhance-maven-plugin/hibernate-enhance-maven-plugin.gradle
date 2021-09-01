@@ -23,6 +23,7 @@ processResources {
 dependencies {
     implementation( project(':hibernate-core') ) { transitive = false }
     implementation( libraries.jpa ) { transitive = false }
+    implementation( libraries.jta ) { transitive = false }
     implementation( libraries.maven_core ) { transitive = false }
     implementation( libraries.maven_artifact ) { transitive = false }
     implementation( libraries.maven_plugin ) { transitive = false }

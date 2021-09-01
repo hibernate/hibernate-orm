@@ -40,7 +40,7 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 			MiddleIdData referencingIdData,
 			MiddleIdData referencedIdData,
 			boolean revisionTypeInId,
-			String orderBy,
+			String orderorderByCollectionRoley,
 			MiddleComponentData... componentData) {
 		super(
 				globalCfg,
@@ -49,7 +49,7 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 				versionsMiddleEntityName,
 				referencingIdData,
 				revisionTypeInId,
-				orderBy
+				orderorderByCollectionRoley
 		);
 
 		this.referencedIdData = referencedIdData;
@@ -96,8 +96,8 @@ public final class TwoEntityOneAuditedQueryGenerator extends AbstractRelationQue
 		// ee.originalId.id_ref_ing = :id_ref_ing
 		referencingIdData.getPrefixedMapper().addNamedIdEqualsToQuery( rootParameters, originalIdPropertyName, true );
 		// ORDER BY
-		if ( !StringHelper.isEmpty( orderBy ) ) {
-			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderBy );
+		if ( !StringHelper.isEmpty( orderByCollectionRole ) ) {
+			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderByCollectionRole );
 		}
 		return qb;
 	}

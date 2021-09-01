@@ -38,6 +38,10 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 		super( parent );
 	}
 
+	public TableGroup findTableGroup(String alias) {
+		return tableGroupByAliasXref.get( alias );
+	}
+
 	public void register(SqmPath<?> sqmPath, TableGroup tableGroup) {
 		register( sqmPath, tableGroup, null );
 	}

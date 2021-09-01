@@ -23,6 +23,10 @@ dependencies {
     testImplementation project( ':hibernate-testing' )
 }
 
+test {
+    include '**/**'
+}
+
 sourceSets {
     test {
         ext {

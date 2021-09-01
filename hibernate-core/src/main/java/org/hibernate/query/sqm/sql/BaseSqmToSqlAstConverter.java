@@ -1464,7 +1464,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			try {
 				for ( SqmSortSpecification sortSpecification : sqmQueryPart.getOrderByClause()
 						.getSortSpecifications() ) {
-					sqlQueryPart.addSortSpecification( visitSortSpecification( sortSpecification ) );
+					final SortSpecification specification = visitSortSpecification( sortSpecification );
+					if ( specification != null ) {
+						sqlQueryPart.addSortSpecification( specification );
+					}
 				}
 			}
 			finally {
@@ -1777,8 +1780,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public SortSpecification visitSortSpecification(SqmSortSpecification sortSpecification) {
+		final Expression expression = resolveGroupOrOrderByExpression( sortSpecification.getSortExpression() );
+		if ( expression == null ) {
+			return null;
+		}
 		return new SortSpecification(
-				resolveGroupOrOrderByExpression( sortSpecification.getSortExpression() ),
+				expression,
 				null,
 				sortSpecification.getSortOrder(),
 				sortSpecification.getNullPrecedence()
@@ -1850,6 +1857,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
 			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
 		}
+		final QuerySpec currentQuerySpec = currentQuerySpec();
 		final TableGroup tableGroup;
 		if ( sqmRoot.isCorrelated() ) {
 			final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
@@ -1863,7 +1871,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroup = new CorrelatedTableGroup(
 						parentTableGroup,
 						sqlAliasBase,
-						currentQuerySpec(),
+						currentQuerySpec,
 						predicate -> additionalRestrictions = SqlAstTreeHelper.combinePredicates(
 								additionalRestrictions,
 								predicate
@@ -1955,12 +1963,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					this,
 					creationContext
 			);
+			final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
+					getLoadQueryInfluencers(),
+					(Joinable) entityDescriptor,
+					tableGroup
+			);
+			if ( filterPredicate != null ) {
+				currentQuerySpec.applyPredicate( filterPredicate );
+			}
 		}
 
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
 		fromClauseIndex.register( sqmRoot, tableGroup );
-		currentQuerySpec().getFromClause().addRoot( tableGroup );
+		currentQuerySpec.getFromClause().addRoot( tableGroup );
 
 		consumeReusablePaths( sqmRoot, tableGroup );
 		consumeExplicitJoins( sqmRoot, tableGroup );

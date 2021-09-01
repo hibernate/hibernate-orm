@@ -44,7 +44,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 			boolean revisionTypeInId,
 			String mappedBy,
 			boolean mappedByKey,
-			String orderBy) {
+			String orderByCollectionRole) {
 		super(
 				globalCfg,
 				verEntCfg,
@@ -52,7 +52,7 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 				verEntCfg.getAuditEntityName( referencedEntityName ),
 				referencingIdData,
 				revisionTypeInId,
-				orderBy
+				orderByCollectionRole
 		);
 
 		this.mappedBy = mappedBy;
@@ -106,8 +106,8 @@ public final class OneAuditEntityQueryGenerator extends AbstractRelationQueryGen
 		}
 
 		// ORDER BY
-		if ( !StringHelper.isEmpty( orderBy ) ) {
-			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderBy );
+		if ( !StringHelper.isEmpty( orderByCollectionRole ) ) {
+			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderByCollectionRole );
 		}
 
 		return qb;

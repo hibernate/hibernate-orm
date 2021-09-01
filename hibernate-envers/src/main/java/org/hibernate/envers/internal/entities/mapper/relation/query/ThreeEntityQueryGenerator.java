@@ -45,7 +45,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 			MiddleIdData referencedIdData,
 			MiddleIdData indexIdData,
 			boolean revisionTypeInId,
-			String orderBy,
+			String orderByCollectionRole,
 			MiddleComponentData... componentData) {
 		super(
 				globalCfg,
@@ -54,7 +54,7 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 				versionsMiddleEntityName,
 				referencingIdData,
 				revisionTypeInId,
-				orderBy
+				orderByCollectionRole
 		);
 
 		this.referencedIdData = referencedIdData;
@@ -139,8 +139,8 @@ public final class ThreeEntityQueryGenerator extends AbstractRelationQueryGenera
 		// ORDER BY
 		// Hibernate applies @OrderBy on map elements, not the key.
 		// So here we apply it to the referenced entity, not the actual index entity that represents the key.
-		if ( !StringHelper.isEmpty( orderBy ) ) {
-			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderBy );
+		if ( !StringHelper.isEmpty( orderByCollectionRole ) ) {
+			qb.addOrderFragment( REFERENCED_ENTITY_ALIAS, orderByCollectionRole );
 		}
 		return qb;
 	}

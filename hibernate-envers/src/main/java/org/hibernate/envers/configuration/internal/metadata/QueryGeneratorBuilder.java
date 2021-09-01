@@ -36,7 +36,7 @@ public final class QueryGeneratorBuilder {
 	private final String auditMiddleEntityName;
 	private final List<MiddleIdData> idDatas;
 	private final boolean revisionTypeInId;
-	private final String orderBy;
+	private final String orderByCollectionRole;
 
 	QueryGeneratorBuilder(
 			GlobalConfiguration globalCfg,
@@ -45,13 +45,13 @@ public final class QueryGeneratorBuilder {
 			MiddleIdData referencingIdData,
 			String auditMiddleEntityName,
 			boolean revisionTypeInId,
-			String orderBy) {
+			String orderByCollectionRole) {
 		this.globalCfg = globalCfg;
 		this.verEntCfg = verEntCfg;
 		this.auditStrategy = auditStrategy;
 		this.referencingIdData = referencingIdData;
 		this.auditMiddleEntityName = auditMiddleEntityName;
-		this.orderBy = orderBy;
+		this.orderByCollectionRole = orderByCollectionRole;
 		this.revisionTypeInId = revisionTypeInId;
 
 		idDatas = new ArrayList<>();
@@ -72,13 +72,13 @@ public final class QueryGeneratorBuilder {
 			if ( idDatas.get( 0 ).isAudited() ) {
 				return new TwoEntityQueryGenerator(
 						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, orderBy, componentDatas
+						idDatas.get( 0 ), revisionTypeInId, orderByCollectionRole, componentDatas
 				);
 			}
 			else {
 				return new TwoEntityOneAuditedQueryGenerator(
 						globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-						idDatas.get( 0 ), revisionTypeInId, orderBy, componentDatas
+						idDatas.get( 0 ), revisionTypeInId, orderByCollectionRole, componentDatas
 				);
 			}
 		}
@@ -91,7 +91,7 @@ public final class QueryGeneratorBuilder {
 			}
 			return new ThreeEntityQueryGenerator(
 					globalCfg, verEntCfg, auditStrategy, auditMiddleEntityName, referencingIdData,
-					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, orderBy, componentDatas
+					idDatas.get( 0 ), idDatas.get( 1 ), revisionTypeInId, orderByCollectionRole, componentDatas
 			);
 		}
 		else {

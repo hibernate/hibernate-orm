@@ -243,7 +243,9 @@ public final class CollectionMetadataGenerator {
 				isEmbeddableElementType(),
 				mappedBy,
 				isMappedByKey( propertyValue, mappedBy ),
-				propertyValue.getOrderBy()
+				propertyValue.getOrderBy() == null
+						? null
+						: propertyValue.getRole()
 		);
 
 		// Creating common mapper data.
@@ -461,6 +463,9 @@ public final class CollectionMetadataGenerator {
 		// Creating a query generator builder, to which additional id data will be added, in case this collection
 		// references some entities (either from the element or index). At the end, this will be used to build
 		// a query generator to read the raw data collection from the middle table.
+		final String orderBy = propertyValue.getOrderBy() == null
+				? propertyValue.getManyToManyOrdering()
+				: propertyValue.getOrderBy();
 		final QueryGeneratorBuilder queryGeneratorBuilder = new QueryGeneratorBuilder(
 				mainGenerator.getGlobalCfg(),
 				mainGenerator.getVerEntCfg(),
@@ -468,9 +473,9 @@ public final class CollectionMetadataGenerator {
 				referencingIdData,
 				auditMiddleEntityName,
 				isRevisionTypeInId(),
-				propertyValue.getOrderBy() == null
-						? propertyValue.getManyToManyOrdering()
-						: propertyValue.getOrderBy()
+				orderBy == null
+						? null
+						: propertyValue.getRole()
 		);
 
 		// Adding the XML mapping for the referencing entity, if the relation isn't inverse.

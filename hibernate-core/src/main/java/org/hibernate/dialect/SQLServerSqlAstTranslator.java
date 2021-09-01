@@ -135,8 +135,8 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 		final boolean hasLimit;
 		final boolean hasOffset;
 		if ( queryPart.isRoot() && hasLimit() ) {
-			hasLimit = getLimit().getMaxRowsJpa() != Integer.MAX_VALUE;
-			hasOffset = getLimit().getFirstRowJpa() != 0;
+			hasLimit = getLimit().getMaxRows() != null;
+			hasOffset = getLimit().getFirstRow() != null;
 		}
 		else {
 			hasLimit = queryPart.getFetchClauseExpression() != null;

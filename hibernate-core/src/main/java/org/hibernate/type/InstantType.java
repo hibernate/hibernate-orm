@@ -57,7 +57,7 @@ public class InstantType
 
 	@Override
 	public String getName() {
-		return Instant.class.getSimpleName();
+		return "instant";
 	}
 
 	@Override

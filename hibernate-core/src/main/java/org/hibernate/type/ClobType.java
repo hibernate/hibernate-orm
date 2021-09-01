@@ -58,7 +58,8 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> implem
 
 		return typeConfiguration.getBasicTypeRegistry().resolve(
 				domainJtd,
-				jdbcTypeRegistry.getDescriptor( Types.NCLOB )
+				jdbcTypeRegistry.getDescriptor( Types.NCLOB ),
+				getName()
 		);
 	}
 }

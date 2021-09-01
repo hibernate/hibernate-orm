@@ -46,7 +46,8 @@ public class MaterializedClobType
 
 			return typeConfiguration.getBasicTypeRegistry().resolve(
 					domainJtd,
-					nclobType
+					nclobType,
+					getName()
 			);
 		}
 

@@ -168,6 +168,7 @@ public class EnumType<T extends Enum<T>>
 						relationalJtd
 				);
 			}
+			this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		}
 		else {
 			final String enumClassName = (String) parameters.get( ENUM );
@@ -180,9 +181,9 @@ public class EnumType<T extends Enum<T>>
 
 			this.enumValueConverter = interpretParameters( parameters );
 			this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
-			this.jdbcValueExtractor = (ValueExtractor) jdbcTypeDescriptor.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
-			this.jdbcValueBinder = (ValueBinder) jdbcTypeDescriptor.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
 		}
+		this.jdbcValueExtractor = (ValueExtractor) jdbcTypeDescriptor.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
+		this.jdbcValueBinder = (ValueBinder) jdbcTypeDescriptor.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(

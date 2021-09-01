@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 
@@ -36,7 +37,7 @@ public class StringNVarcharType
 	}
 
 	public String objectToSQLString(String value, Dialect dialect) throws Exception {
-		return '\'' + value + '\'';
+		return QueryLiteralHelper.toStringLiteral( value );
 	}
 
 	public String stringToObject(String xml) throws Exception {

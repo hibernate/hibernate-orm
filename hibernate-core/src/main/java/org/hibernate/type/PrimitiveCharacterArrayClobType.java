@@ -47,7 +47,8 @@ public class PrimitiveCharacterArrayClobType
 
 		return typeConfiguration.getBasicTypeRegistry().resolve(
 				domainJtd,
-				jdbcTypeRegistry.getDescriptor( Types.NCLOB )
+				jdbcTypeRegistry.getDescriptor( Types.NCLOB ),
+				getName()
 		);
 	}
 }

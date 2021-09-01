@@ -52,7 +52,13 @@ public class CharacterType
 	}
 
 	public String objectToSQLString(Character value, Dialect dialect) {
-		return '\'' + toString( value ) + '\'';
+		if ( value == '\'' ) {
+			return "''''";
+		}
+		final char[] chars = new char[3];
+		chars[0] = chars[2] = '\'';
+		chars[1] = value;
+		return new String( chars );
 	}
 
 	public Character stringToObject(String xml) {
@@ -69,6 +75,6 @@ public class CharacterType
 				? jdbcTypeRegistry.getDescriptor( Types.NCHAR )
 				:  jdbcTypeRegistry.getDescriptor( Types.CHAR );
 
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType );
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType, getName() );
 	}
 }

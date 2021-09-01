@@ -100,6 +100,6 @@ public class BinaryType
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 		final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( Types.BLOB );
 
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType );
+		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType, getName() );
 	}
 }

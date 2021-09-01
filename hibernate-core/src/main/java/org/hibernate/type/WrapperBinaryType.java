@@ -48,6 +48,10 @@ public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byt
 
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcTypeRegistry.getDescriptor( Types.BLOB ) );
+		return typeConfiguration.getBasicTypeRegistry().resolve(
+				domainJtd,
+				jdbcTypeRegistry.getDescriptor( Types.BLOB ),
+				getName()
+		);
 	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -54,15 +55,7 @@ public class SqmLiteral<T>
 	public static <T> void appendHqlString(StringBuilder sb, JavaTypeDescriptor<T> javaTypeDescriptor, T value) {
 		final String string = javaTypeDescriptor.toString( value );
 		if ( javaTypeDescriptor.getJavaTypeClass() == String.class ) {
-			sb.append( '\'' );
-			for ( int i = 0; i < string.length(); i++ ) {
-				final char c = string.charAt( i );
-				if ( c == '\'' ) {
-					sb.append( '\'' );
-				}
-				sb.append( c );
-			}
-			sb.append( '\'' );
+			QueryLiteralHelper.appendStringLiteral( sb, string );
 		}
 		else {
 			sb.append( string );

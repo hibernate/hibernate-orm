@@ -4,12 +4,13 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -22,13 +23,16 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 
-import org.hibernate.query.Query;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.query.Query;
 import org.hibernate.type.OffsetDateTimeType;
+import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.test.type.AbstractJavaTimeTypeTest;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runners.Parameterized;
 
@@ -39,10 +43,12 @@ import static org.junit.Assert.assertThat;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10372")
-public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime, OffsetDateTimeTest.EntityWithOffsetDateTime> {
+public class OffsetDateTimeTest
+		extends AbstractJavaTimeTypeTest<OffsetDateTime, OffsetDateTimeTest.EntityWithOffsetDateTime> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
-		public ParametersBuilder add(int year, int month, int day,
+		public ParametersBuilder add(
+				int year, int month, int day,
 				int hour, int minute, int second, int nanosecond, String offset, ZoneId defaultTimeZone) {
 			if ( !isNanosecondPrecisionSupported() ) {
 				nanosecond = 0;
@@ -50,6 +56,8 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 			return add( defaultTimeZone, year, month, day, hour, minute, second, nanosecond, offset );
 		}
 	}
+
+	private boolean useTimestamp;
 
 	@Parameterized.Parameters(name = "{1}-{2}-{3}T{4}:{5}:{6}.{7}[{8}] {0}")
 	public static List<Object[]> data() {
@@ -132,7 +140,8 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	private final int nanosecond;
 	private final String offset;
 
-	public OffsetDateTimeTest(EnvironmentParameters env, int year, int month, int day,
+	public OffsetDateTimeTest(
+			EnvironmentParameters env, int year, int month, int day,
 			int hour, int minute, int second, int nanosecond, String offset) {
 		super( env );
 		this.year = year;
@@ -143,6 +152,16 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 		this.second = second;
 		this.nanosecond = nanosecond;
 		this.offset = offset;
+	}
+
+	@Before
+	public void setUp() {
+		if ( OffsetDateTimeType.INSTANCE.getJdbcTypeDescriptor() instanceof TimestampTypeDescriptor ) {
+			useTimestamp = true;
+		}
+		else {
+			useTimestamp = false;
+		}
 	}
 
 	@Override
@@ -161,7 +180,12 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 
 	@Override
 	protected OffsetDateTime getExpectedPropertyValueAfterHibernateRead() {
-		return getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() ).toOffsetDateTime();
+		if ( useTimestamp ) {
+			return getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() ).toOffsetDateTime();
+		}
+		else {
+			return getOriginalOffsetDateTime();
+		}
 	}
 
 	@Override
@@ -170,26 +194,43 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 	}
 
 	@Override
-	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex) throws SQLException {
-		statement.setTimestamp( parameterIndex, getExpectedJdbcValueAfterHibernateWrite() );
+	protected void setJdbcValueForNonHibernateWrite(PreparedStatement statement, int parameterIndex)
+			throws SQLException {
+		if ( useTimestamp ) {
+			statement.setTimestamp( parameterIndex, (Timestamp) getExpectedJdbcValueAfterHibernateWrite() );
+
+		}
+		else {
+			statement.setObject(
+					parameterIndex,
+					getExpectedJdbcValueAfterHibernateWrite(),
+					Types.TIMESTAMP_WITH_TIMEZONE
+			);
+		}
 	}
 
 	@Override
-	protected Timestamp getExpectedJdbcValueAfterHibernateWrite() {
-		LocalDateTime dateTimeInDefaultTimeZone = getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() )
-				.toLocalDateTime();
-		return new Timestamp(
-				dateTimeInDefaultTimeZone.getYear() - 1900, dateTimeInDefaultTimeZone.getMonthValue() - 1,
-				dateTimeInDefaultTimeZone.getDayOfMonth(),
-				dateTimeInDefaultTimeZone.getHour(), dateTimeInDefaultTimeZone.getMinute(),
-				dateTimeInDefaultTimeZone.getSecond(),
-				dateTimeInDefaultTimeZone.getNano()
-		);
+	protected Object getExpectedJdbcValueAfterHibernateWrite() {
+		if ( useTimestamp ) {
+			LocalDateTime dateTimeInDefaultTimeZone = getOriginalOffsetDateTime().atZoneSameInstant( ZoneId.systemDefault() )
+					.toLocalDateTime();
+			return new Timestamp(
+					dateTimeInDefaultTimeZone.getYear() - 1900, dateTimeInDefaultTimeZone.getMonthValue() - 1,
+					dateTimeInDefaultTimeZone.getDayOfMonth(),
+					dateTimeInDefaultTimeZone.getHour(), dateTimeInDefaultTimeZone.getMinute(),
+					dateTimeInDefaultTimeZone.getSecond(),
+					dateTimeInDefaultTimeZone.getNano()
+			);
+		}
+		return getOriginalOffsetDateTime();
 	}
 
 	@Override
 	protected Object getActualJdbcValue(ResultSet resultSet, int columnIndex) throws SQLException {
-		return resultSet.getTimestamp( columnIndex );
+		if ( useTimestamp ) {
+			return resultSet.getTimestamp( columnIndex );
+		}
+		return resultSet.getObject( columnIndex, OffsetDateTime.class );
 	}
 
 	@Test

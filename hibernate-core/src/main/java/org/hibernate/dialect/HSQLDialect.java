@@ -61,6 +61,9 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHSQLDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -126,6 +129,9 @@ public class HSQLDialect extends Dialect {
 		}
 
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
+
+		StandardBasicTypes.OFFSET_DATE_TIME.setJavaTypeDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
+		StandardBasicTypes.OFFSET_DATE_TIME.setSqlTypeDescriptor( TimestampWithTimeZoneDescriptor.INSTANCE );
 	}
 
 	private static int reflectedVersion(int version) {

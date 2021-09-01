@@ -16,7 +16,6 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -145,7 +144,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	public final void setJavaTypeDescriptor( JavaTypeDescriptor<T> javaTypeDescriptor ) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
-
+		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
 		this.jdbcValueBinder = getJdbcTypeDescriptor().getBinder( javaTypeDescriptor );
 		this.jdbcValueExtractor = getJdbcTypeDescriptor().getExtractor( javaTypeDescriptor );
 	}

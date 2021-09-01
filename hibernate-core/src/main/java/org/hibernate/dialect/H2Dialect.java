@@ -45,12 +45,15 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
+
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.TemporalUnit.SECOND;
@@ -126,6 +129,9 @@ public class H2Dialect extends Dialect {
 			// which caused problems for schema update tool
 			registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 		}
+
+		StandardBasicTypes.OFFSET_DATE_TIME.setJavaTypeDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
+		StandardBasicTypes.OFFSET_DATE_TIME.setSqlTypeDescriptor( TimestampWithTimeZoneDescriptor.INSTANCE );
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {

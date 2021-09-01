@@ -15,8 +15,8 @@ import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.query.CastType;
-import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
+import org.hibernate.type.descriptor.java.LegacyOffsetDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -32,7 +32,7 @@ public class OffsetDateTimeType
 	public static final OffsetDateTimeType INSTANCE = new OffsetDateTimeType();
 
 	public OffsetDateTimeType() {
-		super( TimestampWithTimeZoneDescriptor.INSTANCE, OffsetDateTimeJavaDescriptor.INSTANCE );
+		super( TimestampTypeDescriptor.INSTANCE, LegacyOffsetDateTimeJavaDescriptor.INSTANCE );
 	}
 
 	@Override

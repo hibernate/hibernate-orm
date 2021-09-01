@@ -53,11 +53,12 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -202,6 +203,13 @@ public class MySQLDialect extends Dialect {
 				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
+
+		remapTypes();
+	}
+
+	protected void remapTypes() {
+		StandardBasicTypes.OFFSET_DATE_TIME.setJavaTypeDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
+		StandardBasicTypes.OFFSET_DATE_TIME.setSqlTypeDescriptor( TimestampWithTimeZoneDescriptor.INSTANCE );
 	}
 
 	protected static int getCharacterSetBytesPerCharacter(DatabaseMetaData databaseMetaData) {

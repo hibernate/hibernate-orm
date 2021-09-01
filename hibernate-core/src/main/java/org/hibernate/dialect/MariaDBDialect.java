@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -56,6 +55,11 @@ public class MariaDBDialect extends MySQLDialect {
 	public MariaDBDialect(int version, int characterSetBytesPerCharacter) {
 		super( version < 530 ? 500 : 570, characterSetBytesPerCharacter );
 		this.version = version;
+
+	}
+
+	@Override
+	protected void remapTypes() {
 	}
 
 	protected int getMaxVarcharLen() {

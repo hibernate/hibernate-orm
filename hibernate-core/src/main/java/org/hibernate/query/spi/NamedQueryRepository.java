@@ -90,6 +90,14 @@ public class NamedQueryRepository {
 		return namedSqlResultSetMappingMap.get( mappingName );
 	}
 
+	private synchronized void removeNamedQueryDefinition(String name) {
+		if ( this.namedQueryDefinitionMap.containsKey( name ) ) {
+			final Map<String, NamedQueryDefinition> copy = CollectionHelper.makeCopy( namedQueryDefinitionMap );
+			copy.remove( name );
+			this.namedQueryDefinitionMap = Collections.unmodifiableMap( copy );
+		}
+	}
+
 	public synchronized void registerNamedQueryDefinition(String name, NamedQueryDefinition definition) {
 		if ( NamedSQLQueryDefinition.class.isInstance( definition ) ) {
 			throw new IllegalArgumentException( "NamedSQLQueryDefinition instance incorrectly passed to registerNamedQueryDefinition" );
@@ -109,7 +117,17 @@ public class NamedQueryRepository {
 			);
 		}
 
+
 		this.namedQueryDefinitionMap = Collections.unmodifiableMap( copy );
+		removeNamedSQLQueryDefinition( name );
+	}
+
+	private synchronized void removeNamedSQLQueryDefinition(String name) {
+		if ( this.namedSqlQueryDefinitionMap.containsKey( name ) ) {
+			final Map<String, NamedSQLQueryDefinition> copy = CollectionHelper.makeCopy( namedSqlQueryDefinitionMap );
+			copy.remove( name );
+			this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( copy );
+		}
 	}
 
 	public synchronized void registerNamedSQLQueryDefinition(String name, NamedSQLQueryDefinition definition) {
@@ -128,6 +146,7 @@ public class NamedQueryRepository {
 		}
 
 		this.namedSqlQueryDefinitionMap = Collections.unmodifiableMap( copy );
+		removeNamedQueryDefinition( name );
 	}
 
 	public synchronized void registerNamedProcedureCallMemento(String name, ProcedureCallMemento memento) {

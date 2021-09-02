@@ -21,14 +21,18 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jcache.test.TestHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.schema.Action;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -88,6 +92,9 @@ public class RefreshUpdatedDataTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Derby does not support nested transactions")
+	@SkipForDialect(SybaseASE15Dialect.class)
+	@SkipForDialect(HSQLDialect.class)
 	public void testUpdateAndFlushThenRefresh() {
 		final String BEFORE = "before";
 

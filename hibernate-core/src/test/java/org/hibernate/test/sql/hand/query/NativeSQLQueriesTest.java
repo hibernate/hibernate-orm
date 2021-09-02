@@ -10,6 +10,9 @@ import javax.persistence.PersistenceException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Blob;
+import java.sql.Clob;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -845,8 +848,21 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		String descriptionRead = ( String ) s.createSQLQuery( getDescriptionsSQL() )
+		Object result = s.createSQLQuery( getDescriptionsSQL() )
 				.uniqueResult();
+		String descriptionRead;
+		if ( result instanceof String ) {
+			descriptionRead = (String) result;
+		}
+		else {
+			Clob clob = (Clob) result;
+			try {
+				descriptionRead = clob.getSubString( 1L, (int) clob.length() );
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+		}
 		assertEquals( description, descriptionRead );
 		s.delete( holder );
 		t.commit();
@@ -858,7 +874,8 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 	public void testImageTypeInSQLQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
-		byte[] photo = buildLongByteArray( 15000, true );
+		// Make sure the last byte is non-zero as Sybase cuts that off
+		byte[] photo = buildLongByteArray( 14999, true );
 		ImageHolder holder = new ImageHolder( photo );
 		s.persist( holder );
 		t.commit();
@@ -866,8 +883,21 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		byte[] photoRead = ( byte[] ) s.createSQLQuery( getPhotosSQL() )
+		Object result = s.createSQLQuery( getPhotosSQL() )
 				.uniqueResult();
+		byte[] photoRead;
+		if ( result instanceof byte[] ) {
+			photoRead = (byte[]) result;
+		}
+		else {
+			Blob blob = (Blob) result;
+			try {
+				photoRead = blob.getBytes( 1L, (int) blob.length() );
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+		}
 		assertTrue( Arrays.equals( photo, photoRead ) );
 		s.delete( holder );
 		t.commit();

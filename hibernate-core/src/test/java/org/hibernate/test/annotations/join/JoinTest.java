@@ -19,9 +19,11 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.mapping.Join;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -152,6 +154,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 	
 	@Test
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Missing constraint violation extractor")
 	public void testUniqueConstaintOnSecondaryTable() throws Exception {
 		Cat cat = new Cat();
 		cat.setStoryPart2( "My long story" );

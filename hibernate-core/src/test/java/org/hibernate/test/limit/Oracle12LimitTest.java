@@ -4,6 +4,7 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -53,7 +54,8 @@ public class Oracle12LimitTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Person")
-	public class Person {
+	@Table(name = "Person")
+	public static class Person {
 		@Id
 		private Long id;
 
@@ -67,7 +69,8 @@ public class Oracle12LimitTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Travel")
-	public class Travel {
+	@Table(name = "Travel")
+	public static class Travel {
 		@Id
 		private Integer id;
 

@@ -45,6 +45,12 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public boolean canCreateSchema() {
+		// As far as I can tell, it does not
+		return false;
+	}
+
+	@Override
 	public String getCurrentSchemaCommand() {
 		return "select db_name()";
 	}

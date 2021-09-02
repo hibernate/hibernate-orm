@@ -12,6 +12,7 @@ import org.hibernate.dialect.SybaseAnywhereDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.test.sql.hand.custom.CustomStoredProcTestSupport;
 import org.hibernate.testing.RequiresDialect;
+import org.junit.Ignore;
 
 /**
  * Custom SQL tests for Sybase dialects
@@ -19,6 +20,7 @@ import org.hibernate.testing.RequiresDialect;
  * @author Gavin King
  */
 @RequiresDialect( { SybaseDialect.class, SybaseASE15Dialect.class, Sybase11Dialect.class, SybaseAnywhereDialect.class })
+@Ignore("The jTDS driver doesn't detect callable prepared statements and can't unwrap from a PreparedStatement to a CallableStatement")
 public class SybaseCustomSQLTest extends CustomStoredProcTestSupport {
 	public String[] getMappings() {
 		return new String[] { "sql/hand/custom/sybase/Mappings.hbm.xml" };

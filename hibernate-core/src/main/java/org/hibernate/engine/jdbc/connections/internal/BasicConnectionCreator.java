@@ -8,6 +8,7 @@ package org.hibernate.engine.jdbc.connections.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import org.hibernate.HibernateException;
@@ -34,18 +35,21 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 
 	private final boolean autoCommit;
 	private final Integer isolation;
+	private final String initSql;
 
 	public BasicConnectionCreator(
 			ServiceRegistryImplementor serviceRegistry,
 			String url,
 			Properties connectionProps,
 			boolean autocommit,
-			Integer isolation) {
+			Integer isolation,
+			String initSql) {
 		this.serviceRegistry = serviceRegistry;
 		this.url = url;
 		this.connectionProps = connectionProps;
 		this.autoCommit = autocommit;
 		this.isolation = isolation;
+		this.initSql = initSql;
 	}
 
 	@Override
@@ -76,6 +80,15 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		}
 		catch (SQLException e) {
 			throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
+		}
+
+		if ( initSql != null && !initSql.trim().isEmpty() ) {
+			try (Statement s = conn.createStatement()) {
+				s.execute( initSql );
+			}
+			catch (SQLException e) {
+				throw convertSqlException( "Unable to execute initSql (" + initSql + ")", e );
+			}
 		}
 
 		return conn;

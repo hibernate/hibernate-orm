@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -277,6 +278,13 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 				}
 			}
 			if ( !skip ) {
+				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
+		}
+
+		public S skippedForDialects(Predicate<Dialect> skipPredicate, Consumer<S> skippedIfDialectMatchesClasses) {
+			if ( !skipPredicate.test( dialect ) ) {
 				skippedIfDialectMatchesClasses.accept( thisAsS() );
 			}
 			return thisAsS();

@@ -11,6 +11,7 @@ import javax.persistence.Id;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
@@ -28,6 +29,7 @@ import static org.junit.Assert.assertEquals;
         },
         comment = "@see https://hibernate.atlassian.net/browse/HHH-10693"
 )
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement nationalized handling")
 public class NationalizedTest extends BaseEntityManagerFunctionalTestCase {
 
     @Override

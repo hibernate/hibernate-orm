@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.results;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -42,8 +43,8 @@ public class SqlSelectionImpl implements SqlSelection, Expression, SqlExpression
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
-		return jdbcMapping.getJdbcValueExtractor();
+	public ValueExtractor getJdbcValueExtractor(Dialect dialect) {
+		return jdbcMapping.getJdbcValueExtractor( dialect );
 	}
 
 	@Override

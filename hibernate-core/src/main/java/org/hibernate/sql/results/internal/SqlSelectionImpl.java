@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import java.util.Objects;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -52,10 +53,8 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
-		return ( (SqlExpressable) sqlExpression.getExpressionType() ).getJdbcMapping().getJdbcValueExtractor();
-//		return jdbcValueExtractor;
-//		return jdbcMapping.getJdbcValueExtractor();
+	public ValueExtractor getJdbcValueExtractor(Dialect dialect) {
+		return ( (SqlExpressable) sqlExpression.getExpressionType() ).getJdbcMapping().getJdbcValueExtractor( dialect );
 	}
 
 	@Override

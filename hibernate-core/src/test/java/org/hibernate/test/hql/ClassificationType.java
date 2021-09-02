@@ -62,7 +62,8 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		Integer ordinal = StandardBasicTypes.INTEGER.getJdbcValueExtractor().extract( rs, position, session );
+		Integer ordinal = StandardBasicTypes.INTEGER.getJdbcValueExtractor( session.getJdbcServices().getDialect() )
+				.extract( rs, position, session );
 		return Classification.valueOf( ordinal );
 	}
 

@@ -700,13 +700,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				int startPosition,
 				JdbcParameterBindings jdbcParamBindings,
 				ExecutionContext executionContext) throws SQLException {
-			getJdbcMapping().getJdbcValueBinder().bind(
+			getJdbcMapping().getJdbcValueBinder( AbstractSqlAstTranslator.getDialect( executionContext ) ).bind(
 					statement,
 					executionContext.getQueryOptions().getLimit().getFirstRow(),
 					startPosition,
 					executionContext.getSession()
 			);
 		}
+	}
+
+	private static Dialect getDialect(ExecutionContext executionContext) {
+		return executionContext.getSession().getJdbcServices().getDialect();
 	}
 
 	private static class LimitJdbcParameter extends JdbcParameterImpl {
@@ -721,7 +725,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				int startPosition,
 				JdbcParameterBindings jdbcParamBindings,
 				ExecutionContext executionContext) throws SQLException {
-			getJdbcMapping().getJdbcValueBinder().bind(
+			getJdbcMapping().getJdbcValueBinder( AbstractSqlAstTranslator.getDialect( executionContext ) ).bind(
 					statement,
 					executionContext.getQueryOptions().getLimit().getMaxRows(),
 					startPosition,
@@ -2384,12 +2388,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								throw new ExecutionException( "JDBC parameter value not bound - " + offsetParameter );
 							}
 							final Number bindValue = (Number) binding.getBindValue();
-							offsetParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
-									statement,
-									bindValue.intValue() + offsetValue,
-									startPosition,
-									executionContext.getSession()
-							);
+							offsetParameter.getExpressionType().getJdbcMappings().get( 0 )
+									.getJdbcValueBinder( AbstractSqlAstTranslator.getDialect( executionContext ) ).bind(
+											statement,
+											bindValue.intValue() + offsetValue,
+											startPosition,
+											executionContext.getSession()
+									);
 						}
 				);
 			}
@@ -2463,12 +2468,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				offsetValue = dynamicOffset.intValue() + staticOffset;
 				dynamicOffset = null;
 			}
-			fetchParameter.getExpressionType().getJdbcMappings().get( 0 ).getJdbcValueBinder().bind(
-					statement,
-					bindValue.intValue() + offsetValue,
-					startPosition,
-					executionContext.getSession()
-			);
+			fetchParameter.getExpressionType().getJdbcMappings().get( 0 )
+					.getJdbcValueBinder( AbstractSqlAstTranslator.getDialect( executionContext ) ).bind(
+							statement,
+							bindValue.intValue() + offsetValue,
+							startPosition,
+							executionContext.getSession()
+					);
 		}
 	}
 

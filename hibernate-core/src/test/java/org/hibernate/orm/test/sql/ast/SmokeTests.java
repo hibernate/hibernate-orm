@@ -9,6 +9,7 @@ package org.hibernate.orm.test.sql.ast;
 import java.sql.Types;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -111,23 +112,24 @@ public class SmokeTests {
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
 					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
 					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
-					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
+					assertThat( sqlSelection.getJdbcValueExtractor(	getDialect( scope ) ), notNullValue() );
 
 					final JdbcSelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcSelect>(
 							session.getSessionFactory(),
 							sqlAst
 					).translate( null, QueryOptions.NONE );
 
-					final String separator = session.getSessionFactory()
-							.getJdbcServices()
-							.getDialect()
-							.getTableAliasSeparator();
+					final String separator = getDialect( scope ).getTableAliasSeparator();
 					assertThat(
 							jdbcSelectOperation.getSql(),
 							is( "select s1_0.name from mapping_simple_entity" + separator + "s1_0" )
 					);
 				}
 		);
+	}
+
+	private Dialect getDialect(SessionFactoryScope scope) {
+		return scope.getSessionFactory().getJdbcServices().getDialect();
 	}
 
 	@Test
@@ -172,7 +174,7 @@ public class SmokeTests {
 					final SqlSelection sqlSelection = selectClause.getSqlSelections().get( 0 );
 					assertThat( sqlSelection.getJdbcResultSetIndex(), is( 1 ) );
 					assertThat( sqlSelection.getValuesArrayPosition(), is( 0 ) );
-					assertThat( sqlSelection.getJdbcValueExtractor(), notNullValue() );
+					assertThat( sqlSelection.getJdbcValueExtractor( getDialect( scope ) ), notNullValue() );
 
 					assertThat( sqlSelection, instanceOf( SqlSelectionImpl.class ) );
 					final Expression selectedExpression = sqlSelection.getExpression();
@@ -217,10 +219,7 @@ public class SmokeTests {
 							sqlAst
 					).translate( null, QueryOptions.NONE );
 
-					final String separator = session.getSessionFactory()
-							.getJdbcServices()
-							.getDialect()
-							.getTableAliasSeparator();
+					final String separator = getDialect( scope ).getTableAliasSeparator();
 					assertThat(
 							jdbcSelectOperation.getSql(),
 							is( "select s1_0.gender from mapping_simple_entity" + separator + "s1_0" )

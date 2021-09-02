@@ -68,7 +68,7 @@ public class JdbcLiteral<T> implements Literal, MappingModelExpressable<T>, Doma
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
 		//noinspection unchecked
-		jdbcMapping.getJdbcValueBinder().bind(
+		jdbcMapping.getJdbcValueBinder( executionContext.getSession().getJdbcServices().getDialect() ).bind(
 				statement,
 				literalValue,
 				startPosition,

@@ -61,8 +61,8 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	}
 
 	public static final String ENTITY_NAME = "theentity";
-	protected static final String ID_COLUMN_NAME = "theid";
-	protected static final String PROPERTY_COLUMN_NAME = "thevalue";
+	public static final String ID_COLUMN_NAME = "theid";
+	public static final String PROPERTY_COLUMN_NAME = "thevalue";
 
 	protected static final ZoneId ZONE_UTC_MINUS_8 = ZoneId.of( "UTC-8" );
 	protected static final ZoneId ZONE_PARIS = ZoneId.of( "Europe/Paris" );
@@ -120,7 +120,8 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	public void writeThenRead() {
 		withDefaultTimeZone( () -> {
 			inTransaction( session -> {
-				session.persist( createEntityForHibernateWrite( 1 ) );
+				final E entityForHibernateWrite = createEntityForHibernateWrite( 1 );
+				session.persist( entityForHibernateWrite );
 			} );
 			inTransaction( session -> {
 				T read = getActualPropertyValue( session.find( getEntityType(), 1 ) );

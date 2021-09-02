@@ -1063,7 +1063,12 @@ public abstract class AbstractCollectionPersister
 			//noinspection unchecked
 			final Object converted = indexConverter.toRelationalValue( index );
 			//noinspection unchecked
-			convertedIndexType.getJdbcValueBinder().bind( st, converted, i, session );
+			convertedIndexType.getJdbcValueBinder( session.getJdbcServices().getDialect() ).bind(
+					st,
+					converted,
+					i,
+					session
+			);
 		}
 		else {
 			getIndexType().nullSafeSet( st, incrementIndexByBase( index ), i, indexColumnIsSettable, session );
@@ -1089,7 +1094,12 @@ public abstract class AbstractCollectionPersister
 		}
 		if ( elementConverter != null ) {
 			final Object converted = elementConverter.toRelationalValue( elt );
-			convertedElementType.getJdbcValueBinder().bind( st, converted, i, session );
+			convertedElementType.getJdbcValueBinder( session.getJdbcServices().getDialect() ).bind(
+					st,
+					converted,
+					i,
+					session
+			);
 		}
 		else {
 			getElementType().nullSafeSet( st, elt, i, elementColumnIsInPrimaryKey, session );
@@ -1108,7 +1118,12 @@ public abstract class AbstractCollectionPersister
 		}
 		if ( indexConverter != null ) {
 			final Object converted = indexConverter.toRelationalValue( index );
-			convertedIndexType.getJdbcValueBinder().bind( st, converted, i, session );
+			convertedIndexType.getJdbcValueBinder( session.getJdbcServices().getDialect() ).bind(
+					st,
+					converted,
+					i,
+					session
+			);
 		}
 		else {
 			getIndexType().nullSafeSet( st, incrementIndexByBase( index ), i, session );

@@ -9,6 +9,7 @@ package org.hibernate.type;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -77,13 +78,13 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default ValueExtractor<T> getJdbcValueExtractor() {
-		return getJdbcTypeDescriptor().getExtractor( getMappedJavaTypeDescriptor() );
+	default ValueExtractor<T> getJdbcValueExtractor(Dialect dialect) {
+		return dialect.remapSqlTypeDescriptor( getJdbcTypeDescriptor() ).getExtractor( getMappedJavaTypeDescriptor() );
 	}
 
 	@Override
-	default ValueBinder<T> getJdbcValueBinder() {
-		return getJdbcTypeDescriptor().getBinder( getMappedJavaTypeDescriptor() );
+	default ValueBinder<T> getJdbcValueBinder(Dialect dialect) {
+		return dialect.remapSqlTypeDescriptor( getJdbcTypeDescriptor() ).getBinder( getMappedJavaTypeDescriptor() );
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
@@ -34,7 +35,7 @@ public interface SqlSelection extends SqlAstNode {
 	/**
 	 * Get the extractor that can be used to extract JDBC values for this selection
 	 */
-	ValueExtractor getJdbcValueExtractor();
+	ValueExtractor getJdbcValueExtractor(Dialect dialect);
 
 	/**
 	 * Get the position within the "JDBC values" array (0-based).  Negative indicates this is

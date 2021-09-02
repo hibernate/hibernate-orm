@@ -16,8 +16,8 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -49,16 +49,10 @@ public abstract class AbstractStandardBasicType<T>
 	// sqlTypes need always to be in sync with sqlTypeDescriptor
 	private int[] sqlTypes;
 
-	private ValueBinder<T> jdbcValueBinder;
-	private ValueExtractor<T> jdbcValueExtractor;
-
 	public AbstractStandardBasicType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<T> javaTypeDescriptor) {
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
 		this.javaTypeDescriptor = javaTypeDescriptor;
-
-		this.jdbcValueBinder = jdbcTypeDescriptor.getBinder( javaTypeDescriptor );
-		this.jdbcValueExtractor = jdbcTypeDescriptor.getExtractor( javaTypeDescriptor );
 	}
 
 	@Override
@@ -72,13 +66,13 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public ValueExtractor<T> getJdbcValueExtractor() {
-		return jdbcValueExtractor;
+	public ValueExtractor<T> getJdbcValueExtractor(Dialect dialect) {
+		return dialect.remapSqlTypeDescriptor( jdbcTypeDescriptor ).getExtractor( javaTypeDescriptor );
 	}
 
 	@Override
-	public ValueBinder<T> getJdbcValueBinder() {
-		return jdbcValueBinder;
+	public ValueBinder<T> getJdbcValueBinder(Dialect dialect) {
+		return dialect.remapSqlTypeDescriptor( jdbcTypeDescriptor ).getBinder( javaTypeDescriptor );
 	}
 
 	@Override
@@ -145,9 +139,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	public final void setJavaTypeDescriptor( JavaTypeDescriptor<T> javaTypeDescriptor ) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
-
-		this.jdbcValueBinder = getJdbcTypeDescriptor().getBinder( javaTypeDescriptor );
-		this.jdbcValueExtractor = getJdbcTypeDescriptor().getExtractor( javaTypeDescriptor );
 	}
 
 	public final JdbcTypeDescriptor getJdbcTypeDescriptor() {
@@ -157,9 +148,6 @@ public abstract class AbstractStandardBasicType<T>
 	public final void setSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
-
-		this.jdbcValueBinder = getJdbcTypeDescriptor().getBinder( javaTypeDescriptor );
-		this.jdbcValueExtractor = getJdbcTypeDescriptor().getExtractor( javaTypeDescriptor );
 	}
 
 	@Override

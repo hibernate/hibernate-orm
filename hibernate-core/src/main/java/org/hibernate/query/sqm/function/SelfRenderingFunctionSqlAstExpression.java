@@ -93,17 +93,17 @@ public class SelfRenderingFunctionSqlAstExpression
 				this
 		) {
 			@Override
-			public ValueExtractor getJdbcValueExtractor() {
+			public ValueExtractor getJdbcValueExtractor(Dialect dialect) {
 				// the superclass implementation calls
 				// getExpressionType() on us to get the
 				// MappingModelExpressable, which we
 				// might not have, due to the code in
 				// SelfRenderingFunctionSqlAstExpression
 				if ( type instanceof SqlExpressable ) {
-					return ( (SqlExpressable) type ).getJdbcMapping().getJdbcValueExtractor();
+					return ( (SqlExpressable) type ).getJdbcMapping().getJdbcValueExtractor( dialect );
 				}
 				else if ( expressable != null ) {
-					return super.getJdbcValueExtractor();
+					return super.getJdbcValueExtractor( dialect );
 				}
 				else {
 					throw new SemanticException("function return type is unknown, so function cannot occur in select");

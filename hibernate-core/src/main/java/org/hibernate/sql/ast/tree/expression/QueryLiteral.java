@@ -96,7 +96,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 			}
 		}
 		//noinspection unchecked
-		type.getJdbcMapping().getJdbcValueBinder().bind(
+		type.getJdbcMapping().getJdbcValueBinder( executionContext.getSession().getJdbcServices().getDialect() ).bind(
 				statement,
 				literalValue,
 				startPosition,

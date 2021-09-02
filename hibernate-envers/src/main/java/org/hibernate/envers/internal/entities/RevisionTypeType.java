@@ -41,7 +41,8 @@ public class RevisionTypeType implements UserType, Serializable {
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		final Integer representationInt = IntegerType.INSTANCE.getJdbcValueExtractor().extract( rs, position, session );
+		final Integer representationInt = IntegerType.INSTANCE
+				.getJdbcValueExtractor( session.getJdbcServices().getDialect() ).extract( rs, position, session );
 		return representationInt == null
 				? null
 				: RevisionType.fromRepresentation( representationInt.byteValue() );

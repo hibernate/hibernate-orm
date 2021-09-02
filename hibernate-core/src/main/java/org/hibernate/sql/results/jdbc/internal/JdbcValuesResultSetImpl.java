@@ -301,11 +301,12 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private void readCurrentRowValues() throws SQLException {
 		for ( final SqlSelection sqlSelection : sqlSelections ) {
 			try {
-				currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
-						resultSetAccess.getResultSet(),
-						sqlSelection.getJdbcResultSetIndex(),
-						executionContext.getSession()
-				);
+				currentRowJdbcValues[sqlSelection.getValuesArrayPosition()] = sqlSelection
+						.getJdbcValueExtractor( executionContext.getSession().getJdbcServices().getDialect() ).extract(
+								resultSetAccess.getResultSet(),
+								sqlSelection.getJdbcResultSetIndex(),
+								executionContext.getSession()
+						);
 			}
 			catch (Exception e) {
 				throw new HibernateException(

@@ -2215,7 +2215,10 @@ public abstract class AbstractEntityPersister
 					if ( !isVersioned() ) {
 						return this;
 					}
-					return getVersionMapping().getJdbcMapping().getJdbcValueExtractor().extract( rs, 1, session );
+					final JdbcMapping jdbcMapping = getVersionMapping().getJdbcMapping();
+
+					return jdbcMapping.getJdbcValueExtractor( session.getJdbcServices().getDialect() )
+							.extract( rs, 1, session );
 				}
 				finally {
 					session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( rs, st );

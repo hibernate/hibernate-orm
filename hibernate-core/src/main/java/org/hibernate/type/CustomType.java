@@ -113,12 +113,12 @@ public class CustomType
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
+	public ValueExtractor getJdbcValueExtractor(Dialect dialect) {
 		return valueExtractor;
 	}
 
 	@Override
-	public ValueBinder<?> getJdbcValueBinder() {
+	public ValueBinder<?> getJdbcValueBinder(Dialect dialect) {
 		return valueBinder;
 	}
 

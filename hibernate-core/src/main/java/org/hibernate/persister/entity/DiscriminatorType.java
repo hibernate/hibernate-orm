@@ -92,19 +92,22 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 
 	@Override
 	public T extract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-		final Object discriminatorValue = underlyingType.getJdbcValueExtractor().extract( rs, paramIndex, options );
+		final Object discriminatorValue = underlyingType.getJdbcValueExtractor( getDialect( options ) )
+				.extract( rs, paramIndex, options );
 		return (T) get( discriminatorValue, options.getSession() );
 	}
 
 	@Override
 	public T extract(CallableStatement statement, int paramIndex, WrapperOptions options) throws SQLException {
-		final Object discriminatorValue = underlyingType.getJdbcValueExtractor().extract( statement, paramIndex, options );
+		final Object discriminatorValue = underlyingType.getJdbcValueExtractor( getDialect( options ) )
+				.extract( statement, paramIndex, options );
 		return (T) get( discriminatorValue, options.getSession() );
 	}
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, WrapperOptions options) throws SQLException {
-		final Object discriminatorValue = underlyingType.getJdbcValueExtractor().extract( statement, paramName, options );
+		final Object discriminatorValue = underlyingType.getJdbcValueExtractor( getDialect( options ) )
+				.extract( statement, paramName, options );
 		return (T) get( discriminatorValue, options.getSession() );
 	}
 
@@ -162,7 +165,11 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
 		final String entityName = factory.getClassMetadata( (Class) value).getEntityName();
 		final Loadable entityPersister = (Loadable) factory.getEntityPersister( entityName);
-		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), index, options );
+		underlyingType.getJdbcValueBinder( getDialect( options ) ).bind( st, entityPersister.getDiscriminatorValue(), index, options );
+	}
+
+	private Dialect getDialect(WrapperOptions options) {
+		return options.getSession().getJdbcServices().getDialect();
 	}
 
 	@Override
@@ -170,7 +177,7 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 		final SessionFactoryImplementor factory = options.getSession().getFactory();
 		final String entityName = factory.getClassMetadata( (Class) value).getEntityName();
 		final Loadable entityPersister = (Loadable) factory.getEntityPersister( entityName);
-		underlyingType.getJdbcValueBinder().bind( st, entityPersister.getDiscriminatorValue(), name, options );
+		underlyingType.getJdbcValueBinder( getDialect( options ) ).bind( st, entityPersister.getDiscriminatorValue(), name, options );
 	}
 
 	@Override
@@ -264,12 +271,12 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 	}
 
 	@Override
-	public ValueExtractor<T> getJdbcValueExtractor() {
+	public ValueExtractor<T> getJdbcValueExtractor(Dialect dialect) {
 		return this;
 	}
 
 	@Override
-	public ValueBinder<T> getJdbcValueBinder() {
+	public ValueBinder<T> getJdbcValueBinder(Dialect dialect) {
 		return this;
 	}
 

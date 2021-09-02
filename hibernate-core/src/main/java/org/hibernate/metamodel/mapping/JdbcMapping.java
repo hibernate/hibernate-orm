@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
@@ -42,13 +43,13 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The strategy for extracting values of this expressable
 	 * type from JDBC ResultSets, CallableStatements, etc
 	 */
-	ValueExtractor getJdbcValueExtractor();
+	ValueExtractor getJdbcValueExtractor(Dialect dialect);
 
 	/**
 	 * The strategy for binding values of this expressable
 	 * type to JDBC PreparedStatements, CallableStatements, etc
 	 */
-	ValueBinder getJdbcValueBinder();
+	ValueBinder getJdbcValueBinder(Dialect dialect);
 
 	@Override
 	default JavaTypeDescriptor getMappedJavaTypeDescriptor() {

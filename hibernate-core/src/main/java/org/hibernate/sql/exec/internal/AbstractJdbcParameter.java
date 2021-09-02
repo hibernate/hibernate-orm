@@ -90,7 +90,7 @@ public abstract class AbstractJdbcParameter
 		final Object bindValue = binding.getBindValue();
 
 		//noinspection unchecked
-		jdbcMapping.getJdbcValueBinder().bind(
+		jdbcMapping.getJdbcValueBinder( executionContext.getSession().getJdbcServices().getDialect() ).bind(
 				statement,
 				bindValue,
 				startPosition,

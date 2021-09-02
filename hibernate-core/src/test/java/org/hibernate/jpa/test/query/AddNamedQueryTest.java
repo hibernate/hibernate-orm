@@ -55,6 +55,41 @@ public class AddNamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	public void replaceTest() {
+		EntityManager em = getOrCreateEntityManager();
+		final String name = "myReplaceItemQuery";
+
+		// create a jpql query
+		String sql = "from Item";
+		Query query = em.createQuery( sql );
+		query.setHint( "org.hibernate.comment", sql );
+		em.getEntityManagerFactory().addNamedQuery( name, query );
+		query = em.createNamedQuery( name );
+		assertEquals( sql, query.getHints().get( "org.hibernate.comment" ) );
+		assertEquals( 0, query.getResultList().size() );
+
+		// create a native query and replace the previous jpql
+		sql = "select * from Item";
+		query = em.createNativeQuery( sql, Item.class );
+		query.setHint( "org.hibernate.comment", sql );
+		em.getEntityManagerFactory().addNamedQuery( name, query );
+		query = em.createNamedQuery( name );
+		assertEquals( sql, query.getHints().get( "org.hibernate.comment" ) );
+		assertEquals( 0, query.getResultList().size() );
+
+		// define back a named query
+		sql = "from Item";
+		query = em.createQuery( sql );
+		query.setHint( "org.hibernate.comment", sql );
+		em.getEntityManagerFactory().addNamedQuery( name, query );
+		query = em.createNamedQuery( name );
+		assertEquals( sql, query.getHints().get( "org.hibernate.comment" ) );
+		assertEquals( 0, query.getResultList().size() );
+
+		em.close();
+	}
+
+	@Test
 	public void testLockModeHandling() {
 		final String name = "lock-mode-handling";
 

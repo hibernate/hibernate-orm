@@ -20,6 +20,7 @@
             <property name="hibernate.connection.username" value="@jdbc.user@"/>
             <property name="hibernate.connection.password" value="@jdbc.pass@"/>
             <property name="hibernate.connection.url" value="@jdbc.url@"/>
+            <property name="hibernate.connection.init_sql" value="@connection.init_sql@"/>
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
         </properties>

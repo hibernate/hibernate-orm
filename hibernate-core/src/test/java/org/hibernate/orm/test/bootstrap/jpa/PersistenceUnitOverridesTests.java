@@ -373,6 +373,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
+		integrationSettings.put( "hibernate.connection.init_sql", "" );
 
 		final PersistenceProvider provider = new HibernatePersistenceProvider();
 

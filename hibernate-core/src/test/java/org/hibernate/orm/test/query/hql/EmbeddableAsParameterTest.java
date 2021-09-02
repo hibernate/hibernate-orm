@@ -12,12 +12,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 
-import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -62,7 +60,6 @@ public class EmbeddableAsParameterTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Null == null on Sybase", matchSubTypes = true)
 	public void testAsParameterReuseInWhereClause2(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

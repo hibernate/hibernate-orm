@@ -16,7 +16,6 @@ import org.hibernate.Hibernate;
 import org.hibernate.Transaction;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.FloatLeg.RateIndex;
 import org.hibernate.orm.test.bootstrap.binding.annotations.embedded.Leg.Frequency;
 import org.hibernate.query.Query;
@@ -27,7 +26,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 
 import org.hibernate.orm.test.util.SchemaUtil;
 import org.junit.jupiter.api.AfterEach;
@@ -142,7 +140,6 @@ public class EmbeddedTest {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
-	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Null == null on Sybase", matchSubTypes = true)
 	public void testQueryWithEmbeddedParameterAllNull(SessionFactoryScope scope) {
 		Person person = new Person();
 		Address a = new Address();

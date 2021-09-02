@@ -21,6 +21,7 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.PersistentClass;
@@ -180,7 +181,7 @@ public class ComponentTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( value = SybaseASE15Dialect.class )
+	@RequiresDialect( value = SybaseASEDialect.class )
 	@FailureExpected( jiraKey = "HHH-3150" )
 	public void testComponentQueryMethodNoParensFailureExpected() {
 		// Sybase should translate "current_timestamp" in HQL to "getdate()";

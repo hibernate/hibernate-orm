@@ -31,6 +31,7 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASE15Dialect;
@@ -43,10 +44,15 @@ import org.junit.Test;
  * 
  * @author Richard H. Tingstad
  */
-@RequiresDialect(value = { SybaseASE15Dialect.class })
+@RequiresDialect(value = { SybaseASEDialect.class })
 public class SybaseASE15FunctionTest extends BaseCoreFunctionalTestCase {
 
 	private Calendar calendar = Calendar.getInstance();
+
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
+	}
 
 	@Override
 	public String[] getMappings() {
@@ -89,7 +95,7 @@ public class SybaseASE15FunctionTest extends BaseCoreFunctionalTestCase {
 	public void testDateaddFunction() {
 		final Session s = openSession();
 		s.getTransaction().begin();
-		Query query = session.createQuery( "select dateadd(dd, 1, p.date) from Product p" );
+		Query query = session.createQuery( "select dateadd(day, 1, p.date) from Product p" );
 		assertTrue(calendar.getTime().before((Date) query.uniqueResult()));
 		s.getTransaction().commit();
 		s.close();

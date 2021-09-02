@@ -9,6 +9,7 @@ import javax.persistence.Table;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -30,6 +31,7 @@ public class HHH14156Test extends BaseCoreFunctionalTestCase {
 	@Test
 	@SkipForDialect(value = SQLServerDialect.class, comment = "SQLServer doesn't support tuple comparisons")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Derby doesn't support tuple comparisons")
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "Sybase doesn't support tuple comparisons")
 	public void testNoExceptionThrown() {
 		inTransaction( session ->
 			session.createQuery(

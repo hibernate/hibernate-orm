@@ -18,11 +18,13 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.ValueGenerationType;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGenerator;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,6 +35,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-11096" )
+@SkipForDialect(value = SybaseASE15Dialect.class, comment = "current_timestamp requires parenthesis which we don't render")
 public class DatabaseCreationTimestampNullableColumnTest extends BaseEntityManagerFunctionalTestCase {
 
     @Override

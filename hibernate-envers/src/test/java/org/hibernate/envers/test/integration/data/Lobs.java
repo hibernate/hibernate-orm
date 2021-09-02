@@ -12,10 +12,12 @@ import java.util.Map;
 import javax.persistence.EntityManager;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
@@ -26,6 +28,7 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @RequiresDialectFeature(DialectChecks.SupportsExpectedLobUsagePattern.class)
+@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement binary stream handling")
 public class Lobs extends BaseEnversJPAFunctionalTestCase {
 	private Integer id1;
 	private Integer id2;

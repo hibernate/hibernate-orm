@@ -34,7 +34,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@RequiresDialectFeature({DialectChecks.SupportsJdbcDriverProxying.class, DialectChecks.SupportsLockTimeouts.class})
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider( false, false );

@@ -8,9 +8,11 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,6 +31,7 @@ public class NullPrecedenceTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "No support for null precedence on Sybase")
 	public void testNullPrecedence() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.persist( new Foo( 1L, null ) );

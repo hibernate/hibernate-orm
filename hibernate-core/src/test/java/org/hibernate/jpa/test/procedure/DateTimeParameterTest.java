@@ -31,6 +31,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -40,6 +41,8 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -50,15 +53,20 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
-public class DateTimeParameterTest extends BaseUnitTestCase {
-	HibernateEntityManagerFactory entityManagerFactory;
+@RequiresDialect(DerbyDialect.class)
+public class DateTimeParameterTest extends BaseCoreFunctionalTestCase {
 
 	private static GregorianCalendar nowCal = new GregorianCalendar();
 	private static Date now = new Date( nowCal.getTime().getTime() );
 
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{Message.class};
+	}
+
 	@Test
 	public void testBindingCalendarAsDate() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = sessionFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -76,7 +84,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBindingCalendarAsTime() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = sessionFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -94,50 +102,19 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 
 	@Before
 	public void startUp() {
-		// create the EMF
-		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				buildSettingsMap()
-		).build().unwrap( HibernateEntityManagerFactory.class );
-
 		// create the procedures
-		createTestData( entityManagerFactory );
-		createProcedures( entityManagerFactory );
-	}
-
-	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map buildSettingsMap() {
-		Map settings = new HashMap();
-
-		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( Message.class ) );
-
-		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DerbyTenSevenDialect.class.getName() );
-		settings.put( org.hibernate.cfg.AvailableSettings.DRIVER, org.apache.derby.jdbc.EmbeddedDriver.class.getName() );
-		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:memory:hibernate-orm-testing;create=true" );
-		settings.put( org.hibernate.cfg.AvailableSettings.USER, "" );
-
-		settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		return settings;
+		createTestData( sessionFactory() );
+		createProcedures( sessionFactory() );
 	}
 
 	@After
 	public void tearDown() {
-		if ( entityManagerFactory == null ) {
-			return;
-		}
 
-		deleteTestData( entityManagerFactory );
-		dropProcedures( entityManagerFactory );
-
-		entityManagerFactory.close();
+		deleteTestData( sessionFactory() );
+		dropProcedures( sessionFactory() );
 	}
 
-	private void createProcedures(HibernateEntityManagerFactory emf) {
-		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
+	private void createProcedures(SessionFactoryImplementor sf) {
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
@@ -248,7 +225,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		out[0] = in;
 	}
 
-	private void createTestData(HibernateEntityManagerFactory entityManagerFactory) {
+	private void createTestData(SessionFactoryImplementor entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		em.persist( new Message( 1, "test", now, now, now ) );
@@ -256,7 +233,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void deleteTestData(HibernateEntityManagerFactory entityManagerFactory) {
+	private void deleteTestData(SessionFactoryImplementor entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete from Message" ).executeUpdate();
@@ -264,8 +241,7 @@ public class DateTimeParameterTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void dropProcedures(HibernateEntityManagerFactory emf) {
-		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
+	private void dropProcedures(SessionFactoryImplementor sf) {
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {

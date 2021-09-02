@@ -73,16 +73,17 @@ public class ViburDBCPConnectionProviderTest extends BaseCoreFunctionalTestCase 
         buildSessionFactory();
 
         doInHibernate(this::sessionFactory, session -> {
-            addDbRecord(session, "CHRISTIAN", "GABLE");
-            addDbRecord(session, "CHRISTIAN", "AKROYD");
-            addDbRecord(session, "CHRISTIAN", "NEESON");
-            addDbRecord(session, "CAMERON", "NEESON");
-            addDbRecord(session, "RAY", "JOHANSSON");
+            addDbRecord(session, 1L, "CHRISTIAN", "GABLE");
+            addDbRecord(session, 2L, "CHRISTIAN", "AKROYD");
+            addDbRecord(session, 3L, "CHRISTIAN", "NEESON");
+            addDbRecord(session, 4L, "CAMERON", "NEESON");
+            addDbRecord(session, 5L, "RAY", "JOHANSSON");
         });
     }
 
-    private static void addDbRecord(Session session, String firstName, String lastName) {
+    private static void addDbRecord(Session session, Long id, String firstName, String lastName) {
         Actor actor = new Actor();
+        actor.setId( id );
         actor.setFirstName(firstName);
         actor.setLastName(lastName);
         session.persist(actor);
@@ -145,7 +146,6 @@ public class ViburDBCPConnectionProviderTest extends BaseCoreFunctionalTestCase 
     @Entity(name="Actor")
     public static class Actor {
         @Id
-        @GeneratedValue
         private Long id;
 
         private String firstName;

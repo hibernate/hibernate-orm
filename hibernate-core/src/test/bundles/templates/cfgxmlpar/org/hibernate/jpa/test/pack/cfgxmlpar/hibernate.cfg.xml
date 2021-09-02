@@ -14,6 +14,7 @@
         <property name="hibernate.connection.driver_class">org.h2.Driver</property>
         <property name="hibernate.connection.username">sa</property>
         <property name="hibernate.connection.password"></property>
+        <property name="hibernate.connection.init_sql"></property>
         <property name="hibernate.connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.cache.region_prefix">hibernate.test</property>

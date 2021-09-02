@@ -96,6 +96,7 @@ public class IndicesTest extends BaseNonConfigCoreFunctionalTestCase {
     }
 
     @Entity(name = "Role")
+    @Table(name = "proj_role")
     public static class Role {
 
         @Id

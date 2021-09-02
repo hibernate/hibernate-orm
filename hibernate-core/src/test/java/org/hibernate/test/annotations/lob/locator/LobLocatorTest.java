@@ -14,8 +14,11 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.type.descriptor.java.DataHelper;
 
 /**
@@ -35,6 +38,7 @@ public class LobLocatorTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-8193")
 	@RequiresDialectFeature(DialectChecks.UsesInputStreamToInsertBlob.class)
+	@SkipForDialect( value = SybaseASE15Dialect.class, comment = "jTDS driver doesn't implement binary stream handling")
 	public void testStreamResetBeforeParameterBinding() throws SQLException {
 		final Session session = openSession();
 

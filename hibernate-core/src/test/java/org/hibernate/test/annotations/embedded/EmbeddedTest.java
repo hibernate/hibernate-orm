@@ -158,7 +158,6 @@ public class EmbeddedTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-8172")
-	@SkipForDialect( value = SybaseDialect.class, comment = "skip for Sybase because (null = null) evaluates to true")
 	@FailureExpected(jiraKey = "HHH-8172")
 	public void testQueryWithEmbeddedParameterOneNull() throws Exception {
 		Person person = new Person();

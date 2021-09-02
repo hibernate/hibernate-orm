@@ -56,6 +56,7 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat",
 				new Properties(),
 				false,
+				null,
 				null
 		);
 

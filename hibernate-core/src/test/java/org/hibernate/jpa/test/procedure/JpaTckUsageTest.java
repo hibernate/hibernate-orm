@@ -20,6 +20,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.StoredProcedureQuery;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -30,6 +31,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
@@ -46,11 +48,17 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-public class JpaTckUsageTest extends BaseUnitTestCase {
+@RequiresDialect(DerbyDialect.class)
+public class JpaTckUsageTest extends BaseEntityManagerFunctionalTestCase {
+
+	@Override
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{User.class};
+	}
 
 	@Test
 	public void testMultipleGetUpdateCountCalls() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -68,7 +76,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicScalarResults() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -95,7 +103,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpected( jiraKey = "HHH-8416", message = "JPA TCK challenge" )
 	public void testHasMoreResultsHandlingTckChallenge() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -113,7 +121,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 	@Test
 	public void testHasMoreResultsHandling() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -130,7 +138,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 	@Test
 	public void testResultClassHandling() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -157,7 +165,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSettingInParamDefinedOnNamedStoredProcedureQuery() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 		try {
 			StoredProcedureQuery query = em.createNamedStoredProcedureQuery( "positional-param" );
@@ -171,7 +179,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 
 	@Test
 	public void testSettingNonExistingParams() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -204,7 +212,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 	@Test
 	@FailureExpected( jiraKey = "HHH-8395", message = "Out of the frying pan into the fire: https://issues.apache.org/jira/browse/DERBY-211" )
 	public void testExecuteUpdate() {
-		EntityManager em = entityManagerFactory.createEntityManager();
+		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
 
 		try {
@@ -248,57 +256,21 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 //			"$$";
 //	public static final String deleteAllUsers_DROP_CMD = "DROP ALIAS deleteAllUsers IF EXISTS";
 
-	HibernateEntityManagerFactory entityManagerFactory;
-
 	@Before
 	public void startUp() {
-		// create the EMF
-		entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
-				buildPersistenceUnitDescriptor(),
-				buildSettingsMap()
-		).build().unwrap( HibernateEntityManagerFactory.class );
-
 		// create the procedures
-		createTestUser( entityManagerFactory );
-		createProcedures( entityManagerFactory );
-	}
-
-	private PersistenceUnitDescriptor buildPersistenceUnitDescriptor() {
-		return new BaseEntityManagerFunctionalTestCase.TestingPersistenceUnitDescriptorImpl( getClass().getSimpleName() );
-	}
-
-	@SuppressWarnings("unchecked")
-	private Map buildSettingsMap() {
-		Map settings = new HashMap();
-
-		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( User.class ) );
-
-		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DerbyTenSevenDialect.class );
-		settings.put( org.hibernate.cfg.AvailableSettings.DRIVER,  org.apache.derby.jdbc.EmbeddedDriver.class.getName() );
-//		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:/tmp/hibernate-orm-testing;create=true" );
-		settings.put( org.hibernate.cfg.AvailableSettings.URL, "jdbc:derby:memory:hibernate-orm-testing;create=true" );
-		settings.put( org.hibernate.cfg.AvailableSettings.USER, "" );
-
-		settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		settings.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-		settings.put( org.hibernate.cfg.AvailableSettings.DIALECT, DerbyTenSevenDialect.class.getName() );
-		return settings;
+		createTestUser( entityManagerFactory() );
+		createProcedures( entityManagerFactory() );
 	}
 
 	@After
 	public void tearDown() {
-		if ( entityManagerFactory == null ) {
-			return;
-		}
 
-		deleteTestUser( entityManagerFactory );
-		dropProcedures( entityManagerFactory );
-
-		entityManagerFactory.close();
+		deleteTestUser( entityManagerFactory() );
+		dropProcedures( entityManagerFactory() );
 	}
 
-	private void createProcedures(HibernateEntityManagerFactory emf) {
-		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
+	private void createProcedures(SessionFactoryImplementor sf) {
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {
@@ -395,7 +367,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		conn.close();
 	}
 
-	private void createTestUser(HibernateEntityManagerFactory entityManagerFactory) {
+	private void createTestUser(SessionFactoryImplementor entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 
@@ -404,7 +376,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void deleteTestUser(HibernateEntityManagerFactory entityManagerFactory) {
+	private void deleteTestUser(SessionFactoryImplementor entityManagerFactory) {
 		EntityManager em = entityManagerFactory.createEntityManager();
 		em.getTransaction().begin();
 		em.createQuery( "delete from User" ).executeUpdate();
@@ -412,8 +384,7 @@ public class JpaTckUsageTest extends BaseUnitTestCase {
 		em.close();
 	}
 
-	private void dropProcedures(HibernateEntityManagerFactory emf) {
-		final SessionFactoryImplementor sf = emf.unwrap( SessionFactoryImplementor.class );
+	private void dropProcedures(SessionFactoryImplementor sf) {
 		final JdbcConnectionAccess connectionAccess = sf.getServiceRegistry().getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess();
 		final Connection conn;
 		try {

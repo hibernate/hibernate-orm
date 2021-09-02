@@ -21,14 +21,17 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.SybaseASE15Dialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.After;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,6 +87,10 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 
 	@After
 	public void tearDown() {
+		// The jTDS driver doesn't support schemas
+		if ( metadata.getDatabase().getDialect() instanceof SybaseASE15Dialect ) {
+			return;
+		}
 		new SchemaExport().setHaltOnError( true )
 				.setFormat( false )
 				.drop( EnumSet.of( TargetType.DATABASE ), metadata );
@@ -91,8 +98,13 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseTest {
 	}
 
 	@Test
+//	@SkipForDialect(value = SybaseASE15Dialect.class, comment = "The jTDS driver doesn't support schemas")
 	public void testSchemaUpdateDoesNotTryToRecreateExistingTables()
 			throws Exception {
+		// The jTDS driver doesn't support schemas
+		if ( metadata.getDatabase().getDialect() instanceof SybaseASE15Dialect ) {
+			return;
+		}
 		createSchema();
 
 		new SchemaUpdate().setHaltOnError( true )

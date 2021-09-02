@@ -41,8 +41,7 @@ jobs:
           - rdbms: oracle
           - rdbms: db2
           - rdbms: mssql
-# Testing against Sybase requires many backports so let's skip it for now
-#          - rdbms: sybase
+          - rdbms: sybase
 # Running with HANA requires at least 8GB memory just for the database, which we don't have on GH Actions runners
 #          - rdbms: hana
     steps:

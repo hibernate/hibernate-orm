@@ -20,6 +20,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.test.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.envers.test.Priority;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(Oracle8iDialect.class)
 @SkipForDialect(value = PostgreSQL81Dialect.class, jiraKey = "HHH-11477", comment = "@Lob field in HQL predicate fails with error about text = bigint")
 @SkipForDialect(value = AbstractHANADialect.class, comment = "HANA doesn't support comparing LOBs with the = operator")
+@SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support comparing LOBs with the = operator")
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 jdbc driver doesn't support setNString")
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby jdbc driver doesn't support setNString")
 public class StringMapLobTest extends BaseEnversJPAFunctionalTestCase {

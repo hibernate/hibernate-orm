@@ -30,7 +30,6 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.jpa.test.Distributor;
@@ -136,7 +135,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testNullPositionalParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -167,7 +165,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testNullPositionalParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -215,7 +212,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testNullPositionalParameterParameterIncompatible() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -263,7 +259,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testNullNamedParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -294,7 +289,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testNullNamedParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -341,7 +335,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testNullNamedParameterParameterIncompatible() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -392,7 +385,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDB192Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
 	public void testNativeQueryNullPositionalParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -430,7 +422,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDB192Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = Oracle8iDialect.class, comment = "ORA-00932: inconsistent datatypes: expected NUMBER got BINARY")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
 	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -484,7 +475,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDB192Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
 	public void testNativeQueryNullNamedParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -522,7 +512,6 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDB192Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = Oracle8iDialect.class, comment = "ORA-00932: inconsistent datatypes: expected NUMBER got BINARY")
-	@SkipForDialect(value = SybaseDialect.class, comment = "Null == null on Sybase")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
 	public void testNativeQueryNullNamedParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

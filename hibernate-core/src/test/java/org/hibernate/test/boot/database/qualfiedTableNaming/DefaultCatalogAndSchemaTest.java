@@ -57,6 +57,7 @@ import org.hibernate.dialect.MariaDB10Dialect;
 import org.hibernate.dialect.MariaDB53Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -86,6 +87,7 @@ import org.junit.runners.Parameterized;
 
 @RunWith(CustomParameterized.class)
 @TestForIssue(jiraKey = { "HHH-14921", "HHH-14922" })
+@SkipForDialect(value = SybaseDialect.class, comment = "Sybase doesn't support sequences")
 @SkipForDialect(value = MySQLDialect.class, comment = "MySQL doesn't support sequences")
 @SkipForDialect(value = MariaDB53Dialect.class, strictMatching = true,
 		comment = "MariaDB < 10.3 doesn't support sequences")

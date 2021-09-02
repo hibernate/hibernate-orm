@@ -106,6 +106,12 @@ public class StandardArchiveDescriptorFactory implements ArchiveDescriptorFactor
 			return url;
 		}
 		else {
+			// see if the URL exists as a File (used for tests)
+			final File urlAsFile = new File( url.getFile() );
+			if ( urlAsFile.exists() && urlAsFile.isFile() ) {
+				return url;
+			}
+
 			// prefer to resolve the relative URL relative to the root PU URL per
 			// JPA 2.0 clarification.
 			final File rootUrlFile = new File( extractLocalFilePath( rootUrl ) );

@@ -185,7 +185,7 @@ task copyBundleResources (type: Copy) {
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
         bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = buildDir.absolutePath
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
     }
 
     from file('src/test/bundles/templates')

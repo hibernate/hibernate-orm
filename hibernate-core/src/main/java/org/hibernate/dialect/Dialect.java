@@ -3103,6 +3103,10 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
+	public boolean isAnsiNullOn() {
+		return true;
+	}
+
 	/**
 	 * Renders an ordering fragment
 	 *

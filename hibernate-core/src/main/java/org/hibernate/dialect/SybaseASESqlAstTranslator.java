@@ -19,7 +19,9 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
+import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -152,24 +154,68 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void renderComparison(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		// I think intersect is only supported in 16.0 SP3
-//		renderComparisonEmulateIntersect( lhs, operator, rhs );
-
-		lhs.accept( this );
-		appendSql( " " );
-		// This relies on the fact that Sybase usually is configured with ANSINULLS OFF
-		switch ( operator ) {
-			case DISTINCT_FROM:
-				appendSql( "<>" );
-				break;
-			case NOT_DISTINCT_FROM:
-				appendSql( '=' );
-				break;
-			default:
-				appendSql( operator.sqlText() );
-				break;
+		if ( getDialect().isAnsiNullOn() ) {
+			if ( getDialect().getVersion() >= 1630 ) {
+				renderComparisonEmulateIntersect( lhs, operator, rhs );
+			}
+			else {
+				renderComparisonEmulateCase( lhs, operator, rhs );
+			}
 		}
-		appendSql( " " );
-		rhs.accept( this );
+		else {
+			// The ansinull setting only matters if using a parameter or literal and the eq operator according to the docs
+			// http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug89.htm
+			boolean rhsNotNullPredicate =
+					lhs instanceof NullnessLiteral
+					|| lhs instanceof Literal
+					|| lhs instanceof JdbcParameter;
+			boolean lhsNotNullPredicate =
+					rhs instanceof NullnessLiteral
+					|| rhs instanceof Literal
+					|| rhs instanceof JdbcParameter;
+			if ( rhsNotNullPredicate || lhsNotNullPredicate ) {
+				lhs.accept( this );
+				appendSql( " " );
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "<>" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( '=' );
+						break;
+					case LESS_THAN:
+					case GREATER_THAN:
+					case LESS_THAN_OR_EQUAL:
+					case GREATER_THAN_OR_EQUAL:
+						// These operators are not affected by ansinull=off
+						lhsNotNullPredicate = false;
+						rhsNotNullPredicate = false;
+					default:
+						appendSql( operator.sqlText() );
+						break;
+				}
+				appendSql( " " );
+				rhs.accept( this );
+				if ( lhsNotNullPredicate ) {
+					appendSql( " and " );
+					lhs.accept( this );
+					appendSql( " is not null" );
+				}
+				if ( rhsNotNullPredicate ) {
+					appendSql( " and " );
+					rhs.accept( this );
+					appendSql( " is not null" );
+				}
+			}
+			else {
+				if ( getDialect().getVersion() >= 1630 ) {
+					renderComparisonEmulateIntersect( lhs, operator, rhs );
+				}
+				else {
+					renderComparisonEmulateCase( lhs, operator, rhs );
+				}
+			}
+		}
 	}
 
 	@Override

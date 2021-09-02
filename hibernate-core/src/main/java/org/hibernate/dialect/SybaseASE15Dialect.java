@@ -17,7 +17,7 @@ package org.hibernate.dialect;
 public class SybaseASE15Dialect extends SybaseASEDialect {
 
 	public SybaseASE15Dialect() {
-		super( 1500, false );
+		super( 1500, false, false );
 	}
 
 }

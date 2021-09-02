@@ -6,6 +6,9 @@
  */
 package org.hibernate.dialect;
 
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
@@ -48,21 +51,23 @@ import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtract
 public class SybaseASEDialect extends SybaseDialect {
 
 	private final SizeStrategy sizeStrategy;
+	private final boolean ansiNull;
 
 	public SybaseASEDialect() {
-		this( 1100, false );
+		this( 1100, false, false );
 	}
 
 	public SybaseASEDialect(DialectResolutionInfo info) {
 		this(
 				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
-				info.getDriverName() != null && info.getDriverName().contains( "jTDS" )
+				info.getDriverName() != null && info.getDriverName().contains( "jTDS" ),
+				isAnsiNull( info.unwrap( DatabaseMetaData.class ) )
 		);
 	}
 
-	public SybaseASEDialect(int version, boolean jtdsDriver) {
+	public SybaseASEDialect(int version, boolean jtdsDriver, boolean ansiNull) {
 		super( version, jtdsDriver );
-
+		this.ansiNull = ansiNull;
 		//On Sybase ASE, the 'bit' type cannot be null,
 		//and cannot have indexes (while we don't use
 		//tinyint to store signed bytes, we can use it
@@ -119,6 +124,28 @@ public class SybaseASEDialect extends SybaseDialect {
 				return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
 		};
+	}
+
+	private static boolean isAnsiNull(DatabaseMetaData databaseMetaData) {
+		if ( databaseMetaData != null ) {
+			try (java.sql.Statement s = databaseMetaData.getConnection().createStatement() ) {
+				final ResultSet rs = s.executeQuery( "SELECT @@options" );
+				if ( rs.next() ) {
+					final byte[] optionBytes = rs.getBytes( 1 );
+					// By trial and error, enabling and disabling ansinull revealed that this bit is the indicator
+					return ( optionBytes[4] & 2 ) == 2;
+				}
+			}
+			catch (SQLException ex) {
+				// Ignore
+			}
+		}
+		return false;
+	}
+
+	@Override
+	public boolean isAnsiNullOn() {
+		return ansiNull;
 	}
 
 	@Override

@@ -1994,6 +1994,40 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	protected void renderComparisonEmulateCase(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		switch ( operator ) {
+			case DISTINCT_FROM:
+				appendSql( "case when " );
+				lhs.accept( this );
+				appendSql( " = " );
+				rhs.accept( this );
+				appendSql( " or " );
+				lhs.accept( this );
+				appendSql( " is null and " );
+				rhs.accept( this );
+				appendSql( " is null then 0 else 1 end = 1" );
+				break;
+			case NOT_DISTINCT_FROM:
+				appendSql( "case when " );
+				lhs.accept( this );
+				appendSql( " = " );
+				rhs.accept( this );
+				appendSql( " or " );
+				lhs.accept( this );
+				appendSql( " is null and " );
+				rhs.accept( this );
+				appendSql( " is null then 0 else 1 end = 0" );
+				break;
+			default:
+				lhs.accept( this );
+				appendSql( ' ' );
+				appendSql( operator.sqlText() );
+				appendSql( ' ' );
+				rhs.accept( this );
+				break;
+		}
+	}
+
 	protected void renderComparisonEmulateIntersect(Expression lhs, ComparisonOperator operator, Expression rhs) {
 		switch ( operator ) {
 			case DISTINCT_FROM:

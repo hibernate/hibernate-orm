@@ -10,11 +10,19 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.SpatialFunction;
 
-import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CONTAINS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_CROSSES;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_DISJOINT;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_EQUALS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_INTERSECTS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_OVERLAPS;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_TOUCHES;
+import static org.hibernate.spatial.CommonSpatialFunction.ST_WITHIN;
 
 /**
  * A factory for spatial JPA Criteria API {@link Predicate}s.
@@ -40,7 +48,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.equals.toString(), boolean.class, geometry1, geometry2 )
+				criteriaBuilder.function( ST_EQUALS.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -75,7 +83,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.within.toString(), boolean.class, geometry1, geometry2 )
+				criteriaBuilder.function( ST_WITHIN.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -110,9 +118,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.contains.toString(), boolean.class,
-										  geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_CONTAINS.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -149,7 +155,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.crosses.toString(), boolean.class,
+				criteriaBuilder.function( ST_CROSSES.name(), boolean.class,
 										  geometry1, geometry2
 				)
 		);
@@ -188,9 +194,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.disjoint.toString(), boolean.class,
-										  geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_DISJOINT.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -227,9 +231,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.intersects.toString(), boolean.class,
-										  geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_INTERSECTS.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -247,8 +249,7 @@ public class JTSSpatialPredicates {
 	public static Predicate intersects(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return intersects( criteriaBuilder, geometry1,
-						   criteriaBuilder.literal( geometry2 )
+		return intersects( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 )
 		);
 	}
 
@@ -266,8 +267,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.overlaps.toString(), boolean.class,
-										  geometry1, geometry2
+				criteriaBuilder.function( ST_OVERLAPS.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -286,8 +286,7 @@ public class JTSSpatialPredicates {
 	public static Predicate overlaps(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return overlaps( criteriaBuilder, geometry1,
-						 criteriaBuilder.literal( geometry2 )
+		return overlaps( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 )
 		);
 	}
 
@@ -305,9 +304,7 @@ public class JTSSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.touches.toString(), boolean.class,
-										  geometry1, geometry2
-				)
+				criteriaBuilder.function( ST_TOUCHES.name(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -325,10 +322,10 @@ public class JTSSpatialPredicates {
 	public static Predicate touches(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return touches( criteriaBuilder, geometry1,
-						criteriaBuilder.literal( geometry2 )
-		);
+		return touches( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
 	}
+
+
 
 //	/**
 //	 * Create a predicate for testing the arguments for bounding box overlap constraint.

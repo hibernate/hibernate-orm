@@ -13,12 +13,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.ByteBuffer;
@@ -29,6 +31,7 @@ import org.geolatte.geom.codec.WkbDecoder;
 import org.geolatte.geom.codec.WkbEncoder;
 import org.geolatte.geom.codec.Wkt;
 import org.geolatte.geom.codec.WktDecoder;
+import org.geolatte.geom.jts.JTS;
 import org.postgresql.util.PGobject;
 
 /**
@@ -45,6 +48,18 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	public static final PGGeometryTypeDescriptor INSTANCE_WKB_1 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_1 );
 	// Type descriptor instance using EWKB v2 (postgis versions >= 2.2.2, see: https://trac.osgeo.org/postgis/ticket/3181)
 	public static final PGGeometryTypeDescriptor INSTANCE_WKB_2 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_2 );
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+		if ( javaTypeDescriptor instanceof GeolatteGeometryJavaTypeDescriptor ) {
+			return (value, dialect, wrapperOptions) -> "ST_GeomFromEWKT('" + value + "')";
+		}
+		return (value, dialect, wrapperOptions) -> "ST_GeomFromEWKT('" + jts2Gl( value ) + "')";
+	}
+
+	private <T> Geometry<?> jts2Gl(T value) {
+		return JTS.from( (org.locationtech.jts.geom.Geometry) value );
+	}
 
 	private PGGeometryTypeDescriptor(Wkb.Dialect dialect) {
 		wkbDialect = dialect;
@@ -78,14 +93,13 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 
-
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.OTHER;
 	}
 
 	@Override
-	public int getDefaultSqlTypeCode(){
+	public int getDefaultSqlTypeCode() {
 		return 5432;
 	}
 

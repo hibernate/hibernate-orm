@@ -25,6 +25,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
+import org.hibernate.spatial.integration.Model;
 import org.hibernate.spatial.testing.HQLTemplate;
 import org.hibernate.spatial.testing.NativeSQLTemplate;
 import org.hibernate.type.StandardBasicTypes;

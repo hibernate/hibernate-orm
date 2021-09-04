@@ -18,6 +18,7 @@ import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
@@ -34,6 +35,9 @@ public class PostgisTestSupport extends TestSupport {
 	public NativeSQLTemplates templates() {
 		return new PostgisNativeSQLTemplates();
 	}
+
+	@Override
+	public PredicateRegexes predicateRegexes(){ return new PostgisPredicateRegexes();}
 
 	//TODO  put this in its own class (analogous to NativeSQLTemplates)
 	@Override
@@ -68,3 +72,5 @@ public class PostgisTestSupport extends TestSupport {
 	}
 
 }
+
+class PostgisPredicateRegexes extends PredicateRegexes { }

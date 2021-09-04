@@ -13,6 +13,7 @@ import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 import org.hibernate.spatial.testing.dialects.postgis.PostgisNativeSQLTemplates;
 
 import org.geolatte.geom.Geometry;
@@ -23,6 +24,11 @@ public class CockroachDBTestSupport extends TestSupport {
 	@Override
 	public NativeSQLTemplates templates() {
 		return new PostgisNativeSQLTemplates();
+	}
+
+	@Override
+	public PredicateRegexes predicateRegexes() {
+		return new CrPredicateRegexes();
 	}
 
 	@Override
@@ -50,3 +56,5 @@ public class CockroachDBTestSupport extends TestSupport {
 	}
 
 }
+
+class CrPredicateRegexes extends PredicateRegexes{ }

@@ -18,6 +18,7 @@ import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestDataElement;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 import org.hibernate.spatial.testing.domain.GeomEntityLike;
 
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -29,6 +30,7 @@ import static org.hibernate.spatial.testing.datareader.TestSupport.TestDataPurpo
 public class SpatialTestDataProvider {
 	protected final static String JTS = "jts";
 	protected final NativeSQLTemplates templates;
+	protected final PredicateRegexes predicateRegexes;
 	protected final Map<CommonSpatialFunction, String> hqlOverrides;
 	private final TestData funcTestData;
 	protected TestData testData;
@@ -38,6 +40,7 @@ public class SpatialTestDataProvider {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( DialectContext.getDialect() );
 			templates = support.templates();
+			predicateRegexes = support.predicateRegexes();
 			hqlOverrides = support.hqlOverrides();
 			codec = support.codec();
 			testData = support.createTestData( StoreRetrieveData );

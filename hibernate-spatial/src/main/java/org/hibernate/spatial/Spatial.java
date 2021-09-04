@@ -13,7 +13,6 @@ package org.hibernate.spatial;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 4/18/13
  */
-@Deprecated
 public interface Spatial {
 
 }

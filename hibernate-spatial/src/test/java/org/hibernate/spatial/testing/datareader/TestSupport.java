@@ -22,6 +22,7 @@ import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 
 /**
@@ -33,6 +34,11 @@ public abstract class TestSupport {
 
 	//TODO -- make this abstract
 	public NativeSQLTemplates templates() {
+		return null;
+	}
+
+	//TODO -- make this abstract
+	public PredicateRegexes predicateRegexes() {
 		return null;
 	}
 

@@ -16,8 +16,10 @@ package org.hibernate.spatial.integration.functions;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.stream.Stream;
 
+import org.hibernate.spatial.integration.Model;
 import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.SpatialTestBase;
 import org.hibernate.spatial.testing.datareader.TestSupport;
@@ -42,13 +44,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *     </ul>
  * </p>
  */
-@SuppressWarnings("ALL")
+
+@SuppressWarnings("rawtypes")
 @RequiresDialectFeature(feature = IsSupportedBySpatial.class)
 @SessionFactory
 public class CommonFunctionTests extends SpatialTestBase {
 
 	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;
-
 
 	List received;
 	List expected;
@@ -57,7 +59,6 @@ public class CommonFunctionTests extends SpatialTestBase {
 	public TestSupport.TestDataPurpose purpose() {
 		return PURPOSE;
 	}
-
 
 	@TestFactory
 	public Stream<DynamicTest> testFunction() {
@@ -73,13 +74,12 @@ public class CommonFunctionTests extends SpatialTestBase {
 
 	}
 
-
 	protected Stream<DynamicTest> buildTests(FunctionTestTemplate template) {
 		return Stream.of(
 						template.getFunctionName(),
 						template.getAltFunctionName()
 				)
-				.filter( s -> s != null )
+				.filter( Objects::nonNull )
 				.map( fn -> DynamicTest.dynamicTest(
 						displayName( template, fn ), executableTest( template, fn )
 				) );
@@ -94,12 +94,11 @@ public class CommonFunctionTests extends SpatialTestBase {
 		);
 	}
 
-	protected <T> Executable executableTest(FunctionTestTemplate template, String fnName) {
-		Executable testF = () -> {
+	protected Executable executableTest(FunctionTestTemplate template, String fnName) {
+		return () -> {
 			expected = template.executeNativeQuery( scope );
 			received = template.executeHQL( scope, fnName );
 			assertEquals( expected, received );
 		};
-		return testF;
 	}
 }

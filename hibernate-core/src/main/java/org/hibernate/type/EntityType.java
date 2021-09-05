@@ -488,7 +488,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 		return getAssociatedEntityPersister( factory ).getIdentifierType();
 	}
 
-	protected EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
+	public EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {
 		final EntityPersister persister = associatedEntityPersister;
 		//The following branch implements a simple lazy-initialization, but rather than the canonical
 		//form it returns the local variable to avoid a second volatile read: associatedEntityPersister
@@ -503,7 +503,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	protected final Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+		if ( isReferenceToIdentifierProperty() ) {
 			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
 					getAssociatedEntityName(),
 					value,
@@ -639,7 +639,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 * or unique key property name.
 	 */
 	public final Type getIdentifierOrUniqueKeyType(Mapping factory) throws MappingException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
+		if ( isReferenceToIdentifierProperty() ) {
 			return getIdentifierType( factory );
 		}
 		else {
@@ -663,12 +663,14 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	public final String getIdentifierOrUniqueKeyPropertyName(Mapping factory)
 			throws MappingException {
-		if ( isReferenceToPrimaryKey() || uniqueKeyPropertyName == null ) {
-			return factory.getIdentifierPropertyName( getAssociatedEntityName() );
-		}
-		else {
-			return uniqueKeyPropertyName;
-		}
+		return isReferenceToIdentifierProperty()
+				? factory.getIdentifierPropertyName( getAssociatedEntityName() )
+				: uniqueKeyPropertyName;
+	}
+
+	public boolean isReferenceToIdentifierProperty() {
+		return isReferenceToPrimaryKey()
+			|| uniqueKeyPropertyName == null;
 	}
 
 	/**

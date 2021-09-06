@@ -3011,12 +3011,8 @@ public abstract class AbstractEntityPersister
 				|| entityMetamodel.isVersionGenerated();
 	}
 
-	public String generateInsertString(boolean[] includeProperty, int j) {
-		return generateInsertString( false, includeProperty, j );
-	}
-
-	public String generateInsertString(boolean identityInsert, boolean[] includeProperty) {
-		return generateInsertString( identityInsert, includeProperty, 0 );
+	public String generateInsertString(boolean[] includeProperty) {
+		return generateInsertString( includeProperty, 0 );
 	}
 
 	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
@@ -3025,10 +3021,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that inserts a row
 	 */
-	public String generateInsertString(boolean identityInsert, boolean[] includeProperty, int j) {
-
-		// todo : remove the identityInsert param and variations;
-		//   identity-insert strings are now generated from generateIdentityInsertString()
+	public String generateInsertString(boolean[] includeProperty, int j) {
 
 		final Insert insert = createInsert().setTableName( getTableName( j ) );
 
@@ -3071,12 +3064,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		// add the primary key
-		if ( j == 0 && identityInsert ) {
-			insert.addIdentityColumn( getKeyColumns( 0 )[0] );
-		}
-		else {
-			insert.addColumns( getKeyColumns( j ) );
-		}
+		insert.addColumns( getKeyColumns( j ) );
 
 		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 			insert.setComment( "insert " + getEntityName() );
@@ -3096,14 +3084,7 @@ public abstract class AbstractEntityPersister
 			}
 		}
 
-		String result = insert.toStatementString();
-
-		// append the SQL to return the generated identifier
-		if ( j == 0 && identityInsert && useInsertSelectIdentity() ) { //TODO: suck into Insert
-			result = getFactory().getJdbcServices().getDialect().getIdentityColumnSupport().appendIdentitySelectToInsert( result );
-		}
-
-		return result;
+		return insert.toStatementString();
 	}
 
 	/**

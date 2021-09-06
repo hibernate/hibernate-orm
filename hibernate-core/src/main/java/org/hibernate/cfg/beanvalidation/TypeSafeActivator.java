@@ -21,6 +21,8 @@ import javax.validation.constraints.Digits;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 import javax.validation.metadata.BeanDescriptor;
 import javax.validation.metadata.ConstraintDescriptor;
@@ -248,7 +250,9 @@ class TypeSafeActivator {
 			}
 
 			if ( canApplyNotNull ) {
-				hasNotNull = hasNotNull || applyNotNull( property, descriptor );
+				hasNotNull = hasNotNull || applyNotNull( property, descriptor )
+						|| applyNotEmpty(property, descriptor, propertyDesc)
+						|| applyNotBlank(property, descriptor, propertyDesc);
 			}
 
 			// apply bean validation specific constraints
@@ -345,6 +349,44 @@ class TypeSafeActivator {
 							);
 						}
 					}
+				}
+			}
+			hasNotNull = true;
+		}
+		property.setOptional( !hasNotNull );
+		return hasNotNull;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static boolean applyNotEmpty(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+		boolean hasNotNull = false;
+		if ( NotBlank.class.equals( descriptor.getAnnotation().annotationType() )
+				&& String.class.equals(propertyDescriptor.getElementClass() ) ) {
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				if (Column.class.isInstance(selectable)) {
+					Column.class.cast(selectable).setNullable(false);
+				}
+			}
+			hasNotNull = true;
+		}
+		property.setOptional( !hasNotNull );
+		return hasNotNull;
+	}
+
+	@SuppressWarnings("unchecked")
+	private static boolean applyNotBlank(Property property, ConstraintDescriptor<?> descriptor, PropertyDescriptor propertyDescriptor) {
+		boolean hasNotNull = false;
+		if ( NotEmpty.class.equals( descriptor.getAnnotation().annotationType() )
+				&& String.class.equals(propertyDescriptor.getElementClass() ) ) {
+			@SuppressWarnings("unchecked")
+			final Iterator<Selectable> itor = property.getColumnIterator();
+			if ( itor.hasNext() ) {
+				final Selectable selectable = itor.next();
+				if (Column.class.isInstance(selectable)) {
+					Column.class.cast(selectable).setNullable(false);
 				}
 			}
 			hasNotNull = true;

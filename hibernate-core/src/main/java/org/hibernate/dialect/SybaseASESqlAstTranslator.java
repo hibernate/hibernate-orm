@@ -7,16 +7,20 @@
 package org.hibernate.dialect;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -42,6 +46,58 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	public SybaseASESqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	// Sybase ASE does not allow CASE expressions where all result arms contain plain parameters.
+	// At least one result arm must provide some type context for inference,
+	// so we cast the first result arm if we encounter this condition
+
+	@Override
+	protected void visitAnsiCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
+			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSearchedExpression(
+					caseSearchedExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+		}
+	}
+
+	@Override
+	protected void visitAnsiCaseSimpleExpression(
+			CaseSimpleExpression caseSimpleExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
+			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSimpleExpression(
+					caseSimpleExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+		}
 	}
 
 	@Override
@@ -168,14 +224,13 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			boolean rhsNotNullPredicate =
 					lhs instanceof NullnessLiteral
 					|| lhs instanceof Literal
-					|| lhs instanceof JdbcParameter;
+					|| isParameter( lhs );
 			boolean lhsNotNullPredicate =
 					rhs instanceof NullnessLiteral
 					|| rhs instanceof Literal
-					|| rhs instanceof JdbcParameter;
+					|| isParameter( rhs );
 			if ( rhsNotNullPredicate || lhsNotNullPredicate ) {
 				lhs.accept( this );
-				appendSql( " " );
 				switch ( operator ) {
 					case DISTINCT_FROM:
 						appendSql( "<>" );
@@ -194,7 +249,6 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 						appendSql( operator.sqlText() );
 						break;
 				}
-				appendSql( " " );
 				rhs.accept( this );
 				if ( lhsNotNullPredicate ) {
 					appendSql( " and " );
@@ -308,7 +362,7 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 
 	@Override
 	protected String getFromDual() {
-		return " from (select 1) as dual(c1)";
+		return " from (select 1) dual(c1)";
 	}
 
 	private boolean supportsTopClause() {

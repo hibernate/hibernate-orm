@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import javax.persistence.metamodel.EntityType;
 
@@ -13,6 +14,7 @@ import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -123,7 +125,7 @@ public class EntityTypeImpl<J>
 			return attribute;
 		}
 
-		if ( "id".equalsIgnoreCase( name ) ) {
+		if ( "id".equalsIgnoreCase( name ) || EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name ) ) {
 			//noinspection unchecked
 			final SingularPersistentAttribute<J, ?> idAttribute = findIdAttribute();
 			//noinspection RedundantIfStatement
@@ -187,5 +189,27 @@ public class EntityTypeImpl<J>
 		throw new UnsupportedOperationException(
 				"EntityType cannot be used to create an SqmPath - that would be an SqmFrom which are created directly"
 		);
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Serialization
+
+	protected Object writeReplace() throws ObjectStreamException {
+		return new SerialForm( jpaMetamodel(), getHibernateEntityName() );
+	}
+
+	private static class SerialForm implements Serializable {
+		private final JpaMetamodel jpaMetamodel;
+		private final String hibernateEntityName;
+
+		public SerialForm(JpaMetamodel jpaMetamodel, String hibernateEntityName) {
+			this.jpaMetamodel = jpaMetamodel;
+			this.hibernateEntityName = hibernateEntityName;
+		}
+
+		private Object readResolve() {
+			return jpaMetamodel.entity( hibernateEntityName );
+		}
+
 	}
 }

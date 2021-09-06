@@ -1289,30 +1289,6 @@ public abstract class AbstractEntityPersister
 				tableGroup,
 				creationState
 		);
-		if ( discriminatorMapping != null ) {
-			discriminatorMapping.applySqlSelections(
-					navigablePath.append( discriminatorMapping.getPartName() ),
-					tableGroup,
-					creationState
-			);
-		}
-		if ( versionMapping != null ) {
-			versionMapping.applySqlSelections(
-					navigablePath.append( versionMapping.getPartName() ),
-					tableGroup,
-					creationState
-			);
-		}
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			if ( attributeMapping instanceof SingularAttributeMapping ) {
-				attributeMapping.applySqlSelections(
-						navigablePath.append( attributeMapping.getPartName() ),
-						tableGroup,
-						creationState
-				);
-			}
-		}
 	}
 
 	@Override
@@ -1327,33 +1303,6 @@ public abstract class AbstractEntityPersister
 				creationState,
 				selectionConsumer
 		);
-		if ( discriminatorMapping != null ) {
-			discriminatorMapping.applySqlSelections(
-					navigablePath.append( discriminatorMapping.getPartName() ),
-					tableGroup,
-					creationState,
-					selectionConsumer
-			);
-		}
-		if ( versionMapping != null ) {
-			versionMapping.applySqlSelections(
-					navigablePath.append( versionMapping.getPartName() ),
-					tableGroup,
-					creationState,
-					selectionConsumer
-			);
-		}
-		for ( int i = 0; i < attributeMappings.size(); i++ ) {
-			final AttributeMapping attributeMapping = attributeMappings.get( i );
-			if ( attributeMapping instanceof SingularAttributeMapping ) {
-				attributeMapping.applySqlSelections(
-						navigablePath.append( attributeMapping.getPartName() ),
-						tableGroup,
-						creationState,
-						selectionConsumer
-				);
-			}
-		}
 	}
 
 	@Override

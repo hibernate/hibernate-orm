@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -13,15 +14,18 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 /**
  * @author Steve Ebersole
  */
-public class InSubQueryPredicate implements Predicate {
+public class InSubQueryPredicate extends AbstractPredicate {
 	private final Expression testExpression;
 	private final QueryPart subQuery;
-	private final boolean negated;
 
 	public InSubQueryPredicate(Expression testExpression, QueryPart subQuery, boolean negated) {
+		this( testExpression, subQuery, negated, null );
+	}
+
+	public InSubQueryPredicate(Expression testExpression, QueryPart subQuery, boolean negated, JdbcMappingContainer expressionType) {
+		super( expressionType, negated );
 		this.testExpression = testExpression;
 		this.subQuery = subQuery;
-		this.negated = negated;
 	}
 
 	public Expression getTestExpression() {
@@ -30,15 +34,6 @@ public class InSubQueryPredicate implements Predicate {
 
 	public QueryPart getSubQuery() {
 		return subQuery;
-	}
-
-	public boolean isNegated() {
-		return negated;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return false;
 	}
 
 	@Override

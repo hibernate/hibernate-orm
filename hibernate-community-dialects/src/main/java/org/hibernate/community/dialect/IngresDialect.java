@@ -235,15 +235,16 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.position( queryEngine );
 		CommonFunctionFactory.format_dateFormat( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(hex(?1))*4" );
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
 				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
+				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1', ?2)", StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", StandardBasicTypes.INTEGER );
 
 		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot(queryEngine);
 
@@ -290,13 +291,13 @@ public class IngresDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
-		return "timestampadd(?1, ?2, ?3)";
+		return "timestampadd(?1,?2,?3)";
 
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		return "timestampdiff(?1, ?2, ?3)";
+		return "timestampdiff(?1,?2,?3)";
 	}
 
 	@Override

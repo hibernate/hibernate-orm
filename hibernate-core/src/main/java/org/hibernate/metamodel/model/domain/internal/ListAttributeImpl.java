@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 
 import org.hibernate.metamodel.internal.MetadataContext;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -42,6 +43,20 @@ class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>, E> imp
 	@Override
 	public SqmPathSource<Integer> getIndexPathSource() {
 		return indexPathSource;
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case INDEX:
+					return indexPathSource;
+				case ELEMENT:
+					return getElementPathSource();
+			}
+		}
+		return getElementPathSource().findSubPathSource( name );
 	}
 
 	@Override

@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -22,12 +24,19 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 			EntityDomainType<S> treatTarget) {
 		//noinspection unchecked
 		super(
-				(EntityDomainType) wrappedPath.getReferencedPathSource().getSqmPathType(),
+				(EntityDomainType<S>) wrappedPath.getReferencedPathSource().getSqmPathType(),
 				alias,
 				wrappedPath.getRoot()
 		);
 		this.wrappedPath = wrappedPath;
 		this.treatTarget = treatTarget;
+	}
+
+	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
 	}
 
 	@Override
@@ -46,9 +55,14 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 	}
 
 	@Override
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
+	}
+
+	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
 		//noinspection unchecked
-		return (EntityDomainType) wrappedPath.getReferencedPathSource();
+		return (EntityDomainType<S>) wrappedPath.getReferencedPathSource();
 	}
 
 	@Override

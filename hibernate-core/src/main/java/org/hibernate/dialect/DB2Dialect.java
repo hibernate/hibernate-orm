@@ -190,6 +190,7 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.addYearsMonthsDaysHoursMinutesSeconds( queryEngine );
 		CommonFunctionFactory.yearsMonthsDaysHoursMinutesSecondsBetween( queryEngine );
 		CommonFunctionFactory.dateTrunc( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(?1)*8" );
 
 		queryEngine.getSqmFunctionRegistry().register( "format", new DB2FormatEmulation() );
 
@@ -417,7 +418,7 @@ public class DB2Dialect extends Dialect {
 			default:
 				literal = "0";
 		}
-		return "nullif(" + literal + ", " + literal + ')';
+		return "nullif(" + literal + "," + literal + ')';
 	}
 
 	@Override
@@ -657,7 +658,7 @@ public class DB2Dialect extends Dialect {
 
 		return String.format(
 				Locale.ENGLISH,
-				"case when %s is null then %s else %s end, %s %s",
+				"case when %s is null then %s else %s end,%s %s",
 				expression,
 				nullPrecedence == NullPrecedence.FIRST ? "0" : "1",
 				nullPrecedence == NullPrecedence.FIRST ? "1" : "0",

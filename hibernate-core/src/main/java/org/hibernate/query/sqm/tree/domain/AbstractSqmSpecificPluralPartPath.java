@@ -16,8 +16,8 @@ import org.hibernate.query.PathException;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPath<T> implements SqmPath<T> {
-	private final SqmPath pluralDomainPath;
-	private final PluralPersistentAttribute<?,?,T> pluralAttribute;
+	private final SqmPath<?> pluralDomainPath;
+	private final PluralPersistentAttribute<?, ?, T> pluralAttribute;
 
 	private String alias;
 
@@ -25,7 +25,7 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	public AbstractSqmSpecificPluralPartPath(
 			NavigablePath navigablePath,
 			SqmPath<?> pluralDomainPath,
-			PluralPersistentAttribute<?,?,T> referencedAttribute) {
+			PluralPersistentAttribute<?, ?, T> referencedAttribute) {
 		super(
 				navigablePath,
 				referencedAttribute,
@@ -37,17 +37,17 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public SqmPath getPluralDomainPath() {
+	public SqmPath<?> getPluralDomainPath() {
 		return pluralDomainPath;
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public PluralPersistentAttribute<?,?,T> getPluralAttribute() {
+	public PluralPersistentAttribute<?, ?, T> getPluralAttribute() {
 		return pluralAttribute;
 	}
 
 	@Override
-	public SqmPath getLhs() {
+	public SqmPath<?> getLhs() {
 		return pluralDomainPath;
 	}
 

@@ -20,7 +20,7 @@ import java.util.List;
  * @author Gavin King
  */
 public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> {
-	private List<SqmValues> valuesList = new ArrayList<>();
+	private final List<SqmValues> valuesList = new ArrayList<>();
 
 	public SqmInsertValuesStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );

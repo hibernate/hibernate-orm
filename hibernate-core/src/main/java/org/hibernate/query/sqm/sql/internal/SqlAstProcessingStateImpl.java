@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.SqmAliasedNodeCollector;
 import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.sql.ast.Clause;
@@ -39,7 +38,7 @@ public class SqlAstProcessingStateImpl
 	private final SqlExpressionResolver expressionResolver;
 	private final Supplier<Clause> currentClauseAccess;
 
-	private final Map<String,Expression> expressionMap = new HashMap<>();
+	private final Map<String, Expression> expressionMap = new HashMap<>();
 
 	public SqlAstProcessingStateImpl(
 			SqlAstProcessingState parentState,

@@ -68,7 +68,7 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			visitDecodeCaseSearchedExpression( caseSearchedExpression );
 		}
 		else {
-			visitAnsiCaseSearchedExpression( caseSearchedExpression );
+			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
 		}
 	}
 

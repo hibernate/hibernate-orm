@@ -112,6 +112,7 @@ public abstract class AbstractSqmSelectQuery<T>
 				new SqmRoot<>(
 						nodeBuilder().getDomainModel().entity( entityClass ),
 						null,
+						true,
 						nodeBuilder()
 				)
 		);
@@ -125,7 +126,7 @@ public abstract class AbstractSqmSelectQuery<T>
 
 	@Override
 	public <X> SqmRoot<X> from(EntityType<X> entityType) {
-		return addRoot( new SqmRoot<>( (EntityDomainType<X>) entityType, null, nodeBuilder() ) );
+		return addRoot( new SqmRoot<>( (EntityDomainType<X>) entityType, null, true, nodeBuilder() ) );
 	}
 
 
@@ -250,6 +251,5 @@ public abstract class AbstractSqmSelectQuery<T>
 			sb.setLength( sb.length() - 2 );
 		}
 		sqmQueryPart.appendHqlString( sb );
-		sb.append( ')' );
 	}
 }

@@ -122,12 +122,14 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
-		if ( selectClause.getSqlSelections().size() == 1 ) {
-			SqlSelection first = selectClause.getSqlSelections().get( 0 );
-			return first.getExpressionType();
-		}
-		else {
-			return null;
+		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		switch ( sqlSelections.size() ) {
+			case 1:
+				return sqlSelections.get( 0 ).getExpressionType();
+			default:
+				// todo (6.0): At some point we should create an ArrayTupleType and return that
+			case 0:
+				return null;
 		}
 	}
 

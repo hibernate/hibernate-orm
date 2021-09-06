@@ -10,7 +10,6 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -37,7 +36,7 @@ public class BasicSqmPathSource<J>
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		throw new IllegalPathUsageException( "Basic paths cannot be dereferenced" );
+		throw new IllegalStateException( "Basic paths cannot be dereferenced" );
 	}
 
 	@Override

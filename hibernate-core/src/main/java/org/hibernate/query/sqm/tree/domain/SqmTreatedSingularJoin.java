@@ -9,8 +9,9 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +28,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				(SingularPersistentAttribute) wrappedPath.getAttribute(),
+				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -35,6 +36,13 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
+	}
+
+	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
 	}
 
 	@Override
@@ -48,20 +56,13 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SingularPersistentAttribute getReferencedPathSource() {
-		return super.getReferencedPathSource();
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
 	}
 
 	@Override
-	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
-		return treatTarget.getExpressableJavaTypeDescriptor();
-	}
-
-	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmTreatedSingularJoin( wrappedPath, treatTarget, getAlias() );
+	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedSingularJoin<>( wrappedPath, treatTarget, getAlias() );
 	}
 
 	@Override

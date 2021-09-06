@@ -6,7 +6,13 @@
  */
 package org.hibernate.query.criteria;
 
+import java.util.Collection;
+import java.util.Map;
+import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
@@ -46,4 +52,19 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	default JpaPath<?> getParentPath() {
 		return getLhs();
 	}
+
+	@Override
+	<Y> JpaPath<Y> get(SingularAttribute<? super T, Y> attribute);
+
+	@Override
+	<E, C extends Collection<E>> JpaExpression<C> get(PluralAttribute<T, C, E> collection);
+
+	@Override
+	<K, V, M extends Map<K, V>> JpaExpression<M> get(MapAttribute<T, K, V> map);
+
+	@Override
+	JpaExpression<Class<? extends T>> type();
+
+	@Override
+	<Y> JpaPath<Y> get(String attributeName);
 }

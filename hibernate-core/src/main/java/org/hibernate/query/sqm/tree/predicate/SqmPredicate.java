@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface SqmPredicate
-		extends SqmVisitableNode, JpaPredicate, SqmExpression<Boolean>, DomainResultProducer<Boolean> {
+		extends SqmVisitableNode, JpaPredicate, SqmExpression<Boolean> {
 	@Override
 	default JavaTypeDescriptor<Boolean> getJavaTypeDescriptor(){
 		return BooleanTypeDescriptor.INSTANCE;

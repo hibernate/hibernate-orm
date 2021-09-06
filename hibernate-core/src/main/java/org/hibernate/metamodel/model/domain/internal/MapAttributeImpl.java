@@ -56,6 +56,20 @@ class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K, V>, V>
 	}
 
 	@Override
+	public SqmPathSource<?> findSubPathSource(String name) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case INDEX:
+					return keyPathSource;
+				case ELEMENT:
+					return getElementPathSource();
+			}
+		}
+		return getElementPathSource().findSubPathSource( name );
+	}
+
+	@Override
 	public SimpleDomainType<K> getKeyType() {
 		return (SimpleDomainType<K>) keyPathSource.getSqmPathType();
 	}

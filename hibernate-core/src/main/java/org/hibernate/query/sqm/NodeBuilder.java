@@ -409,7 +409,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	@Override
 	<R> SqmTuple<R> tuple(
 			Class<R> tupleType,
-			List<JpaExpression<?>> expressions);
+			List<? extends JpaExpression<?>> expressions);
 
 	@Override
 	<R> SqmTuple<R> tuple(
@@ -419,7 +419,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	@Override
 	<R> SqmTuple<R> tuple(
 			DomainType<R> tupleType,
-			List<JpaExpression<?>> expressions);
+			List<? extends JpaExpression<?>> expressions);
 
 	@Override
 	SqmPredicate and(Expression<Boolean> x, Expression<Boolean> y);
@@ -603,7 +603,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmInPredicate<T> in(Expression<? extends T> expression, T... values);
 
 	@Override
-	<T> SqmInPredicate<T> in(Expression<? extends T> expression, List<T> values);
+	<T> SqmInPredicate<T> in(Expression<? extends T> expression, Collection<T> values);
 
 	<T> SqmInPredicate<T> in(Expression<? extends T> expression, SqmSubQuery<T> subQuery);
 
@@ -620,7 +620,7 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<M extends Map<?,?>> SqmExpression<Integer> mapSize(JpaExpression<M> mapExpression);
 
 	@Override
-	SqmExpression<Integer> mapSize(Map map);
+	<M extends Map<?, ?>> SqmExpression<Integer> mapSize(M map);
 
 	@Override
 	SqmSortSpecification sort(

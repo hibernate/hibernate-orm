@@ -72,7 +72,6 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 	@Override
 	public SqmCorrelatedListJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedListJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
@@ -80,8 +79,8 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 				getSqmJoinType(),
 				isFetched(),
 				nodeBuilder(),
-				(SqmCorrelatedRootJoin<O>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmListJoin<O, T>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -48,6 +49,16 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	public FirebirdSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		if ( getDialect().getVersion() >= 300 ) {
+			booleanExpressionPredicate.getExpression().accept( this );
+		}
+		else {
+			super.visitBooleanExpressionPredicate( booleanExpressionPredicate );
+		}
 	}
 
 	@Override

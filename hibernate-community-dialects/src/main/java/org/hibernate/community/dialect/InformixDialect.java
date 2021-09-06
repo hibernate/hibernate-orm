@@ -168,8 +168,8 @@ public class InformixDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
-				"instr(?2, ?1)",
-				"instr(?2, ?1, ?3)"
+				"instr(?2,?1)",
+				"instr(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		//coalesce() and nullif() both supported since Informix 12
@@ -307,7 +307,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select systables.tabname as sequence_name, syssequences.* from syssequences join systables on syssequences.tabid = systables.tabid where tabtype = 'Q'";
+		return "select systables.tabname as sequence_name,syssequences.* from syssequences join systables on syssequences.tabid=systables.tabid where tabtype='Q'";
 	}
 
 	@Override
@@ -322,7 +322,7 @@ public class InformixDialect extends Dialect {
 
 	@Override
 	public String getFromDual() {
-		return "from (select 0 from systables where tabid = 1) as dual";
+		return "from (select 0 from systables where tabid=1) as dual";
 	}
 
 	@Override

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import java.io.Serializable;
+
 import org.hibernate.query.sqm.NodeBuilder;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.query.sqm.NodeBuilder;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmNode implements SqmNode {
+public abstract class AbstractSqmNode implements SqmNode, Serializable {
 	private final NodeBuilder builder;
 
 	protected AbstractSqmNode(NodeBuilder builder) {

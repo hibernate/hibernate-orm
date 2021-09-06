@@ -21,7 +21,6 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -62,9 +61,9 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public SqmFrom<?,O> getLhs() {
+	public SqmFrom<?, O> getLhs() {
 		//noinspection unchecked
-		return (SqmFrom) super.getLhs();
+		return (SqmFrom<?, O>) super.getLhs();
 	}
 
 	@Override

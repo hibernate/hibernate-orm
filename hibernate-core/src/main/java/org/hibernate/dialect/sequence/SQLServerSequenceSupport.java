@@ -19,6 +19,6 @@ public final class SQLServerSequenceSupport extends ANSISequenceSupport {
 
 	@Override
 	public String getSequencePreviousValString(String sequenceName) throws MappingException {
-		return "select convert(varchar(200), current_value) from sys.sequences where name = '" + sequenceName + "'";
+		return "select convert(varchar(200),current_value) from sys.sequences where name='" + sequenceName + "'";
 	}
 }

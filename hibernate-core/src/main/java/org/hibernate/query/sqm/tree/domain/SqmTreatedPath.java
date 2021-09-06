@@ -16,10 +16,5 @@ public interface SqmTreatedPath<T, S extends T> extends SqmPathWrapper<T, S> {
 	EntityDomainType<S> getTreatTarget();
 
 	@Override
-	default SqmPathSource<S> getNodeType() {
-		return getTreatTarget();
-	}
-
-	@Override
 	SqmPath<T> getWrappedPath();
 }

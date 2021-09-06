@@ -108,9 +108,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 			String aliases = selectAliases( sql, afterSelectOffset, fromOffset, result ); //warning: changes result by side-effect
 			result.insert( selectOffset, ( hasCommonTables ? "," : "with" )
-					+ " query_ as (select row_.*, row_number() over (order by current_timestamp) as rownumber_ from (" )
+					+ " query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" )
 				.append( ") row_) select " ).append( aliases )
-				.append( " from query_ where rownumber_ >= ? and rownumber_ < ?" );
+				.append( " from query_ where rownumber_>=? and rownumber_<?" );
 		}
 
 		return result.toString();
@@ -186,9 +186,9 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 
 			String aliases = selectAliases( sql, afterSelectOffset, fromOffset, result ); //warning: changes result by side-effect
 			result.insert( selectOffset, ( hasCommonTables ? "," : "with" )
-					+ " query_ as (select row_.*, row_number() over (order by current_timestamp) as rownumber_ from (" )
+					+ " query_ as (select row_.*,row_number() over (order by current_timestamp) as rownumber_ from (" )
 					.append( ") row_) select " ).append( aliases )
-					.append( " from query_ where rownumber_ >= ? and rownumber_ < ?" );
+					.append( " from query_ where rownumber_>=? and rownumber_<?" );
 		}
 
 		return result.toString();
@@ -272,7 +272,7 @@ public class SQLServer2005LimitHandler extends AbstractLimitHandler {
 		}
 		while ( offset < fromOffset );
 
-		return String.join( ", ", aliases );
+		return String.join( ",", aliases );
 	}
 
 	private int getAliasIndex(String sql) {

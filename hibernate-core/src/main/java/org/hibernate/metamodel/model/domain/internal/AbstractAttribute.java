@@ -9,11 +9,13 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import javax.persistence.metamodel.Attribute;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
@@ -106,49 +108,25 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 		return declaringType.getTypeName() + '#' + name + '(' + attributeClassification + ')';
 	}
 
-	/**
-	 * Used by JDK serialization...
-	 *
-	 * @param ois The input stream from which we are being read...
-	 * @throws java.io.IOException Indicates a general IO stream exception
-	 * @throws ClassNotFoundException Indicates a class resolution issue
-	 */
-	@SuppressWarnings("unchecked")
-	protected void readObject(ObjectInputStream ois) throws IOException, ClassNotFoundException {
-		ois.defaultReadObject();
-		final String memberDeclaringClassName = ( String ) ois.readObject();
-		final String memberName = ( String ) ois.readObject();
-		final String memberType = ( String ) ois.readObject();
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Serialization
 
-		final Class memberDeclaringClass = Class.forName(
-				memberDeclaringClassName,
-				false,
-				declaringType.getJavaType().getClassLoader()
-		);
-		try {
-			this.member = "method".equals( memberType )
-					? memberDeclaringClass.getMethod( memberName, ReflectHelper.NO_PARAM_SIGNATURE )
-					: memberDeclaringClass.getField( memberName );
-		}
-		catch ( Exception e ) {
-			throw new IllegalStateException(
-					"Unable to locate member [" + memberDeclaringClassName + "#"
-							+ memberName + "]"
-			);
-		}
+	protected Object writeReplace() throws ObjectStreamException {
+		return new SerialForm( declaringType, name );
 	}
 
-	/**
-	 * Used by JDK serialization...
-	 *
-	 * @param oos The output stream to which we are being written...
-	 * @throws IOException Indicates a general IO stream exception
-	 */
-	protected void writeObject(ObjectOutputStream oos) throws IOException {
-		oos.defaultWriteObject();
-		oos.writeObject( getJavaMember().getDeclaringClass().getName() );
-		oos.writeObject( getJavaMember().getName() );
-		// should only ever be a field or the getter-method...
-		oos.writeObject( Method.class.isInstance( getJavaMember() ) ? "method" : "field" );
+	private static class SerialForm implements Serializable {
+		private final ManagedDomainType<?> declaringType;
+		private final String name;
+
+		public SerialForm(ManagedDomainType<?> declaringType, String name) {
+			this.declaringType = declaringType;
+			this.name = name;
+		}
+
+		private Object readResolve() {
+			return declaringType.findAttribute( name );
+		}
+
 	}
 }

@@ -13,13 +13,14 @@ package org.hibernate.sql.ast.spi;
  */
 public interface SqlAppender {
 	String NO_SEPARATOR = "";
-	String COMA_SEPARATOR = ", ";
-	String EMPTY_STRING = " ";
+	String COMA_SEPARATOR = ",";
+	char COMA_SEPARATOR_CHAR = ',';
+	char WHITESPACE = ' ';
 
-	String OPEN_PARENTHESIS = "(";
-	String CLOSE_PARENTHESIS = ")";
+	char OPEN_PARENTHESIS = '(';
+	char CLOSE_PARENTHESIS = ')';
 
-	String PARAM_MARKER = "?";
+	char PARAM_MARKER = '?';
 
 	String NULL_KEYWORD = "null";
 

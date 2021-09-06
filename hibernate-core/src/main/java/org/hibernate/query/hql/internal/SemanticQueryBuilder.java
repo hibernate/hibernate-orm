@@ -43,6 +43,7 @@ import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -54,6 +55,7 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
@@ -403,6 +405,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return new SqmRoot<>(
 				(EntityDomainType<R>) visitEntityName( entityNameContext ),
 				identificationVariable,
+				false,
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -852,7 +855,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		fromClause.visitRoots(
 				sqmRoot -> selectClause.addSelection(
-						new SqmSelection<>( sqmRoot, sqmRoot.getExplicitAlias(), creationContext.getNodeBuilder() )
+						new SqmSelection<>( sqmRoot, sqmRoot.getAlias(), creationContext.getNodeBuilder() )
 				)
 		);
 		return selectClause;
@@ -952,8 +955,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						);
 					}
 
-					final PluralPersistentAttribute<?, ?, ?> pluralAttribute = (PluralPersistentAttribute<?, ?, ?>) sqmPath.getReferencedPathSource();
-					final SqmPath<?> elementPath = pluralAttribute.getElementPathSource().createSqmPath( sqmPath );
+					final SqmPath<?> elementPath = (SqmPath<?>) sqmPath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
 					processingStateStack.getCurrent().getPathRegistry().register( elementPath );
 					return elementPath;
 				}
@@ -1534,7 +1536,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 
-		final SqmRoot<?> sqmRoot = new SqmRoot<>( entityDescriptor, alias, creationContext.getNodeBuilder() );
+		final SqmRoot<?> sqmRoot = new SqmRoot<>( entityDescriptor, alias, true, creationContext.getNodeBuilder() );
 
 		pathRegistry.register( sqmRoot );
 
@@ -1688,7 +1690,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 			else {
 				if ( getCreationOptions().useStrictJpaCompliance() ) {
-					if ( join.getExplicitAlias() != null ){
+					if ( join.getExplicitAlias() != null ) {
 						//noinspection rawtypes
 						if ( ( (SqmAttributeJoin) join ).isFetched() ) {
 							throw new StrictJpaComplianceViolation(
@@ -2158,13 +2160,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitEntityIdReference(HqlParser.EntityIdReferenceContext ctx) {
-		final SqmPath<?> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final SqmPath<Object> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
 
 		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
-			//noinspection unchecked
-			final SqmPath<?> idPath = ( (IdentifiableDomainType<?>) sqmPathType ).getIdentifierDescriptor()
-					.createSqmPath( sqmPath );
+			final SqmPathSource<?> identifierDescriptor = ( (IdentifiableDomainType<?>) sqmPathType ).getIdentifierDescriptor();
+			final SqmPath<?> idPath = sqmPath.get( identifierDescriptor.getPathName() );
 
 			if ( ctx.getChildCount() != 5 ) {
 				return idPath;
@@ -2184,12 +2185,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitEntityVersionReference(HqlParser.EntityVersionReferenceContext ctx) {
-		final SqmPath<?> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
+		final SqmPath<Object> sqmPath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final DomainType<?> sqmPathType = sqmPath.getReferencedPathSource().getSqmPathType();
 
 		if ( sqmPathType instanceof IdentifiableDomainType<?> ) {
-			final IdentifiableDomainType<?> identifiableType = (IdentifiableDomainType<?>) sqmPathType;
-			final SingularPersistentAttribute<?, ?> versionAttribute = identifiableType.findVersionAttribute();
+			@SuppressWarnings("unchecked")
+			final IdentifiableDomainType<Object> identifiableType = (IdentifiableDomainType<Object>) sqmPathType;
+			final SingularPersistentAttribute<Object, ?> versionAttribute = identifiableType.findVersionAttribute();
 			if ( versionAttribute == null ) {
 				throw new SemanticException(
 						"`" + sqmPath.getNavigablePath().getFullPath() + "` resolved to an identifiable-type (`" +
@@ -2197,7 +2199,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 
-			return versionAttribute.createSqmPath( sqmPath );
+			return sqmPath.get( versionAttribute );
 		}
 
 		throw new SemanticException( "Path does not reference an identifiable-type : " + sqmPath.getNavigablePath().getFullPath() );
@@ -3614,19 +3616,20 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			selectClause.setSelection( literal );
 		}
 		else {
-			final SqmPathSource<?> pathSource;
+			final String partName;
 			switch ( collectionReferenceCtx.getSymbol().getType() ) {
 				case HqlParser.ELEMENTS:
-					pathSource = attribute.getElementPathSource();
+					partName = CollectionPart.Nature.ELEMENT.getName();
 					break;
 				case HqlParser.INDICES:
-					pathSource = attribute.getIndexPathSource();
+					partName = CollectionPart.Nature.INDEX.getName();
 					break;
 				default:
 					throw new ParsingException( "Unexpected collection reference : " + collectionReferenceCtx.getText() );
 			}
-			subQuery.applyInferableType( pathSource.getSqmPathType() );
-			selectClause.setSelection( pathSource.createSqmPath( collectionJoin ) );
+			final SqmPath<?> path = collectionJoin.resolvePathPart( partName, true, this );
+			subQuery.applyInferableType( path.getNodeType() );
+			selectClause.setSelection( path );
 		}
 		final SqmQuerySpec<?> querySpec = subQuery.getQuerySpec();
 		querySpec.setFromClause( fromClause );
@@ -3822,13 +3825,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final SqmPathSource<?> pluralAttribute = sqmFrom.getReferencedPathSource();
 
-		if ( !( pluralAttribute instanceof PluralPersistentAttribute ) ) {
+		if ( !( pluralAttribute instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
 			throw new ParsingException( "Could not resolve identification variable [" + alias + "] as plural-attribute" );
 		}
 
-		return ( (PluralPersistentAttribute<?, ?, ?>) pluralAttribute ).getIndexPathSource().createSqmPath(
-				sqmFrom
-		);
+		return sqmFrom.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
 	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -4020,6 +4021,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.pop();
 		final SqmExpression<?> indexExpression = (SqmExpression<?>) ctx.getChild( 1 ).accept( this );
 		final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) consumer.getConsumedPart();
+		final NavigablePath navigablePath = attributeJoin.getNavigablePath().getParent().append(
+				attributeJoin.getNavigablePath().getLocalName(),
+				indexExpression.toHqlString()
+		);
+		// Reuse an existing indexed path join if possible
+		for ( SqmJoin<?, ?> sqmJoin : attributeJoin.getSqmJoins() ) {
+			if ( sqmJoin.getNavigablePath().getLocalName().equals( navigablePath.getLocalName() ) ) {
+				return sqmJoin;
+			}
+		}
+
 		final SqmExpression<?> index;
 		if ( attributeJoin instanceof SqmListJoin<?, ?> ) {
 			index = ( (SqmListJoin<?, ?>) attributeJoin ).index();
@@ -4032,6 +4044,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		attributeJoin.setJoinPredicate( creationContext.getNodeBuilder().equal( index, indexExpression ) );
 		final SqmIndexedCollectionAccessPath<?> path = new SqmIndexedCollectionAccessPath<>(
+				navigablePath,
 				attributeJoin,
 				indexExpression
 		);
@@ -4118,7 +4131,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
 
-		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
+		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
 			throw new PathException(
 					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
 			);
@@ -4130,11 +4143,13 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( attribute.getCollectionClassification() != CollectionClassification.MAP ) {
 				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
 			}
+			final TerminalNode firstNode = (TerminalNode) ctx.getChild( 0 );
+			if ( firstNode.getSymbol().getType() == HqlParser.ELEMENTS ) {
+				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+			}
 		}
 
-		SqmPath<?> result = attribute.getElementPathSource().createSqmPath(
-				pluralAttributePath
-		);
+		SqmPath<?> result = (SqmPath<?>) pluralAttributePath.resolvePathPart( CollectionPart.Nature.ELEMENT.getName(), true, this );
 
 		if ( ctx.getChildCount() == 5 ) {
 			result = consumeDomainPath( (HqlParser.DotIdentifierSequenceContext) ctx.getChild( 4 ).getChild( 1 ) );
@@ -4146,26 +4161,19 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPath<?> visitCollectionIndexNavigablePath(HqlParser.CollectionIndexNavigablePathContext ctx) {
+		if ( getCreationOptions().useStrictJpaCompliance() ) {
+			throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.HQL_COLLECTION_FUNCTION );
+		}
 		final SqmPath<?> pluralAttributePath = consumeDomainPath( (HqlParser.PathContext) ctx.getChild( 2 ) );
 		final SqmPathSource<?> referencedPathSource = pluralAttributePath.getReferencedPathSource();
 
-		if ( !(referencedPathSource instanceof PluralPersistentAttribute ) ) {
+		if ( !(referencedPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) ) {
 			throw new PathException(
 					"Illegal attempt to treat non-plural path as a plural path : " + pluralAttributePath.getNavigablePath()
 			);
 		}
 
-		final PluralPersistentAttribute<?, ?, ?> attribute = (PluralPersistentAttribute<?, ?, ?>) referencedPathSource;
-
-		if ( getCreationOptions().useStrictJpaCompliance() ) {
-			if ( attribute.getCollectionClassification() != CollectionClassification.MAP ) {
-				throw new StrictJpaComplianceViolation( StrictJpaComplianceViolation.Type.VALUE_FUNCTION_ON_NON_MAP );
-			}
-		}
-
-		return attribute.getIndexPathSource().createSqmPath(
-				pluralAttributePath
-		);
+		return (SqmPath<?>) pluralAttributePath.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
 	}
 
 	@Override
@@ -4176,16 +4184,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		SqmPath<?> result;
 		if ( sqmPath instanceof SqmMapJoin ) {
 			final SqmMapJoin<?, ?, ?> sqmMapJoin = (SqmMapJoin<?, ?, ?>) sqmPath;
-			result = sqmMapJoin.getReferencedPathSource().getIndexPathSource().createSqmPath( sqmMapJoin );
+			result = sqmMapJoin.key();
 		}
 		else {
 			assert sqmPath instanceof SqmPluralValuedSimplePath;
 			final SqmPluralValuedSimplePath<?> mapPath = (SqmPluralValuedSimplePath<?>) sqmPath;
-			final SqmPath<?> keyPath = mapPath.getReferencedPathSource()
-					.getIndexPathSource()
-					.createSqmPath( mapPath );
-			mapPath.registerReusablePath( keyPath );
-			result = keyPath;
+			result = mapPath.resolvePathPart( CollectionPart.Nature.INDEX.getName(), true, this );
 		}
 
 		if ( ctx.getChildCount() == 5 ) {
@@ -4195,10 +4199,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return result;
 	}
 
-	private SqmPath<?> consumeDomainPath(HqlParser.PathContext parserPath) {
+	private <X> SqmPath<X> consumeDomainPath(HqlParser.PathContext parserPath) {
 		final SemanticPathPart consumedPart = (SemanticPathPart) parserPath.accept( this );
 		if ( consumedPart instanceof SqmPath ) {
-			return (SqmPath<?>) consumedPart;
+			//noinspection unchecked
+			return (SqmPath<X>) consumedPart;
 		}
 
 		throw new SemanticException( "Expecting domain-model path, but found : " + consumedPart );

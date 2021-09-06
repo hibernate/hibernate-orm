@@ -18,6 +18,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
@@ -30,6 +31,16 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstT
 
 	public H2SqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void renderExpressionAsClauseItem(Expression expression) {
+		expression.accept( this );
+	}
+
+	@Override
+	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		booleanExpressionPredicate.getExpression().accept( this );
 	}
 
 	@Override

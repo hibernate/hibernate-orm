@@ -22,11 +22,13 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -106,7 +108,12 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 			);
 		}
 
-		final QueryParameterBinding<T> binding = new QueryParameterBindingImpl<>( queryParameter, sessionFactory, null, queryParametersValidationEnabled );
+		final QueryParameterBinding<T> binding = new QueryParameterBindingImpl<>(
+				queryParameter,
+				sessionFactory,
+				parameterMetadata.getInferredParameterType( queryParameter ),
+				queryParametersValidationEnabled
+		);
 		parameterBindingMap.put( queryParameter, binding );
 
 		return binding;

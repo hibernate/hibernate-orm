@@ -8,13 +8,14 @@ package org.hibernate.query.sqm.tree.insert;
 
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author Gavin King
  */
-public class SqmValues {
+public class SqmValues implements Serializable {
 	private final List<SqmExpression<?>> expressions = new ArrayList<>();
 
 	public List<SqmExpression<?>> getExpressions() {

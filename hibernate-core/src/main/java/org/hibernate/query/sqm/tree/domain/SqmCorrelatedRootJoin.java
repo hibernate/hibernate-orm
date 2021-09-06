@@ -26,13 +26,14 @@ public class SqmCorrelatedRootJoin<T> extends SqmRoot<T> implements SqmCorrelati
 		super( navigablePath, referencedNavigable, nodeBuilder );
 	}
 
+	@SuppressWarnings("unchecked")
 	public static <X, J extends SqmJoin<X, ?>> SqmCorrelatedRootJoin<X> create(J correlationParent, J correlatedJoin) {
 		final SqmFrom<?, X> parentPath = (SqmFrom<?, X>) correlationParent.getParentPath();
 		final SqmCorrelatedRootJoin<X> rootJoin;
 		if ( parentPath == null ) {
-			rootJoin = new SqmCorrelatedRootJoin(
+			rootJoin = new SqmCorrelatedRootJoin<>(
 					correlationParent.getNavigablePath(),
-					correlationParent.getReferencedPathSource(),
+					(SqmPathSource<X>) correlationParent.getReferencedPathSource(),
 					correlationParent.nodeBuilder()
 			);
 		}

@@ -23,7 +23,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -152,10 +151,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		//			1) add `Navigable#createCriteriaExpression` (ala, the exist `#createSqmExpression`)
 		//			2) remove `Navigable#createSqmExpression` and use the approach used here instead.
 
-		if ( getReferencedPathSource().getSqmPathType() instanceof BasicType ) {
-			throw new IllegalStateException( "Cannot resolve path `" + attributeName + "` relative to a basic-valued path: `" + getNavigablePath() + "`" );
-		}
-
 		final SqmPathSource<?> subNavigable = getReferencedPathSource().findSubPathSource( attributeName );
 
 		if ( subNavigable == null ) {
@@ -164,19 +159,21 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return resolvePath( attributeName, subNavigable );
 	}
 
-	private SqmPath<?> resolvePath(PersistentAttribute<?, ?> attribute) {
-		return resolvePath( attribute.getName(), (SqmPathSource<?>) attribute );
+	protected <X> SqmPath<X> resolvePath(PersistentAttribute<?, X> attribute) {
+		//noinspection unchecked
+		return resolvePath( attribute.getName(), (SqmPathSource<X>) attribute );
 	}
 
-	private SqmPath<?> resolvePath(String attributeName, SqmPathSource<?> pathSource) {
+	protected <X> SqmPath<X> resolvePath(String attributeName, SqmPathSource<X> pathSource) {
 		if ( reusablePaths == null ) {
 			reusablePaths = new HashMap<>();
-			final SqmPath<?> path = pathSource.createSqmPath( this );
+			final SqmPath<X> path = pathSource.createSqmPath( this );
 			reusablePaths.put( attributeName, path );
 			return path;
 		}
 		else {
-			return reusablePaths.computeIfAbsent(
+			//noinspection unchecked
+			return (SqmPath<X>) reusablePaths.computeIfAbsent(
 					attributeName,
 					name -> pathSource.createSqmPath( this )
 			);
@@ -192,13 +189,13 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@Override
 	@SuppressWarnings("unchecked")
 	public <E, C extends java.util.Collection<E>> SqmPath<C> get(PluralAttribute<T, C, E> attribute) {
-		return (SqmPath<C>) resolvePath( (PersistentAttribute<?, ?>) attribute );
+		return resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <K, V, M extends java.util.Map<K, V>> SqmPath<M> get(MapAttribute<T, K, V> map) {
-		return (SqmPath<M>) resolvePath( (PersistentAttribute<?, ?>) map );
+		return resolvePath( (PersistentAttribute<T, M>) map );
 	}
 
 	@Override

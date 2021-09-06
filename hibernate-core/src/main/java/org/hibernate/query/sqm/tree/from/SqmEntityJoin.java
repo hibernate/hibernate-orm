@@ -26,14 +26,14 @@ import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
  * @author Steve Ebersole
  */
 public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualifiedJoin<T,T>, JpaEntityJoin<T> {
-	private final SqmRoot sqmRoot;
+	private final SqmRoot<?> sqmRoot;
 	private SqmPredicate joinPredicate;
 
 	public SqmEntityJoin(
 			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot sqmRoot) {
+			SqmRoot<?> sqmRoot) {
 		super(
 				SqmCreationHelper.buildRootNavigablePath( joinedEntityDescriptor.getHibernateEntityName(), alias ),
 				joinedEntityDescriptor,
@@ -45,18 +45,18 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 		this.sqmRoot = sqmRoot;
 	}
 
-	public SqmRoot getRoot() {
+	public SqmRoot<?> getRoot() {
 		return sqmRoot;
 	}
 
 	@Override
-	public SqmRoot findRoot() {
+	public SqmRoot<?> findRoot() {
 		return getRoot();
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return null;
@@ -68,7 +68,7 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 	}
 
 	@Override
-	public SqmPath getLhs() {
+	public SqmPath<?> getLhs() {
 		// An entity-join has no LHS
 		return null;
 	}
@@ -120,7 +120,7 @@ public class SqmEntityJoin<T> extends AbstractSqmJoin<T, T> implements SqmQualif
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),
-				(SqmRoot<?>) pathRegistry.findFromByPath( getRoot().getNavigablePath() )
+				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
 		);
 	}
 }

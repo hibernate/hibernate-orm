@@ -10,7 +10,6 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -38,7 +37,7 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D> {
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) throws IllegalPathUsageException {
-		throw new IllegalPathUsageException( "Entity discriminator cannot be de-referenced" );
+	public SqmPathSource<?> findSubPathSource(String name) {
+		throw new IllegalStateException( "Entity discriminator cannot be de-referenced" );
 	}
 }

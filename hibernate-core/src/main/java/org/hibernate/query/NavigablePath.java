@@ -6,6 +6,8 @@
  */
 package org.hibernate.query;
 
+import java.io.Serializable;
+
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -14,7 +16,7 @@ import org.hibernate.internal.util.StringHelper;
  *
  * @author Steve Ebersole
  */
-public class NavigablePath implements DotIdentifierSequence {
+public class NavigablePath implements DotIdentifierSequence, Serializable {
 	public static final String IDENTIFIER_MAPPER_PROPERTY = "_identifierMapper";
 
 	private final NavigablePath parent;

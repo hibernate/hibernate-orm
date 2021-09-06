@@ -11,13 +11,26 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmPositionalParameter;
+import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmEmptinessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInListPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.service.ServiceRegistry;
 
@@ -50,12 +63,12 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	private final Consumer<SqmParameter<?>> consumer;
 
 	@Override
-	public Object visitPositionalParameterExpression(SqmPositionalParameter expression) {
+	public Object visitPositionalParameterExpression(SqmPositionalParameter<?> expression) {
 		return visitParameter( expression );
 	}
 
 	@Override
-	public Object visitNamedParameterExpression(SqmNamedParameter expression) {
+	public Object visitNamedParameterExpression(SqmNamedParameter<?> expression) {
 		return visitParameter( expression );
 	}
 
@@ -71,26 +84,143 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	 */
 	@Override
 	public SqmJpaCriteriaParameterWrapper<?> visitJpaCriteriaParameter(JpaCriteriaParameter<?> expression) {
-		//noinspection unchecked
-		return (SqmJpaCriteriaParameterWrapper) visitParameter(
-				new SqmJpaCriteriaParameterWrapper(
-						expression.getHibernateType(),
+		return visitParameter(
+				new SqmJpaCriteriaParameterWrapper<>(
+						getInferredParameterType( expression ),
 						expression,
 						expression.nodeBuilder()
 				)
 		);
 	}
 
-	private SqmParameter<?> visitParameter(SqmParameter<?> param) {
+	private <T> AllowableParameterType<T> getInferredParameterType(JpaCriteriaParameter<?> expression) {
+		AllowableParameterType<?> parameterType = null;
+		if ( inferenceBasis != null ) {
+			final SqmExpressable<?> expressable = inferenceBasis.getExpressable();
+			if ( expressable instanceof AllowableParameterType<?> ) {
+				parameterType = (AllowableParameterType<?>) expressable;
+			}
+		}
+		if ( parameterType == null ) {
+			parameterType = expression.getHibernateType();
+		}
+		//noinspection unchecked
+		return (AllowableParameterType<T>) parameterType;
+	}
+
+	private <T extends SqmParameter<?>> T visitParameter(T param) {
 		if ( parameterExpressions == null ) {
 			parameterExpressions = new HashSet<>();
 		}
-
 		parameterExpressions.add( param );
-
 		consumer.accept( param );
-
 		return param;
 	}
 
+	private <T> SqmJpaCriteriaParameterWrapper<T> visitParameter(SqmJpaCriteriaParameterWrapper<T> param) {
+		if ( parameterExpressions == null ) {
+			parameterExpressions = new HashSet<>();
+		}
+		parameterExpressions.add( param.getJpaCriteriaParameter() );
+		consumer.accept( param );
+		return param;
+	}
+
+	private SqmExpressableAccessor<?> inferenceBasis;
+
+	private void withTypeInference(SqmExpressableAccessor<?> inferenceBasis, Runnable action) {
+		SqmExpressableAccessor<?> original = this.inferenceBasis;
+		this.inferenceBasis = inferenceBasis;
+		try {
+			action.run();
+		}
+		finally {
+			this.inferenceBasis = original;
+		}
+	}
+
+	@Override
+	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
+		path.getLhs().accept( this );
+		withTypeInference( path.getReferencedPathSource().getIndexPathSource(), () -> path.getSelectorExpression().accept( this ) );
+		return path;
+	}
+
+	@Override
+	public Object visitIsEmptyPredicate(SqmEmptinessPredicate predicate) {
+		withTypeInference( null, () -> super.visitIsEmptyPredicate( predicate ) );
+		return predicate;
+	}
+
+	@Override
+	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
+		withTypeInference( null, () -> super.visitIsNullPredicate( predicate ) );
+		return predicate;
+	}
+
+	@Override
+	public Object visitComparisonPredicate(SqmComparisonPredicate predicate) {
+		withTypeInference( predicate.getRightHandExpression(), () -> predicate.getLeftHandExpression().accept( this ) );
+		withTypeInference( predicate.getLeftHandExpression(), () -> predicate.getRightHandExpression().accept( this ) );
+		return predicate;
+	}
+
+	@Override
+	public Object visitBetweenPredicate(SqmBetweenPredicate predicate) {
+		withTypeInference( predicate.getLowerBound(), () -> predicate.getExpression().accept( this ) );
+		withTypeInference(
+				predicate.getExpression(),
+				() -> {
+					predicate.getLowerBound().accept( this );
+					predicate.getUpperBound().accept( this );
+				}
+		);
+		return predicate;
+	}
+
+	@Override
+	public Object visitLikePredicate(SqmLikePredicate predicate) {
+		withTypeInference( predicate.getPattern(), () -> predicate.getMatchExpression().accept( this ) );
+		withTypeInference(
+				predicate.getMatchExpression(),
+				() -> {
+					predicate.getPattern().accept( this );
+					if ( predicate.getEscapeCharacter() != null ) {
+						predicate.getEscapeCharacter().accept( this );
+					}
+				}
+		);
+		return predicate;
+	}
+
+	@Override
+	public Object visitMemberOfPredicate(SqmMemberOfPredicate predicate) {
+		withTypeInference( predicate.getPluralPath(), () -> predicate.getLeftHandExpression().accept( this ) );
+		predicate.getPluralPath().accept( this );
+		return predicate;
+	}
+
+	@Override
+	public Object visitInListPredicate(SqmInListPredicate<?> predicate) {
+		final SqmExpression<?> firstListElement = predicate.getListExpressions().isEmpty()
+				? null
+				: predicate.getListExpressions().get( 0 );
+		withTypeInference( firstListElement, () -> predicate.getTestExpression().accept( this ) );
+		withTypeInference(
+				predicate.getTestExpression(),
+				() -> {
+					for ( SqmExpression<?> expression : predicate.getListExpressions() ) {
+						expression.accept( this );
+					}
+				}
+		);
+		return predicate;
+	}
+
+	@Override
+	public Object visitInSubQueryPredicate(SqmInSubQueryPredicate<?> predicate) {
+		withTypeInference( predicate.getSubQueryExpression(), () -> predicate.getTestExpression().accept( this ) );
+		withTypeInference( predicate.getTestExpression(), () -> predicate.getSubQueryExpression().accept( this ) );
+		return predicate;
+	}
 }

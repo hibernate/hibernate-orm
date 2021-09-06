@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.from;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,7 +22,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
  *
  * @author Steve Ebersole
  */
-public class SqmFromClause {
+public class SqmFromClause implements Serializable {
 	private List<SqmRoot<?>> domainRoots;
 
 	public SqmFromClause() {

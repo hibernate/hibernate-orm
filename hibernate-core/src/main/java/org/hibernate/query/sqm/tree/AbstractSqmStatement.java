@@ -8,14 +8,11 @@ package org.hibernate.query.sqm.tree;
 
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
+import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 
@@ -40,7 +37,7 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	}
 
 	@Override
-	public void addParameter(SqmParameter parameter) {
+	public void addParameter(SqmParameter<?> parameter) {
 		if ( parameters == null ) {
 			parameters = new HashSet<>();
 		}
@@ -50,21 +47,21 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 
 	@Override
 	public Set<SqmParameter<?>> getSqmParameters() {
+		if ( querySource == SqmQuerySource.CRITERIA ) {
+			assert parameters == null : "SqmSelectStatement (as Criteria) should not have collected parameters";
+
+			return org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters(
+					this,
+					sqmParameter -> {},
+					nodeBuilder().getServiceRegistry()
+			);
+		}
+
 		return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
 	}
 
 	@Override
 	public ParameterResolutions resolveParameters() {
-		return new ParameterResolutions() {
-			@Override
-			public Set<SqmParameter<?>> getSqmParameters() {
-				return AbstractSqmStatement.this.getSqmParameters();
-			}
-
-			@Override
-			public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
-				return Collections.emptyMap();
-			}
-		};
+		return SqmUtil.resolveParameters( this );
 	}
 }

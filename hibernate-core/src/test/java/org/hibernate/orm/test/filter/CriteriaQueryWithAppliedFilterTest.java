@@ -25,7 +25,6 @@ import org.hibernate.annotations.ParamDef;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -76,7 +75,6 @@ public class CriteriaQueryWithAppliedFilterTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "subquery not fully implemented in v6 yet")
 	void testSubquery(SessionFactoryScope scope) {
 		final CriteriaBuilder detachedCriteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 		final CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
@@ -133,7 +131,6 @@ public class CriteriaQueryWithAppliedFilterTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "subquery not fully implemented in v6 yet")
 	void testSubqueryWithRestrictionsOnComponentTypes(SessionFactoryScope scope) {
 		final CriteriaBuilder detachedCriteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 		final CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
@@ -172,7 +169,6 @@ public class CriteriaQueryWithAppliedFilterTest {
 	}
 
 	@Test
-	@FailureExpected(reason = "subquery not fully implemented in v6 yet")
 	void testSubqueryWithRestrictionsOnComponentTypes2(SessionFactoryScope scope) {
 		final CriteriaBuilder detachedCriteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 		final CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );

@@ -52,9 +52,27 @@ public interface ForeignKeyDescriptor extends VirtualModelPart {
 
 	ModelPart getTargetPart();
 
+	default ModelPart getPart(Nature nature) {
+		if ( nature == Nature.KEY ) {
+			return getKeyPart();
+		}
+		else {
+			return getTargetPart();
+		}
+	}
+
 	Side getKeySide();
 
 	Side getTargetSide();
+
+	default Side getSide(Nature nature) {
+		if ( nature == Nature.KEY ) {
+			return getKeySide();
+		}
+		else {
+			return getTargetSide();
+		}
+	}
 
 	/**
 	 * Create a DomainResult for the referring-side of the fk

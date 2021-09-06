@@ -24,17 +24,21 @@ import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedRoot;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, DomainResultProducer<E> {
+
+	private final boolean allowJoins;
+
 	public SqmRoot(
 			EntityDomainType<E> entityType,
 			String alias,
+			boolean allowJoins,
 			NodeBuilder nodeBuilder) {
 		super( entityType, alias, nodeBuilder );
+		this.allowJoins = allowJoins;
 	}
 
 	protected SqmRoot(
@@ -42,6 +46,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 			SqmPathSource<E> referencedNavigable,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, nodeBuilder );
+		this.allowJoins = true;
 	}
 
 	public SqmRoot(
@@ -50,7 +55,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, entityType, alias, nodeBuilder );
-
+		this.allowJoins = true;
 	}
 
 	@Override
@@ -59,8 +64,22 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 		return null;
 	}
 
+	public boolean isAllowJoins() {
+		return allowJoins;
+	}
+
 	@Override
-	public SqmRoot findRoot() {
+	public void addSqmJoin(SqmJoin<E, ?> join) {
+		if ( !allowJoins ) {
+			throw new IllegalArgumentException(
+					"The root node [" + this + "] does not allow join/fetch"
+			);
+		}
+		super.addSqmJoin( join );
+	}
+
+	@Override
+	public SqmRoot<?> findRoot() {
 		return this;
 	}
 
@@ -71,11 +90,6 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 
 	public String getEntityName() {
 		return getReferencedPathSource().getHibernateEntityName();
-	}
-
-	@Override
-	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
@@ -132,7 +146,7 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E>, Doma
 	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType) {
 		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, joinType, this );
 		//noinspection unchecked
-		addSqmJoin( (SqmEntityJoin) join );
+		addSqmJoin( (SqmJoin<E, ?>) join );
 		return join;
 	}
 

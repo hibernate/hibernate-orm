@@ -20,6 +20,7 @@ import javax.persistence.metamodel.SetAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.JpaFrom;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -43,6 +44,9 @@ public interface SqmFrom<O,T> extends SqmVisitableNode, SqmPath<T>, JpaFrom<O, T
 	 */
 	@Override
 	SqmPathSource<T> getReferencedPathSource();
+
+	@Override
+	SqmPath<?> resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState);
 
 	boolean hasJoins();
 

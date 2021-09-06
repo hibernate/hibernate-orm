@@ -41,6 +41,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -155,6 +156,9 @@ public class H2Dialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
+		CommonFunctionFactory.aggregates( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.radians( queryEngine );
@@ -246,13 +250,13 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
-		return "dateadd(?1, ?2, ?3)";
+		return "dateadd(?1,?2,?3)";
 
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
-		return "datediff(?1, ?2, ?3)";
+		return "datediff(?1,?2,?3)";
 	}
 
 	@Override

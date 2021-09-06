@@ -127,7 +127,7 @@ public class SqmMappingModelHelper {
 			return ( (BasicType) nodeType );
 		}
 
-		throw new NotYetImplementedFor6Exception( DomainModelHelper.class );
+		return null;
 	}
 
 	private static ModelPart resolveSqmPath(

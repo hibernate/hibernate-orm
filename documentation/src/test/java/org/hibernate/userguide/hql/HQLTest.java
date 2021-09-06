@@ -27,8 +27,8 @@ import org.hibernate.Session;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -1355,7 +1355,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 		});
 	}
 
-	@Test @RequiresDialect(H2Dialect.class)
+	@Test
+	@RequiresDialect(H2Dialect.class)
 	public void test_hql_current_time_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-current-time-function-example[]
@@ -1385,8 +1386,8 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(Oracle8iDialect.class)
-	@RequiresDialect(MySQL5Dialect.class)
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(MySQLDialect.class)
 	public void test_hql_bit_length_function_example() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			//tag::hql-bit-length-function-example[]
@@ -1940,7 +1941,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
-	@RequiresDialect(MySQL5Dialect.class)
+	@RequiresDialect(MySQLDialect.class)
 	public void test_hql_relational_comparisons_example_3() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -2145,7 +2146,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	@RequiresDialect(H2Dialect.class)
 	@RequiresDialect(PostgreSQLDialect.class)
-	@RequiresDialect(MySQL5Dialect.class)
+	@RequiresDialect(MySQLDialect.class)
 	public void test_hql_between_predicate_example_2() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -2399,9 +2400,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(PostgreSQLDialect.class)
-	@RequiresDialect(MySQL5Dialect.class)
 	public void test_hql_group_by_example_3() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -2421,9 +2419,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect(H2Dialect.class)
-	@RequiresDialect(PostgreSQLDialect.class)
-	@RequiresDialect(MySQL5Dialect.class)
 	public void test_hql_group_by_example_4() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {

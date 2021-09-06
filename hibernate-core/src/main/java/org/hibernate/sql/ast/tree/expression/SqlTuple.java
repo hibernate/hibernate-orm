@@ -11,13 +11,19 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.tuple.TupleResult;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class SqlTuple implements Expression, SqlTupleContainer {
+public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProducer {
 	private final List<? extends Expression> expressions;
 	private final MappingModelExpressable valueMapping;
 
@@ -50,6 +56,27 @@ public class SqlTuple implements Expression, SqlTupleContainer {
 	@Override
 	public SqlTuple getSqlTuple() {
 		return this;
+	}
+
+	@Override
+	public DomainResult createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final JavaTypeDescriptor javaTypeDescriptor = ( (SqmExpressable<?>) valueMapping ).getExpressableJavaTypeDescriptor();
+		final int[] valuesArrayPositions = new int[expressions.size()];
+		for ( int i = 0; i < expressions.size(); i++ ) {
+			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+					expressions.get( i ),
+					javaTypeDescriptor,
+					creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+			).getValuesArrayPosition();
+		}
+
+		return new TupleResult(
+				valuesArrayPositions,
+				resultVariable,
+				javaTypeDescriptor
+		);
 	}
 
 	public static class Builder {

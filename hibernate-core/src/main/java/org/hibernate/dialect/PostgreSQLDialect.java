@@ -175,15 +175,15 @@ public class PostgreSQLDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch ( unit ) {
 			case NANOSECOND:
-				return "(?3 + (?2)/1e3 * interval '1 microsecond')";
+				return "(?3+(?2)/1e3*interval '1 microsecond')";
 			case NATIVE:
-				return "(?3 + (?2) * interval '1 second')";
+				return "(?3+(?2)*interval '1 second')";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3 + (?2) * interval '3 month')";
+				return "(?3+(?2)*interval '3 month')";
 			case WEEK: //week is not supported in interval literals
-				return "(?3 + (?2) * interval '7 day')";
+				return "(?3+(?2)*interval '7 day')";
 			default:
-				return "(?3 + (?2) * interval '1 ?1')";
+				return "(?3+(?2)*interval '1 ?1')";
 		}
 	}
 
@@ -324,7 +324,7 @@ public class PostgreSQLDialect extends Dialect {
 				"locate",
 				StandardBasicTypes.INTEGER,
 				"position(?1 in ?2)",
-				"(position(?1 in substring(?2 from ?3)) + (?3) - 1)"
+				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		if ( getVersion() >= 940 ) {

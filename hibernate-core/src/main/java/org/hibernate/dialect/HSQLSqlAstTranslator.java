@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
@@ -15,10 +16,13 @@ import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -32,6 +36,68 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 
 	public HSQLSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void renderExpressionAsClauseItem(Expression expression) {
+		expression.accept( this );
+	}
+
+	@Override
+	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		booleanExpressionPredicate.getExpression().accept( this );
+	}
+
+	// HSQL does not allow CASE expressions where all result arms contain plain parameters.
+	// At least one result arm must provide some type context for inference,
+	// so we cast the first result arm if we encounter this condition
+
+	@Override
+	protected void visitAnsiCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
+			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSearchedExpression(
+					caseSearchedExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+		}
+	}
+
+	@Override
+	protected void visitAnsiCaseSimpleExpression(
+			CaseSimpleExpression caseSimpleExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
+			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSimpleExpression(
+					caseSimpleExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+		}
 	}
 
 	@Override
@@ -98,9 +164,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			case NOT_DISTINCT_FROM:
 				// HSQL does not like parameters in the distinct from predicate
 				render( lhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-				appendSql( " " );
 				appendSql( operator.sqlText() );
-				appendSql( " " );
 				render( rhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 				break;
 			default:

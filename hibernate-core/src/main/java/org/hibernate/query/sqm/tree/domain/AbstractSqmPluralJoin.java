@@ -27,7 +27,6 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		super(
 				lhs,
 				joinedNavigable,
@@ -39,12 +38,12 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 	}
 
 	@Override
-	public PluralPersistentAttribute<O,C,E> getReferencedPathSource() {
+	public PluralPersistentAttribute<O, C, E> getReferencedPathSource() {
 		return (PluralPersistentAttribute<O, C, E>) super.getReferencedPathSource();
 	}
 
 	@Override
-	public PluralPersistentAttribute<O,C,E> getModel() {
+	public PluralPersistentAttribute<O, C, E> getModel() {
 		return getReferencedPathSource();
 	}
 }

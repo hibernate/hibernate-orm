@@ -219,13 +219,13 @@ public class SybaseASEDialect extends SybaseDialect {
 				// If the driver or database do not support bigdatetime and bigtime types,
 				// we try to operate on milliseconds instead
 				if ( getVersion() < 1550 || jtdsDriver ) {
-					return "dateadd(millisecond, ?2/1000000, ?3)";
+					return "dateadd(millisecond,?2/1000000,?3)";
 				}
 				else {
-					return "dateadd(mcs, ?2/1000, ?3)";
+					return "dateadd(mcs,?2/1000,?3)";
 				}
 			default:
-				return "dateadd(?1, ?2, ?3)";
+				return "dateadd(?1,?2,?3)";
 		}
 	}
 
@@ -235,9 +235,9 @@ public class SybaseASEDialect extends SybaseDialect {
 		switch ( unit ) {
 			case NANOSECOND:
 			case NATIVE:
-				return "(datediff(mcs, ?2, ?3)*1000)";
+				return "(datediff(mcs,?2,?3)*1000)";
 			default:
-				return "datediff(?1, ?2, ?3)";
+				return "datediff(?1,?2,?3)";
 		}
 	}
 

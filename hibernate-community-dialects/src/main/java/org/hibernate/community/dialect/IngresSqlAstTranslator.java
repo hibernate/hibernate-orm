@@ -151,7 +151,7 @@ public class IngresSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	@Override
 	protected String getFromDual() {
 		//this is only necessary if the query has a where clause
-		return " from (select 0) as dual";
+		return " from (select 0) dual";
 	}
 
 	@Override

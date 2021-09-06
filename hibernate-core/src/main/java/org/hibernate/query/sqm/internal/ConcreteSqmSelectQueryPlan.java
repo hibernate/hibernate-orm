@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import javax.persistence.Tuple;
 import javax.persistence.TupleElement;
+import javax.persistence.criteria.CompoundSelection;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -22,6 +23,7 @@ import org.hibernate.internal.EmptyScrollableResults;
 import org.hibernate.internal.util.streams.StingArrayCollector;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -32,6 +34,7 @@ import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -140,10 +143,22 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		if ( Tuple.class.isAssignableFrom( resultType ) ) {
 			// resultType is Tuple..
 			if ( queryOptions.getTupleTransformer() == null ) {
-				final Map<TupleElement<?>, Integer> tupleElementMap = new IdentityHashMap<>( selections.size() );
-				for ( int i = 0; i < selections.size(); i++ ) {
-					final SqmSelection<?> selection = selections.get( i );
-					tupleElementMap.put( selection.getSelectableNode(), i );
+				final Map<TupleElement<?>, Integer> tupleElementMap;
+				if ( selections.size() == 1 && selections.get( 0 ).getSelectableNode() instanceof CompoundSelection<?> ) {
+					final List<? extends JpaSelection<?>> selectionItems = selections.get( 0 )
+							.getSelectableNode()
+							.getSelectionItems();
+					tupleElementMap = new IdentityHashMap<>( selectionItems.size() );
+					for ( int i = 0; i < selectionItems.size(); i++ ) {
+						tupleElementMap.put( selectionItems.get( i ), i );
+					}
+				}
+				else {
+					tupleElementMap = new IdentityHashMap<>( selections.size() );
+					for ( int i = 0; i < selections.size(); i++ ) {
+						final SqmSelection<?> selection = selections.get( i );
+						tupleElementMap.put( selection.getSelectableNode(), i );
+					}
 				}
 				return (RowTransformer<R>) new RowTransformerJpaTupleImpl( new TupleMetadata( tupleElementMap ) );
 			}

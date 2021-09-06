@@ -241,7 +241,7 @@ public class ToOneAttributeMapping
 		}
 
 		this.navigableRole = navigableRole;
-		final CollectionPart.Nature nature = CollectionPart.Nature.fromName(
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact(
 				getNavigableRole().getParent().getLocalName()
 		);
 		if ( nature == null ) {

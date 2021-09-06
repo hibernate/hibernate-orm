@@ -6,23 +6,21 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
+import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
  */
 public class DynamicInstantiationArgument<T> {
-	private final ArgumentDomainResult<T> argumentResult;
+	private final DomainResultProducer<T> argumentResultProducer;
 	private final String alias;
 
 	@SuppressWarnings("WeakerAccess")
-	public DynamicInstantiationArgument(
-			String alias,
-			DomainResultProducer<T> argumentResultProducer,
-			DomainResultCreationState creationState) {
-		this.argumentResult = new ArgumentDomainResult<>( argumentResultProducer.createDomainResult( alias, creationState ) );
+	public DynamicInstantiationArgument(DomainResultProducer<T> argumentResultProducer, String alias) {
+		this.argumentResultProducer = argumentResultProducer;
 		this.alias = alias;
 	}
 
@@ -31,6 +29,12 @@ public class DynamicInstantiationArgument<T> {
 	}
 
 	public ArgumentDomainResult<T> buildArgumentDomainResult(DomainResultCreationState creationState) {
-		return argumentResult;
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
+				.getCurrentProcessingState()
+				.getSqlExpressionResolver();
+		if ( sqlExpressionResolver instanceof BaseSqmToSqlAstConverter.SqmAliasedNodeCollector ) {
+			( (BaseSqmToSqlAstConverter.SqmAliasedNodeCollector) sqlExpressionResolver ).next();
+		}
+		return new ArgumentDomainResult<>( argumentResultProducer.createDomainResult( alias, creationState ) );
 	}
 }

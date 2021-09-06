@@ -11,11 +11,13 @@ import java.math.BigInteger;
 import java.util.Collection;
 import javax.persistence.criteria.Expression;
 
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
+import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -58,43 +60,36 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.LONG );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.INTEGER );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.FLOAT );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.DOUBLE );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.STRING );
 	}
 
@@ -125,7 +120,19 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public SqmPredicate in(Collection<?> values) {
-		return nodeBuilder().in( this, values );
+		final SqmInPredicate<T> in = nodeBuilder().in( this );
+		for ( Object value : values ) {
+			if ( value instanceof SqmExpression<?> ) {
+				//noinspection unchecked
+				in.value( (JpaExpression<? extends T>) value );
+			}
+			else {
+				//noinspection unchecked
+				in.value( (T) value );
+			}
+		}
+
+		return in;
 	}
 
 	@Override

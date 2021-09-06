@@ -289,6 +289,7 @@ public class QuerySplitter {
 			final SqmRoot<?> copy = new SqmRoot<>(
 					pathSource,
 					sqmRoot.getExplicitAlias(),
+					sqmRoot.isAllowJoins(),
 					sqmRoot.nodeBuilder()
 			);
 			return (SqmRoot<?>) getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
@@ -632,7 +633,7 @@ public class QuerySplitter {
 
 
 		@Override
-		public SqmPositionalParameter visitPositionalParameterExpression(SqmPositionalParameter expression) {
+		public SqmPositionalParameter visitPositionalParameterExpression(SqmPositionalParameter<?> expression) {
 			return new SqmPositionalParameter(
 					expression.getPosition(),
 					expression.allowMultiValuedBinding(),
@@ -641,7 +642,7 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmNamedParameter visitNamedParameterExpression(SqmNamedParameter expression) {
+		public SqmNamedParameter visitNamedParameterExpression(SqmNamedParameter<?> expression) {
 			return new SqmNamedParameter(
 					expression.getName(),
 					expression.allowMultiValuedBinding(),
@@ -650,12 +651,12 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmLiteralEntityType visitEntityTypeLiteralExpression(SqmLiteralEntityType expression) {
+		public SqmLiteralEntityType visitEntityTypeLiteralExpression(SqmLiteralEntityType<?> expression) {
 			return new SqmLiteralEntityType( expression.getNodeType(), expression.nodeBuilder() );
 		}
 
 		@Override
-		public SqmUnaryOperation visitUnaryOperationExpression(SqmUnaryOperation expression) {
+		public SqmUnaryOperation visitUnaryOperationExpression(SqmUnaryOperation<?> expression) {
 			return new SqmUnaryOperation(
 					expression.getOperation(),
 					(SqmExpression) expression.getOperand().accept( this )
@@ -672,7 +673,7 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmBinaryArithmetic visitBinaryArithmeticExpression(SqmBinaryArithmetic expression) {
+		public SqmBinaryArithmetic visitBinaryArithmeticExpression(SqmBinaryArithmetic<?> expression) {
 			return new SqmBinaryArithmetic(
 					expression.getOperator(), (SqmExpression) expression.getLeftHandOperand().accept( this ),
 					(SqmExpression) expression.getRightHandOperand().accept( this ),
@@ -682,7 +683,7 @@ public class QuerySplitter {
 		}
 
 		@Override
-		public SqmSubQuery visitSubQueryExpression(SqmSubQuery expression) {
+		public SqmSubQuery visitSubQueryExpression(SqmSubQuery<?> expression) {
 			// its not supported for a SubQuery to define a dynamic instantiation, so
 			//		any "selectable node" will only ever be an SqmExpression
 			return new SqmSubQuery(

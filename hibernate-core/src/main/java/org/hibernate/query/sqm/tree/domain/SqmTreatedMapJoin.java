@@ -8,25 +8,25 @@ package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> implements SqmTreatedPath<V,S> {
-	private final SqmMapJoin<O,K,V> wrappedPath;
+public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S> implements SqmTreatedPath<V, S> {
+	private final SqmMapJoin<O, K, V> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
 	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedMapJoin(
-			SqmMapJoin<O,K,V> wrappedPath,
+			SqmMapJoin<O, K, V> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				( (SqmMapJoin) wrappedPath ).getModel(),
+				( (SqmMapJoin<O, K, S>) wrappedPath ).getModel(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -34,6 +34,13 @@ public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> imp
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
+	}
+
+	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<V, ?>) join );
 	}
 
 	@Override
@@ -47,14 +54,13 @@ public class SqmTreatedMapJoin<O,K,V, S extends V> extends SqmMapJoin<O,K,S> imp
 	}
 
 	@Override
-	public JavaTypeDescriptor<S> getJavaTypeDescriptor() {
-		return null;
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmTreatedMapJoin(
+	public SqmMapJoin<O, K, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedMapJoin<>(
 				wrappedPath,
 				treatTarget,
 				getAlias()

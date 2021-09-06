@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 /**
@@ -39,6 +40,13 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
+	}
+
+	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
@@ -51,6 +59,11 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return wrappedPath;
+	}
+
+	@Override
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
 	}
 
 	@Override
@@ -69,7 +82,7 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {

@@ -19,6 +19,6 @@ public final class DerbySequenceSupport extends DB2SequenceSupport {
 
 	@Override
 	public String getSelectSequencePreviousValString(String sequenceName) throws MappingException {
-		return "SYSCS_UTIL.SYSCS_PEEK_AT_SEQUENCE('HIBERNATE_ORM_TEST', '" + sequenceName.toUpperCase() + "')";
+		return "SYSCS_UTIL.SYSCS_PEEK_AT_SEQUENCE('HIBERNATE_ORM_TEST','" + sequenceName.toUpperCase() + "')";
 	}
 }

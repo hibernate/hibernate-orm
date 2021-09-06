@@ -6,18 +6,22 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * @author Steve Ebersole
  */
-public class LikePredicate implements Predicate {
+public class LikePredicate extends AbstractPredicate {
 	private final Expression matchExpression;
 	private final Expression pattern;
 	private final Expression escapeCharacter;
-	private final boolean negated;
 	private final boolean isCaseSensitive;
+
+	public LikePredicate(Expression matchExpression, Expression pattern) {
+		this( matchExpression, pattern, null );
+	}
 
 	public LikePredicate(
 			Expression matchExpression,
@@ -31,7 +35,7 @@ public class LikePredicate implements Predicate {
 			Expression pattern,
 			Expression escapeCharacter,
 			boolean negated) {
-		this( matchExpression, pattern, escapeCharacter, negated, true );
+		this( matchExpression, pattern, escapeCharacter, negated, true, null );
 	}
 
 	public LikePredicate(
@@ -39,16 +43,13 @@ public class LikePredicate implements Predicate {
 			Expression pattern,
 			Expression escapeCharacter,
 			boolean negated,
-			boolean isCaseSensitive) {
+			boolean isCaseSensitive,
+			JdbcMappingContainer expressionType) {
+		super( expressionType, negated );
 		this.matchExpression = matchExpression;
 		this.pattern = pattern;
 		this.escapeCharacter = escapeCharacter;
-		this.negated = negated;
 		this.isCaseSensitive = isCaseSensitive;
-	}
-
-	public LikePredicate(Expression matchExpression, Expression pattern) {
-		this( matchExpression, pattern, null );
 	}
 
 	public Expression getMatchExpression() {
@@ -63,17 +64,8 @@ public class LikePredicate implements Predicate {
 		return escapeCharacter;
 	}
 
-	public boolean isNegated() {
-		return negated;
-	}
-
 	public boolean isCaseSensitive() {
 		return isCaseSensitive;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return false;
 	}
 
 	@Override

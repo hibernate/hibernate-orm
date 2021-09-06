@@ -175,8 +175,8 @@ public class DomainParameterXref {
 	/**
 	 * Get all of the QueryParameters mapped by this xref
 	 */
-	public Set<QueryParameterImplementor<?>> getQueryParameters() {
-		return sqmParamsByQueryParam.keySet();
+	public Map<QueryParameterImplementor<?>, List<SqmParameter>> getQueryParameters() {
+		return sqmParamsByQueryParam;
 	}
 
 	public int getQueryParameterCount() {
@@ -215,6 +215,9 @@ public class DomainParameterXref {
 	public QueryParameterImplementor<?> getQueryParameter(SqmParameter sqmParameter) {
 		if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper ) {
 			return ( (SqmJpaCriteriaParameterWrapper) sqmParameter ).getJpaCriteriaParameter();
+		}
+		else if ( sqmParameter instanceof QueryParameterImplementor<?> ) {
+			return (QueryParameterImplementor<?>) sqmParameter;
 		}
 		return queryParamBySqmParam.get( sqmParameter );
 	}

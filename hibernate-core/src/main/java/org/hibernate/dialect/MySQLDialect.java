@@ -465,11 +465,11 @@ public class MySQLDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
-				return "timestampadd(microsecond, (?2)/1e3, ?3)";
+				return "timestampadd(microsecond,(?2)/1e3,?3)";
 			case NATIVE:
-				return "timestampadd(microsecond, ?2, ?3)";
+				return "timestampadd(microsecond,?2,?3)";
 			default:
-				return "timestampadd(?1, ?2, ?3)";
+				return "timestampadd(?1,?2,?3)";
 		}
 	}
 
@@ -477,11 +477,11 @@ public class MySQLDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
-				return "timestampdiff(microsecond, ?2, ?3)*1e3";
+				return "timestampdiff(microsecond,?2,?3)*1e3";
 			case NATIVE:
-				return "timestampdiff(microsecond, ?2, ?3)";
+				return "timestampdiff(microsecond,?2,?3)";
 			default:
-				return "timestampdiff(?1, ?2, ?3)";
+				return "timestampdiff(?1,?2,?3)";
 		}
 	}
 
@@ -773,7 +773,7 @@ public class MySQLDialect extends Dialect {
 			else {
 				orderByElement.append( "1 else 0" );
 			}
-			orderByElement.append( " end, " );
+			orderByElement.append( " end," );
 		}
 		// Nulls precedence has already been handled so passing NONE value.
 		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );

@@ -167,6 +167,7 @@ public class CUBRIDDialect extends Dialect {
 		CommonFunctionFactory.lastDay( queryEngine );
 		CommonFunctionFactory.weekQuarter( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.md5( queryEngine );
 		CommonFunctionFactory.trunc( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
@@ -386,11 +387,11 @@ public class CUBRIDDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
-				return "adddate(?3, interval (?2)/1e6 millisecond)";
+				return "adddate(?3,interval (?2)/1e6 millisecond)";
 			case NATIVE:
-				return "adddate(?3, interval ?2 millisecond)";
+				return "adddate(?3,interval ?2 millisecond)";
 			default:
-				return "adddate(?3, interval ?2 ?1)";
+				return "adddate(?3,interval ?2 ?1)";
 		}
 	}
 

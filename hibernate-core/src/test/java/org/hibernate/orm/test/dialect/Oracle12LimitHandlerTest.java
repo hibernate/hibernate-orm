@@ -22,7 +22,7 @@ public class Oracle12LimitHandlerTest {
 	@Test
 	public void testSqlWithSpace() {
 		final String sql = "select  p.name from Person p where p.id = 1 for update";
-		final String expected = "select * from ( select  p.name from Person p where p.id = 1 ) where rownum <= ? for update";
+		final String expected = "select * from (select  p.name from Person p where p.id = 1) where rownum<=? for update";
 
 		final QueryParameters queryParameters = getQueryParameters( 0, 5 );
 		final String processedSql = Oracle12LimitHandler.INSTANCE.processSql( sql, queryParameters );
@@ -33,7 +33,7 @@ public class Oracle12LimitHandlerTest {
 	@Test
 	public void testSqlWithSpaceInsideQuotedString() {
 		final String sql = "select p.name from Person p where p.name =  ' this is a  string with spaces  ' for update";
-		final String expected = "select * from ( select p.name from Person p where p.name =  ' this is a  string with spaces  ' ) where rownum <= ? for update";
+		final String expected = "select * from (select p.name from Person p where p.name =  ' this is a  string with spaces  ') where rownum<=? for update";
 
 		final QueryParameters queryParameters = getQueryParameters( 0, 5 );
 		final String processedSql = Oracle12LimitHandler.INSTANCE.processSql( sql, queryParameters );
@@ -55,7 +55,7 @@ public class Oracle12LimitHandlerTest {
 	@Test
 	public void testSqlWithForUpdateInsideAndOutsideQuotedStringA() {
 		final String sql = "select a.prop from A a where a.name =  'this is for update ' for update";
-		final String expected = "select * from ( select a.prop from A a where a.name =  'this is for update ' ) where rownum <= ? for update";
+		final String expected = "select * from (select a.prop from A a where a.name =  'this is for update ') where rownum<=? for update";
 
 		final QueryParameters queryParameters = getQueryParameters( 0, 5 );
 		final String processedSql = Oracle12LimitHandler.INSTANCE.processSql( sql, queryParameters );

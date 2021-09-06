@@ -36,7 +36,7 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot sqmRoot,
+			SqmRoot<?> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,
 			SqmEntityJoin<T> correlationParent) {
 		super( joinedEntityDescriptor, alias, joinType, sqmRoot );
@@ -67,14 +67,13 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 	@Override
 	public SqmCorrelatedEntityJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedEntityJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),
 				getSqmJoinType(),
-				(SqmRoot<?>) pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
-				(SqmCorrelatedRootJoin<T>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmEntityJoin<T>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

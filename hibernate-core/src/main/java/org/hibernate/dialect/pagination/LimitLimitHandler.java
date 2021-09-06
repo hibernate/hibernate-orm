@@ -25,7 +25,7 @@ public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 
 	@Override
 	protected String limitClause(boolean hasFirstRow) {
-		return hasFirstRow ? " limit ?, ?" : " limit ?";
+		return hasFirstRow ? " limit ?,?" : " limit ?";
 	}
 
 	private static final Pattern FOR_UPDATE_PATTERN =

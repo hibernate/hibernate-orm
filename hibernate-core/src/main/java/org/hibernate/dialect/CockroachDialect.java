@@ -229,7 +229,7 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return "select sequence_name, sequence_schema, sequence_catalog, start_value, minimum_value, maximum_value, increment from information_schema.sequences";
+		return "select sequence_name,sequence_schema,sequence_catalog,start_value,minimum_value,maximum_value,increment from information_schema.sequences";
 	}
 
 	@Override
@@ -305,15 +305,15 @@ public class CockroachDialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch ( unit ) {
 			case NANOSECOND:
-				return "(?3 + (?2)/1e3 * interval '1 microsecond')";
+				return "(?3+(?2)/1e3*interval '1 microsecond')";
 			case NATIVE:
-				return "(?3 + (?2) * interval '1 microsecond')";
+				return "(?3+(?2)*interval '1 microsecond')";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3 + (?2) * interval '3 month')";
+				return "(?3+(?2)*interval '3 month')";
 			case WEEK: //week is not supported in interval literals
-				return "(?3 + (?2) * interval '7 day')";
+				return "(?3+(?2)*interval '7 day')";
 			default:
-				return "(?3 + (?2) * interval '1 ?1')";
+				return "(?3+(?2)*interval '1 ?1')";
 		}
 	}
 

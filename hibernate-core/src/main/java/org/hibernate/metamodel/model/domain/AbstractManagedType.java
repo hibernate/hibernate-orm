@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -647,6 +648,28 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public <S extends J> ManagedDomainType<S> findSubType(Class<S> subType) {
 		return DomainModelHelper.resolveSubType( this, subType, jpaMetamodel() );
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Serialization
+
+	protected Object writeReplace() throws ObjectStreamException {
+		return new SerialForm( jpaMetamodel(), getJavaType() );
+	}
+
+	private static class SerialForm implements Serializable {
+		private final JpaMetamodel jpaMetamodel;
+		private final Class<?> typeClass;
+
+		public SerialForm(JpaMetamodel jpaMetamodel, Class<?> typeClass) {
+			this.jpaMetamodel = jpaMetamodel;
+			this.typeClass = typeClass;
+		}
+
+		private Object readResolve() {
+			return jpaMetamodel.managedType( typeClass );
+		}
+
 	}
 
 

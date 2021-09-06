@@ -6,13 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import java.io.Serializable;
+
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;
 
 /**
  * @author Christian Beikov
  */
-public class SqmSearchClauseSpecification {
+public class SqmSearchClauseSpecification implements Serializable {
 	private final SqmCteTableColumn cteColumn;
 	private final SortOrder sortOrder;
 	private final NullPrecedence nullPrecedence;

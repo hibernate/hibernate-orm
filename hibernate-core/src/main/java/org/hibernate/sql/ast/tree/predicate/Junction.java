@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.predicate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -27,10 +28,16 @@ public class Junction implements Predicate {
 	}
 
 	private final Nature nature;
+	private final JdbcMappingContainer expressionType;
 	private final List<Predicate> predicates = new ArrayList<>();
 
 	public Junction(Nature nature) {
+		this( nature, null );
+	}
+
+	public Junction(Nature nature, JdbcMappingContainer expressionType) {
 		this.nature = nature;
+		this.expressionType = expressionType;
 	}
 
 	public void add(Predicate predicate) {
@@ -53,5 +60,10 @@ public class Junction implements Predicate {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitJunction( this );
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return expressionType;
 	}
 }

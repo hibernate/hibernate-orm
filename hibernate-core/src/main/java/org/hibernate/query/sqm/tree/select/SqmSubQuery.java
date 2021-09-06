@@ -12,6 +12,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import javax.persistence.criteria.AbstractQuery;
 import javax.persistence.criteria.CollectionJoin;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Join;
@@ -83,7 +84,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	public SqmSubQuery(
 			SqmQuery<?> parent,
 			NodeBuilder builder) {
-		super( (Class<T>) null, builder );
+		super( null, builder );
 		this.parent = parent;
 	}
 
@@ -94,8 +95,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmSelectQuery<?> getParent() {
+		final SqmQuery<?> containingQuery = getContainingQuery();
 		// JPA only allows sub-queries on select queries
-		return (SqmSelectQuery<?>) getContainingQuery();
+		if ( !(containingQuery instanceof AbstractQuery) ) {
+			throw new IllegalStateException( "Cannot call getParent on update/delete criterias" );
+		}
+		return (SqmSelectQuery<?>) containingQuery;
 	}
 
 	@Override
@@ -110,15 +115,19 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmSubQuery<T> select(Expression<T> expression) {
-		getQuerySpec().setSelection( (JpaSelection) expression );
+		final SqmQuerySpec<T> querySpec = getQuerySpec();
+		if ( querySpec.getSelectClause() == null ) {
+			querySpec.setSelectClause( new SqmSelectClause( false, 1, nodeBuilder() ) );
+		}
+		//noinspection unchecked
+		querySpec.setSelection( (JpaSelection<T>) expression );
 		return this;
 	}
 
 	@Override
 	public SqmExpression<T> getSelection() {
-		return (SqmExpression<T>) super.getSelection();
+		return this;
 	}
 
 	@Override
@@ -177,9 +186,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public <Y> SqmRoot<Y> correlate(Root<Y> parentRoot) {
 		final SqmCorrelatedRoot<Y> correlated = ( (SqmRoot<Y>) parentRoot ).createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated );
-		}
+		getQuerySpec().addRoot( correlated );
 		return correlated;
 	}
 
@@ -199,63 +206,49 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 			}
 		}
 		final SqmCorrelatedSingularJoin<X, Y> correlated = ( (SqmSingularJoin<X, Y>) join ).createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
 	public <X, Y> SqmBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
 		final SqmCorrelatedBagJoin<X, Y> correlated = ( (SqmBagJoin<X, Y>) parentCollection ).createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
 	public <X, Y> SqmSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
 		final SqmCorrelatedSetJoin<X, Y> correlated = ( (SqmSetJoin<X, Y>) parentSet ).createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
 	public <X, Y> SqmListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
 		final SqmCorrelatedListJoin<X, Y> correlated = ( (SqmListJoin<X, Y>) parentList ).createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
 	public <X, K, V> SqmMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
 		final SqmCorrelatedMapJoin<X, K, V> correlated = ( (SqmMapJoin<X, K, V>) parentMap ).createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
 	public <X> SqmCrossJoin<X> correlate(SqmCrossJoin<X> parentCrossJoin) {
 		final SqmCorrelatedCrossJoin<X> correlated = parentCrossJoin.createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
 	public <X> SqmEntityJoin<X> correlate(SqmEntityJoin<X> parentEntityJoin) {
 		final SqmCorrelatedEntityJoin<X> correlated = parentEntityJoin.createCorrelation();
-		if ( getQuerySpec().getFromClause() != null ) {
-			getQuerySpec().getFromClause().addRoot( correlated.getCorrelatedRoot() );
-		}
+		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
@@ -300,22 +293,22 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public SqmInPredicate in(Object... values) {
+	public SqmInPredicate<?> in(Object... values) {
 		return nodeBuilder().in( this, values );
 	}
 
 	@Override
-	public SqmInPredicate in(Expression<?>... values) {
+	public SqmInPredicate<?> in(Expression<?>... values) {
 		return nodeBuilder().in( this, values );
 	}
 
 	@Override
-	public SqmInPredicate in(Collection<?> values) {
+	public SqmInPredicate<?> in(Collection<?> values) {
 		return nodeBuilder().in( this, values );
 	}
 
 	@Override
-	public SqmInPredicate in(Expression<Collection<?>> values) {
+	public SqmInPredicate<?> in(Expression<Collection<?>> values) {
 		return nodeBuilder().in( this, values );
 	}
 
@@ -333,43 +326,36 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.LONG );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.INTEGER );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.FLOAT );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.DOUBLE );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.BIG_DECIMAL );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.BIG_INTEGER );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		//noinspection unchecked
 		return castAs( StandardBasicTypes.STRING );
 	}
 
@@ -388,7 +374,6 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 
 	@Override
 	public Class<? extends T> getJavaType() {
-		//noinspection unchecked
 		return getResultType();
 	}
 

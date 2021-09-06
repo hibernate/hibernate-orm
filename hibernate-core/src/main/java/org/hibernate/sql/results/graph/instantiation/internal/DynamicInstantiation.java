@@ -90,7 +90,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 			arguments = new ArrayList<>();
 		}
 
-		arguments.add( new DynamicInstantiationArgument<>( alias, argumentResultProducer, creationState ) );
+		arguments.add( new DynamicInstantiationArgument<>( argumentResultProducer, alias ) );
 	}
 
 	public void complete() {

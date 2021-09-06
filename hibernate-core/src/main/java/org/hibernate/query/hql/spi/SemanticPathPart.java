@@ -29,8 +29,8 @@ public interface SemanticPathPart {
 			boolean isTerminal,
 			SqmCreationState creationState);
 
-	SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState);
 }

@@ -7,24 +7,24 @@
 package org.hibernate.dialect;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
-import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
-import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
-import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
+import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 
@@ -37,6 +37,68 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	public DerbySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	@Override
+	protected void renderExpressionAsClauseItem(Expression expression) {
+		expression.accept( this );
+	}
+
+	@Override
+	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		booleanExpressionPredicate.getExpression().accept( this );
+	}
+
+	// Derby does not allow CASE expressions where all result arms contain plain parameters.
+	// At least one result arm must provide some type context for inference,
+	// so we cast the first result arm if we encounter this condition
+
+	@Override
+	protected void visitAnsiCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
+			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSearchedExpression(
+					caseSearchedExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+		}
+	}
+
+	@Override
+	protected void visitAnsiCaseSimpleExpression(
+			CaseSimpleExpression caseSimpleExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
+			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSimpleExpression(
+					caseSimpleExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+		}
 	}
 
 	@Override
@@ -140,6 +202,28 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	public void visitInListPredicate(InListPredicate inListPredicate) {
+		final List<Expression> listExpressions = inListPredicate.getListExpressions();
+		if ( listExpressions.isEmpty() ) {
+			appendSql( "1=0" );
+			return;
+		}
+		final Expression testExpression = inListPredicate.getTestExpression();
+		if ( isParameter( testExpression ) ) {
+			renderCasted( testExpression );
+			if ( inListPredicate.isNegated() ) {
+				appendSql( " not" );
+			}
+			appendSql( " in(" );
+			renderCommaSeparated( listExpressions );
+			appendSql( CLOSE_PARENTHESIS );
+		}
+		else {
+			super.visitInListPredicate( inListPredicate );
+		}
+	}
+
+	@Override
 	protected boolean supportsRowValueConstructorSyntax() {
 		return false;
 	}
@@ -156,7 +240,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected String getFromDual() {
-		return " from (values 0) as dual";
+		return " from (values 0) dual";
 	}
 
 	@Override

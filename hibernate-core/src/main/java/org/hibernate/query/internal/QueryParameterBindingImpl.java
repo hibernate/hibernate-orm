@@ -20,6 +20,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -128,17 +129,17 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return false;
 		}
 
-		if ( value instanceof Collection ) {
-			setBindValues( (Collection) value );
-			return true;
-		}
-
-		if ( value.getClass().isArray() ) {
-			setBindValues( (Collection) Arrays.asList( (Object[]) value ) );
+		if ( value instanceof Collection && !isRegisteredAsBasicType( value.getClass() ) ) {
+			//noinspection unchecked
+			setBindValues( (Collection<T>) value );
 			return true;
 		}
 
 		return false;
+	}
+
+	private boolean isRegisteredAsBasicType(Class<?> valueClass) {
+		return getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
 	}
 
 	private void bindValue(T value) {
@@ -186,7 +187,20 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( bindType != null ) {
-			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			try {
+				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
+			catch ( CoercionException ex ) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value [%s] did not match expected type [%s (%s)]",
+								value,
+								bindType.getTypeName(),
+								temporalTypePrecision == null ? "n/a" : temporalTypePrecision.name()
+						),
+						ex
+				);
+			}
 		}
 		else if ( queryParameter.getHibernateType() != null ) {
 			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );

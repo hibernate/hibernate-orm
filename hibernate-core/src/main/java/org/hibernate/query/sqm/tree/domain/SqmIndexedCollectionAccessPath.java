@@ -22,14 +22,14 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implements SqmPath<T> {
 	private final SqmExpression<?> selectorExpression;
 
-
 	public SqmIndexedCollectionAccessPath(
+			NavigablePath navigablePath,
 			SqmPath<?> pluralDomainPath,
 			SqmExpression<?> selectorExpression) {
 		//noinspection unchecked
 		super(
-				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), selectorExpression.toHqlString() ),
-				(PluralPersistentAttribute) pluralDomainPath.getReferencedPathSource(),
+				navigablePath,
+				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource(),
 				pluralDomainPath,
 				pluralDomainPath.nodeBuilder()
 		);
@@ -37,21 +37,13 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 
 	}
 
-	public SqmExpression getSelectorExpression() {
+	public SqmExpression<?> getSelectorExpression() {
 		return selectorExpression;
 	}
 
 	@Override
-	public PluralPersistentAttribute<?,?,T> getReferencedPathSource() {
-		//noinspection unchecked
-		return (PluralPersistentAttribute) super.getReferencedPathSource();
-	}
-
-	@Override
-	public NavigablePath getNavigablePath() {
-		// todo (6.0) : this would require some String-ified form of the selector
-//		return null;
-		return super.getNavigablePath();
+	public PluralPersistentAttribute<?, ?, T> getReferencedPathSource() {
+		return (PluralPersistentAttribute<?, ?, T>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -59,8 +51,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathSource subPathSource = getReferencedPathSource().getElementPathSource().findSubPathSource( name );
-		//noinspection unchecked
+		final SqmPathSource<?> subPathSource = getReferencedPathSource().getElementPathSource().findSubPathSource( name );
 		return subPathSource.createSqmPath( this );
 	}
 
@@ -77,8 +68,7 @@ public class SqmIndexedCollectionAccessPath<T> extends AbstractSqmPath<T> implem
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		if ( getReferencedPathSource().getSqmPathType() instanceof EntityDomainType ) {
-			//noinspection unchecked
-			return new SqmTreatedSimplePath( this, treatTarget, nodeBuilder() );
+			return new SqmTreatedSimplePath<>( this, treatTarget, nodeBuilder() );
 		}
 
 		throw new UnsupportedOperationException(  );

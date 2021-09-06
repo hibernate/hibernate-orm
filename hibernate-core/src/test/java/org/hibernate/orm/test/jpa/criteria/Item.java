@@ -16,9 +16,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 
-import org.hibernate.jpa.test.criteria.Attribute;
-import org.hibernate.jpa.test.criteria.ItemAttributeConverter;
-
 /**
  * @author Chris Cranford
  */

@@ -72,7 +72,6 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 	@Override
 	public SqmCorrelatedSingularJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedSingularJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
@@ -80,8 +79,8 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 				getSqmJoinType(),
 				isFetched(),
 				nodeBuilder(),
-				(SqmCorrelatedRootJoin<O>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmSingularJoin<O, T>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

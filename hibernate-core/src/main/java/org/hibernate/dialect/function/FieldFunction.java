@@ -34,7 +34,7 @@ public class FieldFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		sqlAppender.appendSql( "field(" );
 		sqlAstArguments.get( 0 ).accept( walker );
 		for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
-			sqlAppender.appendSql( ", " );
+			sqlAppender.appendSql( ',' );
 
 			final SqlAstNode argument = sqlAstArguments.get( i );
 			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( argument );
@@ -42,7 +42,7 @@ public class FieldFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 				final List<? extends Expression> expressions = sqlTuple.getExpressions();
 				for ( int j = 0; j < expressions.size(); j++ ) {
 					if ( j != 0 ) {
-						sqlAppender.appendSql( ", " );
+						sqlAppender.appendSql( ',' );
 					}
 					expressions.get( j ).accept( walker );
 				}

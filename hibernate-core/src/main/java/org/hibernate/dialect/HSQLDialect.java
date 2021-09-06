@@ -284,13 +284,13 @@ public class HSQLDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				pattern.append("timestampadd(sql_tsi_frac_second, ?2, "); //nanos
+				pattern.append("timestampadd(sql_tsi_frac_second,?2,"); //nanos
 				break;
 			case WEEK:
-				pattern.append("dateadd('day', ?2*7, ");
+				pattern.append("dateadd('day',?2*7,");
 				break;
 			default:
-				pattern.append("dateadd('?1', ?2, ");
+				pattern.append("dateadd('?1',?2,");
 		}
 		if (castTo) {
 			pattern.append("cast(?3 as timestamp)");
@@ -317,14 +317,14 @@ public class HSQLDialect extends Dialect {
 			default:
 				pattern.append("datediff('?1'");
 		}
-		pattern.append(", ");
+		pattern.append(',');
 		if (castFrom) {
 			pattern.append("cast(?2 as timestamp)");
 		}
 		else {
 			pattern.append("?2");
 		}
-		pattern.append(", ");
+		pattern.append(',');
 		if (castTo) {
 			pattern.append("cast(?3 as timestamp)");
 		}

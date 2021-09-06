@@ -52,6 +52,12 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
+	public void registerReusablePath(SqmPath<?> path) {
+		super.registerReusablePath( path );
+		wrappedPath.registerReusablePath( path );
+	}
+
+	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
@@ -59,6 +65,11 @@ public class SqmTreatedSimplePath<T, S extends T>
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return wrappedPath;
+	}
+
+	@Override
+	public EntityDomainType<S> getNodeType() {
+		return treatTarget;
 	}
 
 	@Override

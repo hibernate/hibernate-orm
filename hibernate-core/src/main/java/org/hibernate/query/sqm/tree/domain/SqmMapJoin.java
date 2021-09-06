@@ -11,11 +11,8 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
@@ -26,7 +23,6 @@ import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -46,13 +42,7 @@ public class SqmMapJoin<O, K, V>
 
 	@Override
 	public MapPersistentAttribute<O, K, V> getReferencedPathSource() {
-		//noinspection unchecked
-		return(MapPersistentAttribute) super.getReferencedPathSource();
-	}
-
-	@Override
-	public JavaTypeDescriptor<V> getJavaTypeDescriptor() {
-		return getNodeJavaTypeDescriptor();
+		return(MapPersistentAttribute<O, K, V>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -71,81 +61,20 @@ public class SqmMapJoin<O, K, V>
 	// JPA
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public SqmPath<K> key() {
-		final SqmPathSource keyPathSource = getReferencedPathSource().getKeyPathSource();
-		final NavigablePath navigablePath = getNavigablePath().append( keyPathSource.getPathName() );
-
-		if ( keyPathSource.getSqmPathType() instanceof BasicDomainType ) {
-			return new SqmBasicValuedSimplePath(
-					navigablePath,
-					keyPathSource,
-					this,
-					null
-			);
-		}
-
-		if ( keyPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
-			return new SqmEmbeddedValuedSimplePath(
-					navigablePath,
-					keyPathSource,
-					this,
-					null
-			);
-		}
-
-		if ( keyPathSource.getSqmPathType() instanceof EntityDomainType ) {
-			return new SqmEntityValuedSimplePath(
-					navigablePath,
-					keyPathSource,
-					this,
-					null
-			);
-		}
-
-		throw new UnsupportedOperationException( "Unrecognized Map key descriptor : " + keyPathSource );
+		final SqmPathSource<K> keyPathSource = getReferencedPathSource().getKeyPathSource();
+		return resolvePath( keyPathSource.getPathName(), keyPathSource );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Path<V> value() {
-		final SqmPathSource elementPathSource = getReferencedPathSource().getElementPathSource();
-		final NavigablePath navigablePath = getNavigablePath().append( elementPathSource.getPathName() );
-
-		if ( elementPathSource.getSqmPathType() instanceof BasicDomainType ) {
-			return new SqmBasicValuedSimplePath(
-					navigablePath,
-					elementPathSource,
-					this,
-					null
-			);
-		}
-
-		if ( elementPathSource.getSqmPathType() instanceof EmbeddableDomainType ) {
-			return new SqmEmbeddedValuedSimplePath(
-					navigablePath,
-					elementPathSource,
-					this,
-					null
-			);
-		}
-
-		if ( elementPathSource.getSqmPathType() instanceof EntityDomainType ) {
-			return new SqmEntityValuedSimplePath(
-					navigablePath,
-					elementPathSource,
-					this,
-					null
-			);
-		}
-
-		throw new UnsupportedOperationException( "Unrecognized Map value descriptor : " + elementPathSource );
+		final SqmPathSource<V> elementPathSource = getReferencedPathSource().getElementPathSource();
+		return resolvePath( elementPathSource.getPathName(), elementPathSource );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Expression<Map.Entry<K, V>> entry() {
-		return new SqmMapEntryReference( this, nodeBuilder() );
+		return new SqmMapEntryReference<>( this, nodeBuilder() );
 	}
 
 	@Override
@@ -180,14 +109,12 @@ public class SqmMapJoin<O, K, V>
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		//noinspection unchecked
-		return new SqmTreatedMapJoin( this, treatTarget, null );
+		return new SqmTreatedMapJoin<>( this, treatTarget, null );
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmMapJoin(
+	public SqmMapJoin<O, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmMapJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),

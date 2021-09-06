@@ -6,15 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
+import javax.persistence.Tuple;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.ParameterExpression;
@@ -22,17 +18,15 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Selection;
 
 import org.hibernate.query.FetchClauseType;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
+import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
@@ -51,7 +45,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	public SqmSelectStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
-		super( (Class<T>) null, nodeBuilder );
+		super( null, nodeBuilder );
 		this.querySource = querySource;
 	}
 
@@ -149,131 +143,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public ParameterResolutions resolveParameters() {
-		if ( querySource == SqmQuerySource.CRITERIA ) {
-			final CriteriaParameterCollector parameterCollector = new CriteriaParameterCollector();
-
-			ParameterCollector.collectParameters(
-					this,
-					parameterCollector::process,
-					nodeBuilder().getServiceRegistry()
-			);
-
-			return parameterCollector.makeResolution();
-		}
-		else {
-			return new ParameterResolutions() {
-				@Override
-				public Set<SqmParameter<?>> getSqmParameters() {
-					return parameters == null ? Collections.emptySet() : Collections.unmodifiableSet( parameters );
-				}
-
-				@Override
-				public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
-					return Collections.emptyMap();
-				}
-			};
-		}
-	}
-
-	private static class CriteriaParameterCollector {
-		private Set<SqmParameter<?>> sqmParameters;
-		private Map<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
-
-		public void process(SqmParameter<?> parameter) {
-			if ( sqmParameters == null ) {
-				sqmParameters = new HashSet<>();
-			}
-
-			if ( parameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				if ( jpaCriteriaParamResolutions == null ) {
-					jpaCriteriaParamResolutions = new IdentityHashMap<>();
-				}
-
-				final SqmJpaCriteriaParameterWrapper<?> wrapper = (SqmJpaCriteriaParameterWrapper<?>) parameter;
-				final JpaCriteriaParameter<?> criteriaParameter = wrapper.getJpaCriteriaParameter();
-
-				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
-						criteriaParameter,
-						jcp -> new ArrayList<>()
-				);
-
-				sqmParametersForCriteriaParameter.add( wrapper );
-				sqmParameters.add( wrapper );
-			}
-			else if ( parameter instanceof JpaCriteriaParameter ) {
-				throw new UnsupportedOperationException();
-//				final JpaCriteriaParameter<?> criteriaParameter = (JpaCriteriaParameter<?>) parameter;
-//
-//				if ( jpaCriteriaParamResolutions == null ) {
-//					jpaCriteriaParamResolutions = new IdentityHashMap<>();
-//				}
-//
-//				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
-//						criteriaParameter,
-//						jcp -> new ArrayList<>()
-//				);
-//
-//				final SqmJpaCriteriaParameterWrapper<?> wrapper = new SqmJpaCriteriaParameterWrapper(
-//						criteriaParameter.getHibernateType(),
-//						criteriaParameter,
-//						criteriaParameter.nodeBuilder()
-//				);
-//
-//				sqmParametersForCriteriaParameter.add( wrapper );
-//				sqmParameters.add( wrapper );
-			}
-			else {
-				sqmParameters.add( parameter );
-			}
-		}
-
-		private ParameterResolutions makeResolution() {
-			return new ParameterResolutionsImpl(
-					sqmParameters == null ? Collections.emptySet() : sqmParameters,
-					jpaCriteriaParamResolutions == null ? Collections.emptyMap() : jpaCriteriaParamResolutions
-			);
-		}
-	}
-
-	private static class ParameterResolutionsImpl implements ParameterResolutions {
-		private final Set<SqmParameter<?>> sqmParameters;
-		private final Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
-
-		public ParameterResolutionsImpl(
-				Set<SqmParameter<?>> sqmParameters,
-				Map<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions) {
-			this.sqmParameters = sqmParameters;
-
-			if ( jpaCriteriaParamResolutions == null || jpaCriteriaParamResolutions.isEmpty() ) {
-				this.jpaCriteriaParamResolutions = Collections.emptyMap();
-			}
-			else {
-				this.jpaCriteriaParamResolutions = new IdentityHashMap<>( CollectionHelper.determineProperSizing( jpaCriteriaParamResolutions ) );
-				for ( Map.Entry<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> entry : jpaCriteriaParamResolutions.entrySet() ) {
-					final Iterator<SqmJpaCriteriaParameterWrapper<?>> itr = entry.getValue().iterator();
-					this.jpaCriteriaParamResolutions.put(
-							entry.getKey(),
-							() -> {
-								if ( itr.hasNext() ) {
-									return itr.next();
-								}
-								throw new IllegalStateException( "SqmJpaCriteriaParameterWrapper references for JpaCriteriaParameter [" + entry.getKey() + "] already exhausted" );
-							}
-					);
-
-				}
-			}
-		}
-
-		@Override
-		public Set<SqmParameter<?>> getSqmParameters() {
-			return sqmParameters;
-		}
-
-		@Override
-		public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
-			return jpaCriteriaParamResolutions;
-		}
+		return SqmUtil.resolveParameters( this );
 	}
 
 	@Override
@@ -282,7 +152,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
-	public void addParameter(SqmParameter parameter) {
+	public void addParameter(SqmParameter<?> parameter) {
 		if ( parameters == null ) {
 			parameters = new HashSet<>();
 		}
@@ -308,12 +178,15 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		//
 		// for a "finalized" set of parameters, use `#resolveParameters` instead
 		assert querySource == SqmQuerySource.CRITERIA;
-		return (Set) getSqmParameters();
+		return (Set<ParameterExpression<?>>) (Set<?>) getSqmParameters();
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> select(Selection<? extends T> selection) {
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			checkSelectionIsJpaCompliant( selection );
+		}
 		getQuerySpec().setSelection( (JpaSelection<T>) selection );
 		if ( getResultType() == null ) {
 			setResultType( (Class<T>) selection.getJavaType() );
@@ -322,46 +195,115 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> multiselect(Selection<?>... selections) {
-		for ( Selection<?> selection : selections ) {
-			getQuerySpec().getSelectClause().add( (SqmExpression<?>) selection, selection.getAlias() );
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			for ( Selection<?> selection : selections ) {
+				checkSelectionIsJpaCompliant( selection );
+			}
 		}
-		if ( getResultType() == null ) {
-			setResultType( (Class<T>) Object[].class );
+		final Selection<? extends T> resultSelection;
+		Class<T> resultType = getResultType();
+		if ( resultType == null ) {
+			setResultType( resultType = (Class<T>) Object[].class );
 		}
+		if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, selections );
+		}
+		else if ( Object.class.equals( resultType ) ) {
+			switch ( selections.length ) {
+				case 0: {
+					throw new IllegalArgumentException(
+							"empty selections passed to criteria query typed as Object"
+					);
+				}
+				case 1: {
+					resultSelection = ( Selection<? extends T> ) selections[0];
+					break;
+				}
+				default: {
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+				}
+			}
+		}
+		else {
+			resultSelection = nodeBuilder().construct( resultType, selections );
+		}
+		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
 		return this;
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public SqmSelectStatement<T> multiselect(List<Selection<?>> selectionList) {
-		for ( Selection<?> selection : selectionList ) {
-			getQuerySpec().getSelectClause().add( (SqmExpression<?>) selection, selection.getAlias() );
+		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+			for ( Selection<?> selection : selectionList ) {
+				checkSelectionIsJpaCompliant( selection );
+			}
 		}
-		if ( getResultType() == null ) {
-			setResultType( (Class<T>) Object[].class );
+		final Selection<? extends T> resultSelection;
+		Class<T> resultType = getResultType();
+		if ( resultType == null ) {
+			setResultType( resultType = (Class<T>) Object[].class );
 		}
+		final List<? extends JpaSelection<?>> jpaSelectionList = (List<? extends JpaSelection<?>>) (List<?>) selectionList;
+		if ( Tuple.class.isAssignableFrom( resultType ) ) {
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( jpaSelectionList );
+		}
+		else if ( resultType.isArray() ) {
+			resultSelection = nodeBuilder().array( resultType, jpaSelectionList );
+		}
+		else if ( Object.class.equals( resultType ) ) {
+			switch ( selectionList.size() ) {
+				case 0: {
+					throw new IllegalArgumentException(
+							"empty selections passed to criteria query typed as Object"
+					);
+				}
+				case 1: {
+					resultSelection = ( Selection<? extends T> ) selectionList.get( 0 );
+					break;
+				}
+				default: {
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( jpaSelectionList );
+				}
+			}
+		}
+		else {
+			resultSelection = nodeBuilder().construct( resultType, jpaSelectionList );
+		}
+		getQuerySpec().getSelectClause().setSelection( (SqmSelectableNode<?>) resultSelection );
 		return this;
+	}
+
+	private void checkSelectionIsJpaCompliant(Selection<?> selection) {
+		if ( selection instanceof SqmSubQuery<?> ) {
+			throw new IllegalStateException(
+					"The JPA specification does not support subqueries in select clauses. " +
+							"Please disable the JPA query compliance if you want to use this feature." );
+		}
 	}
 
 	@Override
 	public SqmSelectStatement<T> orderBy(Order... orders) {
-		if ( getQueryPart().getOrderByClause() == null ) {
-			getQueryPart().setOrderByClause( new SqmOrderByClause() );
-		}
+		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orders.length );
 		for ( Order order : orders ) {
-			getQueryPart().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
+			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) order );
 		}
+		getQueryPart().setOrderByClause( sqmOrderByClause );
 		return this;
 	}
 
 	@Override
 	public SqmSelectStatement<T> orderBy(List<Order> orders) {
-		if ( getQueryPart().getOrderByClause() == null ) {
-			getQueryPart().setOrderByClause( new SqmOrderByClause() );
-		}
+		final SqmOrderByClause sqmOrderByClause = new SqmOrderByClause( orders.size() );
 		for ( Order order : orders ) {
-			getQueryPart().getOrderByClause().addSortSpecification( (SqmSortSpecification) order );
+			sqmOrderByClause.addSortSpecification( (SqmSortSpecification) order );
 		}
+		getQueryPart().setOrderByClause( sqmOrderByClause );
 		return this;
 	}
 
@@ -402,6 +344,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public JpaExpression<Number> getOffset() {
+		//noinspection unchecked
 		return (JpaExpression<Number>) getQueryPart().getOffset();
 	}
 
@@ -419,6 +362,7 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 	@Override
 	public JpaExpression<Number> getFetch() {
+		//noinspection unchecked
 		return (JpaExpression<Number>) getQueryPart().getFetch();
 	}
 

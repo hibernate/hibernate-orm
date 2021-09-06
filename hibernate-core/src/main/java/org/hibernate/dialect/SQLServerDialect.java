@@ -148,6 +148,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory.truncate_round( queryEngine );
 		CommonFunctionFactory.everyAny_sumIif( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );
 
 		if ( getVersion() >= 10 ) {
 			CommonFunctionFactory.locate_charindex( queryEngine );
@@ -237,7 +238,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String currentTime() {
-		return "convert(time, getdate())";
+		return "convert(time,getdate())";
 	}
 
 	@Override
@@ -298,24 +299,24 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				lockMode = lockOptions.getLockMode();
 			}
 
-			final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock, holdlock";
+			final String writeLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
 			final String readLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
 
-			final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ", nowait" : "";
-			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ", readpast" : "";
+			final String noWaitStr = lockOptions.getTimeOut() == LockOptions.NO_WAIT ? ",nowait" : "";
+			final String skipLockStr = lockOptions.getTimeOut() == LockOptions.SKIP_LOCKED ? ",readpast" : "";
 
 			switch ( lockMode ) {
 				//noinspection deprecation
 				case UPGRADE:
 				case PESSIMISTIC_WRITE:
 				case WRITE:
-					return tableName + " with (" + writeLockStr + ", rowlock" + noWaitStr + skipLockStr + ")";
+					return tableName + " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
 				case PESSIMISTIC_READ:
-					return tableName + " with (" + readLockStr + ", rowlock" + noWaitStr + skipLockStr + ")";
+					return tableName + " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")";
 				case UPGRADE_SKIPLOCKED:
-					return tableName + " with (updlock, rowlock, readpast" + noWaitStr + ")";
+					return tableName + " with (updlock,rowlock,readpast" + noWaitStr + ")";
 				case UPGRADE_NOWAIT:
-					return tableName + " with (updlock, holdlock, rowlock, nowait)";
+					return tableName + " with (updlock,holdlock,rowlock,nowait)";
 				default:
 					return tableName;
 			}
@@ -327,11 +328,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_WRITE:
 				case WRITE:
-					return tableName + " with (updlock, rowlock)";
+					return tableName + " with (updlock,rowlock)";
 				case PESSIMISTIC_READ:
-					return tableName + " with (holdlock, rowlock)";
+					return tableName + " with (holdlock,rowlock)";
 				case UPGRADE_SKIPLOCKED:
-					return tableName + " with (updlock, rowlock, readpast)";
+					return tableName + " with (updlock,rowlock,readpast)";
 				default:
 					return tableName;
 			}
@@ -501,7 +502,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			else {
 				orderByElement.append( "1 else 0" );
 			}
-			orderByElement.append( " end, " );
+			orderByElement.append( " end," );
 		}
 
 		// Nulls precedence has already been handled so passing NONE value.
@@ -593,12 +594,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				//Java Durations are usually the only thing
 				//we find expressed in nanosecond precision,
 				//and they can easily be very large
-				return "dateadd(nanosecond, ?2%1000000000, dateadd(second, ?2/1000000000, ?3))";
+				return "dateadd(nanosecond,?2%1000000000,dateadd(second,?2/1000000000,?3))";
 			case NATIVE:
 				//microsecond is the "native" precision
-				return "dateadd(microsecond, ?2%1000000, dateadd(second, ?2/1000000, ?3))";
+				return "dateadd(microsecond,?2%1000000,dateadd(second,?2/1000000,?3))";
 			default:
-				return "dateadd(?1, ?2, ?3)";
+				return "dateadd(?1,?2,?3)";
 		}
 	}
 
@@ -607,14 +608,14 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		switch (unit) {
 			case NATIVE:
 				//use microsecond as the "native" precision
-				return "datediff_big(microsecond, ?2, ?3)";
+				return "datediff_big(microsecond,?2,?3)";
 			default:
 				//datediff() returns an int, and can easily
 				//overflow when dealing with "physical"
 				//durations, so use datediff_big()
 				return unit.normalized() == NANOSECOND
-						? "datediff_big(?1, ?2, ?3)"
-						: "datediff(?1, ?2, ?3)";
+						? "datediff_big(?1,?2,?3)"
+						: "datediff(?1,?2,?3)";
 		}
 	}
 

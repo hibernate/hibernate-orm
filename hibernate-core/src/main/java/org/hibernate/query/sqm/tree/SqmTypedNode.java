@@ -15,13 +15,18 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public interface SqmTypedNode<T> extends SqmNode {
+public interface SqmTypedNode<T> extends SqmNode, SqmExpressableAccessor<T> {
 	/**
 	 * The Java type descriptor for this node.
 	 */
 	default JavaTypeDescriptor<T> getNodeJavaTypeDescriptor() {
 		final SqmExpressable<T> nodeType = getNodeType();
 		return nodeType != null ? nodeType.getExpressableJavaTypeDescriptor() : null;
+	}
+
+	@Override
+	default SqmExpressable<T> getExpressable() {
+		return getNodeType();
 	}
 
 	SqmExpressable<T> getNodeType();

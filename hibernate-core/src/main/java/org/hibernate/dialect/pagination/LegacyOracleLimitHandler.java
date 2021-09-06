@@ -38,16 +38,16 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if ( hasOffset ) {
-			pagingSelect.append( "select * from (select row_.*, rownum rownum_ from (" ).append( sql );
+			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
 			if ( version < 900 ) {
-				pagingSelect.append( ") row_) where rownum_ <= ? and rownum_ > ?" );
+				pagingSelect.append( ") row_) where rownum_<=? and rownum_>?" );
 			}
 			else {
-				pagingSelect.append( ") row_ where rownum <= ?) where rownum_ > ?" );
+				pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
 			}
 		}
 		else {
-			pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum <= ?" );
+			pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum<=?" );
 		}
 
 		if ( forUpdateClause != null ) {
@@ -73,16 +73,16 @@ public class LegacyOracleLimitHandler extends AbstractLimitHandler {
 
 		final StringBuilder pagingSelect = new StringBuilder( sql.length() + 100 );
 		if ( hasOffset ) {
-			pagingSelect.append( "select * from (select row_.*, rownum rownum_ from (" ).append( sql );
+			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" ).append( sql );
 			if ( version < 900 ) {
-				pagingSelect.append( ") row_) where rownum_ <= ? and rownum_ > ?" );
+				pagingSelect.append( ") row_) where rownum_<=? and rownum_>?" );
 			}
 			else {
-				pagingSelect.append( ") row_ where rownum <= ?) where rownum_ > ?" );
+				pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
 			}
 		}
 		else {
-			pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum <= ?" );
+			pagingSelect.append( "select * from (" ).append( sql ).append( ") where rownum<=?" );
 		}
 
 		if ( forUpdateClause != null ) {

@@ -116,6 +116,8 @@ public class HqlTranslationNoFactoryTests {
 		final SqmCreationOptions sqmCreationOptions = () -> false;
 
 		final QueryEngine queryEngine = new QueryEngine(
+				null,
+				null,
 				jpaMetamodel,
 				ValueHandlingMode.BIND,
 				ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( registryScope.getRegistry() ),

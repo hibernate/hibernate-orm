@@ -14,6 +14,7 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmAggregateFunction;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
@@ -22,7 +23,8 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 /**
  * @author Christian Beikov
  */
-public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFunction<T> {
+public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFunction<T>
+		implements SqmAggregateFunction<T> {
 
 	private final SqmPredicate filter;
 
@@ -53,6 +55,11 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				resultType,
 				getMappingModelExpressable( walker, resultType )
 		);
+	}
+
+	@Override
+	public SqmPredicate getFilter() {
+		return filter;
 	}
 
 	@Override

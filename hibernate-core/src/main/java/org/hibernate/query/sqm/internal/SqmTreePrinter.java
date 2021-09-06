@@ -579,14 +579,14 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath path) {
+	public Object visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath<?> path) {
 		logWithIndentation( "-> [non-aggregated-composite-path] - `%s`", path.getNavigablePath().getFullPath() );
 
 		return null;
 	}
 
 	@Override
-	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath sqmPath) {
+	public Object visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath) {
 		logWithIndentation( "-> [self-interpreting-path] - `%s`", sqmPath.getNavigablePath().getFullPath() );
 
 		return null;
@@ -607,7 +607,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path) {
+	public Object visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path) {
 		return null;
 	}
 
@@ -617,7 +617,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitCorrelation(SqmCorrelation correlation) {
+	public Object visitCorrelation(SqmCorrelation<?, ?> correlation) {
 		return null;
 	}
 
@@ -681,17 +681,17 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitFunction(SqmFunction tSqmFunction) {
+	public Object visitFunction(SqmFunction<?> tSqmFunction) {
 		return null;
 	}
 
 	@Override
-	public Object visitCoalesce(SqmCoalesce sqmCoalesce) {
+	public Object visitCoalesce(SqmCoalesce<?> sqmCoalesce) {
 		return null;
 	}
 
 	@Override
-	public Object visitToDuration(SqmToDuration toDuration) {
+	public Object visitToDuration(SqmToDuration<?> toDuration) {
 		return null;
 	}
 
@@ -701,7 +701,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitExtractUnit(SqmExtractUnit extractUnit) {
+	public Object visitExtractUnit(SqmExtractUnit<?> extractUnit) {
 		return null;
 	}
 
@@ -711,7 +711,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitCastTarget(SqmCastTarget sqmCastTarget) {
+	public Object visitCastTarget(SqmCastTarget<?> sqmCastTarget) {
 		return null;
 	}
 
@@ -721,12 +721,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitDistinct(SqmDistinct distinct) {
+	public Object visitDistinct(SqmDistinct<?> distinct) {
 		return null;
 	}
 
 	@Override
-	public Object visitDurationUnit(SqmDurationUnit durationUnit) {
+	public Object visitDurationUnit(SqmDurationUnit<?> durationUnit) {
 		return null;
 	}
 
@@ -914,7 +914,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitMapEntryFunction(SqmMapEntryReference function) {
+	public Object visitMapEntryFunction(SqmMapEntryReference<?, ?> function) {
 		return null;
 	}
 
@@ -1011,12 +1011,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	}
 
 	@Override
-	public Object visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral) {
+	public Object visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
-	public Object visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral) {
+	public Object visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

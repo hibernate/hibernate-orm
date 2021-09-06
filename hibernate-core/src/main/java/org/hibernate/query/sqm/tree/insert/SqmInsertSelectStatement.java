@@ -31,6 +31,7 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
 						null,
+						false,
 						nodeBuilder
 				),
 				SqmQuerySource.CRITERIA,

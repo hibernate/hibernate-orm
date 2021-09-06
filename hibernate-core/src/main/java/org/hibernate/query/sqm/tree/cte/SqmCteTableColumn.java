@@ -6,13 +6,15 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import java.io.Serializable;
+
 import org.hibernate.metamodel.mapping.ModelPart;
 
 /**
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class SqmCteTableColumn {
+public class SqmCteTableColumn implements Serializable {
 	private final SqmCteTable cteTable;
 	private final String columnName;
 	private final ModelPart typeExpressable;

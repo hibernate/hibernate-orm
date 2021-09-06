@@ -248,7 +248,7 @@ public class FirebirdDialect extends Dialect {
 				"locate",
 				StandardBasicTypes.INTEGER,
 				"position(?1 in ?2)",
-				"position(?1, ?2, ?3)"
+				"position(?1,?2,?3)"
 		).setArgumentListSignature( "(pattern, string[, start])" );
 		functionRegistry.namedDescriptorBuilder( "ascii_val" )
 				.setExactArgumentCount( 1 )
@@ -593,7 +593,7 @@ public class FirebirdDialect extends Dialect {
 				? "select rdb$generator_name from rdb$generators"
 				// Note: Firebird 3 has an 'off by increment' bug (fixed in Firebird 4), see
 				// http://tracker.firebirdsql.org/browse/CORE-6084
-				: "select rdb$generator_name, rdb$initial_value, rdb$generator_increment from rdb$generators where coalesce(rdb$system_flag, 0) = 0";
+				: "select rdb$generator_name,rdb$initial_value,rdb$generator_increment from rdb$generators where coalesce(rdb$system_flag,0)=0";
 	}
 
 	@Override

@@ -145,8 +145,8 @@ public class TimesTenDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
-				"instr(?2, ?1)",
-				"instr(?2, ?1, ?3)"
+				"instr(?2,?1)",
+				"instr(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
@@ -166,9 +166,9 @@ public class TimesTenDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				return "timestampadd(sql_tsi_frac_second, ?2, ?3)";
+				return "timestampadd(sql_tsi_frac_second,?2,?3)";
 			default:
-				return "timestampadd(sql_tsi_?1, ?2, ?3)";
+				return "timestampadd(sql_tsi_?1,?2,?3)";
 		}
 	}
 
@@ -177,9 +177,9 @@ public class TimesTenDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				return "timestampdiff(sql_tsi_frac_second, ?2, ?3)";
+				return "timestampdiff(sql_tsi_frac_second,?2,?3)";
 			default:
-				return "timestampdiff(sql_tsi_?1, ?2, ?3)";
+				return "timestampdiff(sql_tsi_?1,?2,?3)";
 		}
 	}
 

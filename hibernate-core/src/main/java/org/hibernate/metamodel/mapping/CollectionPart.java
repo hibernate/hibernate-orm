@@ -27,6 +27,19 @@ public interface CollectionPart extends ModelPart, Fetchable {
 			return name;
 		}
 
+		public static Nature fromNameExact(String name) {
+			switch ( name ) {
+				case "{element}":
+					return ELEMENT;
+				case "{index}":
+					return INDEX;
+				case "{collection-id}":
+					return ID;
+			}
+
+			return null;
+		}
+
 		public static Nature fromName(String name) {
 			// NOTE : the `$x$` form comes form order-by handling
 			//		todo (6.0) : ^^ convert these to use the `{x}` form instead?

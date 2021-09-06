@@ -34,6 +34,12 @@ public enum SqlAstNodeRenderingMode {
 	INLINE_PARAMETERS,
 
 	/**
+	 * Render all nested parameters as literals.
+	 * All parameters within the {@link org.hibernate.sql.ast.tree.SqlAstNode} are rendered as literals.
+	 */
+	INLINE_ALL_PARAMETERS,
+
+	/**
 	 * Don't render plain parameters. Render it as literal or as expression.
 	 * If the {@link org.hibernate.sql.ast.tree.SqlAstNode} to render is a parameter,
 	 * it will be rendered either as literal or wrapped into a semantically equivalent expression

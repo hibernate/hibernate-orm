@@ -178,7 +178,7 @@ public class TeradataDialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
 		//TODO: TOTALLY UNTESTED CODE!
-		pattern.append("cast((?3 - ?2) ");
+		pattern.append("cast((?3-?2) ");
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
@@ -214,15 +214,15 @@ public class TeradataDialect extends Dialect {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
 			case NANOSECOND:
-				return "(?3 + (?2)/1e9 * interval '1' second)";
+				return "(?3+(?2)/1e9*interval '1' second)";
 			case NATIVE:
-				return "(?3 + (?2) * interval '1' second)";
+				return "(?3+(?2)*interval '1' second)";
 			case QUARTER:
-				return "(?3 + (?2) * interval '3' month)";
+				return "(?3+(?2)*interval '3' month)";
 			case WEEK:
-				return "(?3 + (?2) * interval '7' day)";
+				return "(?3+(?2)*interval '7' day)";
 			default:
-				return "(?3 + (?2) * interval '1' ?1)";
+				return "(?3+(?2)*interval '1' ?1)";
 		}
 	}
 
@@ -238,6 +238,7 @@ public class TeradataDialect extends Dialect {
 		CommonFunctionFactory.substring_substr( queryEngine );
 		//also natively supports ANSI-style substring()
 		CommonFunctionFactory.position( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(cast(?1 as char))*4" );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
 				.setInvariantType( StandardBasicTypes.STRING )

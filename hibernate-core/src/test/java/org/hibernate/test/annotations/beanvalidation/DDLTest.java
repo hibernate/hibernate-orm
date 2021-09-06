@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
+ * @author Geonhee Lee
  */
 public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Test
@@ -82,6 +83,26 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-14810" )
+	public void testNotBlankConstraint() {
+		PersistentClass classMapping = metadata().getEntityBinding( Book.class.getName() );
+		Column modelColumn = (Column) classMapping.getProperty( "title" ).getColumnIterator().next();
+		assertEquals(
+				"Validator annotations are applied on title", false, modelColumn.isNullable()
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-14810" )
+	public void testNotEmptyConstraint() {
+		PersistentClass classMapping = metadata().getEntityBinding( Book.class.getName() );
+		Column modelColumn = (Column) classMapping.getProperty( "author" ).getColumnIterator().next();
+		assertEquals(
+				"Validator annotations are applied on author", false, modelColumn.isNullable()
+		);
+	}
+
 	@Override
 	protected void addSettings(Map settings) {
 		settings.put( "javax.persistence.validation.mode", "ddl" );
@@ -93,7 +114,8 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 				Address.class,
 				Tv.class,
 				TvOwner.class,
-				Rock.class
+				Rock.class,
+				Book.class
 		};
 	}
 }

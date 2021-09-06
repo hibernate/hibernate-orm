@@ -142,14 +142,18 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	public void setGroupByClauseExpressions(List<SqmExpression<?>> groupByClauseExpressions) {
-		this.groupByClauseExpressions = groupByClauseExpressions == null
-				? Collections.emptyList()
-				: groupByClauseExpressions;
-
-		for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
-			final SqmExpression<?> groupItem = groupByClauseExpressions.get( i );
-			if ( groupItem instanceof SqmAliasedNodeRef ) {
-				hasPositionalGroupItem = true;
+		this.hasPositionalGroupItem = false;
+		if ( groupByClauseExpressions == null ) {
+			this.groupByClauseExpressions = Collections.emptyList();
+		}
+		else {
+			this.groupByClauseExpressions = groupByClauseExpressions;
+			for ( int i = 0; i < groupByClauseExpressions.size(); i++ ) {
+				final SqmExpression<?> groupItem = groupByClauseExpressions.get( i );
+				if ( groupItem instanceof SqmAliasedNodeRef ) {
+					this.hasPositionalGroupItem = true;
+					break;
+				}
 			}
 		}
 	}
@@ -191,12 +195,11 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		assert getSelectClause() != null;
 		// NOTE : this call comes from JPA which inherently supports just a
 		// single (possibly "compound") selection
-		getSelectClause().setSelection( (SqmSelectableNode) selection );
+		getSelectClause().setSelection( (SqmSelectableNode<?>) selection );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<SqmRoot<?>> getRoots() {
 		assert getFromClause() != null;
 		return new HashSet<>( getFromClause().getRoots() );
@@ -207,7 +210,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 		if ( getFromClause() == null ) {
 			setFromClause( new SqmFromClause() );
 		}
-		getFromClause().addRoot( (SqmRoot) root );
+		getFromClause().addRoot( (SqmRoot<?>) root );
 		return this;
 	}
 
@@ -221,29 +224,34 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(JpaPredicate restriction) {
-		if ( getWhereClause() == null ) {
-			setWhereClause( new SqmWhereClause( nodeBuilder() ) );
+		SqmWhereClause whereClause = getWhereClause();
+		if ( whereClause == null ) {
+			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
 		}
-		getWhereClause().setPredicate( (SqmPredicate) restriction );
+		whereClause.setPredicate( (SqmPredicate) restriction );
 		return this;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(Expression<Boolean> restriction) {
-		if ( getWhereClause() == null ) {
-			setWhereClause( new SqmWhereClause( nodeBuilder() ) );
+		SqmWhereClause whereClause = getWhereClause();
+		if ( whereClause == null ) {
+			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
 		}
-		getWhereClause().setPredicate( nodeBuilder().wrap( restriction ) );
+		whereClause.setPredicate( nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
 	@Override
 	public SqmQuerySpec<T> setRestriction(Predicate... restrictions) {
-		if ( getWhereClause() == null ) {
-			setWhereClause( new SqmWhereClause( nodeBuilder() ) );
+		SqmWhereClause whereClause = getWhereClause();
+		if ( whereClause == null ) {
+			setWhereClause( whereClause = new SqmWhereClause( nodeBuilder() ) );
 		}
-		getWhereClause().applyPredicates( (SqmPredicate[]) restrictions );
-		return null;
+		for ( Predicate restriction : restrictions ) {
+			whereClause.applyPredicate( (SqmPredicate) restriction );
+		}
+		return this;
 	}
 
 	@Override
@@ -253,8 +261,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setGroupingExpressions(List<? extends JpaExpression<?>> groupExpressions) {
+		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.size() );
 		for ( JpaExpression<?> groupExpression : groupExpressions ) {
+			if ( groupExpression instanceof SqmAliasedNodeRef ) {
+				this.hasPositionalGroupItem = true;
+			}
 			this.groupByClauseExpressions.add( (SqmExpression<?>) groupExpression );
 		}
 		return this;
@@ -262,8 +274,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 
 	@Override
 	public SqmQuerySpec<T> setGroupingExpressions(JpaExpression<?>... groupExpressions) {
+		this.hasPositionalGroupItem = false;
 		this.groupByClauseExpressions = new ArrayList<>( groupExpressions.length );
 		for ( JpaExpression<?> groupExpression : groupExpressions ) {
+			if ( groupExpression instanceof SqmAliasedNodeRef ) {
+				this.hasPositionalGroupItem = true;
+			}
 			this.groupByClauseExpressions.add( (SqmExpression<?>) groupExpression );
 		}
 		return this;
@@ -354,21 +370,17 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				sb.append( separator );
 				if ( root.isCorrelated() ) {
 					if ( root.containsOnlyInnerJoins() ) {
-						appendJoins( root, root.getCorrelationParent().getExplicitAlias(), sb );
+						appendJoins( root, root.getCorrelationParent().resolveAlias(), sb );
 					}
 					else {
-						sb.append( root.getCorrelationParent().getExplicitAlias() );
-						if ( root.getExplicitAlias() != null ) {
-							sb.append( ' ' ).append( root.getExplicitAlias() );
-						}
+						sb.append( root.getCorrelationParent().resolveAlias() );
+						sb.append( ' ' ).append( root.resolveAlias() );
 						appendJoins( root, sb );
 					}
 				}
 				else {
 					sb.append( root.getEntityName() );
-					if ( root.getExplicitAlias() != null ) {
-						sb.append( ' ' ).append( root.getExplicitAlias() );
-					}
+					sb.append( ' ' ).append( root.resolveAlias() );
 					appendJoins( root, sb );
 				}
 				separator = ", ";
@@ -415,11 +427,9 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
-				sb.append( sqmFrom.getExplicitAlias() ).append( '.' );
+				sb.append( sqmFrom.resolveAlias() ).append( '.' );
 				sb.append( (attributeJoin).getAttribute().getName() );
-				if ( sqmJoin.getExplicitAlias() != null ) {
-					sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
-				}
+				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( attributeJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
 					attributeJoin.getJoinPredicate().appendHqlString( sb );
@@ -428,17 +438,13 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 			else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
 				sb.append( ( (SqmCrossJoin<?>) sqmJoin ).getEntityName() );
-				if ( sqmJoin.getExplicitAlias() != null ) {
-					sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
-				}
+				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				appendJoins( sqmJoin, sb );
 			}
 			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
 				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
 				sb.append( (sqmEntityJoin).getEntityName() );
-				if ( sqmJoin.getExplicitAlias() != null ) {
-					sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
-				}
+				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( sqmEntityJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
 					sqmEntityJoin.getJoinPredicate().appendHqlString( sb );
@@ -458,9 +464,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			sb.append( separator );
 			sb.append( correlationPrefix ).append( '.' );
 			sb.append( ( (SqmAttributeJoin<?, ?>) sqmJoin ).getAttribute().getName() );
-			if ( sqmJoin.getExplicitAlias() != null ) {
-				sb.append( ' ' ).append( sqmJoin.getExplicitAlias() );
-			}
+			sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 			appendJoins( sqmJoin, sb );
 			separator = ", ";
 		}

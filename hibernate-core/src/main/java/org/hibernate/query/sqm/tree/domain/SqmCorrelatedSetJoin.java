@@ -72,7 +72,6 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 	@Override
 	public SqmCorrelatedSetJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedSetJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
@@ -80,8 +79,8 @@ public class SqmCorrelatedSetJoin<O, T> extends SqmSetJoin<O, T> implements SqmC
 				getSqmJoinType(),
 				isFetched(),
 				nodeBuilder(),
-				(SqmCorrelatedRootJoin<O>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmSetJoin<O, T>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

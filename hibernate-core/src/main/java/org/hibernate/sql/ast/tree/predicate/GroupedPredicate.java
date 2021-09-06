@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -30,5 +31,10 @@ public class GroupedPredicate implements Predicate {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitGroupedPredicate( this );
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return subPredicate.getExpressionType();
 	}
 }

@@ -63,7 +63,7 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 		sqlAppender.appendSql( "str(" );
 		arguments.get( 0 ).accept( walker );
 		for ( int i = 1; i < arguments.size(); i++ ) {
-			sqlAppender.appendSql( ", " );
+			sqlAppender.appendSql( ',' );
 			arguments.get( i ).accept( walker );
 		}
 		sqlAppender.appendSql( ')' );

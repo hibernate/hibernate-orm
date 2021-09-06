@@ -66,7 +66,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 			if ( rendersTableReferenceAlias( currentClause ) ) {
 				final String identificationVariable = tableReference.getIdentificationVariable();
 				if ( identificationVariable != null ) {
-					appendSql( getDialect().getTableAliasSeparator() );
+					appendSql( ' ' );
 					appendSql( identificationVariable );
 				}
 			}
@@ -82,27 +82,27 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 	private void renderLockHint(LockMode lockMode) {
 		if ( getDialect().getVersion() >= 9 ) {
 			final int effectiveLockTimeout = getEffectiveLockTimeout( lockMode );
-			final String writeLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? "updlock" : "updlock, holdlock";
+			final String writeLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? "updlock" : "updlock,holdlock";
 			final String readLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? "updlock" : "holdlock";
 
-			final String noWaitStr = effectiveLockTimeout == LockOptions.NO_WAIT ? ", nowait" : "";
-			final String skipLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? ", readpast" : "";
+			final String noWaitStr = effectiveLockTimeout == LockOptions.NO_WAIT ? ",nowait" : "";
+			final String skipLockStr = effectiveLockTimeout == LockOptions.SKIP_LOCKED ? ",readpast" : "";
 
 			switch ( lockMode ) {
 				//noinspection deprecation
 				case UPGRADE:
 				case PESSIMISTIC_WRITE:
 				case WRITE:
-					appendSql( " with (" + writeLockStr + ", rowlock" + noWaitStr + skipLockStr + ")" );
+					appendSql( " with (" + writeLockStr + ",rowlock" + noWaitStr + skipLockStr + ")" );
 					break;
 				case PESSIMISTIC_READ:
-					appendSql( " with (" + readLockStr + ", rowlock" + noWaitStr + skipLockStr + ")" );
+					appendSql( " with (" + readLockStr + ",rowlock" + noWaitStr + skipLockStr + ")" );
 					break;
 				case UPGRADE_SKIPLOCKED:
-					appendSql( " with (updlock, rowlock, readpast" + noWaitStr + ")" );
+					appendSql( " with (updlock,rowlock,readpast" + noWaitStr + ")" );
 					break;
 				case UPGRADE_NOWAIT:
-					appendSql( " with (updlock, holdlock, rowlock, nowait)" );
+					appendSql( " with (updlock,holdlock,rowlock,nowait)" );
 					break;
 			}
 		}
@@ -113,13 +113,13 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends Abstract
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_WRITE:
 				case WRITE:
-					appendSql( " with (updlock, rowlock)" );
+					appendSql( " with (updlock,rowlock)" );
 					break;
 				case PESSIMISTIC_READ:
-					appendSql(" with (holdlock, rowlock)" );
+					appendSql(" with (holdlock,rowlock)" );
 					break;
 				case UPGRADE_SKIPLOCKED:
-					appendSql( " with (updlock, rowlock, readpast)" );
+					appendSql( " with (updlock,rowlock,readpast)" );
 					break;
 			}
 		}

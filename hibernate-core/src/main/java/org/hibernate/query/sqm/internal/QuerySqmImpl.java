@@ -6,9 +6,11 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,8 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
@@ -57,6 +61,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -76,6 +81,7 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -218,7 +224,11 @@ public class QuerySqmImpl<R>
 			);
 		}
 		else if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
-			verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, (SqmUpdateStatement<R>) sqmStatement, producer.getFactory() );
+			final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
+			verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
+			if ( updateStatement.getSetClause() == null || updateStatement.getSetClause().getAssignments().isEmpty() ) {
+				throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
+			}
 		}
 
 		this.hqlString = CRITERIA_HQL_STRING;
@@ -334,7 +344,41 @@ public class QuerySqmImpl<R>
 		assert sqmExpressable != null;
 		assert sqmExpressable.getExpressableJavaTypeDescriptor() != null;
 
-		if ( ! resultClass.isAssignableFrom( sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass() ) ) {
+		final Class<?> javaTypeClass = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+		if ( ! resultClass.isAssignableFrom( javaTypeClass ) ) {
+			// Special case for date because we always report java.util.Date as expression type
+			// But the expected resultClass could be a subtype of that, so we need to check the JdbcTypeDescriptor
+			if ( javaTypeClass == Date.class ) {
+				JdbcTypeDescriptor jdbcTypeDescriptor = null;
+				if ( sqmExpressable instanceof BasicDomainType<?> ) {
+					jdbcTypeDescriptor = ( (BasicDomainType<?>) sqmExpressable ).getJdbcTypeDescriptor();
+				}
+				else if ( sqmExpressable instanceof SqmPathSource<?> ) {
+					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressable ).getSqmPathType();
+					if ( domainType instanceof BasicDomainType<?> ) {
+						jdbcTypeDescriptor = ( (BasicDomainType<?>) domainType ).getJdbcTypeDescriptor();
+					}
+				}
+				if ( jdbcTypeDescriptor != null ) {
+					switch ( jdbcTypeDescriptor.getJdbcTypeCode() ) {
+						case Types.DATE:
+							if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
+								return;
+							}
+							break;
+						case Types.TIME:
+							if ( resultClass.isAssignableFrom( java.sql.Time.class ) ) {
+								return;
+							}
+							break;
+						case Types.TIMESTAMP:
+							if ( resultClass.isAssignableFrom( java.sql.Timestamp.class ) ) {
+								return;
+							}
+							break;
+					}
+				}
+			}
 			final String errorMessage = String.format(
 					"Specified result type [%s] did not match Query selection type [%s] - multiple selections: use Tuple or array",
 					resultClass.getName(),

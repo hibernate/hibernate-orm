@@ -146,9 +146,10 @@ public class CacheDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
-				"$find(?2, ?1)",
-				"$find(?2, ?1, ?3)"
+				"$find(?2,?1)",
+				"$find(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "($length(?1)*8)" );
 
 		useJdbcEscape(queryEngine, "sin");
 		useJdbcEscape(queryEngine, "cos");
@@ -181,7 +182,7 @@ public class CacheDialect extends Dialect {
 
 	@Override
 	public String extractPattern(TemporalUnit unit) {
-		return "datepart(?1, ?2)";
+		return "datepart(?1,?2)";
 	}
 
 	@Override
@@ -189,9 +190,9 @@ public class CacheDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				return "dateadd(millisecond, (?2)/1e6, ?3)";
+				return "dateadd(millisecond,(?2)/1e6,?3)";
 			default:
-				return "dateadd(?1, ?2, ?3)";
+				return "dateadd(?1,?2,?3)";
 		}
 	}
 
@@ -200,9 +201,9 @@ public class CacheDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				return "datediff(millisecond, ?2, ?3)*1e6";
+				return "datediff(millisecond,?2,?3)*1e6";
 			default:
-				return "datediff(?1, ?2, ?3)";
+				return "datediff(?1,?2,?3)";
 		}
 	}
 

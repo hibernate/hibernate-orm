@@ -9,11 +9,12 @@ package org.hibernate.metamodel.model.domain.internal;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -65,7 +66,14 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 		assert entityDescriptor.hasSubclasses();
 
 		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( getLhs().getNavigablePath() );
-		final EntityMappingType entityMapping = ( (EntityValuedModelPart) tableGroup.getModelPart() ).getEntityMappingType();
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final EntityMappingType entityMapping;
+		if ( modelPart instanceof EntityValuedModelPart ) {
+			entityMapping = ( (EntityValuedModelPart) modelPart ).getEntityMappingType();
+		}
+		else {
+			entityMapping = (EntityMappingType) ( (PluralAttributeMapping) modelPart ).getElementDescriptor().getPartMappingType();
+		}
 
 		return new DiscriminatorPathInterpretation( getNavigablePath(), entityMapping, tableGroup, sqlAstCreationState );
 	}
@@ -79,7 +87,7 @@ public class DiscriminatorSqmPath extends AbstractSqmPath implements SelfInterpr
 
 	@Override
 	public SemanticPathPart resolvePathPart(String name, boolean isTerminal, SqmCreationState creationState) {
-		throw new IllegalPathUsageException( "Discriminator cannot be de-referenced" );
+		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
 	@Override

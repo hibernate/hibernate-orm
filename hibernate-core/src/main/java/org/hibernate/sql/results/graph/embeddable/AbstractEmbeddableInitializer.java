@@ -212,6 +212,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			compositeInstance = null;
 		}
 		else {
+			notifyParentResolutionListeners( compositeInstance );
 			if ( compositeInstance instanceof HibernateProxy ) {
 				Object target = embeddedModelPartDescriptor.getEmbeddableTypeDescriptor()
 						.getRepresentationStrategy()

@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class SqmMapEntryReference<K,V>
-		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>> {
+		implements SqmSelectableNode<Map.Entry<K,V>>, Expression<Map.Entry<K,V>>, SqmExpressable<Map.Entry<K,V>> {
 	@SuppressWarnings({"FieldCanBeLocal", "unused"})
 	private final SqmPath<?> mapPath;
 	private final NodeBuilder nodeBuilder;
@@ -78,6 +78,11 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	public JavaTypeDescriptor<Map.Entry<K, V>> getExpressableJavaTypeDescriptor() {
+		return mapEntryTypeDescriptor;
+	}
+
+	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitMapEntryFunction( this );
 	}
@@ -99,7 +104,7 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public SqmExpressable<Map.Entry<K, V>> getNodeType() {
-		return null;
+		return this;
 	}
 
 	@Override

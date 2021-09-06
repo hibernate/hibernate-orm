@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 
 /**
@@ -16,9 +16,11 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
 public class ExistsPredicate implements Predicate {
 
 	private final QueryPart expression;
+	private final JdbcMappingContainer expressionType;
 
-	public ExistsPredicate(QueryPart expression) {
+	public ExistsPredicate(QueryPart expression, JdbcMappingContainer expressionType) {
 		this.expression = expression;
+		this.expressionType = expressionType;
 	}
 
 	public QueryPart getExpression() {
@@ -33,5 +35,10 @@ public class ExistsPredicate implements Predicate {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitExistsPredicate( this );
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return expressionType;
 	}
 }

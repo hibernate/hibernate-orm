@@ -17,7 +17,6 @@ import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -39,11 +38,6 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeJavaTypeDescriptor();
-	}
-
-	@Override
 	public SingularPersistentAttribute<O, T> getModel() {
 		return getReferencedPathSource();
 	}
@@ -61,8 +55,7 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 
 	@Override
 	public <S extends T> SqmTreatedSingularJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		//noinspection unchecked
-		return new SqmTreatedSingularJoin( this, treatTarget, null );
+		return new SqmTreatedSingularJoin<>( this, treatTarget, null );
 	}
 
 	@Override
@@ -81,9 +74,8 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmSingularJoin(
+	public SqmAttributeJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmSingularJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),

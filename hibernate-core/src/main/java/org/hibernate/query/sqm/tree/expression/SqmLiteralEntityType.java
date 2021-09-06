@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Represents an reference to an entity type as a literal.  This is the JPA
@@ -34,11 +33,6 @@ public class SqmLiteralEntityType<T>
 	public SqmLiteralEntityType(EntityDomainType<T> entityType, NodeBuilder nodeBuilder) {
 		super( entityType, nodeBuilder );
 		this.entityType = entityType;
-	}
-
-	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 
 	@Override

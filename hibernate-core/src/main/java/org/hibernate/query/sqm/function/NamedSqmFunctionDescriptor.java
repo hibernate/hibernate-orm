@@ -113,7 +113,7 @@ public class NamedSqmFunctionDescriptor
 		boolean firstPass = true;
 		for ( SqlAstNode arg : sqlAstArguments ) {
 			if ( !firstPass ) {
-				sqlAppender.appendSql( ", " );
+				sqlAppender.appendSql( "," );
 			}
 			if ( caseWrapper && !( arg instanceof Distinct ) ) {
 				sqlAppender.appendSql( "case when " );

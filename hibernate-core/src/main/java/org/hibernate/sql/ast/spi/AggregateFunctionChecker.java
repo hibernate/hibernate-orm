@@ -46,6 +46,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
@@ -172,6 +173,11 @@ class AggregateFunctionChecker implements SqlAstWalker {
 	@Override
 	public void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression) {
 		unaryOperationExpression.getOperand().accept( this );
+	}
+
+	@Override
+	public void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate) {
+		booleanExpressionPredicate.getExpression().accept( this );
 	}
 
 	@Override

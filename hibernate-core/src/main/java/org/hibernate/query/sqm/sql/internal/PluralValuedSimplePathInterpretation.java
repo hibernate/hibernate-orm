@@ -14,6 +14,8 @@ import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Andrea Boriero
@@ -51,6 +53,18 @@ public class PluralValuedSimplePathInterpretation<T> extends AbstractSqmPathInte
 	@Override
 	public Expression getSqlExpression() {
 		return sqlExpression;
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
+		// This is only invoked when a plural attribute is a top level select, order by or group by item
+		// in which case we have to produce results for the element
+		return ( (PluralAttributeMapping) getExpressionType() ).getElementDescriptor().createDomainResult(
+				getNavigablePath(),
+				getTableGroup(),
+				resultVariable,
+				creationState
+		);
 	}
 
 	@Override

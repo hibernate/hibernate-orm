@@ -22,7 +22,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -42,13 +41,7 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public SetPersistentAttribute<O,E> getReferencedPathSource() {
-		//noinspection unchecked
-		return (SetPersistentAttribute) super.getReferencedPathSource();
-	}
-
-	@Override
-	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getExpressableJavaTypeDescriptor();
+		return (SetPersistentAttribute<O, E>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -102,9 +95,8 @@ public class SqmSetJoin<O, E>
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmSetJoin(
+	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmSetJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),

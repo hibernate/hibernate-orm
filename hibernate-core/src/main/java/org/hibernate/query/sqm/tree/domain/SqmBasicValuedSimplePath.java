@@ -28,7 +28,7 @@ public class SqmBasicValuedSimplePath<T>
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
@@ -36,7 +36,7 @@ public class SqmBasicValuedSimplePath<T>
 	public SqmBasicValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );

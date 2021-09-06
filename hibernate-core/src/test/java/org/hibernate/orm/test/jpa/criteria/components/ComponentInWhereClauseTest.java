@@ -191,7 +191,6 @@ public class ComponentInWhereClauseTest {
 	}
 
 	@Test
-	@NotImplementedYet
 	public void testInExpressionForAComponent(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -208,7 +207,6 @@ public class ComponentInWhereClauseTest {
 	}
 
 	@Test
-	@NotImplementedYet
 	public void testInExpressionForTheManyToOnePropertyOfAComponent(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

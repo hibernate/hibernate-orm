@@ -6,36 +6,31 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * @author Steve Ebersole
  */
-public class NullnessPredicate implements Predicate {
+public class NullnessPredicate extends AbstractPredicate {
 	private final Expression expression;
-	private final boolean negated;
 
 	public NullnessPredicate(Expression expression) {
-		this( expression, false );
+		this( expression, false, null );
 	}
 
 	public NullnessPredicate(Expression expression, boolean negated) {
+		this( expression, negated, null );
+	}
+
+	public NullnessPredicate(Expression expression, boolean negated, JdbcMappingContainer expressionType) {
+		super( expressionType, negated );
 		this.expression = expression;
-		this.negated = negated;
 	}
 
 	public Expression getExpression() {
 		return expression;
-	}
-
-	public boolean isNegated() {
-		return negated;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return false;
 	}
 
 	@Override

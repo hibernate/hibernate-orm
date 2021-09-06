@@ -25,7 +25,7 @@ public class SqmBasicValuedEntityTypePath<T> extends SqmBasicValuedSimplePath<T>
 	public SqmBasicValuedEntityTypePath(
 			NavigablePath navigablePath,
 			EntityDomainType<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
@@ -33,7 +33,7 @@ public class SqmBasicValuedEntityTypePath<T> extends SqmBasicValuedSimplePath<T>
 	public SqmBasicValuedEntityTypePath(
 			NavigablePath navigablePath,
 			EntityDomainType<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );

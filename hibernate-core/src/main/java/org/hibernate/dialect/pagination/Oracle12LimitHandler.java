@@ -146,15 +146,15 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 
 		if ( hasFirstRow ) {
 			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 98 );
-			pagingSelect.append( "select * from ( select row_.*, rownum rownum_ from ( " );
+			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" );
 			pagingSelect.append( sql );
-			pagingSelect.append( " ) row_ where rownum <= ?) where rownum_ > ?" );
+			pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
 		}
 		else {
 			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 37 );
-			pagingSelect.append( "select * from ( " );
+			pagingSelect.append( "select * from (" );
 			pagingSelect.append( sql );
-			pagingSelect.append( " ) where rownum <= ?" );
+			pagingSelect.append( ") where rownum<=?" );
 		}
 
 		if ( isForUpdate ) {

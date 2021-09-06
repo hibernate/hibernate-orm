@@ -71,7 +71,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	 *
 	 * @return The left-hand operand.
 	 */
-	public SqmExpression getLeftHandOperand() {
+	public SqmExpression<?> getLeftHandOperand() {
 		return lhsOperand;
 	}
 
@@ -89,7 +89,7 @@ public class SqmBinaryArithmetic<T> extends AbstractSqmExpression<T> implements 
 	 *
 	 * @return The right-hand operand.
 	 */
-	public SqmExpression getRightHandOperand() {
+	public SqmExpression<?> getRightHandOperand() {
 		return rhsOperand;
 	}
 

@@ -25,7 +25,7 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 		super(
 				pluralDomainPath.getNavigablePath().getParent().append( pluralDomainPath.getNavigablePath().getLocalName(), NAVIGABLE_NAME ),
 				pluralDomainPath,
-				(PluralPersistentAttribute) pluralDomainPath.getReferencedPathSource()
+				(PluralPersistentAttribute<?, ?, T>) pluralDomainPath.getReferencedPathSource()
 		);
 	}
 
@@ -35,7 +35,6 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		if ( getPluralAttribute().getElementPathSource().getSqmPathType() instanceof ManagedDomainType ) {
-			//noinspection unchecked
 			return getPluralAttribute().getElementPathSource().createSqmPath( this );
 		}
 
@@ -44,7 +43,6 @@ public class SqmMaxElementPath<T> extends AbstractSqmSpecificPluralPartPath<T> {
 
 	@Override
 	public SqmPathSource<T> getReferencedPathSource() {
-		//noinspection unchecked
 		return getPluralAttribute().getElementPathSource();
 	}
 

@@ -819,8 +819,8 @@ public abstract class AbstractHANADialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
-				"locate(?2, ?1)",
-				"locate(?2, ?1, ?3)"
+				"locate(?2,?1)",
+				"locate(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
 		CommonFunctionFactory.ceiling_ceil( queryEngine );
@@ -846,6 +846,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		CommonFunctionFactory.format_toVarchar( queryEngine );
 		CommonFunctionFactory.currentUtcdatetimetimestamp( queryEngine );
 		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(to_binary(?1))*8" );
 	}
 
 	@Override
@@ -1421,7 +1422,7 @@ public abstract class AbstractHANADialect extends Dialect {
 				conn = connectionProvider.getConnection();
 				try ( Statement statement = conn.createStatement() ) {
 					try ( ResultSet rs = statement.executeQuery(
-							"SELECT TOP 1 VALUE, MAP(LAYER_NAME, 'DEFAULT', 1, 'SYSTEM', 2, 'DATABASE', 3, 4) AS LAYER FROM SYS.M_INIFILE_CONTENTS WHERE FILE_NAME='indexserver.ini' AND SECTION='session' AND KEY='max_lob_prefetch_size' ORDER BY LAYER DESC" ) ) {
+							"SELECT TOP 1 VALUE,MAP(LAYER_NAME,'DEFAULT',1,'SYSTEM',2,'DATABASE',3,4) AS LAYER FROM SYS.M_INIFILE_CONTENTS WHERE FILE_NAME='indexserver.ini' AND SECTION='session' AND KEY='max_lob_prefetch_size' ORDER BY LAYER DESC" ) ) {
 						// This only works if the current user has the privilege INIFILE ADMIN
 						if ( rs.next() ) {
 							maxLobPrefetchSizeDefault = rs.getInt( 1 );
@@ -1645,21 +1646,21 @@ public abstract class AbstractHANADialect extends Dialect {
 			case NANOSECOND:
 			case NATIVE:
 				if ( temporalType == TemporalType.TIME ) {
-					return "cast(add_nano100('1970-01-01 '||(?3), ?2) as time)";
+					return "cast(add_nano100('1970-01-01 '||(?3),?2) as time)";
 				}
 				else {
-					return "add_nano100(?3, ?2)";
+					return "add_nano100(?3,?2)";
 				}
 			case QUARTER:
-				return "add_months(?3, 3*?2)";
+				return "add_months(?3,3*?2)";
 			case WEEK:
-				return "add_days(?3, 7*?2)";
+				return "add_days(?3,7*?2)";
 			case MINUTE:
-				return "add_seconds(?3, 60*?2)";
+				return "add_seconds(?3,60*?2)";
 			case HOUR:
-				return "add_seconds(?3, 3600*?2)";
+				return "add_seconds(?3,3600*?2)";
 			default:
-				return "add_?1s(?3, ?2)";
+				return "add_?1s(?3,?2)";
 		}
 	}
 
@@ -1672,18 +1673,18 @@ public abstract class AbstractHANADialect extends Dialect {
 //					return "nano100_between(cast(?3 as timestamp), cast(?2 as timestamp))";
 //				}
 //				else {
-				return "nano100_between(?2, ?3)";
+				return "nano100_between(?2,?3)";
 //				}
 			case QUARTER:
-				return "months_between(?2, ?3)/3";
+				return "months_between(?2,?3)/3";
 			case WEEK:
-				return "days_between(?2, ?3)/7";
+				return "days_between(?2,?3)/7";
 			case MINUTE:
-				return "seconds_between(?2, ?3)/60";
+				return "seconds_between(?2,?3)/60";
 			case HOUR:
-				return "seconds_between(?2, ?3)/3600";
+				return "seconds_between(?2,?3)/3600";
 			default:
-				return "?1s_between(?2, ?3)";
+				return "?1s_between(?2,?3)";
 		}
 	}
 

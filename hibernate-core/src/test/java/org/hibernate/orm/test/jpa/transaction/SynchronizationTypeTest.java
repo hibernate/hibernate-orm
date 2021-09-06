@@ -27,7 +27,6 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.ExtraAssertions;
 import org.hibernate.testing.orm.junit.Jpa;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
@@ -146,7 +145,6 @@ public class SynchronizationTypeTest {
 	}
 
 	@Test
-	@NotImplementedYet(reason = "SqmUpdateStatement#set method has not yet been emplemented")
 	public void testDisallowedOperations(EntityManagerFactoryScope scope) throws Exception {
 		// test calling operations that are disallowed while a UNSYNCHRONIZED persistence context is not
 		// yet joined/enlisted

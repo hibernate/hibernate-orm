@@ -33,7 +33,7 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 	private SqmCorrelatedCrossJoin(
 			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
-			SqmRoot sqmRoot,
+			SqmRoot<?> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,
 			SqmCrossJoin<T> correlationParent) {
 		super( joinedEntityDescriptor, alias, sqmRoot );
@@ -64,13 +64,12 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 	@Override
 	public SqmCorrelatedCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),
-				(SqmRoot<?>) pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
-				(SqmCorrelatedRootJoin<T>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmCrossJoin<T>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( getRoot().getNavigablePath() ),
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

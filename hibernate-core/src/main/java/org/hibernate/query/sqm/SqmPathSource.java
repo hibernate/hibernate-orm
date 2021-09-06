@@ -11,6 +11,7 @@ import javax.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
 /**
@@ -22,7 +23,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
  *
  * @author Steve Ebersole
  */
-public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
+public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J>, SqmExpressableAccessor<J> {
 	/**
 	 * The name of this thing.  Mainly used in logging and when creating a
 	 * {@link org.hibernate.query.NavigablePath}
@@ -38,14 +39,19 @@ public interface SqmPathSource<J> extends SqmExpressable<J>, Bindable<J> {
 	/**
 	 * Find a SqmPathSource by name relative to this source.
 	 *
-	 * @throws IllegalPathUsageException to indicate that this source cannot be de-referenced
+	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
-	SqmPathSource<?> findSubPathSource(String name) throws IllegalPathUsageException;
+	SqmPathSource<?> findSubPathSource(String name);
 
 	/**
 	 * Create an SQM path for this source relative to the given left-hand side
 	 */
 	SqmPath<J> createSqmPath(SqmPath<?> lhs);
+
+	@Override
+	default SqmExpressable<J> getExpressable() {
+		return (SqmExpressable<J>) getSqmPathType();
+	}
 
 	default <X extends DomainType> X sqmAs(Class<X> targetType) {
 		if ( targetType.isInstance( this ) ) {

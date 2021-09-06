@@ -7,8 +7,10 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -33,6 +35,13 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 	}
 
 	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
+	}
+
+	@Override
 	public EntityDomainType<S> getTreatTarget() {
 		return treatTarget;
 	}
@@ -40,6 +49,11 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 	@Override
 	public SqmPath<T> getWrappedPath() {
 		return wrappedPath;
+	}
+
+	@Override
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
 	}
 
 	@Override

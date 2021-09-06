@@ -14,5 +14,5 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
  * @author Steve Ebersole
  */
 public interface ParameterCollector {
-	void addParameter(SqmParameter parameter);
+	void addParameter(SqmParameter<?> parameter);
 }

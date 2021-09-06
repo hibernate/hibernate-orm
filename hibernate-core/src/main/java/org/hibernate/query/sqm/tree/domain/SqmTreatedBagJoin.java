@@ -9,7 +9,9 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -20,13 +22,13 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 
 	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedBagJoin(
-			SqmBagJoin<O,T> wrappedPath,
+			SqmBagJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				(BagPersistentAttribute) wrappedPath.getAttribute(),
+				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -34,6 +36,13 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
+	}
+
+	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
 	}
 
 	@Override
@@ -47,9 +56,13 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmTreatedBagJoin( wrappedPath, treatTarget, getAlias() );
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedBagJoin<>( wrappedPath, treatTarget, getAlias() );
 	}
 
 	@Override

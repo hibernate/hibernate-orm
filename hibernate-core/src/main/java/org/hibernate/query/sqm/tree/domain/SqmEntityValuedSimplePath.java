@@ -22,7 +22,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 	public SqmEntityValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 	}
@@ -32,15 +32,14 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		final SqmPathSource referencedPathSource = getReferencedPathSource();
-		final SqmPathSource subPathSource = referencedPathSource.findSubPathSource( name );
+		final SqmPathSource<T> referencedPathSource = getReferencedPathSource();
+		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( name );
 
 		assert getLhs() == null || creationState.getProcessingStateStack()
 				.getCurrent()
 				.getPathRegistry()
 				.findPath( getLhs().getNavigablePath() ) != null;
 
-		//noinspection unchecked
 		return subPathSource.createSqmPath( this );
 	}
 
@@ -62,8 +61,7 @@ public class SqmEntityValuedSimplePath<T> extends AbstractSqmSimplePath<T> {
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		//noinspection unchecked
-		return new SqmTreatedSimplePath( this, treatTarget, nodeBuilder() );
+		return new SqmTreatedSimplePath<>( this, treatTarget, nodeBuilder() );
 	}
 
 }

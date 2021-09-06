@@ -145,7 +145,7 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	protected String getFromDual() {
-		return " from (select 0 from systables where tabid = 1) as dual";
+		return " from (select 0 from systables where tabid=1) dual";
 	}
 
 	@Override

@@ -7,14 +7,18 @@
 package org.hibernate.dialect;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.ComparisonOperator;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
+import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
+import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
@@ -33,6 +37,58 @@ public class SybaseSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 
 	public SybaseSqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
+	}
+
+	// Sybase does not allow CASE expressions where all result arms contain plain parameters.
+	// At least one result arm must provide some type context for inference,
+	// so we cast the first result arm if we encounter this condition
+
+	@Override
+	protected void visitAnsiCaseSearchedExpression(
+			CaseSearchedExpression caseSearchedExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSearchedExpression ) ) {
+			final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSearchedExpression(
+					caseSearchedExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSearchedExpression( caseSearchedExpression, resultRenderer );
+		}
+	}
+
+	@Override
+	protected void visitAnsiCaseSimpleExpression(
+			CaseSimpleExpression caseSimpleExpression,
+			Consumer<Expression> resultRenderer) {
+		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( caseSimpleExpression ) ) {
+			final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
+			final Expression firstResult = whenFragments.get( 0 ).getResult();
+			super.visitAnsiCaseSimpleExpression(
+					caseSimpleExpression,
+					e -> {
+						if ( e == firstResult ) {
+							renderCasted( e );
+						}
+						else {
+							resultRenderer.accept( e );
+						}
+					}
+			);
+		}
+		else {
+			super.visitAnsiCaseSimpleExpression( caseSimpleExpression, resultRenderer );
+		}
 	}
 
 	@Override

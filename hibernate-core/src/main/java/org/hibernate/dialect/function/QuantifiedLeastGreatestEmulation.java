@@ -46,12 +46,12 @@ public class QuantifiedLeastGreatestEmulation
 				sqlAppender.appendSql( " when " );
 				arguments.get( i ).accept( walker );
 				sqlAppender.appendSql( operator );
-				sqlAppender.appendSql( " all(" );
+				sqlAppender.appendSql( "all(" );
 				String separator = "";
 				for ( int j = i + 1; j < numberOfArguments; j++ ) {
 					sqlAppender.appendSql( separator );
 					arguments.get( j ).accept( walker );
-					separator = ", ";
+					separator = ",";
 				}
 				sqlAppender.appendSql( ") then " );
 				arguments.get( i ).accept( walker );

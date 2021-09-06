@@ -26,7 +26,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> imp
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 
@@ -37,7 +37,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> imp
 	public SqmEmbeddedValuedSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, explicitAlias, nodeBuilder );

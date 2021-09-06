@@ -7,7 +7,6 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
-import org.hibernate.query.sqm.IllegalPathUsageException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.NonAggregatedCompositeSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -31,7 +30,7 @@ public class NonAggregatedCompositeSqmPathSource extends AbstractSqmPathSource i
 	}
 
 	@Override
-	public SqmPathSource<?> findSubPathSource(String name) throws IllegalPathUsageException {
+	public SqmPathSource<?> findSubPathSource(String name) {
 		return (SqmPathSource<?>) getSqmPathType().findAttribute( name );
 	}
 

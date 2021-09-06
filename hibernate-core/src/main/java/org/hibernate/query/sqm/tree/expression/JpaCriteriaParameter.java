@@ -34,6 +34,13 @@ public class JpaCriteriaParameter<T>
 	private boolean allowsMultiValuedBinding;
 
 	public JpaCriteriaParameter(
+			AllowableParameterType<T> type,
+			boolean allowsMultiValuedBinding,
+			NodeBuilder nodeBuilder) {
+		this( null, type, allowsMultiValuedBinding, nodeBuilder );
+	}
+
+	public JpaCriteriaParameter(
 			String name,
 			AllowableParameterType<T> type,
 			boolean allowsMultiValuedBinding,
@@ -43,11 +50,17 @@ public class JpaCriteriaParameter<T>
 		this.value = null;
 		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
+
 	public JpaCriteriaParameter(
+			String name,
 			AllowableParameterType<T> type,
+			T value,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
-		this( null, type, allowsMultiValuedBinding, nodeBuilder );
+		super( type, nodeBuilder );
+		this.name = name;
+		this.value = value;
+		this.allowsMultiValuedBinding = allowsMultiValuedBinding;
 	}
 
 	public JpaCriteriaParameter(AllowableParameterType<T> type, T value, NodeBuilder criteriaBuilder) {

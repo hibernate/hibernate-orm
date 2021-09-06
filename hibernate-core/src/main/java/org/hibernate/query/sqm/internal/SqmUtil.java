@@ -6,18 +6,23 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -34,11 +39,15 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.jpa.ParameterCollector;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
@@ -192,6 +201,11 @@ public class SqmUtil {
 				);
 
 				final List<List<JdbcParameter>> jdbcParamsBinds = jdbcParamMap.get( sqmParameter );
+				if ( jdbcParamsBinds == null ) {
+					// This can happen when a group or order by item expression, that contains parameters,
+					// is replaced with an alias reference expression, which can happen for JPA Criteria queries
+					continue;
+				}
 				if ( !domainParamBinding.isBound() ) {
 					final MappingModelExpressable mappingExpressable = SqmMappingModelHelper.resolveMappingModelExpressable(
 							sqmParameter,
@@ -404,5 +418,133 @@ public class SqmUtil {
 		// assume we have (or can create) a mapping for the parameter's Java type
 		BasicType basicType = typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
 		return basicType;
+	}
+
+	public static SqmStatement.ParameterResolutions resolveParameters(SqmStatement<?> statement) {
+		if ( statement.getQuerySource() == SqmQuerySource.CRITERIA ) {
+			final CriteriaParameterCollector parameterCollector = new CriteriaParameterCollector();
+
+			ParameterCollector.collectParameters(
+					statement,
+					parameterCollector::process,
+					statement.nodeBuilder().getServiceRegistry()
+			);
+
+			return parameterCollector.makeResolution();
+		}
+		else {
+			return new SqmStatement.ParameterResolutions() {
+				@Override
+				public Set<SqmParameter<?>> getSqmParameters() {
+					return statement.getSqmParameters();
+				}
+
+				@Override
+				public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+					return Collections.emptyMap();
+				}
+			};
+		}
+	}
+
+	private static class CriteriaParameterCollector {
+		private Set<SqmParameter<?>> sqmParameters;
+		private Map<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
+
+		public void process(SqmParameter<?> parameter) {
+			if ( sqmParameters == null ) {
+				sqmParameters = new HashSet<>();
+			}
+
+			if ( parameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
+				if ( jpaCriteriaParamResolutions == null ) {
+					jpaCriteriaParamResolutions = new IdentityHashMap<>();
+				}
+
+				final SqmJpaCriteriaParameterWrapper<?> wrapper = (SqmJpaCriteriaParameterWrapper<?>) parameter;
+				final JpaCriteriaParameter<?> criteriaParameter = wrapper.getJpaCriteriaParameter();
+
+				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
+						criteriaParameter,
+						jcp -> new ArrayList<>()
+				);
+
+				sqmParametersForCriteriaParameter.add( wrapper );
+				sqmParameters.add( wrapper );
+			}
+			else if ( parameter instanceof JpaCriteriaParameter ) {
+				throw new UnsupportedOperationException();
+//				final JpaCriteriaParameter<?> criteriaParameter = (JpaCriteriaParameter<?>) parameter;
+//
+//				if ( jpaCriteriaParamResolutions == null ) {
+//					jpaCriteriaParamResolutions = new IdentityHashMap<>();
+//				}
+//
+//				final List<SqmJpaCriteriaParameterWrapper<?>> sqmParametersForCriteriaParameter = jpaCriteriaParamResolutions.computeIfAbsent(
+//						criteriaParameter,
+//						jcp -> new ArrayList<>()
+//				);
+//
+//				final SqmJpaCriteriaParameterWrapper<?> wrapper = new SqmJpaCriteriaParameterWrapper(
+//						criteriaParameter.getHibernateType(),
+//						criteriaParameter,
+//						criteriaParameter.nodeBuilder()
+//				);
+//
+//				sqmParametersForCriteriaParameter.add( wrapper );
+//				sqmParameters.add( wrapper );
+			}
+			else {
+				sqmParameters.add( parameter );
+			}
+		}
+
+		private SqmStatement.ParameterResolutions makeResolution() {
+			return new ParameterResolutionsImpl(
+					sqmParameters == null ? Collections.emptySet() : sqmParameters,
+					jpaCriteriaParamResolutions == null ? Collections.emptyMap() : jpaCriteriaParamResolutions
+			);
+		}
+	}
+
+	private static class ParameterResolutionsImpl implements SqmStatement.ParameterResolutions {
+		private final Set<SqmParameter<?>> sqmParameters;
+		private final Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions;
+
+		public ParameterResolutionsImpl(
+				Set<SqmParameter<?>> sqmParameters,
+				Map<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> jpaCriteriaParamResolutions) {
+			this.sqmParameters = sqmParameters;
+
+			if ( jpaCriteriaParamResolutions == null || jpaCriteriaParamResolutions.isEmpty() ) {
+				this.jpaCriteriaParamResolutions = Collections.emptyMap();
+			}
+			else {
+				this.jpaCriteriaParamResolutions = new IdentityHashMap<>( CollectionHelper.determineProperSizing( jpaCriteriaParamResolutions ) );
+				for ( Map.Entry<JpaCriteriaParameter<?>, List<SqmJpaCriteriaParameterWrapper<?>>> entry : jpaCriteriaParamResolutions.entrySet() ) {
+					final Iterator<SqmJpaCriteriaParameterWrapper<?>> itr = entry.getValue().iterator();
+					this.jpaCriteriaParamResolutions.put(
+							entry.getKey(),
+							() -> {
+								if ( itr.hasNext() ) {
+									return itr.next();
+								}
+								throw new IllegalStateException( "SqmJpaCriteriaParameterWrapper references for JpaCriteriaParameter [" + entry.getKey() + "] already exhausted" );
+							}
+					);
+
+				}
+			}
+		}
+
+		@Override
+		public Set<SqmParameter<?>> getSqmParameters() {
+			return sqmParameters;
+		}
+
+		@Override
+		public Map<JpaCriteriaParameter<?>, Supplier<SqmJpaCriteriaParameterWrapper<?>>> getJpaCriteriaParamResolutions() {
+			return jpaCriteriaParamResolutions;
+		}
 	}
 }

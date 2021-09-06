@@ -139,7 +139,7 @@ public class MaxDBDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER, "index(?2, ?1)", "index(?2, ?1, ?3)"
+				StandardBasicTypes.INTEGER, "index(?2,?1)", "index(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 

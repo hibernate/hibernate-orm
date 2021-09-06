@@ -42,8 +42,8 @@ public class DB2400V7R3Dialect extends DB2400Dialect {
 	@Override
 	public String getQuerySequencesString() {
 		return "select distinct sequence_name from qsys2.syssequences " +
-				"where ( current_schema = '*LIBL' and sequence_schema in ( select schema_name from qsys2.library_list_info ) ) " +
-				"or sequence_schema = current_schema";
+				"where current_schema='*LIBL' and sequence_schema in (select schema_name from qsys2.library_list_info) " +
+				"or sequence_schema=current_schema";
 	}
 
 	@Override
@@ -53,8 +53,8 @@ public class DB2400V7R3Dialect extends DB2400Dialect {
 			return sql + " fetch first " + limit + " rows only";
 		}
 		//nest the main query in an outer select
-		return "select * from ( select inner2_.*, rownumber() over(order by order of inner2_) as rownumber_ from ( "
-				+ sql + " fetch first " + limit + " rows only ) as inner2_ ) as inner1_ where rownumber_ > "
+		return "select * from (select inner2_.*,rownumber() over(order by order of inner2_) as rownumber_ from ("
+				+ sql + " fetch first " + limit + " rows only) as inner2_) as inner1_ where rownumber_>"
 				+ offset + " order by rownumber_";
 	}
 

@@ -59,7 +59,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedNavigable,
-			SqmFrom lhs,
+			SqmFrom<?, ?> lhs,
 			String alias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, nodeBuilder );
@@ -121,7 +121,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
@@ -170,7 +170,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 
 	@Override
-	public JpaPath getParentPath() {
+	public JpaPath<?> getParentPath() {
 		return getLhs();
 	}
 
@@ -187,10 +187,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<Join<T, ?>> getJoins() {
-		return (Set) getSqmJoins().stream()
-				.filter( sqmJoin -> ! ( sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin) sqmJoin ).isFetched() ) )
+		//noinspection unchecked
+		return (Set<Join<T, ?>>) (Set<?>) getSqmJoins().stream()
+				.filter( sqmJoin -> ! ( sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() ) )
 				.collect( Collectors.toSet() );
 	}
 
@@ -408,10 +408,10 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<Fetch<T, ?>> getFetches() {
-		return (Set) getSqmJoins().stream()
-				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin) sqmJoin ).isFetched() )
+		//noinspection unchecked
+		return (Set<Fetch<T, ?>>) (Set<?>) getSqmJoins().stream()
+				.filter( sqmJoin -> sqmJoin instanceof SqmAttributeJoin && ( (SqmAttributeJoin<?, ?>) sqmJoin ).isFetched() )
 				.collect( Collectors.toSet() );
 	}
 

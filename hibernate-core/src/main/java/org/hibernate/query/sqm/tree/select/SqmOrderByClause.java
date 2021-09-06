@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,7 +17,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 /**
  * @author Steve Ebersole
  */
-public class SqmOrderByClause {
+public class SqmOrderByClause implements Serializable {
 	private boolean hasPositionalSortItem;
 	private List<SqmSortSpecification> sortSpecifications;
 
@@ -38,7 +39,7 @@ public class SqmOrderByClause {
 		}
 		sortSpecifications.add( sortSpecification );
 		if ( sortSpecification.getExpression() instanceof SqmAliasedNodeRef ) {
-			hasPositionalSortItem = true;
+			this.hasPositionalSortItem = true;
 		}
 		return this;
 	}
@@ -62,10 +63,11 @@ public class SqmOrderByClause {
 	public void setSortSpecifications(List<SqmSortSpecification> sortSpecifications) {
 		this.sortSpecifications = new ArrayList<>();
 		this.sortSpecifications.addAll( sortSpecifications );
+		this.hasPositionalSortItem = false;
 		for ( int i = 0; i < sortSpecifications.size(); i++ ) {
 			final SqmSortSpecification sortSpecification = sortSpecifications.get( i );
 			if ( sortSpecification.getExpression() instanceof SqmAliasedNodeRef ) {
-				hasPositionalSortItem = true;
+				this.hasPositionalSortItem = true;
 			}
 		}
 	}

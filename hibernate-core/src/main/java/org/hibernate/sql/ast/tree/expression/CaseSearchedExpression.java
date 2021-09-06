@@ -7,6 +7,7 @@
 
 package org.hibernate.sql.ast.tree.expression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,7 +93,7 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 		return type;
 	}
 
-	public static class WhenFragment {
+	public static class WhenFragment implements Serializable {
 		private final Predicate predicate;
 		private final Expression result;
 

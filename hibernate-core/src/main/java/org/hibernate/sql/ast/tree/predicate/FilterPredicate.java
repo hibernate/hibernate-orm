@@ -9,6 +9,7 @@ package org.hibernate.sql.ast.tree.predicate;
 import java.util.List;
 
 import org.hibernate.internal.FilterJdbcParameter;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -44,5 +45,10 @@ public class FilterPredicate implements Predicate {
 
 	public List<FilterJdbcParameter> getFilterJdbcParameters() {
 		return filterJdbcParameters;
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return null;
 	}
 }

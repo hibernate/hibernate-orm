@@ -42,6 +42,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.predicate.BetweenPredicate;
+import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
 import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
@@ -146,6 +147,8 @@ public interface SqlAstWalker {
 	void visitNullnessLiteral(NullnessLiteral nullnessLiteral);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
+
+	void visitBooleanExpressionPredicate(BooleanExpressionPredicate booleanExpressionPredicate);
 
 	void visitBetweenPredicate(BetweenPredicate betweenPredicate);
 

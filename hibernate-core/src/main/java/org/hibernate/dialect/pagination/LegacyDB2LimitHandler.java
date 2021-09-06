@@ -22,9 +22,9 @@ public class LegacyDB2LimitHandler extends AbstractLimitHandler {
 	public String processSql(String sql, RowSelection selection) {
 		if ( hasFirstRow( selection ) ) {
 			//nest the main query in an outer select
-			return "select * from ( select row_.*, rownumber() over(order by order of row_) as rownumber_ from ( "
+			return "select * from (select row_.*,rownumber() over(order by order of row_) as rownumber_ from ("
 					+ sql + fetchFirstRows( selection )
-					+ " ) as row_ ) as query_ where rownumber_ > "
+					+ ") as row_) as query_ where rownumber_>"
 					+ selection.getFirstRow()
 					+ " order by rownumber_";
 		}
@@ -43,9 +43,9 @@ public class LegacyDB2LimitHandler extends AbstractLimitHandler {
 	public String processSql(String sql, Limit limit) {
 		if ( hasFirstRow( limit ) ) {
 			//nest the main query in an outer select
-			return "select * from ( select row_.*, rownumber() over(order by order of row_) as rownumber_ from ( "
+			return "select * from (select row_.*,rownumber() over(order by order of row_) as rownumber_ from ("
 					+ sql + fetchFirstRows( limit )
-					+ " ) as row_ ) as query_ where rownumber_ > "
+					+ ") as row_) as query_ where rownumber_>"
 					+ limit.getFirstRow()
 					+ " order by rownumber_";
 		}

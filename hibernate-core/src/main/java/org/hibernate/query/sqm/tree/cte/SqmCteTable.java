@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -20,7 +21,7 @@ import org.hibernate.sql.ast.tree.cte.CteColumn;
  * @author Steve Ebersole
  * @author Christian Beikov
  */
-public class SqmCteTable {
+public class SqmCteTable implements Serializable {
 	private final String cteName;
 	private final List<SqmCteTableColumn> columns;
 

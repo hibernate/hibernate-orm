@@ -16,7 +16,6 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
@@ -24,12 +23,12 @@ import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePa
  * @author Steve Ebersole
  */
 public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T, T> {
-	private final SqmRoot sqmRoot;
+	private final SqmRoot<?> sqmRoot;
 
 	public SqmCrossJoin(
 			EntityDomainType<T> joinedEntityDescriptor,
 			String alias,
-			SqmRoot sqmRoot) {
+			SqmRoot<?> sqmRoot) {
 		super(
 				buildRootNavigablePath( alias, joinedEntityDescriptor.getHibernateEntityName() ),
 				joinedEntityDescriptor,
@@ -40,12 +39,12 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 		this.sqmRoot = sqmRoot;
 	}
 
-	public SqmRoot getRoot() {
+	public SqmRoot<?> getRoot() {
 		return sqmRoot;
 	}
 
 	@Override
-	public SqmPath getLhs() {
+	public SqmPath<?> getLhs() {
 		// a cross-join has no LHS
 		return null;
 	}
@@ -70,12 +69,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return getReferencedPathSource().getExpressableJavaTypeDescriptor();
-	}
-
-	@Override
-	public SqmRoot findRoot() {
+	public SqmRoot<?> findRoot() {
 		return getRoot();
 	}
 
@@ -102,7 +96,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements SqmJoin<T,
 		return new SqmCrossJoin<>(
 				getReferencedPathSource(),
 				getExplicitAlias(),
-				(SqmRoot<?>) pathRegistry.findFromByPath( getRoot().getNavigablePath() )
+				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
 		);
 	}
 }

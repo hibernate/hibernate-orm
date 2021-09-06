@@ -172,6 +172,7 @@ public class OracleDialect extends Dialect {
 		CommonFunctionFactory.covarPopSamp( queryEngine );
 		CommonFunctionFactory.corr( queryEngine );
 		CommonFunctionFactory.regrLinearRegressionAggregates( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "vsize(?1)*8" );
 
 		if ( getVersion() < 900 ) {
 			queryEngine.getSqmFunctionRegistry().register( "coalesce", new NvlCoalesceEmulation() );
@@ -184,8 +185,8 @@ public class OracleDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
-				"instr(?2, ?1)",
-				"instr(?2, ?1, ?3)"
+				"instr(?2,?1)",
+				"instr(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 
@@ -367,7 +368,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		StringBuilder pattern = new StringBuilder();
-		pattern.append("(?3 + ");
+		pattern.append("(?3+");
 		switch ( unit ) {
 			case YEAR:
 			case QUARTER:
@@ -1005,7 +1006,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "SELECT SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') FROM DUAL";
+		return "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
 	}
 
 	@Override

@@ -19,7 +19,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedPathSource, lhs, null, nodeBuilder );
 	}
@@ -28,7 +28,7 @@ public abstract class AbstractSqmSimplePath<T> extends AbstractSqmPath<T> implem
 	public AbstractSqmSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );

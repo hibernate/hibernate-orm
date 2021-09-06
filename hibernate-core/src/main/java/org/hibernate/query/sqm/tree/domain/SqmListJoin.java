@@ -12,17 +12,16 @@ import javax.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaListJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -41,14 +40,8 @@ public class SqmListJoin<O,E>
 	}
 
 	@Override
-	public ListPersistentAttribute<O,E> getReferencedPathSource() {
-		//noinspection unchecked
-		return (ListPersistentAttribute) super.getReferencedPathSource();
-	}
-
-	@Override
-	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
-		return getNodeJavaTypeDescriptor();
+	public ListPersistentAttribute<O, E> getReferencedPathSource() {
+		return (ListPersistentAttribute<O, E>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -64,16 +57,8 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public SqmPath<Integer> index() {
-		final String navigableName = "{index}";
-		final NavigablePath navigablePath = getNavigablePath().append( navigableName );
-
-		//noinspection unchecked
-		return new SqmBasicValuedSimplePath<>(
-				navigablePath,
-				( (ListPersistentAttribute) getReferencedPathSource() ).getIndexPathSource(),
-				this,
-				nodeBuilder()
-		);
+		final SqmPathSource<Integer> indexPathSource = getReferencedPathSource().getIndexPathSource();
+		return resolvePath( indexPathSource.getPathName(), indexPathSource );
 	}
 
 	@Override
@@ -108,14 +93,12 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		//noinspection unchecked
-		return new SqmTreatedListJoin( this, treatTarget, null );
+		return new SqmTreatedListJoin<>( this, treatTarget, null );
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmListJoin(
+	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmListJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
 				getExplicitAlias(),

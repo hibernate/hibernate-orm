@@ -6,13 +6,20 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+
+import javax.persistence.metamodel.MapAttribute;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -55,6 +62,18 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	 */
 	void setExplicitAlias(String explicitAlias);
 
+	/**
+	 * Retrieve the explicit alias, if one, otherwise return a generated one and set that as explicit alias.
+	 */
+	default String resolveAlias() {
+		final String explicitAlias = getExplicitAlias();
+		if ( explicitAlias != null ) {
+			return explicitAlias;
+		}
+		final String generatedAlias = "alias_" + System.identityHashCode( this );
+		setExplicitAlias( generatedAlias );
+		return generatedAlias;
+	}
 
 	/**
 	 * Get the left-hand side of this path - may be null, indicating a
@@ -101,8 +120,8 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Override
 	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException;
 
-	default SqmRoot findRoot() {
-		final SqmPath lhs = getLhs();
+	default SqmRoot<?> findRoot() {
+		final SqmPath<?> lhs = getLhs();
 		if ( lhs != null ) {
 			return lhs.findRoot();
 		}
@@ -111,10 +130,27 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	}
 
 	@Override
-	default SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	default SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		throw new SemanticException( "Non-plural path [" + getNavigablePath() + "] cannot be index-accessed" );
 	}
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Covariant overrides
+
+	@Override
+	<Y> SqmPath<Y> get(SingularAttribute<? super T, Y> attribute);
+
+	@Override
+	<E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<T, C, E> collection);
+
+	@Override
+	<K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<T, K, V> map);
+
+	@Override
+	SqmExpression<Class<? extends T>> type();
+
+	@Override
+	<Y> SqmPath<Y> get(String attributeName);
 }

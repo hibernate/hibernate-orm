@@ -72,7 +72,6 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 	@Override
 	public SqmCorrelatedMapJoin<O, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedMapJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
@@ -80,8 +79,8 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 				getSqmJoinType(),
 				isFetched(),
 				nodeBuilder(),
-				(SqmCorrelatedRootJoin<O>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmMapJoin<O, K, V>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

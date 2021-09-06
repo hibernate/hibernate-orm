@@ -52,7 +52,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			SqmEntityValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter sqlAstCreationState) {
 		final SqmPath<?> realPath;
-		if ( CollectionPart.Nature.ELEMENT.getName().equals( sqmPath.getNavigablePath().getUnaliasedLocalName() ) ) {
+		if ( CollectionPart.Nature.fromNameExact( sqmPath.getNavigablePath().getUnaliasedLocalName() ) != null ) {
 			realPath = sqmPath.getLhs();
 		}
 		else {

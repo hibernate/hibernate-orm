@@ -145,6 +145,9 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaCompoundSelection<Object[]> array(Selection<?>[] selections);
 	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
 
+	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Expressions
@@ -271,6 +274,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, String name);
+
+	<T> JpaParameterExpression<T> parameter(Class<T> paramClass, T value);
 
 	@Override
 	JpaExpression<String> concat(Expression<String> x, Expression<String> y);
@@ -423,13 +428,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @apiNote This is different from the purely JPA form
 	 * {@link CriteriaBuilder#tuple} which is intended only for use as
 	 * the selection in a root query.
-	 *
-	 * @param tupleType The Java type
+	 *@param tupleType The Java type
 	 * @param expressions The individual expressions making up the tuple
 	 */
 	<R> JpaCompoundSelection<R> tuple(
 			Class<R> tupleType,
-			List<JpaExpression<?>> expressions);
+			List<? extends JpaExpression<?>> expressions);
 
 	/**
 	 * Create a tuple, as in a composite value, usable in any
@@ -459,7 +463,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	<R> JpaCompoundSelection<R> tuple(
 			DomainType<R> tupleType,
-			List<JpaExpression<?>> expressions);
+			List<? extends JpaExpression<?>> expressions);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -671,7 +675,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@SuppressWarnings("unchecked")
 	<T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values);
 
-	<T> JpaInPredicate<T> in(Expression<? extends T> expression, List<T> values);
+	<T> JpaInPredicate<T> in(Expression<? extends T> expression, Collection<T> values);
 
 	@Override
 	JpaPredicate exists(Subquery<?> subquery);
@@ -724,7 +728,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 *
 	 * @return size expression
 	 */
-	<M extends Map<?,?>> JpaExpression<Integer> mapSize(M map);
+	<M extends Map<?, ?>> JpaExpression<Integer> mapSize(M map);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

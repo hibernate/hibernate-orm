@@ -9,6 +9,7 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,9 +23,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 /**
  * Encapsulates metadata about parameters encountered within a query.
@@ -37,19 +40,19 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	 */
 	public static final ParameterMetadataImpl EMPTY = new ParameterMetadataImpl();
 
-	private final Set<QueryParameterImplementor<?>> queryParameters;
+	private final Map<QueryParameterImplementor<?>, List<SqmParameter>> queryParameters;
 
 	private final Set<String> names;
 	private final Set<Integer> labels;
 
 
 	private ParameterMetadataImpl() {
-		this.queryParameters = Collections.emptySet();
+		this.queryParameters = Collections.emptyMap();
 		this.names = Collections.emptySet();
 		this.labels = Collections.emptySet();
 	}
 
-	public ParameterMetadataImpl(Set<QueryParameterImplementor<?>> queryParameters) {
+	public ParameterMetadataImpl(Map<QueryParameterImplementor<?>, List<SqmParameter>> queryParameters) {
 		this.queryParameters = queryParameters;
 
 		// if we have any ordinal parameters, make sure the numbers
@@ -58,7 +61,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		Set<String> names = null;
 		Set<Integer> labels = null;
 
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( queryParameter.getPosition() != null ) {
 				if ( labels == null ) {
 					labels = new HashSet<>();
@@ -90,14 +93,16 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		if ( CollectionHelper.isEmpty( positionalQueryParameters )
 				&& CollectionHelper.isEmpty( namedQueryParameters ) ) {
 			// no parameters
-			this.queryParameters = Collections.emptySet();
+			this.queryParameters = Collections.emptyMap();
 			this.names = Collections.emptySet();
 			this.labels = Collections.emptySet();
 		}
 		else {
-			this.queryParameters = new IdentitySet<>();
+			this.queryParameters = new IdentityHashMap<>();
 			if ( positionalQueryParameters != null ) {
-				this.queryParameters.addAll( positionalQueryParameters.values() );
+				for ( QueryParameterImplementor<?> value : positionalQueryParameters.values() ) {
+					this.queryParameters.put( value, Collections.emptyList() );
+				}
 				this.labels = positionalQueryParameters.keySet();
 				verifyOrdinalParamLabels( labels );
 			}
@@ -105,7 +110,9 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 				labels = null;
 			}
 			if ( namedQueryParameters != null ) {
-				this.queryParameters.addAll( namedQueryParameters.values() );
+				for ( QueryParameterImplementor<?> value : namedQueryParameters.values() ) {
+					this.queryParameters.put( value, Collections.emptyList() );
+				}
 				this.names = namedQueryParameters.keySet();
 			}
 			else {
@@ -161,24 +168,33 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
+	public <T> AllowableParameterType<T> getInferredParameterType(QueryParameter<T> parameter) {
+		final List<SqmParameter> sqmParameters = queryParameters.get( parameter );
+		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
+			return null;
+		}
+		return sqmParameters.get( 0 ).getNodeType();
+	}
+
+	@Override
 	public boolean containsReference(QueryParameter<?> parameter) {
 		//noinspection SuspiciousMethodCalls
-		return queryParameters.contains( parameter );
+		return queryParameters.containsKey( parameter );
 	}
 
 	@Override
 	public void visitParameters(Consumer<QueryParameterImplementor<?>> consumer) {
-		queryParameters.forEach( consumer );
+		queryParameters.keySet().forEach( consumer );
 	}
 
 	@Override
 	public Set<QueryParameterImplementor<?>> getRegistrations() {
-		return Collections.unmodifiableSet( queryParameters );
+		return Collections.unmodifiableSet( queryParameters.keySet() );
 	}
 
 	@Override
 	public boolean hasAnyMatching(Predicate<QueryParameterImplementor<?>> filter) {
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( filter.test( queryParameter ) ) {
 				return true;
 			}
@@ -212,13 +228,20 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(String name) {
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( name.equals( queryParameter.getName() ) ) {
 				return queryParameter;
 			}
 		}
 
-		return null;
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"Could not locate named parameter [%s], expecting one of [%s]",
+						name,
+						String.join( ", ", names )
+				)
+		);
 	}
 
 
@@ -237,7 +260,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 
 	@Override
 	public QueryParameterImplementor<?> getQueryParameter(int positionLabel) {
-		for ( QueryParameterImplementor<?> queryParameter : queryParameters ) {
+		for ( QueryParameterImplementor<?> queryParameter : queryParameters.keySet() ) {
 			if ( queryParameter.getPosition() != null && queryParameter.getPosition() == positionLabel ) {
 				return queryParameter;
 			}

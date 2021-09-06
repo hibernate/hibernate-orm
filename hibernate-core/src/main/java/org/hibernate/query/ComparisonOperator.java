@@ -87,7 +87,7 @@ public enum ComparisonOperator {
 
 		@Override
 		public String sqlText() {
-			return "is not distinct from";
+			return " is not distinct from ";
 		}
 	},
 
@@ -114,7 +114,7 @@ public enum ComparisonOperator {
 
 		@Override
 		public String sqlText() {
-			return "is distinct from";
+			return " is distinct from ";
 		}
 	},
 

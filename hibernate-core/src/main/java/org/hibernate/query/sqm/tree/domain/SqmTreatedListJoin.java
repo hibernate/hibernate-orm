@@ -10,8 +10,10 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -22,13 +24,13 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 
 	@SuppressWarnings("WeakerAccess")
 	public SqmTreatedListJoin(
-			SqmListJoin<O,T> wrappedPath,
+			SqmListJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				(ListPersistentAttribute) wrappedPath.getAttribute(),
+				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
 				wrappedPath.isFetched(),
@@ -36,6 +38,13 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		);
 		this.treatTarget = treatTarget;
 		this.wrappedPath = wrappedPath;
+	}
+
+	@Override
+	public void addSqmJoin(SqmJoin<S, ?> join) {
+		super.addSqmJoin( join );
+		//noinspection unchecked
+		wrappedPath.addSqmJoin( (SqmJoin<T, ?>) join );
 	}
 
 	@Override
@@ -54,17 +63,21 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
-	public SqmPath resolveIndexedAccess(
-			SqmExpression selector,
+	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		return getWrappedPath().resolveIndexedAccess( selector, isTerminal, creationState );
 	}
 
 	@Override
-	public SqmAttributeJoin makeCopy(SqmCreationProcessingState creationProcessingState) {
-		//noinspection unchecked
-		return new SqmTreatedListJoin( wrappedPath, treatTarget, getAlias() );
+	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
+		return new SqmTreatedListJoin<>( wrappedPath, treatTarget, getAlias() );
 	}
 
 	@Override

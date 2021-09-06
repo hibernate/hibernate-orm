@@ -141,15 +141,15 @@ public interface SemanticQueryWalker<T> {
 
 	T visitAnyValuedValuedPath(SqmAnyValuedSimplePath<?> path);
 
-	T visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath path);
+	T visitNonAggregatedCompositeValuedPath(NonAggregatedCompositeSimplePath<?> path);
 
 	T visitEntityValuedPath(SqmEntityValuedSimplePath<?> path);
 
 	T visitPluralValuedPath(SqmPluralValuedSimplePath<?> path);
 
-	T visitSelfInterpretingSqmPath(SelfInterpretingSqmPath sqmPath);
+	T visitSelfInterpretingSqmPath(SelfInterpretingSqmPath<?> sqmPath);
 	
-	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath path);
+	T visitIndexedPluralAccessPath(SqmIndexedCollectionAccessPath<?> path);
 
 	T visitMaxElementPath(SqmMaxElementPath<?> path);
 
@@ -161,7 +161,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitTreatedPath(SqmTreatedPath<?, ?> sqmTreatedPath);
 
-	T visitCorrelation(SqmCorrelation correlation);
+	T visitCorrelation(SqmCorrelation<?, ?> correlation);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -193,9 +193,9 @@ public interface SemanticQueryWalker<T> {
 
 	T visitLiteral(SqmLiteral<?> literal);
 
-	T visitEnumLiteral(SqmEnumLiteral sqmEnumLiteral);
+	T visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral);
 
-	T visitFieldLiteral(SqmFieldLiteral sqmFieldLiteral);
+	T visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral);
 
 	T visitTuple(SqmTuple<?> sqmTuple);
 
@@ -229,27 +229,27 @@ public interface SemanticQueryWalker<T> {
 
 	T visitUnaryOperationExpression(SqmUnaryOperation<?> expression);
 
-	T visitFunction(SqmFunction tSqmFunction);
+	T visitFunction(SqmFunction<?> tSqmFunction);
 
-	T visitExtractUnit(SqmExtractUnit extractUnit);
+	T visitExtractUnit(SqmExtractUnit<?> extractUnit);
 
 	T visitFormat(SqmFormat sqmFormat);
 
-	T visitCastTarget(SqmCastTarget sqmCastTarget);
+	T visitCastTarget(SqmCastTarget<?> sqmCastTarget);
 
 	T visitTrimSpecification(SqmTrimSpecification trimSpecification);
 
-	T visitDistinct(SqmDistinct distinct);
+	T visitDistinct(SqmDistinct<?> distinct);
 
 	T visitStar(SqmStar sqmStar);
 
-	T visitCoalesce(SqmCoalesce sqmCoalesce);
+	T visitCoalesce(SqmCoalesce<?> sqmCoalesce);
 
-	T visitToDuration(SqmToDuration toDuration);
+	T visitToDuration(SqmToDuration<?> toDuration);
 
 	T visitByUnit(SqmByUnit sqmByUnit);
 
-	T visitDurationUnit(SqmDurationUnit durationUnit);
+	T visitDurationUnit(SqmDurationUnit<?> durationUnit);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// predicates
@@ -306,7 +306,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitPluralAttributeSizeFunction(SqmCollectionSize function);
 
-	T visitMapEntryFunction(SqmMapEntryReference function);
+	T visitMapEntryFunction(SqmMapEntryReference<?, ?> function);
 
 	T visitFullyQualifiedClass(Class<?> namedClass);
 }

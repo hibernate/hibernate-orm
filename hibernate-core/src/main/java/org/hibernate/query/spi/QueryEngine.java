@@ -73,6 +73,8 @@ public class QueryEngine {
 		final SqmTranslatorFactory sqmTranslatorFactory = resolveSqmTranslatorFactory( queryEngineOptions, dialect );
 
 		return new QueryEngine(
+				sessionFactory.getUuid(),
+				sessionFactory.getName(),
 				() -> sessionFactory.getRuntimeMetamodels().getJpaMetamodel(),
 				sessionFactory.getSessionFactoryOptions().getCriteriaValueHandlingMode(),
 				sessionFactory.getSessionFactoryOptions().getPreferredSqlTypeCodeForBoolean(),
@@ -99,6 +101,8 @@ public class QueryEngine {
 	private final int preferredSqlTypeCodeForBoolean;
 
 	public QueryEngine(
+			String uuid,
+			String name,
 			Supplier<JpaMetamodel> jpaMetamodelAccess,
 			ValueHandlingMode criteriaValueHandlingMode,
 			int preferredSqlTypeCodeForBoolean,
@@ -118,6 +122,8 @@ public class QueryEngine {
 		this.hqlTranslator = hqlTranslator;
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+				uuid,
+				name,
 				this,
 				jpaMetamodelAccess,
 				serviceRegistry,
@@ -152,6 +158,8 @@ public class QueryEngine {
 	 * Simplified constructor mainly meant for Quarkus use
 	 */
 	public QueryEngine(
+			String uuid,
+			String name,
 			JpaMetamodel jpaMetamodel,
 			ValueHandlingMode criteriaValueHandlingMode,
 			int preferredSqlTypeCodeForBoolean,
@@ -170,6 +178,8 @@ public class QueryEngine {
 		dialect.initializeFunctionRegistry( this );
 
 		this.criteriaBuilder = new SqmCriteriaNodeBuilder(
+				uuid,
+				name,
 				this,
 				() -> jpaMetamodel,
 				serviceRegistry,

@@ -72,7 +72,6 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 	@Override
 	public SqmCorrelatedBagJoin<O, T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
-		//noinspection unchecked
 		return new SqmCorrelatedBagJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
 				getReferencedPathSource(),
@@ -80,8 +79,8 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 				getSqmJoinType(),
 				isFetched(),
 				nodeBuilder(),
-				(SqmCorrelatedRootJoin<O>) pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
-				(SqmBagJoin<O, T>) pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
+				pathRegistry.findFromByPath( correlatedRootJoin.getNavigablePath() ),
+				pathRegistry.findFromByPath( correlationParent.getNavigablePath() )
 		);
 	}
 }

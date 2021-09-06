@@ -215,6 +215,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 		CommonFunctionFactory.replace_strReplace( queryEngine );
 		CommonFunctionFactory.everyAny_sumCaseCase( queryEngine );
+		CommonFunctionFactory.bitLength_pattern( queryEngine, "datalength(?1) * 8" );
 	}
 
 	@Override
@@ -238,11 +239,11 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		if ( to == CastType.STRING ) {
 			switch ( from ) {
 				case DATE:
-					return "str_replace(convert(varchar, ?1, 102), '.', '-')";
+					return "str_replace(convert(varchar,?1,102),'.','-')";
 				case TIME:
-					return "convert(varchar, ?1, 108)";
+					return "convert(varchar,?1,108)";
 				case TIMESTAMP:
-					return "str_replace(convert(varchar, ?1, 23), 'T', ' ')";
+					return "str_replace(convert(varchar,?1,23),'T',' ')";
 			}
 		}
 		return super.castPattern( from, to );
@@ -259,7 +260,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String extractPattern(TemporalUnit unit) {
 		//TODO!!
-		return "datepart(?1, ?2)";
+		return "datepart(?1,?2)";
 	}
 
 	@Override
@@ -270,13 +271,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		//TODO!!
-		return "dateadd(?1, ?2, ?3)";
+		return "dateadd(?1,?2,?3)";
 	}
 
 	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		//TODO!!
-		return "datediff(?1, ?2, ?3)";
+		return "datediff(?1,?2,?3)";
 	}
 
 	@Override

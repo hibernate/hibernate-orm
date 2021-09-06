@@ -11,6 +11,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.function.DerbyConcatFunction;
 import org.hibernate.dialect.function.DerbyLpadEmulation;
 import org.hibernate.dialect.function.DerbyRpadEmulation;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -183,6 +184,9 @@ public class DerbyDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
+		CommonFunctionFactory.aggregates( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.chr_char( queryEngine );
@@ -208,6 +212,8 @@ public class DerbyDialect extends Dialect {
 				.setReturnTypeResolver( useArgType(1) )
 				.setExactArgumentCount( 2 )
 				.register();
+
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction() );
 
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation() );
@@ -252,14 +258,14 @@ public class DerbyDialect extends Dialect {
 			case DAY_OF_MONTH:
 				return "day(?2)";
 			case DAY_OF_YEAR:
-				return "({fn timestampdiff(sql_tsi_day, date(char(year(?2),4)||'-01-01'),?2)}+1)";
+				return "({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),?2)}+1)";
 			case DAY_OF_WEEK:
 				// Use the approach as outlined here: https://stackoverflow.com/questions/36357013/day-of-week-from-seconds-since-epoch
-				return "(mod(mod({fn timestampdiff(sql_tsi_day, {d '1970-01-01'}, ?2)}+4,7)+7,7)+1)";
+				return "(mod(mod({fn timestampdiff(sql_tsi_day,{d '1970-01-01'},?2)}+4,7)+7,7)+1)";
 			case WEEK:
 				// Use the approach as outlined here: https://www.sqlservercentral.com/articles/a-simple-formula-to-calculate-the-iso-week-number
 				// In SQL Server terms this is (DATEPART(dy,DATEADD(dd,DATEDIFF(dd,'17530101',@SomeDate)/7*7,'17530104'))+6)/7
-				return "(({fn timestampdiff(sql_tsi_day, date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day, {fn timestampdiff(sql_tsi_day, {d '1753-01-01'}, ?2)}/7*7, {d '1753-01-04'})})}+7)/7)";
+				return "(({fn timestampdiff(sql_tsi_day,date(char(year(?2),4)||'-01-01'),{fn timestampadd(sql_tsi_day,{fn timestampdiff(sql_tsi_day,{d '1753-01-01'},?2)}/7*7,{d '1753-01-04'})})}+7)/7)";
 			case QUARTER:
 				return "((month(?2)+2)/3)";
 			default:
@@ -320,9 +326,9 @@ public class DerbyDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				return "{fn timestampadd(sql_tsi_frac_second, mod(bigint(?2),1000000000), {fn timestampadd(sql_tsi_second, bigint((?2)/1000000000), ?3)})}";
+				return "{fn timestampadd(sql_tsi_frac_second,mod(bigint(?2),1000000000),{fn timestampadd(sql_tsi_second,bigint((?2)/1000000000),?3)})}";
 			default:
-				return "{fn timestampadd(sql_tsi_?1, bigint(?2), ?3)}";
+				return "{fn timestampadd(sql_tsi_?1,bigint(?2),?3)}";
 		}
 	}
 
@@ -331,9 +337,9 @@ public class DerbyDialect extends Dialect {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:
-				return "{fn timestampdiff(sql_tsi_frac_second, ?2, ?3)}";
+				return "{fn timestampdiff(sql_tsi_frac_second,?2,?3)}";
 			default:
-				return "{fn timestampdiff(sql_tsi_?1, ?2, ?3)}";
+				return "{fn timestampdiff(sql_tsi_?1,?2,?3)}";
 		}
 	}
 
@@ -368,7 +374,7 @@ public class DerbyDialect extends Dialect {
 	public String getQuerySequencesString() {
 		return getVersion() < 1060
 				? null
-				: "select sys.sysschemas.schemaname as sequence_schema, sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid = sys.sysschemas.schemaid";
+				: "select sys.sysschemas.schemaname as sequence_schema,sys.syssequences.* from sys.syssequences left join sys.sysschemas on sys.syssequences.schemaid=sys.sysschemas.schemaid";
 	}
 
 	@Override

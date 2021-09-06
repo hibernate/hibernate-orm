@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 
@@ -32,5 +33,10 @@ public class SelfRenderingPredicate implements Predicate {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitSelfRenderingPredicate( this );
+	}
+
+	@Override
+	public JdbcMappingContainer getExpressionType() {
+		return selfRenderingExpression.getExpressionType();
 	}
 }

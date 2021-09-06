@@ -251,7 +251,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 				this,
 				r -> new SqmAliasedNodePositionTracker(
 						r,
-						sqmSelectClause.getSelectionItems().size()
+						sqmSelectClause.getSelections()
 				),
 				getCurrentClauseStack()::getCurrent
 		) {
@@ -277,7 +277,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		pushProcessingState( processingState, getFromClauseIndex() );
 		try {
 			for ( int i = 0; i < sqmSelectClause.getSelectionItems().size(); i++ ) {
-				final DomainResultProducer domainResultProducer = (DomainResultProducer) sqmSelectClause.getSelectionItems()
+				final DomainResultProducer<?> domainResultProducer = (DomainResultProducer<?>) sqmSelectClause.getSelectionItems()
 						.get( i )
 						.accept( this );
 				domainResultProducer.applySqlSelections( this );

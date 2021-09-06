@@ -43,11 +43,6 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public JavaTypeDescriptor<E> getJavaTypeDescriptor() {
-		return getModel().getExpressableJavaTypeDescriptor();
-	}
-
-	@Override
 	public BagPersistentAttribute<O,E> getModel() {
 		return getReferencedPathSource();
 	}

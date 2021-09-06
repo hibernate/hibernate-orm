@@ -126,27 +126,27 @@ public class SQLiteDialect extends Dialect {
 	public String extractPattern(TemporalUnit unit) {
 		switch ( unit ) {
 			case SECOND:
-				return "cast(strftime('%S.%f', ?2) as double)";
+				return "cast(strftime('%S.%f',?2) as double)";
 			case MINUTE:
-				return "strftime('%M', ?2)";
+				return "strftime('%M',?2)";
 			case HOUR:
-				return "strftime('%H', ?2)";
+				return "strftime('%H',?2)";
 			case DAY:
 			case DAY_OF_MONTH:
-				return "(strftime('%d', ?2)+1)";
+				return "(strftime('%d',?2)+1)";
 			case MONTH:
-				return "strftime('%m', ?2)";
+				return "strftime('%m',?2)";
 			case YEAR:
-				return "strftime('%Y', ?2)";
+				return "strftime('%Y',?2)";
 			case DAY_OF_WEEK:
-				return "(strftime('%w', ?2)+1)";
+				return "(strftime('%w',?2)+1)";
 			case DAY_OF_YEAR:
-				return "strftime('%j', ?2)";
+				return "strftime('%j',?2)";
 			case EPOCH:
-				return "strftime('%s', ?2)";
+				return "strftime('%s',?2)";
 			case WEEK:
 				// Thanks https://stackoverflow.com/questions/15082584/sqlite-return-wrong-week-number-for-2013
-				return "((strftime('%j', date(?2, '-3 days', 'weekday 4'))-1)/7+1)";
+				return "((strftime('%j',date(?2,'-3 days','weekday 4'))-1)/7+1)";
 			default:
 				return super.extractPattern(unit);
 		}
@@ -158,13 +158,13 @@ public class SQLiteDialect extends Dialect {
 		switch ( unit ) {
 			case NANOSECOND:
 			case NATIVE:
-				return "datetime(?3, '+?2 seconds')";
+				return "datetime(?3,'+?2 seconds')";
 			case QUARTER: //quarter is not supported in interval literals
-				return function + "(?3, '+'||(?2*3)||' months')";
+				return function + "(?3,'+'||(?2*3)||' months')";
 			case WEEK: //week is not supported in interval literals
-				return function + "(?3, '+'||(?2*7)||' days')";
+				return function + "(?3,'+'||(?2*7)||' days')";
 			default:
-				return function + "(?3, '+?2 ?1s')";
+				return function + "(?3,'+?2 ?1s')";
 		}
 	}
 
@@ -244,20 +244,20 @@ public class SQLiteDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
 				StandardBasicTypes.INTEGER,
-				"instr(?2, ?1)",
-				"instr(?2, ?1, ?3)"
+				"instr(?2,?1)",
+				"instr(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
 				StandardBasicTypes.STRING,
-				"(substr(replace(hex(zeroblob(?2)), '00', ' '), 1, ?2 - length(?1))||?1)",
-				"(substr(replace(hex(zeroblob(?2)), '00', ?3), 1, ?2 - length(?1))||?1)"
+				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
+				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)"
 		).setArgumentListSignature("(string, length[, padding])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"rpad",
 				StandardBasicTypes.STRING,
-				"(?1||substr(replace(hex(zeroblob(?2)), '00', ' '), 1, ?2 - length(?1)))",
-				"(?1||substr(replace(hex(zeroblob(?2)), '00', ?3), 1, ?2 - length(?1)))"
+				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
+				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))"
 		).setArgumentListSignature("(string, length[, padding])");
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")
@@ -269,13 +269,13 @@ public class SQLiteDialect extends Dialect {
 		if (!supportsMathFunctions() ) {
 			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
 					"floor",
-					"(cast(?1 as int) - (?1 < cast(?1 as int)))"
+					"(cast(?1 as int)-(?1<cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
 					.register();
 			queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder(
 					"ceiling",
-					"(cast(?1 as int) + (?1 > cast(?1 as int)))"
+					"(cast(?1 as int)+(?1>cast(?1 as int)))"
 			).setReturnTypeResolver( StandardFunctionReturnTypeResolvers.useArgType( 1 ) )
 					.setExactArgumentCount( 1 )
 					.register();
@@ -288,15 +288,15 @@ public class SQLiteDialect extends Dialect {
 			case BOTH:
 				return character == ' '
 						? "trim(?1)"
-						: "trim(?1, '" + character + "')";
+						: "trim(?1,'" + character + "')";
 			case LEADING:
 				return character == ' '
 						? "ltrim(?1)"
-						: "ltrim(?1, '" + character + "')";
+						: "ltrim(?1,'" + character + "')";
 			case TRAILING:
 				return character == ' '
 						? "rtrim(?1)"
-						: "rtrim(?1, '" + character + "')";
+						: "rtrim(?1,'" + character + "')";
 		}
 		throw new UnsupportedOperationException( "Unsupported specification: " + specification );
 	}

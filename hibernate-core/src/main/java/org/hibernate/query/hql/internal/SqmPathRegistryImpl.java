@@ -37,12 +37,12 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	private final SqmCreationProcessingState associatedProcessingState;
 	private final JpaCompliance jpaCompliance;
 
-	private final Map<NavigablePath, SqmPath> sqmPathByPath = new HashMap<>();
-	private final Map<NavigablePath, SqmFrom> sqmFromByPath = new HashMap<>();
+	private final Map<NavigablePath, SqmPath<?>> sqmPathByPath = new HashMap<>();
+	private final Map<NavigablePath, SqmFrom<?, ?>> sqmFromByPath = new HashMap<>();
 
-	private final Map<String, SqmFrom> sqmFromByAlias = new HashMap<>();
+	private final Map<String, SqmFrom<?, ?>> sqmFromByAlias = new HashMap<>();
 
-	private final List<SqmAliasedNode> simpleSelectionNodes = new ArrayList<>();
+	private final List<SqmAliasedNode<?>> simpleSelectionNodes = new ArrayList<>();
 
 	public SqmPathRegistryImpl(SqmCreationProcessingState associatedProcessingState) {
 		this.associatedProcessingState = associatedProcessingState;
@@ -50,7 +50,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public void register(SqmPath sqmPath) {
+	public void register(SqmPath<?> sqmPath) {
 		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#register(SqmPath) : %s", sqmPath.getNavigablePath().getFullPath() );
 
 		// Generally we:
@@ -61,8 +61,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		// Regarding part #1 (add to the path-by-path map), it is ok for a SqmFrom to replace a
 		// 		non-SqmFrom.  This should equate to, e.g., an implicit join.
 
-		if ( sqmPath instanceof SqmFrom ) {
-			final SqmFrom sqmFrom = (SqmFrom) sqmPath;
+		if ( sqmPath instanceof SqmFrom<?, ?> ) {
+			final SqmFrom<?, ?> sqmFrom = (SqmFrom<?, ?>) sqmPath;
 
 			final String alias = sqmPath.getExplicitAlias();
 			if ( alias != null ) {
@@ -70,7 +70,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 						? alias.toLowerCase( Locale.getDefault() )
 						: alias;
 
-				final SqmFrom previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
+				final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
 
 				if ( previousFrom != null ) {
 					throw new AliasCollisionException(
@@ -85,7 +85,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				}
 			}
 
-			final SqmFrom previousFromByPath = sqmFromByPath.put( sqmPath.getNavigablePath(), sqmFrom );
+			final SqmFrom<?, ?> previousFromByPath = sqmFromByPath.put( sqmPath.getNavigablePath(), sqmFrom );
 
 			if ( previousFromByPath != null ) {
 				// this should never happen
@@ -101,7 +101,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			}
 		}
 
-		final SqmPath previousPath = sqmPathByPath.put( sqmPath.getNavigablePath(), sqmPath );
+		final SqmPath<?> previousPath = sqmPathByPath.put( sqmPath.getNavigablePath(), sqmPath );
 
 		if ( previousPath instanceof SqmFrom ) {
 			// this should never happen
@@ -118,14 +118,15 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmPath findPath(NavigablePath path) {
-		final SqmPath found = sqmPathByPath.get( path );
+	public <X> SqmPath<X> findPath(NavigablePath path) {
+		final SqmPath<?> found = sqmPathByPath.get( path );
 		if ( found != null ) {
-			return found;
+			//noinspection unchecked
+			return (SqmPath<X>) found;
 		}
 
 		if ( associatedProcessingState.getParentProcessingState() != null ) {
-			final SqmFrom containingQueryFrom = associatedProcessingState.getParentProcessingState()
+			final SqmFrom<?, X> containingQueryFrom = associatedProcessingState.getParentProcessingState()
 					.getPathRegistry()
 					.findFromByPath( path );
 			if ( containingQueryFrom != null ) {
@@ -138,14 +139,15 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmFrom findFromByPath(NavigablePath navigablePath) {
-		final SqmFrom found = sqmFromByPath.get( navigablePath );
+	public <X extends SqmFrom<?, ?>> X findFromByPath(NavigablePath navigablePath) {
+		final SqmFrom<?, ?> found = sqmFromByPath.get( navigablePath );
 		if ( found != null ) {
-			return found;
+			//noinspection unchecked
+			return (X) found;
 		}
 
 		if ( associatedProcessingState.getParentProcessingState() != null ) {
-			final SqmFrom containingQueryFrom = associatedProcessingState.getParentProcessingState()
+			final X containingQueryFrom = associatedProcessingState.getParentProcessingState()
 					.getPathRegistry()
 					.findFromByPath( navigablePath );
 			if ( containingQueryFrom != null ) {
@@ -158,15 +160,16 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmFrom findFromByAlias(String alias) {
+	public <X extends SqmFrom<?, ?>> X findFromByAlias(String alias) {
 		final String localAlias = jpaCompliance.isJpaQueryComplianceEnabled()
 				? alias.toLowerCase( Locale.getDefault() )
 				: alias;
 
-		final SqmFrom registered = sqmFromByAlias.get( localAlias );
+		final SqmFrom<?, ?> registered = sqmFromByAlias.get( localAlias );
 
 		if ( registered != null ) {
-			return registered;
+			//noinspection unchecked
+			return (X) registered;
 		}
 
 		if ( associatedProcessingState.getParentProcessingState() != null ) {
@@ -177,14 +180,14 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public SqmFrom findFromExposing(String navigableName) {
+	public <X extends SqmFrom<?, ?>> X findFromExposing(String navigableName) {
 		// todo (6.0) : atm this checks every from-element every time, the idea being to make sure there
 		//  	is only one such element obviously that scales poorly across larger from-clauses.  Another
 		//  	(configurable?) option would be to simply pick the first one as a perf optimization
 
-		SqmFrom found = null;
-		for ( Map.Entry<NavigablePath, SqmFrom> entry : sqmFromByPath.entrySet() ) {
-			final SqmFrom fromElement = entry.getValue();
+		SqmFrom<?, ?> found = null;
+		for ( Map.Entry<NavigablePath, SqmFrom<?, ?>> entry : sqmFromByPath.entrySet() ) {
+			final SqmFrom<?, ?> fromElement = entry.getValue();
 			if ( definesAttribute( fromElement.getReferencedPathSource(), navigableName ) ) {
 				if ( found != null ) {
 					throw new IllegalStateException( "Multiple from-elements expose unqualified attribute : " + navigableName );
@@ -208,24 +211,26 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				navigableName
 		);
 
-		return found;
+		//noinspection unchecked
+		return (X) found;
 	}
 
 	@Override
-	public SqmPath resolvePath(NavigablePath navigablePath, Function<NavigablePath, SqmPath> creator) {
+	public <X> SqmPath<X> resolvePath(NavigablePath navigablePath, Function<NavigablePath, SqmPath<X>> creator) {
 		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
 
-		final SqmPath existing = sqmPathByPath.get( navigablePath );
+		final SqmPath<?> existing = sqmPathByPath.get( navigablePath );
 		if ( existing != null ) {
-			return existing;
+			//noinspection unchecked
+			return (SqmPath<X>) existing;
 		}
 
-		final SqmPath sqmPath = creator.apply( navigablePath );
+		final SqmPath<X> sqmPath = creator.apply( navigablePath );
 		register( sqmPath );
 		return sqmPath;
 	}
 
-	private boolean definesAttribute(SqmPathSource containerType, String name) {
+	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {
 		return containerType.findSubPathSource( name ) != null;
 	}
 
@@ -282,7 +287,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		simpleSelectionNodes.add( node );
 	}
 
-	private void checkResultVariable(SqmAliasedNode selection) {
+	private void checkResultVariable(SqmAliasedNode<?> selection) {
 		final String alias = selection.getAlias();
 		if ( alias == null ) {
 			return;
@@ -300,7 +305,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 			);
 		}
 
-		final SqmFrom registeredFromElement = sqmFromByAlias.get( alias );
+		final SqmFrom<?, ?> registeredFromElement = sqmFromByAlias.get( alias );
 		if ( registeredFromElement != null ) {
 			if ( !registeredFromElement.equals( selection.getSelectableNode() ) ) {
 				throw new AliasCollisionException(

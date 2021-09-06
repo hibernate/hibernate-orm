@@ -8,34 +8,24 @@ package org.hibernate.query.sqm.tree.delete;
 
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.metamodel.EntityType;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCriteriaDelete;
-import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
-import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
+import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmDeleteStatement<T>
-		extends AbstractSqmDmlStatement<T>
+		extends AbstractSqmRestrictedDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaDelete<T> {
-	private final SqmQuerySource querySource;
-
-	private SqmWhereClause whereClause;
 
 	public SqmDeleteStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
-		this.querySource = SqmQuerySource.HQL;
 	}
 
 	public SqmDeleteStatement(Class<T> targetEntity, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
@@ -43,78 +33,24 @@ public class SqmDeleteStatement<T>
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
 						null,
+						false,
 						nodeBuilder
 				),
 				querySource,
 				nodeBuilder
 		);
-		this.querySource = SqmQuerySource.CRITERIA;
-	}
-
-	@Override
-	public SqmQuerySource getQuerySource() {
-		return querySource;
-	}
-
-	@Override
-	public SqmWhereClause getWhereClause() {
-		return whereClause;
-	}
-
-	@Override
-	public void applyPredicate(SqmPredicate predicate) {
-		if ( predicate == null ) {
-			return;
-		}
-		if ( whereClause == null ) {
-			whereClause = new SqmWhereClause( nodeBuilder() );
-		}
-
-		whereClause.applyPredicate( predicate );
-	}
-
-	public void setWhereClause(SqmWhereClause whereClause) {
-		this.whereClause = whereClause;
-	}
-
-	@Override
-	public Root<T> from(Class<T> entityClass) {
-		final EntityDomainType<T> entity = nodeBuilder().getDomainModel().entity( entityClass );
-		SqmRoot<T> root = new SqmRoot<>( entity, null, nodeBuilder() );
-		setTarget( root );
-		return root;
-	}
-
-	@Override
-	public Root<T> from(EntityType<T> entity) {
-		SqmRoot<T> root = new SqmRoot<>( (EntityDomainType<T>) entity, null, nodeBuilder() );
-		setTarget( root );
-		return root;
-	}
-
-	@Override
-	public Root<T> getRoot() {
-		return getTarget();
 	}
 
 	@Override
 	public SqmDeleteStatement<T> where(Expression<Boolean> restriction) {
-		getWhereClause().setPredicate( (SqmPredicate) restriction );
+		setWhere( restriction );
 		return this;
 	}
 
 	@Override
 	public SqmDeleteStatement<T> where(Predicate... restrictions) {
-		getWhereClause().setPredicate( null );
-		for ( Predicate restriction : restrictions ) {
-			getWhereClause().applyPredicate( (SqmPredicate) restriction );
-		}
+		setWhere( restrictions );
 		return this;
-	}
-
-	@Override
-	public JpaPredicate getRestriction() {
-		return whereClause == null ? null : whereClause.getPredicate();
 	}
 
 	@Override
@@ -126,12 +62,7 @@ public class SqmDeleteStatement<T>
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "delete from " );
 		sb.append( getTarget().getEntityName() );
-		if ( getTarget().getExplicitAlias() != null ) {
-			sb.append( ' ' ).append( getTarget().getExplicitAlias() );
-		}
-		if ( whereClause != null && whereClause.getPredicate() != null ) {
-			sb.append( " where " );
-			whereClause.getPredicate().appendHqlString( sb );
-		}
+		sb.append( ' ' ).append( getTarget().resolveAlias() );
+		super.appendHqlString( sb );
 	}
 }

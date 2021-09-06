@@ -101,6 +101,7 @@ public class MimerSQLDialect extends Dialect {
 
 		CommonFunctionFactory.soundex( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
+		CommonFunctionFactory.bitLength( queryEngine );
 		CommonFunctionFactory.truncate( queryEngine );
 		CommonFunctionFactory.repeat( queryEngine );
 		CommonFunctionFactory.pad_repeat( queryEngine );
@@ -161,7 +162,7 @@ public class MimerSQLDialect extends Dialect {
 
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		StringBuilder pattern = new StringBuilder();
-		pattern.append("cast((?3 - ?2) ");
+		pattern.append("cast((?3-?2) ");
 		switch (unit) {
 			case NATIVE:
 			case NANOSECOND:
@@ -209,13 +210,13 @@ public class MimerSQLDialect extends Dialect {
 		switch ( unit ) {
 			case NATIVE:
 			case NANOSECOND:
-				return "(?3 + (?2)/1e9 * interval '1' second)";
+				return "(?3+(?2)/1e9*interval '1' second)";
 			case QUARTER:
-				return "(?3 + (?2) * interval '3' month)";
+				return "(?3+(?2)*interval '3' month)";
 			case WEEK:
-				return "(?3 + (?2) * interval '7' day)";
+				return "(?3+(?2)*interval '7' day)";
 			default:
-				return "(?3 + (?2) * interval '1' ?1)";
+				return "(?3+(?2)*interval '1' ?1)";
 		}
 	}
 

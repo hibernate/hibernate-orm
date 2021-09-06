@@ -7,16 +7,12 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.persister.collection.CollectionPropertyNames;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
+import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.hql.spi.SemanticPathPart;
-import org.hibernate.query.hql.spi.SqmCreationState;
 
 /**
  * An SqmPath for plural attribute paths
@@ -28,8 +24,8 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
-			PluralPersistentAttribute referencedNavigable,
-			SqmPath lhs,
+			PluralPersistentAttribute<?, ?, E> referencedNavigable,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		this( navigablePath, referencedNavigable, lhs, null, nodeBuilder );
 	}
@@ -37,18 +33,16 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	@SuppressWarnings("WeakerAccess")
 	public SqmPluralValuedSimplePath(
 			NavigablePath navigablePath,
-			PluralPersistentAttribute referencedNavigable,
-			SqmPath lhs,
+			PluralPersistentAttribute<?, ?, E> referencedNavigable,
+			SqmPath<?> lhs,
 			String explicitAlias,
 			NodeBuilder nodeBuilder) {
-		//noinspection unchecked
 		super( navigablePath, referencedNavigable, lhs, explicitAlias, nodeBuilder );
 	}
 
 	@Override
-	public PluralPersistentAttribute<?,?,E> getReferencedPathSource() {
-		//noinspection unchecked
-		return (PluralPersistentAttribute) super.getReferencedPathSource();
+	public PluralPersistentAttribute<?, ?, E> getReferencedPathSource() {
+		return (PluralPersistentAttribute<?, ?, E>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -62,50 +56,15 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SemanticPathPart resolvePathPart(
+	public SqmPath<?> resolvePathPart(
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
 		// this is a reference to a collection outside of the from-clause...
-
-		// what "names" should be allowed here?
-		//		1) special names such as {id}, {index}, {element}, etc?
-		//		2) named Navigables relative to the Collection's element type?
-		//		3) named Navigables relative to the Collection's index (if one) type?
-		//		?) others?
-		//		d) all of the above :)
-		//
-		//	or probably some combination of.  For now,
-
 		final NavigablePath navigablePath = getNavigablePath().append( name );
 		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 				navigablePath,
-				np -> {
-					final PluralPersistentAttribute<?, ?, E> referencedPathSource = getReferencedPathSource();
-
-					if ( CollectionPropertyNames.COLLECTION_ELEMENTS.equals( name ) ) {
-						return referencedPathSource.getElementPathSource().createSqmPath(
-								this
-						);
-					}
-
-					if ( CollectionPropertyNames.COLLECTION_INDEX.equals( name )
-							|| CollectionPropertyNames.COLLECTION_INDICES.equals( name ) ) {
-						if ( referencedPathSource instanceof MapPersistentAttribute ) {
-							return ( (MapPersistentAttribute) referencedPathSource ).getKeyPathSource().createSqmPath( this );
-						}
-						else if ( referencedPathSource instanceof ListPersistentAttribute ) {
-							return referencedPathSource.getIndexPathSource().createSqmPath( this );
-						}
-
-						throw new UnsupportedOperationException(  );
-					}
-
-					return referencedPathSource.getElementPathSource().createSqmPath(
-							this
-					);
-				}
+				np -> get( np.getUnaliasedLocalName() )
 		);
 	}
 

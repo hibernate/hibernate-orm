@@ -10,23 +10,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * @author Steve Ebersole
  */
-public class InListPredicate implements Predicate {
+public class InListPredicate extends AbstractPredicate {
 	private final Expression testExpression;
 	private final List<Expression> listExpressions;
-	private final boolean negated;
 
 	public InListPredicate(Expression testExpression) {
 		this( testExpression, new ArrayList<>() );
 	}
 
-	public InListPredicate(Expression testExpression, boolean negated) {
-		this( testExpression, new ArrayList<>(), negated );
+	public InListPredicate(Expression testExpression, boolean negated, JdbcMappingContainer expressionType) {
+		this( testExpression, new ArrayList<>(), negated, expressionType );
 	}
 
 	public InListPredicate(Expression testExpression, Expression... listExpressions) {
@@ -36,16 +36,17 @@ public class InListPredicate implements Predicate {
 	public InListPredicate(
 			Expression testExpression,
 			List<Expression> listExpressions) {
-		this( testExpression, listExpressions, false );
+		this( testExpression, listExpressions, false, null );
 	}
 
 	public InListPredicate(
 			Expression testExpression,
 			List<Expression> listExpressions,
-			boolean negated) {
+			boolean negated,
+			JdbcMappingContainer expressionType) {
+		super( expressionType, negated );
 		this.testExpression = testExpression;
 		this.listExpressions = listExpressions;
-		this.negated = negated;
 	}
 
 	public Expression getTestExpression() {
@@ -58,15 +59,6 @@ public class InListPredicate implements Predicate {
 
 	public void addExpression(Expression expression) {
 		listExpressions.add( expression );
-	}
-
-	public boolean isNegated() {
-		return negated;
-	}
-
-	@Override
-	public boolean isEmpty() {
-		return false;
 	}
 
 	@Override

@@ -163,7 +163,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 								appendSql( ')' );
 							}
 						}
-						appendSql( " where rownum <= " );
+						appendSql( " where rownum<=" );
 						final Stack<Clause> clauseStack = getClauseStack();
 						clauseStack.push( Clause.WHERE );
 						try {
@@ -307,7 +307,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 			visitDecodeCaseSearchedExpression( caseSearchedExpression );
 		}
 		else {
-			visitAnsiCaseSearchedExpression( caseSearchedExpression );
+			super.visitCaseSearchedExpression( caseSearchedExpression, inSelect );
 		}
 	}
 

@@ -22,7 +22,7 @@ public abstract class AbstractSqmJoin<O,T> extends AbstractSqmFrom<O,T> implemen
 	public AbstractSqmJoin(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedNavigable,
-			SqmFrom lhs,
+			SqmFrom<?, ?> lhs,
 			String alias,
 			SqmJoinType joinType,
 			NodeBuilder nodeBuilder) {

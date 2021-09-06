@@ -221,7 +221,7 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SqmPath<J> createSqmPath(SqmPath lhs) {
+	public SqmPath<J> createSqmPath(SqmPath<?> lhs) {
 		return sqmPathSource.createSqmPath( lhs );
 	}
 

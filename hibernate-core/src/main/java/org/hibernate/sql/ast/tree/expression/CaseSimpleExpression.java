@@ -7,6 +7,7 @@
 
 package org.hibernate.sql.ast.tree.expression;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -87,7 +88,7 @@ public class CaseSimpleExpression implements Expression, DomainResultProducer {
 		whenFragments.add( new WhenFragment( test, result ) );
 	}
 
-	public static class WhenFragment {
+	public static class WhenFragment implements Serializable {
 		private final Expression checkValue;
 		private final Expression result;
 

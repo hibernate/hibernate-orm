@@ -9,13 +9,18 @@ package org.hibernate.sql.ast.tree.expression;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.basic.BasicResult;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Christian Beikov
  */
-public class Collate implements Expression, SqlExpressable, SqlAstNode {
+public class Collate implements Expression, SqlExpressable, SqlAstNode, DomainResultProducer {
 
 	private final Expression expression;
 	private final String collation;
@@ -60,5 +65,21 @@ public class Collate implements Expression, SqlExpressable, SqlAstNode {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitCollate( this );
+	}
+
+	@Override
+	public DomainResult createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		final JavaTypeDescriptor javaTypeDescriptor = expression.getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
+		return new BasicResult(
+				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
+						this,
+						javaTypeDescriptor,
+						creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
+				).getValuesArrayPosition(),
+				resultVariable,
+				javaTypeDescriptor
+		);
 	}
 }

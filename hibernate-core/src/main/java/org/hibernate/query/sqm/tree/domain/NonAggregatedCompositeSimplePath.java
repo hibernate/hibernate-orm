@@ -26,7 +26,7 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 	public NonAggregatedCompositeSimplePath(
 			NavigablePath navigablePath,
 			SqmPathSource<T> referencedPathSource,
-			SqmPath lhs,
+			SqmPath<?> lhs,
 			NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedPathSource, lhs, nodeBuilder );
 

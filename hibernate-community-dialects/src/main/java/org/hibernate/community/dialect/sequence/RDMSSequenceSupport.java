@@ -30,7 +30,7 @@ public final class RDMSSequenceSupport implements SequenceSupport {
 	@Override
 	public String getFromDual() {
 		// The where clause was added to eliminate this statement from Brute Force Searches.
-		return " from rdms.rdms_dummy where key_col = 1";
+		return " from rdms.rdms_dummy where key_col=1";
 	}
 
 	@Override

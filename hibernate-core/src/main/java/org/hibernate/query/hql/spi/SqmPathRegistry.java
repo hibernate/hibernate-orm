@@ -30,7 +30,7 @@ public interface SqmPathRegistry {
 	/**
 	 * Register an SqmPath
 	 */
-	void register(SqmPath sqmPath);
+	void register(SqmPath<?> sqmPath);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).  Will search any
@@ -38,14 +38,14 @@ public interface SqmPathRegistry {
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	SqmFrom findFromByAlias(String identificationVariable);
+	<X extends SqmFrom<?, ?>> X findFromByAlias(String identificationVariable);
 
 	/**
 	 * Find a SqmFrom by its NavigablePath.  Will search any parent contexts as well
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	SqmFrom findFromByPath(NavigablePath navigablePath);
+	<X extends SqmFrom<?, ?>> X findFromByPath(NavigablePath navigablePath);
 
 	/**
 	 * Find a SqmFrom which exposes a Navigable by the given name.  Will search any
@@ -53,7 +53,7 @@ public interface SqmPathRegistry {
 	 *
 	 * @return matching SqmFrom or {@code null}
 	 */
-	SqmFrom findFromExposing(String navigableName);
+	<X extends SqmFrom<?, ?>> X findFromExposing(String navigableName);
 
 	/**
 	 * Find an SqmPath by its NavigablePath.  Will return a SqmFrom if the NavigablePath
@@ -61,7 +61,7 @@ public interface SqmPathRegistry {
 	 *
 	 * @return matching SqmPath or {@code null}
 	 */
-	SqmPath findPath(NavigablePath path);
+	<X> SqmPath<X> findPath(NavigablePath path);
 
 	/**
 	 * Similar to {@link #findPath}, but accepting a producer to be used
@@ -69,7 +69,7 @@ public interface SqmPathRegistry {
 	 *
 	 * @return The existing or just-created SqmPath
 	 */
-	SqmPath resolvePath(NavigablePath path, Function<NavigablePath, SqmPath> creator);
+	<X> SqmPath<X> resolvePath(NavigablePath path, Function<NavigablePath, SqmPath<X>> creator);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

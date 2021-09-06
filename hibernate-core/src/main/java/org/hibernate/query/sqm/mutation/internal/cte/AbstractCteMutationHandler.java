@@ -219,10 +219,9 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 			MultiTableSqmMutationConverter sqmConverter) {
 		final SqmExpression<?> arg = new SqmStar( factory.getNodeBuilder() );
 		final TypeConfiguration typeConfiguration = factory.getJpaMetamodel().getTypeConfiguration();
-		final BasicDomainType<Long> type = typeConfiguration.standardBasicTypeForJavaType( Long.class );
-		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor("count").generateSqmExpression(
+		return factory.getQueryEngine().getSqmFunctionRegistry().findFunctionDescriptor( "count" ).generateSqmExpression(
 				arg,
-				type,
+				null,
 				factory.getQueryEngine(),
 				typeConfiguration
 		).convertToSqlAst( sqmConverter );

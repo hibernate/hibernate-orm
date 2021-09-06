@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import javax.persistence.Parameter;
 
 import org.hibernate.Incubating;
+import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 
 /**
@@ -56,6 +57,10 @@ public interface ParameterMetadata {
 	 * are valid.
 	 */
 	QueryParameter<?> resolve(Parameter param);
+
+	default <T> AllowableParameterType<T> getInferredParameterType(QueryParameter<T> parameter) {
+		return null;
+	}
 
 	/**
 	 * Is this parameter reference registered in this collection?

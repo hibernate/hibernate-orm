@@ -46,6 +46,8 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 
 		ssr = new StandardServiceRegistryBuilder().build();
 		queryEngine = new QueryEngine(
+				null,
+				null,
 				jpaMetamodel,
 				ValueHandlingMode.BIND,
 				dialect.getPreferredSqlTypeCodeForBoolean(),

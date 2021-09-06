@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -24,10 +26,12 @@ import javax.persistence.metamodel.EmbeddableType;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.ManagedType;
 
+import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.annotations.NamedEntityGraphDefinition;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
@@ -58,7 +62,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class JpaMetamodelImpl implements JpaMetamodel {
+public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( JpaMetamodel.class );
 	private static final ImportInfo<?> INVALID_IMPORT = new ImportInfo<>( null, null );
 
@@ -654,5 +658,25 @@ public class JpaMetamodelImpl implements JpaMetamodel {
 
 		context.registerMappedSuperclassType( mappedSuperclass, mappedSuperclassType );
 		return mappedSuperclassType;
+	}
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Serialization
+
+	private Object writeReplace() throws ObjectStreamException {
+		return new SerialForm( typeConfiguration.getSessionFactory() );
+	}
+
+	private static class SerialForm implements Serializable {
+		private final SessionFactoryImplementor sessionFactory;
+
+		public SerialForm(SessionFactoryImplementor sessionFactory) {
+			this.sessionFactory = sessionFactory;
+		}
+
+		private Object readResolve() {
+			return sessionFactory.getJpaMetamodel();
+		}
+
 	}
 }

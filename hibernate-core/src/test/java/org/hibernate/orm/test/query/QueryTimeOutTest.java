@@ -42,7 +42,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 			true,
 			false
 	);
-	private static final String QUERY = "update AnEntity set name = 'abc'";
+	private static final String QUERY = "update AnEntity set name='abc'";
 
 	@Override
 	protected Class[] getAnnotatedClasses() {
@@ -73,7 +73,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 						if ( getDialect() instanceof SybaseDialect ) {
 							verify(
 									CONNECTION_PROVIDER.getPreparedStatement(
-											"update AnEntity set AnEntity.name = 'abc'" ),
+											"update AnEntity set AnEntity.name='abc'" ),
 									times( 1 )
 							).setQueryTimeout( 123 );
 						}
@@ -104,7 +104,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 						if ( getDialect() instanceof SybaseDialect ) {
 							verify(
 									CONNECTION_PROVIDER.getPreparedStatement(
-											"update AnEntity set AnEntity.name = 'abc'" ),
+											"update AnEntity set AnEntity.name='abc'" ),
 									times( 1 )
 							).setQueryTimeout( 123 );
 						}

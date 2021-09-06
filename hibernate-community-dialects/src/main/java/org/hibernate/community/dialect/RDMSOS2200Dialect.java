@@ -223,11 +223,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
 		switch (unit) {
 			case NANOSECOND:
-				return "timestampadd('SQL_TSI_FRAC_SECOND', (?2)/1e3, ?3)";
+				return "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";
 			case NATIVE:
-				return "timestampadd('SQL_TSI_FRAC_SECOND', ?2, ?3)";
+				return "timestampadd('SQL_TSI_FRAC_SECOND',?2,?3)";
 			default:
-				return "dateadd('?1', ?2, ?3)";
+				return "dateadd('?1',?2,?3)";
 		}
 	}
 
@@ -235,11 +235,11 @@ public class RDMSOS2200Dialect extends Dialect {
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		switch (unit) {
 			case NANOSECOND:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)*1e3";
+				return "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)*1e3";
 			case NATIVE:
-				return "timestampdiff('SQL_TSI_FRAC_SECOND', ?2, ?3)";
+				return "timestampdiff('SQL_TSI_FRAC_SECOND',?2,?3)";
 			default:
-				return "dateadd('?1', ?2, ?3)";
+				return "dateadd('?1',?2,?3)";
 		}
 	}
 
@@ -325,7 +325,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public String getFromDual() {
-		return "from rdms.rdms_dummy where key_col = 1";
+		return "from rdms.rdms_dummy where key_col=1";
 	}
 
 	@Override

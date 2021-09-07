@@ -33,7 +33,7 @@ ext {
 
     assertjVersion = '3.14.0'
 
-    geolatteVersion = '1.8.0'
+    geolatteVersion = '1.8.2'
 
     shrinkwrapVersion = '1.2.6'
     shrinkwrapDescriptorsVersion = '2.0.0'

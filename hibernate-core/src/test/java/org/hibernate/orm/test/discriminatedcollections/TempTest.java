@@ -6,80 +6,110 @@
  */
 package org.hibernate.orm.test.discriminatedcollections;
 
-import org.hibernate.Session;
-import org.hibernate.query.criteria.JpaCriteriaQuery;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
 import javax.persistence.criteria.JoinType;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+
 
 /**
  * @author Gavin King
  */
-public class TempTest extends BaseCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Client.class, Account.class, DebitAccount.class, CreditAccount.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				Client.class, Account.class, DebitAccount.class, CreditAccount.class
+		}
+)
+@SessionFactory
+public class TempTest {
 
 	@Test
-	public void test() {
-		Client c = new Client("Gavin");
-		DebitAccount da = new DebitAccount(c);
-		CreditAccount ca = new CreditAccount(c);
-		c.getDebitAccounts().add(da);
-		c.getCreditAccounts().add(ca);
-		Session session = openSession();
-		session.beginTransaction();
-		session.persist(c);
-		session.getTransaction().commit();
-		session.close();
+	public void test(SessionFactoryScope scope) {
+		Client c = new Client( "Gavin" );
+		DebitAccount da = new DebitAccount( c );
+		CreditAccount ca = new CreditAccount( c );
+		c.getDebitAccounts().add( da );
+		c.getCreditAccounts().add( ca );
 
-		session = openSession();
-		Client client = session.find(Client.class, c.getId());
-		assertEquals(1, client.getDebitAccounts().size());
-		assertEquals(1, client.getCreditAccounts().size());
-		assertNotEquals(client.getDebitAccounts().iterator().next().getId(),
-				client.getCreditAccounts().iterator().next().getId());
-		session.close();
+		scope.inTransaction(
+				session ->
+						session.persist( c )
+		);
 
-		session = openSession();
-		client = session.createQuery("from Client", Client.class).getSingleResult();
-		assertEquals(1, client.getDebitAccounts().size());
-		assertEquals(1, client.getCreditAccounts().size());
-		assertNotEquals(client.getDebitAccounts().iterator().next().getId(),
-				client.getCreditAccounts().iterator().next().getId());
-		session.close();
+		scope.inSession(
+				session -> {
+					Client client = session.find( Client.class, c.getId() );
+					assertEquals( 1, client.getDebitAccounts().size() );
+					assertEquals( 1, client.getCreditAccounts().size() );
+					assertNotEquals(
+							client.getDebitAccounts().iterator().next().getId(),
+							client.getCreditAccounts().iterator().next().getId()
+					);
+				}
+		);
 
-		session = openSession();
-		client = session.createQuery("from Client c left join fetch c.debitAccounts", Client.class).getSingleResult();
-		assertEquals(1, client.getDebitAccounts().size());
-		assertEquals(1, client.getCreditAccounts().size());
-		assertNotEquals(client.getDebitAccounts().iterator().next().getId(),
-				client.getCreditAccounts().iterator().next().getId());
-		session.close();
+		scope.inSession(
+				session -> {
+					Client client = session.createQuery( "from Client", Client.class ).getSingleResult();
+					assertEquals( 1, client.getDebitAccounts().size() );
+					assertEquals( 1, client.getCreditAccounts().size() );
+					assertNotEquals(
+							client.getDebitAccounts().iterator().next().getId(),
+							client.getCreditAccounts().iterator().next().getId()
+					);
+				}
+		);
 
-		session = openSession();
-		client = session.createQuery("from Client c left join fetch c.debitAccounts left join fetch c.creditAccounts", Client.class).getSingleResult();
-		assertEquals(1, client.getDebitAccounts().size());
-		assertEquals(1, client.getCreditAccounts().size());
-		assertNotEquals(client.getDebitAccounts().iterator().next().getId(),
-				client.getCreditAccounts().iterator().next().getId());
-		session.close();
+		scope.inSession(
+				session -> {
+					Client client = session.createQuery( "from Client c left join fetch c.debitAccounts", Client.class )
+							.getSingleResult();
+					assertEquals( 1, client.getDebitAccounts().size() );
+					assertEquals( 1, client.getCreditAccounts().size() );
+					assertNotEquals(
+							client.getDebitAccounts().iterator().next().getId(),
+							client.getCreditAccounts().iterator().next().getId()
+					);
+				}
+		);
 
-		session = openSession();
-		JpaCriteriaQuery<Client> query = sessionFactory().getCriteriaBuilder().createQuery(Client.class);
-		query.from(Client.class).fetch(Client_.creditAccounts, JoinType.LEFT);
-		client = session.createQuery(query).getSingleResult();
-		assertEquals(1, client.getDebitAccounts().size());
-		assertEquals(1, client.getCreditAccounts().size());
-		assertNotEquals(client.getDebitAccounts().iterator().next().getId(),
-				client.getCreditAccounts().iterator().next().getId());
-		session.close();
+		scope.inSession(
+				session -> {
+					Client client = session.createQuery(
+							"from Client c left join fetch c.debitAccounts left join fetch c.creditAccounts",
+							Client.class
+					).getSingleResult();
+					assertEquals( 1, client.getDebitAccounts().size() );
+					assertEquals( 1, client.getCreditAccounts().size() );
+					assertNotEquals(
+							client.getDebitAccounts().iterator().next().getId(),
+							client.getCreditAccounts().iterator().next().getId()
+					);
+				}
+		);
+
+		scope.inSession(
+				session -> {
+					JpaCriteriaQuery<Client> query = scope.getSessionFactory()
+							.getCriteriaBuilder()
+							.createQuery( Client.class );
+					query.from( Client.class ).fetch( Client_.creditAccounts, JoinType.LEFT );
+					Client client = session.createQuery( query ).getSingleResult();
+					assertEquals( 1, client.getDebitAccounts().size() );
+					assertEquals( 1, client.getCreditAccounts().size() );
+					assertNotEquals(
+							client.getDebitAccounts().iterator().next().getId(),
+							client.getCreditAccounts().iterator().next().getId()
+					);
+				}
+		);
 	}
 }
 

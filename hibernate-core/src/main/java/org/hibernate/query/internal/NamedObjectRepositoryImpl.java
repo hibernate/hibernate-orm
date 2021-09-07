@@ -68,6 +68,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public synchronized void registerHqlQueryMemento(String name, NamedHqlQueryMemento descriptor) {
 		hqlMementoMap.put( name, descriptor );
+		sqlMementoMap.remove( name );
 	}
 
 
@@ -87,6 +88,7 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	@Override
 	public synchronized void registerNativeQueryMemento(String name, NamedNativeQueryMemento descriptor) {
 		sqlMementoMap.put( name, descriptor );
+		hqlMementoMap.remove( name );
 	}
 
 

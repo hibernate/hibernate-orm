@@ -684,7 +684,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			NativeQueryImpl query = new NativeQueryImpl( queryString, this );
-			query.setComment( "dynamic native SQL query" );
+			if ( StringHelper.isEmpty( query.getComment() ) ) {
+				query.setComment( "dynamic native SQL query" );
+			}
 			applyQuerySettingsAndHints( query );
 			return query;
 		}
@@ -796,7 +798,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		if ( namedHqlDescriptor != null ) {
 			HqlQueryImplementor<T> query = namedHqlDescriptor.toQuery( this, resultType );
-			query.setComment( "dynamic HQL query" );
+			if ( StringHelper.isEmpty( query.getComment() ) ) {
+				query.setComment( "dynamic HQL query" );
+			}
 			applyQuerySettingsAndHints( query );
 			if ( namedHqlDescriptor.getLockOptions() != null ) {
 				query.setLockOptions( namedHqlDescriptor.getLockOptions() );
@@ -817,7 +821,9 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			else {
 				query = namedNativeDescriptor.toQuery( this, resultType );
 			}
-			query.setComment( "dynamic native SQL query" );
+			if ( StringHelper.isEmpty( query.getComment() ) ) {
+				query.setComment( "dynamic native SQL query" );
+			}
 			applyQuerySettingsAndHints( query );
 			return query;
 		}

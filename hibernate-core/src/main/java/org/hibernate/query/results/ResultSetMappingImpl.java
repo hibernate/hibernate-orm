@@ -123,6 +123,10 @@ public class ResultSetMappingImpl implements ResultSetMapping {
 		}
 	}
 
+	public String getMappingIdentifier(){
+		return mappingIdentifier;
+	}
+
 	@Override
 	public void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
 		if ( StringHelper.isEmpty( mappingIdentifier ) ) {

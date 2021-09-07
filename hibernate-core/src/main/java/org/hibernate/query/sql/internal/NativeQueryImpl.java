@@ -37,7 +37,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
@@ -145,8 +144,10 @@ public class NativeQueryImpl<R>
 								.getQueryEngine()
 								.getNamedObjectRepository()
 								.getResultSetMappingMemento( memento.getResultMappingName() );
-						resultSetMappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
-						return true;
+						if ( resultSetMappingMemento != null ) {
+							resultSetMappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
+							return true;
+						}
 					}
 
 					if ( memento.getResultMappingClass() != null ) {
@@ -376,7 +377,23 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public NamedNativeQueryMemento toMemento(String name) {
-		throw new NotYetImplementedFor6Exception(  );
+		return new NamedNativeQueryMementoImpl(
+				name,
+				sqlString,
+				resultSetMapping.getMappingIdentifier(),
+				null,
+				querySpaces,
+				isCacheable(),
+				getCacheRegion(),
+				getCacheMode(),
+				getHibernateFlushMode(),
+				isReadOnly(),
+				getTimeout(),
+				getFetchSize(),
+				getComment(),
+				getHints()
+
+		);
 	}
 
 	@Override

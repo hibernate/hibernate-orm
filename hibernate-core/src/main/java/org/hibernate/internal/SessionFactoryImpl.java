@@ -113,6 +113,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
+import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
@@ -899,10 +900,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		// query implementations
 
 		// first, handle StoredProcedureQuery
+		final NamedObjectRepository namedObjectRepository = getQueryEngine().getNamedObjectRepository();
 		try {
 			final ProcedureCallImplementor unwrapped = query.unwrap( ProcedureCallImplementor.class );
 			if ( unwrapped != null ) {
-				getQueryEngine().getNamedObjectRepository().registerCallableQueryMemento(
+				namedObjectRepository.registerCallableQueryMemento(
 						name,
 						unwrapped.toMemento( name )
 				);
@@ -919,13 +921,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( hibernateQuery != null ) {
 				// create and register the proper NamedQueryDefinition...
 				if ( hibernateQuery instanceof NativeQueryImplementor ) {
-					getQueryEngine().getNamedObjectRepository().registerNativeQueryMemento(
+					namedObjectRepository.registerNativeQueryMemento(
 							name,
 							( (NativeQueryImplementor) hibernateQuery ).toMemento( name )
 					);
+
 				}
 				else {
-					getQueryEngine().getNamedObjectRepository().registerHqlQueryMemento(
+					namedObjectRepository.registerHqlQueryMemento(
 							name,
 							( ( HqlQueryImplementor ) hibernateQuery ).toMemento( name )
 					);

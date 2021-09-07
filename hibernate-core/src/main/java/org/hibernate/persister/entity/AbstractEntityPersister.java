@@ -38,6 +38,7 @@ import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
+import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
@@ -1609,8 +1610,9 @@ public abstract class AbstractEntityPersister
 				// for the collection to the just loaded collection
 				final EntityEntry ownerEntry = persistenceContext.getEntry( entity );
 				if ( ownerEntry == null ) {
-					// not good
-					throw new AssertionFailure(
+					// the entity is not in the session; it was probably deleted,
+					// so we cannot load the collection anymore.
+					throw new LazyInitializationException(
 							"Could not locate EntityEntry for the collection owner in the PersistenceContext"
 					);
 				}

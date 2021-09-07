@@ -57,6 +57,8 @@ import javax.persistence.TemporalType;
  */
 public class DB2Dialect extends Dialect {
 
+	private static final int BIND_PARAMETERS_NUMBER_LIMIT = 32_767;
+
 	private static final String FOR_READ_ONLY_SQL = " for read only with rs";
 	private static final String FOR_SHARE_SQL = FOR_READ_ONLY_SQL + " use and keep share locks";
 	private static final String FOR_UPDATE_SQL = FOR_READ_ONLY_SQL + " use and keep update locks";
@@ -745,6 +747,11 @@ public class DB2Dialect extends Dialect {
 		else {
 			return super.extractPattern( unit );
 		}
+	}
+
+	@Override
+	public int getInExpressionCountLimit() {
+		return BIND_PARAMETERS_NUMBER_LIMIT;
 	}
 
 }

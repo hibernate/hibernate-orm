@@ -31,7 +31,10 @@ if ( !JavaVersion.current().java8Compatible ) {
 }
 
 buildCache {
-    local { enabled = true }
+    // duplicated from `gradle-enterprise.gradle` but not sure how to share it...
+    def isCi = System.getenv("CI") != null || System.getProperty("CI") != null
+
+    local { enabled = !isCi }
     remote(HttpBuildCache) { enabled = false }
 }
 

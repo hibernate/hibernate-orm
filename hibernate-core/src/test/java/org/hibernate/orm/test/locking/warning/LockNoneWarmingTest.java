@@ -9,6 +9,7 @@ package org.hibernate.orm.test.locking.warning;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -91,6 +92,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 		@Id
 		String name;
 
+		@Column(name = "i_comment")
 		String comment;
 
 		@OneToMany(mappedBy = "item", fetch = FetchType.EAGER)
@@ -107,6 +109,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 		@ManyToOne
 		Item item;
 
+		@Column(name = "b_comment")
 		String comment;
 	}
 }

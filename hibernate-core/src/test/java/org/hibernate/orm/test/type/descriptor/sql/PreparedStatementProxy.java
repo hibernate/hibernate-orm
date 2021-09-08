@@ -4,7 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type.descriptor.sql;
+package org.hibernate.orm.test.type.descriptor.sql;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -12,7 +13,7 @@ import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import junit.framework.Assert;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * TODO : javadoc
@@ -39,7 +40,7 @@ public class PreparedStatementProxy<T> implements InvocationHandler {
 	@SuppressWarnings({ "unchecked" })
 	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 		if ( value == null ) {
-			Assert.assertEquals( "Expecting setNull call", "setNull", method.getName() );
+			assertEquals( "setNull", method.getName(), "Expecting setNull call" );
 			return null;
 		}
 		if ( method.getName().equals( methodName ) && args.length >= 1 ) {
@@ -50,14 +51,14 @@ public class PreparedStatementProxy<T> implements InvocationHandler {
 	}
 
 	protected void checkValue(T arg) throws SQLException {
-		Assert.assertEquals( value, arg );
+		assertEquals( value, arg );
 	}
 
 	protected final String extractString(Clob clob) throws SQLException {
 		if ( StringClobImpl.class.isInstance( clob ) ) {
 			return ( (StringClobImpl) clob ).getValue();
 		}
-		return clob.getSubString( 1, (int)clob.length() );
+		return clob.getSubString( 1, (int) clob.length() );
 	}
 
 	private final String methodName;
@@ -83,7 +84,7 @@ public class PreparedStatementProxy<T> implements InvocationHandler {
 				new PreparedStatementProxy<Clob>( "setClob", value ) {
 					@Override
 					protected void checkValue(Clob arg) throws SQLException {
-						Assert.assertEquals( extractString( getValue() ), extractString( arg ) );
+						assertEquals( extractString( getValue() ), extractString( arg ) );
 					}
 				}
 		);

@@ -4,41 +4,34 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.locking.warning;
+package org.hibernate.orm.test.locking.warning;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-
-import org.jboss.byteman.contrib.bmunit.BMRule;
-import org.jboss.byteman.contrib.bmunit.BMRules;
-import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
-
-import org.jboss.logging.Logger;
 
 import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.loader.Loader;
 import org.hibernate.query.Query;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+
+import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertFalse;
 
@@ -46,13 +39,13 @@ import static org.junit.Assert.assertFalse;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10513")
-@RunWith(BMUnitRunner.class)
 public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 
 	private Triggerable triggerable;
+
 	@Rule
 	public LoggerInspectionRule logInspection = new LoggerInspectionRule(
-			Logger.getMessageLogger( CoreMessageLogger.class, Loader.class.getName() )
+			Logger.getMessageLogger( CoreMessageLogger.class, LockNoneWarmingTest.class.getName() )
 	);
 
 	@Override
@@ -81,12 +74,6 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@BMRules(rules = {
-			@BMRule(targetClass = "org.hibernate.dialect.Dialect",
-					targetMethod = "useFollowOnLocking",
-					action = "return true",
-					name = "H2DialectUseFollowOnLocking")
-	})
 	public void testQuerySetLockModeNONEDoNotLogAWarnMessageWhenTheDialectUseFollowOnLockingIsTrue() {
 		try (Session s = openSession();) {
 			final Query query = s.createQuery( "from Item i join i.bids b where name = :name" );
@@ -104,6 +91,8 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 		@Id
 		String name;
 
+		String comment;
+
 		@OneToMany(mappedBy = "item", fetch = FetchType.EAGER)
 		Set<Bid> bids = new HashSet<Bid>();
 	}
@@ -117,5 +106,7 @@ public class LockNoneWarmingTest extends BaseCoreFunctionalTestCase {
 		@Id
 		@ManyToOne
 		Item item;
+
+		String comment;
 	}
 }

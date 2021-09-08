@@ -16,7 +16,7 @@ import javax.persistence.ManyToOne;
  * @author Yoann Rodière
  * @author Guillaume Smet
  */
-@Entity
+@Entity(name = "LAENTITY")
 public class LazyAbstractEntityReference {
 
 	@Id

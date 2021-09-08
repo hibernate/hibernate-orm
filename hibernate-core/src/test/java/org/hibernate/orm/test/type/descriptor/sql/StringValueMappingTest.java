@@ -4,7 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type.descriptor.sql;
+package org.hibernate.orm.test.type.descriptor.sql;
+
 import java.sql.Clob;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -13,39 +14,52 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Steve Ebersole
  */
-public class StringValueMappingTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class StringValueMappingTest {
 	private final StringTypeDescriptor stringJavaDescriptor = new StringTypeDescriptor();
 
 	private final VarcharTypeDescriptor varcharSqlDescriptor = new VarcharTypeDescriptor();
 	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
+		@Override
+		public SharedSessionContractImplementor getSession() {
+			return getSession();
+		}
+
 		public boolean useStreamForLobBinding() {
 			return false;
+		}
+
+		@Override
+		public int getPreferredSqlTypeCodeForBoolean() {
+			return 0;
 		}
 
 		public LobCreator getLobCreator() {
 			return NonContextualLobCreator.INSTANCE;
 		}
 
-		public SqlTypeDescriptor remapSqlTypeDescriptor(SqlTypeDescriptor sqlTypeDescriptor) {
+		public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor sqlTypeDescriptor) {
 			return sqlTypeDescriptor;
 		}
 
@@ -55,7 +69,7 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 		}
 	};
 
-	public static final String COLUMN_NAME = "n/a";
+	public static final int COLUMN_POSITION = 0;
 	public static final int BIND_POSITION = -1;
 
 	@Test
@@ -66,7 +80,7 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 		final String fixture = "string value";
 
 		ResultSet resultSet = ResultSetProxy.generateProxy( fixture );
-		final String value = extractor.extract( resultSet, COLUMN_NAME, wrapperOptions );
+		final String value = extractor.extract( resultSet, COLUMN_POSITION, wrapperOptions );
 		assertEquals( fixture, value );
 
 		PreparedStatement ps = PreparedStatementProxy.generateProxy( fixture );
@@ -81,7 +95,7 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 		final String fixture = null;
 
 		ResultSet resultSet = ResultSetProxy.generateProxy( fixture );
-		final String value = extractor.extract( resultSet, COLUMN_NAME, wrapperOptions );
+		final String value = extractor.extract( resultSet, COLUMN_POSITION, wrapperOptions );
 		assertEquals( fixture, value );
 
 		PreparedStatement ps = PreparedStatementProxy.generateProxy( fixture );
@@ -97,7 +111,7 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 		final Clob clob = new StringClobImpl( fixture );
 
 		ResultSet resultSet = ResultSetProxy.generateProxy( clob );
-		final String value = extractor.extract( resultSet, COLUMN_NAME, wrapperOptions );
+		final String value = extractor.extract( resultSet, COLUMN_POSITION, wrapperOptions );
 		assertEquals( fixture, value );
 
 		PreparedStatement ps = PreparedStatementProxy.generateProxy( clob );
@@ -113,7 +127,7 @@ public class StringValueMappingTest extends BaseUnitTestCase {
 		final Clob clob = null;
 
 		ResultSet resultSet = ResultSetProxy.generateProxy( clob );
-		final String value = extractor.extract( resultSet, COLUMN_NAME, wrapperOptions );
+		final String value = extractor.extract( resultSet, COLUMN_POSITION, wrapperOptions );
 		assertNull( value );
 
 		PreparedStatement ps = PreparedStatementProxy.generateProxy( clob );

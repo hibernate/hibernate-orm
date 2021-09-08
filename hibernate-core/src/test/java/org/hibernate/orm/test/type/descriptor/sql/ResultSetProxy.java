@@ -4,7 +4,8 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type.descriptor.sql;
+package org.hibernate.orm.test.type.descriptor.sql;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -53,13 +54,13 @@ public class ResultSetProxy<T> implements InvocationHandler {
 
 	public static ResultSet generateProxy(final String value) {
 		return generateProxy(
-				new ResultSetProxy<String>( "getString", value )
+				new ResultSetProxy<>( "getString", value )
 		);
 	}
 
 	public static ResultSet generateProxy(final Clob value) {
 		return generateProxy(
-				new ResultSetProxy<Clob>( "getClob", value )
+				new ResultSetProxy<>( "getClob", value )
 		);
 	}
 }

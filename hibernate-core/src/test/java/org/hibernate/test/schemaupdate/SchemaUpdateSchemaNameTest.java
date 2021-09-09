@@ -75,8 +75,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 					.applySettings( cfg.getProperties() )
 					.build();
 
-			SessionFactory sf = cfg.buildSessionFactory( ssr );
-			try {
+			try (SessionFactory sf = cfg.buildSessionFactory();) {
 				Session session = sf.openSession();
 				try {
 					session.getTransaction().begin();
@@ -92,9 +91,6 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 				finally {
 					session.close();
 				}
-			}
-			finally {
-				sf.close();
 			}
 		}
 		finally {
@@ -112,8 +108,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 					cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml() )
 					.applySettings( cfg.getProperties() )
 					.build();
-			SessionFactory sf = cfg.buildSessionFactory( ssr );
-			try {
+			try (SessionFactory sf = cfg.buildSessionFactory( ssr )) {
 				Session session = sf.openSession();
 				try {
 					session.getTransaction().begin();
@@ -129,9 +124,6 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 				finally {
 					session.close();
 				}
-			}
-			finally {
-				sf.close();
 			}
 		}
 		finally {

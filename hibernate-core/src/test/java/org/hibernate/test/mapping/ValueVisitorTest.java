@@ -63,21 +63,23 @@ public class ValueVisitorTest extends BaseUnitTestCase {
 		final RootClass rootClass = new RootClass( metadataBuildingContext );
 
 		ValueVisitor vv = new ValueVisitorValidator();
-		MetadataBuildingContextTestingImpl metadataBuildingContext = new MetadataBuildingContextTestingImpl();
-		new Any( metadataBuildingContext, tbl ).accept( vv );
-		new Array( metadataBuildingContext, rootClass ).accept( vv );
-		new Bag( metadataBuildingContext, rootClass ).accept( vv );
-		new Component( metadataBuildingContext, rootClass ).accept( vv );
-		new DependantValue( metadataBuildingContext, tbl, null ).accept( vv );
-		new IdentifierBag( metadataBuildingContext, rootClass ).accept( vv );
-		new List( metadataBuildingContext, rootClass ).accept( vv );
-		new ManyToOne( metadataBuildingContext, tbl ).accept( vv );
-		new Map( metadataBuildingContext, rootClass ).accept( vv );
-		new OneToMany( metadataBuildingContext, rootClass ).accept( vv );
-		new OneToOne( metadataBuildingContext, tbl, rootClass ).accept( vv );
-		new PrimitiveArray( metadataBuildingContext, rootClass ).accept( vv );
-		new Set( metadataBuildingContext, rootClass ).accept( vv );
-		new SimpleValue( metadataBuildingContext ).accept( vv );
+		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+			MetadataBuildingContextTestingImpl metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			new Any( metadataBuildingContext, tbl ).accept( vv );
+			new Array( metadataBuildingContext, rootClass ).accept( vv );
+			new Bag( metadataBuildingContext, rootClass ).accept( vv );
+			new Component( metadataBuildingContext, rootClass ).accept( vv );
+			new DependantValue( metadataBuildingContext, tbl, null ).accept( vv );
+			new IdentifierBag( metadataBuildingContext, rootClass ).accept( vv );
+			new List( metadataBuildingContext, rootClass ).accept( vv );
+			new ManyToOne( metadataBuildingContext, tbl ).accept( vv );
+			new Map( metadataBuildingContext, rootClass ).accept( vv );
+			new OneToMany( metadataBuildingContext, rootClass ).accept( vv );
+			new OneToOne( metadataBuildingContext, tbl, rootClass ).accept( vv );
+			new PrimitiveArray( metadataBuildingContext, rootClass ).accept( vv );
+			new Set( metadataBuildingContext, rootClass ).accept( vv );
+			new SimpleValue( metadataBuildingContext ).accept( vv );
+		}
 	}
 
 	static public class ValueVisitorValidator implements ValueVisitor {

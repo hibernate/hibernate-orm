@@ -19,6 +19,9 @@ import org.hibernate.cfg.annotations.reflection.XMLContext;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import org.junit.After;
+import org.junit.Before;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -30,6 +33,18 @@ import static org.junit.Assert.assertTrue;
  */
 abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	protected JPAOverriddenAnnotationReader reader;
+
+	private BootstrapContextImpl bootstrapContext;
+
+	@Before
+	public void init() {
+		bootstrapContext = new BootstrapContextImpl();
+	}
+
+	@After
+	public void destroy() {
+		bootstrapContext.close();
+	}
 
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
 		assertTrue(
@@ -49,7 +64,7 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 			throws Exception {
 		AnnotatedElement el = getAnnotatedElement( entityClass, fieldName );
 		XMLContext xmlContext = getContext( ormResourceName );
-		return new JPAOverriddenAnnotationReader( el, xmlContext, BootstrapContextImpl.INSTANCE );
+		return new JPAOverriddenAnnotationReader( el, xmlContext, bootstrapContext );
 	}
 
 	protected AnnotatedElement getAnnotatedElement(Class<?> entityClass, String fieldName) throws Exception {
@@ -63,7 +78,7 @@ abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	}
 
 	protected XMLContext getContext(InputStream is) throws Exception {
-		XMLContext xmlContext = new XMLContext( BootstrapContextImpl.INSTANCE );
+		XMLContext xmlContext = new XMLContext( bootstrapContext );
 		SAXReader reader = new SAXReader();
 		reader.setFeature( "http://apache.org/xml/features/nonvalidating/load-external-dtd", false );
 		reader.setFeature( "http://xml.org/sax/features/external-general-entities", false );

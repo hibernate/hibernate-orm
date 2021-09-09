@@ -12,6 +12,9 @@ import java.io.InputStream;
 
 import org.dom4j.io.SAXReader;
 import org.junit.Assert;
+import org.hibernate.testing.boot.BootstrapContextImpl;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXNotSupportedException;
@@ -28,10 +31,23 @@ import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
  * @author Emmanuel Bernard
  */
 public class XMLContextTest {
+
+	private BootstrapContextImpl bootstrapContext;
+
+	@Before
+	public void init() {
+		bootstrapContext = new BootstrapContextImpl();
+	}
+
+	@After
+	public void destroy() {
+		bootstrapContext.close();
+	}
+
 	@Test
 	public void testAll() throws Exception {
 		final XMLHelper xmlHelper = new XMLHelper();
-		final XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
+		final XMLContext context = new XMLContext( bootstrapContext );
 
 		InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream(
 				"org/hibernate/test/annotations/reflection/orm.xml"

@@ -54,7 +54,7 @@ public class AuditedDynamicComponentTest extends BaseEnversFunctionalTestCase {
 
 		final ServiceRegistry serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
 		try {
-			config.buildSessionFactory( serviceRegistry );
+			config.buildSessionFactory( serviceRegistry ).close();
 			Assert.fail( "MappingException expected" );
 		}
 		catch ( MappingException e ) {

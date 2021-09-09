@@ -44,6 +44,7 @@ public class SafeMappingTest {
 			if ( serviceRegistry != null ) {
 				ServiceRegistryBuilder.destroy( serviceRegistry );
 			}
+			cfg.getStandardServiceRegistryBuilder().getBootstrapServiceRegistry().close();
 		}
 	}
 }

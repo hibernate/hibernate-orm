@@ -54,6 +54,7 @@ import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
@@ -77,7 +78,9 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.service.spi.Stoppable;
 import org.hibernate.tool.schema.spi.DelayedDropRegistryNotAvailableImpl;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
@@ -181,7 +184,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			ClassLoaderService providedClassLoaderService ) {
 		this( persistenceUnit, integrationSettings, null, providedClassLoaderService);
 	}
-	
+
 	private EntityManagerFactoryBuilderImpl(
 			PersistenceUnitDescriptor persistenceUnit,
 			Map integrationSettings,
@@ -199,74 +202,81 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// Build the boot-strap service registry, which mainly handles class loader interactions
 		final BootstrapServiceRegistry bsr = buildBootstrapServiceRegistry( integrationSettings, providedClassLoader, providedClassLoaderService);
 
-		// merge configuration sources and build the "standard" service registry
-		final StandardServiceRegistryBuilder ssrBuilder = StandardServiceRegistryBuilder.forJpa( bsr );
+		try {
+			// merge configuration sources and build the "standard" service registry
+			final StandardServiceRegistryBuilder ssrBuilder = StandardServiceRegistryBuilder.forJpa( bsr );
 
-		final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, ssrBuilder );
+			final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, ssrBuilder );
 
-		// flush before completion validation
-		if ( "true".equals( mergedSettings.configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
-			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
-			mergedSettings.configurationValues.put( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-		}
+			// flush before completion validation
+			if ( "true".equals( mergedSettings.configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
+				LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
+				mergedSettings.configurationValues.put( Environment.FLUSH_BEFORE_COMPLETION, "false" );
+			}
 
-		// keep the merged config values for phase-2
-		this.configurationValues = mergedSettings.getConfigurationValues();
+			// keep the merged config values for phase-2
+			this.configurationValues = mergedSettings.getConfigurationValues();
 
-		// Build the "standard" service registry
-		ssrBuilder.applySettings( configurationValues );
+			// Build the "standard" service registry
+			ssrBuilder.applySettings( configurationValues );
 
-		this.standardServiceRegistry = ssrBuilder.build();
+			this.standardServiceRegistry = ssrBuilder.build();
 
-		configureIdentifierGenerators( standardServiceRegistry );
+			configureIdentifierGenerators( standardServiceRegistry );
 
-		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = applyMappingResources( metadataSources );
+			final MetadataSources metadataSources = new MetadataSources( bsr );
+			this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
+			List<AttributeConverterDefinition> attributeConverterDefinitions = applyMappingResources( metadataSources );
 
-		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
-		applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
+			applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
 
-		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
-		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
-		final CfgXmlAccessService cfgXmlAccessService = standardServiceRegistry.getService( CfgXmlAccessService.class );
-		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
-				for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
-					mappingReference.apply( metadataSources );
+			// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
+			//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
+			final CfgXmlAccessService cfgXmlAccessService = standardServiceRegistry.getService( CfgXmlAccessService.class );
+			if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+				if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
+					for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
+						mappingReference.apply( metadataSources );
+					}
 				}
 			}
-		}
 
-		this.managedResources = MetadataBuildingProcess.prepare(
-				metadataSources,
-				metamodelBuilder.getBootstrapContext()
-		);
-
-		applyMetadataBuilderContributor();
-
-
-		withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// push back class transformation to the environment; for the time being this only has any effect in EE
-		// container situations, calling back into PersistenceUnitInfo#addClassTransformer
-
-		final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
-		final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
-		final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
-
-		if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
-			EnhancementContext enhancementContext = getEnhancementContext(
-					dirtyTrackingEnabled,
-					lazyInitializationEnabled,
-					associationManagementEnabled
+			this.managedResources = MetadataBuildingProcess.prepare(
+					metadataSources,
+					metamodelBuilder.getBootstrapContext()
 			);
 
-			persistenceUnit.pushClassTransformer( enhancementContext );
-		}
+			applyMetadataBuilderContributor();
 
-		// for the time being we want to revoke access to the temp ClassLoader if one was passed
-		metamodelBuilder.applyTempClassLoader( null );
+
+			withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY ) );
+
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// push back class transformation to the environment; for the time being this only has any effect in EE
+			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
+
+			final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
+			final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
+
+			if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
+				EnhancementContext enhancementContext = getEnhancementContext(
+						dirtyTrackingEnabled,
+						lazyInitializationEnabled,
+						associationManagementEnabled
+				);
+
+				persistenceUnit.pushClassTransformer( enhancementContext );
+			}
+
+			// for the time being we want to revoke access to the temp ClassLoader if one was passed
+			metamodelBuilder.applyTempClassLoader( null );
+		}
+		catch (Throwable t) {
+			bsr.close();
+			cleanup();
+			throw t;
+		}
 	}
 
 	private void applyMetadataBuilderContributor() {
@@ -401,7 +411,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				bsrBuilder.applyIntegrator( integrator );
 			}
 		}
-		
+
 		final StrategyRegistrationProviderList strategyRegistrationProviderList
 				= (StrategyRegistrationProviderList) integrationSettings.get( STRATEGY_REGISTRATION_PROVIDERS );
 		if ( strategyRegistrationProviderList != null ) {
@@ -1207,10 +1217,28 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 	@Override
 	public void cancel() {
+		cleanup();
 		// todo : close the bootstrap registry (not critical, but nice to do)
 	}
 
-	private MetadataImplementor metadata() {
+	private void cleanup() {
+		// Stop and de-register the ConnectionProvider to prevent connections lying around
+		if ( standardServiceRegistry instanceof ServiceRegistryImplementor &&
+				standardServiceRegistry instanceof ServiceBinding.ServiceLifecycleOwner ) {
+			final ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) standardServiceRegistry;
+			final ServiceBinding.ServiceLifecycleOwner lifecycleOwner = (ServiceBinding.ServiceLifecycleOwner) serviceRegistry;
+			final ServiceBinding<ConnectionProvider> binding = serviceRegistry.locateServiceBinding( ConnectionProvider.class );
+			if ( binding != null && binding.getService() instanceof Stoppable ) {
+				lifecycleOwner.stopService( binding );
+				binding.setService( null );
+			}
+		}
+	}
+
+	/**
+	 * Used by extensions : Hibernate Reactive
+	 */
+	protected MetadataImplementor metadata() {
 		if ( this.metadata == null ) {
 			this.metadata = MetadataBuildingProcess.complete(
 					managedResources,

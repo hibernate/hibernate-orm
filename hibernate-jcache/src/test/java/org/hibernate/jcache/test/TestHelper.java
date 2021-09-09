@@ -105,8 +105,13 @@ public class TestHelper {
 		additionalSettings.accept( ssrb );
 
 		final StandardServiceRegistry ssr = ssrb.build();
-
-		return (SessionFactoryImplementor) new MetadataSources( ssr ).buildMetadata().buildSessionFactory();
+		try {
+			return (SessionFactoryImplementor) new MetadataSources( ssr ).buildMetadata().buildSessionFactory();
+		}
+		catch (Throwable t) {
+			ssr.close();
+			throw t;
+		}
 	}
 
 	public static StandardServiceRegistryBuilder getStandardServiceRegistryBuilder() {

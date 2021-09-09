@@ -356,6 +356,15 @@ public final class ReflectHelper {
 		}
 	}
 
+	public static Method getMethod(Class clazz, String methodName, Class... paramTypes) {
+		try {
+			return clazz.getMethod( methodName, paramTypes );
+		}
+		catch (Exception e) {
+			return null;
+		}
+	}
+
 	public static Field findField(Class containerClass, String propertyName) {
 		if ( containerClass == null ) {
 			throw new IllegalArgumentException( "Class on which to find field [" + propertyName + "] cannot be null" );

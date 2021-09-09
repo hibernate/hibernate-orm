@@ -37,7 +37,7 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	private static final MockSettings MOCK_SETTINGS = Mockito.withSettings()
 			.stubOnly() //important optimisation: uses far less memory, at tradeoff of mocked methods no longer being verifiable but we often don't need that.
 			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
-	private static final MockSettings VERIFIEABLE_MOCK_SETTINGS = Mockito.withSettings()
+	private static final MockSettings VERIFIABLE_MOCK_SETTINGS = Mockito.withSettings()
 			.defaultAnswer( org.mockito.Answers.CALLS_REAL_METHODS );
 
 	private final Map<PreparedStatement, String> preparedStatementMap = new LinkedHashMap<>();
@@ -64,8 +64,8 @@ public class PreparedStatementSpyConnectionProvider extends ConnectionProviderDe
 	 * When you really need to verify invocations, set the relevant constructor parameter to true.
 	 */
 	public PreparedStatementSpyConnectionProvider(boolean allowMockVerificationOnStatements, boolean allowMockVerificationOnConnections) {
-		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIEABLE_MOCK_SETTINGS : MOCK_SETTINGS;
-		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIEABLE_MOCK_SETTINGS : MOCK_SETTINGS;
+		this.settingsForStatements = allowMockVerificationOnStatements ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
+		this.settingsForConnections = allowMockVerificationOnConnections ? VERIFIABLE_MOCK_SETTINGS : MOCK_SETTINGS;
 	}
 
 	protected Connection actualConnection() throws SQLException {

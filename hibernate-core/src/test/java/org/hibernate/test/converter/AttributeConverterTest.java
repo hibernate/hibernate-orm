@@ -29,6 +29,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.hql.internal.ast.tree.JavaConstantNode;
 import org.hibernate.internal.util.ConfigHelper;
@@ -41,10 +42,13 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.sql.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.sql.SqlTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -67,8 +71,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			fail( "expecting an exception" );
 		}
 		catch (AnnotationException e) {
-			assertNotNull( e.getCause() );
-			assertTyping( BlewUpException.class, e.getCause() );
+			assertTyping( BlewUpException.class, ExceptionUtil.rootCause( e ) );
 		}
 	}
 
@@ -93,24 +96,29 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicOperation() {
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+			SimpleValue simpleValue = new SimpleValue( new MetadataBuildingContextTestingImpl( serviceRegistry ) );
+			simpleValue.setJpaAttributeConverterDescriptor(
+					new InstanceBasedConverterDescriptor(
+							new StringClobConverter(),
+							new ClassmateContext()
+					)
+			);
+			simpleValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
 
-		SimpleValue simpleValue = new SimpleValue( new MetadataBuildingContextTestingImpl() );
-		simpleValue.setJpaAttributeConverterDescriptor(
-				new InstanceBasedConverterDescriptor(
-						new StringClobConverter(),
-						new ClassmateContext()
-				)
-		);
-		simpleValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
-
-		Type type = simpleValue.getType();
-		assertNotNull( type );
-		if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
-			fail( "AttributeConverter not applied" );
+			Type type = simpleValue.getType();
+			assertNotNull( type );
+			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter not applied" );
+			}
+			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
+			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+			assertEquals(
+					Dialect.getDialect().remapSqlTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING ).getSqlType(),
+					sqlTypeDescriptor.getSqlType()
+			);
 		}
-		AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-		assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-		assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
 	}
 
 	@Test
@@ -161,7 +169,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+			assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -190,7 +199,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			}
 			AttributeConverterTypeAdapter basicType = assertTyping( AttributeConverterTypeAdapter.class, type );
 			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-			assertEquals( Types.CLOB, basicType.getSqlTypeDescriptor().getSqlType() );
+			SqlTypeDescriptor sqlTypeDescriptor = basicType.getSqlTypeDescriptor();
+			assertEquals( Dialect.getDialect().remapSqlTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING).getSqlType(), sqlTypeDescriptor.getSqlType() );
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );
@@ -233,9 +243,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
 			session.save( new Tester4( 1L, "steve", 200 ) );
@@ -265,9 +273,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			session.getTransaction().commit();
 			session.close();
 		}
-		finally {
-			sf.close();
-		}
 	}
 
 	@Test
@@ -278,9 +283,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
 			session.save( new IrrelevantInstantEntity( 1L ) );
@@ -300,9 +303,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			session.delete( e );
 			session.getTransaction().commit();
 			session.close();
-		}
-		finally {
-			sf.close();
 		}
 	}
 
@@ -386,8 +386,8 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}
-	
-	
+
+
 
 	// Entity declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

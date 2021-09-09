@@ -35,8 +35,8 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration configuration = super.constructAndConfigureConfiguration();
+	protected void configure(Configuration configuration) {
+		super.configure( configuration );
 		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
 			typeContributions.contributeType( ArrayType.INSTANCE,
 				new String[] {
@@ -45,7 +45,6 @@ public class ArrayTypeContributorTest extends BaseCoreFunctionalTestCase {
 				}
 			);
 		} );
-		return configuration;
 	}
 
 	@Test

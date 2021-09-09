@@ -34,6 +34,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.build.AllowSysOut;
+import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jdbc.AbstractReturningWork;
@@ -107,16 +108,34 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected void buildSessionFactory(Consumer<Configuration> configurationAdapter) {
 		// for now, build the configuration to get all the property settings
-		configuration = constructAndConfigureConfiguration();
-		if ( configurationAdapter != null ) {
-			configurationAdapter.accept(configuration);
+		BootstrapServiceRegistry bootRegistry = null;
+		try {
+			bootRegistry = buildBootstrapServiceRegistry();
+			configuration = constructAndConfigureConfiguration( bootRegistry );
+			if ( configurationAdapter != null ) {
+				configurationAdapter.accept( configuration );
+			}
+			serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
+			// this is done here because Configuration does not currently support 4.0 xsd
+			afterConstructAndConfigureConfiguration( configuration );
+			sessionFactory = (SessionFactoryImplementor) configuration.buildSessionFactory( serviceRegistry );
+			afterSessionFactoryBuilt();
 		}
-		BootstrapServiceRegistry bootRegistry = buildBootstrapServiceRegistry();
-		serviceRegistry = buildServiceRegistry( bootRegistry, configuration );
-		// this is done here because Configuration does not currently support 4.0 xsd
-		afterConstructAndConfigureConfiguration( configuration );
-		sessionFactory = ( SessionFactoryImplementor ) configuration.buildSessionFactory( serviceRegistry );
-		afterSessionFactoryBuilt();
+		catch (Throwable t) {
+			if ( sessionFactory != null ) {
+				sessionFactory.close();
+				sessionFactory = null;
+				configuration = null;
+			}
+			if ( serviceRegistry != null ) {
+				serviceRegistry.destroy();
+				serviceRegistry = null;
+			}
+			else if ( bootRegistry != null ) {
+				bootRegistry.close();
+			}
+			throw t;
+		}
 	}
 
 	protected void rebuildSessionFactory() {
@@ -140,14 +159,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		buildSessionFactory( configurationAdapter );
 	}
 
-	protected Configuration buildConfiguration() {
-		Configuration cfg = constructAndConfigureConfiguration();
-		afterConstructAndConfigureConfiguration( cfg );
-		return cfg;
-	}
-
-	protected Configuration constructAndConfigureConfiguration() {
-		Configuration cfg = constructConfiguration();
+	protected Configuration constructAndConfigureConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		Configuration cfg = constructConfiguration( bootstrapServiceRegistry );
 		configure( cfg );
 		return cfg;
 	}
@@ -158,8 +171,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		afterConfigurationBuilt( cfg );
 	}
 
-	protected Configuration constructConfiguration() {
-		Configuration configuration = new Configuration();
+	protected Configuration constructConfiguration(BootstrapServiceRegistry bootstrapServiceRegistry) {
+		Configuration configuration = new Configuration( bootstrapServiceRegistry );
 		configuration.setProperty( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		configuration.setProperty( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
 		if ( createSchema() ) {
@@ -265,18 +278,26 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected StandardServiceRegistryImpl buildServiceRegistry(BootstrapServiceRegistry bootRegistry, Configuration configuration) {
-		Properties properties = new Properties();
-		properties.putAll( configuration.getProperties() );
-		Environment.verifyProperties( properties );
-		ConfigurationHelper.resolvePlaceHolders( properties );
+		try {
+			Properties properties = new Properties();
+			properties.putAll( configuration.getProperties() );
+			Environment.verifyProperties( properties );
+			ConfigurationHelper.resolvePlaceHolders( properties );
 
-		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
+			StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
 
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
-				.applySettings( properties );
+			StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
+					.applySettings( properties );
 
-		prepareBasicRegistryBuilder( registryBuilder );
-		return (StandardServiceRegistryImpl) registryBuilder.build();
+			prepareBasicRegistryBuilder( registryBuilder );
+			return (StandardServiceRegistryImpl) registryBuilder.build();
+		}
+		catch (Throwable t) {
+			if ( bootRegistry != null ) {
+				bootRegistry.close();
+			}
+			throw t;
+		}
 	}
 
 	protected void prepareBasicRegistryBuilder(StandardServiceRegistryBuilder serviceRegistryBuilder) {
@@ -345,6 +366,11 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	@After
 	public final void afterTest() throws Exception {
+		// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
+		if ( getDialect() instanceof H2Dialect ) {
+			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" ).invoke( null );
+		}
+
 		completeStrayTransaction();
 
 		if ( isCleanupTestDataRequired() ) {
@@ -388,7 +414,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			sessionFactory.getCache().evictAllRegions();
 		}
 	}
-	
+
 	protected boolean isCleanupTestDataRequired() {
 		return false;
 	}
@@ -420,6 +446,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	public static class RollbackWork implements Work {
+
+		@Override
 		public void execute(Connection connection) throws SQLException {
 			connection.rollback();
 		}

@@ -15,6 +15,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Startable;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -25,9 +27,18 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 public class ServiceRegistryTest {
-	private final ServiceRegistry registry = buildRegistry();
+	private ServiceRegistry registry;
 	private final static int NUMBER_OF_THREADS = 100;
-	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
+
+	@Before
+	public void init() {
+		registry = buildRegistry();
+	}
+
+	@After
+	public void destroy() {
+		registry.close();
+	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10427")
@@ -46,9 +57,6 @@ public class ServiceRegistryTest {
 			}
 
 		}
-
-		standardServiceRegistryBuilder.destroy( registry );
-
 	}
 
 	@Test
@@ -82,8 +90,7 @@ public class ServiceRegistryTest {
 	}
 
 	private ServiceRegistry buildRegistry() {
-		standardServiceRegistryBuilder = new StandardServiceRegistryBuilder();
-		return standardServiceRegistryBuilder.addInitiator( new SlowServiceInitiator() )
+		return new StandardServiceRegistryBuilder().addInitiator( new SlowServiceInitiator() )
 				.addInitiator( new NullServiceInitiator() )
 				.build();
 	}

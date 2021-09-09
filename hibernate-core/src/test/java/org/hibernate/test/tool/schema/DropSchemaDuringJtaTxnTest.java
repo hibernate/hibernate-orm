@@ -53,11 +53,16 @@ public class DropSchemaDuringJtaTxnTest extends BaseUnitTestCase {
 		settings.put( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta" );
 
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().applySettings( settings ).build();
-
-		return new MetadataSources( ssr )
-				.addAnnotatedClass( TestEntity.class )
-				.buildMetadata()
-				.buildSessionFactory();
+		try {
+			return new MetadataSources( ssr )
+					.addAnnotatedClass( TestEntity.class )
+					.buildMetadata()
+					.buildSessionFactory();
+		}
+		catch (Throwable t) {
+			ssr.close();
+			throw t;
+		}
 	}
 
 

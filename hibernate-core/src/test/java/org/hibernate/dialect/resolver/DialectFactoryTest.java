@@ -22,6 +22,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfoSource;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,6 +49,13 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 
 		dialectFactory = new DialectFactoryImpl();
 		dialectFactory.injectServices( (ServiceRegistryImplementor) registry );
+	}
+
+	@After
+	public void destroy() {
+		if ( registry != null ) {
+			registry.close();
+		}
 	}
 
 	@Test

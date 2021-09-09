@@ -26,6 +26,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.TestForIssue;
@@ -44,11 +45,13 @@ public class OneToManyBidirectionalForeignKeyTest {
 
 	@Test
 	public void testForeignKeyShouldNotBeCreated() {
-		Metadata metadata = new MetadataSources(new StandardServiceRegistryBuilder().build())
-				.addAnnotatedClass(PlainTreeEntity.class).addAnnotatedClass(TreeEntityWithOnDelete.class)
-				.buildMetadata();
-		assertTrue(findTable(metadata, TABLE_NAME_PLAIN).getForeignKeys().isEmpty());
-		assertFalse(findTable(metadata, TABLE_NAME_WITH_ON_DELETE).getForeignKeys().isEmpty());
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( PlainTreeEntity.class ).addAnnotatedClass( TreeEntityWithOnDelete.class )
+					.buildMetadata();
+			assertTrue( findTable( metadata, TABLE_NAME_PLAIN ).getForeignKeys().isEmpty() );
+			assertFalse( findTable( metadata, TABLE_NAME_WITH_ON_DELETE ).getForeignKeys().isEmpty() );
+		}
 	}
 
 	private static Table findTable(Metadata metadata, String tableName) {

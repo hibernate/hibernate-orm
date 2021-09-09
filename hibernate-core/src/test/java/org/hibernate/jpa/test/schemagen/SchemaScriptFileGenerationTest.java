@@ -24,6 +24,7 @@ import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -51,6 +52,13 @@ public class SchemaScriptFileGenerationTest {
 				buildPersistenceUnitDescriptor(),
 				getConfig()
 		);
+	}
+
+	@After
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
 	}
 
 	@Test
@@ -109,5 +117,4 @@ public class SchemaScriptFileGenerationTest {
 		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
-
 }

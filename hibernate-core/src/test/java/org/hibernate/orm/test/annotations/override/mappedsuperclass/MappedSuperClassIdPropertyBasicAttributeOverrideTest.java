@@ -21,9 +21,7 @@ public class MappedSuperClassIdPropertyBasicAttributeOverrideTest {
 
 	@Test
 	public void test() {
-		try {
-			StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
-			StandardServiceRegistry ssr = ssrb.build();
+		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
 
 			MetadataSources metadataSources = new MetadataSources( ssr );
 			metadataSources.addAnnotatedClasses( MappedSuperClassWithUuidAsBasic.class );

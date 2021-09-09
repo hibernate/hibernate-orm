@@ -109,25 +109,27 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBasicOperation() {
-		final BasicValue basicValue = new BasicValue( new MetadataBuildingContextTestingImpl() );
-		basicValue.setJpaAttributeConverterDescriptor(
-				new InstanceBasedConverterDescriptor(
-						new StringClobConverter(),
-						new ClassmateContext()
-				)
-		);
-		basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
+		try ( StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+			final BasicValue basicValue = new BasicValue( new MetadataBuildingContextTestingImpl( serviceRegistry ) );
+			basicValue.setJpaAttributeConverterDescriptor(
+					new InstanceBasedConverterDescriptor(
+							new StringClobConverter(),
+							new ClassmateContext()
+					)
+			);
+			basicValue.setTypeUsingReflection( IrrelevantEntity.class.getName(), "name" );
 
-		final Type type = basicValue.getType();
-		assertNotNull( type );
-		assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
+			final Type type = basicValue.getType();
+			assertNotNull( type );
+			assertThat( type, instanceOf( AttributeConverterTypeAdapter.class ) );
 
-		final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
 
-		assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
 
-		final JdbcTypeDescriptor jdbcTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
-		assertThat( jdbcTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+			final JdbcTypeDescriptor jdbcTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
+			assertThat( jdbcTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+		}
 	}
 
 	@Test
@@ -253,9 +255,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
 			session.save( new Tester4( 1L, "steve", 200 ) );
@@ -284,9 +284,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			session.delete( t4 );
 			session.getTransaction().commit();
 			session.close();
-		}
-		finally {
-			sf.close();
 		}
 	}
 
@@ -328,9 +325,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
 			session.save( new IrrelevantInstantEntity( 1L ) );
@@ -351,9 +346,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			session.getTransaction().commit();
 			session.close();
 		}
-		finally {
-			sf.close();
-		}
 	}
 
 	@Test
@@ -365,9 +357,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 		cfg.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
 
-		SessionFactory sf = cfg.buildSessionFactory();
-
-		try {
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session session = sf.openSession();
 			session.beginTransaction();
 			session.save( new Tester4( 1L, "George", 150, ConvertibleEnum.DEFAULT ) );
@@ -396,9 +386,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			session.delete( t4 );
 			session.getTransaction().commit();
 			session.close();
-		}
-		finally {
-			sf.close();
 		}
 	}
 

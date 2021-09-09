@@ -55,11 +55,9 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testDefaultedSequenceBackedConfiguration() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
@@ -76,9 +74,6 @@ public class SequenceStyleConfigUnitTest {
 			assertEquals( optimizer.getIncrementSize(), OptimizableGenerator.DEFAULT_INCREMENT_SIZE );
 
 			assertEquals( "ID_SEQ", databaseStructure.getName() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 
@@ -100,11 +95,9 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testDefaultedTableBackedConfiguration() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
 			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
@@ -122,9 +115,6 @@ public class SequenceStyleConfigUnitTest {
 
 			assertEquals( "ID_SEQ", databaseStructure.getName() );
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 	}
 
 	/**
@@ -135,11 +125,9 @@ public class SequenceStyleConfigUnitTest {
 	@Test
 	public void testDefaultOptimizerBasedOnIncrementBackedBySequence() {
 		// for dialects which do not support pooled sequences, we default to pooled+table
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
@@ -154,16 +142,11 @@ public class SequenceStyleConfigUnitTest {
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 
 		// for dialects which do support pooled sequences, we default to pooled+sequence
-		serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
@@ -177,9 +160,6 @@ public class SequenceStyleConfigUnitTest {
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 	}
 
 	/**
@@ -189,11 +169,9 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testDefaultOptimizerBasedOnIncrementBackedByTable() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
@@ -207,9 +185,6 @@ public class SequenceStyleConfigUnitTest {
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 			assertEquals( "ID_SEQ", generator.getDatabaseStructure().getName() );
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 	}
 
 	/**
@@ -217,11 +192,9 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testForceTableUse() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 
@@ -240,9 +213,6 @@ public class SequenceStyleConfigUnitTest {
 
 			assertEquals( "ID_SEQ", databaseStructure.getName() );
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 	}
 
 	/**
@@ -250,12 +220,10 @@ public class SequenceStyleConfigUnitTest {
 	 */
 	@Test
 	public void testExplicitOptimizerWithExplicitIncrementSize() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
-				.build();
-
 		// optimizer=none w/ increment > 1 => should honor optimizer
-		try {
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
@@ -300,18 +268,13 @@ public class SequenceStyleConfigUnitTest {
 			assertEquals( 20, generator.getOptimizer().getIncrementSize() );
 			assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
 		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
-		}
 	}
 
 	@Test
 	public void testPreferredPooledOptimizerSetting() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
+		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
-				.build();
-
-		try {
+				.build()) {
 			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
@@ -339,9 +302,6 @@ public class SequenceStyleConfigUnitTest {
 			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoThreadLocalOptimizer.class, generator.getOptimizer().getClass() );
-		}
-		finally {
-			StandardServiceRegistryBuilder.destroy( serviceRegistry );
 		}
 	}
 

@@ -31,16 +31,17 @@ public class MultipleBagFetchTest {
 
 	@Test
 	public void testEntityWithMultipleJoinFetchedBags() {
-		StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+		try (StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build()) {
 
-		Metadata metadata = new MetadataSources( standardRegistry )
-				.addAnnotatedClass( Post.class )
-				.addAnnotatedClass( PostComment.class )
-				.addAnnotatedClass( Tag.class )
-				.getMetadataBuilder()
-				.build();
-		// make sure that this model does not cause a MultipleBagFetchException
-		metadata.buildSessionFactory();
+			Metadata metadata = new MetadataSources( standardRegistry )
+					.addAnnotatedClass( Post.class )
+					.addAnnotatedClass( PostComment.class )
+					.addAnnotatedClass( Tag.class )
+					.getMetadataBuilder()
+					.build();
+			// make sure that this model does not cause a MultipleBagFetchException
+			metadata.buildSessionFactory().close();
+		}
 	}
 
 	@Entity(name = "Post")

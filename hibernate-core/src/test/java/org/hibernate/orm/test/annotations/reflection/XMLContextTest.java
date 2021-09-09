@@ -12,6 +12,8 @@ import org.hibernate.orm.test.internal.util.xml.XMLMappingHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.boot.BootstrapContextImpl;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -19,10 +21,23 @@ import org.junit.jupiter.api.Test;
  */
 @TestForIssue(jiraKey = "HHH-14529")
 public class XMLContextTest {
+
+	private BootstrapContextImpl bootstrapContext;
+
+	@BeforeEach
+	public void init() {
+		bootstrapContext = new BootstrapContextImpl();
+	}
+
+	@AfterEach
+	public void destroy() {
+		bootstrapContext.close();
+	}
+
 	@Test
 	public void testAll() throws Exception {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
-		final XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
+		final XMLContext context = new XMLContext( bootstrapContext );
 
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings(
 				"org/hibernate/orm/test/annotations/reflection/orm.xml" );

@@ -15,6 +15,8 @@ import org.jboss.logging.Logger;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -88,11 +90,11 @@ public class BackquoteTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-4647")
 	public void testInvalidReferenceToQuotedTableName() {
-		try {
-			Configuration config = new Configuration();
+		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
+			Configuration config = new Configuration( serviceRegistry );
 			config.addAnnotatedClass( Printer.class );
 			config.addAnnotatedClass( PrinterCable.class );
-			sessionFactory = config.buildSessionFactory( serviceRegistry );
+			sessionFactory = config.buildSessionFactory( this.serviceRegistry );
 			fail( "expected MappingException to be thrown" );
 		}
 		//we WANT MappingException to be thrown

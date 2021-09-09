@@ -35,11 +35,10 @@ import org.jboss.jandex.IndexView;
  * @author Andrea Boriero
  */
 public class BootstrapContextImpl implements BootstrapContext {
-	public static final BootstrapContextImpl INSTANCE = new BootstrapContextImpl();
 
-	private BootstrapContext delegate;
+	private final BootstrapContext delegate;
 
-	private BootstrapContextImpl() {
+	public BootstrapContextImpl() {
 		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build();
 		MetadataBuildingOptions buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
 
@@ -149,5 +148,10 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public void release() {
 		delegate.release();
+	}
+
+	public void close() {
+		delegate.release();
+		delegate.getServiceRegistry().close();
 	}
 }

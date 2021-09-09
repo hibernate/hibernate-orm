@@ -12,18 +12,10 @@ import java.util.Set;
 @Entity
 class Client {
 
-    @Id @GeneratedValue
-    private Long id;
-
-    public Long getId() {
-        return id;
-    }
+    @Id
+    private Integer id;
 
     private String name;
-
-    public String getName() {
-        return name;
-    }
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "client", fetch = FetchType.LAZY)
     private Set<DebitAccount> debitAccounts = new HashSet<>();
@@ -33,8 +25,17 @@ class Client {
 
     Client() {}
 
-    Client(String name) {
+    Client(Integer id, String name) {
+        this.id = id;
         this.name = name;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Set<CreditAccount> getCreditAccounts() {

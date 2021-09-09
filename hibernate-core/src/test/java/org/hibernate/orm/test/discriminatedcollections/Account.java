@@ -4,7 +4,6 @@ import javax.persistence.DiscriminatorColumn;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -12,29 +11,27 @@ import javax.persistence.ManyToOne;
 @DiscriminatorColumn(name = "account_type")
 abstract class Account {
 
+    @Id
+    private Integer id;
+    private double amount;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Client client;
+
     Account() {}
 
-    Account(Client client) {
+    Account(Integer id, Client client) {
+        this.id = id;
         this.client = client;
         amount = 0.0;
         rate = 12.0;
     }
 
-    @Id @GeneratedValue
-    private Long id;
-
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Client client;
-
     public Client getClient() {
         return client;
     }
-
-    private double amount;
 
     public double getAmount() {
         return amount;
@@ -64,8 +61,8 @@ class DebitAccount extends Account {
     public DebitAccount() {
     }
 
-    public DebitAccount(Client client) {
-        super(client);
+    public DebitAccount(Integer id, Client client) {
+        super( id, client );
     }
 
     @Override
@@ -81,8 +78,8 @@ class CreditAccount extends Account {
     public CreditAccount() {
     }
 
-    public CreditAccount(Client client) {
-        super(client);
+    public CreditAccount(Integer id, Client client) {
+        super( id, client );
     }
 
     @Override

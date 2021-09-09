@@ -101,6 +101,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.Clause;
 
 import org.jboss.logging.Logger;
 
@@ -272,6 +273,12 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// statements
 
+	/**
+	 * @implNote Clause is technically intended for use in the SQL tree, but here we use
+	 * it to keep track of where we are
+	 */
+	private Clause clause = Clause.IRRELEVANT;
+
 	@Override
 	public Object visitDeleteStatement(SqmDeleteStatement<?> statement) {
 		if ( DEBUG_ENABLED ) {
@@ -323,6 +330,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 		return null;
 	}
+
 
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
@@ -477,7 +485,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 		processStanza(
 				"root",
 				'`' + sqmRoot.getNavigablePath().getFullPath() + '`',
-				() -> processJoins( sqmRoot )
+				() -> {
+					if ( clause != Clause.SELECT ) {
+						processJoins( sqmRoot );
+					}
+				}
 		);
 
 		return null;
@@ -623,10 +635,18 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitSelectClause(SqmSelectClause selectClause) {
-		processStanza(
-				selectClause.isDistinct() ? "select(distinct)" : "select",
-				() -> selectClause.getSelections().forEach( this::visitSelection )
-		);
+		final Clause previousClause = this.clause;
+		this.clause = Clause.SELECT;
+
+		try {
+			processStanza(
+					selectClause.isDistinct() ? "select(distinct)" : "select",
+					() -> selectClause.getSelections().forEach( this::visitSelection )
+			);
+		}
+		finally {
+			this.clause = previousClause;
+		}
 
 		return null;
 	}

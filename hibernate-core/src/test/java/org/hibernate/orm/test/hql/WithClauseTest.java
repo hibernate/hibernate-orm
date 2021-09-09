@@ -4,14 +4,12 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.hql;
+package org.hibernate.orm.test.hql;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 
@@ -20,15 +18,16 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.test.hql.Human;
+import org.hibernate.test.hql.SimpleAssociatedEntity;
+import org.hibernate.test.hql.SimpleEntityWithAssociation;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Implementation of WithClauseTest.
@@ -56,26 +55,6 @@ public class WithClauseTest {
 	}
 
 	@Test
-	public void testWithClauseFailsWithFetch(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> {
-					try {
-						session.createQuery( "from Animal a inner join fetch a.offspring as o with o.bodyWeight = :someLimit" )
-								.setParameter( "someLimit", 1 )
-								.list();
-						fail( "ad-hoc on clause allowed with fetched association" );
-					}
-					catch (IllegalArgumentException e) {
-						assertTyping( QueryException.class, e.getCause() );
-					}
-					catch ( HibernateException e ) {
-						// the expected response...
-					}
-				}
-		);
-	}
-
-	@Test
 	public void testWithClause(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {
@@ -83,33 +62,33 @@ public class WithClauseTest {
 					List list = session.createQuery( "from Human h inner join h.offspring as o with o.bodyWeight < :someLimit" )
 							.setParameter( "someLimit", 1 )
 							.list();
-					assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					// many-to-one
 					list = session.createQuery( "from Animal a inner join a.mother as m with m.bodyWeight < :someLimit" )
 							.setParameter( "someLimit", 1 )
 							.list();
-					assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					list = session.createQuery( "from Human h inner join h.friends f with f.bodyWeight < :someLimit" )
 							.setParameter( "someLimit", 25 )
 							.list();
-					assertTrue( "ad-hoc on did take effect", !list.isEmpty() );
+					assertTrue( !list.isEmpty(), "ad-hoc on did take effect" );
 
 					// many-to-many
 					list = session.createQuery( "from Human h inner join h.friends as f with f.nickName like 'bubba'" )
 							.list();
-					assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					// http://opensource.atlassian.com/projects/hibernate/browse/HHH-1930
 					list = session.createQuery( "from Human h inner join h.nickNames as nicknames with nicknames = 'abc'" )
 							.list();
-					assertTrue( "ad-hoc on did not take effect", list.isEmpty() );
+					assertTrue( list.isEmpty(), "ad-hoc on did not take effect" );
 
 					list = session.createQuery( "from Human h inner join h.offspring o with o.mother.father = :cousin" )
 							.setParameter( "cousin", session.load( Human.class, Long.valueOf( "123" ) ) )
 							.list();
-					assertTrue( "ad-hoc did take effect", list.isEmpty() );
+					assertTrue( list.isEmpty(), "ad-hoc did take effect" );
 				}
 		);
 	}
@@ -161,7 +140,7 @@ public class WithClauseTest {
 					// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
 					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName like 'bubba' where h.description = 'father'" )
 							.list();
-					assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
 		);
 	}
@@ -174,7 +153,7 @@ public class WithClauseTest {
 					// Like testWithClauseAsSubquery but uses equal operator since it render differently in SQL
 					List list = session.createQuery( "from Human h left join h.friends as f with f.nickName = 'bubba' where h.description = 'father'" )
 							.list();
-					assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
 		);
 	}
@@ -188,7 +167,7 @@ public class WithClauseTest {
 					// Normally this produces 2 results which is wrong and can only be circumvented by converting the join table and target entity table join to a subquery
 					List list = session.createQuery( "from Human h left join h.family as f with key(f) like 'son1' where h.description = 'father'" )
 							.list();
-					assertEquals( "subquery rewriting of join table did not take effect", 1, list.size() );
+					assertEquals( 1, list.size(), "subquery rewriting of join table did not take effect" );
 				}
 		);
 	}
@@ -202,7 +181,7 @@ public class WithClauseTest {
 					// Just a stupid example that makes use of a column that isn't from the collection table or the target entity table
 					List list = s.createQuery( "select 1 from Human h join h.friends as friend left join h.family as f with key(f) = concat('son', cast(friend.intValue as string)) where h.description = 'father'" )
 							.list();
-					assertEquals( "subquery rewriting of join table did not take effect", 2, list.size() );
+					assertEquals( 2, list.size(), "subquery rewriting of join table did not take effect" );
 				}
 		);
 	}
@@ -281,8 +260,8 @@ public class WithClauseTest {
 						session.delete( session.createQuery( "from Human where description = 'mother'" ).uniqueResult() );
 						session.delete( father );
 						session.createQuery( "delete Animal" ).executeUpdate();
-						session.createQuery( "delete SimpleEntityWithAssociation" ).executeUpdate();
 						session.createQuery( "delete SimpleAssociatedEntity" ).executeUpdate();
+						session.createQuery( "delete SimpleEntityWithAssociation" ).executeUpdate();
 					}
 			);
 		}

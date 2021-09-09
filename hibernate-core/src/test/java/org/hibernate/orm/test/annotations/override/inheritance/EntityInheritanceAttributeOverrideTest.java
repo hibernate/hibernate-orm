@@ -62,7 +62,7 @@ public class EntityInheritanceAttributeOverrideTest extends EntityManagerFactory
 
 	@Test
 	public void test() {
-		produceEntityManagerFactory();
+		produceEntityManagerFactory().close();
 	}
 
 	@Entity(name = "AbstractEntity")

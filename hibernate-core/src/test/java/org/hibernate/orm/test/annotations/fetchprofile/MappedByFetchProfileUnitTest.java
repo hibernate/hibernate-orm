@@ -35,19 +35,19 @@ public class MappedByFetchProfileUnitTest extends BaseUnitTestCase {
 		Configuration config = new Configuration();
 		config.addAnnotatedClass( Customer6.class );
 		config.addAnnotatedClass( Address.class );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
 				serviceRegistry
-		);
+		)) {
 
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "address-with-customer" )
-		);
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "customer-with-address" )
-		);
-		sessionImpl.close();
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "address-with-customer" )
+			);
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "customer-with-address" )
+			);
+		}
 	}
 
 	@Test
@@ -56,19 +56,19 @@ public class MappedByFetchProfileUnitTest extends BaseUnitTestCase {
 		config.addAnnotatedClass( Customer6.class );
 		config.addAnnotatedClass( Address.class );
 		config.addPackage( Address.class.getPackage().getName() );
-		SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
+		try (SessionFactoryImplementor sessionImpl = ( SessionFactoryImplementor ) config.buildSessionFactory(
 				serviceRegistry
-		);
+		)) {
 
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-1" )
-		);
-		assertTrue(
-				"fetch profile not parsed properly",
-				sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-2" )
-		);
-		sessionImpl.close();
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-1" )
+			);
+			assertTrue(
+					"fetch profile not parsed properly",
+					sessionImpl.containsFetchProfileDefinition( "mappedBy-package-profile-2" )
+			);
+		}
 	}
 
 }

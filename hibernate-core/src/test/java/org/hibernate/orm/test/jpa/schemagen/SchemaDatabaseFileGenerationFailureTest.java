@@ -29,6 +29,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,6 +59,13 @@ public class SchemaDatabaseFileGenerationFailureTest {
 				buildPersistenceUnitDescriptor(),
 				getConfig()
 		);
+	}
+
+	@AfterEach
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
 	}
 
 	@Test

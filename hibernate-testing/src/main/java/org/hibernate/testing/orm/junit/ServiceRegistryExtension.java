@@ -63,7 +63,6 @@ public class ServiceRegistryExtension
 		ServiceRegistryScopeImpl existingScope = (ServiceRegistryScopeImpl) store.get( REGISTRY_KEY );
 
 		if ( existingScope == null ) {
-			final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl(  );
 			log.debugf( "Creating ServiceRegistryScope - %s", context.getDisplayName() );
 
 			final BootstrapServiceRegistryProducer bsrProducer;
@@ -114,7 +113,8 @@ public class ServiceRegistryExtension
 				};
 			}
 
-			scope.createRegistry( bsrProducer, ssrProducer );
+			final ServiceRegistryScopeImpl scope = new ServiceRegistryScopeImpl( bsrProducer, ssrProducer );
+			scope.getRegistry();
 
 			locateExtensionStore( testInstance, context ).put( REGISTRY_KEY, scope );
 
@@ -209,7 +209,6 @@ public class ServiceRegistryExtension
 	@Override
 	public void postProcessTestInstance(Object testInstance, ExtensionContext context) {
 		log.tracef( "#postProcessTestInstance(%s, %s)", testInstance, context.getDisplayName() );
-
 		findServiceRegistryScope( testInstance, context );
 	}
 
@@ -249,24 +248,26 @@ public class ServiceRegistryExtension
 		private StandardServiceRegistry registry;
 		private boolean active = true;
 
-		public ServiceRegistryScopeImpl() {
-		}
-
-		public StandardServiceRegistry createRegistry(BootstrapServiceRegistryProducer bsrProducer, ServiceRegistryProducer ssrProducer) {
+		public ServiceRegistryScopeImpl(BootstrapServiceRegistryProducer bsrProducer, ServiceRegistryProducer ssrProducer) {
 			this.bsrProducer = bsrProducer;
 			this.ssrProducer = ssrProducer;
+		}
 
-			verifyActive();
-
+		private StandardServiceRegistry createRegistry() {
 			BootstrapServiceRegistryBuilder bsrb = new BootstrapServiceRegistryBuilder().enableAutoClose();
 
 			final org.hibernate.boot.registry.BootstrapServiceRegistry bsr = bsrProducer.produceServiceRegistry( bsrb );
+			try {
+				final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
+				// we will close it ourselves explicitly.
+				ssrb.disableAutoClose();
 
-			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
-			// we will close it ourselves explicitly.
-			ssrb.disableAutoClose();
-
-			return ssrProducer.produceServiceRegistry( ssrb );
+				return registry = ssrProducer.produceServiceRegistry( ssrb );
+			}
+			catch (Throwable t) {
+				bsr.close();
+				throw t;
+			}
 		}
 
 		private void verifyActive() {
@@ -280,7 +281,7 @@ public class ServiceRegistryExtension
 			verifyActive();
 
 			if ( registry == null ) {
-				registry = createRegistry( bsrProducer, ssrProducer );
+				registry = createRegistry();
 			}
 
 			return registry;

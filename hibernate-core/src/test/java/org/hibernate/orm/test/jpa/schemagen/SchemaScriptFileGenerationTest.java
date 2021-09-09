@@ -25,6 +25,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -50,6 +51,13 @@ public class SchemaScriptFileGenerationTest {
 				buildPersistenceUnitDescriptor(),
 				getConfig()
 		);
+	}
+
+	@AfterEach
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
 	}
 
 	@Test

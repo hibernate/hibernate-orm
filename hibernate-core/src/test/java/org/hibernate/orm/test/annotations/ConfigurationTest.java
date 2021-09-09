@@ -37,17 +37,17 @@ public class ConfigurationTest {
 		Configuration cfg = new Configuration();
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		SessionFactory sf = cfg.buildSessionFactory();
-		assertNotNull( sf );
-		Session s = sf.openSession();
-		Transaction tx = s.beginTransaction();
-		Query q = s.createQuery( "from Boat" );
-		assertEquals( 0, q.list().size() );
-		q = s.createQuery( "from Plane" );
-		assertEquals( 0, q.list().size() );
-		tx.commit();
-		s.close();
-		sf.close();
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
+			assertNotNull( sf );
+			Session s = sf.openSession();
+			Transaction tx = s.beginTransaction();
+			Query q = s.createQuery( "from Boat" );
+			assertEquals( 0, q.list().size() );
+			q = s.createQuery( "from Plane" );
+			assertEquals( 0, q.list().size() );
+			tx.commit();
+			s.close();
+		}
 	}
 
 	@Test
@@ -93,24 +93,24 @@ public class ConfigurationTest {
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.addAnnotatedClass( Boat.class );
-		SessionFactory sf = cfg.buildSessionFactory();
-		assertNotNull( sf );
-		Session s = sf.openSession();
-		s.getTransaction().begin();
-		Boat boat = new Boat();
-		boat.setSize( 12 );
-		boat.setWeight( 34 );
-		s.persist( boat );
-		s.getTransaction().commit();
-		s.clear();
-		Transaction tx = s.beginTransaction();
-		boat = (Boat) s.get( Boat.class, boat.getId() );
-		assertTrue( 34 != boat.getWeight(), "Annotation has precedence" );
-		s.delete( boat );
-		//s.getTransaction().commit();
-		tx.commit();
-		s.close();
-		sf.close();
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
+			assertNotNull( sf );
+			Session s = sf.openSession();
+			s.getTransaction().begin();
+			Boat boat = new Boat();
+			boat.setSize( 12 );
+			boat.setWeight( 34 );
+			s.persist( boat );
+			s.getTransaction().commit();
+			s.clear();
+			Transaction tx = s.beginTransaction();
+			boat = (Boat) s.get( Boat.class, boat.getId() );
+			assertTrue( 34 != boat.getWeight(), "Annotation has precedence" );
+			s.delete( boat );
+			//s.getTransaction().commit();
+			tx.commit();
+			s.close();
+		}
 	}
 
 	@Test
@@ -120,23 +120,23 @@ public class ConfigurationTest {
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
 		cfg.setProperty( Configuration.ARTEFACT_PROCESSING_ORDER, "class, hbm" );
 		cfg.addAnnotatedClass( Boat.class );
-		SessionFactory sf = cfg.buildSessionFactory();
-		assertNotNull( sf );
-		Session s = sf.openSession();
-		s.getTransaction().begin();
-		Boat boat = new Boat();
-		boat.setSize( 12 );
-		boat.setWeight( 34 );
-		s.persist( boat );
-		s.getTransaction().commit();
-		s.clear();
-		Transaction tx = s.beginTransaction();
-		boat = (Boat) s.get( Boat.class, boat.getId() );
-		assertTrue( 34 == boat.getWeight(), "Annotation has precedence" );
-		s.delete( boat );
-		tx.commit();
-		s.close();
-		sf.close();
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
+			assertNotNull( sf );
+			Session s = sf.openSession();
+			s.getTransaction().begin();
+			Boat boat = new Boat();
+			boat.setSize( 12 );
+			boat.setWeight( 34 );
+			s.persist( boat );
+			s.getTransaction().commit();
+			s.clear();
+			Transaction tx = s.beginTransaction();
+			boat = (Boat) s.get( Boat.class, boat.getId() );
+			assertTrue( 34 == boat.getWeight(), "Annotation has precedence" );
+			s.delete( boat );
+			tx.commit();
+			s.close();
+		}
 	}
 
 	@Test
@@ -145,17 +145,17 @@ public class ConfigurationTest {
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.addClass( Ferry.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		SessionFactory sf = cfg.buildSessionFactory();
-		assertNotNull( sf );
-		Session s = sf.openSession();
-		Transaction tx = s.beginTransaction();
-		Query q = s.createQuery( "from Ferry" );
-		assertEquals( 0, q.list().size() );
-		q = s.createQuery( "from Plane" );
-		assertEquals( 0, q.list().size() );
-		tx.commit();
-		s.close();
-		sf.close();
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
+			assertNotNull( sf );
+			Session s = sf.openSession();
+			Transaction tx = s.beginTransaction();
+			Query q = s.createQuery( "from Ferry" );
+			assertEquals( 0, q.list().size() );
+			q = s.createQuery( "from Plane" );
+			assertEquals( 0, q.list().size() );
+			tx.commit();
+			s.close();
+		}
 	}
 
 	@Test
@@ -164,16 +164,16 @@ public class ConfigurationTest {
 		cfg.configure( "org/hibernate/orm/test/annotations/hibernate.cfg.xml" );
 		cfg.addAnnotatedClass( Port.class );
 		cfg.setProperty( Environment.HBM2DDL_AUTO, "create-drop" );
-		SessionFactory sf = cfg.buildSessionFactory();
-		assertNotNull( sf );
-		Session s = sf.openSession();
-		Transaction tx = s.beginTransaction();
-		Query q = s.createQuery( "from Boat" );
-		assertEquals( 0, q.list().size() );
-		q = s.createQuery( "from Port" );
-		assertEquals( 0, q.list().size() );
-		tx.commit();
-		s.close();
-		sf.close();
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
+			assertNotNull( sf );
+			Session s = sf.openSession();
+			Transaction tx = s.beginTransaction();
+			Query q = s.createQuery( "from Boat" );
+			assertEquals( 0, q.list().size() );
+			q = s.createQuery( "from Port" );
+			assertEquals( 0, q.list().size() );
+			tx.commit();
+			s.close();
+		}
 	}
 }

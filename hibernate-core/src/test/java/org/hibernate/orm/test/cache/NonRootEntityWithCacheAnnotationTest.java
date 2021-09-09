@@ -54,21 +54,20 @@ public class NonRootEntityWithCacheAnnotationTest {
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 
-		ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
 				.applySettings( settings )
-				.build();
+				.build()) {
 
-		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000482" );
+			Triggerable triggerable = logInspection.watchForLogMessages( "HHH000482" );
 
-		Metadata metadata = new MetadataSources( serviceRegistry )
-				.addAnnotatedClass( ABase.class )
-				.addAnnotatedClass( AEntity.class )
-				.buildMetadata();
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( ABase.class )
+					.addAnnotatedClass( AEntity.class )
+					.buildMetadata();
 
-		assertTrue( triggerable.wasTriggered() );
-		assertFalse( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
-
-		serviceRegistry.destroy();
+			assertTrue( triggerable.wasTriggered() );
+			assertFalse( metadata.getEntityBinding( AEntity.class.getName() ).isCached() );
+		}
 	}
 
 	@Entity

@@ -2,6 +2,7 @@ package org.hibernate.orm.test.annotations.embeddables.collection;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -17,11 +18,8 @@ import static org.junit.Assert.fail;
 public abstract class AbstractEmbeddableWithManyToManyTest {
 	@Test
 	public void test() {
-		try {
-			BootstrapServiceRegistryBuilder bootstrapServiceRegistryBuilder = new BootstrapServiceRegistryBuilder();
-			final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder(
-					bootstrapServiceRegistryBuilder.build() );
-			StandardServiceRegistry ssr = ssrb.build();
+		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build();
+			 StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( serviceRegistry ).build()) {
 			MetadataSources metadataSources = new MetadataSources( ssr );
 			addResources( metadataSources );
 			addAnnotatedClasses(metadataSources);

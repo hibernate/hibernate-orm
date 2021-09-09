@@ -47,13 +47,18 @@ public class AttributeConverterOnSuperclassTest extends BaseUnitTestCase {
 
 	@Test
 	public void testAttributeConverterOnSuperclass() {
-		final BootstrapContextImpl bootstrapContext = BootstrapContextImpl.INSTANCE;
-		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-				StringIntegerConverterSubclass.class,
-				bootstrapContext.getClassmateContext()
-		);
+		final BootstrapContextImpl bootstrapContext = new BootstrapContextImpl();
+		try {
+			final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
+					StringIntegerConverterSubclass.class,
+					bootstrapContext.getClassmateContext()
+			);
 
-		assertEquals( String.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
+			assertEquals( String.class, converterDescriptor.getDomainValueResolvedType().getErasedType() );
+		}
+		finally {
+			bootstrapContext.close();
+		}
 	}
 
 	public interface StringLongAttributeConverter extends AttributeConverter<String, Long> {

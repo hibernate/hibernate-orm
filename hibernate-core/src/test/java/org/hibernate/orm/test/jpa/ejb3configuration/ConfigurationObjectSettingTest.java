@@ -33,22 +33,25 @@ public class ConfigurationObjectSettingTest {
 	public void testContainerBootstrapSharedCacheMode() {
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
+		EntityManagerFactoryBuilderImpl builder = null;
 		{
 			// as object
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
 			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
+		builder.cancel();
 		{
 			// as string
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE.name() )
 			);
 			assertEquals( SharedCacheMode.DISABLE_SELECTIVE.name(), builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
+		builder.cancel();
 
 		// next, via the PUI
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter() {
@@ -58,43 +61,48 @@ public class ConfigurationObjectSettingTest {
 			}
 		};
 		{
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					null
 			);
 			assertEquals( SharedCacheMode.ENABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
+		builder.cancel();
 
 		// via both, integration vars should take precedence
 		{
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					Collections.singletonMap( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.DISABLE_SELECTIVE )
 			);
 			assertEquals( SharedCacheMode.DISABLE_SELECTIVE, builder.getConfigurationValues().get( AvailableSettings.JPA_SHARED_CACHE_MODE ) );
 		}
+		builder.cancel();
 	}
 
 	@Test
 	public void testContainerBootstrapValidationMode() {
 		// first, via the integration vars
 		PersistenceUnitInfoAdapter empty = new PersistenceUnitInfoAdapter();
+		EntityManagerFactoryBuilderImpl builder = null;
 		{
 			// as object
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.CALLBACK )
 			);
 			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
+		builder.cancel();
 		{
 			// as string
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
 					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.CALLBACK.name() )
 			);
 			assertEquals( ValidationMode.CALLBACK.name(), builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
+		builder.cancel();
 
 		// next, via the PUI
 		PersistenceUnitInfoAdapter adapter = new PersistenceUnitInfoAdapter() {
@@ -104,21 +112,23 @@ public class ConfigurationObjectSettingTest {
 			}
 		};
 		{
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					null
 			);
 			assertEquals( ValidationMode.CALLBACK, builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
+		builder.cancel();
 
 		// via both, integration vars should take precedence
 		{
-			EntityManagerFactoryBuilderImpl builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
+			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_MODE, ValidationMode.NONE )
 			);
 			assertEquals( ValidationMode.NONE, builder.getConfigurationValues().get( AvailableSettings.JPA_VALIDATION_MODE ) );
 		}
+		builder.cancel();
 	}
 
 	@Test
@@ -129,7 +139,7 @@ public class ConfigurationObjectSettingTest {
 			Bootstrap.getEntityManagerFactoryBuilder(
 					adapter,
 					Collections.singletonMap( AvailableSettings.JPA_VALIDATION_FACTORY, token )
-			);
+			).cancel();
 			fail( "Was expecting error as token did not implement ValidatorFactory" );
 		}
 		catch ( HibernateException e ) {

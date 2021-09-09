@@ -29,6 +29,6 @@ public class NoCdiAvailableTestDelegate {
 		new HibernatePersistenceProvider().createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
 				Collections.singletonMap( AvailableSettings.CDI_BEAN_MANAGER, new Object() )
-		);
+		).close();
 	}
 }

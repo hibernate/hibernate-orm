@@ -64,38 +64,45 @@ public class UserDefinedGeneratorsTests extends BaseUnitTestCase {
 		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.BEAN_CONTAINER, beanContainer );
 
-		final StandardServiceRegistry ssr = ssrb.build();
-		final Metadata metadata = new MetadataSources( ssr )
-				.addAnnotatedClass( Entity1.class )
-				.addAnnotatedClass( Entity2.class )
-				.buildMetadata();
+		try (final StandardServiceRegistry ssr = ssrb.build()) {
+			final Metadata metadata = new MetadataSources( ssr )
+					.addAnnotatedClass( Entity1.class )
+					.addAnnotatedClass( Entity2.class )
+					.buildMetadata();
 
-		final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
-		generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
+			final DefaultIdentifierGeneratorFactory generatorFactory = new DefaultIdentifierGeneratorFactory();
+			generatorFactory.injectServices( (ServiceRegistryImplementor) ssr );
 
-		final PersistentClass entityBinding1 = metadata.getEntityBinding( Entity1.class.getName() );
-		final PersistentClass entityBinding2 = metadata.getEntityBinding( Entity2.class.getName() );
-		final IdentifierGenerator generator1 = entityBinding1.getRootClass().getIdentifier().createIdentifierGenerator(
-				generatorFactory,
-				new H2Dialect(),
-				"",
-				"",
-				entityBinding1.getRootClass()
-		);
-		final IdentifierGenerator generator2 = entityBinding2.getRootClass().getIdentifier().createIdentifierGenerator(
-				generatorFactory,
-				new H2Dialect(),
-				"",
-				"",
-				entityBinding2.getRootClass()
-		);
+			final PersistentClass entityBinding1 = metadata.getEntityBinding( Entity1.class.getName() );
+			final PersistentClass entityBinding2 = metadata.getEntityBinding( Entity2.class.getName() );
+			final IdentifierGenerator generator1 = entityBinding1.getRootClass()
+					.getIdentifier()
+					.createIdentifierGenerator(
+							generatorFactory,
+							new H2Dialect(),
+							"",
+							"",
+							entityBinding1.getRootClass()
+					);
+			final IdentifierGenerator generator2 = entityBinding2.getRootClass()
+					.getIdentifier()
+					.createIdentifierGenerator(
+							generatorFactory,
+							new H2Dialect(),
+							"",
+							"",
+							entityBinding2.getRootClass()
+					);
 
-		then( beanContainer ).should( times( 2 ) ).getBean( same( TestIdentifierGenerator.class ), any( LifecycleOptions.class ),
-				same( FallbackBeanInstanceProducer.INSTANCE ) );
+			then( beanContainer ).should( times( 2 ) ).getBean( same( TestIdentifierGenerator.class ),
+																any( LifecycleOptions.class ),
+																same( FallbackBeanInstanceProducer.INSTANCE )
+			);
 
-		assertThat( generator1, is( instanceOf( TestIdentifierGenerator.class ) ) );
-		assertThat( generator2, is( instanceOf( TestIdentifierGenerator.class ) ) );
-		assertThat( generator1 == generator2, is( false ) ); // should not be same instance
+			assertThat( generator1, is( instanceOf( TestIdentifierGenerator.class ) ) );
+			assertThat( generator2, is( instanceOf( TestIdentifierGenerator.class ) ) );
+			assertThat( generator1 == generator2, is( false ) ); // should not be same instance
+		}
 
 	}
 

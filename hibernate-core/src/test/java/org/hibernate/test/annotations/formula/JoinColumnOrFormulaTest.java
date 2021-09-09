@@ -18,6 +18,8 @@ import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
@@ -50,15 +52,17 @@ public class JoinColumnOrFormulaTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-9897" )
 	@FailureExpected( jiraKey = "HHH-9897" )
 	public void testUseOfJoinColumnOrFormula() {
-		Metadata metadata = new MetadataSources()
-				.addAnnotatedClass( A.class )
-				.addAnnotatedClass( D.class )
-				.buildMetadata();
+		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
+			Metadata metadata = new MetadataSources( serviceRegistry )
+					.addAnnotatedClass( A.class )
+					.addAnnotatedClass( D.class )
+					.buildMetadata();
 
-		// Binding to the mapping model works after the simple change for HHH-9897
-		// But building the SessionFactory fails in the collection persister trying to
-		// use the formula (it expects Columns too)
-		metadata.buildSessionFactory().close();
+			// Binding to the mapping model works after the simple change for HHH-9897
+			// But building the SessionFactory fails in the collection persister trying to
+			// use the formula (it expects Columns too)
+			metadata.buildSessionFactory().close();
+		}
 	}
 
 	@Entity( name = "A" )

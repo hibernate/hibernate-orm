@@ -222,80 +222,88 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				providedClassLoader,
 				providedClassLoaderService
 		);
+		try {
+			// merge configuration sources and build the "standard" service registry
+			final StandardServiceRegistryBuilder ssrBuilder = getStandardServiceRegistryBuilder( bsr );
 
-		// merge configuration sources and build the "standard" service registry
-		final StandardServiceRegistryBuilder ssrBuilder = getStandardServiceRegistryBuilder( bsr );
+			final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, ssrBuilder );
 
-		final MergedSettings mergedSettings = mergeSettings( persistenceUnit, integrationSettings, ssrBuilder );
+			// flush before completion validation
+			if ( "true".equals( mergedSettings.configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
+				LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
+				mergedSettings.configurationValues.put( Environment.FLUSH_BEFORE_COMPLETION, "false" );
+			}
 
-		// flush before completion validation
-		if ( "true".equals( mergedSettings.configurationValues.get( Environment.FLUSH_BEFORE_COMPLETION ) ) ) {
-			LOG.definingFlushBeforeCompletionIgnoredInHem( Environment.FLUSH_BEFORE_COMPLETION );
-			mergedSettings.configurationValues.put( Environment.FLUSH_BEFORE_COMPLETION, "false" );
-		}
+			// keep the merged config values for phase-2
+			this.configurationValues = mergedSettings.getConfigurationValues();
 
-		// keep the merged config values for phase-2
-		this.configurationValues = mergedSettings.getConfigurationValues();
+			// Build the "standard" service registry
+			ssrBuilder.applySettings( configurationValues );
 
-		// Build the "standard" service registry
-		ssrBuilder.applySettings( configurationValues );
+			this.standardServiceRegistry = ssrBuilder.build();
 
-		this.standardServiceRegistry = ssrBuilder.build();
+			configureIdentifierGenerators( standardServiceRegistry );
 
-		configureIdentifierGenerators( standardServiceRegistry );
+			final MetadataSources metadataSources = new MetadataSources( bsr );
+			this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder(
+					standardServiceRegistry );
+			List<AttributeConverterDefinition> attributeConverterDefinitions = applyMappingResources( metadataSources );
 
-		final MetadataSources metadataSources = new MetadataSources( bsr );
-		List<AttributeConverterDefinition> attributeConverterDefinitions = applyMappingResources( metadataSources );
+			applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
 
-		this.metamodelBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder( standardServiceRegistry );
-		applyMetamodelBuilderSettings( mergedSettings, attributeConverterDefinitions );
+			applyMetadataBuilderContributor();
 
-		applyMetadataBuilderContributor();
-
-		// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
-		//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
-		final CfgXmlAccessService cfgXmlAccessService = standardServiceRegistry.getService( CfgXmlAccessService.class );
-		if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
-			if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
-				for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig().getMappingReferences() ) {
-					mappingReference.apply( metadataSources );
+			// todo : would be nice to have MetadataBuilder still do the handling of CfgXmlAccessService here
+			//		another option is to immediately handle them here (probably in mergeSettings?) as we encounter them...
+			final CfgXmlAccessService cfgXmlAccessService = standardServiceRegistry.getService( CfgXmlAccessService.class );
+			if ( cfgXmlAccessService.getAggregatedConfig() != null ) {
+				if ( cfgXmlAccessService.getAggregatedConfig().getMappingReferences() != null ) {
+					for ( MappingReference mappingReference : cfgXmlAccessService.getAggregatedConfig()
+							.getMappingReferences() ) {
+						mappingReference.apply( metadataSources );
+					}
 				}
 			}
-		}
 
-		this.managedResources = MetadataBuildingProcess.prepare(
-				metadataSources,
-				metamodelBuilder.getBootstrapContext()
-		);
-
-		final Object validatorFactory = configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY );
-		if ( validatorFactory == null ) {
-			withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) );
-		}
-		else {
-			withValidatorFactory( validatorFactory );
-		}
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// push back class transformation to the environment; for the time being this only has any effect in EE
-		// container situations, calling back into PersistenceUnitInfo#addClassTransformer
-
-		final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
-		final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
-		final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
-
-		if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
-			EnhancementContext enhancementContext = getEnhancementContext(
-					dirtyTrackingEnabled,
-					lazyInitializationEnabled,
-					associationManagementEnabled
+			this.managedResources = MetadataBuildingProcess.prepare(
+					metadataSources,
+					metamodelBuilder.getBootstrapContext()
 			);
 
-			persistenceUnit.pushClassTransformer( enhancementContext );
-		}
+			final Object validatorFactory = configurationValues.get( org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY );
+			if ( validatorFactory == null ) {
+				withValidatorFactory( configurationValues.get( org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) );
+			}
+			else {
+				withValidatorFactory( validatorFactory );
+			}
 
-		// for the time being we want to revoke access to the temp ClassLoader if one was passed
-		metamodelBuilder.applyTempClassLoader( null );
+			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+			// push back class transformation to the environment; for the time being this only has any effect in EE
+			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
+
+			final boolean dirtyTrackingEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
+			final boolean lazyInitializationEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
+
+			if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {
+				EnhancementContext enhancementContext = getEnhancementContext(
+						dirtyTrackingEnabled,
+						lazyInitializationEnabled,
+						associationManagementEnabled
+				);
+
+				persistenceUnit.pushClassTransformer( enhancementContext );
+			}
+
+			// for the time being we want to revoke access to the temp ClassLoader if one was passed
+			metamodelBuilder.applyTempClassLoader( null );
+		}
+		catch (Throwable t) {
+			bsr.close();
+			cleanup();
+			throw t;
+		}
 	}
 
 	/**
@@ -532,8 +540,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				if ( keyString.startsWith( JACC_PREFIX ) ) {
 					if( !JACC_CONTEXT_ID.equals( keyString ) && !JACC_ENABLED.equals( keyString )) {
 						if ( jaccContextId == null ) {
-							LOG.debug(
-									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring"
+							LOG.debugf(
+									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring",
+									keyString
 							);
 						}
 						else {
@@ -716,7 +725,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		if ( txnType == null ) {
 			// is it more appropriate to have this be based on bootstrap entry point (EE vs SE)?
-			LOG.debugf( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
+			LOG.debug( "PersistenceUnitTransactionType not specified - falling back to RESOURCE_LOCAL" );
 			txnType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 		}
 

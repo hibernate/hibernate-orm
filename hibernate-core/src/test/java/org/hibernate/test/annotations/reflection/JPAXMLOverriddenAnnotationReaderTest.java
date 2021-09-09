@@ -15,6 +15,8 @@ import org.hibernate.internal.util.xml.XMLMappingHelper;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import javax.persistence.*;
@@ -29,19 +31,32 @@ import static org.junit.Assert.*;
  */
 @TestForIssue(jiraKey = "HHH-14529")
 public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
+
+	private BootstrapContextImpl bootstrapContext;
+
+	@Before
+	public void init() {
+		bootstrapContext = new BootstrapContextImpl();
+	}
+
+	@After
+	public void destroy() {
+		bootstrapContext.close();
+	}
+
 	@Test
 	public void testMappedSuperclassAnnotations() throws Exception {
 		XMLContext context = buildContext(
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( Organization.class, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( Organization.class, context, bootstrapContext );
 		assertTrue( reader.isAnnotationPresent( MappedSuperclass.class ) );
 	}
 
 	@Test
 	public void testEntityRelatedAnnotations() throws Exception {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( Administration.class, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( Administration.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Entity.class ) );
 		assertEquals(
 				"Default value in xml entity should not override @Entity.name", "JavaAdministration",
@@ -75,7 +90,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "wrong tble name", "tablehilo", reader.getAnnotation( TableGenerator.class ).table() );
 		assertEquals( "no schema overriding", "myschema", reader.getAnnotation( TableGenerator.class ).schema() );
 
-		reader = new JPAXMLOverriddenAnnotationReader( Match.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( Match.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Table.class ) );
 		assertEquals(
 				"Java annotation not taken into account", "matchtable", reader.getAnnotation( Table.class ).name()
@@ -123,10 +138,10 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertNotNull( reader.getAnnotation( ExcludeSuperclassListeners.class ) );
 		assertNotNull( reader.getAnnotation( ExcludeDefaultListeners.class ) );
 
-		reader = new JPAXMLOverriddenAnnotationReader( Competition.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( Competition.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( MappedSuperclass.class ) );
 
-		reader = new JPAXMLOverriddenAnnotationReader( TennisMatch.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( TennisMatch.class, context, bootstrapContext );
 		assertNull( "Mutualize PKJC into PKJCs", reader.getAnnotation( PrimaryKeyJoinColumn.class ) );
 		assertNotNull( reader.getAnnotation( PrimaryKeyJoinColumns.class ) );
 		assertEquals(
@@ -153,7 +168,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		);
 
 
-		reader = new JPAXMLOverriddenAnnotationReader( SocialSecurityPhysicalAccount.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( SocialSecurityPhysicalAccount.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( IdClass.class ) );
 		assertEquals( "id-class not used", SocialSecurityNumber.class, reader.getAnnotation( IdClass.class ).value() );
 		assertEquals(
@@ -174,7 +189,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext(
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( Administration.class, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( Administration.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Entity.class ) );
 		assertEquals(
 				"Metadata complete should ignore java annotations", "", reader.getAnnotation( Entity.class ).name()
@@ -183,7 +198,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "@Table should not be used", "", reader.getAnnotation( Table.class ).name() );
 		assertEquals( "Default schema not overriden", "myschema", reader.getAnnotation( Table.class ).schema() );
 
-		reader = new JPAXMLOverriddenAnnotationReader( Match.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( Match.class, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Table.class ) );
 		assertEquals( "@Table should not be used", "", reader.getAnnotation( Table.class ).name() );
 		assertEquals( "Overriding not taken into account", "myschema", reader.getAnnotation( Table.class ).schema() );
@@ -194,14 +209,14 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertNull( reader.getAnnotation( NamedQueries.class ) );
 		assertNull( reader.getAnnotation( NamedNativeQueries.class ) );
 
-		reader = new JPAXMLOverriddenAnnotationReader( TennisMatch.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( TennisMatch.class, context, bootstrapContext );
 		assertNull( reader.getAnnotation( PrimaryKeyJoinColumn.class ) );
 		assertNull( reader.getAnnotation( PrimaryKeyJoinColumns.class ) );
 
-		reader = new JPAXMLOverriddenAnnotationReader( Competition.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( Competition.class, context, bootstrapContext );
 		assertNull( reader.getAnnotation( MappedSuperclass.class ) );
 
-		reader = new JPAXMLOverriddenAnnotationReader( SocialSecurityMoralAccount.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( SocialSecurityMoralAccount.class, context, bootstrapContext );
 		assertNull( reader.getAnnotation( IdClass.class ) );
 		assertNull( reader.getAnnotation( DiscriminatorValue.class ) );
 		assertNull( reader.getAnnotation( DiscriminatorColumn.class ) );
@@ -213,11 +228,11 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 	public void testIdRelatedAnnotations() throws Exception {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 		Method method = Administration.class.getDeclaredMethod( "getId" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertNull( reader.getAnnotation( Id.class ) );
 		assertNull( reader.getAnnotation( Column.class ) );
 		Field field = Administration.class.getDeclaredField( "id" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Id.class ) );
 		assertNotNull( reader.getAnnotation( GeneratedValue.class ) );
 		assertEquals( GenerationType.SEQUENCE, reader.getAnnotation( GeneratedValue.class ).strategy() );
@@ -234,23 +249,23 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
 		method = Administration.class.getDeclaredMethod( "getId" );
-		reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertNotNull(
 				"Default access type when not defined in metadata complete should be property",
 				reader.getAnnotation( Id.class )
 		);
 		field = Administration.class.getDeclaredField( "id" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNull(
 				"Default access type when not defined in metadata complete should be property",
 				reader.getAnnotation( Id.class )
 		);
 
 		method = BusTrip.class.getDeclaredMethod( "getId" );
-		reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertNull( reader.getAnnotation( EmbeddedId.class ) );
 		field = BusTrip.class.getDeclaredField( "id" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( EmbeddedId.class ) );
 		assertNotNull( reader.getAnnotation( AttributeOverrides.class ) );
 		assertEquals( 1, reader.getAnnotation( AttributeOverrides.class ).value().length );
@@ -262,22 +277,22 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
 		Field field = BusTrip.class.getDeclaredField( "status" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Enumerated.class ) );
 		assertEquals( EnumType.STRING, reader.getAnnotation( Enumerated.class ).value() );
 		assertEquals( false, reader.getAnnotation( Basic.class ).optional() );
 		field = BusTrip.class.getDeclaredField( "serial" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Lob.class ) );
 		assertEquals( "serialbytes", reader.getAnnotation( Columns.class ).columns()[0].name() );
 		field = BusTrip.class.getDeclaredField( "terminusTime" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Temporal.class ) );
 		assertEquals( TemporalType.TIMESTAMP, reader.getAnnotation( Temporal.class ).value() );
 		assertEquals( FetchType.LAZY, reader.getAnnotation( Basic.class ).fetch() );
 
 		field = BusTripPk.class.getDeclaredField( "busDriver" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.isAnnotationPresent( Basic.class ) );
 	}
 
@@ -285,7 +300,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 	public void testVersionRelatedAnnotations() throws Exception {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 		Method method = Administration.class.getDeclaredMethod( "getVersion" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Version.class ) );
 
 		Field field = Match.class.getDeclaredField( "version" );
@@ -297,12 +312,12 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Field field = Administration.class.getDeclaredField( "transientField" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Transient.class ) );
 		assertNull( reader.getAnnotation( Basic.class ) );
 
 		field = Match.class.getDeclaredField( "playerASSN" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( Embedded.class ) );
 	}
 
@@ -311,7 +326,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Field field = Administration.class.getDeclaredField( "defaultBusTrip" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( OneToOne.class ) );
 		assertNull( reader.getAnnotation( JoinColumns.class ) );
 		assertNotNull( reader.getAnnotation( PrimaryKeyJoinColumns.class ) );
@@ -324,7 +339,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 				"org/hibernate/test/annotations/reflection/metadata-complete.xml"
 		);
 		field = BusTrip.class.getDeclaredField( "players" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( OneToMany.class ) );
 		assertNotNull( reader.getAnnotation( JoinColumns.class ) );
 		assertEquals( 2, reader.getAnnotation( JoinColumns.class ).value().length );
@@ -333,7 +348,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		assertEquals( "name", reader.getAnnotation( MapKey.class ).name() );
 
 		field = BusTrip.class.getDeclaredField( "roads" );
-		reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( ManyToMany.class ) );
 		assertNotNull( reader.getAnnotation( JoinTable.class ) );
 		assertEquals( "bus_road", reader.getAnnotation( JoinTable.class ).name() );
@@ -350,7 +365,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Field field = Company.class.getDeclaredField( "organizations" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( field, context, bootstrapContext );
 		assertNotNull( reader.getAnnotation( ElementCollection.class ) );
 		assertNotNull( reader.getAnnotation( Converts.class ) );
 		assertNotNull( reader.getAnnotation( Converts.class ).value() );
@@ -363,20 +378,20 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 		XMLContext context = buildContext( "org/hibernate/test/annotations/reflection/orm.xml" );
 
 		Method method = Administration.class.getDeclaredMethod( "calculate" );
-		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		JPAXMLOverriddenAnnotationReader reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertTrue( reader.isAnnotationPresent( PrePersist.class ) );
 
-		reader = new JPAXMLOverriddenAnnotationReader( Administration.class, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( Administration.class, context, bootstrapContext );
 		assertTrue( reader.isAnnotationPresent( EntityListeners.class ) );
 		assertEquals( 1, reader.getAnnotation( EntityListeners.class ).value().length );
 		assertEquals( LogListener.class, reader.getAnnotation( EntityListeners.class ).value()[0] );
 
 		method = LogListener.class.getDeclaredMethod( "noLog", Object.class );
-		reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertTrue( reader.isAnnotationPresent( PostLoad.class ) );
 
 		method = LogListener.class.getDeclaredMethod( "log", Object.class );
-		reader = new JPAXMLOverriddenAnnotationReader( method, context, BootstrapContextImpl.INSTANCE );
+		reader = new JPAXMLOverriddenAnnotationReader( method, context, bootstrapContext );
 		assertTrue( reader.isAnnotationPresent( PrePersist.class ) );
 		assertFalse( reader.isAnnotationPresent( PostPersist.class ) );
 
@@ -387,7 +402,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 	private XMLContext buildContext(String ormfile) throws IOException {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( ormfile );
-		XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
+		XMLContext context = new XMLContext( bootstrapContext );
 		context.addDocument( mappings );
 		return context;
 	}

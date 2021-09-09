@@ -46,10 +46,11 @@ public class DefaultConstraintModeTest extends BaseUnitTestCase {
 	}
 
 	private void testForeignKeyCreation(boolean created) {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting(Environment.HBM2DDL_DEFAULT_CONSTRAINT_MODE, created ? "CONSTRAINT" : "NO_CONSTRAINT").build();
-		Metadata metadata = new MetadataSources(ssr).addAnnotatedClass(TestEntity.class).buildMetadata();
-		assertThat(findTable(metadata, TABLE_NAME).getForeignKeys().isEmpty(), is(!created));
+		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+				.applySetting(Environment.HBM2DDL_DEFAULT_CONSTRAINT_MODE, created ? "CONSTRAINT" : "NO_CONSTRAINT").build()) {
+			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( TestEntity.class ).buildMetadata();
+			assertThat( findTable( metadata, TABLE_NAME ).getForeignKeys().isEmpty(), is( !created ) );
+		}
 	}
 
 	private static Table findTable(Metadata metadata, String tableName) {

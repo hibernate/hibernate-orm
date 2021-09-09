@@ -11,13 +11,14 @@ package org.hibernate.test.annotations.backquotes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-import org.jboss.logging.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -37,17 +38,21 @@ import static org.junit.Assert.fail;
 public class BackquoteTest extends BaseUnitTestCase {
 
 	private ServiceRegistry serviceRegistry;
-    private SessionFactory sessionFactory;
+	private SessionFactory sessionFactory;
 
 	@Before
-    public void setUp() {
+	public void setUp() {
 		serviceRegistry = ServiceRegistryBuilder.buildServiceRegistry( Environment.getProperties() );
 	}
 
 	@After
-    public void tearDown() {
-        if(sessionFactory !=null) sessionFactory.close();
-        if (serviceRegistry != null) ServiceRegistryBuilder.destroy(serviceRegistry);
+	public void tearDown() {
+		if(sessionFactory !=null) {
+			sessionFactory.close();
+		}
+		if (serviceRegistry != null) {
+			ServiceRegistryBuilder.destroy(serviceRegistry);
+		}
 	}
 
 	@Test
@@ -55,15 +60,15 @@ public class BackquoteTest extends BaseUnitTestCase {
 	public void testBackquotes() {
 		try {
 			Configuration config = new Configuration();
-			config.addAnnotatedClass(Bug.class);
-			config.addAnnotatedClass(Category.class);
+			config.addAnnotatedClass( Bug.class );
+			config.addAnnotatedClass( Category.class );
 			sessionFactory = config.buildSessionFactory( serviceRegistry );
 		}
 		catch( Exception e ) {
 			StringWriter writer = new StringWriter();
-			e.printStackTrace(new PrintWriter(writer));
-            log.debug(writer.toString());
-			fail(e.getMessage());
+			e.printStackTrace( new PrintWriter(writer) );
+			log.debug( writer.toString() );
+			fail( e.getMessage() );
 		}
 		finally {
 			if ( sessionFactory != null ) {
@@ -83,23 +88,23 @@ public class BackquoteTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-4647" )
 	public void testInvalidReferenceToQuotedTableName() {
-    	try {
-    		Configuration config = new Configuration();
-    		config.addAnnotatedClass(Printer.class);
-    		config.addAnnotatedClass(PrinterCable.class);
-    		sessionFactory = config.buildSessionFactory( serviceRegistry );
-    		fail("expected MappingException to be thrown");
-    	}
-    	//we WANT MappingException to be thrown
-        catch( MappingException e ) {
-        	assertTrue("MappingException was thrown", true);
-        }
-        catch(Exception e) {
-        	StringWriter writer = new StringWriter();
-			e.printStackTrace(new PrintWriter(writer));
-            log.debug(writer.toString());
-        	fail(e.getMessage());
-        } finally {
+		try (BootstrapServiceRegistry serviceRegistry = new BootstrapServiceRegistryBuilder().build()) {
+			Configuration config = new Configuration( serviceRegistry );
+			config.addAnnotatedClass( Printer.class );
+			config.addAnnotatedClass( PrinterCable.class );
+			sessionFactory = config.buildSessionFactory( this.serviceRegistry );
+			fail( "expected MappingException to be thrown" );
+		}
+		//we WANT MappingException to be thrown
+		catch( MappingException e ) {
+			assertTrue("MappingException was thrown", true);
+		}
+		catch(Exception e) {
+			StringWriter writer = new StringWriter();
+			e.printStackTrace( new PrintWriter(writer) );
+			log.debug( writer.toString() );
+			fail( e.getMessage() );
+		} finally {
 			if(sessionFactory!=null){
 				sessionFactory.close();
 				sessionFactory = null;

@@ -18,6 +18,9 @@ import org.hibernate.internal.util.xml.XMLMappingHelper;
 import org.hibernate.testing.boot.BootstrapContextImpl;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 
+import org.junit.After;
+import org.junit.Before;
+
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -31,7 +34,19 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 
 	protected JPAXMLOverriddenAnnotationReader reader;
 
+	private BootstrapContextImpl bootstrapContext;
+
 	protected Ejb3XmlTestCase() {
+	}
+
+	@Before
+	public void init() {
+		bootstrapContext = new BootstrapContextImpl();
+	}
+
+	@After
+	public void destroy() {
+		bootstrapContext.close();
 	}
 
 	protected void assertAnnotationPresent(Class<? extends Annotation> annotationType) {
@@ -52,7 +67,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 			throws Exception {
 		AnnotatedElement el = getAnnotatedElement( entityClass, fieldName );
 		XMLContext xmlContext = getContext( ormResourceName );
-		return new JPAXMLOverriddenAnnotationReader( el, xmlContext, BootstrapContextImpl.INSTANCE );
+		return new JPAXMLOverriddenAnnotationReader( el, xmlContext, bootstrapContext );
 	}
 
 	protected AnnotatedElement getAnnotatedElement(Class<?> entityClass, String fieldName) throws Exception {
@@ -68,7 +83,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 	protected XMLContext getContext(InputStream is, String resourceName) throws Exception {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
-		XMLContext context = new XMLContext( BootstrapContextImpl.INSTANCE );
+		XMLContext context = new XMLContext( bootstrapContext );
 		context.addDocument( mappings );
 		return context;
 	}

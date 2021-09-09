@@ -27,6 +27,7 @@ import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,12 +53,19 @@ public class SchemaScriptFileGenerationFailureTest {
 		);
 	}
 
+	@After
+	public void destroy() {
+		if ( entityManagerFactoryBuilder != null ) {
+			entityManagerFactoryBuilder.cancel();
+		}
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-12192")
 	public void testErrorMessageContainsTheFailingDDLCommand() {
 		try {
 			entityManagerFactoryBuilder.generateSchema();
-			fail( "Should haave thrown IOException" );
+			fail( "Should have thrown IOException" );
 		}
 		catch (Exception e) {
 			assertTrue( e instanceof PersistenceException );
@@ -126,7 +134,6 @@ public class SchemaScriptFileGenerationFailureTest {
 
 		@Override
 		public void close() throws IOException {
-
 		}
 	}
 }

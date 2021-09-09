@@ -54,7 +54,9 @@ public class EmbeddableWithOneToMany_HHH_8860_Test
 			) );
 		}
 		finally {
-			serviceRegistry().destroy();
+			if ( serviceRegistry() != null ) {
+				serviceRegistry().destroy();
+			}
 		}
 	}
 

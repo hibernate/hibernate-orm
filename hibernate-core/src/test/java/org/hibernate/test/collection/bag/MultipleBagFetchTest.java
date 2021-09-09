@@ -21,7 +21,6 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-
 import org.hibernate.loader.MultipleBagFetchException;
 
 import org.junit.Test;
@@ -32,19 +31,20 @@ public class MultipleBagFetchTest {
 
 	@Test
 	public void testEntityWithMultipleJoinFetchedBags() {
-		StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build();
+		try (StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build()) {
 
-		Metadata metadata = new MetadataSources( standardRegistry )
-				.addAnnotatedClass( Post.class )
-				.addAnnotatedClass( PostComment.class )
-				.addAnnotatedClass( Tag.class )
-				.getMetadataBuilder()
-				.build();
-		try {
-			metadata.buildSessionFactory();
-			fail( "MultipleBagFetchException should have been thrown." );
-		}
-		catch (MultipleBagFetchException expected) {
+			Metadata metadata = new MetadataSources( standardRegistry )
+					.addAnnotatedClass( Post.class )
+					.addAnnotatedClass( PostComment.class )
+					.addAnnotatedClass( Tag.class )
+					.getMetadataBuilder()
+					.build();
+			try {
+				metadata.buildSessionFactory();
+				fail( "MultipleBagFetchException should have been thrown." );
+			}
+			catch (MultipleBagFetchException expected) {
+			}
 		}
 	}
 

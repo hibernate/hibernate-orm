@@ -529,7 +529,7 @@ public class PluralAttributeMappingImpl
 			}
 		}
 
-		if ( getCollectionDescriptor().getCollectionType().hasHolder() || !getCollectionDescriptor().isLazy() ) {
+		if ( getCollectionDescriptor().getCollectionType().hasHolder() ) {
 			return createSelectEagerCollectionFetch( fetchParent, fetchablePath, creationState, sqlAstCreationState );
 		}
 

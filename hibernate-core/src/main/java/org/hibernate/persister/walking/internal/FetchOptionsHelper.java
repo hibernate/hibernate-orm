@@ -124,11 +124,8 @@ public final class FetchOptionsHelper {
 				return FetchTiming.IMMEDIATE;
 			}
 			case BATCH:
-			case SUBSELECT: {
-				return FetchTiming.DELAYED;
-			}
+			case SUBSELECT:
 			default: {
-				// SELECT case, can be either
 				return isSubsequentSelectDelayed( type, sessionFactory )
 						? FetchTiming.DELAYED
 						: FetchTiming.IMMEDIATE;

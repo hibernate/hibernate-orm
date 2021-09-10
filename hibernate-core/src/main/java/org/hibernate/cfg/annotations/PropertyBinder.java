@@ -20,9 +20,11 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
+import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
@@ -31,6 +33,7 @@ import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
+import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -44,10 +47,14 @@ import org.hibernate.mapping.Value;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
+import org.hibernate.tuple.TenantIdGeneration;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.jboss.logging.Logger;
+
+import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 
 /**
  * @author Emmanuel Bernard
@@ -190,9 +197,36 @@ public class PropertyBinder {
 		);
 		basicValueBinder.setReferencedEntityName( referencedEntityName );
 		basicValueBinder.setAccessType( accessType );
+
+
 		SimpleValue propertyValue = basicValueBinder.make();
 		setValue( propertyValue );
-		return makeProperty();
+		Property prop = makeProperty();
+
+		if ( property.isAnnotationPresent(TenantId.class) ) {
+			InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
+			collector.addFilterDefinition(
+					new FilterDefinition(
+							TenantIdGeneration.FILTER_NAME,
+							"",
+							singletonMap(
+									TenantIdGeneration.PARAMETER_NAME,
+									collector.getTypeConfiguration().getBasicTypeRegistry()
+											.getRegisteredType(returnedClassName)
+							)
+					)
+			);
+			String columnOrFormula = columns[0].isFormula() ? columns[0].getFormulaString() : columns[0].getName();
+			entityBinder.getPersistentClass()
+					.addFilter(
+							TenantIdGeneration.FILTER_NAME,
+							columnOrFormula + " = :" + TenantIdGeneration.PARAMETER_NAME,
+							true,
+							emptyMap(), emptyMap()
+					);
+		}
+
+		return prop;
 	}
 
 	//used when value is provided

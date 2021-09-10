@@ -7,8 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Arrays;
 
 import org.hibernate.AssertionFailure;
@@ -18,7 +16,6 @@ import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.*;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -127,38 +124,6 @@ public class ManyToOneType extends EntityType {
 		return ForeignKeyDirection.FROM_PARENT;
 	}
 
-	@Override
-	public Object hydrate(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		// return the (fully resolved) identifier value, but do not resolve
-		// to the actual referenced entity instance
-		// NOTE: the owner of the association is not really the owner of the id!
-
-		// First hydrate the ID to check if it is null.
-		// Don't bother resolving the ID if hydratedKeyState[i] is null.
-
-		// Implementation note: if id is a composite ID, then resolving a null value will
-		// result in instantiating an empty composite if AvailableSettings#CREATE_EMPTY_COMPOSITES_ENABLED
-		// is true. By not resolving a null value for a composite ID, we avoid the overhead of instantiating
-		// an empty composite, checking if it is equivalent to null (it should be), then ultimately throwing
-		// out the empty value.
-		final Object hydratedId = getIdentifierOrUniqueKeyType( session.getFactory() )
-				.hydrate( rs, names, session, null );
-		final Object id;
-		if ( hydratedId != null ) {
-			id = getIdentifierOrUniqueKeyType( session.getFactory() )
-					.resolve( hydratedId, session, null );
-		}
-		else {
-			id = null;
-		}
-		scheduleBatchLoadIfNeeded( id, session );
-		return id;
-	}
-
 	/**
 	 * Register the entity as batch loadable, if enabled
 	 */
@@ -201,28 +166,6 @@ public class ManyToOneType extends EntityType {
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
 		return getIdentifierOrUniqueKeyType( session.getFactory() )
 				.isDirty( getIdentifier( old, session ), getIdentifier( current, session ), session );
-	}
-
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
-		Object resolvedValue = super.resolve(value, session, owner, overridingEager);
-		if ( isLogicalOneToOne && value != null && getPropertyName() != null ) {
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			EntityEntry entry = persistenceContext.getEntry( owner );
-			if ( entry != null ) {
-				final Loadable ownerPersister = (Loadable) session.getFactory().getMetamodel().entityPersister( entry.getEntityName() );
-				EntityUniqueKey entityKey = new EntityUniqueKey(
-						ownerPersister.getEntityName(),
-						getPropertyName(),
-						value,
-						this,
-						ownerPersister.getEntityMode(),
-						session.getFactory()
-				);
-				persistenceContext.addEntity( entityKey, owner );
-			}
-		}
-		return resolvedValue;
 	}
 
 	@Override

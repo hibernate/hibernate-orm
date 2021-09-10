@@ -7,8 +7,6 @@
 package org.hibernate.orm.test.cfg.persister;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -780,26 +778,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		public Class getElementClass() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public Object readKey(ResultSet rs, String[] keyAliases, SharedSessionContractImplementor session)
-				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public Object readElement(ResultSet rs, Object owner, String[] columnAliases, SharedSessionContractImplementor session)
-				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public Object readIndex(ResultSet rs, String[] columnAliases, SharedSessionContractImplementor session)
-				throws HibernateException, SQLException {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		public Object readIdentifier(ResultSet rs, String columnAlias, SharedSessionContractImplementor session)
-				throws HibernateException, SQLException {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
 		}
 

@@ -18,8 +18,6 @@ import javax.transaction.TransactionManager;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.jpa.test.transaction.Book;
-import org.hibernate.jpa.test.transaction.Book_;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
 import org.hibernate.testing.TestForIssue;

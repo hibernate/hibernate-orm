@@ -169,8 +169,7 @@ public class CustomType<J>
 		return getUserType().hashCode( x);
 	}
 
-	@Override
-	public Object nullSafeGet(
+	private Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
 			SharedSessionContractImplementor session,
@@ -178,8 +177,7 @@ public class CustomType<J>
 		throw new UnsupportedOperationException( "Reading from ResultSet by name is no longer supported" );
 	}
 
-	@Override
-	public Object nullSafeGet(
+	private Object nullSafeGet(
 			ResultSet rs,
 			String columnName,
 			SharedSessionContractImplementor session,

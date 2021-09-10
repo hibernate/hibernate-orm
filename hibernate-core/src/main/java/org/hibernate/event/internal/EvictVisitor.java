@@ -54,7 +54,8 @@ public class EvictVisitor extends AbstractVisitor {
 			collection = (PersistentCollection) value;
 		}
 		else if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY ) {
-			collection = (PersistentCollection) type.resolve( value, session, this.owner );
+			final Object keyOfOwner = type.getKeyOfOwner( owner, session );
+			collection = (PersistentCollection) type.getCollection( keyOfOwner, session, owner, Boolean.FALSE );
 		}
 		else {
 			return; //EARLY EXIT!

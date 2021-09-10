@@ -107,25 +107,6 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 		return (T) get( discriminatorValue, options.getSession() );
 	}
 
-	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		return nullSafeGet( rs, names[0], session, owner );
-	}
-
-	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String name,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		final Object discriminatorValue = underlyingType.nullSafeGet( rs, name, session, owner );
-		return get( discriminatorValue, session );
-	}
-
 	private Object get(Object discriminatorValue, SharedSessionContractImplementor session) {
 		final String entityName = persister.getSubclassForDiscriminatorValue( discriminatorValue );
 		if ( entityName == null ) {

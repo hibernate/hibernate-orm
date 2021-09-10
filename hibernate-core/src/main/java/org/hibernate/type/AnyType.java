@@ -237,37 +237,6 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs,	String[] names,	SharedSessionContractImplementor session,	Object owner)
-			throws HibernateException, SQLException {
-		return resolveAny(
-				(String) discriminatorType.nullSafeGet( rs, names[0], session, owner ),
-				identifierType.nullSafeGet( rs, names[1], session, owner ),
-				session
-		);
-	}
-
-	@Override
-	public Object hydrate(ResultSet rs,	String[] names,	SharedSessionContractImplementor session,	Object owner)
-			throws HibernateException, SQLException {
-		final String entityName = (String) discriminatorType.nullSafeGet( rs, names[0], session, owner );
-		final Object id = identifierType.nullSafeGet( rs, names[1], session, owner );
-		return new ObjectTypeCacheEntry( entityName, id );
-	}
-
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		final ObjectTypeCacheEntry holder = (ObjectTypeCacheEntry) value;
-		return resolveAny( holder.entityName, holder.id, session );
-	}
-
-	private Object resolveAny(String entityName, Object id, SharedSessionContractImplementor session)
-			throws HibernateException {
-		return entityName==null || id==null
-				? null
-				: session.internalLoad( entityName, id, eager, false );
-	}
-
-	@Override
 	public void nullSafeSet(PreparedStatement st, Object value,	int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		nullSafeSet( st, value, index, null, session );
@@ -353,14 +322,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 	}
 
-	@Override
-	public Object nullSafeGet(ResultSet rs,	String name, SharedSessionContractImplementor session, Object owner) {
+	private Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner) {
 		throw new UnsupportedOperationException( "object is a multicolumn type" );
-	}
-
-	@Override
-	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner) {
-		throw new UnsupportedOperationException( "any mappings may not form part of a property-ref" );
 	}
 
 	// CompositeType implementation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -7,8 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.Map;
 import java.util.Objects;
 
@@ -80,30 +78,6 @@ public abstract class AbstractType implements Type {
 	}
 
 	@Override
-	public Object hydrate(
-		ResultSet rs,
-		String[] names,
-		SharedSessionContractImplementor session,
-		Object owner)
-	throws HibernateException, SQLException {
-		// TODO: this is very suboptimal for some subclasses (namely components),
-		// since it does not take advantage of two-phase-load
-		return nullSafeGet(rs, names, session, owner);
-	}
-
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException {
-		return value;
-	}
-
-	@Override
-	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException {
-		return value;
-	}
-
-	@Override
 	public boolean isAnyType() {
 		return false;
 	}
@@ -137,11 +111,6 @@ public abstract class AbstractType implements Type {
 	@Override
 	public int getHashCode(Object x, SessionFactoryImplementor factory) {
 		return getHashCode(x );
-	}
-
-	@Override
-	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
-		return this;
 	}
 
 	@Override

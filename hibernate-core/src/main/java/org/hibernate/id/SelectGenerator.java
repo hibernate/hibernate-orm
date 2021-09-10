@@ -13,6 +13,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.AbstractSelectingDelegate;
@@ -92,13 +93,16 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 				Dialect dialect,
 				String suppliedUniqueKeyPropertyName) {
 			super( persister );
-			this.persister = persister;
-			this.dialect = dialect;
-			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
 
-			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
-			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
-			idType = persister.getIdentifierType();
+			throw new NotYetImplementedFor6Exception( getClass() );
+
+//			this.persister = persister;
+//			this.dialect = dialect;
+//			this.uniqueKeyPropertyName = determineNameOfPropertyToUse( persister, suppliedUniqueKeyPropertyName );
+//
+//			idSelectString = persister.getSelectByUniqueKeyString( uniqueKeyPropertyName );
+//			uniqueKeyType = persister.getPropertyType( uniqueKeyPropertyName );
+//			idType = persister.getIdentifierType();
 		}
 
 		public IdentifierGeneratingInsert prepareIdentifierGeneratingInsert() {
@@ -130,12 +134,14 @@ public class SelectGenerator extends AbstractPostInsertGenerator implements Conf
 								uniqueKeyPropertyName
 				);
 			}
-			return idType.nullSafeGet(
-					rs,
-					persister.getRootTableKeyColumnNames(),
-					session,
-					entity
-			);
+
+			throw new NotYetImplementedFor6Exception( getClass() );
+//			return idType.nullSafeGet(
+//					rs,
+//					persister.getRootTableKeyColumnNames(),
+//					session,
+//					entity
+//			);
 		}
 	}
 }

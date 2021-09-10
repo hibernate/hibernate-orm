@@ -8,8 +8,6 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -21,6 +19,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -141,15 +140,6 @@ public class OneToOneType extends EntityType {
 	}
 
 	@Override
-	public Object hydrate(
-		ResultSet rs,
-		String[] names,
-		SharedSessionContractImplementor session,
-		Object owner) throws HibernateException, SQLException {
-		return session.getContextEntityIdentifier(owner);
-	}
-
-	@Override
 	public boolean isNullable() {
 		return !constrained;
 	}
@@ -182,7 +172,12 @@ public class OneToOneType extends EntityType {
 
 		if ( oid == null ) {
 			if ( uniqueKeyPropertyName != null ) {
-				return resolve( session.getContextEntityIdentifier( owner ), session, owner );
+				final EntityPersister associatedEntityPersister = getAssociatedEntityPersister( session.getFactory() );
+				return ( (UniqueKeyLoadable) associatedEntityPersister ).loadByUniqueKey(
+						uniqueKeyPropertyName,
+						session.getContextEntityIdentifier( owner ),
+						session
+				);
 			}
 			return null;
 		}

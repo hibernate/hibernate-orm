@@ -986,53 +986,11 @@ public abstract class AbstractCollectionPersister
 		return elementClass;
 	}
 
-	@Override
-	public Object readElement(ResultSet rs, Object owner, String[] aliases, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		return getElementType().nullSafeGet( rs, aliases, session, owner );
-	}
-
-	@Override
-	public Object readIndex(ResultSet rs, String[] aliases, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		Object index = getIndexType().nullSafeGet( rs, aliases, session, null );
-		if ( index == null ) {
-			throw new HibernateException( "null index column for collection: " + navigableRole.getFullPath() );
-		}
-		index = decrementIndexByBase( index );
-		return index;
-	}
-
 	protected Object decrementIndexByBase(Object index) {
 		if ( baseIndex != 0 ) {
 			index = (Integer)index - baseIndex;
 		}
 		return index;
-	}
-
-	@Override
-	public Object readIdentifier(ResultSet rs, String alias, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		Object id = getIdentifierType().nullSafeGet( rs, alias, session, null );
-		if ( id == null ) {
-			throw new HibernateException( "null identifier column for collection: " + navigableRole.getFullPath() );
-		}
-		return id;
-	}
-
-	@Override
-	public Object readKey(ResultSet rs, String[] aliases, SharedSessionContractImplementor session)
-			throws HibernateException, SQLException {
-		// First hydrate the collection key to check if it is null.
-		// Don't bother resolving the collection key if the hydrated value is null.
-
-		// Implementation note: if collection key is a composite value, then resolving a null value will
-		// result in instantiating an empty composite if AvailableSettings#CREATE_EMPTY_COMPOSITES_ENABLED
-		// is true. By not resolving a null value for a composite key, we avoid the overhead of instantiating
-		// an empty composite, checking if it is equivalent to null (it should be), then ultimately throwing
-		// out the empty value.
-		final Object hydratedKey = getKeyType().hydrate( rs, aliases, session, null );
-		return hydratedKey == null ? null : getKeyType().resolve( hydratedKey, session, null );
 	}
 
 	/**

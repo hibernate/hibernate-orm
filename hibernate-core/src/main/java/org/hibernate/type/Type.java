@@ -284,43 +284,6 @@ public interface Type extends Serializable {
 			throws HibernateException;
 
 	/**
-	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
-	 * should handle possibility of null values.
-	 *
-	 * @param rs The result set from which to extract value.
-	 * @param names the column names making up this type value (use to read from result set)
-	 * @param session The originating session
-	 * @param owner the parent entity
-	 *
-	 * @return The extracted value
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @see Type#hydrate(ResultSet, String[], SharedSessionContractImplementor, Object) alternative, 2-phase property initialization
-	 */
-	Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException, SQLException;
-
-	/**
-	 * Extract a value of the {@link #getReturnedClass() mapped class} from the JDBC result set. Implementors
-	 * should handle possibility of null values.  This form might be called if the type is known to be a
-	 * single-column type.
-	 *
-	 * @param rs The result set from which to extract value.
-	 * @param name the column name making up this type value (use to read from result set)
-	 * @param session The originating session
-	 * @param owner the parent entity
-	 *
-	 * @return The extracted value
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 */
-	Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException, SQLException;
-
-	/**
 	 * Bind a value represented by an instance of the {@link #getReturnedClass() mapped class} to the JDBC prepared
 	 * statement, ignoring some columns as dictated by the 'settable' parameter.  Implementors should handle the
 	 * possibility of null values.  A multi-column type should bind parameters starting from <tt>index</tt>.
@@ -436,82 +399,6 @@ public interface Type extends Serializable {
 	 * @param session The originating session
 	 */
 	void beforeAssemble(Serializable cached, SharedSessionContractImplementor session);
-
-	/**
-	 * Extract a value from the JDBC result set.  This is useful for 2-phase property initialization - the second
-	 * phase is a call to {@link #resolve}
-	 * This hydrated value will be either:<ul>
-	 *     <li>in the case of an entity or collection type, the key</li>
-	 *     <li>otherwise, the value itself</li>
-	 * </ul>
-	 *
-	 * @param rs The JDBC result set
-	 * @param names the column names making up this type value (use to read from result set)
-	 * @param session The originating session
-	 * @param owner the parent entity
-	 *
-	 * @return An entity or collection key, or an actual value.
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 * @throws SQLException An error from the JDBC driver
-	 *
-	 * @see #resolve
-	 */
-	Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException, SQLException;
-
-	/**
-	 * @see #resolve(Object, SharedSessionContractImplementor, Object, Boolean)
-	 */
-	Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException;
-
-	/**
-	 * The second phase of 2-phase loading.  Only really pertinent for entities and collections.  Here we resolve the
-	 * identifier to an entity or collection instance
-	 *
-	 * @param value an identifier or value returned by <tt>hydrate()</tt>
-	 * @param owner the parent entity
-	 * @param session the session
-	 * @param overridingEager can override eager from the mapping. For example because of {@link org.hibernate.engine.spi.LoadQueryInfluencers}
-	 *   If null, then it does not override. If true or false then it overrides the mapping value.
-	 *
-	 * @return the given value, or the value associated with the identifier
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 *
-	 * @see #hydrate
-	 */
-	default Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager)
-	throws HibernateException {
-		return resolve(value, session, owner);
-	}
-
-	/**
-	 * Given a hydrated, but unresolved value, return a value that may be used to reconstruct property-ref
-	 * associations.
-	 *
-	 * @param value The unresolved, hydrated value
-	 * @param session THe originating session
-	 * @param owner The value owner
-	 *
-	 * @return The semi-resolved value
-	 *
-	 * @throws HibernateException An error from Hibernate
-	 */
-	Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException;
-
-	/**
-	 * As part of 2-phase loading, when we perform resolving what is the resolved type for this type?  Generally
-	 * speaking the type and its semi-resolved type will be the same.  The main deviation from this is in the
-	 * case of an entity where the type would be the entity type and semi-resolved type would be its identifier type
-	 *
-	 * @param factory The session factory
-	 *
-	 * @return The semi-resolved type
-	 */
-	Type getSemiResolvedType(SessionFactoryImplementor factory);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to

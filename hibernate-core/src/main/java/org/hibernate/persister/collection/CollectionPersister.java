@@ -127,31 +127,6 @@ public interface CollectionPersister extends CollectionDefinition {
 	}
 
 	/**
-	 * Read the key from a row of the JDBC <tt>ResultSet</tt>
-	 */
-	Object readKey(ResultSet rs, String[] keyAliases, SharedSessionContractImplementor session)
-		throws HibernateException, SQLException;
-	/**
-	 * Read the element from a row of the JDBC <tt>ResultSet</tt>
-	 */
-	Object readElement(
-			ResultSet rs,
-			Object owner,
-			String[] columnAliases,
-			SharedSessionContractImplementor session) throws SQLException;
-	/**
-	 * Read the index from a row of the JDBC <tt>ResultSet</tt>
-	 */
-	Object readIndex(ResultSet rs, String[] columnAliases, SharedSessionContractImplementor session) throws SQLException;
-
-	/**
-	 * Read the identifier from a row of the JDBC <tt>ResultSet</tt>
-	 */
-	Object readIdentifier(
-			ResultSet rs,
-			String columnAlias,
-			SharedSessionContractImplementor session) throws SQLException;
-	/**
 	 * Is this an array or primitive values?
 	 */
 	boolean isPrimitiveArray();

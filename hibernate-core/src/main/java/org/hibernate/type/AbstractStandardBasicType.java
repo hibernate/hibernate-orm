@@ -16,7 +16,6 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -268,8 +267,7 @@ public abstract class AbstractStandardBasicType<T>
 		return isDirty( oldHydratedState, currentState );
 	}
 
-	@Override
-	public final Object nullSafeGet(
+	private final Object nullSafeGet(
 			ResultSet rs,
 			String[] names,
 			SharedSessionContractImplementor session,
@@ -277,8 +275,7 @@ public abstract class AbstractStandardBasicType<T>
 		return nullSafeGet( rs, names[0], session );
 	}
 
-	@Override
-	public final Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
+	private final Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
 			throws SQLException {
 		return nullSafeGet( rs, name, session );
 	}
@@ -355,27 +352,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public final void beforeAssemble(Serializable cached, SharedSessionContractImplementor session) {
-	}
-
-	@Override
-	public final Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return nullSafeGet(rs, names, session, owner);
-	}
-
-	@Override
-	public final Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return value;
-	}
-
-	@Override
-	public final Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
-		return value;
-	}
-
-	@Override
-	public final Type getSemiResolvedType(SessionFactoryImplementor factory) {
-		return this;
 	}
 
 	@Override

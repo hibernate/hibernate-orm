@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,6 +22,7 @@ import java.util.TreeMap;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.collection.internal.AbstractPersistentCollection;
 import org.hibernate.collection.spi.PersistentCollection;
@@ -139,17 +139,6 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @return The instantiated collection.
 	 */
 	public abstract PersistentCollection instantiate(SharedSessionContractImplementor session, CollectionPersister persister, Object key);
-
-	@Override
-	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		return nullSafeGet( rs, new String[] { name }, session, owner );
-	}
-
-	@Override
-	public Object nullSafeGet(ResultSet rs, String[] name, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return resolve( null, session, owner );
-	}
 
 	@Override
 	public final void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable,
@@ -431,11 +420,13 @@ public abstract class CollectionType extends AbstractType implements Association
 			Class returnedClass = keyType.getReturnedClass();
 
 			if ( !returnedClass.isInstance( id ) ) {
-				id = keyType.semiResolve(
-						entityEntry.getLoadedValue( foreignKeyPropertyName ),
-						session,
-						owner
-				);
+				// todo (6.0) :
+				throw new NotYetImplementedFor6Exception( "Re-work support for semi-resolve" );
+//				id = keyType.semiResolve(
+//						entityEntry.getLoadedValue( foreignKeyPropertyName ),
+//						session,
+//						owner
+//				);
 			}
 
 			return id;
@@ -474,22 +465,7 @@ public abstract class CollectionType extends AbstractType implements Association
 		return ownerId;
 	}
 
-	@Override
-	public Object hydrate(ResultSet rs, String[] name, SharedSessionContractImplementor session, Object owner) {
-		// can't just return null here, since that would
-		// cause an owning component to become null
-		return NOT_NULL_COLLECTION;
-	}
-
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException {
-
-		return resolve( value, session, owner, null );
-	}
-
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
+	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
 		return resolveKey( getKeyOfOwner( owner, session ), session, owner, overridingEager );
 	}
 
@@ -498,13 +474,6 @@ public abstract class CollectionType extends AbstractType implements Association
 		// collection reference");
 		return key == null ? null : // TODO: can this case really occur??
 			getCollection( key, session, owner, overridingEager );
-	}
-
-	@Override
-	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException {
-		throw new UnsupportedOperationException(
-			"collection mappings may not form part of a property-ref" );
 	}
 
 	public boolean isArrayType() {

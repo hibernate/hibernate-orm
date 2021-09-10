@@ -76,26 +76,6 @@ public class MetaType extends AbstractType {
 	}
 
 	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		Object key = baseType.nullSafeGet(rs, names, session, owner);
-		return key==null ? null : discriminatorValuesToEntityNameMap.get(key);
-	}
-
-	@Override
-	public Object nullSafeGet(
-			ResultSet rs,
-			String name,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		Object key = baseType.nullSafeGet(rs, name, session, owner);
-		return key==null ? null : discriminatorValuesToEntityNameMap.get(key);
-	}
-
-	@Override
 	public void nullSafeSet(
 			PreparedStatement st,
 			Object value,

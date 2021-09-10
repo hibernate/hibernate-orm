@@ -7,8 +7,6 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -78,13 +76,6 @@ public class SpecialOneToOneType extends OneToOneType {
 		return false;
 	}
 
-	@Override
-	public Object hydrate(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-	throws HibernateException, SQLException {
-		return super.getIdentifierOrUniqueKeyType( session.getFactory() )
-			.nullSafeGet(rs, names, session, owner);
-	}
-	
 	// TODO: copy/paste from ManyToOneType
 	@Override
 	public Serializable disassemble(Object value, SharedSessionContractImplementor session, Object owner)

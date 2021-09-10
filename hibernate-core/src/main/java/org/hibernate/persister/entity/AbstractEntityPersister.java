@@ -187,7 +187,6 @@ import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
@@ -3213,116 +3212,6 @@ public abstract class AbstractEntityPersister
 			return getIdentifierColumnSpan();
 		}
 		return 0;
-	}
-
-	/**
-	 * Unmarshal the fields of a persistent instance from a result set,
-	 * without resolving associations or collections. Question: should
-	 * this really be here, or should it be sent back to Loader?
-	 */
-	@Override
-	public Object[] hydrate(
-			final ResultSet rs,
-			final Object id,
-			final Object object,
-			final Loadable rootLoadable,
-			final String[][] suffixedPropertyColumns,
-			final boolean forceEager,
-			final boolean[] propertiesForceEager,
-			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Hydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
-		}
-
-		final AbstractEntityPersister rootPersister = (AbstractEntityPersister) rootLoadable;
-
-		final boolean hasDeferred = rootPersister.hasSequentialSelect();
-		PreparedStatement sequentialSelect = null;
-		ResultSet sequentialResultSet = null;
-		boolean sequentialSelectEmpty = false;
-		try {
-
-			if ( hasDeferred ) {
-				final String sql = rootPersister.getSequentialSelect( getEntityName() );
-				if ( sql != null ) {
-					//TODO: I am not so sure about the exception handling in this bit!
-					sequentialSelect = session
-							.getJdbcCoordinator()
-							.getStatementPreparer()
-							.prepareStatement( sql );
-					rootPersister.getIdentifierType().nullSafeSet( sequentialSelect, id, 1, session );
-					sequentialResultSet = session.getJdbcCoordinator().getResultSetReturn().extract( sequentialSelect );
-					if ( !sequentialResultSet.next() ) {
-						// TODO: Deal with the "optional" attribute in the <join> mapping;
-						// this code assumes that optional defaults to "true" because it
-						// doesn't actually seem to work in the fetch="join" code
-						//
-						// Note that actual proper handling of optional-ality here is actually
-						// more involved than this patch assumes.  Remember that we might have
-						// multiple <join/> mappings associated with a single entity.  Really
-						// a couple of things need to happen to properly handle optional here:
-						//  1) First and foremost, when handling multiple <join/>s, we really
-						//      should be using the entity root table as the driving table;
-						//      another option here would be to choose some non-optional joined
-						//      table to use as the driving table.  In all likelihood, just using
-						//      the root table is much simpler
-						//  2) Need to add the FK columns corresponding to each joined table
-						//      to the generated select list; these would then be used when
-						//      iterating the result set to determine whether all non-optional
-						//      data is present
-						// My initial thoughts on the best way to deal with this would be
-						// to introduce a new SequentialSelect abstraction that actually gets
-						// generated in the persisters (ok, SingleTable...) and utilized here.
-						// It would encapsulated all this required optional-ality checking...
-						sequentialSelectEmpty = true;
-					}
-				}
-			}
-
-			final String[] propNames = getPropertyNames();
-			final Type[] types = getPropertyTypes();
-			final Object[] values = new Object[types.length];
-			final boolean[] laziness = getPropertyLaziness();
-			final String[] propSubclassNames = getSubclassPropertySubclassNameClosure();
-
-			for ( int i = 0; i < types.length; i++ ) {
-				if ( !propertySelectable[i] ) {
-					values[i] = PropertyAccessStrategyBackRefImpl.UNKNOWN;
-				}
-				else if ( forceEager || !laziness[i] || propertiesForceEager != null && propertiesForceEager[i] ) {
-					//decide which ResultSet to get the property value from:
-					final boolean propertyIsDeferred = hasDeferred &&
-							rootPersister.isSubclassPropertyDeferred( propNames[i], propSubclassNames[i] );
-					if ( propertyIsDeferred && sequentialSelectEmpty ) {
-						values[i] = null;
-					}
-					else {
-						final ResultSet propertyResultSet = propertyIsDeferred ? sequentialResultSet : rs;
-						final String[] cols = propertyIsDeferred ?
-								propertyColumnAliases[i] :
-								suffixedPropertyColumns[i];
-						values[i] = types[i].hydrate( propertyResultSet, cols, session, object );
-					}
-				}
-				else {
-					values[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-				}
-			}
-
-			if ( sequentialResultSet != null ) {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( sequentialResultSet, sequentialSelect );
-			}
-
-			return values;
-
-		}
-		finally {
-			if ( sequentialSelect != null ) {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( sequentialSelect );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
 	}
 
 	public boolean useInsertSelectIdentity() {

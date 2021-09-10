@@ -7,7 +7,6 @@
 package org.hibernate.type;
 
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Map;
 import java.util.Set;
@@ -224,21 +223,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return nullSafeGet( rs, new String[] {name}, session, owner );
-	}
-
-	@Override
-	public final Object nullSafeGet(
-			ResultSet rs,
-			String[] names,
-			SharedSessionContractImplementor session,
-			Object owner) throws HibernateException, SQLException {
-		return resolve( hydrate( rs, names, session, owner ), session, owner );
-	}
-
-	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( settable.length > 0 ) {
@@ -418,13 +402,11 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	/**
 	 * Resolve an identifier or unique key value
 	 */
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner) throws HibernateException {
 		return resolve(value, session, owner, null);
 	}
 
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
+	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner, Boolean overridingEager) throws HibernateException {
 		if ( value != null && !isNull( owner, session ) ) {
 			if ( isReferenceToPrimaryKey() ) {
 				return resolveIdentifier( value, session, overridingEager );
@@ -447,11 +429,6 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 */
 	public boolean isEager(Boolean overridingEager) {
 		return overridingEager != null ? overridingEager : this.eager;
-	}
-
-	@Override
-	public Type getSemiResolvedType(SessionFactoryImplementor factory) {
-		return getAssociatedEntityPersister( factory ).getIdentifierType();
 	}
 
 	public EntityPersister getAssociatedEntityPersister(final SessionFactoryImplementor factory) {

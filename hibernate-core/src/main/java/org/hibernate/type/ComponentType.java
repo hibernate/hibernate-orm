@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
@@ -324,12 +323,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, String[] names, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-		return resolve( hydrate( rs, names, session, owner ), session, owner );
-	}
-
-	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int begin, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 
@@ -382,13 +375,6 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		else {
 			return getPropertyValues( value, entityMode );
 		}
-	}
-
-	@Override
-	public Object nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException, SQLException {
-
-		return nullSafeGet( rs, new String[] {name}, session, owner );
 	}
 
 	@Override
@@ -652,64 +638,27 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 		return joinedFetch[i];
 	}
 
-	@Override
-	public Object hydrate(
-			final ResultSet rs,
-			final String[] names,
-			final SharedSessionContractImplementor session,
-			final Object owner)
-			throws HibernateException, SQLException {
-
-		int begin = 0;
-		boolean notNull = false;
-		Object[] values = new Object[propertySpan];
-		for ( int i = 0; i < propertySpan; i++ ) {
-			int length = propertyTypes[i].getColumnSpan( session.getFactory() );
-			String[] range = ArrayHelper.slice( names, begin, length ); //cache this
-			Object val = propertyTypes[i].hydrate( rs, range, session, owner );
-			if ( val == null ) {
-				if ( isKey ) {
-					return null; //different nullability rules for pk/fk
-				}
-			}
-			else {
-				notNull = true;
-			}
-			values[i] = val;
-			begin += length;
-		}
-
-		return notNull ? values : null;
-	}
-
-	@Override
-	public Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
+	private Object resolve(Object value, SharedSessionContractImplementor session, Object owner)
 			throws HibernateException {
 
-		if ( value != null ) {
-			Object result = instantiate( owner, session );
-			Object[] values = (Object[]) value;
-			Object[] resolvedValues = new Object[values.length]; //only really need new array during semi-resolve!
-			for ( int i = 0; i < values.length; i++ ) {
-				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
-			}
-			setPropertyValues( result, resolvedValues, entityMode );
-			return result;
-		}
-		else if ( isCreateEmptyCompositesEnabled() ) {
-			return instantiate( owner, session );
-		}
-		else {
-			return null;
-		}
-	}
+		throw new NotYetImplementedFor6Exception( getClass() );
 
-	@Override
-	public Object semiResolve(Object value, SharedSessionContractImplementor session, Object owner)
-			throws HibernateException {
-		//note that this implementation is kinda broken
-		//for components with many-to-one associations
-		return resolve( value, session, owner );
+//		if ( value != null ) {
+//			Object result = instantiate( owner, session );
+//			Object[] values = (Object[]) value;
+//			Object[] resolvedValues = new Object[values.length]; //only really need new array during semi-resolve!
+//			for ( int i = 0; i < values.length; i++ ) {
+//				resolvedValues[i] = propertyTypes[i].resolve( values[i], session, owner );
+//			}
+//			setPropertyValues( result, resolvedValues, entityMode );
+//			return result;
+//		}
+//		else if ( isCreateEmptyCompositesEnabled() ) {
+//			return instantiate( owner, session );
+//		}
+//		else {
+//			return null;
+//		}
 	}
 
 	@Override

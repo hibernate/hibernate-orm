@@ -11,6 +11,7 @@ import java.util.function.Function;
 
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.SemanticException;
@@ -26,7 +27,6 @@ import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Steve Ebersole
@@ -49,8 +49,8 @@ public class SqmParameterInterpretation implements Expression, DomainResultProdu
 		this.queryParameter = queryParameter;
 		this.queryParameterBindingResolver = queryParameterBindingResolver;
 
-		if ( valueMapping instanceof EntityValuedFetchable ) {
-			this.valueMapping = ( (EntityValuedFetchable) valueMapping ).getEntityMappingType().getIdentifierMapping();
+		if ( valueMapping instanceof EntityValuedModelPart ) {
+			this.valueMapping = ( (EntityValuedModelPart) valueMapping ).getEntityMappingType().getIdentifierMapping();
 		}
 		else {
 			this.valueMapping = valueMapping;

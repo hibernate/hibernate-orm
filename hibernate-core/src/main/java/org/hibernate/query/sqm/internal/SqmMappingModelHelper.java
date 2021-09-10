@@ -160,6 +160,10 @@ public class SqmMappingModelHelper {
 			return pluralPart.findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 		}
 
+		if ( sqmPath.getLhs() == null ) {
+			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) sqmPath.getReferencedPathSource();
+			return domainModel.findEntityDescriptor( entityDomainType.getHibernateEntityName() );
+		}
 		final TableGroup lhsTableGroup = tableGroupLocator.apply( sqmPath.getLhs().getNavigablePath() );
 		return lhsTableGroup.getModelPart().findSubPart( sqmPath.getReferencedPathSource().getPathName(), null );
 	}

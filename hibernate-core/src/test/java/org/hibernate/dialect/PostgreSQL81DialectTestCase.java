@@ -14,6 +14,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 
@@ -57,6 +58,17 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		assertTrue(exception instanceof PessimisticLockException);
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-13661")
+	public void testQueryTimeoutException() {
+		final PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		final SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
+		assertNotNull( delegate );
+
+		final JDBCException exception = delegate.convert( new SQLException("Client cancelled operation", "57014"), "", "" );
+		assertTrue( exception instanceof QueryTimeoutException );
+	}
+
 	/**
 	 * Tests that getForUpdateString(String aliases, LockOptions lockOptions) will return a String
 	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
@@ -98,4 +110,5 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 			assertEquals( "PostgreSQL only supports accessing REF_CURSOR parameters by position", e.getMessage() );
 		}
 	}
+
 }

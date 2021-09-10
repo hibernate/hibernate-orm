@@ -7,7 +7,6 @@ import javax.persistence.criteria.SetJoin;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.criteria.internal.hhh14197.Employee_;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

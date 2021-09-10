@@ -6,7 +6,6 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.criteria.internal.hhh13908.Foo_;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

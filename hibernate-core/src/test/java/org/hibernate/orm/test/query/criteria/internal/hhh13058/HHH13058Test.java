@@ -12,8 +12,6 @@ import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.criteria.internal.hhh13058.Patient_;
-import org.hibernate.query.criteria.internal.hhh13058.Task_;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;

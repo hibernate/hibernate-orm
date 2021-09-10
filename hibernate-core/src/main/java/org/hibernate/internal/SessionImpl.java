@@ -129,6 +129,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.tuple.TenantIdGeneration;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -240,6 +241,18 @@ public class SessionImpl
 				initialMode = ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO );
 			}
 			setHibernateFlushMode( initialMode );
+		}
+
+		if ( factory.getDefinedFilterNames().contains( TenantIdGeneration.FILTER_NAME ) ) {
+			String tenantIdentifier = getTenantIdentifier();
+			if ( tenantIdentifier == null ) {
+				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
+			}
+			else {
+				getLoadQueryInfluencers()
+						.enableFilter( TenantIdGeneration.FILTER_NAME )
+						.setParameter( TenantIdGeneration.PARAMETER_NAME, tenantIdentifier );
+			}
 		}
 
 		if ( log.isTraceEnabled() ) {

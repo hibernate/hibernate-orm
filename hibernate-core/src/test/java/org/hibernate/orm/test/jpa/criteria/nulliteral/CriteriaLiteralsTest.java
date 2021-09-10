@@ -188,7 +188,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 					1,
 					sqlStatementInterceptor.getSqlQueries().size()
 			);
-			sqlStatementInterceptor.assertExecuted( "select a1_0.name from Book b1_0 inner join Author a1_0 on a1_0.book_id=b1_0.id where b1_0.name=? and a1_0.index_id=?" );
+			sqlStatementInterceptor.assertExecuted( "select a1_0.name from Book b1_0 join Author a1_0 on a1_0.book_id=b1_0.id where b1_0.name=? and a1_0.index_id=?" );
 		} );
 	}
 

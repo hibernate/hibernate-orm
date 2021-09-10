@@ -13,27 +13,27 @@ public enum SqlAstJoinType {
 	/**
 	 * Represents an inner join.
 	 */
-	INNER( "inner" ),
+	INNER( "" ),
 
 	/**
 	 * Represents a left outer join.
 	 */
-	LEFT( "left outer" ),
+	LEFT( "left " ),
 
 	/**
 	 * Represents a right outer join.
 	 */
-	RIGHT( "right outer" ),
+	RIGHT( "right " ),
 
 	/**
 	 * Represents a cross join (aka a cartesian product).
 	 */
-	CROSS( "cross" ),
+	CROSS( "cross " ),
 
 	/**
 	 * Represents a full join.
 	 */
-	FULL( "full" );
+	FULL( "full " );
 
 	private final String text;
 

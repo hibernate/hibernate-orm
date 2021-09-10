@@ -18,7 +18,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.test.transaction.Book;
 import org.hibernate.orm.test.jpa.txn.JtaTransactionJoiningTest;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 

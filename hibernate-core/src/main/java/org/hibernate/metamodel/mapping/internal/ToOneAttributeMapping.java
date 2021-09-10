@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.LockMode;
@@ -15,11 +16,15 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -172,7 +177,22 @@ public class ToOneAttributeMapping
 			else {
 				cardinality = Cardinality.MANY_TO_ONE;
 			}
-			this.bidirectionalAttributeName = manyToOne.getReferencedPropertyName();
+			if ( referencedPropertyName == null ) {
+				String bidirectionalAttributeName = null;
+				final PersistentClass entityBinding = manyToOne.getMetadata().getEntityBinding( manyToOne.getReferencedEntityName() );
+				final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
+				while (propertyClosureIterator.hasNext()) {
+					final Property property = propertyClosureIterator.next();
+					if ( property.getValue() instanceof Collection && name.equals( ( (Collection) property.getValue() ).getMappedByProperty() ) ) {
+						bidirectionalAttributeName = property.getName();
+						break;
+					}
+				}
+				this.bidirectionalAttributeName = bidirectionalAttributeName;
+			}
+			else {
+				this.bidirectionalAttributeName = referencedPropertyName;
+			}
 		}
 		else {
 			assert bootValue instanceof OneToOne;

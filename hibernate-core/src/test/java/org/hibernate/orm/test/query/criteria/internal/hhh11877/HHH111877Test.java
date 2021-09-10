@@ -6,7 +6,6 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.criteria.internal.hhh11877.Foo_;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

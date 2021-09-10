@@ -146,7 +146,7 @@ public class ColumnTransformerTest {
 					final String sqlString =
 							// represents how each is mapped in the mappings - see their @ColumnTransformer#read
 							"select i.integer_val"
-							+ " from t_staff s inner join integers i on s.id = i.Staff_id"
+							+ " from t_staff s join integers i on s.id = i.Staff_id"
 							+ " where s.id = 12";
 
 					final List<?> results = session

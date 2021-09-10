@@ -15,18 +15,15 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.Assert;
@@ -50,22 +47,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				OneToManyBidirectionalTest.Item.class
 		}
 )
-@SessionFactory
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
 				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
-public class OneToManyBidirectionalTest implements SessionFactoryProducer {
-
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sqlStatementInterceptor = new SQLStatementInterceptor( sessionFactoryBuilder );
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
-	}
+public class OneToManyBidirectionalTest {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -94,6 +83,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 
 	@Test
 	public void testFetchingSameAssociationTwice(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -111,7 +101,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 							inner join "Order" as o1_0  on i1_0."order_id" = o1_0.id
 					 */
 
-					assertJoinFrequencyInSQL( true, 2, 0 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 					sqlStatementInterceptor.clear();
 
 					assertThat( items.size(), is( 2 ) );
@@ -129,7 +119,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
    	 					where l1_0."order_id" = ?
 					 */
 
-					assertNoJoinInSQL( 0 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 					sqlStatementInterceptor.clear();
 
 					Order itemOrder = item.getOrder();
@@ -144,6 +134,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 
 	@Test
 	public void testRetrievingItem(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -159,7 +150,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 							where i1_0.id = ?
 					 */
 
-					assertJoinFrequencyInSQL( false, 1, 0 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.LEFT, 1 );
 					sqlStatementInterceptor.clear();
 
 					Order order = item.getOrder();
@@ -174,7 +165,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 						where l1_0."order_id" = ?
 					 */
 
-					assertNoJoinInSQL( 0 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 					sqlStatementInterceptor.clear();
 
 					assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
@@ -199,8 +190,8 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     				where o1_0.id = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
-			assertNoJoinInSQL( 1 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 ).getOrder();
@@ -217,7 +208,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
@@ -243,8 +234,8 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
    					 where o1_0.id = ?
 			 */
 
-			assertJoinFrequencyInSQL( true, 1, 0 );
-			assertNoJoinInSQL( 1 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
+			sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 ).getOrder();
@@ -260,7 +251,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertThat( statistics.getPrepareStatementCount(), is( 3L ) );
@@ -284,7 +275,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			inner join "Order" as o1_0 on i1_0."order_id" = o1_0.id
 			 */
 
-			assertJoinFrequencyInSQL( true, 1, 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 ).getOrder();
@@ -301,7 +292,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertThat( statistics.getPrepareStatementCount(), is( 2L ) );
@@ -334,8 +325,8 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 					where o1_0.id = ?
 			 */
 
-			assertJoinFrequencyInSQL( true, 2, 0 );
-			assertNoJoinInSQL( 1 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
+			sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 			sqlStatementInterceptor.clear();
 
 			Item item = results.get( 0 );
@@ -352,7 +343,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			for ( Item itm : order.getLineItems() ) {
@@ -364,6 +355,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 
 	@Test
 	public void testRetrievingOrder(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction( session -> {
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			statistics.clear();
@@ -377,7 +369,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where o1_0.id = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			List<Item> lineItems = order.getLineItems();
@@ -392,7 +384,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertTrue( Hibernate.isInitialized( lineItems ) );
@@ -416,7 +408,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			from "Order" as o1_0
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 );
@@ -433,7 +425,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertTrue( Hibernate.isInitialized( lineItems ) );
@@ -457,7 +449,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
-			assertJoinFrequencyInSQL( true, 1, 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 );
@@ -474,7 +466,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertTrue( Hibernate.isInitialized( lineItems ) );
@@ -499,7 +491,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
-			assertJoinFrequencyInSQL( true, 1, 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 );
@@ -526,12 +518,15 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 			).list();
 
 			/*
-				select o1_0.id, o1_0.name
+			    select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
     			from "Order" as o1_0
     			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+    			inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
 			 */
 
-			assertJoinFrequencyInSQL( true, 1, 0 );
+			// todo (6.0): this was originally intended to produce only a single SQL join,
+			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 );
@@ -547,7 +542,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			where l1_0."order_id" = ?
 			 */
 
-			assertNoJoinInSQL( 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 			sqlStatementInterceptor.clear();
 
 			assertTrue( Hibernate.isInitialized( lineItems ) );
@@ -568,12 +563,15 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 			).list();
 
 			/*
-				select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name
+			    select o1_0.id, l1_0."order_id", l1_0.id, o1_0.name, o2_0.id, o2_0.name
     			from "Order" as o1_0
     			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
+    			inner join "Order" as o2_0 on l1_0."order_id" = o2_0.id
 			 */
 
-			assertJoinFrequencyInSQL( true, 1, 0 );
+			// todo (6.0): this was originally intended to produce only a single SQL join,
+			//  but joins are created before fetches, thus we don't know about bi-directional fetching/joining
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 );
@@ -593,6 +591,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 	@Test
 	@FailureExpected(jiraKey = "no jira", reason = "order.getLineItems().size() is 4 and not 2 as it should be")
 	public void testItemFetchJoin(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction( session -> {
 			Statistics statistics = session.getSessionFactory().getStatistics();
 			statistics.clear();
@@ -610,7 +609,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
     			inner join Item as l1_0 on l1_0."order_id" = o1_0.id
 			 */
 
-			assertJoinFrequencyInSQL( true, 2, 0 );
+			sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 			sqlStatementInterceptor.clear();
 
 			Order order = results.get( 0 ).getOrder();
@@ -626,6 +625,7 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 	@Test
 	@FailureExpected(reason = "It should throw an exception because query specified join fetching, but the owner of the fetched association was not present in the select list")
 	public void testItemJoinWithFetchJoin(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		Assertions.assertThrows( IllegalArgumentException.class, () ->
 				scope.inTransaction( session -> {
 					Statistics statistics = session.getSessionFactory().getStatistics();
@@ -712,23 +712,6 @@ public class OneToManyBidirectionalTest implements SessionFactoryProducer {
 		public void setOrder(Order order) {
 			this.order = order;
 		}
-	}
-
-	private void assertJoinFrequencyInSQL(boolean innerJoin, int expectedCount, int sqlIndex) {
-		String joinPhrase = innerJoin ? "inner join" : "left outer join";
-		String sql = sqlStatementInterceptor.getSqlQueries().get( sqlIndex );
-		String re = String.format( "^.+(\\s+%s\\s+.+){%d}.*$", joinPhrase, expectedCount );
-		assertThat(
-				String.format( "%s should show up %d time(s) in SQL: %s", joinPhrase, expectedCount, sql ),
-				sql.matches( re ),
-				is( true )
-		);
-	}
-
-	private void assertNoJoinInSQL(int sqlIndex) {
-		String sql = sqlStatementInterceptor.getSqlQueries().get( sqlIndex );
-		String re = "^.+\\s+join\\s+.+$";
-		assertThat( String.format( " 'join' should not appear in SQL: %s", sql ), sql.matches( re ), is( false ) );
 	}
 
 }

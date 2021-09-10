@@ -3494,7 +3494,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderJoinType(SqlAstJoinType joinType) {
 		appendSql( joinType.getText() );
-		appendSql( " join " );
+		appendSql( "join " );
 	}
 
 	@Override

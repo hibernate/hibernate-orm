@@ -106,7 +106,7 @@ public class BatchedManyToManyTest {
 				// outer join fragment.  But at least this wil fail on the majority
 				// of dialects...
 				assertFalse(
-						sql.toLowerCase( Locale.ROOT ).contains( "left outer join" ),
+						sql.toLowerCase( Locale.ROOT ).contains( "left join" ),
 						"batch load of many-to-many should use inner join"
 				);
 				return super.onPrepareStatement( sql );

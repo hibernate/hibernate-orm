@@ -65,7 +65,7 @@ public class EntityGraphWithFetchAnnotationTest {
 							.getResultList();
 
 					statementInspector.assertExecutedCount( 1 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "left outer join", 0 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "left join", 0 );
 				}
 		);
 	}
@@ -96,7 +96,7 @@ public class EntityGraphWithFetchAnnotationTest {
 
 					statementInspector.assertExecutedCount( 1 );
 					String sql = statementInspector.getSqlQueries().get( 0 );
-					assertThat( sql, containsString( "left outer join" ) );
+					assertThat( sql, containsString( "left join" ) );
 				}
 		);
 	}

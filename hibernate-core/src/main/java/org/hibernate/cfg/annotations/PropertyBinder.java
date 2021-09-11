@@ -15,7 +15,6 @@ import javax.persistence.Lob;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
@@ -298,21 +297,6 @@ public class PropertyBinder {
 
 		if ( property != null ) {
 			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
-
-			if ( property.isAnnotationPresent( AttributeAccessor.class ) ) {
-				final AttributeAccessor accessor = property.getAnnotation( AttributeAccessor.class );
-				String value = accessor.value();
-				Class<?> type = accessor.strategy();
-				if ( !value.isEmpty() ) {
-					prop.setPropertyAccessorName( value );
-				}
-				else if ( !PropertyAccessStrategy.class.equals(type) ) {
-					prop.setPropertyAccessorName( type.getName() );
-				}
-				else {
-					throw new AnnotationException("@AttributeAccessor must specify a PropertyAccessStrategy type");
-				}
-			}
 		}
 
 		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;

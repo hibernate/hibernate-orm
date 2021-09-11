@@ -78,7 +78,7 @@ public class AttributeAccessorTest extends BaseEnversJPAFunctionalTestCase {
 			this.id = id;
 		}
 
-		@AttributeAccessor( strategy =BasicAttributeAccessor.class )
+		@AttributeAccessor( strategy = BasicAttributeAccessor.class )
 		public String getName() {
 			return name;
 		}

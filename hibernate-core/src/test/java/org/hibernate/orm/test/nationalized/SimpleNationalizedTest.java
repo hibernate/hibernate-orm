@@ -19,13 +19,12 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CharacterArrayType;
 import org.hibernate.type.CharacterNCharType;
 import org.hibernate.type.CharacterType;
-import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
 import org.hibernate.type.NTextType;
@@ -35,7 +34,6 @@ import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -101,21 +99,16 @@ public class SimpleNationalizedTest {
 			}
 
 			prop = pc.getProperty( "materializedNclobAtt" );
-			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				// See issue HHH-10693
-				if ( dialect instanceof SybaseDialect ) {
-					assertThat( prop.getType(), instanceOf( StandardBasicTypeImpl.class ) );
-					final StandardBasicTypeImpl type = (StandardBasicTypeImpl) prop.getType();
-					assertSame( StringTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
-					assertSame( ClobTypeDescriptor.CLOB_BINDING, type.getJdbcTypeDescriptor() );
-				}
-				else {
-					assertSame( MaterializedClobType.INSTANCE, prop.getType() );
-				}
-
+			if ( dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
+				assertSame( MaterializedNClobType.INSTANCE, prop.getType() );
 			}
 			else {
-				assertSame( MaterializedNClobType.INSTANCE, prop.getType() );
+				// dialects with IMPLICIT nationalized character types generally
+				// contribute their own type descriptors
+				assertThat( prop.getType(), instanceOf( BasicType.class ) );
+				final BasicType basic = (BasicType) prop.getType();
+				assertSame( StringTypeDescriptor.INSTANCE, basic.getJavaTypeDescriptor() );
+				assertThat( basic.getJdbcTypeDescriptor(), instanceOf( ClobTypeDescriptor.class ) );
 			}
 			prop = pc.getProperty( "nclobAtt" );
 			assertSame( NClobType.INSTANCE, prop.getType() );
@@ -129,10 +122,10 @@ public class SimpleNationalizedTest {
 				assertSame( CharacterArrayType.INSTANCE, prop.getType() );
 			}
 			else {
-				assertThat( prop.getType(), instanceOf( StandardBasicTypeImpl.class ) );
-				StandardBasicTypeImpl type = (StandardBasicTypeImpl) prop.getType();
-				assertThat( type.getJavaTypeDescriptor(), instanceOf( CharacterArrayTypeDescriptor.class ) );
-				assertThat( type.getJdbcTypeDescriptor(), instanceOf( NVarcharTypeDescriptor.class ) );
+				assertThat( prop.getType(), instanceOf( BasicType.class ) );
+				BasicType basic = (BasicType) prop.getType();
+				assertThat( basic.getJavaTypeDescriptor(), instanceOf( CharacterArrayTypeDescriptor.class ) );
+				assertThat( basic.getJdbcTypeDescriptor(), instanceOf( NVarcharTypeDescriptor.class ) );
 			}
 			prop = pc.getProperty( "ncharacterAtt" );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {

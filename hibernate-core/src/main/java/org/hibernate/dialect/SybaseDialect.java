@@ -161,47 +161,28 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
 
+		typeContributions.contributeJdbcTypeDescriptor(BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING);
+
 		if ( jtdsDriver ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
-					Types.NCLOB,
-					ClobTypeDescriptor.CLOB_BINDING
-			);
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
-					Types.NVARCHAR,
-					ClobTypeDescriptor.CLOB_BINDING
-			);
-			typeContributions.contributeJdbcTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING );
+			// The jTDS driver doesn't support the JDBC4 setNString method
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+					.addDescriptor(Types.NVARCHAR, NClobTypeDescriptor.NCLOB_BINDING);
+			// Some Sybase drivers cannot support getClob.  See HHH-7889
+			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
+			typeContributions.contributeJdbcTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING);
+			typeContributions.contributeJdbcTypeDescriptor(NClobTypeDescriptor.NCLOB_BINDING);
 		}
+		else {
+			typeContributions.contributeJdbcTypeDescriptor(ClobTypeDescriptor.STREAM_BINDING_EXTRACTING);
+			typeContributions.contributeJdbcTypeDescriptor(NClobTypeDescriptor.STREAM_BINDING);
+		}
+
 	}
 
 	@Override
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
 		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
-	}
-
-	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		switch (sqlCode) {
-		case Types.BLOB:
-			return BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
-		case Types.CLOB:
-			// Some Sybase drivers cannot support getClob.  See HHH-7889
-			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			return jtdsDriver ? ClobTypeDescriptor.CLOB_BINDING : ClobTypeDescriptor.STREAM_BINDING_EXTRACTING;
-		case Types.NCLOB:
-			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			if ( jtdsDriver ) {
-				return NClobTypeDescriptor.NCLOB_BINDING;
-			}
-		case Types.NVARCHAR:
-			// The jTDS driver doesn't support the JDBC4 setNString method
-			if ( jtdsDriver ) {
-				return NClobTypeDescriptor.NCLOB_BINDING;
-			}
-		default:
-			return super.getSqlTypeDescriptorOverride( sqlCode );
-		}
 	}
 
 	@Override

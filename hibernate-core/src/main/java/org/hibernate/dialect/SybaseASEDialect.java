@@ -15,7 +15,7 @@ import java.util.Map;
 import javax.persistence.TemporalType;
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.QuantifiedLeastGreatestEmulation;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -28,7 +28,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.Sybase11JoinFragment;
@@ -181,17 +181,14 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		switch ( sqlCode ) {
-			case Types.BOOLEAN:
-				return TinyIntTypeDescriptor.INSTANCE;
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				// At least the jTDS driver does not support this type code
-				if ( jtdsDriver ) {
-					return TimestampTypeDescriptor.INSTANCE;
-				}
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes(typeContributions, serviceRegistry);
+
+		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+				.addDescriptor(Types.BOOLEAN, TinyIntTypeDescriptor.INSTANCE);
+		if ( jtdsDriver ) {
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+					.addDescriptor(Types.TIMESTAMP_WITH_TIMEZONE, TimestampTypeDescriptor.INSTANCE);
 		}
 	}
 

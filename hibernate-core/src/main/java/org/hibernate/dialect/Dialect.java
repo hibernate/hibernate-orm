@@ -82,7 +82,6 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NCharTypeDescriptor;
@@ -1028,10 +1027,11 @@ public abstract class Dialect implements ConversionContext {
 	 * @param serviceRegistry The service registry
 	 */
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		// by default, not much to do...
+//		if ( useInputStreamToInsertBlob() ) {
+//			typeContributions.contributeJdbcTypeDescriptor(ClobTypeDescriptor.STREAM_BINDING);
+//		}
 
-		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
-		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
+		if ( getNationalizationSupport() == NationalizationSupport.EXPLICIT ) {
 			typeContributions.contributeJdbcTypeDescriptor( NCharTypeDescriptor.INSTANCE );
 			typeContributions.contributeJdbcTypeDescriptor( NVarcharTypeDescriptor.INSTANCE );
 			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharTypeDescriptor.INSTANCE );
@@ -1260,20 +1260,12 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @param sqlCode A {@link Types} constant indicating the SQL column type
 	 * @return The {@link JdbcTypeDescriptor} to use as an override, or {@code null} if there is no override.
+	 *
+	 * @deprecated use {@link #contributeTypes(TypeContributions, ServiceRegistry)}
 	 */
+	@Deprecated
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		JdbcTypeDescriptor descriptor;
-		switch ( sqlCode ) {
-			case Types.CLOB: {
-				descriptor = useInputStreamToInsertBlob() ? ClobTypeDescriptor.STREAM_BINDING : null;
-				break;
-			}
-			default: {
-				descriptor = null;
-				break;
-			}
-		}
-		return descriptor;
+		return null;
 	}
 
 	/**

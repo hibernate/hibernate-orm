@@ -60,7 +60,7 @@ import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -329,25 +329,6 @@ public class PostgreSQLDialect extends Dialect {
 
 		if ( getVersion() >= 940 ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
-		}
-	}
-
-	@Override
-	public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
-		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
-		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
-		switch ( sqlCode ) {
-			case Types.BLOB:
-				// Force BLOB binding.  Otherwise, byte[] fields annotated
-				// with @Lob will attempt to use
-				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
-				// dialect uses oid for Blobs, byte arrays cannot be used.
-				return BlobTypeDescriptor.BLOB_BINDING;
-			case Types.CLOB:
-				return ClobTypeDescriptor.CLOB_BINDING;
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
 	}
 
@@ -888,6 +869,16 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
+
+		// For discussion of BLOB support in Postgres, as of 8.4, see
+		// http://jdbc.postgresql.org/documentation/84/binary-data.html
+		// For how this affects Hibernate, see http://in.relation.to/15492.lace
+
+		// Force BLOB binding.  Otherwise, byte[] fields annotated @Lob will attempt to use
+		// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the dialect uses oid for Blobs,
+		// byte arrays cannot be used.
+		typeContributions.contributeJdbcTypeDescriptor(BlobTypeDescriptor.BLOB_BINDING);
+		typeContributions.contributeJdbcTypeDescriptor(ClobTypeDescriptor.CLOB_BINDING);
 
 		if ( getVersion() >= 820 ) {
 			// HHH-9562

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatFunction;
@@ -21,7 +22,6 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
@@ -42,6 +42,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -53,7 +54,6 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -533,6 +533,21 @@ public class DerbyDialect extends Dialect {
 				return super.getSqlTypeDescriptorOverride(sqlCode);
 		}
 	}
+
+//	@Override
+//	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+//		super.contributeTypes(typeContributions, serviceRegistry);
+//
+//		if ( getVersion() < 1070 ) {
+//			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+//					.addDescriptor(Types.BOOLEAN, SmallIntTypeDescriptor.INSTANCE);
+//		}
+//
+//		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+//				.addDescriptor(Types.NUMERIC, DecimalTypeDescriptor.INSTANCE);
+//		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+//				.addDescriptor(Types.TIMESTAMP_WITH_TIMEZONE, TimestampTypeDescriptor.INSTANCE);
+//	}
 
 	@Override
 	public String getNotExpression( String expression ) {

@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Id;
 import javax.persistence.Lob;
+import javax.persistence.Version;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -41,7 +42,6 @@ import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GenerationTiming;
@@ -252,7 +252,7 @@ public class PropertyBinder {
 				identifier.addProperty( prop );
 			}
 			else {
-				rootClass.setIdentifier( ( KeyValue ) getValue() );
+				rootClass.setIdentifier( (KeyValue) getValue() );
 				if (embedded) {
 					rootClass.setEmbeddedIdentifier( true );
 				}
@@ -296,57 +296,71 @@ public class PropertyBinder {
 		prop.setReturnedClassName( returnedClassName );
 
 		if ( property != null ) {
+			handleNaturalId( prop );
 			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );
+			// HHH-4635 -- needed for dialect-specific property ordering
+			prop.setLob( property.isAnnotationPresent(Lob.class) );
 		}
-
-		NaturalId naturalId = property != null ? property.getAnnotation( NaturalId.class ) : null;
-		if ( naturalId != null ) {
-			if ( ! entityBinder.isRootEntity() ) {
-				throw new AnnotationException( "@NaturalId only valid on root entity (or its @MappedSuperclasses)" );
-			}
-			if ( ! naturalId.mutable() ) {
-				updatable = false;
-			}
-			prop.setNaturalIdentifier( true );
-		}
-
-		// HHH-4635 -- needed for dialect-specific property ordering
-		Lob lob = property != null ? property.getAnnotation( Lob.class ) : null;
-		prop.setLob( lob != null );
 
 		prop.setInsertable( insertable );
 		prop.setUpdateable( updatable );
 
-		// this is already handled for collections in CollectionBinder...
-		if ( Collection.class.isInstance( value ) ) {
-			prop.setOptimisticLocked( ( (Collection) value ).isOptimisticLocked() );
-		}
-		else {
-			final OptimisticLock lockAnn = property != null
-					? property.getAnnotation( OptimisticLock.class )
-					: null;
-			if ( lockAnn != null ) {
-				//TODO this should go to the core as a mapping validation checking
-				if ( lockAnn.excluded() && (
-						property.isAnnotationPresent( javax.persistence.Version.class )
-								|| property.isAnnotationPresent( Id.class )
-								|| property.isAnnotationPresent( EmbeddedId.class ) ) ) {
-					throw new AnnotationException(
-							"@OptimisticLock.exclude=true incompatible with @Id, @EmbeddedId and @Version: "
-									+ StringHelper.qualify( holder.getPath(), name )
-					);
-				}
-			}
-			final boolean isOwnedValue = !isToOneValue( value ) || insertable; // && updatable as well???
-			final boolean includeInOptimisticLockChecks = ( lockAnn != null )
-					? ! lockAnn.excluded()
-					: isOwnedValue;
-			prop.setOptimisticLocked( includeInOptimisticLockChecks );
-		}
+		inferOptimisticLocking(prop);
 
 		LOG.tracev( "Cascading {0} with {1}", name, cascade );
 		this.mappingProperty = prop;
 		return prop;
+	}
+
+	private void handleNaturalId(Property prop) {
+		NaturalId naturalId = property.getAnnotation(NaturalId.class);
+		if ( naturalId != null ) {
+			if ( !entityBinder.isRootEntity() ) {
+				throw new AnnotationException( "@NaturalId only valid on root entity (or its @MappedSuperclasses)" );
+			}
+			if ( !naturalId.mutable() ) {
+				updatable = false;
+			}
+			prop.setNaturalIdentifier( true );
+		}
+	}
+
+	private void inferOptimisticLocking(Property prop) {
+		// this is already handled for collections in CollectionBinder...
+		if ( value instanceof Collection ) {
+			prop.setOptimisticLocked( ((Collection) value).isOptimisticLocked() );
+		}
+		else if ( property != null && property.isAnnotationPresent(OptimisticLock.class) ) {
+			OptimisticLock lockAnn = property.getAnnotation(OptimisticLock.class);
+			validateOptimisticLock(lockAnn);
+			prop.setOptimisticLocked( !lockAnn.excluded() );
+		}
+		else {
+			prop.setOptimisticLocked( !isToOneValue(value) || insertable ); // && updatable as well???
+		}
+	}
+
+	private void validateOptimisticLock(OptimisticLock lockAnn) {
+		if ( lockAnn.excluded() ) {
+			if ( property.isAnnotationPresent(Version.class) ) {
+				throw new AnnotationException(
+						"@OptimisticLock(excluded=true) incompatible with @Version: "
+								+ StringHelper.qualify(holder.getPath(), name)
+				);
+			}
+			if ( property.isAnnotationPresent(Id.class) ) {
+				throw new AnnotationException(
+						"@OptimisticLock(excluded=true) incompatible with @Id: "
+								+ StringHelper.qualify(holder.getPath(), name)
+				);
+			}
+			if ( property.isAnnotationPresent(EmbeddedId.class) ) {
+				throw new AnnotationException(
+						"@OptimisticLock(excluded=true) incompatible with @EmbeddedId: "
+								+ StringHelper.qualify(holder.getPath(), name)
+				);
+			}
+		}
 	}
 
 	private ValueGeneration determineValueGenerationStrategy(XProperty property) {
@@ -414,7 +428,7 @@ public class PropertyBinder {
 		final AnnotationValueGeneration<A> valueGeneration = instantiateAndInitializeValueGeneration( annotation, generationType, property );
 
 		if ( annotation.annotationType() == Generated.class
-				&& property.isAnnotationPresent( javax.persistence.Version.class )
+				&& property.isAnnotationPresent(Version.class)
 				&& valueGeneration.getGenerationTiming() == GenerationTiming.INSERT ) {
 
 			throw new AnnotationException(

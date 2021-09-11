@@ -20,7 +20,7 @@ public class Account {
 
     @TenantId String tenantId;
 
-    @ManyToOne Client client;
+    @ManyToOne(optional = false) Client client;
 
     public Account(Client client) {
         this.client = client;

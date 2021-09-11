@@ -17,9 +17,6 @@ import org.hibernate.annotations.TenantId;
  */
 public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, ValueGenerator<Object> {
 
-	public static final String FILTER_NAME = "_tenantId";
-	public static final String PARAMETER_NAME = "tenantId";
-
 	private String entityName;
 	private String propertyName;
 

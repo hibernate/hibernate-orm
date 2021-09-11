@@ -17,11 +17,12 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory
 @DomainModel(annotatedClasses = { Account.class, Client.class })
@@ -33,6 +34,14 @@ import static org.junit.jupiter.api.Assertions.*;
 public class TenantIdTest implements SessionFactoryProducer {
 
     String currentTenant;
+
+    @AfterEach
+    public void cleanup(SessionFactoryScope scope) {
+        scope.inTransaction( session -> {
+            session.createQuery("delete from Account").executeUpdate();
+            session.createQuery("delete from Client").executeUpdate();
+        });
+    }
 
     @Override
     public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
@@ -73,10 +82,10 @@ public class TenantIdTest implements SessionFactoryProducer {
     }
 
     @Test
-    public void testError(SessionFactoryScope scope) {
+    public void testErrorOnInsert(SessionFactoryScope scope) {
         currentTenant = "mine";
         Client client = new Client("Gavin");
-        Account acc = new Account();
+        Account acc = new Account(client);
         acc.tenantId = "yours";
         try {
             scope.inTransaction( session -> {
@@ -88,5 +97,27 @@ public class TenantIdTest implements SessionFactoryProducer {
         catch (Throwable e) {
             assertTrue( e.getCause() instanceof PropertyValueException );
         }
+    }
+
+    @Test
+    public void testErrorOnUpdate(SessionFactoryScope scope) {
+        currentTenant = "mine";
+        Client client = new Client("Gavin");
+        Account acc = new Account(client);
+        scope.inTransaction( session -> {
+            session.persist(client);
+            session.persist(acc);
+            acc.tenantId = "yours";
+            client.tenantId = "yours";
+            client.name = "Steve";
+        } );
+        //TODO: it would be better if this were an error
+        scope.inTransaction( session -> {
+            Account account = session.find(Account.class, acc.id);
+            assertNotNull(account);
+            assertEquals( "mine", acc.tenantId );
+            assertEquals( "Steve", acc.client.name );
+            assertEquals( "mine", acc.client.tenantId );
+        } );
     }
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.tuple;
 
+import org.hibernate.PropertyValueException;
 import org.hibernate.Session;
 import org.hibernate.annotations.TenantId;
 
@@ -19,8 +20,18 @@ public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, 
 	public static final String FILTER_NAME = "_tenantId";
 	public static final String PARAMETER_NAME = "tenantId";
 
+	private String entityName;
+	private String propertyName;
+
+	@Override
+	public void initialize(TenantId annotation, Class<?> propertyType, String entityName, String propertyName) {
+		this.entityName = entityName;
+		this.propertyName = propertyName;
+	}
+
 	@Override
 	public void initialize(TenantId annotation, Class<?> propertyType) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -34,8 +45,21 @@ public class TenantIdGeneration implements AnnotationValueGeneration<TenantId>, 
 	}
 
 	@Override
+	public Object generateValue(Session session, Object owner, Object currentValue) {
+		String identifier = session.getTenantIdentifier();
+		if ( currentValue != null && !currentValue.equals(identifier) ) {
+			throw new PropertyValueException(
+					"assigned tenant id differs from current tenant id: "
+							+ currentValue + "!=" + identifier,
+					entityName, propertyName
+			);
+		}
+		return identifier;
+	}
+
+	@Override
 	public Object generateValue(Session session, Object owner) {
-		return session.getTenantIdentifier();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

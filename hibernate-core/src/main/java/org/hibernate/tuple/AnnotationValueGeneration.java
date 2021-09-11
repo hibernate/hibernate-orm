@@ -30,4 +30,21 @@ public interface AnnotationValueGeneration<A extends Annotation> extends ValueGe
 	 * an implementation can't create a value for the given property type.
 	 */
 	void initialize(A annotation, Class<?> propertyType);
+
+	/**
+	 * Initializes this generation strategy for the given annotation instance.
+	 *
+	 * @param annotation an instance of the strategy's annotation type. Typically implementations will retrieve the
+	 * annotation's attribute values and store them in fields.
+	 * @param propertyType the type of the property annotated with the generator annotation. Implementations may use
+	 * the type to determine the right {@link ValueGenerator} to be applied.
+	 * @param entityName the name of the entity to which the annotated property belongs
+	 * @param propertyName the name of the annotated property
+	 *
+	 * @throws org.hibernate.HibernateException in case an error occurred during initialization, e.g. if
+	 * an implementation can't create a value for the given property type.
+	 */
+	default void initialize(A annotation, Class<?> propertyType, String entityName, String propertyName) {
+		initialize(annotation, propertyType);
+	}
 }

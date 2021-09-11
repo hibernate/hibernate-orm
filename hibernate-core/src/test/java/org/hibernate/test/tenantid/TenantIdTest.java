@@ -24,7 +24,7 @@ import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SessionFactory
-@DomainModel(annotatedClasses = Account.class)
+@DomainModel(annotatedClasses = { Account.class, Client.class })
 @ServiceRegistry(
         settings = {
                 @Setting(name = HBM2DDL_DATABASE_ACTION, value = "create-drop")
@@ -53,8 +53,12 @@ public class TenantIdTest implements SessionFactoryProducer {
     @Test
     public void test(SessionFactoryScope scope) {
         currentTenant = "mine";
-        Account acc = new Account();
-        scope.inTransaction( session -> session.persist(acc) );
+        Client client = new Client("Gavin");
+        Account acc = new Account(client);
+        scope.inTransaction( session -> {
+            session.persist(client);
+            session.persist(acc);
+        } );
         scope.inTransaction( session -> {
             assertNotNull( session.find(Account.class, acc.id) );
             assertEquals( 1, session.createQuery("from Account").getResultList().size() );
@@ -71,10 +75,14 @@ public class TenantIdTest implements SessionFactoryProducer {
     @Test
     public void testError(SessionFactoryScope scope) {
         currentTenant = "mine";
+        Client client = new Client("Gavin");
         Account acc = new Account();
         acc.tenantId = "yours";
         try {
-            scope.inTransaction( session -> session.persist(acc) );
+            scope.inTransaction( session -> {
+                session.persist(client);
+                session.persist(acc);
+            } );
             fail("should have thrown");
         }
         catch (Throwable e) {

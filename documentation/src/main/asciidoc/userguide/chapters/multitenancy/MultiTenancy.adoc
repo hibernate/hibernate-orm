@@ -47,7 +47,7 @@ Using this approach, we would have a distinct JDBC Connection pool per-tenant wh
 Using this approach, we would have a single JDBC Connection pool for use to service all tenants, but before using the Connection, it would be altered to reference the schema named by the "tenant identifier" associated with the currently logged in user.
 
 [[multitenacy-discriminator]]
-=== Partitioned (discriminator) data
+==== Partitioned (discriminator) data
 
 image:images/multitenancy/multitenacy_discriminator.png[]
 
@@ -73,10 +73,36 @@ include::{sourcedir}/AbstractMultiTenancyTest.java[tags=multitenacy-hibernate-se
 ----
 ====
 
+[[multitenacy-hibernate-TenantId]]
+==== @TenantId
+
+For the partitioned data approach, each entity representing partitioned data must declare a field
+annotated `@TenantId`.
+
+[[multitenacy-hibernate-MultiTenantConnectionProvider-example]]
+.A `@TenantId` usage example
+====
+[source, JAVA, indent=0]
+----
+@Entity
+public class Account {
+
+    @Id @GeneratedValue Long id;
+
+    @TenantId String tenantId;
+
+    ...
+}
+----
+====
+
+The `@TenantId` field is automatically populated by Hibernate when an instance is made
+persistent.
+
 [[multitenacy-hibernate-MultiTenantConnectionProvider]]
 ==== MultiTenantConnectionProvider
 
-When using either the DATABASE or SCHEMA approach, Hibernate needs to be able to obtain Connections in a tenant-specific manner.
+When using either the separate database or separate schema approach, Hibernate needs to be able to obtain connections in a tenant-specific manner.
 
 That is the role of the `MultiTenantConnectionProvider` contract.
 Application developers will need to provide an implementation of this contract. 

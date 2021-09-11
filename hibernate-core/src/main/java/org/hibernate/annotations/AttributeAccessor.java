@@ -7,12 +7,13 @@
 package org.hibernate.annotations;
 
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
+import org.hibernate.tuple.AttributeAccessorBinder;
 
 import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
@@ -40,8 +41,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @author Steve Ebersole
  * @author Emmanuel Bernard
  */
-@java.lang.annotation.Target({ TYPE, METHOD, FIELD })
+@Target({METHOD, FIELD})
 @Retention(RUNTIME)
+@AttributeBinderType(binder = AttributeAccessorBinder.class)
 public @interface AttributeAccessor {
 	/**
 	 * Names the {@link PropertyAccessStrategy} strategy.

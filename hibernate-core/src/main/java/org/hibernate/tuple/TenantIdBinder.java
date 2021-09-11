@@ -23,7 +23,7 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 
 /**
- * Sets up filters associated with a @TenantId field
+ * Sets up filters associated with a {@link TenantId} field
  *
  * @author Gavin King
  */

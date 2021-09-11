@@ -11,21 +11,27 @@ import org.hibernate.annotations.TenantId;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
-public class Account {
+public class Client {
+    @Id
+    @GeneratedValue
+    Long id;
 
-    @Id @GeneratedValue Long id;
+    String name;
 
-    @TenantId String tenantId;
+    @TenantId
+    String tenantId;
 
-    @ManyToOne Client client;
+    @OneToMany(mappedBy = "client")
+    Set<Account> accounts = new HashSet<>();
 
-    public Account(Client client) {
-        this.client = client;
+    public Client(String name) {
+        this.name = name;
     }
 
-    Account() {}
+    Client() {}
 }
-

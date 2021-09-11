@@ -598,16 +598,19 @@ public class AuditedPropertiesReader {
 			propertyData.setStore( aud.modStore() );
 			propertyData.setRelationTargetAuditMode( aud.targetAuditMode() );
 			propertyData.setUsingModifiedFlag( checkUsingModifiedFlag( aud ) );
-      Column column = property.getAnnotation( Column.class );
-      if(column != null){
-        if(StringTools.isEmpty(column.name())){
-          propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
-        } else {
-          propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( column.name(), modifiedFlagSuffix ) );
-        }
-      } else {
-        propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
-      }
+			Column column = property.getAnnotation( Column.class );
+			if(column != null){
+				if(StringTools.isEmpty(column.name())){
+					propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
+				}
+				else {
+					propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( column.name(), modifiedFlagSuffix ) );
+				}
+			}
+			else {
+				propertyData.setModifiedFlagName( MetadataTools.getModifiedFlagPropertyName( propertyName, modifiedFlagSuffix ) );
+			}
+
 			if ( !StringTools.isEmpty( aud.modifiedColumnName() ) ) {
 				propertyData.setExplicitModifiedFlagName( aud.modifiedColumnName() );
 			}

@@ -49,6 +49,7 @@ public class Property implements Serializable, MetaAttributable {
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean lob;
+	private String returnedClassName;
 
 	public boolean isBackRef() {
 		return false;
@@ -88,7 +89,26 @@ public class Property implements Serializable, MetaAttributable {
 	public Value getValue() {
 		return value;
 	}
-	
+
+	public void resetUpdateable(boolean updateable) {
+		setUpdateable(updateable);
+		boolean[] columnUpdateability = getValue().getColumnUpdateability();
+		for (int i=0; i<getColumnSpan(); i++ ) {
+			columnUpdateability[i] = updateable;
+		}
+	}
+
+	public void resetOptional(boolean optional) {
+		setOptional(optional);
+		Iterator<Selectable> columnIterator = getValue().getColumnIterator();
+		while ( columnIterator.hasNext() ) {
+			Selectable column = columnIterator.next();
+			if (column instanceof Column) {
+				( (Column) column ).setNullable(optional);
+			}
+		}
+	}
+
 	public boolean isPrimitive(Class clazz) {
 		return getGetter(clazz).getReturnTypeClass().isPrimitive();
 	}
@@ -360,4 +380,11 @@ public class Property implements Serializable, MetaAttributable {
 		this.lob = lob;
 	}
 
+	public String getReturnedClassName() {
+		return returnedClassName;
+	}
+
+	public void setReturnedClassName(String returnedClassName) {
+		this.returnedClassName = returnedClassName;
+	}
 }

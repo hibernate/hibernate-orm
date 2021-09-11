@@ -15,17 +15,15 @@ import javax.persistence.Lob;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
-import org.hibernate.MappingException;
 import org.hibernate.annotations.AttributeAccessor;
+import org.hibernate.annotations.AttributeBinderType;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
-import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.ValueGenerationType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.AnnotationBinder;
@@ -34,7 +32,6 @@ import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.InheritanceState;
 import org.hibernate.cfg.PropertyHolder;
 import org.hibernate.cfg.PropertyPreloadedData;
-import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Collection;
@@ -47,17 +44,12 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.tuple.AnnotationValueGeneration;
+import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.TenantIdGeneration;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 
-import org.hibernate.type.BasicType;
-import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
-
-import static java.util.Collections.emptyMap;
-import static java.util.Collections.singletonMap;
 
 /**
  * @author Emmanuel Bernard
@@ -99,9 +91,9 @@ public class PropertyBinder {
 	}
 
 	/*
-			 * property can be null
-			 * prefer propertyName to property.getName() since some are overloaded
-			 */
+	 * property can be null
+	 * prefer propertyName to property.getName() since some are overloaded
+	 */
 	private XProperty property;
 	private XClass returnedClass;
 	private boolean isId;
@@ -204,60 +196,23 @@ public class PropertyBinder {
 
 		SimpleValue propertyValue = basicValueBinder.make();
 		setValue( propertyValue );
-		Property prop = makeProperty();
-
-		makeTenantIdFilter();
-
-		return prop;
+		return makeProperty();
 	}
 
-	private void makeTenantIdFilter() {
-		if ( property.isAnnotationPresent(TenantId.class) ) {
-			InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
-			BasicType<Object> tenantIdType =
-					collector.getTypeConfiguration().getBasicTypeRegistry()
-							.getRegisteredType(returnedClassName);
-			FilterDefinition filterDefinition = collector.getFilterDefinition(TenantIdGeneration.FILTER_NAME);
-			if ( filterDefinition == null ) {
-				collector.addFilterDefinition(
-						new FilterDefinition(
-								TenantIdGeneration.FILTER_NAME,
-								"",
-								singletonMap( TenantIdGeneration.PARAMETER_NAME, tenantIdType )
-						)
-				);
-			}
-			else {
-				Type parameterType = filterDefinition.getParameterTypes().get(TenantIdGeneration.PARAMETER_NAME);
-				if ( !parameterType.getName().equals( tenantIdType.getName() ) ) {
-					throw new MappingException(
-							"all @TenantId fields must have the same type: "
-									+ parameterType.getName()
-									+ " differs from "
-									+ tenantIdType.getName()
-					);
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private void callAttributeBinders(Property prop) {
+		for ( Annotation annotation: property.getAnnotations() ) {
+			if ( annotation.annotationType().isAnnotationPresent(AttributeBinderType.class) ) {
+				AttributeBinder binder;
+				try {
+					binder = annotation.annotationType().getAnnotation(AttributeBinderType.class).binder().newInstance();
 				}
+				catch (Exception e) {
+					throw new AnnotationException("error processing @AttributeBinderType annotation", e);
+				}
+				binder.bind( annotation, buildingContext, entityBinder.getPersistentClass(), prop );
 			}
-			entityBinder.getPersistentClass()
-					.addFilter(
-							TenantIdGeneration.FILTER_NAME,
-							getColumnNameOrFormula()
-									+ " = :"
-									+ TenantIdGeneration.PARAMETER_NAME,
-							true,
-							emptyMap(),
-							emptyMap()
-					);
 		}
-	}
-
-	private String getColumnNameOrFormula() {
-		if ( columns.length!=1 ) {
-			throw new MappingException("@TenantId field must be mapped to a single column or formula");
-		}
-		return columns[0].isFormula()
-			? columns[0].getFormulaString()
-			: columns[0].getName();
 	}
 
 	//used when value is provided
@@ -322,6 +277,9 @@ public class PropertyBinder {
 		else {
 			holder.addProperty( prop, columns, declaringClass );
 		}
+
+		callAttributeBinders(prop);
+
 		return prop;
 	}
 
@@ -336,6 +294,7 @@ public class PropertyBinder {
 		prop.setLazyGroup( lazyGroup );
 		prop.setCascade( cascade );
 		prop.setPropertyAccessorName( accessType.getType() );
+		prop.setReturnedClassName( returnedClassName );
 
 		if ( property != null ) {
 			prop.setValueGenerationStrategy( determineValueGenerationStrategy( property ) );

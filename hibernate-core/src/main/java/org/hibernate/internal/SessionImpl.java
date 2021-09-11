@@ -139,7 +139,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.tuple.TenantIdGeneration;
+import org.hibernate.tuple.TenantIdBinder;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
@@ -242,15 +242,15 @@ public class SessionImpl
 			setHibernateFlushMode( initialMode );
 		}
 
-		if ( factory.getDefinedFilterNames().contains( TenantIdGeneration.FILTER_NAME ) ) {
+		if ( factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME ) ) {
 			String tenantIdentifier = getTenantIdentifier();
 			if ( tenantIdentifier == null ) {
 				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 			}
 			else {
 				getLoadQueryInfluencers()
-						.enableFilter( TenantIdGeneration.FILTER_NAME )
-						.setParameter( TenantIdGeneration.PARAMETER_NAME, tenantIdentifier );
+						.enableFilter( TenantIdBinder.FILTER_NAME )
+						.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
 			}
 		}
 

@@ -15,6 +15,7 @@ import jakarta.persistence.Lob;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
+import org.hibernate.MappingException;
 import org.hibernate.annotations.AttributeAccessor;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Immutable;
@@ -52,6 +53,8 @@ import org.hibernate.tuple.TenantIdGeneration;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
 
+import org.hibernate.type.BasicType;
+import org.hibernate.type.Type;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
@@ -204,30 +207,58 @@ public class PropertyBinder {
 		setValue( propertyValue );
 		Property prop = makeProperty();
 
+		makeTenantIdFilter();
+
+		return prop;
+	}
+
+	private void makeTenantIdFilter() {
 		if ( property.isAnnotationPresent(TenantId.class) ) {
 			InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
-			collector.addFilterDefinition(
-					new FilterDefinition(
-							TenantIdGeneration.FILTER_NAME,
-							"",
-							singletonMap(
-									TenantIdGeneration.PARAMETER_NAME,
-									collector.getTypeConfiguration().getBasicTypeRegistry()
-											.getRegisteredType(returnedClassName)
-							)
-					)
-			);
-			String columnOrFormula = columns[0].isFormula() ? columns[0].getFormulaString() : columns[0].getName();
+			BasicType<Object> tenantIdType =
+					collector.getTypeConfiguration().getBasicTypeRegistry()
+							.getRegisteredType(returnedClassName);
+			FilterDefinition filterDefinition = collector.getFilterDefinition(TenantIdGeneration.FILTER_NAME);
+			if ( filterDefinition == null ) {
+				collector.addFilterDefinition(
+						new FilterDefinition(
+								TenantIdGeneration.FILTER_NAME,
+								"",
+								singletonMap( TenantIdGeneration.PARAMETER_NAME, tenantIdType )
+						)
+				);
+			}
+			else {
+				Type parameterType = filterDefinition.getParameterTypes().get(TenantIdGeneration.PARAMETER_NAME);
+				if ( !parameterType.getName().equals( tenantIdType.getName() ) ) {
+					throw new MappingException(
+							"all @TenantId fields must have the same type: "
+									+ parameterType.getName()
+									+ " differs from "
+									+ tenantIdType.getName()
+					);
+				}
+			}
 			entityBinder.getPersistentClass()
 					.addFilter(
 							TenantIdGeneration.FILTER_NAME,
-							columnOrFormula + " = :" + TenantIdGeneration.PARAMETER_NAME,
+							getColumnNameOrFormula()
+									+ " = :"
+									+ TenantIdGeneration.PARAMETER_NAME,
 							true,
-							emptyMap(), emptyMap()
+							emptyMap(),
+							emptyMap()
 					);
 		}
+	}
 
-		return prop;
+	private String getColumnNameOrFormula() {
+		if ( columns.length!=1 ) {
+			throw new MappingException("@TenantId field must be mapped to a single column or formula");
+		}
+		return columns[0].isFormula()
+			? columns[0].getFormulaString()
+			: columns[0].getName();
 	}
 
 	//used when value is provided

@@ -469,7 +469,9 @@ public class PropertyBinder {
 			AnnotationValueGeneration<A> valueGeneration = (AnnotationValueGeneration<A>) generationType.newInstance();
 			valueGeneration.initialize(
 					annotation,
-					buildingContext.getBootstrapContext().getReflectionManager().toClass( property.getType() )
+					buildingContext.getBootstrapContext().getReflectionManager().toClass( property.getType() ),
+					entityBinder.getPersistentClass().getEntityName(),
+					property.getName()
 			);
 
 			return valueGeneration;

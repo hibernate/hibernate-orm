@@ -6,6 +6,7 @@
  */
 package org.hibernate.test.tenantid;
 
+import org.hibernate.PropertyValueException;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -16,12 +17,11 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SessionFactory
 @DomainModel(annotatedClasses = Account.class)
@@ -49,6 +49,7 @@ public class TenantIdTest implements SessionFactoryProducer {
         } );
         return (SessionFactoryImplementor) sessionFactoryBuilder.build();
     }
+
     @Test
     public void test(SessionFactoryScope scope) {
         currentTenant = "mine";
@@ -65,5 +66,19 @@ public class TenantIdTest implements SessionFactoryProducer {
             assertNull( session.find(Account.class, acc.id) );
             assertEquals( 0, session.createQuery("from Account").getResultList().size() );
         } );
+    }
+
+    @Test
+    public void testError(SessionFactoryScope scope) {
+        currentTenant = "mine";
+        Account acc = new Account();
+        acc.tenantId = "yours";
+        try {
+            scope.inTransaction( session -> session.persist(acc) );
+            fail("should have thrown");
+        }
+        catch (Throwable e) {
+            assertTrue( e.getCause() instanceof PropertyValueException );
+        }
     }
 }

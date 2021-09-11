@@ -23,4 +23,17 @@ public interface ValueGenerator<T> {
 	 * @return The generated value
 	 */
 	public T generateValue(Session session, Object owner);
+
+	/**
+	 * Generate the value.
+	 *
+	 * @param session The Session from which the request originates.
+	 * @param owner The instance of the object owning the attribute for which we are generating a value.
+	 * @param currentValue The current value assigned to the property
+	 *
+	 * @return The generated value
+	 */
+	public default T generateValue(Session session, Object owner, Object currentValue) {
+		return generateValue(session, owner);
+	}
 }

@@ -362,7 +362,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 				return prop;
 			}
 		}
-		throw new MappingException("component property not found: " + propertyName);
+		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
 	public String getRoleName() {

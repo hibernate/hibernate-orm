@@ -186,10 +186,6 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
 				.addDescriptor(Types.BOOLEAN, TinyIntTypeDescriptor.INSTANCE);
-		if ( jtdsDriver ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
-					.addDescriptor(Types.TIMESTAMP_WITH_TIMEZONE, TimestampTypeDescriptor.INSTANCE);
-		}
 	}
 
 	@Override

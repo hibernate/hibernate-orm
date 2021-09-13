@@ -104,6 +104,30 @@ public class TimestampWithTimeZoneDescriptor implements JdbcTypeDescriptor {
 					st.setTimestamp( name, timestamp );
 				}
 			}
+
+			@Override
+			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
+				try {
+					// supposed to be supported in JDBC 4.2
+					st.setNull( index, Types.TIMESTAMP_WITH_TIMEZONE );
+				}
+				catch (SQLException e) {
+					// fall back to treating it as a JDBC Timestamp
+					st.setNull( index, Types.TIMESTAMP );
+				}
+			}
+
+			@Override
+			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
+				try {
+					// supposed to be supported in JDBC 4.2
+					st.setNull( name, Types.TIMESTAMP_WITH_TIMEZONE );
+				}
+				catch (SQLException e) {
+					// fall back to treating it as a JDBC Timestamp
+					st.setNull( name, Types.TIMESTAMP );
+				}
+			}
 		};
 	}
 

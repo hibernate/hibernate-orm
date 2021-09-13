@@ -60,6 +60,7 @@ import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -248,9 +249,13 @@ public class SessionImpl
 				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 			}
 			else {
-				getLoadQueryInfluencers()
-						.enableFilter( TenantIdBinder.FILTER_NAME )
-						.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
+				CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
+				if ( resolver==null || !resolver.isRoot(tenantIdentifier) ) {
+					// turn on the filter, unless this is the "root" tenant with access to all partitions
+					getLoadQueryInfluencers()
+							.enableFilter( TenantIdBinder.FILTER_NAME )
+							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
+				}
 			}
 		}
 

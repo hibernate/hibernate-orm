@@ -31,4 +31,13 @@ public interface CurrentTenantIdentifierResolver {
 	 * @see org.hibernate.context.TenantIdentifierMismatchException
 	 */
 	public boolean validateExistingCurrentSessions();
+
+	/**
+	 * Does the given tenant id represent a "root" tenant with access to all partitions.
+	 * @param tenantId a tenant id produced by {@link #resolveCurrentTenantIdentifier()}
+	 * @return true is this is root tenant
+	 */
+	public default boolean isRoot(String tenantId) {
+		return false;
+	}
 }

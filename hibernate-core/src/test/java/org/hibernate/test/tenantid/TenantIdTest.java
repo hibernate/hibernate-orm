@@ -17,6 +17,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.tuple.TenantIdBinder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +79,9 @@ public class TenantIdTest implements SessionFactoryProducer {
         scope.inTransaction( session -> {
             assertNull( session.find(Account.class, acc.id) );
             assertEquals( 0, session.createQuery("from Account").getResultList().size() );
+            session.disableFilter(TenantIdBinder.FILTER_NAME);
+            assertNotNull( session.find(Account.class, acc.id) );
+            assertEquals( 1, session.createQuery("from Account").getResultList().size() );
         } );
     }
 

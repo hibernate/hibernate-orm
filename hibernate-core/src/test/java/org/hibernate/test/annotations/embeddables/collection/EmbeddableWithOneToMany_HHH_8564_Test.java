@@ -55,6 +55,11 @@ public class EmbeddableWithOneToMany_HHH_8564_Test
 					"@OneToMany, @ManyToMany or @ElementCollection cannot be used inside an @Embeddable that is also contained within an @ElementCollection"
 			) );
 		}
+		finally {
+			if ( serviceRegistry() != null ) {
+				serviceRegistry().destroy();
+			}
+		}
 	}
 
 	@Test

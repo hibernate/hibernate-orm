@@ -180,13 +180,13 @@ public class SybaseASEDialect extends SybaseDialect {
 		return false;
 	}
 
-	@Override
-	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		super.contributeTypes(typeContributions, serviceRegistry);
-
-		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
-				.addDescriptor(Types.BOOLEAN, TinyIntTypeDescriptor.INSTANCE);
-	}
+//	@Override
+//	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+//		super.contributeTypes(typeContributions, serviceRegistry);
+//
+//		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry()
+//				.addDescriptor(Types.BOOLEAN, TinyIntTypeDescriptor.INSTANCE);
+//	}
 
 	@Override
 	public String currentDate() {

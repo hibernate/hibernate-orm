@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.tuple.GeneratedAlwaysValueGeneration;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -14,34 +16,28 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies that a column has a {@code DEFAULT} value specified in DDL,
- * and whether Hibernate should fetch the defaulted value from the database.
- * <p>
- * {@code @ColumnDefault} may be used in combination with:
- * <ul>
- *     <li>{@code DynamicInsert}, to let the database fill in the value of
- *     a null entity attribute, or
- *     <li>{@code @Generated(INSERT)}, to populate an entity attribute with
- *     the defaulted value of a database column.
- * </ul>
+ * Specifies that a column is defined using a DDL {@code generated always as} clause
+ * or equivalent, and whether Hibernate should fetch the generated value from the
+ * database.
  *
- * @author Steve Ebersole
+ * @author Gavin King
  *
- * @see GeneratedColumn
+ * @see ColumnDefault
  */
 @Target( {FIELD, METHOD} )
 @Retention( RUNTIME )
-public @interface ColumnDefault {
+@ValueGenerationType(generatedBy = GeneratedAlwaysValueGeneration.class)
+public @interface GeneratedColumn {
 	/**
-	 * The {@code DEFAULT} value to use in generated DDL.
+	 * The expression to include in the generated DDL.
 	 *
-	 * @return a SQL expression that evaluates to the default column value
+	 * @return the SQL expression that is evaluated to generate the column value.
 	 */
 	String value();
 
 	/**
-	 * The name of the generated column. Optional for a field or property
-	 * mapped to a single column.
+	 * The name of the generated column. Optional for a field or property mapped
+	 * to a single column.
 	 * <ul>
 	 * <li>If the column name is explicitly specified using the
 	 * {@link jakarta.persistence.Column @Column} annotation, the name given

@@ -2832,6 +2832,8 @@ public abstract class AbstractEntityPersister
 		return true;
 	}
 
+	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
+
 	public String generateUpdateString(boolean[] includeProperty, int j, boolean useRowId) {
 		return generateUpdateString( includeProperty, j, null, useRowId );
 	}
@@ -2872,7 +2874,7 @@ public abstract class AbstractEntityPersister
 								&& valueGeneration.referenceColumnInSql() ) {
 							update.addColumns(
 									getPropertyColumnNames( index ),
-									new boolean[] { true },
+									SINGLE_TRUE,
 									new String[] { valueGeneration.getDatabaseGeneratedReferencedColumnValue() }
 							);
 							hasColumns = true;
@@ -2962,9 +2964,6 @@ public abstract class AbstractEntityPersister
 	public String generateInsertString(boolean[] includeProperty) {
 		return generateInsertString( includeProperty, 0 );
 	}
-
-	private static final boolean[] SINGLE_TRUE = new boolean[] { true };
-	private static final boolean[] SINGLE_FALSE = new boolean[] { false };
 
 	/**
 	 * Generate the SQL that inserts a row

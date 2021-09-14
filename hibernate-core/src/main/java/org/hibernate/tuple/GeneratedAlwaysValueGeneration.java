@@ -6,33 +6,23 @@
  */
 package org.hibernate.tuple;
 
-import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GeneratedColumn;
 
 /**
- * A {@link AnnotationValueGeneration} which marks a property as generated in the database.
+ * For {@link GeneratedColumn}
  *
- * @author Steve Ebersole
- * @author Gunnar Morling
+ * @author Gavin King
  */
-public class GeneratedValueGeneration implements AnnotationValueGeneration<Generated> {
+public class GeneratedAlwaysValueGeneration implements AnnotationValueGeneration<GeneratedColumn> {
 
-	private GenerationTiming timing;
-
-	public GeneratedValueGeneration() {
-	}
-
-	public GeneratedValueGeneration(GenerationTiming timing) {
-		this.timing = timing;
-	}
+	public GeneratedAlwaysValueGeneration() {}
 
 	@Override
-	public void initialize(Generated annotation, Class<?> propertyType) {
-		this.timing = annotation.value().getEquivalent();
-	}
+	public void initialize(GeneratedColumn annotation, Class<?> propertyType) {}
 
 	@Override
 	public GenerationTiming getGenerationTiming() {
-		return timing;
+		return GenerationTiming.ALWAYS;
 	}
 
 	@Override
@@ -43,7 +33,6 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 
 	@Override
 	public boolean referenceColumnInSql() {
-		// historically these columns are not referenced in the SQL
 		return false;
 	}
 
@@ -52,4 +41,3 @@ public class GeneratedValueGeneration implements AnnotationValueGeneration<Gener
 		return null;
 	}
 }
-

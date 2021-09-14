@@ -911,19 +911,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 
 	@Override
 	public void redefineColumnName(String columnName, String propertyName, boolean applyNamingStrategy) {
-		if ( StringHelper.isNotEmpty( columnName ) ) {
-			if ( applyNamingStrategy ) {
-				getMappingColumn().setName(
-						getBuildingContext().getBuildingOptions().getPhysicalNamingStrategy().toPhysicalColumnName(
-								getBuildingContext().getMetadataCollector().getDatabase().toIdentifier( columnName ),
-								getBuildingContext().getMetadataCollector().getDatabase().getJdbcEnvironment()
-						).render()
-				);
-			}
-			else {
-				getMappingColumn().setName( columnName );
-			}
-		}
+		super.redefineColumnName( columnName, null, applyNamingStrategy );
 	}
 
 	public static Ejb3JoinColumn[] buildJoinTableJoinColumns(

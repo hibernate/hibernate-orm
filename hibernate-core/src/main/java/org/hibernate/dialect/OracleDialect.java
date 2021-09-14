@@ -1254,4 +1254,8 @@ public class OracleDialect extends Dialect {
 		return (ResultSet) statement.getObject( name );
 	}
 
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ")";
+	}
 }

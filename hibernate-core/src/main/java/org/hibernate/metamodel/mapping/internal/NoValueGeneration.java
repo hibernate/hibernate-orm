@@ -38,9 +38,4 @@ public class NoValueGeneration implements ValueGeneration {
 	public String getDatabaseGeneratedReferencedColumnValue() {
 		return null;
 	}
-
-	@Override
-	public boolean timingMatches(GenerationTiming timing) {
-		return timing == GenerationTiming.NEVER;
-	}
 }

@@ -102,6 +102,11 @@ public class StandardTableExporter implements Exporter<Table> {
 						buf.append( " default " ).append( defaultValue );
 					}
 
+					String generatedAs = col.getGeneratedAs();
+					if ( generatedAs != null) {
+						buf.append( dialect.generatedAs( generatedAs ) );
+					}
+
 					if ( col.isNullable() ) {
 						buf.append( dialect.getNullColumnString( columnType ) );
 					}

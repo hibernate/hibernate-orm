@@ -442,6 +442,11 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 					alter.append( " default " ).append( defaultValue );
 				}
 
+				String generatedAs = column.getGeneratedAs();
+				if ( generatedAs != null) {
+					alter.append( dialect.generatedAs( generatedAs ) );
+				}
+
 				if ( column.isNullable() ) {
 					alter.append( dialect.getNullColumnString( columnType ) );
 				}
@@ -492,6 +497,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 			String defaultCatalog,
 			String defaultSchema) {
 		throw new UnsupportedOperationException();
+	}
 //		Dialect dialect = context.getDialect();
 //		StringBuilder buf = new StringBuilder( hasPrimaryKey() ? dialect.getCreateTableString() : dialect.getCreateMultisetTableString() )
 //				.append( ' ' )
@@ -528,6 +534,11 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 //				String defaultValue = col.getDefaultValue();
 //				if ( defaultValue != null ) {
 //					buf.append( " default " ).append( defaultValue );
+//				}
+//
+//				String generatedAs = col.getGeneratedAs();
+//				if ( generatedAs != null) {
+//					buf.append( dialect.generatedAs( generatedAs ) );
 //				}
 //
 //				if ( col.isNullable() ) {
@@ -584,7 +595,6 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 //		}
 //
 //		return buf.append( dialect.getTableTypeString() ).toString();
-	}
 
 	@Override
 	public String sqlDropString(SqlStringGenerationContext context, String defaultCatalog, String defaultSchema) {

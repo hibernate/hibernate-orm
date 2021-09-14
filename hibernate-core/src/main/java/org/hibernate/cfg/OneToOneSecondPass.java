@@ -215,6 +215,7 @@ public class OneToOneSecondPass implements SecondPass {
 						copy.setCheckConstraint( column.getCheckConstraint() );
 						copy.setComment( column.getComment() );
 						copy.setDefaultValue( column.getDefaultValue() );
+						copy.setGeneratedAs(column.getGeneratedAs() );
 						manyToOne.addColumn( copy );
 					}
 					mappedByJoin.addProperty( prop );
@@ -300,6 +301,7 @@ public class OneToOneSecondPass implements SecondPass {
 			copy.setCheckConstraint( column.getCheckConstraint() );
 			copy.setComment( column.getComment() );
 			copy.setDefaultValue( column.getDefaultValue() );
+			column.setGeneratedAs( column.getGeneratedAs() );
 			key.addColumn( copy );
 		}
 		persistentClass.addJoin( join );

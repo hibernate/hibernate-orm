@@ -3939,7 +3939,11 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
-	/**
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ") stored";
+	}
+
+    /**
 	 * Pluggable strategy for determining the Size to use for columns of
 	 * a given SQL type.
 	 *

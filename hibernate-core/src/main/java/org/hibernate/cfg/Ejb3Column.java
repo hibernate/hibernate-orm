@@ -7,7 +7,6 @@
 package org.hibernate.cfg;
 
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -15,6 +14,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
 import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.naming.Identifier;
@@ -70,6 +70,7 @@ public class Ejb3Column {
 	private String writeExpression;
 
 	private String defaultValue;
+	private String generatedAs;
 
 	private String comment;
 
@@ -204,6 +205,14 @@ public class Ejb3Column {
 		this.comment = comment;
 	}
 
+	public String getGeneratedAs() {
+		return generatedAs;
+	}
+
+	private void setGeneratedAs(String as) {
+		this.generatedAs = as;
+	}
+
 	public Ejb3Column() {
 	}
 
@@ -221,7 +230,10 @@ public class Ejb3Column {
 				mappingColumn.setDefaultValue( defaultValue );
 			}
 			if ( StringHelper.isNotEmpty( comment ) ) {
-				mappingColumn.setComment (comment );
+				mappingColumn.setComment( comment );
+			}
+			if ( generatedAs != null ) {
+				mappingColumn.setGeneratedAs( generatedAs );
 			}
 			if ( LOG.isDebugEnabled() ) {
 				LOG.debugf( "Binding column: %s", toString() );
@@ -597,6 +609,7 @@ public class Ejb3Column {
 
 					if ( length == 1 ) {
 						applyColumnDefault( column, inferredData );
+						applyGeneratedAs( column, inferredData );
 					}
 
 					column.setImplicit( false );
@@ -647,6 +660,21 @@ public class Ejb3Column {
 		else {
 			LOG.trace(
 					"Could not perform @ColumnDefault lookup as 'PropertyData' did not give access to XProperty"
+			);
+		}
+	}
+
+	private static void applyGeneratedAs(Ejb3Column column, PropertyData inferredData) {
+		final XProperty xProperty = inferredData.getProperty();
+		if ( xProperty != null ) {
+			Generated generatedAnn = xProperty.getAnnotation( Generated.class );
+			if ( generatedAnn != null && !generatedAnn.as().isEmpty() ) {
+				column.setGeneratedAs( generatedAnn.as() );
+			}
+		}
+		else {
+			LOG.trace(
+					"Could not perform @Generated lookup as 'PropertyData' did not give access to XProperty"
 			);
 		}
 	}
@@ -723,6 +751,7 @@ public class Ejb3Column {
 			column.setImplicit( true );
 		}
 		applyColumnDefault( column, inferredData );
+		applyGeneratedAs( column, inferredData );
 		column.extractDataFromPropertyData( inferredData );
 		column.bind();
 		return columns;

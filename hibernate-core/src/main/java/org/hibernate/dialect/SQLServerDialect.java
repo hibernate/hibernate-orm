@@ -886,4 +886,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 	}
 
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " as (" + generatedAs + ") persisted";
+	}
 }

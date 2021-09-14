@@ -6,13 +6,10 @@
  */
 package org.hibernate.cfg.annotations;
 
-import java.lang.annotation.Annotation;
-import java.util.Map;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.Version;
-
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -48,8 +45,10 @@ import org.hibernate.tuple.AttributeBinder;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.ValueGenerator;
-
 import org.jboss.logging.Logger;
+
+import java.lang.annotation.Annotation;
+import java.util.Map;
 
 import static org.hibernate.cfg.annotations.HCANNHelper.findContainingAnnotation;
 
@@ -391,11 +390,6 @@ public class PropertyBinder {
 			// if we have an in-db generator, mark it as not insertable nor updatable
 			insertable = false;
 			updatable = false;
-//			final GenerationTiming when = valueGeneration.getGenerationTiming();
-//			if ( when == GenerationTiming.ALWAYS ) {
-//				// it should also be not-updatable
-//				updatable = false;
-//			}
 		}
 
 		return valueGeneration;

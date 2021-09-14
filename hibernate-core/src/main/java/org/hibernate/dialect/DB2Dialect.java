@@ -719,4 +719,8 @@ public class DB2Dialect extends Dialect {
 		return BIND_PARAMETERS_NUMBER_LIMIT;
 	}
 
+	@Override
+	public String generatedAs(String generatedAs) {
+		return " generated always as (" + generatedAs + ")";
+	}
 }

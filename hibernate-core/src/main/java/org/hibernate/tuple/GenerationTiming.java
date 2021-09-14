@@ -7,9 +7,17 @@
 package org.hibernate.tuple;
 
 /**
+ * Represents the timing of {@link ValueGeneration value generation} that occurs
+ * in the Java program, or in the database.
+ *
  * @author Steve Ebersole
+ *
+ * @see ValueGeneration
  */
 public enum GenerationTiming {
+	/**
+	 * Value generation that never occurs.
+	 */
 	NEVER {
 		@Override
 		public boolean includesInsert() {
@@ -26,6 +34,9 @@ public enum GenerationTiming {
 			return false;
 		}
 	},
+	/**
+	 * Value generation that occurs when a row is inserted in the database.
+	 */
 	INSERT {
 		@Override
 		public boolean includesInsert() {
@@ -42,6 +53,9 @@ public enum GenerationTiming {
 			return timing.includesInsert();
 		}
 	},
+	/**
+	 * Value generation that occurs when a row is inserted or updated in the database.
+	 */
 	ALWAYS {
 		@Override
 		public boolean includesInsert() {
@@ -59,8 +73,15 @@ public enum GenerationTiming {
 		}
 	};
 
+	/**
+	 * Does value generation happen for SQL {@code INSERT} statements?
+	 */
 	public abstract boolean includesInsert();
+	/**
+	 * Does value generation happen for SQL {@code UPDATE} statements?
+	 */
 	public abstract boolean includesUpdate();
+
 	public abstract boolean includes(GenerationTiming timing);
 
 	public static GenerationTiming parseFromName(String name) {

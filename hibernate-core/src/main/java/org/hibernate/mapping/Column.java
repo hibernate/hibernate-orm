@@ -47,6 +47,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	private String checkConstraint;
 	private String comment;
 	private String defaultValue;
+	private String generatedAs;
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
@@ -442,6 +443,15 @@ public class Column implements Selectable, Serializable, Cloneable {
 		this.defaultValue = defaultValue;
 	}
 
+	public String getGeneratedAs() {
+		return generatedAs;
+	}
+
+	public void setGeneratedAs(String generatedAs) {
+		this.generatedAs = generatedAs;
+	}
+
+
 	public String getCustomWrite() {
 		return customWrite;
 	}
@@ -487,6 +497,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 		copy.setCheckConstraint( checkConstraint );
 		copy.setComment( comment );
 		copy.setDefaultValue( defaultValue );
+		copy.setGeneratedAs( generatedAs );
 		copy.setCustomRead( customRead );
 		copy.setCustomWrite( customWrite );
 		return copy;

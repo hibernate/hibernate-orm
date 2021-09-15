@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -26,7 +27,6 @@ import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
@@ -181,6 +181,20 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				deferredResultSetAccess
 		);
 
+		final boolean stats;
+		long startTime = 0;
+		final StatisticsImplementor statistics = executionContext.getSession().getFactory().getStatistics();
+		if ( executionContext.getQueryOptions().hasQueryExecutionToBeAddedToStatistics()
+				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
+			stats = statistics.isStatisticsEnabled();
+			if ( stats ) {
+				startTime = System.nanoTime();
+			}
+		}
+		else {
+			stats = false;
+		}
+
 		/*
 		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
 		 */
@@ -241,7 +255,24 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowReader
 		);
 
+		if ( stats ) {
+			final long endTime = System.nanoTime();
+			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			statistics.queryExecuted(
+					executionContext.getQueryIdentifier( jdbcSelect.getSql() ),
+					getResultSize( result ),
+					milliseconds
+			);
+		}
+
 		return result;
+	}
+
+	private <T> int getResultSize(T result) {
+		if ( result instanceof List ) {
+			return ( (List) result ).size();
+		}
+		return ( (ScrollableResultsImplementor) result ).getRowNumber();
 	}
 
 	@SuppressWarnings("unchecked")

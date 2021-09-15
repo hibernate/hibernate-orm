@@ -103,6 +103,11 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
+	public boolean hasQueryExecutionToBeAddedToStatistics() {
+		return true;
+	}
+
+	@Override
 	public LockOptions getLockOptions() {
 		return lockOptions;
 	}

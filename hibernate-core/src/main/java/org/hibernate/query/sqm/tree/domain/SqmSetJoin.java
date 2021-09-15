@@ -105,4 +105,9 @@ public class SqmSetJoin<O, E>
 				nodeBuilder()
 		);
 	}
+
+	@Override
+	public String getAlias() {
+		return getExplicitAlias();
+	}
 }

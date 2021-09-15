@@ -6,7 +6,7 @@
  */
 
 //$Id: Item.java 9587 2006-03-09 21:38:26Z steve.ebersole@jboss.com $
-package org.hibernate.test.querycache;
+package org.hibernate.orm.test.querycache;
 
 
 

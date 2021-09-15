@@ -9,7 +9,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.querycache">
+<hibernate-mapping package="org.hibernate.orm.test.querycache">
 	
 	<class name="Course">
 		<id name="courseCode">

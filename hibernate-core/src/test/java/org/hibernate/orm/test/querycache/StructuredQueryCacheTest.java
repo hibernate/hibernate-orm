@@ -4,11 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.querycache;
+package org.hibernate.orm.test.querycache;
 
 import java.io.Serializable;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -20,72 +19,72 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 
-import org.hibernate.CacheMode;
-import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalceca
  */
 @TestForIssue( jiraKey = "HHH-12107" )
-public class StructuredQueryCacheTest extends BaseNonConfigCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				StructuredQueryCacheTest.OneToManyWithEmbeddedId.class,
+				StructuredQueryCacheTest.OneToManyWithEmbeddedIdChild.class,
+				StructuredQueryCacheTest.OneToManyWithEmbeddedIdKey.class
+		},
+		concurrencyStrategy = "transactional"
+)
+@SessionFactory
+@ServiceRegistry(settings = {
+		@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "true" ),
+		@Setting( name = AvailableSettings.CACHE_REGION_PREFIX, value = "foo" ),
+		@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
+		@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+		@Setting( name = AvailableSettings.USE_STRUCTURED_CACHE, value = "true" ),
+})
+public class StructuredQueryCacheTest {
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-			OneToManyWithEmbeddedId.class,
-			OneToManyWithEmbeddedIdChild.class,
-			OneToManyWithEmbeddedIdKey.class
-		};
-	}
-
-	@Override
-	protected void addSettings(Map settings) {
-		settings.put( AvailableSettings.USE_QUERY_CACHE, "true" );
-		settings.put( AvailableSettings.CACHE_REGION_PREFIX, "foo" );
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		settings.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-		settings.put( AvailableSettings.USE_STRUCTURED_CACHE, "true" );
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
-
-	@Override
-	protected String getCacheConcurrencyStrategy() {
-		return "transactional";
+	@AfterEach
+	public void tearDown(SessionFactoryScope scope){
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "delete from OneToManyWithEmbeddedIdChild" ).executeUpdate();
+					session.createQuery( "delete from OneToManyWithEmbeddedId" ).executeUpdate();
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-12107" )
-	public void testEmbeddedIdInOneToMany() {
+	public void testEmbeddedIdInOneToMany(SessionFactoryScope scope) {
 
 		OneToManyWithEmbeddedIdKey key = new OneToManyWithEmbeddedIdKey( 1234 );
 		final OneToManyWithEmbeddedId o = new OneToManyWithEmbeddedId( key );
 		o.setItems( new HashSet<>() );
 		o.getItems().add( new OneToManyWithEmbeddedIdChild( 1 ) );
 
-		doInHibernate( this::sessionFactory, session -> {
-			session.persist( o );
-		});
+		scope.inTransaction( session ->
+			session.persist( o )
+		);
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			OneToManyWithEmbeddedId _entity = session.find( OneToManyWithEmbeddedId.class, key );
 			assertTrue( session.getSessionFactory().getCache().containsEntity( OneToManyWithEmbeddedId.class, key ) );
 			assertNotNull( _entity );
 		});
 
-		doInHibernate( this::sessionFactory, session -> {
+		scope.inTransaction( session -> {
 			OneToManyWithEmbeddedId _entity = session.find( OneToManyWithEmbeddedId.class, key );
 			assertTrue( session.getSessionFactory().getCache().containsEntity( OneToManyWithEmbeddedId.class, key ) );
 			assertNotNull( _entity );
@@ -96,6 +95,8 @@ public class StructuredQueryCacheTest extends BaseNonConfigCoreFunctionalTestCas
 	public static class OneToManyWithEmbeddedId {
 
 		private OneToManyWithEmbeddedIdKey id;
+
+		private String name;
 
 		private Set<OneToManyWithEmbeddedIdChild> items = new HashSet<>(  );
 
@@ -130,6 +131,8 @@ public class StructuredQueryCacheTest extends BaseNonConfigCoreFunctionalTestCas
 	public static class OneToManyWithEmbeddedIdChild {
 		private Integer id;
 
+		public String name;
+
 		public OneToManyWithEmbeddedIdChild() {
 		}
 
@@ -145,6 +148,14 @@ public class StructuredQueryCacheTest extends BaseNonConfigCoreFunctionalTestCas
 
 		public void setId(int id) {
 			this.id = id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 

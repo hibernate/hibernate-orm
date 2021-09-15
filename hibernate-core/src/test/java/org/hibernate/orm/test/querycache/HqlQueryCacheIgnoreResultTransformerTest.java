@@ -4,30 +4,22 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.querycache;
+package org.hibernate.orm.test.querycache;
 
 import org.junit.Test;
 
 import org.hibernate.CacheMode;
+import org.hibernate.orm.test.querycache.AbstractHqlQueryCacheResultTransformerTest;
+
 import org.hibernate.testing.FailureExpected;
 
 /**
  * @author Gail Badner
  */
-public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCacheResultTransformerTest {
+public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractHqlQueryCacheResultTransformerTest {
 	@Override
 	protected CacheMode getQueryCacheMode() {
 		return CacheMode.IGNORE;
-	}
-
-	@Override
-	protected void runTest(HqlExecutor hqlExecutor, CriteriaExecutor criteriaExecutor, ResultChecker checker, boolean isSingleResult)
-		throws Exception {
-		createData();
-		if ( hqlExecutor != null ) {
-			runTest( hqlExecutor, checker, isSingleResult );
-		}
-		deleteData();
 	}
 
 	@Test
@@ -53,7 +45,6 @@ public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCache
 
 	@Test
 	@Override
-	@FailureExpected( jiraKey = "HHH-3345", message = "HQL query using 'select new' and 'join fetch'" )
 	public void testMultiSelectNewMapUsingAliasesWithFetchJoinList() throws Exception {
 		super.testMultiSelectNewMapUsingAliasesWithFetchJoinList();
 	}

@@ -6,7 +6,7 @@
  */
 
 //$Id: Student.java 9116 2006-01-23 21:21:01Z steveebersole $
-package org.hibernate.test.querycache;
+package org.hibernate.orm.test.querycache;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

@@ -9,7 +9,7 @@
  * Created on 28-Jan-2005
  *
  */
-package org.hibernate.test.querycache;
+package org.hibernate.orm.test.querycache;
 
 
 /**

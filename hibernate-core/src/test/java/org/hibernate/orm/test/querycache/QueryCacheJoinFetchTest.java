@@ -4,11 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.querycache;
+package org.hibernate.orm.test.querycache;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -24,39 +23,36 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue( jiraKey = "HHH-12430" )
-public class QueryCacheJoinFetchTest extends BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
-
-	protected void addConfigOptions(Map options) {
-		options.put( AvailableSettings.USE_QUERY_CACHE, "true" );
-		options.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true" );
-		options.put( AvailableSettings.GENERATE_STATISTICS, "true" );
-	}
+@TestForIssue(jiraKey = "HHH-12430")
+@Jpa(
+		annotatedClasses = {
+				QueryCacheJoinFetchTest.Person.class,
+				QueryCacheJoinFetchTest.Phone.class
+		},
+		generateStatistics = true,
+		integrationSettings = {
+				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
+		}
+)
+public class QueryCacheJoinFetchTest {
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12430" )
-	public void testLifecycle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testLifecycle(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			Person person = new Person();
 			Phone phone1 = new Phone( "123-456-7890" );
 			Phone phone2 = new Phone( "321-654-0987" );
@@ -66,38 +62,38 @@ public class QueryCacheJoinFetchTest extends BaseEntityManagerFunctionalTestCase
 			entityManager.persist( person );
 		} );
 
-		entityManagerFactory().getCache().evictAll();
-		entityManagerFactory().unwrap( SessionFactory.class ).getStatistics().clear();
+		scope.getEntityManagerFactory().getCache().evictAll();
+		scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics().clear();
 
-		Person person = doInJPA( this::entityManagerFactory, entityManager -> {
+		Person person = scope.fromEntityManager( entityManager -> {
 			return entityManager.createQuery(
-				"select distinct p " +
-				"from Person p " +
-				"join fetch p.phones ph", Person.class )
-			.setHint( QueryHints.CACHEABLE, Boolean.TRUE )
-			.getSingleResult();
+							"select distinct p " +
+									"from Person p " +
+									"join fetch p.phones ph", Person.class )
+					.setHint( QueryHints.CACHEABLE, Boolean.TRUE )
+					.getSingleResult();
 		} );
 
 		assertEquals( 2, person.getPhones().size() );
 		assertEquals(
 				0,
-				entityManagerFactory().unwrap( SessionFactory.class ).getStatistics().getQueryCacheHitCount()
+				scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics().getQueryCacheHitCount()
 		);
 
-		person = doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.getEntityManagerFactory().getCache().evictAll();
+		person = scope.fromEntityManager( entityManager -> {
+			scope.getEntityManagerFactory().getCache().evictAll();
 
 			return entityManager.createQuery(
-				"select distinct p " +
-				"from Person p " +
-				"join fetch p.phones ph", Person.class )
-			.setHint( QueryHints.CACHEABLE, Boolean.TRUE )
-			.getSingleResult();
+							"select distinct p " +
+									"from Person p " +
+									"join fetch p.phones ph", Person.class )
+					.setHint( QueryHints.CACHEABLE, Boolean.TRUE )
+					.getSingleResult();
 		} );
 
 		assertEquals(
 				1,
-				entityManagerFactory().unwrap( SessionFactory.class ).getStatistics().getQueryCacheHitCount()
+				scope.getEntityManagerFactory().unwrap( SessionFactory.class ).getStatistics().getQueryCacheHitCount()
 		);
 
 		assertEquals( 2, person.getPhones().size() );

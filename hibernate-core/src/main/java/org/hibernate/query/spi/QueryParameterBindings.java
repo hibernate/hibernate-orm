@@ -91,6 +91,9 @@ public interface QueryParameterBindings {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
+	};
+
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
 		public boolean isBound(QueryParameterImplementor parameter) {
@@ -123,6 +126,11 @@ public interface QueryParameterBindings {
 		@Override
 		public boolean hasAnyMultiValuedBindings() {
 			return false;
+		}
+
+		@Override
+		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
+			return NO_PARAMETER_BINDING_MEMENTO;
 		}
 	};
 }

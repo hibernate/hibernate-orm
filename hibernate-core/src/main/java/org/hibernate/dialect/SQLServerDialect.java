@@ -16,7 +16,7 @@ import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
-import org.hibernate.dialect.sequence.SQLServer13SequenceSupport;
+import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -288,7 +288,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeTableName() {
-		if ( getVersion() >= 13 ) {
+		if ( getVersion() >= 16 ) {
 			return true;
 		}
 		return super.supportsIfExistsBeforeTableName();
@@ -296,7 +296,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsIfExistsBeforeConstraintName() {
-		if ( getVersion() >= 13 ) {
+		if ( getVersion() >= 16 ) {
 			return true;
 		}
 		return super.supportsIfExistsBeforeConstraintName();
@@ -445,8 +445,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		if ( getVersion() < 11 ) {
 			return NoSequenceSupport.INSTANCE;
 		}
-		else if ( getVersion() >= 13 ) {
-			return SQLServer13SequenceSupport.INSTANCE;
+		else if ( getVersion() >= 16 ) {
+			return SQLServer16SequenceSupport.INSTANCE;
 		}
 		else {
 			return SQLServerSequenceSupport.INSTANCE;
@@ -753,7 +753,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	protected String getDropSequenceString(String sequenceName) throws MappingException {
-		if ( getVersion() >= 13 ) {
+		if ( getVersion() >= 16 ) {
 			return "drop sequence if exists " + sequenceName;
 		}
 		return super.getDropSequenceString( sequenceName );
@@ -761,7 +761,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
-		if ( getVersion() >= 13 ) {
+		if ( getVersion() >= 16 ) {
 			return new String[] { "drop schema if exists " + schemaName };
 		}
 		return super.getDropSchemaCommand( schemaName );

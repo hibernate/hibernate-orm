@@ -8,8 +8,8 @@ package org.hibernate.dialect.sequence;
 
 import org.hibernate.MappingException;
 
-public class SQLServer13SequenceSupport extends SQLServerSequenceSupport{
-	public static final SequenceSupport INSTANCE = new SQLServer13SequenceSupport();
+public class SQLServer16SequenceSupport extends SQLServerSequenceSupport{
+	public static final SequenceSupport INSTANCE = new SQLServer16SequenceSupport();
 
 	@Override
 	public String getDropSequenceString(String sequenceName) throws MappingException {

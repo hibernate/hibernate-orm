@@ -348,13 +348,23 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						cacheMode.name()
 			);
 			cachedResults = null;
-			queryResultsCacheKey = null;
+			if ( queryCacheEnabled ) {
+				queryResultsCacheKey = QueryKey.from(
+						jdbcSelect.getSql(),
+						executionContext.getQueryOptions().getLimit(),
+						executionContext.getQueryParameterBindings(),
+						session
+				);
+			}
+			else {
+				queryResultsCacheKey = null;
+			}
 		}
 
 		if ( cachedResults == null ) {
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
-					canBeCached ? queryResultsCacheKey : null,
+					canBeCached && queryCacheEnabled ? queryResultsCacheKey : null,
 					queryIdentifier,
 					executionContext.getQueryOptions(),
 					jdbcValuesMapping,

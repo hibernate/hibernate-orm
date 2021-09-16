@@ -1794,9 +1794,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private AssociationOverrides getAssociationOverrides(ManagedType root, XMLContext.Default defaults) {
-		return root instanceof JaxbEntity
-				? getAssociationOverrides( ( (JaxbEntity) root ).getAssociationOverride(), defaults, true )
-				: null;
+		return getAssociationOverrides(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getAssociationOverride() : Collections.emptyList(),
+				defaults, true
+		);
 	}
 
 	/**
@@ -1880,9 +1881,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private AttributeOverrides getAttributeOverrides(ManagedType root, XMLContext.Default defaults) {
-		return root instanceof JaxbEntity
-				? getAttributeOverrides( ( (JaxbEntity) root ).getAttributeOverride(), defaults, true )
-				: null;
+		return getAttributeOverrides(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getAttributeOverride() : Collections.emptyList(),
+				defaults, true
+		);
 	}
 
 	/**
@@ -2741,9 +2743,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private PrimaryKeyJoinColumns getPrimaryKeyJoinColumns(ManagedType root, XMLContext.Default defaults) {
-		return root instanceof JaxbEntity
-				? getPrimaryKeyJoinColumns( ( (JaxbEntity) root ).getPrimaryKeyJoinColumn(), defaults, true )
-				: null;
+		return getPrimaryKeyJoinColumns(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getPrimaryKeyJoinColumn() : Collections.emptyList(),
+				defaults, true
+		);
 	}
 
 	/**

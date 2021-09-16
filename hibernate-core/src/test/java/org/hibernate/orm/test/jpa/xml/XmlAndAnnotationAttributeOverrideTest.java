@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.xml;
+package org.hibernate.orm.test.jpa.xml;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,40 +17,36 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.test.util.SchemaUtil;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
 
-public class XmlAndAnnotationAttributeOverrideTest extends BaseEntityManagerFunctionalTestCase {
+import org.hibernate.orm.test.util.SchemaUtil;
+
+import org.junit.jupiter.api.Test;
+
+@Jpa(annotatedClasses = {
+		XmlAndAnnotationAttributeOverrideTest.MappedSuperclassType.class, XmlAndAnnotationAttributeOverrideTest.DerivedEntityType.class, XmlAndAnnotationAttributeOverrideTest.EmbeddableType.class
+},
+		// Using an empty orm.xml: the mere presence of an orm.xml used to trigger the bug,
+		// regardless of its content
+		xmlMappings = "org/hibernate/jpa/test/xml/orm-empty.xml"
+
+)
+public class XmlAndAnnotationAttributeOverrideTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-14827")
-	public void testDerivedClassAttributeOverriding() {
-		assertThat( SchemaUtil.getColumnNames( entityManagerFactory(), DerivedEntityType.class ) )
+	public void testDerivedClassAttributeOverriding(EntityManagerFactoryScope scope) {
+		assertThat( SchemaUtil.getColumnNames( scope.getEntityManagerFactory(), DerivedEntityType.class ) )
 				.contains( "custom_name" )
 				.doesNotContain( "name" );
 	}
 
 	@Test
-	public void testEmbeddedAttributeOverriding() {
-		assertThat( SchemaUtil.getColumnNames( entityManagerFactory(), DerivedEntityType.class ) )
+	public void testEmbeddedAttributeOverriding(EntityManagerFactoryScope scope) {
+		assertThat( SchemaUtil.getColumnNames( scope.getEntityManagerFactory(), DerivedEntityType.class ) )
 				.contains( "custom_embeddable_name" )
 				.doesNotContain( "embeddable_name" );
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { MappedSuperclassType.class, DerivedEntityType.class, EmbeddableType.class };
-	}
-
-	@Override
-	public String[] getEjb3DD() {
-		return new String[] {
-				// Using an empty orm.xml: the mere presence of an orm.xml used to trigger the bug,
-				// regardless of its content.
-				"org/hibernate/jpa/test/xml/orm-empty.xml"
-		};
 	}
 
 	@MappedSuperclass

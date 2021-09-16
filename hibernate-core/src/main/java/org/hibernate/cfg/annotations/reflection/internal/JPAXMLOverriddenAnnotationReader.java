@@ -1880,9 +1880,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	}
 
 	private AttributeOverrides getAttributeOverrides(ManagedType root, XMLContext.Default defaults) {
-		return root instanceof JaxbEntity
-				? getAttributeOverrides( ( (JaxbEntity) root ).getAttributeOverride(), defaults, true )
-				: null;
+		return getAttributeOverrides(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getAttributeOverride() : Collections.emptyList(),
+				defaults, true
+		);
 	}
 
 	/**

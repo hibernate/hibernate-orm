@@ -8,8 +8,13 @@ package org.hibernate.metamodel.mapping;
 
 
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.mapping.IndexedConsumer;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 
 /**
  * Support for composite identifier mappings
@@ -32,5 +37,10 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping {
 		for ( int i = 0; i < attributes.size(); i++ ) {
 			consumer.accept( i, attributes.get( i ) );
 		}
+	}
+
+	@Override
+	default IdentifierValue getUnsavedStrategy() {
+		return IdentifierValue.UNDEFINED;
 	}
 }

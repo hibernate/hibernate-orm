@@ -74,11 +74,6 @@ public final class EntityIdentifierDefinitionHelper {
 			private final CompositionDefinitionAdapter compositionDefinition = new CompositionDefinitionAdapter( entityPersister );
 
 			@Override
-			public Iterable<AttributeDefinition> getAttributes() {
-				return compositionDefinition.getAttributes();
-			}
-
-			@Override
 			public Class getSeparateIdentifierMappingClass() {
 				return entityPersister.getEntityMetamodel().getIdentifierProperty().hasIdentifierMapper() ?
 						entityPersister.getEntityMetamodel().getIdentifierProperty().getType().getReturnedClass() :
@@ -175,9 +170,5 @@ public final class EntityIdentifierDefinitionHelper {
 			return (CompositeType) super.getType();
 		}
 
-		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
-			return  CompositionSingularSubAttributesHelper.getIdentifierSubAttributes( (AbstractEntityPersister) getEntityPersister() );
-		}
 	}
 }

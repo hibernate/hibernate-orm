@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.dynamicmap;
+package org.hibernate.orm.test.mapping.dynamic.map;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,9 +23,7 @@ import static org.junit.Assert.assertThat;
 public class DynamicMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
-		return new String[] {
-				"/dynamicmap/Test.hbm.xml"
-		};
+		return new String[] { "/org/hibernate/orm/test/mapping/dynamic/map/Test.hbm.xml" };
 	}
 
 	@Test

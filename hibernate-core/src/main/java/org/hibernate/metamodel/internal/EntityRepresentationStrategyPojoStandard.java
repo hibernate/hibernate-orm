@@ -6,6 +6,7 @@
  */
 package org.hibernate.metamodel.internal;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -154,31 +155,30 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		this.reflectionOptimizer = resolveReflectionOptimizer( bootDescriptor, bytecodeProvider, sessionFactory );
 
+		instantiator = determineInstantiator( bootDescriptor, runtimeDescriptor, entityMetamodel );
+	}
+
+	private EntityInstantiator determineInstantiator(PersistentClass bootDescriptor, EntityPersister runtimeDescriptor, EntityMetamodel entityMetamodel) {
+		if ( runtimeDescriptor.isAbstract() ) {
+			return new EntityInitiatorPojoIllegal( runtimeDescriptor );
+		}
+
 		if ( reflectionOptimizer != null && reflectionOptimizer.getInstantiationOptimizer() != null ) {
 			final InstantiationOptimizer instantiationOptimizer = reflectionOptimizer.getInstantiationOptimizer();
-			this.instantiator = new EntityInstantiatorPojoOptimized(
+			return new EntityInstantiatorPojoOptimized(
 					entityMetamodel,
 					bootDescriptor,
 					mappedJtd,
 					instantiationOptimizer
 			);
 		}
-		else {
-			this.instantiator = new EntityInstantiatorPojoStandard( entityMetamodel, bootDescriptor, mappedJtd );
-		}
-	}
 
-	private PropertyAccess resolveIdentifierPropertyAccess(PersistentClass bootDescriptor) {
-		final Property identifierProperty = bootDescriptor.getIdentifierProperty();
-
-		if ( identifierProperty == null ) {
-			return PropertyAccessStrategyEmbeddedImpl.INSTANCE.buildPropertyAccess(
-					proxyJtd != null ? proxyJtd.getJavaTypeClass() : mappedJtd.getJavaTypeClass(),
-					"id"
-			);
+		final Constructor<?> constructor = EntityInstantiatorPojoStandard.resolveConstructor( bootDescriptor.getMappedClass() );
+		if ( constructor == null ) {
+			return new EntityInitiatorPojoIllegal( runtimeDescriptor );
 		}
 
-		return makePropertyAccess( identifierProperty );
+		return new EntityInstantiatorPojoStandard( constructor, entityMetamodel, bootDescriptor, mappedJtd );
 	}
 
 	private ProxyFactory createProxyFactory(

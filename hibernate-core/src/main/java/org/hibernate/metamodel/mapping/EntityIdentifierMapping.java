@@ -6,20 +6,30 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import java.util.function.Supplier;
+
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 
 /**
+ * Describes the mapping of an entity's identifier.
+ *
  * @author Steve Ebersole
  */
 public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 	String ROLE_LOCAL_NAME = "{id}";
 
-	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
-	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
-	Object instantiate();
-
 	@Override
 	default String getPartName() {
 		return ROLE_LOCAL_NAME;
 	}
+
+	IdentifierValue getUnsavedStrategy();
+
+	Object getIdentifier(Object entity, SharedSessionContractImplementor session);
+	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
+	Object instantiate();
 }

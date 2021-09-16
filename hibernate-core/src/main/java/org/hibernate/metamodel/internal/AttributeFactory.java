@@ -690,10 +690,6 @@ public class AttributeFactory {
 			final EntityPersister declaringEntityMapping = getDeclaringEntity( identifiableType, metadataContext );
 			final EntityMetamodel entityMetamodel = declaringEntityMapping.getEntityMetamodel();
 			final String versionPropertyName = attributeContext.getPropertyMapping().getName();
-			if ( !versionPropertyName.equals( entityMetamodel.getVersionProperty().getName() ) ) {
-				// this should never happen, but to be safe...
-				throw new IllegalArgumentException( "Given property did not match declared version property" );
-			}
 
 			final Getter getter = declaringEntityMapping.getRepresentationStrategy().resolvePropertyAccess( attributeContext.getPropertyMapping() ).getGetter();
 			if ( PropertyAccessMapImpl.GetterImpl.class.isInstance( getter ) ) {

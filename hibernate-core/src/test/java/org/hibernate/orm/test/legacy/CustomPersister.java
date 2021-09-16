@@ -27,18 +27,13 @@ import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.cache.spi.entry.StandardCacheEntryImpl;
 import org.hibernate.cache.spi.entry.UnstructuredCacheEntry;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
-import org.hibernate.engine.internal.TwoPhaseLoad;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.EntityEntryFactory;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
-import org.hibernate.event.spi.EventSource;
-import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -57,9 +52,6 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -780,16 +772,6 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public EntityIdentifierDefinition getEntityKeyDefinition() {
-		throw new NotYetImplementedException();
-	}
-
-	@Override
-	public Iterable<AttributeDefinition> getAttributes() {
-		throw new NotYetImplementedException();
-	}
-
-    @Override
     public int[] resolveAttributeIndexes(String[] attributeNames) {
         return null;
     }

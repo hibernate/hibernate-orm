@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
@@ -171,11 +170,6 @@ public class PojoEntityTuplizer extends AbstractEntityTuplizer {
 
 	protected Object[] getPropertyValuesWithOptimizer(Object object) {
 		return optimizer.getAccessOptimizer().getPropertyValues( object );
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return EntityMode.POJO;
 	}
 
 	@Override

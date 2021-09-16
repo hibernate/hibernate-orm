@@ -8,7 +8,6 @@ package org.hibernate.tuple.entity;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
-import org.hibernate.engine.internal.JoinHelper;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,7 +21,6 @@ import org.hibernate.persister.walking.internal.FetchOptionsHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
 import org.hibernate.persister.walking.spi.AssociationAttributeDefinition;
-import org.hibernate.persister.walking.spi.AssociationKey;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.persister.walking.spi.WalkingException;
@@ -30,11 +28,8 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.tuple.BaselineAttributeInformation;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
-import org.hibernate.type.ForeignKeyDirection;
 
 import static org.hibernate.engine.internal.JoinHelper.getLHSColumnNames;
-import static org.hibernate.engine.internal.JoinHelper.getLHSTableName;
-import static org.hibernate.engine.internal.JoinHelper.getRHSColumnNames;
 
 /**
 * @author Steve Ebersole
@@ -57,45 +52,6 @@ public class EntityBasedAssociationAttribute
 	@Override
 	public AssociationType getType() {
 		return (AssociationType) super.getType();
-	}
-	@Override
-	public AssociationKey getAssociationKey() {
-		final AssociationType type = getType();
-
-		if ( type.isAnyType() ) {
-			return new AssociationKey(
-					JoinHelper.getLHSTableName( type, attributeNumber(), (OuterJoinLoadable) getSource() ),
-					JoinHelper.getLHSColumnNames(
-							type,
-							attributeNumber(),
-							0,
-							(OuterJoinLoadable) getSource(),
-							sessionFactory()
-					)
-			);
-		}
-
-		final Joinable joinable = type.getAssociatedJoinable( sessionFactory() );
-
-		if ( type.getForeignKeyDirection() == ForeignKeyDirection.FROM_PARENT ) {
-			final String lhsTableName;
-			final String[] lhsColumnNames;
-
-			if ( joinable.isCollection() ) {
-				final QueryableCollection collectionPersister = (QueryableCollection) joinable;
-				lhsTableName = collectionPersister.getTableName();
-				lhsColumnNames = collectionPersister.getElementColumnNames();
-			}
-			else {
-				final OuterJoinLoadable entityPersister = (OuterJoinLoadable) source();
-				lhsTableName = getLHSTableName( type, attributeNumber(), entityPersister );
-				lhsColumnNames = getLHSColumnNames( type, attributeNumber(), entityPersister, sessionFactory() );
-			}
-			return new AssociationKey( lhsTableName, lhsColumnNames );
-		}
-		else {
-			return new AssociationKey( joinable.getTableName(), getRHSColumnNames( type, sessionFactory() ) );
-		}
 	}
 
 	@Override

@@ -18,4 +18,8 @@ public interface EntityInstantiator extends Instantiator {
 	 * Create an instance of managed entity
 	 */
 	Object instantiate(SessionFactoryImplementor sessionFactory);
+
+	default boolean canBeInstantiated() {
+		return true;
+	}
 }

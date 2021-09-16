@@ -16,10 +16,8 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
@@ -31,11 +29,9 @@ import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
-import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
 
 /**
  * Responsible for generation of runtime metamodel {@link Property} representations.
@@ -88,52 +84,6 @@ public final class PropertyFactory {
 					generator
 			);
 		}
-	}
-
-	/**
-	 * Generates a VersionProperty representation for an entity mapping given its
-	 * version mapping Property.
-	 *
-	 * @param property The version mapping Property.
-	 * @param lazyAvailable Is property lazy loading currently available.
-	 *
-	 * @return The appropriate VersionProperty definition.
-	 */
-	public static VersionProperty buildVersionProperty(
-			EntityPersister persister,
-			SessionFactoryImplementor sessionFactory,
-			int attributeNumber,
-			Property property,
-			boolean lazyAvailable) {
-		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
-
-		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
-				mappedUnsavedValue,
-				getGetter( property ),
-				(VersionType) property.getType(),
-				getConstructor( property.getPersistentClass() )
-		);
-
-		boolean lazy = lazyAvailable && property.isLazy();
-
-		return new VersionProperty(
-				persister,
-				sessionFactory,
-				attributeNumber,
-				property.getName(),
-				property.getValue().getType(),
-				new BaselineAttributeInformation.Builder()
-						.setLazy( lazy )
-						.setInsertable( property.isInsertable() )
-						.setUpdateable( property.isUpdateable() )
-						.setValueGenerationStrategy( property.getValueGenerationStrategy() )
-						.setNullable( property.isOptional() )
-						.setDirtyCheckable( property.isUpdateable() && !lazy )
-						.setVersionable( property.isOptimisticLocked() )
-						.setCascadeStyle( property.getCascadeStyle() )
-						.createInformation(),
-				unsavedValue
-		);
 	}
 
 	public static enum NonIdentifierAttributeNature {

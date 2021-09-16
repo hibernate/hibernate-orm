@@ -15,5 +15,4 @@ import org.hibernate.persister.entity.EntityPersister;
  */
 public interface EntityDefinition extends AttributeSource {
 	public EntityPersister getEntityPersister();
-	public EntityIdentifierDefinition getEntityKeyDefinition();
 }

@@ -6,7 +6,6 @@
  */
 package org.hibernate.tuple.entity;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -25,7 +24,6 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.id.Assigned;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.KeyValue;
@@ -38,7 +36,6 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.Instantiator;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.ComponentType;
@@ -222,7 +219,7 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 					throw new HibernateException( "The class has no identifier property: " + getEntityName() );
 				}
 				else {
-					id = mappedIdentifierValueMarshaller.getIdentifier( entity, getEntityMode(), session );
+					id = mappedIdentifierValueMarshaller.getIdentifier( entity, null, session );
 				}
 			}
 			else {
@@ -257,14 +254,14 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		if ( entityMetamodel.getIdentifierProperty().isEmbedded() ) {
 			if ( entity != id ) {
 				CompositeType copier = (CompositeType) entityMetamodel.getIdentifierProperty().getType();
-				copier.setPropertyValues( entity, copier.getPropertyValues( id, getEntityMode() ), getEntityMode() );
+				copier.setPropertyValues( entity, copier.getPropertyValues( id, (EntityMode) null ), null );
 			}
 		}
 		else if ( idSetter != null ) {
 			idSetter.set( entity, id, getFactory() );
 		}
 		else if ( identifierMapperType != null ) {
-			mappedIdentifierValueMarshaller.setIdentifier( entity, id, getEntityMode(), session );
+			mappedIdentifierValueMarshaller.setIdentifier( entity, id, null, session );
 		}
 	}
 
@@ -502,49 +499,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 		return metamodel.entityPersister( entityName );
 	}
 
-	@Override
-	public void resetIdentifier(Object entity, Object currentId, Object currentVersion) {
-		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
-		// interpretations of JPA 2 "derived identity" support
-		resetIdentifier( entity, currentId, currentVersion, null );
-	}
-
-	@Override
-	public void resetIdentifier(
-			Object entity,
-			Object currentId,
-			Object currentVersion,
-			SharedSessionContractImplementor session) {
-		//noinspection StatementWithEmptyBody
-		final IdentifierProperty identifierProperty = entityMetamodel.getIdentifierProperty();
-		if ( identifierProperty.getIdentifierGenerator() instanceof Assigned ) {
-		}
-		else {
-			//reset the id
-			Object result = identifierProperty
-					.getUnsavedValue()
-					.getDefaultValue( currentId );
-			setIdentifier( entity, result, session );
-			//reset the version
-			VersionProperty versionProperty = entityMetamodel.getVersionProperty();
-			if ( entityMetamodel.isVersioned() ) {
-				setPropertyValue(
-						entity,
-						entityMetamodel.getVersionPropertyIndex(),
-						versionProperty.getUnsavedValue().getDefaultValue( currentVersion )
-				);
-			}
-		}
-	}
-
-	@Override
-	public Object getVersion(Object entity) throws HibernateException {
-		if ( !entityMetamodel.isVersioned() ) {
-			return null;
-		}
-		return getters[entityMetamodel.getVersionPropertyIndex()].get( entity );
-	}
-
 	protected boolean shouldGetAllProperties(Object entity) {
 		final BytecodeEnhancementMetadata bytecodeEnhancementMetadata = getEntityMetamodel().getBytecodeEnhancementMetadata();
 		if ( !bytecodeEnhancementMetadata.isEnhancedForLazyLoading() ) {
@@ -690,13 +644,6 @@ public abstract class AbstractEntityTuplizer implements EntityTuplizer {
 	@Override
 	public void setPropertyValue(Object entity, String propertyName, Object value) throws HibernateException {
 		setters[entityMetamodel.getPropertyIndex( propertyName )].set( entity, value, getFactory() );
-	}
-
-	@Override
-	public final Object instantiate(Object id) throws HibernateException {
-		// 99% of the time the session is not needed.  It's only needed for certain brain-dead
-		// interpretations of JPA 2 "derived identity" support
-		return instantiate( id, null );
 	}
 
 	@Override

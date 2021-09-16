@@ -6,18 +6,22 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
+import java.util.function.Supplier;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.VersionValue;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
 import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.Primitive;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -25,6 +29,104 @@ import org.hibernate.type.VersionType;
  * @author Gavin King
  */
 public class UnsavedValueFactory {
+
+	/**
+	 * Return the UnsavedValueStrategy for determining whether an entity instance is
+	 * unsaved based on the identifier.  If an explicit strategy is not specified, determine
+	 * the unsaved value by instantiating an instance of the entity and reading the value of
+	 * its id property, or if that is not possible, using the java default value for the type
+	 */
+	public static IdentifierValue getUnsavedIdentifierValue(
+			KeyValue bootIdMapping,
+			JavaTypeDescriptor<?> idJtd,
+			Getter getter,
+			Supplier<?> templateInstanceAccess,
+			SessionFactoryImplementor sessionFactory) {
+		final String unsavedValue = bootIdMapping.getNullValue();
+
+		if ( unsavedValue == null ) {
+			if ( getter != null && templateInstanceAccess != null ) {
+				// use the id value of a newly instantiated instance as the unsaved-value
+				final Object templateInstance = templateInstanceAccess.get();
+				final Object defaultValue = getter.get( templateInstance );
+				return new IdentifierValue( defaultValue );
+			}
+			else if ( idJtd instanceof Primitive ) {
+				return new IdentifierValue( ( (Primitive<?>) idJtd ).getDefaultValue() );
+			}
+			else {
+				return IdentifierValue.NULL;
+			}
+		}
+		else if ( "null".equals( unsavedValue ) ) {
+			return IdentifierValue.NULL;
+		}
+		else if ( "undefined".equals( unsavedValue ) ) {
+			return IdentifierValue.UNDEFINED;
+		}
+		else if ( "none".equals( unsavedValue ) ) {
+			return IdentifierValue.NONE;
+		}
+		else if ( "any".equals( unsavedValue ) ) {
+			return IdentifierValue.ANY;
+		}
+		else {
+			return new IdentifierValue( idJtd.fromString( unsavedValue ) );
+		}
+	}
+
+	/**
+	 * Return the UnsavedValueStrategy for determining whether an entity instance is
+	 * unsaved based on the version.  If an explicit strategy is not specified, determine the
+	 * unsaved value by instantiating an instance of the entity and reading the value of its
+	 * version property, or if that is not possible, using the java default value for the type
+	 */
+	public static VersionValue getUnsavedVersionValue(
+			KeyValue bootVersionMapping,
+			JavaTypeDescriptor jtd,
+			Getter getter,
+			Supplier<?> templateInstanceAccess,
+			VersionType versionType,
+			SessionFactoryImplementor sessionFactory) {
+		final String unsavedValue = bootVersionMapping.getNullValue();
+		if ( unsavedValue == null ) {
+			if ( getter != null && templateInstanceAccess != null ) {
+				final Object templateInstance = templateInstanceAccess.get();
+				final Object defaultValue = getter.get( templateInstance );
+
+				// if the version of a newly instantiated object is not the same
+				// as the version seed value, use that as the unsaved-value
+				final Object seedValue = versionType.seed( null );
+				return jtd.areEqual( seedValue, defaultValue )
+						? VersionValue.UNDEFINED
+						: new VersionValue( defaultValue );
+			}
+			else {
+				return VersionValue.UNDEFINED;
+			}
+		}
+		else if ( "undefined".equals( unsavedValue ) ) {
+			return VersionValue.UNDEFINED;
+		}
+		else if ( "null".equals( unsavedValue ) ) {
+			return VersionValue.NULL;
+		}
+		else if ( "negative".equals( unsavedValue ) ) {
+			return VersionValue.NEGATIVE;
+		}
+		else {
+			// this should not happen since the DTD prevents it
+			throw new MappingException( "Could not parse version unsaved-value: " + unsavedValue );
+		}
+
+	}
+
+
+
+
+
+
+
 
 	/**
 	 * Instantiate a class using the provided Constructor
@@ -47,7 +149,7 @@ public class UnsavedValueFactory {
 	/**
 	 * Return an IdentifierValue for the specified unsaved-value. If none is specified, 
 	 * guess the unsaved value by instantiating a test instance of the class and
-	 * reading it's id property, or if that is not possible, using the java default
+	 * reading the value of its id property, or if that is not possible, using the java default
 	 * value for the type
 	 *
 	 * @param unsavedValue The mapping defined unsaved value

@@ -85,10 +85,8 @@ import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.internal.CompositionSingularSubAttributesHelper;
 import org.hibernate.persister.walking.internal.StandardAnyTypeDefinition;
 import org.hibernate.persister.walking.spi.AnyMappingDefinition;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.persister.walking.spi.CollectionDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
@@ -2265,10 +2263,6 @@ public abstract class AbstractCollectionPersister
 					}
 
 					@Override
-					public Iterable<AttributeDefinition> getAttributes() {
-						return CompositionSingularSubAttributesHelper.getCompositeCollectionIndexSubAttributes( this );
-					}
-					@Override
 					public CollectionDefinition getCollectionDefinition() {
 						return AbstractCollectionPersister.this;
 					}
@@ -2344,11 +2338,6 @@ public abstract class AbstractCollectionPersister
 						// TODO: what if this is a collection w/in an encapsulated composition attribute?
 						// should return the encapsulated composition attribute instead???
 						return getOwnerEntityPersister();
-					}
-
-					@Override
-					public Iterable<AttributeDefinition> getAttributes() {
-						return CompositionSingularSubAttributesHelper.getCompositeCollectionElementSubAttributes( this );
 					}
 
 					@Override

@@ -11,7 +11,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTuplizerType;
-import org.hibernate.tuple.entity.DynamicMapEntityTuplizer;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -31,19 +30,25 @@ public class EntityModeConverterTest extends BaseUnitTestCase {
 		XmlBindingChecker.checkValidGeneration( generateXml( true ) );
 	}
 
-	private JaxbHbmHibernateMapping generateXml(boolean includeEntityMode)
-			throws Exception {
-		JaxbHbmHibernateMapping hm = new JaxbHbmHibernateMapping();
-		JaxbHbmRootEntityType clazz = new JaxbHbmRootEntityType();
-		JaxbHbmTuplizerType tuplizer = new JaxbHbmTuplizerType();
-		tuplizer.setClazz( DynamicMapEntityTuplizer.class.getCanonicalName() );
-		if ( includeEntityMode ) {
-			tuplizer.setEntityMode( EntityMode.MAP );
-		}
-		clazz.getTuplizer().add( tuplizer );
-		JaxbHbmSimpleIdType id = new JaxbHbmSimpleIdType();
-		clazz.setId( id );
+	private JaxbHbmHibernateMapping generateXml(boolean includeEntityMode) {
+		final JaxbHbmHibernateMapping hm = new JaxbHbmHibernateMapping();
+
+		final JaxbHbmRootEntityType clazz = new JaxbHbmRootEntityType();
 		hm.getClazz().add( clazz );
+
+		final JaxbHbmSimpleIdType id = new JaxbHbmSimpleIdType();
+		clazz.setId( id );
+
+		if ( includeEntityMode ) {
+			final JaxbHbmTuplizerType tuplizer = new JaxbHbmTuplizerType();
+			clazz.getTuplizer().add( tuplizer );
+
+			tuplizer.setEntityMode( EntityMode.MAP );
+			// we don't care about the actual class.  in fact starting with 6 we completely
+			// ignore this tuplizer node
+			tuplizer.setClazz( "a.b.c" );
+		}
+
 		return hm;
 	}
 }

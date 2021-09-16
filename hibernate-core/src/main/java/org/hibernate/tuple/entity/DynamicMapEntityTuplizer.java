@@ -8,7 +8,6 @@ package org.hibernate.tuple.entity;
 
 import java.util.Map;
 
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -36,11 +35,6 @@ public class DynamicMapEntityTuplizer extends AbstractEntityTuplizer {
 
 	DynamicMapEntityTuplizer(EntityMetamodel entityMetamodel, PersistentClass mappedEntity) {
 		super( entityMetamodel, mappedEntity );
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return EntityMode.MAP;
 	}
 
 	private PropertyAccess buildPropertyAccess(Property mappedProperty) {

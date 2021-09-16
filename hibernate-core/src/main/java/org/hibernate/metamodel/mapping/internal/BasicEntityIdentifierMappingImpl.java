@@ -7,20 +7,23 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.internal.UnsavedValueFactory;
+import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -61,14 +64,19 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 
 	private final SessionFactoryImplementor sessionFactory;
 
+	private IdentifierValue unsavedStrategy;
+
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
-			String attributeName,
+			Supplier<?> templateInstanceCreator, String attributeName,
 			String rootTable,
 			String pkColumnName,
 			BasicType<?> idType,
 			MappingModelCreationProcess creationProcess) {
 		assert attributeName != null;
+
+		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+
 		this.attributeName = attributeName;
 		this.rootTable = rootTable;
 		this.pkColumnName = pkColumnName;
@@ -79,11 +87,24 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 				.getBootModel()
 				.getEntityBinding( entityPersister.getEntityName() );
 
-		propertyAccess = entityPersister.getRepresentationStrategy()
+		propertyAccess = entityPersister
+				.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
+		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(
+				bootEntityDescriptor.getIdentifier(),
+				getJavaTypeDescriptor(),
+				propertyAccess.getGetter(),
+				templateInstanceCreator,
+				sessionFactory
+		);
+
 		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
+	}
+
+	@Override
+	public IdentifierValue getUnsavedStrategy() {
+		return unsavedStrategy;
 	}
 
 	@Override

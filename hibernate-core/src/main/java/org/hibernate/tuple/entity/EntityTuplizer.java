@@ -32,27 +32,8 @@ import org.hibernate.tuple.Tuplizer;
  */
 @Deprecated
 public interface EntityTuplizer extends Tuplizer {
+
 	/**
-	 * Return the entity-mode handled by this tuplizer instance.
-	 *
-	 * @return The entity-mode
-	 */
-	EntityMode getEntityMode();
-
-    /**
-     * Create an entity instance initialized with the given identifier.
-     *
-     * @param id The identifier value for the entity to be instantiated.
-     * @return The instantiated entity.
-     * @throws HibernateException
-	 *
-	 * @deprecated Use {@link #instantiate(Object, SharedSessionContractImplementor)} instead.
-     */
-	@Deprecated
-	@SuppressWarnings( {"JavaDoc"})
-	Object instantiate(Object id) throws HibernateException;
-
-    /**
      * Create an entity instance initialized with the given identifier.
      *
      * @param id The identifier value for the entity to be instantiated.
@@ -111,39 +92,6 @@ public interface EntityTuplizer extends Tuplizer {
 	 * @param session The session from which is requests originates
      */
 	void setIdentifier(Object entity, Object id, SharedSessionContractImplementor session);
-
-	/**
-	 * Inject the given identifier and version into the entity, in order to
-	 * "roll back" to their original values.
-	 *
-	 * @param entity The entity for which to reset the id/version values
-	 * @param currentId The identifier value to inject into the entity.
-	 * @param currentVersion The version value to inject into the entity.
-	 *
-	 * @deprecated Use {@link #resetIdentifier(Object, Object, Object, SharedSessionContractImplementor)} instead
-	 */
-	@Deprecated
-	@SuppressWarnings( {"UnusedDeclaration"})
-	void resetIdentifier(Object entity, Object currentId, Object currentVersion);
-
-	/**
-	 * Inject the given identifier and version into the entity, in order to
-	 * "roll back" to their original values.
-	 *  @param entity The entity for which to reset the id/version values
-	 * @param currentId The identifier value to inject into the entity.
-	 * @param currentVersion The version value to inject into the entity.
-	 * @param session The session from which the request originated
-	 */
-	void resetIdentifier(Object entity, Object currentId, Object currentVersion, SharedSessionContractImplementor session);
-
-    /**
-     * Extract the value of the version property from the given entity.
-     *
-     * @param entity The entity from which to extract the version value.
-     * @return The value of the version property, or null if not versioned.
-	 * @throws HibernateException Indicates a problem accessing the version property
-     */
-	Object getVersion(Object entity) throws HibernateException;
 
 	/**
 	 * Inject the value of a particular property.

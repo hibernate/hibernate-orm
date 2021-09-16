@@ -215,28 +215,20 @@ public class EntityMetamodel implements Serializable {
 
 		while ( props.hasNext() ) {
 			Property prop = props.next();
-			final NonIdentifierAttribute attribute;
+			final NonIdentifierAttribute attribute = PropertyFactory.buildEntityBasedAttribute(
+					persister,
+					sessionFactory,
+					i,
+					prop,
+					bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
+					creationContext
+			);
+
+			properties[i] = attribute;
+
 			if ( prop == persistentClass.getVersion() ) {
 				tempVersionProperty = i;
-				attribute = PropertyFactory.buildVersionProperty(
-						persister,
-						sessionFactory,
-						i,
-						prop,
-						bytecodeEnhancementMetadata.isEnhancedForLazyLoading()
-				);
 			}
-			else {
-				attribute = PropertyFactory.buildEntityBasedAttribute(
-						persister,
-						sessionFactory,
-						i,
-						prop,
-						bytecodeEnhancementMetadata.isEnhancedForLazyLoading(),
-						creationContext
-				);
-			}
-			properties[i] = attribute;
 
 			if ( prop.isNaturalIdentifier() ) {
 				naturalIdNumbers.add( i );
@@ -852,15 +844,6 @@ public class EntityMetamodel implements Serializable {
 
 	public int getVersionPropertyIndex() {
 		return versionPropertyIndex;
-	}
-
-	public VersionProperty getVersionProperty() {
-		if ( NO_VERSION_INDX == versionPropertyIndex ) {
-			return null;
-		}
-		else {
-			return ( VersionProperty ) properties[ versionPropertyIndex ];
-		}
 	}
 
 	public NonIdentifierAttribute[] getProperties() {

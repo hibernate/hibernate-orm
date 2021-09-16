@@ -13,7 +13,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.InstantiationException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
@@ -21,6 +23,7 @@ import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,72 +54,67 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 
 	@Test
 	public void testFindEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( (session) -> {
 			try {
 				Country country = session.find( Country.class, this.country.id );
 
-				assertNotNull( "Romania", country.getName() );
+				assertNotNull( country.getName() );
 				fail( "Should have thrown exception" );
 			}
-			catch (Exception expected) {
-				assertTrue( expected.getMessage().contains( "No default constructor for entity" ) );
+			catch (PersistenceException expected) {
+				assertThat( expected.getCause() ).isInstanceOf( InstantiationException.class );
 			}
 		} );
 	}
 
 	@Test
 	public void testGetReferenceEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( (session) -> {
 			try {
 				Country country = session.getReference( Country.class, this.country.id );
 
-				assertNotNull( "Romania", country.getName() );
+				assertNotNull( country.getName() );
 				fail( "Should have thrown exception" );
 			}
-			catch (Exception expected) {
-				assertTrue( expected.getMessage().contains( "No default constructor for entity" ) );
+			catch (PersistenceException expected) {
+				assertThat( expected.getCause() ).isInstanceOf( InstantiationException.class );
 			}
 		} );
 	}
 
 	@Test
 	public void testLoadProxyAssociation() {
-
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( (session) -> {
 			try {
 				Person person = session.find( Person.class, this.person.id );
 
-				assertNotNull( "Romania", person.getCountry().getName() );
+				assertNotNull( person.getCountry().getName() );
 				fail( "Should have thrown exception" );
 			}
-			catch (Exception expected) {
-				assertTrue( expected.getMessage().contains( "No default constructor for entity" ) );
+			catch (PersistenceException expected) {
+				assertThat( expected.getCause() ).isInstanceOf( InstantiationException.class );
 			}
 		} );
 	}
 
 	@Test
 	public void testListEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( (session) -> {
 			try {
 				List<Person> persons = session.createQuery( "select p from Person p" ).getResultList();
 				assertTrue( persons.stream().anyMatch( p -> p.getCountry().getName().equals( "Romania" ) ) );
 
 				fail( "Should have thrown exception" );
 			}
-			catch (Exception expected) {
-				assertTrue( expected.getMessage().contains( "No default constructor for entity" ) );
+			catch (PersistenceException expected) {
+				assertThat( expected.getCause() ).isInstanceOf( InstantiationException.class );
 			}
 		} );
 	}
 
 	@Test
 	public void testListJoinFetchEntity() {
-
-		doInHibernate( this::sessionFactory, session -> {
+		inTransaction( (session) -> {
 			try {
 				List<Person> persons = session.createQuery( "select p from Person p join fetch p.country" )
 						.getResultList();
@@ -124,8 +122,8 @@ public class PrivateConstructorEnhancerTest extends BaseNonConfigCoreFunctionalT
 
 				fail( "Should have thrown exception" );
 			}
-			catch (Exception expected) {
-				assertTrue( expected.getMessage().contains( "No default constructor for entity" ) );
+			catch (PersistenceException expected) {
+				assertThat( expected.getCause() ).isInstanceOf( InstantiationException.class );
 			}
 		} );
 	}

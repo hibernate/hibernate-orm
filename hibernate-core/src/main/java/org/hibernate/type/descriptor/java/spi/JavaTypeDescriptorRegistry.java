@@ -100,6 +100,19 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	}
 
 	public void addDescriptor(JavaTypeDescriptor<?> descriptor) {
+		if ( log.isDebugEnabled() ) {
+			if ( descriptor.getJavaTypeClass().isPrimitive() ) {
+				if ( ! Primitive.class.isAssignableFrom( descriptor.getJavaTypeClass() ) ) {
+					log.debugf(
+							"JavaTypeDescriptor (`%s`) being registered does not implement `%s` even though it maps a primitive Java type - `%`",
+							descriptor,
+							Primitive.class.getName(),
+							descriptor.getJavaTypeClass().getName()
+					);
+				}
+			}
+		}
+
 		JavaTypeDescriptor<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
 		if ( old != null ) {
 			log.debugf(

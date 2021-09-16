@@ -20,8 +20,6 @@ public interface AssociationAttributeDefinition extends AttributeDefinition {
 	@Override
 	AssociationType getType();
 
-	AssociationKey getAssociationKey();
-
 	enum AssociationNature {
 		ANY,
 		ENTITY,

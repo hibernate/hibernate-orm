@@ -57,9 +57,6 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -648,16 +645,6 @@ public class PersisterClassProviderTest {
 		@Override
 		public EntityPersister getEntityPersister() {
 			return this;
-		}
-
-		@Override
-		public EntityIdentifierDefinition getEntityKeyDefinition() {
-			return null;
-		}
-
-		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
-			return null;
 		}
 
 		@Override

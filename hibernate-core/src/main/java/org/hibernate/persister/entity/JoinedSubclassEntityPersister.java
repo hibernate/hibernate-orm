@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -1194,8 +1195,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	protected EntityVersionMapping generateVersionMapping(
-			MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
-		if ( getVersionType() == null ) {
+			Supplier<?> templateInstanceCreator,
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
+		if ( ! bootEntityDescriptor.isVersioned() ) {
 			return null;
 		}
 		else {
@@ -1205,6 +1208,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				return creationProcess.processSubPart(
 						versionPropertyName,
 						(role, process) -> generateVersionMapping(
+								templateInstanceCreator,
 								this,
 								bootEntityDescriptor,
 								process
@@ -1219,7 +1223,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected EntityIdentifierMapping generateIdentifierMapping(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
+	protected EntityIdentifierMapping generateIdentifierMapping(
+			Supplier<?> templateInstanceCreator,
+			PersistentClass bootEntityDescriptor,
+			MappingModelCreationProcess creationProcess) {
 		final Type idType = getIdentifierType();
 
 		if ( idType instanceof CompositeType ) {
@@ -1249,7 +1256,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
-				bootEntityDescriptor.getIdentifierProperty().getName(),
+				templateInstanceCreator, bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				tableKeyColumns[0][0],
 				(BasicType<?>) idType,

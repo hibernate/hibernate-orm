@@ -8,6 +8,7 @@ package org.hibernate.metamodel.internal;
 
 
 import java.lang.reflect.Constructor;
+import java.util.Set;
 
 import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
@@ -28,25 +29,28 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPojo {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityInstantiatorPojoStandard.class );
 
-	private final EntityMetamodel entityMetamodel;
+	private final String entityName;
+	private final Set<String> lazyAttributeNames;
+
 	private final Class<?> proxyInterface;
 	private final boolean applyBytecodeInterception;
 
 	private final Constructor<?> constructor;
 
 	public EntityInstantiatorPojoStandard(
+			Constructor<?> constructor,
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
 			JavaTypeDescriptor<?> javaTypeDescriptor) {
 		super( entityMetamodel, persistentClass, javaTypeDescriptor );
 
-		this.entityMetamodel = entityMetamodel;
+		assert constructor != null;
+		this.constructor = constructor;
+
+		this.entityName = entityMetamodel.getName();
+		this.lazyAttributeNames = entityMetamodel.getBytecodeEnhancementMetadata().getLazyAttributesMetadata().getLazyAttributeNames();
+
 		this.proxyInterface = persistentClass.getProxyInterface();
-
-		this.constructor = isAbstract()
-				? null
-				: resolveConstructor( getMappedPojoClass() );
-
 		this.applyBytecodeInterception = PersistentAttributeInterceptable.class.isAssignableFrom( persistentClass.getMappedClass() );
 	}
 
@@ -62,21 +66,8 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	}
 
 	@Override
-	protected Object applyInterception(Object entity) {
-		if ( !applyBytecodeInterception ) {
-			return entity;
-		}
-
-		PersistentAttributeInterceptor interceptor = new LazyAttributeLoadingInterceptor(
-				entityMetamodel.getName(),
-				null,
-				entityMetamodel.getBytecodeEnhancementMetadata()
-						.getLazyAttributesMetadata()
-						.getLazyAttributeNames(),
-				null
-		);
-		( (PersistentAttributeInterceptable) entity ).$$_hibernate_setInterceptor( interceptor );
-		return entity;
+	public boolean canBeInstantiated() {
+		return ! isAbstract();
 	}
 
 	@Override

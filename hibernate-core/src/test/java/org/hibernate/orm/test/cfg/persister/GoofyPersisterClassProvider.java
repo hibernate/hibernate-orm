@@ -54,10 +54,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
-import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
-import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -666,16 +664,6 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public EntityIdentifierDefinition getEntityKeyDefinition() {
-			return null;  //To change body of implemented methods use File | Settings | File Templates.
-		}
-
-		@Override
-		public Iterable<AttributeDefinition> getAttributes() {
-			throw new NotYetImplementedException();
-		}
-
-        @Override
         public int[] resolveAttributeIndexes(String[] attributeNames) {
             return null;
         }

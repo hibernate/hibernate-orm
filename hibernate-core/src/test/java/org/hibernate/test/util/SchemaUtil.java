@@ -6,13 +6,17 @@
  */
 package org.hibernate.test.util;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import javax.persistence.EntityManagerFactory;
 
 import org.hibernate.boot.Metadata;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
+import org.hibernate.persister.entity.AbstractEntityPersister;
 
 /**
  * Check that the Hibernate metamodel contains some database objects
@@ -59,5 +63,19 @@ public abstract class SchemaUtil {
 		}
 
 		return false;
+	}
+
+	public static Set<String> getColumnNames(EntityManagerFactory entityManagerFactory, Class<?> entityType) {
+		Set<String> result = new HashSet<>();
+		AbstractEntityPersister persister = (AbstractEntityPersister) entityManagerFactory
+				.unwrap( SessionFactoryImplementor.class )
+				.getMetamodel().entityPersister( entityType );
+		if ( persister == null ) {
+			return result;
+		}
+		for ( String propertyName : persister.getPropertyNames() ) {
+			Collections.addAll( result, persister.getPropertyColumnNames( propertyName ) );
+		}
+		return result;
 	}
 }

@@ -19,6 +19,7 @@ import javax.persistence.TemporalType;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -611,6 +612,8 @@ public class PostgreSQLDialect extends Dialect {
 				case "55P03":
 					// LOCK NOT AVAILABLE
 					return new PessimisticLockException(message, sqlException, sql);
+				case "57014":
+					return new QueryTimeoutException( message, sqlException, sql );
 				default:
 					// returning null allows other delegates to operate
 					return null;

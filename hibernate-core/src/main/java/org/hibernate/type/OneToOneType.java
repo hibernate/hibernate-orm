@@ -219,7 +219,7 @@ public class OneToOneType extends EntityType {
 		Serializable id = ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
 
 		if ( id == null ) {
-			return null;
+			return resolve( session.getContextEntityIdentifier(owner), session, owner );
 		}
 
 		return resolveIdentifier( id, session );

@@ -95,6 +95,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							);
 							return;
 						case Opcodes.PUTFIELD:
+							if ( field.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
@@ -107,9 +112,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							throw new EnhancementException( "Unexpected opcode: " + opcode );
 					}
 				}
-				else {
-					super.visitFieldInsn( opcode, owner, name, desc );
-				}
+				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
 	}

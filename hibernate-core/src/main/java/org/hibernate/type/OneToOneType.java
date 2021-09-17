@@ -215,11 +215,19 @@ public class OneToOneType extends EntityType {
 
 	@Override
 	public Object assemble(Serializable oid, SharedSessionContractImplementor session, Object owner) throws HibernateException {
+
+		if ( oid == null ) {
+			if ( uniqueKeyPropertyName != null ) {
+				return resolve( session.getContextEntityIdentifier( owner ), session, owner );
+			}
+			return null;
+		}
+
 		//the owner of the association is not the owner of the id
 		Serializable id = ( Serializable ) getIdentifierType( session ).assemble( oid, session, null );
 
 		if ( id == null ) {
-			return resolve( session.getContextEntityIdentifier(owner), session, owner );
+			return null;
 		}
 
 		return resolveIdentifier( id, session );

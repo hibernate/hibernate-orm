@@ -15,10 +15,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
 import javax.persistence.Embedded;
 
-import net.bytebuddy.utility.OpenedClassReader;
 import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedFieldDescription;
 import org.hibernate.bytecode.enhance.spi.EnhancerConstants;
 import org.hibernate.engine.spi.CompositeOwner;
@@ -42,6 +40,7 @@ import net.bytebuddy.jar.asm.Opcodes;
 import net.bytebuddy.jar.asm.Type;
 import net.bytebuddy.matcher.ElementMatcher.Junction;
 import net.bytebuddy.pool.TypePool;
+import net.bytebuddy.utility.OpenedClassReader;
 
 final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDeclaredMethods.MethodVisitorWrapper {
 
@@ -138,7 +137,8 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		return new MethodVisitor( OpenedClassReader.ASM_API, methodVisitor ) {
 			@Override
 			public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-				if ( isEnhanced( owner, name, desc ) ) {
+				AnnotatedFieldDescription enhancedField = getEnhancedField( owner, name, desc );
+				if ( enhancedField != null ) {
 					switch ( opcode ) {
 						case Opcodes.GETFIELD:
 							methodVisitor.visitMethodInsn(
@@ -150,6 +150,11 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							);
 							return;
 						case Opcodes.PUTFIELD:
+							if ( enhancedField.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
@@ -165,15 +170,15 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		};
 	}
 
-	private boolean isEnhanced(String owner, String name, String desc) {
+	private AnnotatedFieldDescription getEnhancedField(String owner, String name, String desc) {
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			if ( enhancedField.getName().equals( name )
 					&& enhancedField.getDescriptor().equals( desc )
 					&& enhancedField.getDeclaringType().asErasure().getInternalName().equals( owner ) ) {
-				return true;
+				return enhancedField;
 			}
 		}
-		return false;
+		return null;
 	}
 
 	DynamicType.Builder<?> applyTo(DynamicType.Builder<?> builder) {
@@ -187,15 +192,19 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 							enhancedField.getType().asErasure(),
 							Visibility.PUBLIC
 					)
-					.intercept( fieldReader( enhancedField )
-					)
-					.defineMethod(
-							EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
-							TypeDescription.VOID,
-							Visibility.PUBLIC
-					)
-					.withParameters( enhancedField.getType().asErasure() )
-					.intercept( fieldWriter( enhancedField ) );
+					.intercept( fieldReader( enhancedField ) );
+			// Final fields will only be written to from the constructor,
+			// so there's no point trying to replace final field writes with a method call.
+			if ( !enhancedField.getFieldDescription().isFinal() ) {
+				builder = builder
+						.defineMethod(
+								EnhancerConstants.PERSISTENT_FIELD_WRITER_PREFIX + enhancedField.getName(),
+								TypeDescription.VOID,
+								Visibility.PUBLIC
+						)
+						.withParameters( enhancedField.getType().asErasure() )
+						.intercept( fieldWriter( enhancedField ) );
+			}
 
 			if ( !compositeOwner
 					&& !enhancementContext.isMappedSuperclassClass( managedCtClass )

@@ -13,6 +13,7 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -60,6 +61,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public abstract class AbstractCompositeIdentifierMapping
 		implements CompositeIdentifierMapping, EmbeddableValuedFetchable, FetchOptions {
 	private final NavigableRole navigableRole;
+	private final IdentifierGenerator valueGenerator;
 	private final String tableExpression;
 
 	private final StateArrayContributorMetadataAccess attributeMetadataAccess;
@@ -78,11 +80,11 @@ public abstract class AbstractCompositeIdentifierMapping
 		this.attributeMetadataAccess = attributeMetadataAccess;
 		this.embeddableDescriptor = embeddableDescriptor;
 		this.entityMapping = entityMapping;
+		this.valueGenerator = entityMapping.getEntityPersister().getIdentifierGenerator();
 		this.tableExpression = tableExpression;
 		this.sessionFactory = sessionFactory;
 
-		this.navigableRole = entityMapping.getNavigableRole()
-				.appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 	}
 
 	/**
@@ -97,6 +99,11 @@ public abstract class AbstractCompositeIdentifierMapping
 	@Override
 	public EmbeddableMappingType getMappedType() {
 		return embeddableDescriptor;
+	}
+
+	@Override
+	public IdentifierGenerator getValueGenerator() {
+		return valueGenerator;
 	}
 
 	@Override

@@ -29,7 +29,6 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.tuple.IdentifierAttribute;
 
 /**
  * @author Steve Ebersole

@@ -8,6 +8,7 @@ package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -44,14 +45,12 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessBasicImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
-import org.hibernate.property.access.internal.PropertyAccessStrategyEmbeddedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRefImpl;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -228,38 +227,27 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 
 		proxyInterfaces.add( HibernateProxy.class );
 
-		Iterator properties = bootDescriptor.getPropertyIterator();
-		Class clazz = bootDescriptor.getMappedClass();
+		Iterator<Property> properties = bootDescriptor.getPropertyIterator();
+		Class<?> clazz = bootDescriptor.getMappedClass();
 		final Method idGetterMethod;
 		final Method idSetterMethod;
 
 		try {
-			while ( properties.hasNext() ) {
-				Property property = (Property) properties.next();
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Getter",
-						property.getGetter( clazz ).getMethod()
-				);
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Setter",
-						property.getSetter( clazz ).getMethod()
-				);
-			}
 			if ( identifierPropertyAccess != null ) {
 				idGetterMethod = identifierPropertyAccess.getGetter().getMethod();
 				idSetterMethod = identifierPropertyAccess.getSetter().getMethod();
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Getter",
-						idGetterMethod
-				);
-				ProxyFactoryHelper.validateGetterSetterMethodProxyability(
-						"Setter",
-						idSetterMethod
-				);
+				validateGetterSetterMethodProxyability( "Getter", idGetterMethod );
+				validateGetterSetterMethodProxyability( "Setter", idSetterMethod );
 			}
 			else {
 				idGetterMethod = null;
 				idSetterMethod = null;
+			}
+
+			while ( properties.hasNext() ) {
+				Property property = properties.next();
+				validateGetterSetterMethodProxyability( "Getter", property.getGetter( clazz ).getMethod() );
+				validateGetterSetterMethodProxyability( "Setter", property.getSetter( clazz ).getMethod() );
 			}
 		}
 		catch (HibernateException he) {
@@ -292,6 +280,19 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 		catch (HibernateException he) {
 			LOG.unableToCreateProxyFactory( bootDescriptor.getEntityName(), he );
 			return null;
+		}
+	}
+
+	public static void validateGetterSetterMethodProxyability(String getterOrSetter, Method method ) {
+		if ( method != null && Modifier.isFinal( method.getModifiers() ) ) {
+			throw new HibernateException(
+					String.format(
+							"%s methods of lazy classes cannot be final: %s#%s",
+							getterOrSetter,
+							method.getDeclaringClass().getName(),
+							method.getName()
+					)
+			);
 		}
 	}
 

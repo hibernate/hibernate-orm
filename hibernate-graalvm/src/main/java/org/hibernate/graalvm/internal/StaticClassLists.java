@@ -22,15 +22,12 @@ final class StaticClassLists {
 				//The CoreMessageLogger is sometimes looked up without it necessarily being a field, so we're
 				//not processing it the same way as other Logger lookups.
 				org.hibernate.internal.CoreMessageLogger_$logger.class,
-				org.hibernate.tuple.component.PojoComponentTuplizer.class,
 				org.hibernate.tuple.component.DynamicMapComponentTuplizer.class,
-				org.hibernate.tuple.entity.DynamicMapEntityTuplizer.class,
 				org.hibernate.persister.collection.OneToManyPersister.class,
 				org.hibernate.persister.collection.BasicCollectionPersister.class,
 				org.hibernate.persister.entity.JoinedSubclassEntityPersister.class,
 				org.hibernate.persister.entity.UnionSubclassEntityPersister.class,
 				org.hibernate.persister.entity.SingleTableEntityPersister.class,
-				org.hibernate.tuple.entity.PojoEntityTuplizer.class,
 		};
 	}
 

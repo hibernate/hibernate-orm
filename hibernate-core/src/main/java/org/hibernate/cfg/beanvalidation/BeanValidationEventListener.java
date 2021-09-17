@@ -17,7 +17,6 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
-import org.hibernate.EntityMode;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -29,6 +28,7 @@ import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
@@ -78,31 +78,40 @@ public class BeanValidationEventListener
 
 	public boolean onPreInsert(PreInsertEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
-				event.getSession().getFactory(), GroupsPerOperation.Operation.INSERT
+				event.getEntity(),
+				event.getPersister(),
+				event.getSession().getFactory(),
+				GroupsPerOperation.Operation.INSERT
 		);
 		return false;
 	}
 
 	public boolean onPreUpdate(PreUpdateEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
-				event.getSession().getFactory(), GroupsPerOperation.Operation.UPDATE
+				event.getEntity(),
+				event.getPersister(),
+				event.getSession().getFactory(),
+				GroupsPerOperation.Operation.UPDATE
 		);
 		return false;
 	}
 
 	public boolean onPreDelete(PreDeleteEvent event) {
 		validate(
-				event.getEntity(), event.getPersister().getEntityMode(), event.getPersister(),
-				event.getSession().getFactory(), GroupsPerOperation.Operation.DELETE
+				event.getEntity(),
+				event.getPersister(),
+				event.getSession().getFactory(),
+				GroupsPerOperation.Operation.DELETE
 		);
 		return false;
 	}
 
-	private <T> void validate(T object, EntityMode mode, EntityPersister persister,
-			SessionFactoryImplementor sessionFactory, GroupsPerOperation.Operation operation) {
-		if ( object == null || mode != EntityMode.POJO ) {
+	private <T> void validate(
+			T object,
+			EntityPersister persister,
+			SessionFactoryImplementor sessionFactory,
+			GroupsPerOperation.Operation operation) {
+		if ( object == null || persister.getRepresentationStrategy().getMode() != RepresentationMode.POJO ) {
 			return;
 		}
 		TraversableResolver tr = new HibernateTraversableResolver(

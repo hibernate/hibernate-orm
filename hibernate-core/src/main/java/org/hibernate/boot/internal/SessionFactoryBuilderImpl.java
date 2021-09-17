@@ -11,11 +11,9 @@ import java.util.function.Supplier;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.CustomEntityDirtinessStrategy;
-import org.hibernate.EntityMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -32,11 +30,10 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
-import org.hibernate.tuple.entity.EntityTuplizer;
-import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
  * @author Gail Badner
@@ -177,12 +174,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultEntityMode(EntityMode entityMode) {
-		this.optionsBuilder.applyDefaultEntityMode( entityMode );
-		return this;
-	}
-
-	@Override
 	public SessionFactoryBuilder applyNullabilityChecking(boolean enabled) {
 		this.optionsBuilder.enableNullabilityChecking( enabled );
 		return this;
@@ -191,20 +182,6 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyLazyInitializationOutsideTransaction(boolean enabled) {
 		this.optionsBuilder.allowLazyInitializationOutsideTransaction( enabled );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory) {
-		this.optionsBuilder.applyEntityTuplizerFactory( entityTuplizerFactory );
-		return this;
-	}
-
-	@Override
-	public SessionFactoryBuilder applyEntityTuplizer(
-			EntityMode entityMode,
-			Class<? extends EntityTuplizer> tuplizerClass) {
-		this.optionsBuilder.applyEntityTuplizer( entityMode, tuplizerClass );
 		return this;
 	}
 

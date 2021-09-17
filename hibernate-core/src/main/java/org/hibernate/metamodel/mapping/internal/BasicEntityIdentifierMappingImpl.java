@@ -15,6 +15,7 @@ import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
@@ -63,16 +64,20 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	private final BasicType<?> idType;
 
 	private final SessionFactoryImplementor sessionFactory;
+	private final IdentifierGenerator valueGenerator;
 
 	private IdentifierValue unsavedStrategy;
 
 	public BasicEntityIdentifierMappingImpl(
 			EntityPersister entityPersister,
-			Supplier<?> templateInstanceCreator, String attributeName,
+			Supplier<?> templateInstanceCreator,
+			String attributeName,
 			String rootTable,
 			String pkColumnName,
 			BasicType<?> idType,
+			IdentifierGenerator valueGenerator,
 			MappingModelCreationProcess creationProcess) {
+		this.valueGenerator = valueGenerator;
 		assert attributeName != null;
 
 		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
@@ -100,6 +105,11 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		);
 
 		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+	}
+
+	@Override
+	public IdentifierGenerator getValueGenerator() {
+		return valueGenerator;
 	}
 
 	@Override

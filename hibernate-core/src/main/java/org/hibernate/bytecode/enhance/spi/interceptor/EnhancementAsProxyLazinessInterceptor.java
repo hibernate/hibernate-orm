@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.bytecode.BytecodeLogging;
@@ -20,6 +19,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CompositeType;
@@ -70,7 +70,7 @@ public class EnhancementAsProxyLazinessInterceptor extends AbstractLazyLoadInter
 			}
 		}
 
-		this.inLineDirtyChecking = entityPersister.getEntityMode() == EntityMode.POJO
+		this.inLineDirtyChecking = entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
 				&& SelfDirtinessTracker.class.isAssignableFrom( entityPersister.getMappedClass() );
 		// if self-dirty tracking is enabled but DynamicUpdate is not enabled then we need to initialise the entity
 		// 	because the pre-computed update statement contains even not dirty properties and so we need all the values

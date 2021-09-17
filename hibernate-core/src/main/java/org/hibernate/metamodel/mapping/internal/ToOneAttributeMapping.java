@@ -68,7 +68,6 @@ import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
-import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
@@ -256,14 +255,10 @@ public class ToOneAttributeMapping
 			) );
 		}
 		if ( referencedPropertyName == null ) {
-			final IdentifierProperty identifierProperty = getEntityMappingType()
-					.getEntityPersister()
-					.getEntityMetamodel()
-					.getIdentifierProperty();
-			this.targetKeyPropertyName = identifierProperty.getName();
+			this.targetKeyPropertyName = getEntityMappingType().getEntityPersister().getIdentifierPropertyName();
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
 			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-			addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, identifierProperty.getType() );
+			addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, getEntityMappingType().getEntityPersister().getIdentifierType() );
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else if ( bootValue.isReferenceToPrimaryKey() ) {

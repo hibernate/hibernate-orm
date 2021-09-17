@@ -17,7 +17,6 @@ import org.hibernate.type.Type;
  * Implemented by a <tt>EntityPersister</tt> that may be loaded
  * using <tt>Loader</tt>.
  *
- * @see org.hibernate.loader.Loader
  * @author Gavin King
  */
 public interface Loadable extends EntityPersister {

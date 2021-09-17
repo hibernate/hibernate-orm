@@ -6,13 +6,9 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.function.Supplier;
-
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.id.IdentifierGenerator;
 
 /**
  * Describes the mapping of an entity's identifier.
@@ -27,6 +23,7 @@ public interface EntityIdentifierMapping extends ValueMapping, ModelPart {
 		return ROLE_LOCAL_NAME;
 	}
 
+	IdentifierGenerator getValueGenerator();
 	IdentifierValue getUnsavedStrategy();
 
 	Object getIdentifier(Object entity, SharedSessionContractImplementor session);

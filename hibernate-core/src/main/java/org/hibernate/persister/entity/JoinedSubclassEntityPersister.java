@@ -1256,10 +1256,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 		return new BasicEntityIdentifierMappingImpl(
 				this,
-				templateInstanceCreator, bootEntityDescriptor.getIdentifierProperty().getName(),
+				templateInstanceCreator,
+				bootEntityDescriptor.getIdentifierProperty().getName(),
 				getTableName(),
 				tableKeyColumns[0][0],
 				(BasicType<?>) idType,
+				getIdentifierGenerator(),
 				creationProcess
 		);
 	}

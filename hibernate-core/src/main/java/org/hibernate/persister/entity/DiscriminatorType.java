@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.AbstractType;
 import org.hibernate.type.BasicType;
@@ -114,7 +115,7 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 			throw new HibernateException( "Unable to resolve discriminator value [" + discriminatorValue + "] to entity name" );
 		}
 		final EntityPersister entityPersister = session.getEntityPersister( entityName, null );
-		return ( EntityMode.POJO == entityPersister.getEntityMode() ) ? entityPersister.getMappedClass() : entityName;
+		return entityPersister.getRepresentationStrategy().getMode() == RepresentationMode.POJO ? entityPersister.getMappedClass() : entityName;
 	}
 
 	@Override
@@ -224,9 +225,10 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 
 	@Override
 	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
-		return (JavaTypeDescriptor<T>) ( EntityMode.POJO == persister.getEntityMode() ?
-				ClassTypeDescriptor.INSTANCE :
-				StringTypeDescriptor.INSTANCE );
+		//noinspection unchecked
+		return (JavaTypeDescriptor<T>) ( persister.getRepresentationStrategy().getMode() == RepresentationMode.POJO
+				? ClassTypeDescriptor.INSTANCE
+				: StringTypeDescriptor.INSTANCE );
 	}
 
 	@Override

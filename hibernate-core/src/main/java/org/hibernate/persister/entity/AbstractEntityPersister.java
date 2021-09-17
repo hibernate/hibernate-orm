@@ -33,7 +33,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -75,7 +74,6 @@ import org.hibernate.engine.internal.CacheHelper;
 import org.hibernate.engine.internal.ImmutableEntityEntryFactory;
 import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
-import org.hibernate.engine.internal.UnsavedValueFactory;
 import org.hibernate.engine.internal.Versioning;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -98,7 +96,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
-import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.id.Assigned;
@@ -141,7 +138,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
@@ -235,14 +231,12 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
-import org.hibernate.tuple.IdentifierProperty;
 import org.hibernate.tuple.InDatabaseValueGenerationStrategy;
 import org.hibernate.tuple.InMemoryValueGenerationStrategy;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.entity.EntityBasedAssociationAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
@@ -5381,25 +5375,23 @@ public abstract class AbstractEntityPersister
 			Object currentId,
 			Object currentVersion,
 			SharedSessionContractImplementor session) {
-		final IdentifierProperty identifierProperty = entityMetamodel.getIdentifierProperty();
-		if ( !(identifierProperty.getIdentifierGenerator() instanceof Assigned) ) {
-			//reset the id
-			Object result = identifierMapping
-					.getUnsavedStrategy()
-					.getDefaultValue( currentId );
-			setIdentifier( entity, result, session );
-			if ( isVersioned() ) {
-				//reset the version
-				final Setter versionSetter = getVersionMapping()
-						.getVersionAttribute()
-						.getPropertyAccess()
-						.getSetter();
-				versionSetter.set(
-						entity,
-						getVersionMapping().getUnsavedStrategy().getDefaultValue( currentVersion ),
-						getFactory()
-				);
-			}
+		if ( getIdentifierMapping().getValueGenerator() instanceof Assigned ) {
+			return;
+		}
+
+		setIdentifier( entity, identifierMapping.getUnsavedStrategy().getDefaultValue( currentId ), session );
+
+		if ( isVersioned() ) {
+			//reset the version
+			final Setter versionSetter = getVersionMapping()
+					.getVersionAttribute()
+					.getPropertyAccess()
+					.getSetter();
+			versionSetter.set(
+					entity,
+					getVersionMapping().getUnsavedStrategy().getDefaultValue( currentVersion ),
+					getFactory()
+			);
 		}
 	}
 
@@ -5593,16 +5585,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public EntityRepresentationStrategy getRepresentationStrategy() {
 		return representationStrategy;
-	}
-
-	@Override
-	public EntityMode getEntityMode() {
-		return getRepresentationStrategy().getMode().getLegacyEntityMode();
-	}
-
-	@Override
-	public EntityTuplizer getEntityTuplizer() {
-		return null;
 	}
 
 	@Override
@@ -6190,6 +6172,7 @@ public abstract class AbstractEntityPersister
 				getTableName(),
 				rootTableKeyColumnNames[0],
 				(BasicType<?>) idType,
+				getIdentifierGenerator(),
 				creationProcess
 		);
 	}

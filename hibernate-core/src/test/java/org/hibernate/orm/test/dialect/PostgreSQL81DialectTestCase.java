@@ -15,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 
@@ -56,6 +57,17 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 
 		JDBCException exception = delegate.convert(new SQLException("Lock Not Available", "55P03"), "", "");
 		assertTrue(exception instanceof PessimisticLockException);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-13661")
+	public void testQueryTimeoutException() {
+		final PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		final SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
+		assertNotNull( delegate );
+
+		final JDBCException exception = delegate.convert( new SQLException("Client cancelled operation", "57014"), "", "" );
+		assertTrue( exception instanceof QueryTimeoutException );
 	}
 
 	/**

@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -229,6 +230,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
 
 		if ( dbMetaData == null ) {
+			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
+			//       Check to see if this setting is correct.
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
@@ -765,6 +768,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			return new String[] { "drop schema if exists " + schemaName };
 		}
 		return super.getDropSchemaCommand( schemaName );
+	}
+
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.BOTH;
 	}
 
 }

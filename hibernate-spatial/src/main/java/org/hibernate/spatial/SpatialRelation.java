@@ -13,6 +13,7 @@ package org.hibernate.spatial;
  * section 2.1.13.3. "</p>
  *
  * @author Karel Maesen
+ * @deprecated Will be removed in 6
  */
 @Deprecated
 public interface SpatialRelation {

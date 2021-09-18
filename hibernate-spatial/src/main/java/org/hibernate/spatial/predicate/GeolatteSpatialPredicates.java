@@ -10,7 +10,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.SpatialFunction;
 
 import org.geolatte.geom.Geometry;
@@ -50,8 +49,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( ST_EQUALS.name(), boolean.class,
-										  geometry1, geometry2
+				criteriaBuilder.function( ST_EQUALS.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -70,8 +68,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate eq(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return eq( criteriaBuilder, geometry1,
-				   criteriaBuilder.literal( geometry2 )
+		return eq( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 )
 		);
 	}
 
@@ -129,8 +126,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( ST_CONTAINS.name(), boolean.class,
-										  geometry1, geometry2
+				criteriaBuilder.function( ST_CONTAINS.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -149,8 +145,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate contains(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return contains( criteriaBuilder, geometry1,
-						 criteriaBuilder.literal( geometry2 )
+		return contains( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 )
 		);
 	}
 
@@ -170,8 +165,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( ST_CROSSES.name(), boolean.class,
-										  geometry1, geometry2
+				criteriaBuilder.function( ST_CROSSES.name(), boolean.class, geometry1, geometry2
 				)
 		);
 	}
@@ -229,9 +223,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate disjoint(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return disjoint( criteriaBuilder, geometry1,
-						 criteriaBuilder.literal( geometry2 )
-		);
+		return disjoint( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
 	}
 
 	/**
@@ -365,9 +357,7 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.filter.toString(), boolean.class,
-										  geometry1, geometry2
-				)
+				criteriaBuilder.function( SpatialFunction.filter.toString(), boolean.class, geometry1, geometry2 )
 		);
 	}
 
@@ -429,8 +419,12 @@ public class GeolatteSpatialPredicates {
 			Expression<? extends Geometry> geometry2, Expression<Double> distance) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.dwithin.toString(), boolean.class,
-										  geometry1, geometry2, distance
+				criteriaBuilder.function(
+						SpatialFunction.dwithin.toString(),
+						boolean.class,
+						geometry1,
+						geometry2,
+						distance
 				)
 		);
 	}
@@ -450,8 +444,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2, Expression<Double> distance) {
-		return distanceWithin( criteriaBuilder, geometry1,
-							   criteriaBuilder.literal( geometry2 ), distance
+		return distanceWithin( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ), distance
 		);
 	}
 
@@ -470,8 +463,11 @@ public class GeolatteSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2, double distance) {
-		return distanceWithin( criteriaBuilder, geometry1,
-							   criteriaBuilder.literal( geometry2 ), criteriaBuilder.literal( distance )
+		return distanceWithin(
+				criteriaBuilder,
+				geometry1,
+				criteriaBuilder.literal( geometry2 ),
+				criteriaBuilder.literal( distance )
 		);
 	}
 
@@ -490,8 +486,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Expression<? extends Geometry> geometry2, double distance) {
-		return distanceWithin( criteriaBuilder, geometry1, geometry2,
-							   criteriaBuilder.literal( distance )
+		return distanceWithin( criteriaBuilder, geometry1, geometry2, criteriaBuilder.literal( distance )
 		);
 	}
 
@@ -529,9 +524,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate havingSRID(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			int srid) {
-		return havingSRID( criteriaBuilder, geometry,
-						   criteriaBuilder.literal( srid )
-		);
+		return havingSRID( criteriaBuilder, geometry, criteriaBuilder.literal( srid ) );
 	}
 
 	/**
@@ -547,9 +540,7 @@ public class GeolatteSpatialPredicates {
 	public static Predicate isEmpty(CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry) {
 		return booleanExpressionToPredicate(
 				criteriaBuilder,
-				criteriaBuilder.function( SpatialFunction.isempty.toString(), boolean.class,
-										  geometry
-				)
+				criteriaBuilder.function( SpatialFunction.isempty.toString(), boolean.class, geometry )
 		);
 	}
 

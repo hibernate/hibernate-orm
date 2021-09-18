@@ -10,6 +10,7 @@ package org.hibernate.spatial;
  * The spatial analysis functions defined in the OGC SFS specification.
  *
  * @author Karel Maesen
+ * @deprecated Will be removed in 6
  */
 @Deprecated
 public interface SpatialAnalysis {

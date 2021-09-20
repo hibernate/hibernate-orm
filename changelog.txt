@@ -3,6 +3,36 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.0.Beta2 (September 20, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31980
+
+** Bug
+    * [HHH-14828] - Bytecode enhancement generates invalid bytecode for final fields
+    * [HHH-14827] - @AttributeOverride at type level does not work when also using orm.xml
+    * [HHH-14826] - Regression: OneToOne fields are always null if parent is loaded from L2 cache
+    * [HHH-14811] - org.hibernate.AssertionFailure thrown instead of LazyInitializationException when trying to access a lazy property on a deleted entity
+    * [HHH-14796] - Cannot replace an existing JPQL NamedQuery with a native NamedQuery
+    * [HHH-14757] - Cannot save (dirty check failed) single element GeometryCollection
+    * [HHH-14413] - EntityUpdateAction increments version despite veto on update
+    * [HHH-13661] - Postgresql query timeout not translated to org.hibernate.QueryTimeoutException
+
+** Improvement
+    * [HHH-13999] - Add dialect for SQL Server 2016
+    * [HHH-5249] - Component.java MappingException needs more detail
+
+** Sub-task
+    * [HHH-4369] - Support @Comment or column attribute on @Table and @Column
+
+** Task
+    * [HHH-14833] - Upgrade to Byte Buddy 1.11.16
+    * [HHH-14813] - Update DB2 dialect with bind parameters limit
+    * [HHH-14812] - Upgrade integration tests to use Oracle JDBC driver v 21.3.0.0
+    * [HHH-14794] - More changes to support SchemaMigrator/SchemaValidator using Hibernate Reactive
+    * [HHH-14633] - Upgrade to latest geolatte-geom version 1.8.2
+
+
 Changes in 5.6.0.Beta1 (August 27, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

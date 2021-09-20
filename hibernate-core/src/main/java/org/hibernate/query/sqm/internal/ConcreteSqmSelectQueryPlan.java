@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -20,7 +21,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
-import org.hibernate.internal.util.streams.StingArrayCollector;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.criteria.JpaSelection;
@@ -34,7 +34,6 @@ import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -188,12 +187,20 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private RowTransformer<R> makeRowTransformerTupleTransformerAdapter(
 			SqmSelectStatement sqm,
 			QueryOptions queryOptions) {
+		final List<String> aliases = new ArrayList<>();
+		sqm.getQuerySpec().getSelectClause().getSelections()
+				.stream()
+				.forEach(
+						sqmSelection -> {
+							final String[] selectionAliases = sqmSelection.getAliases();
+							for ( int i = 0; i < selectionAliases.length; i++ ) {
+								final String alias = selectionAliases[i];
+								aliases.add( alias );
+							}
+						}
+				);
 		return new RowTransformerTupleTransformerAdapter<>(
-				sqm.getQuerySpec().getSelectClause().getSelections()
-						.stream()
-						.map( SqmSelection::getAlias )
-						.collect( StingArrayCollector.INSTANCE ),
-				queryOptions.getTupleTransformer()
+				aliases.toArray( new String[] {} ), queryOptions.getTupleTransformer()
 		);
 	}
 

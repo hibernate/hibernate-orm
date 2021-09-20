@@ -29,4 +29,8 @@ public interface SqmSelectableNode<T> extends JpaSelection<T>, SqmTypedNode<T>, 
 	 * @see Selection#getCompoundSelectionItems()
 	 */
 	void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer);
+
+	default String[] getAliases() {
+		return new String[] { getAlias() };
+	}
 }

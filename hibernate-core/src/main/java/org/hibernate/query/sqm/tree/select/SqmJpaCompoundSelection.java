@@ -99,6 +99,14 @@ public class SqmJpaCompoundSelection<T>
 		return null;
 	}
 
+	public String[] getAliases() {
+		String[] aliases = new String[selectableNodes.size()];
+		for ( int i = 0; i < selectableNodes.size(); i++ ) {
+			aliases[i] = selectableNodes.get( i ).getAlias();
+		}
+		return aliases;
+	}
+
 	@Override
 	public boolean isCompoundSelection() {
 		return true;

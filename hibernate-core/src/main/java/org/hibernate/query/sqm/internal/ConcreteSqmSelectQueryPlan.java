@@ -21,6 +21,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.criteria.JpaSelection;
@@ -188,19 +189,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 			SqmSelectStatement sqm,
 			QueryOptions queryOptions) {
 		final List<String> aliases = new ArrayList<>();
-		sqm.getQuerySpec().getSelectClause().getSelections()
-				.stream()
-				.forEach(
-						sqmSelection -> {
-							final String[] selectionAliases = sqmSelection.getAliases();
-							for ( int i = 0; i < selectionAliases.length; i++ ) {
-								final String alias = selectionAliases[i];
-								aliases.add( alias );
-							}
-						}
-				);
+		sqm.getQuerySpec().getSelectClause().getSelections().forEach(
+				sqmSelection ->
+					sqmSelection.getSelectableNode().visitSubSelectableNodes(
+							subSelection -> aliases.add( subSelection.getAlias() )
+					)
+		);
+
 		return new RowTransformerTupleTransformerAdapter<>(
-				aliases.toArray( new String[] {} ), queryOptions.getTupleTransformer()
+				ArrayHelper.toStringArray( aliases ), queryOptions.getTupleTransformer()
 		);
 	}
 

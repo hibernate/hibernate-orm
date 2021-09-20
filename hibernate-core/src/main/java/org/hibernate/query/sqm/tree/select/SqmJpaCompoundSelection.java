@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import javax.persistence.criteria.Selection;
 
@@ -99,14 +100,6 @@ public class SqmJpaCompoundSelection<T>
 		return null;
 	}
 
-	public String[] getAliases() {
-		String[] aliases = new String[selectableNodes.size()];
-		for ( int i = 0; i < selectableNodes.size(); i++ ) {
-			aliases[i] = selectableNodes.get( i ).getAlias();
-		}
-		return aliases;
-	}
-
 	@Override
 	public boolean isCompoundSelection() {
 		return true;
@@ -124,7 +117,10 @@ public class SqmJpaCompoundSelection<T>
 			sb.append(", ");
 			selectableNodes.get( i ).appendHqlString( sb );
 		}
-
 	}
 
+	@Override
+	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+		selectableNodes.forEach( jpaSelectionConsumer );
+	}
 }

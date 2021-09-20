@@ -19,7 +19,6 @@ import javax.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.transform.Transformers;
 import org.junit.Before;
@@ -49,7 +48,6 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-13140")
 	@TestForIssue(jiraKey = "HHH-13140")
 	public void testAlias() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -76,7 +74,6 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-13140")
 	@TestForIssue(jiraKey = "HHH-13192")
 	public void testNoAliasInWhereClause() {
 		doInJPA( this::entityManagerFactory, entityManager -> {

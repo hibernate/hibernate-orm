@@ -33,6 +33,7 @@ import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -607,5 +608,13 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		else {
 			sb.append( alias );
 		}
+	}
+
+	@Override
+	public JpaSelection<T> alias(String name) {
+		if ( getExplicitAlias() == null ) {
+			setExplicitAlias( name );
+		}
+		return super.alias( name );
 	}
 }

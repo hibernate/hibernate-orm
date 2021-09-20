@@ -50,10 +50,6 @@ public class SqmSelection<T> extends AbstractSqmNode implements SqmAliasedNode<T
 		return selectableNode.getAlias();
 	}
 
-	public String[] getAliases() {
-		return selectableNode.getAliases();
-	}
-
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitSelection( this );

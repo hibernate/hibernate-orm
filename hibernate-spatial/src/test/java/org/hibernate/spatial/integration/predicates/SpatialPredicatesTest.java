@@ -21,13 +21,11 @@ import org.hibernate.spatial.integration.Model;
 import org.hibernate.spatial.predicate.GeolatteSpatialPredicates;
 import org.hibernate.spatial.predicate.JTSSpatialPredicates;
 import org.hibernate.spatial.testing.HSReflectionUtil;
-import org.hibernate.spatial.testing.IsSupportedBySpatial;
 import org.hibernate.spatial.testing.SpatialTestBase;
 import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.api.function.Executable;
@@ -43,9 +41,7 @@ import static org.geolatte.geom.crs.CoordinateReferenceSystems.WGS84;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
-@RequiresDialectFeature(feature = IsSupportedBySpatial.class)
-@SessionFactory
-public class GeolatteSpatialPredicatesTest extends SpatialTestBase {
+abstract public class SpatialPredicatesTest extends SpatialTestBase {
 
 	public final static TestSupport.TestDataPurpose PURPOSE = TestSupport.TestDataPurpose.SpatialFunctionsData;
 
@@ -59,13 +55,15 @@ public class GeolatteSpatialPredicatesTest extends SpatialTestBase {
 		return PURPOSE;
 	}
 
+	abstract public Stream<PredicateRegexes.PredicateRegex> getTestRegexes();
+
 	@TestFactory
 	public Stream<DynamicTest> testFactory() {
 		return
-				predicateRegexes.all()
-						.flatMap( entry -> Stream.of(
-								new Args( entry.getKey(), entry.getValue(), Model.GLMODEL ),
-								new Args( entry.getKey(), entry.getValue(), Model.JTSMODEL )
+				getTestRegexes()
+						.flatMap( rp -> Stream.of(
+								new Args( rp.predicate, rp.regex, Model.GLMODEL ),
+								new Args( rp.predicate, rp.regex, Model.JTSMODEL )
 						) )
 						.map( args -> DynamicTest.dynamicTest(
 								displayName( args ),
@@ -92,8 +90,11 @@ public class GeolatteSpatialPredicatesTest extends SpatialTestBase {
 			String stmt = inspector.getSqlQueries()
 					.get( 0 )
 					.toLowerCase( Locale.ROOT );
-			//TODO -- can't we use a (hamcrest) matcher here?
-			assertTrue( stmt.matches( regex ) );
+
+			assertTrue(
+					stmt.matches( regex ),
+					String.format( Locale.ROOT, "Statement didn't match regex:\n%s\n%s\n", stmt, regex )
+			);
 		} );
 	}
 

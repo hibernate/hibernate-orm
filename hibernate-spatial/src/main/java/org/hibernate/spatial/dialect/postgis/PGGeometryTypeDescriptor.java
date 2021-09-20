@@ -125,17 +125,6 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 				st.setObject( name, obj );
 			}
 
-			//this and the  next override is ONLY necessary as long as the distinction between SQLType and JDBC Type is not resolved
-			@Override
-			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
-				st.setNull( index, Types.OTHER );
-			}
-
-			@Override
-			protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
-				st.setNull( name, Types.OTHER );
-			}
-
 			private PGobject toPGobject(X value, WrapperOptions options) throws SQLException {
 				final WkbEncoder encoder = Wkb.newEncoder( Wkb.Dialect.POSTGIS_EWKB_1 );
 				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );

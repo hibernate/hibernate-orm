@@ -9,53 +9,93 @@ package org.hibernate.spatial.testing.dialects;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 
 public class PredicateRegexes {
 
-	protected final Map<String, String> regexes = new HashMap<>();
+	protected final Map<String, RegexPair> regexes = new HashMap<>();
 
 	// Note that we alias the function invocation so that
 	// we can map the return value to the required type
 	public PredicateRegexes() {
-		regexes.put(
+		add(
 				"overlaps",
-				"select .* from .* where st_overlaps\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_overlaps\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_overlaps\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
-		regexes.put(
-				"intersects",
-				"select .* from .* where st_intersects\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
-		);
-		regexes.put(
+		add(
 				"crosses",
-				"select .* from .* where st_crosses\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_crosses\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_crosses\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
+
 		);
-		regexes.put(
+		add(
 				"contains",
-				"select .* from .* where st_contains\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_contains\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_contains\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
-		regexes.put(
+		add(
 				"disjoint",
-				"select .* from .* where st_disjoint\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_disjoint\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_disjoint\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
-		regexes.put(
+		add(
 				"touches",
-				"select .* from .* where st_touches\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_touches\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_touches\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
-		regexes.put(
+		add(
 				"within",
-				"select .* from .* where st_within\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_within\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_within\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
+
 		);
-		regexes.put(
+		add(
 				"eq",
-				"select .* from .* where st_equals\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=\\?.*"
+				"select .* from .* where st_equals\\(.*geom\\s*,.*st_geomfromewkt\\(.*\\)\\s*=true.*",
+				"select .* from .* where st_equals\\(.*geom\\s*,.s*?\\)\\s*=\\s*?.*"
 		);
 
 	}
 
-	public Stream<Map.Entry<String, String>> all() {
-		return this.regexes.entrySet().stream();
+	public Stream<PredicateRegex> inlineModeRegexes() {
+		return extractForMode( entry -> new PredicateRegex( entry.getKey(), entry.getValue().inlineMode ) );
 	}
 
+	public Stream<PredicateRegex> bindingModeRegexes() {
+		return extractForMode( entry -> new PredicateRegex( entry.getKey(), entry.getValue().bindingMode ) );
+	}
+
+	private Stream<PredicateRegex> extractForMode(Function<Map.Entry<String, RegexPair>, PredicateRegex> mkPredRegex) {
+		return this.regexes
+				.entrySet()
+				.stream()
+				.map( mkPredRegex );
+	}
+
+	private void add(String predicate, String inlineRegex, String bindingRegex) {
+		regexes.put( predicate, new RegexPair( inlineRegex, bindingRegex ) );
+	}
+
+	static public class PredicateRegex {
+		public final String predicate;
+		public final String regex;
+
+		PredicateRegex(String predicate, String regex) {
+			this.predicate = predicate;
+			this.regex = regex;
+		}
+	}
+
+	static class RegexPair {
+		final String inlineMode;
+		final String bindingMode;
+
+		private RegexPair(String inline, String binding) {
+			inlineMode = inline;
+			bindingMode = binding;
+		}
+	}
 }

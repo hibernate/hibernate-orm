@@ -20,6 +20,7 @@ import org.geolatte.geom.crs.CoordinateReferenceSystem;
 /**
  * {@link JTSFilterPredicate}, but for geolatte-geom.
  */
+//TODO update class to H6
 public class GeolatteFilterPredicate {
 
 	private final Expression<? extends Geometry> geometry;

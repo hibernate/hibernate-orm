@@ -10,6 +10,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Predicate;
 
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.spatial.SpatialFunction;
 
 import org.locationtech.jts.geom.Geometry;
@@ -65,7 +66,8 @@ public class JTSSpatialPredicates {
 	public static Predicate eq(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return eq( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return eq( cb, geometry1, cb.value( geometry2 ) );
 	}
 
 	/**
@@ -100,7 +102,8 @@ public class JTSSpatialPredicates {
 	public static Predicate within(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return within( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return within( cb, geometry1, cb.value( geometry2 ) );
 	}
 
 	/**
@@ -135,7 +138,8 @@ public class JTSSpatialPredicates {
 	public static Predicate contains(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return contains( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return contains( cb, geometry1, cb.value( geometry2 ) );
 	}
 
 	/**
@@ -170,8 +174,9 @@ public class JTSSpatialPredicates {
 	public static Predicate crosses(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return crosses( criteriaBuilder, geometry1,
-						criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return crosses( cb, geometry1,
+						cb.value( geometry2 )
 		);
 	}
 
@@ -207,7 +212,8 @@ public class JTSSpatialPredicates {
 	public static Predicate disjoint(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return disjoint( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return disjoint( cb, geometry1, cb.value( geometry2 ) );
 	}
 
 	/**
@@ -242,7 +248,8 @@ public class JTSSpatialPredicates {
 	public static Predicate intersects(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return intersects( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return intersects( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -279,7 +286,8 @@ public class JTSSpatialPredicates {
 	public static Predicate overlaps(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return overlaps( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 )
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return overlaps( cb, geometry1, cb.value( geometry2 )
 		);
 	}
 
@@ -309,13 +317,12 @@ public class JTSSpatialPredicates {
 	 * @param geometry2 geometry value
 	 *
 	 * @return "spatially touches" predicate
-	 *
-	 * @return "spatially touches" predicate
 	 */
 	public static Predicate touches(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2) {
-		return touches( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return touches( cb, geometry1, cb.value( geometry2 ) );
 	}
 
 
@@ -416,7 +423,8 @@ public class JTSSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2, Expression<Double> distance) {
-		return distanceWithin( criteriaBuilder, geometry1, criteriaBuilder.literal( geometry2 ), distance );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return distanceWithin( cb, geometry1, cb.value( geometry2 ), distance );
 	}
 
 	/**
@@ -434,11 +442,12 @@ public class JTSSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Geometry geometry2, double distance) {
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
 		return distanceWithin(
 				criteriaBuilder,
 				geometry1,
-				criteriaBuilder.literal( geometry2 ),
-				criteriaBuilder.literal( distance )
+				cb.value( geometry2 ),
+				cb.value( distance )
 		);
 	}
 
@@ -457,7 +466,8 @@ public class JTSSpatialPredicates {
 	public static Predicate distanceWithin(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry1,
 			Expression<? extends Geometry> geometry2, double distance) {
-		return distanceWithin( criteriaBuilder, geometry1, geometry2, criteriaBuilder.literal( distance ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return distanceWithin( cb, geometry1, geometry2, cb.value( distance ) );
 	}
 
 	/**
@@ -492,7 +502,8 @@ public class JTSSpatialPredicates {
 	public static Predicate havingSRID(
 			CriteriaBuilder criteriaBuilder, Expression<? extends Geometry> geometry,
 			int srid) {
-		return havingSRID( criteriaBuilder, geometry, criteriaBuilder.literal( srid ) );
+		HibernateCriteriaBuilder cb = (HibernateCriteriaBuilder) criteriaBuilder;
+		return havingSRID( criteriaBuilder, geometry, cb.value( srid ) );
 	}
 
 	/**

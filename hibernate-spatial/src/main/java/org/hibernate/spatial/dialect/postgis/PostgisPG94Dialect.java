@@ -23,7 +23,7 @@ public class PostgisPG94Dialect extends PostgreSQLDialect {
 	}
 
 	public PostgisPG94Dialect() {
-		super();
+		super( 940 );
 	}
 
 	public PostgisPG94Dialect(int version) {

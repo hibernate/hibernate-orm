@@ -37,9 +37,15 @@ class ContributorResolver {
 	static ContributorImplementor resolveSpatialtypeContributorImplementor(ServiceRegistry serviceRegistry) {
 		JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		Dialect dialect = jdbcServices.getDialect();
-		for ( Class<?> dialectClass : CONTRIBUTOR_MAP.keySet() ) {
-			if ( dialectClass.isAssignableFrom( dialect.getClass() ) ) {
-				return CONTRIBUTOR_MAP.get( dialectClass ).apply( serviceRegistry );
+		Function<ServiceRegistry, ContributorImplementor> creator =
+				CONTRIBUTOR_MAP.get( dialect.getClass() );
+		if ( creator != null ) {
+			creator.apply( serviceRegistry );
+		}
+		for ( Map.Entry<Class<? extends Dialect>, Function<ServiceRegistry, ContributorImplementor>> entry :
+				CONTRIBUTOR_MAP.entrySet() ) {
+			if ( entry.getKey().isAssignableFrom( dialect.getClass() ) ) {
+				return entry.getValue().apply( serviceRegistry );
 			}
 		}
 		return null;

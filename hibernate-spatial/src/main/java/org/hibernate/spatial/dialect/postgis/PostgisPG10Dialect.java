@@ -22,7 +22,7 @@ public class PostgisPG10Dialect  extends PostgreSQLDialect {
 	}
 
 	public PostgisPG10Dialect() {
-		super( 100 );
+		super( 1000 );
 	}
 
 }

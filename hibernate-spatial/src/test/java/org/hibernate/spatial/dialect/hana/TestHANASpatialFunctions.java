@@ -32,7 +32,7 @@ import org.locationtech.jts.io.WKBWriter;
 import org.locationtech.jts.io.WKTWriter;
 
 import static java.lang.String.format;
-
+//TODO - see what tests are still needed, when we update/fix the HANA spatial support
 @RequiresDialect(value = HANASpatialDialect.class, comment = "This test tests the HANA spatial functions not covered by Hibernate Spatial", jiraKey = "HHH-12426")
 @Ignore
 @Deprecated

@@ -29,9 +29,6 @@ public interface HSMessageLogger extends BasicLogger {
 
 	HSMessageLogger LOGGER = Logger.getMessageLogger( HSMessageLogger.class, LOGGER_NAME );
 
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-
 	@LogMessage(level = INFO)
 	@Message(value = "hibernate-spatial integration enabled : %s", id = 80000001)
 	void spatialEnabled(boolean enabled);

@@ -2271,7 +2271,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						return;
 					}
 
-					final TableGroup tableGroup = createTableGroup( parentTableGroup, joinedPath );
+					final TableGroup tableGroup = createTableGroup( parentTableGroup, joinedPath, false );
 					consumeReusablePaths( joinedPath, tableGroup, implicitJoinChecker );
 					if ( tableGroup != null ) {
 						implicitJoinChecker.accept( tableGroup );
@@ -2292,7 +2292,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				navigablePath = lhsPath.getNavigablePath();
 			}
-			createTableGroup( fromClauseIndex.getTableGroup( navigablePath ), joinedPath );
+			// INNER join semantics are required per the JPA spec for select items.
+			createTableGroup( fromClauseIndex.getTableGroup( navigablePath ), joinedPath, true );
 		}
 		// When we select a treated path, we must add the type restriction as where clause predicate
 		if ( joinedPath instanceof SqmTreatedPath<?, ?> ) {
@@ -2304,7 +2305,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath) {
+	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath, boolean useInnerjoin) {
 		final SqmPath<?> lhsPath = joinedPath.getLhs();
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 		final ModelPart subPart = parentTableGroup.getModelPart().findSubPart(
@@ -2317,7 +2318,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableGroup tableGroup;
 		if ( subPart instanceof TableGroupJoinProducer ) {
 			final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
-			final SqlAstJoinType defaultSqlAstJoinType = joinProducer.getDefaultSqlAstJoinType( parentTableGroup );
+			final SqlAstJoinType defaultSqlAstJoinType;
+
+			// The check for joinProducer being an instance of PluralAttributeMapping is necessary
+			// for cases where we are consuming a reusable path for special case in which de-referencing a plural path is allowed,
+			// i.e.`select key(s.addresses) from Student s`.
+			if ( useInnerjoin || joinProducer instanceof PluralAttributeMapping ) {
+				defaultSqlAstJoinType = SqlAstJoinType.INNER;
+			}
+			else {
+				defaultSqlAstJoinType = joinProducer.getDefaultSqlAstJoinType( parentTableGroup );
+			}
 			final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 					joinedPath.getNavigablePath(),
 					parentTableGroup,

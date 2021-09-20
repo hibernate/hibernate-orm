@@ -6,6 +6,7 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
+import static net.bytebuddy.matcher.ElementMatchers.anyOf;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
@@ -25,8 +26,10 @@ import org.hibernate.internal.CoreMessageLogger;
 
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.AsmVisitorWrapper;
+import net.bytebuddy.asm.ModifierAdjustment;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.modifier.ModifierContributor;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
@@ -47,6 +50,22 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( PersistentAttributeTransformer.class );
 
 	private static final Junction<MethodDescription> NOT_HIBERNATE_GENERATED = not( nameStartsWith( "$$_hibernate_" ) );
+	private static final ModifierContributor.ForField REMOVE_FINAL_MODIFIER = new ModifierContributor.ForField() {
+		@Override
+		public int getMask() {
+			return EMPTY_MASK; // Do not add any modifier
+		}
+
+		@Override
+		public int getRange() {
+			return Opcodes.ACC_FINAL; // Remove the "final" modifier
+		}
+
+		@Override
+		public boolean isDefault() {
+			return false;
+		}
+	};
 
 	private final TypeDescription managedCtClass;
 
@@ -185,6 +204,16 @@ final class PersistentAttributeTransformer implements AsmVisitorWrapper.ForDecla
 		boolean compositeOwner = false;
 
 		builder = builder.visit( new AsmVisitorWrapper.ForDeclaredMethods().invokable( NOT_HIBERNATE_GENERATED, this ) );
+		// Remove the final modifier from all enhanced fields, because:
+		// 1. We sometimes need to write to final fields when they are lazy.
+		// 2. Those fields are already written to by Hibernate ORM through reflection anyway.
+		// 3. The compiler already makes sure that final fields are not written to from the user's source code.
+		List<FieldDescription.InDefinedShape> enhancedFieldsAsDefined = new ArrayList<>();
+		for ( AnnotatedFieldDescription f : enhancedFields ) {
+			enhancedFieldsAsDefined.add( f.asDefined() );
+		}
+		builder = builder.visit( new ModifierAdjustment().withFieldModifiers( anyOf( enhancedFieldsAsDefined ),
+				REMOVE_FINAL_MODIFIER ) );
 		for ( AnnotatedFieldDescription enhancedField : enhancedFields ) {
 			builder = builder
 					.defineMethod(

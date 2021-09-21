@@ -9,7 +9,7 @@ package org.hibernate.procedure.internal;
 import java.sql.CallableStatement;
 import java.sql.SQLException;
 import java.util.Objects;
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;

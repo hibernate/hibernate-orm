@@ -9,10 +9,10 @@ package org.hibernate.orm.test.ops;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.PersistenceException;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.NonUniqueObjectException;

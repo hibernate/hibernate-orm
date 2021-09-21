@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.ops;
 
 import java.util.List;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.StaleObjectStateException;

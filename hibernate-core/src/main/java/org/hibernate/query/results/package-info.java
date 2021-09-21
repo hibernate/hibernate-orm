@@ -7,7 +7,7 @@
 
 /**
  * Support for defining result-set mappings used in {@link org.hibernate.query.NativeQuery}
- * and {@link org.hibernate.procedure.ProcedureCall} / {@link javax.persistence.StoredProcedureQuery}.
+ * and {@link org.hibernate.procedure.ProcedureCall} / {@link jakarta.persistence.StoredProcedureQuery}.
  * These result-set mappings are used to map the values in the JDBC {@link java.sql.ResultSet}
  * into the query result graph.
  *

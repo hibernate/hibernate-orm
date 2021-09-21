@@ -7,7 +7,7 @@
 package org.hibernate.boot.spi;
 
 import java.util.List;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -145,7 +145,7 @@ public interface MetadataBuildingOptions {
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by
-	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
 	 *
 	 * @return The tempo ClassLoader
 	 *
@@ -242,7 +242,7 @@ public interface MetadataBuildingOptions {
 	/**
 	 * Should we create constraint by default?
 	 *
-	 * @see javax.persistence.ConstraintMode#PROVIDER_DEFAULT
+	 * @see jakarta.persistence.ConstraintMode#PROVIDER_DEFAULT
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_CONSTRAINT_MODE
 	 *
 	 * @return {@code true} if not create constraint by default; {@code false} otherwise.

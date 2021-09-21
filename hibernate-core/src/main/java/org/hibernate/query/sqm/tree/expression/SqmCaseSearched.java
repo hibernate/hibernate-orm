@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSearchedCase;

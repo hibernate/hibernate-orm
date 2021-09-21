@@ -63,7 +63,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 

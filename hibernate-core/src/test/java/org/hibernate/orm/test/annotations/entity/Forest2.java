@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -22,7 +22,7 @@ import org.hibernate.annotations.Type;
 
 /**
  * Mapping following lines of {@link Forest}, but using the replacements for the now deprecated
- * {@link javax.persistence.Entity} annotation.
+ * {@link jakarta.persistence.Entity} annotation.
  *
  * @author Steve Ebersole
  */

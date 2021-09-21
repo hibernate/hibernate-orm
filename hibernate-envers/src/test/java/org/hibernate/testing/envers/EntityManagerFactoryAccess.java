@@ -6,7 +6,7 @@
  */
 package org.hibernate.testing.envers;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.dialect.Dialect;
 

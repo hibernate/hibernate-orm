@@ -19,13 +19,13 @@ public interface TemporalJavaTypeDescriptor<T> extends BasicJavaDescriptor<T> {
 	/**
 	 * The precision represented by this type
 	 */
-	javax.persistence.TemporalType getPrecision();
+	jakarta.persistence.TemporalType getPrecision();
 
 	/**
 	 * Resolve the appropriate TemporalJavaTypeDescriptor for the given precision
 	 * "relative" to this type.
 	 */
 	<X> TemporalJavaTypeDescriptor<X> resolveTypeForPrecision(
-			javax.persistence.TemporalType precision,
+			jakarta.persistence.TemporalType precision,
 			TypeConfiguration typeConfiguration);
 }

@@ -8,11 +8,11 @@
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 import java.io.Serializable;
-import javax.persistence.AccessType;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
-import javax.persistence.Access;
+import jakarta.persistence.Access;
 
 /**
  * Non realistic embedded dependent object

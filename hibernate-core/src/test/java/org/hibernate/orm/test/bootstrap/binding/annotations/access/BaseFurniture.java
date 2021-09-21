@@ -8,13 +8,13 @@
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
 
-import javax.persistence.AccessType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Transient;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Transient;
 
-import javax.persistence.Access;
+import jakarta.persistence.Access;
 
 /**
  * @author Vlad Mihalcea

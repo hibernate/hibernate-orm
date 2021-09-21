@@ -13,11 +13,11 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.UUID;
-import javax.persistence.FlushModeType;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.CacheMode;
 import org.hibernate.EmptyInterceptor;

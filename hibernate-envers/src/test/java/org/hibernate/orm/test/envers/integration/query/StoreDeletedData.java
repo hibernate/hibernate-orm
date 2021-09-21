@@ -9,7 +9,7 @@ package org.hibernate.orm.test.envers.integration.query;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.configuration.EnversSettings;

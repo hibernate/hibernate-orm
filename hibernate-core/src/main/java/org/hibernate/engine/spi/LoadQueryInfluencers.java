@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.persistence.EntityGraph;
+import jakarta.persistence.EntityGraph;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;

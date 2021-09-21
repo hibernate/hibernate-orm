@@ -42,7 +42,7 @@ import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
 import java.util.Map;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * Hibernate Dialect implementation for Cloud Spanner.

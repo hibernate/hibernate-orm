@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.transaction;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
 

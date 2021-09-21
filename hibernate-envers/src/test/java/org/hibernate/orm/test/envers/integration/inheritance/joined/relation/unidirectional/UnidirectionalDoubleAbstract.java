@@ -9,7 +9,7 @@ package org.hibernate.orm.test.envers.integration.inheritance.joined.relation.un
 
 import java.util.Arrays;
 import java.util.Set;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;

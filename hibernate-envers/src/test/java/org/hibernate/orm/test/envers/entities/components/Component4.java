@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.entities.components;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.NotAudited;

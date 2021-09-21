@@ -9,8 +9,8 @@ package org.hibernate.engine.spi;
 import java.sql.Connection;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.FlushModeType;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

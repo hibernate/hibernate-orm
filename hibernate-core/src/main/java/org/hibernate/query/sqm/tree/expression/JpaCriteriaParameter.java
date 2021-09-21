@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 
 /**
- * {@link JpaParameterExpression} created via JPA {@link javax.persistence.criteria.CriteriaBuilder}.
+ * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
  *
  * Each occurence of a JpaParameterExpression results in a unique SqmParameter
  *

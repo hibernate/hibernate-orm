@@ -13,8 +13,9 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.service.spi.ServiceException;
@@ -34,13 +35,13 @@ public class BootFailureTest {
 
 	@Test
 	public void exceptionOnIllegalPUTest() {
-		Assertions.assertThrows( ServiceException.class, () ->
+		Assertions.assertThrows( PersistenceException.class, () ->
 				bootstrapPersistenceUnit( "IntentionallyBroken" ) );
 	}
 
 	@Test
 	public void exceptionOnIllegalPUWithoutProviderTest() {
-		Assertions.assertThrows( ServiceException.class, () ->
+		Assertions.assertThrows( PersistenceException.class, () ->
 				bootstrapPersistenceUnit( "IntentionallyBrokenWihoutExplicitProvider" ) );
 	}
 

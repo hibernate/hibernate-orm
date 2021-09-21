@@ -9,8 +9,8 @@ package org.hibernate.test.type;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.concurrent.TimeUnit;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;

@@ -6,10 +6,10 @@
  */
 package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Named;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 /**
  * @author Yoann Rodiere
@@ -19,7 +19,7 @@ import javax.inject.Named;
 public class TheMainNamedApplicationScopedBeanImpl implements TheNamedApplicationScopedBean {
 	public static final String NAME = "TheMainNamedApplicationScopedBeanImpl_name";
 
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	private TheNestedDependentBean nestedDependentBean;
 
 	public TheMainNamedApplicationScopedBeanImpl() {

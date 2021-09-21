@@ -8,7 +8,7 @@
 /**
  * Support for set and map ordering
  *
- * @see javax.persistence.OrderBy
+ * @see jakarta.persistence.OrderBy
  * @see org.hibernate.annotations.OrderBy
  */
 package org.hibernate.metamodel.mapping.ordering;

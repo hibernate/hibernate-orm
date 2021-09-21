@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 import java.util.function.Consumer;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.annotations.Remove;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;

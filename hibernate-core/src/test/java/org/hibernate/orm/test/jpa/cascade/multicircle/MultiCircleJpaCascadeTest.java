@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.cascade.multicircle;
 
-import javax.persistence.RollbackException;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.TransientPropertyValueException;
 
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.fail;
  * <p>
  * All IDs are generated from a sequence.
  * <p>
- * JPA cascade types are used (javax.persistence.CascadeType)..
+ * JPA cascade types are used (jakarta.persistence.CascadeType)..
  * <p>
  * This test uses the following model:
  *

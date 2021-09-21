@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import javax.persistence.AttributeConverter;
-import javax.persistence.ConstraintMode;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;

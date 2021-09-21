@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Locale;
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedNativeQueryType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNamedQueryType;
@@ -97,7 +97,7 @@ public class NamedQueryBinder {
 			String prefix) {
 		if ( namedQueryBinding.isCallable() ) {
 			DeprecationLogger.DEPRECATION_LOGGER.warn(
-					"Marking named native queries as callable is no longer supported; use `@javax.persistence.NamedStoredProcedureQuery` instead.  Ignoring."
+					"Marking named native queries as callable is no longer supported; use `@jakarta.persistence.NamedStoredProcedureQuery` instead.  Ignoring."
 			);
 		}
 

@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.idclass;
 
 import java.io.Serializable;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 
 /**

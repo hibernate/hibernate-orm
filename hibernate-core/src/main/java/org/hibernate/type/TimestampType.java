@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;

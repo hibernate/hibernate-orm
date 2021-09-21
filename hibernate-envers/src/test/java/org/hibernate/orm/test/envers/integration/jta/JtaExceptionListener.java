@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.envers.integration.jta;
 
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.transaction.RollbackException;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.RollbackException;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;

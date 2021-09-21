@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.userguide.util;
 
-import javax.persistence.spi.LoadState;
+import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;

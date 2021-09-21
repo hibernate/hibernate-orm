@@ -17,11 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -187,7 +187,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 	/**
 	 * Add a DB query hint to the SQL.  These differ from JPA's
-	 * {@link javax.persistence.QueryHint} and {@link #getHints()}, which is
+	 * {@link jakarta.persistence.QueryHint} and {@link #getHints()}, which is
 	 * specific to the JPA implementation and ignores DB vendor-specific hints.
 	 * Instead, these are intended solely for the vendor-specific hints, such
 	 * as Oracle's optimizers.  Multiple query hints are supported; the Dialect
@@ -409,7 +409,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// covariant overrides - javax.persistence.Query/TypedQuery
+	// covariant overrides - jakarta.persistence.Query/TypedQuery
 
 	@Override
 	Query<R> setMaxResults(int maxResult);

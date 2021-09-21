@@ -7,7 +7,7 @@
 package org.hibernate.resource.transaction.spi;
 
 import java.io.Serializable;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.resource.transaction.NullSynchronizationException;
 

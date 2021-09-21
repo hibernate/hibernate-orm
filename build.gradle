@@ -31,6 +31,8 @@ plugins {
 	id 'eclipse'
 
 	id 'org.hibernate.build.xjc' version '2.2.0' apply false
+	id 'org.hibernate.build.xjc-jakarta' version '1.0.1' apply false
+
 	id 'org.hibernate.matrix-test' version '3.1.1' apply false
 	id 'biz.aQute.bnd' version '5.1.1' apply false
 }

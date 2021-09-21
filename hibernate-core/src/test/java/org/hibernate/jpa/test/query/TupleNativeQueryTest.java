@@ -11,8 +11,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.persistence.*;
-import javax.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.*;
+import jakarta.persistence.criteria.CriteriaDelete;
 import java.util.List;
 import java.util.stream.Collectors;
 

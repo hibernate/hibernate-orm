@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<bindings xmlns="http://java.sun.com/xml/ns/jaxb"
+<bindings xmlns="https://jakarta.ee/xml/ns/jaxb"
         xmlns:xsd="http://www.w3.org/2001/XMLSchema"
         xmlns:inheritance="http://jaxb2-commons.dev.java.net/basic/inheritance"
         extensionBindingPrefixes="inheritance"
-        version="2.1">
+        version="3.0">
 
     <bindings schemaLocation="../resources/org/hibernate/jpa/orm_2_2.xsd" node="/xsd:schema">
         <schemaBindings>
@@ -18,61 +18,61 @@
         </schemaBindings>
 
 		<bindings node="//xsd:simpleType[@name='access-type']">
-			<javaType name="javax.persistence.AccessType"
+			<javaType name="jakarta.persistence.AccessType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.AccessTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.AccessTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='discriminator-type']">
-			<javaType name="javax.persistence.DiscriminatorType"
+			<javaType name="jakarta.persistence.DiscriminatorType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.DiscriminatorTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.DiscriminatorTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='enum-type']">
-			<javaType name="javax.persistence.EnumType"
+			<javaType name="jakarta.persistence.EnumType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.EnumTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.EnumTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='fetch-type']">
-			<javaType name="javax.persistence.FetchType"
+			<javaType name="jakarta.persistence.FetchType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.FetchTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.FetchTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='lock-mode-type']">
-			<javaType name="javax.persistence.LockModeType"
+			<javaType name="jakarta.persistence.LockModeType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.LockModeTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.LockModeTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='parameter-mode']">
-			<javaType name="javax.persistence.ParameterMode"
+			<javaType name="jakarta.persistence.ParameterMode"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ParameterModeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.ParameterModeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='temporal-type']">
-			<javaType name="javax.persistence.TemporalType"
+			<javaType name="jakarta.persistence.TemporalType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.TemporalTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.TemporalTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='inheritance-type']">
-			<javaType name="javax.persistence.InheritanceType"
+			<javaType name="jakarta.persistence.InheritanceType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.InheritanceTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.InheritanceTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='generation-type']">
-			<javaType name="javax.persistence.GenerationType"
+			<javaType name="jakarta.persistence.GenerationType"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTypeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.GenerationTypeMarshalling.toXml" />
         </bindings>
 
 		<bindings node="//xsd:simpleType[@name='constraint-mode']">
-			<javaType name="javax.persistence.ConstraintMode"
+			<javaType name="jakarta.persistence.ConstraintMode"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.toXml" />
         </bindings>

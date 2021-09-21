@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.cdi.general.mixed;
 
-import javax.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainer;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;

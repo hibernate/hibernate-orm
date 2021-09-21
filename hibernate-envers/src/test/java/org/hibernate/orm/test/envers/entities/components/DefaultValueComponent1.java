@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.entities.components;
 
-import javax.persistence.Embedded;
+import jakarta.persistence.Embedded;
 
 /**
  * @author Erik-Berndt Scheper

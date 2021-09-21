@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.graphs;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Set;
 

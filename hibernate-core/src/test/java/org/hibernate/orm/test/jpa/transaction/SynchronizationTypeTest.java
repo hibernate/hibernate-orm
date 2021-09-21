@@ -6,14 +6,14 @@
  */
 package org.hibernate.orm.test.jpa.transaction;
 
-import javax.persistence.EntityManager;
-import javax.persistence.LockModeType;
-import javax.persistence.SynchronizationType;
-import javax.persistence.TransactionRequiredException;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaUpdate;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

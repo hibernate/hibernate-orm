@@ -6,10 +6,10 @@
  */
 package org.hibernate.orm.test.jpa.exception;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.exception.ConstraintViolationException;

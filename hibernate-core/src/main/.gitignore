@@ -1,5 +1,0 @@
-## Ignore IntelliJ Antlr Plugin's output
-gen/
-
-## Ignore other generated code (e.g. Logger)
-generated/

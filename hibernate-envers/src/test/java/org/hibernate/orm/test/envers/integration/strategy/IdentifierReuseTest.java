@@ -8,8 +8,8 @@ package org.hibernate.orm.test.envers.integration.strategy;
 
 import java.util.Arrays;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.envers.configuration.EnversSettings;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

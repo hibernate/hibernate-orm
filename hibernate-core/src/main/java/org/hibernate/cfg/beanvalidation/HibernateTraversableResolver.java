@@ -9,8 +9,8 @@ import java.lang.annotation.ElementType;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.validation.Path;
-import javax.validation.TraversableResolver;
+import jakarta.validation.Path;
+import jakarta.validation.TraversableResolver;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Hibernate;

@@ -8,8 +8,8 @@ package org.hibernate.orm.test.sql.function;
 
 import java.sql.Timestamp;
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

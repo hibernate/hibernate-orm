@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.cdi.events;
 
-import javax.persistence.PrePersist;
+import jakarta.persistence.PrePersist;
 
 /**
  * @author Steve Ebersole
@@ -14,7 +14,7 @@ import javax.persistence.PrePersist;
 public class TheListener {
 	private final Monitor monitor;
 
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	public TheListener(Monitor monitor) {
 		this.monitor = monitor;
 	}

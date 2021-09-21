@@ -6,10 +6,10 @@
  */
 package org.hibernate.graph;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Subgraph;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -17,11 +17,11 @@ import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 
 /**
- * Parser for string representations of JPA {@link javax.persistence.EntityGraph}
- * ({@link RootGraph}) and {@link javax.persistence.Subgraph} ({@link SubGraph}),
+ * Parser for string representations of JPA {@link jakarta.persistence.EntityGraph}
+ * ({@link RootGraph}) and {@link jakarta.persistence.Subgraph} ({@link SubGraph}),
  * using a simple syntax defined by the `graph.g` Antlr grammar.
  * <p/>
- * The {@link #parse} methods all create a root {@link javax.persistence.EntityGraph}
+ * The {@link #parse} methods all create a root {@link jakarta.persistence.EntityGraph}
  * based on the passed entity class and parse the graph string into that root graph.
  * <p/>
  * The {@link #parseInto} methods parse the graph string into a passed graph, which may be a sub-graph

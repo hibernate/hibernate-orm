@@ -7,8 +7,8 @@
 package org.hibernate;
 
 import java.util.Locale;
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 /**
  * Controls how the session interacts with the second-level cache and query cache.

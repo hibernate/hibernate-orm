@@ -8,8 +8,8 @@ package org.hibernate.jpa.internal.util;
 
 import java.util.Map;
 import java.util.function.Supplier;
-import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockScope;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.LockOptions;
 

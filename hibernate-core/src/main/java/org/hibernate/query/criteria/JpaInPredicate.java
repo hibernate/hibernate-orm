@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaBuilder;
 
 /**
  * @author Steve Ebersole

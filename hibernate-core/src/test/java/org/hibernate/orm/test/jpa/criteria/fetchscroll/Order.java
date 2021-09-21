@@ -2,7 +2,7 @@
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
 import java.util.*;
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "order_headers")

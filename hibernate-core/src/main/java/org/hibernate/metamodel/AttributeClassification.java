@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel;
 
-import javax.persistence.metamodel.Attribute.PersistentAttributeType;
+import jakarta.persistence.metamodel.Attribute.PersistentAttributeType;
 
 public enum AttributeClassification {
 	BASIC( PersistentAttributeType.BASIC ),

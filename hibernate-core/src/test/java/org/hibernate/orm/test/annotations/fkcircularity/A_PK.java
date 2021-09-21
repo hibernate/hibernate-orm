@@ -8,7 +8,7 @@
 // $Id$
 package org.hibernate.orm.test.annotations.fkcircularity;
 import java.io.Serializable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.ManyToOne;
 
 /**
  * Test entities ANN-722.

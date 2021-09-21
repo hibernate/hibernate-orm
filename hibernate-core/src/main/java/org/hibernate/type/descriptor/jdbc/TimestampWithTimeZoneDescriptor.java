@@ -14,7 +14,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterTemporal;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

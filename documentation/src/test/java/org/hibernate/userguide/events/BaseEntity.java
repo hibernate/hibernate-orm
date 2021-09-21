@@ -1,7 +1,7 @@
 package org.hibernate.userguide.events;
 
 import java.sql.Timestamp;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Vlad Mihalcea

@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import javax.persistence.FetchType;
+import jakarta.persistence.FetchType;
 
 /**
  * Marshalling support for dealing with JPA FetchType enums.  Plugged into JAXB for binding

@@ -22,7 +22,7 @@ idea.module {
 
 configurations {
     core
-//    testing
+    testing
 
     envers
 
@@ -35,30 +35,20 @@ configurations {
     jcache
 
     jpamodelgen
-
-    coreJakarta
-//    testingJakarta
-    enversJakarta
-    jpamodelgenJakarta
 }
 
 dependencies {
     core project( ':hibernate-core' )
-//    testing project( ':hibernate-testing' )
+    testing project( ':hibernate-testing' )
     envers project( ':hibernate-envers' )
     agroal project( ':hibernate-agroal' )
     c3p0 project( ':hibernate-c3p0' )
     hikaricp project( ':hibernate-hikaricp' )
     proxool project( ':hibernate-proxool' )
     vibur project( ':hibernate-vibur' )
-    jcache project( ':hibernate-jcache' )
+//    jcache project( ':hibernate-jcache' )
 
     jpamodelgen project( ':hibernate-jpamodelgen' )
-
-    coreJakarta project( ':hibernate-core-jakarta' )
-//    testingJakarta project( ':hibernate-testing-jakarta' )
-    enversJakarta project( ':hibernate-envers-jakarta' )
-    jpamodelgenJakarta project( ':hibernate-jpamodelgen-jakarta' )
 }
 
 /**
@@ -185,29 +175,14 @@ distributions {
                 into( 'hikaricp' ) {
                     from( configurations.hikaricp - configurations.core )
                 }
-                into( 'jcache' ) {
-                    from( configurations.jcache - configurations.core )
-                }
+//                into( 'jcache' ) {
+//                    from( configurations.jcache - configurations.core )
+//                }
                 into( 'proxool' ) {
                     from( configurations.proxool - configurations.core )
                 }
                 into( 'vibur' ) {
                     from( configurations.vibur - configurations.core )
-                }
-            }
-
-            into( 'lib/jakarta' ) {
-                into( 'required' ) {
-                    from configurations.coreJakarta
-                }
-//                into( 'testing' ) {
-//                   from( configurations.testingJakarta - configurations.coreJakarta )
-//                }
-                into( 'envers' ) {
-                    from( configurations.enversJakarta - configurations.coreJakarta )
-                }
-                into( 'jpa-metamodel-generator' ) {
-                    from( configurations.jpamodelgenJakarta - configurations.coreJakarta )
                 }
             }
 

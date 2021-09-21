@@ -8,7 +8,7 @@
 // $Id$
 
 package org.hibernate.orm.test.bootstrap.binding.annotations.access.xml;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik

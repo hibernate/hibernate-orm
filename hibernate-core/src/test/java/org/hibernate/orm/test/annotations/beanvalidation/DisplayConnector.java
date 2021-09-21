@@ -6,11 +6,11 @@
  */
 
 package org.hibernate.orm.test.annotations.beanvalidation;
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 
 
 /**

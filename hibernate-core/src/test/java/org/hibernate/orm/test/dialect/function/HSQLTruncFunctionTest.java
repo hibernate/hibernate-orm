@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.dialect.function;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.xml.sequences;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

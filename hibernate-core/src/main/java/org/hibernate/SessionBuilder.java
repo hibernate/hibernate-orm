@@ -82,7 +82,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.SynchronizationType#SYNCHRONIZED
+	 * @see jakarta.persistence.SynchronizationType#SYNCHRONIZED
 	 */
 	T autoJoinTransactions(boolean autoJoinTransactions);
 
@@ -102,7 +102,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.PersistenceContextType
+	 * @see jakarta.persistence.PersistenceContextType
 	 */
 	T flushMode(FlushMode flushMode);
 
@@ -136,7 +136,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 
 	/**
 	 * Should {@link org.hibernate.query.Query#setParameter} perform parameter validation
-	 * when the Session is bootstrapped via JPA {@link javax.persistence.EntityManagerFactory}
+	 * when the Session is bootstrapped via JPA {@link jakarta.persistence.EntityManagerFactory}
 	 *
 	 * @param enabled {@code true} indicates the validation should be performed, {@code false} otherwise
 	 * <p>
@@ -157,7 +157,7 @@ public interface SessionBuilder<T extends SessionBuilder> {
 	 *
 	 * @return {@code this}, for method chaining
 	 *
-	 * @see javax.persistence.PersistenceContextType
+	 * @see jakarta.persistence.PersistenceContextType
 	 *
 	 * @deprecated Only integrations can specify autoClosing behavior of individual sessions.  See
 	 * {@link org.hibernate.engine.spi.SessionOwner}

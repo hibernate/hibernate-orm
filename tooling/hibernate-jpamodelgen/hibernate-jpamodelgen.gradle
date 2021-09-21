@@ -1,0 +1,70 @@
+plugins {
+    id 'org.hibernate.build.xjc-jakarta'
+}
+
+repositories {
+    mavenLocal()
+}
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+description = 'JPA "static metamodel" generator'
+
+ext {
+    xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
+    xsdDir = file( "${projectDir}/src/main/xsd" )
+}
+
+dependencies {
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:3.0.2'
+
+    xjc 'org.glassfish.jaxb:jaxb-xjc:3.0.2'
+//    xjc 'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1'
+    xjc 'org.glassfish.jaxb:jaxb-runtime:3.0.2'
+
+//    xjc 'org.jvnet.jaxb2_commons:jaxb2-basics:3.0.0-SNAPSHOT'
+//    xjc 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:3.0.0-SNAPSHOT'
+    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
+
+    testImplementation project( ':hibernate-core' )
+    testImplementation libraries.junit
+    testImplementation libraries.jakarta_validation
+}
+
+sourceSets.main {
+    java.srcDir xjcTargetDir
+    resources.srcDir xsdDir
+}
+
+compileTestJava {
+    options.compilerArgs += [
+            "-proc:none"
+    ]
+}
+
+task jaxb {
+    // configure Gradle up-to-date checking
+    inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
+    outputs.dir( xjcTargetDir )
+    outputs.cacheIf { true }
+
+    // perform actions
+    doLast {
+        xjcTargetDir.mkdirs()
+
+        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
+
+        ant.xjc(
+                destdir: ( xjcTargetDir as File ).absolutePath,
+                package: 'org.hibernate.jpamodelgen.xml.jaxb',
+                extension: 'true'
+        ) {
+            project.ant.arg line: '-no-header'
+            project.ant.arg line: '-npa'
+            schema( dir: xsdDir.path, includes: "*.xsd" )
+        }
+    }
+}
+
+tasks.compileJava.dependsOn tasks.jaxb

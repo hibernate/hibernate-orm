@@ -11,9 +11,9 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.MapKeyColumn;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.MapKeyColumn;
 
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;

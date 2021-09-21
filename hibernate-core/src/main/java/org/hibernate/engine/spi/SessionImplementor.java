@@ -8,9 +8,9 @@ package org.hibernate.engine.spi;
 
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;

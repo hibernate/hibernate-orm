@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.locking.paging;
 
 import java.util.List;
-import javax.persistence.LockModeType;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.LockMode;
 import org.hibernate.query.NativeQuery;

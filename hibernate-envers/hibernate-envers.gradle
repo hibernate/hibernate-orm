@@ -5,89 +5,564 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
+
 description = 'Hibernate\'s entity version (audit/history) support'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
 
 dependencies {
-    api project( ':hibernate-core' )
+	api project( ':hibernate-core' )
 
-    // TODO HHH-13703: get rid of this dependency
-    implementation libraries.dom4j
+	// TODO HHH-13703: get rid of this dependency
+	implementation libraries.dom4j
 
-    compileOnly libraries.ant
+	compileOnly libraries.ant
 
-    annotationProcessor project( ':hibernate-jpamodelgen' )
+	annotationProcessor project( ':hibernate-jpamodelgen' )
 
-    testImplementation project( ':hibernate-testing' )
+	testImplementation project( ':hibernate-testing' )
 }
 
+
 test {
-    include '**/**'
+	include '**/**'
 }
 
 sourceSets {
-    test {
-        ext {
-            enversDemoJavaDir = file( "src/demo/java" )
-            enversDemoResourcesDir = file( "src/demo/resources" )
-        }
-        java {
-            srcDir enversDemoJavaDir
-        }
-        resources {
-            srcDir enversDemoResourcesDir
-        }
-    }
+	test {
+		ext {
+			enversDemoJavaDir = file( "src/demo/java" )
+			enversDemoResourcesDir = file( "src/demo/resources" )
+		}
+		java {
+			srcDir enversDemoJavaDir
+		}
+		resources {
+			srcDir enversDemoResourcesDir
+		}
+	}
 }
 
-configurations {
-    tests {
-        description = 'Configuration for the produced test jar'
-    }
-}
 
 jar {
-    manifest {
-        attributes(
-                // BND Plugin instructions (for OSGi):
-                'Import-Package': [
-                        // TODO: Shouldn't have to explicitly list the JPA packages, but
-                        // the plugin generates them with [1.0,2) versions.
-                        "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.criteria;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.metamodel;version=\"${project.jpaVersion.osgiName}\"",
-                        "javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
-                        // optionals
-                        'javax.naming;resolution:=optional',
-                        'org.apache.tools.ant;resolution:=optional',
-                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                        // use it.  Without this, the plugin generates [1.2,2).
-                        'javax.transaction;version="[1.1,2)"',
-                        // Also import every package referenced in the code
-                        '*'
-                ].join( ',' )
-        )
-    }
+	manifest {
+		attributes(
+				// BND Plugin instructions (for OSGi):
+				'Import-Package': [
+						// TODO: Shouldn't have to explicitly list the JPA packages, but
+						// the plugin generates them with [1.0,2) versions.
+						"javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
+						"javax.persistence.criteria;version=\"${project.jpaVersion.osgiName}\"",
+						"javax.persistence.metamodel;version=\"${project.jpaVersion.osgiName}\"",
+						"javax.persistence.spi;version=\"${project.jpaVersion.osgiName}\"",
+						// optionals
+						'javax.naming;resolution:=optional',
+						'org.apache.tools.ant;resolution:=optional',
+						// Temporarily support JTA 1.1 -- Karaf and other frameworks still
+						// use it.  Without this, the plugin generates [1.2,2).
+						'javax.transaction;version="[1.1,2)"',
+						// Also import every package referenced in the code
+						'*'
+				].join( ',' )
+		)
+	}
 }
 
 sourcesJar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 task testJar(type: Jar, dependsOn: testClasses) {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set( 'test' )
-    from sourceSets.test.output
+	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+	archiveClassifier.set( 'test' )
+	from sourceSets.test.output
 }
 
-artifacts {
-    tests testJar
-}
 
 tasks."matrix_mariadb" {
-    beforeTest { descriptor ->
-        println "Starting test: " + descriptor
-    }
+	beforeTest { descriptor ->
+		println "Starting test: ${descriptor}"
+	}
 }
+
+
+
+
+
+
+//import org.hibernate.orm.jakarta.JakartaDirectoryTransformation
+//
+//plugins {
+//	id 'org.hibernate.orm.jakarta' apply false
+//}
+//
+//apply from: rootProject.file( 'gradle/java-module.gradle' )
+//apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+//
+//
+//
+//
+//
+//
+//description = 'Hibernate\'s entity version (audit/history) support Jakarta edition'
+//
+////apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
+//
+//configurations {
+//	jakartaeeTransformTool
+//}
+//
+//dependencies {
+//	api project( ':hibernate-core' )
+//
+//	testImplementation( project( ':hibernate-testing' ) )
+//
+//	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+//			'commons-cli:commons-cli:1.4',
+//			'org.slf4j:slf4j-simple:1.7.30',
+//			'org.slf4j:slf4j-api:1.7.26',
+//			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+//			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+//}
+//
+//
+//def groupingTask = tasks.create("jakartafy")
+//
+//// main
+//
+//tasks.create(
+//		"jakartafySources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/main/java' ) )
+//			transformation.targetDirectory.set( project.file( 'src/main/java' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//tasks.create(
+//		"jakartafyResources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/main/resources' ) )
+//			transformation.targetDirectory.set( project.file( 'src/main/resources' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//// test
+//
+//tasks.create(
+//		"jakartafyTestSources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test/java' ) )
+//			transformation.targetDirectory.set( project.file( 'src/test/java' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//tasks.create(
+//		"jakartafyTestResources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test/resources' ) )
+//			transformation.targetDirectory.set( project.file( 'src/test/resources' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//
+//// demo
+//
+//tasks.create(
+//		"jakartafyDemoSources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/demo/java' ) )
+//			transformation.targetDirectory.set( project.file( 'src/demo/java' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//tasks.create(
+//		"jakartafyDemoResources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/demo/resources' ) )
+//			transformation.targetDirectory.set( project.file( 'src/demo/resources' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//
+//
+////// test_legacy
+////
+////tasks.create(
+////		"jakartafyTestLegacySources",
+////		JakartaDirectoryTransformation.class,
+////		{transformation ->
+////			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test_legacy/java' ) )
+////			transformation.targetDirectory.set( project.file( 'src/test_legacy/java' ) )
+////			groupingTask.dependsOn( transformation )
+////		}
+////)
+////
+////tasks.create(
+////		"jakartafyTestLegacyResources",
+////		JakartaDirectoryTransformation.class,
+////		{transformation ->
+////			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test_legacy/resources' ) )
+////			transformation.targetDirectory.set( project.file( 'src/test_legacy/resources' ) )
+////			groupingTask.dependsOn( transformation )
+////		}
+////)
+//
+//
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// main jar
+//
+////tasks.jar {
+////	enabled false
+////}
+////
+////task jakartafyJar( type: JakartaJarTransformation ) {
+////	sourceJar = project(':hibernate-envers').tasks.jar.archiveFile
+////	targetJar = tasks.jar.archiveFile
+////}
+////
+////tasks.jar.dependsOn project(':hibernate-envers').tasks.jar
+////tasks.jar.finalizedBy tasks.jakartafyJar
+////tasks.jakartafyJar.dependsOn tasks.jar
+////tasks.jakartafyJar.mustRunAfter tasks.jar
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// javadoc jar
+//
+////tasks.javadocJar {
+////	enabled false
+////}
+////
+////task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+////	sourceJar = project(':hibernate-envers').tasks.javadocJar.archiveFile
+////	targetJar = tasks.javadocJar.archiveFile
+////}
+////
+////tasks.javadocJar.dependsOn project(':hibernate-envers').tasks.javadocJar
+////tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+////tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+////tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+//
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// sources jar
+//
+////tasks.sourcesJar {
+////	enabled false
+////}
+////
+////task jakartafySourcesJar( type: JakartaJarTransformation ) {
+////	sourceJar = project(':hibernate-envers').tasks.sourcesJar.archiveFile
+////	targetJar = tasks.javadocJar.archiveFile
+////}
+////
+////tasks.sourcesJar.dependsOn project(':hibernate-envers').tasks.sourcesJar
+////tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+////tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+////tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
+////
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~//import org.hibernate.orm.jakarta.JakartaDirectoryTransformation
+//
+//plugins {
+//	id 'org.hibernate.orm.jakarta' apply false
+//}
+//
+//apply from: rootProject.file( 'gradle/java-module.gradle' )
+//apply from: rootProject.file( 'gradle/publishing-pom.gradle' )
+//
+//
+//
+//
+//
+//
+//description = 'Hibernate\'s entity version (audit/history) support Jakarta edition'
+//
+////apply from: rootProject.file( 'gradle/published-jakarta-java-module.gradle' )
+//
+//configurations {
+//	jakartaeeTransformTool
+//}
+//
+//dependencies {
+//	api project( ':hibernate-core' )
+//
+//	testImplementation( project( ':hibernate-testing' ) )
+//
+//	jakartaeeTransformTool 'biz.aQute.bnd:biz.aQute.bnd.transform:5.1.1',
+//			'commons-cli:commons-cli:1.4',
+//			'org.slf4j:slf4j-simple:1.7.30',
+//			'org.slf4j:slf4j-api:1.7.26',
+//			'org.eclipse.transformer:org.eclipse.transformer:0.2.0',
+//			'org.eclipse.transformer:org.eclipse.transformer.cli:0.2.0'
+//}
+//
+//
+//def groupingTask = tasks.create("jakartafy")
+//
+//// main
+//
+//tasks.create(
+//		"jakartafySources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/main/java' ) )
+//			transformation.targetDirectory.set( project.file( 'src/main/java' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//tasks.create(
+//		"jakartafyResources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/main/resources' ) )
+//			transformation.targetDirectory.set( project.file( 'src/main/resources' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//// test
+//
+//tasks.create(
+//		"jakartafyTestSources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test/java' ) )
+//			transformation.targetDirectory.set( project.file( 'src/test/java' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//tasks.create(
+//		"jakartafyTestResources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test/resources' ) )
+//			transformation.targetDirectory.set( project.file( 'src/test/resources' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//
+//// demo
+//
+//tasks.create(
+//		"jakartafyDemoSources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/demo/java' ) )
+//			transformation.targetDirectory.set( project.file( 'src/demo/java' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//tasks.create(
+//		"jakartafyDemoResources",
+//		JakartaDirectoryTransformation.class,
+//		{transformation ->
+//			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/demo/resources' ) )
+//			transformation.targetDirectory.set( project.file( 'src/demo/resources' ) )
+//			groupingTask.dependsOn( transformation )
+//		}
+//)
+//
+//
+//
+////// test_legacy
+////
+////tasks.create(
+////		"jakartafyTestLegacySources",
+////		JakartaDirectoryTransformation.class,
+////		{transformation ->
+////			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test_legacy/java' ) )
+////			transformation.targetDirectory.set( project.file( 'src/test_legacy/java' ) )
+////			groupingTask.dependsOn( transformation )
+////		}
+////)
+////
+////tasks.create(
+////		"jakartafyTestLegacyResources",
+////		JakartaDirectoryTransformation.class,
+////		{transformation ->
+////			transformation.sourceDirectory.set( project( ':hibernate-envers' ).file( 'src/test_legacy/resources' ) )
+////			transformation.targetDirectory.set( project.file( 'src/test_legacy/resources' ) )
+////			groupingTask.dependsOn( transformation )
+////		}
+////)
+//
+//
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// main jar
+//
+////tasks.jar {
+////	enabled false
+////}
+////
+////task jakartafyJar( type: JakartaJarTransformation ) {
+////	sourceJar = project(':hibernate-envers').tasks.jar.archiveFile
+////	targetJar = tasks.jar.archiveFile
+////}
+////
+////tasks.jar.dependsOn project(':hibernate-envers').tasks.jar
+////tasks.jar.finalizedBy tasks.jakartafyJar
+////tasks.jakartafyJar.dependsOn tasks.jar
+////tasks.jakartafyJar.mustRunAfter tasks.jar
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// javadoc jar
+//
+////tasks.javadocJar {
+////	enabled false
+////}
+////
+////task jakartafyJavadocJar( type: JakartaJarTransformation ) {
+////	sourceJar = project(':hibernate-envers').tasks.javadocJar.archiveFile
+////	targetJar = tasks.javadocJar.archiveFile
+////}
+////
+////tasks.javadocJar.dependsOn project(':hibernate-envers').tasks.javadocJar
+////tasks.javadocJar.finalizedBy tasks.jakartafyJavadocJar
+////tasks.jakartafyJavadocJar.dependsOn tasks.javadocJar
+////tasks.jakartafyJavadocJar.mustRunAfter tasks.javadocJar
+//
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// sources jar
+//
+////tasks.sourcesJar {
+////	enabled false
+////}
+////
+////task jakartafySourcesJar( type: JakartaJarTransformation ) {
+////	sourceJar = project(':hibernate-envers').tasks.sourcesJar.archiveFile
+////	targetJar = tasks.javadocJar.archiveFile
+////}
+////
+////tasks.sourcesJar.dependsOn project(':hibernate-envers').tasks.sourcesJar
+////tasks.sourcesJar.finalizedBy tasks.jakartafySourcesJar
+////tasks.jakartafySourcesJar.dependsOn tasks.sourcesJar
+////tasks.jakartafySourcesJar.mustRunAfter tasks.sourcesJar
+////
+//
+//
+//// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+//// testing
+//
+////project.ext {
+////	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
+////	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
+////}
+////
+////tasks.compileTestJava {
+////	enabled false
+////}
+////
+////tasks.processTestResources {
+////	enabled false
+////}
+////
+////task unpackTests(type: Copy) {
+////	from zipTree( project( ':hibernate-envers' ).tasks.testJar.archiveFile )
+////	into project.testClassesUnpackTargetDirectory
+////}
+////
+////task jakartafyTests(type: JakartaDirectoryTransformation) {
+////	sourceDirectory = project.testClassesUnpackTargetDirectory
+////	targetDirectory = project.testClassesTransformationTargetDirectory
+////}
+////
+////
+////tasks.compileTestJava.dependsOn tasks.unpackTests
+////tasks.compileTestJava.finalizedBy tasks.jakartafyTests
+////
+////tasks.unpackTests.dependsOn project(':hibernate-envers').tasks.testJar
+////
+////tasks.jakartafyTests.dependsOn tasks.unpackTests
+//
+////tasks.test {
+////	dependsOn tasks.jakartafyTests
+////	testClassesDirs += project.files( tasks.jakartafyTests.targetDirectory )
+////	classpath += project.files( tasks.jakartafyTests.targetDirectory )
+////
+////	systemProperty 'file.encoding', 'utf-8'
+////
+////	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+////		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+////		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+////		// Weld needs this to generate proxies
+////		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+////		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+////	}
+////}
+////
+//// testing
+//
+////project.ext {
+////	testClassesUnpackTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/unpack/classes' )
+////	testClassesTransformationTargetDirectory = project.layout.buildDirectory.dir( 'jakarta/test/classes' )
+////}
+////
+////tasks.compileTestJava {
+////	enabled false
+////}
+////
+////tasks.processTestResources {
+////	enabled false
+////}
+////
+////task unpackTests(type: Copy) {
+////	from zipTree( project( ':hibernate-envers' ).tasks.testJar.archiveFile )
+////	into project.testClassesUnpackTargetDirectory
+////}
+////
+////task jakartafyTests(type: JakartaDirectoryTransformation) {
+////	sourceDirectory = project.testClassesUnpackTargetDirectory
+////	targetDirectory = project.testClassesTransformationTargetDirectory
+////}
+////
+////
+////tasks.compileTestJava.dependsOn tasks.unpackTests
+////tasks.compileTestJava.finalizedBy tasks.jakartafyTests
+////
+////tasks.unpackTests.dependsOn project(':hibernate-envers').tasks.testJar
+////
+////tasks.jakartafyTests.dependsOn tasks.unpackTests
+//
+////tasks.test {
+////	dependsOn tasks.jakartafyTests
+////	testClassesDirs += project.files( tasks.jakartafyTests.targetDirectory )
+////	classpath += project.files( tasks.jakartafyTests.targetDirectory )
+////
+////	systemProperty 'file.encoding', 'utf-8'
+////
+////	if ( gradle.ext.javaVersions.test.launcher.asInt() >= 9 ) {
+////		// See org.hibernate.boot.model.naming.NamingHelperTest.DefaultCharset.set
+////		jvmArgs( ['--add-opens', 'java.base/java.nio.charset=ALL-UNNAMED'] )
+////		// Weld needs this to generate proxies
+////		jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
+////		jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
+////	}
+////}
+////

@@ -14,7 +14,7 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;

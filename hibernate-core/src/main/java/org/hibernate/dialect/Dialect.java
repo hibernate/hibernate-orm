@@ -90,7 +90,7 @@ import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.*;
@@ -4018,7 +4018,7 @@ public abstract class Dialect implements ConversionContext {
 				case Types.FLOAT:
 				case Types.DOUBLE:
 				case Types.REAL:
-					// The given precision and scale are in decimal numbers as per Javadoc of javax.persistence.Column
+					// The given precision and scale are in decimal numbers as per Javadoc of jakarta.persistence.Column
 					// but the SQL type FLOAT takes the precision in binary digits,
 					// so we have to calculate the number of binary digits necessary.
 					// If the precision and a scale are given, we assume the values are given as decimal digits.

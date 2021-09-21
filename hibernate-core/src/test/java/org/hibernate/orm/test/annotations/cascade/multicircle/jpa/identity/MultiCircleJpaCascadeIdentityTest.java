@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * <p>
  * All IDs are generated from an identity column.
  * <p>
- * JPA cascade types are used (javax.persistence.CascadeType)..
+ * JPA cascade types are used (jakarta.persistence.CascadeType)..
  * <p>
  * This test uses the following model:
  *

@@ -3,7 +3,7 @@ package org.hibernate.jpa.spi;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.junit.Test;
 

@@ -9,12 +9,12 @@ package org.hibernate;
 import java.io.Closeable;
 import java.sql.Connection;
 import java.util.List;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.stat.SessionStatistics;

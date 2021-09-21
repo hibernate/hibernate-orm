@@ -6,8 +6,8 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 /**
  * {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation for Weblogic
@@ -16,8 +16,8 @@ import javax.transaction.UserTransaction;
  * @author Steve Ebersole
  */
 public class WeblogicJtaPlatform extends AbstractJtaPlatform {
-	public static final String TM_NAME = "javax.transaction.TransactionManager";
-	public static final String UT_NAME = "javax.transaction.UserTransaction";
+	public static final String TM_NAME = "jakarta.transaction.TransactionManager";
+	public static final String UT_NAME = "jakarta.transaction.UserTransaction";
 
 	@Override
 	protected TransactionManager locateTransactionManager() {

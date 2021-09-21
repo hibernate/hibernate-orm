@@ -69,7 +69,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * An abstract base class for SAP HANA dialects.

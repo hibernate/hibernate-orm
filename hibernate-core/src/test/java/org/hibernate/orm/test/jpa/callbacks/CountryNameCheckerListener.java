@@ -9,8 +9,8 @@
 package org.hibernate.orm.test.jpa.callbacks;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 
 import org.hibernate.orm.test.jpa.callbacks.Translation;
 

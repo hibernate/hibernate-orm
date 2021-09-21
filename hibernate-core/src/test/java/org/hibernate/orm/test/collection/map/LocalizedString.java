@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.collection.map;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class LocalizedString {

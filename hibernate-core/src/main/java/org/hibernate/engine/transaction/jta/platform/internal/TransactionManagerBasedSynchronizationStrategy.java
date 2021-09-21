@@ -6,14 +6,14 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
 
 /**
  * Implementation of the {@link JtaSynchronizationStrategy} contract based on using a
- * {@link javax.transaction.TransactionManager}
+ * {@link jakarta.transaction.TransactionManager}
  * 
  * @author Steve Ebersole
  */

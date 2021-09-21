@@ -9,7 +9,7 @@ package org.hibernate.community.dialect;
 import java.util.Collections;
 
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.jpa.JpaComplianceStub;
+import org.hibernate.testing.orm.jpa.JpaComplianceStub;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.internal.NamedObjectRepositoryImpl;

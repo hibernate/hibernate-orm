@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 import java.util.ArrayList;
 import java.util.List;
 

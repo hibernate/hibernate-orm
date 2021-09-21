@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.Locale;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

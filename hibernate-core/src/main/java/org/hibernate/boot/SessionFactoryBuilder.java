@@ -402,10 +402,10 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it prefer to use
-	 * {@link javax.transaction.UserTransaction} over {@link javax.transaction.Transaction}?
+	 * {@link jakarta.transaction.UserTransaction} over {@link jakarta.transaction.Transaction}?
 	 *
-	 * @param preferUserTransactions {@code true} indicates we should prefer {@link javax.transaction.UserTransaction};
-	 * {@code false} indicates we should prefer {@link javax.transaction.Transaction}
+	 * @param preferUserTransactions {@code true} indicates we should prefer {@link jakarta.transaction.UserTransaction};
+	 * {@code false} indicates we should prefer {@link jakarta.transaction.Transaction}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -715,7 +715,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**
-	 * Should resources held by {@link javax.persistence.EntityManager} instance be released immediately on close?
+	 * Should resources held by {@link jakarta.persistence.EntityManager} instance be released immediately on close?
 	 * <p/>
 	 * The other option is to release them as part of an after-transaction callback.
 	 *

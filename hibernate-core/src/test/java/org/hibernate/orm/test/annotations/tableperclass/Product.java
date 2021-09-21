@@ -8,9 +8,9 @@
 //$Id$
 package org.hibernate.orm.test.annotations.tableperclass;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * @author Emmanuel Bernard

@@ -20,7 +20,7 @@ package org.hibernate.boot.model.source.spi;
  * </ul>
  * <p/>
  * {@link PluralAttributeMapKeySourceEntityAttribute} is only relevant from
- * annotations when using {@link javax.persistence.MapKey}.
+ * annotations when using {@link jakarta.persistence.MapKey}.
  *
  * @author Steve Ebersole
  */

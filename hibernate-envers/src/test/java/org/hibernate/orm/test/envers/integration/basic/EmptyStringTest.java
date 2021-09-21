@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.basic;
 
 import java.util.Arrays;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

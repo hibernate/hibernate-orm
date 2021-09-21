@@ -9,8 +9,8 @@ package org.hibernate.resource.transaction.backend.jdbc.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.RollbackException;
-import javax.transaction.Status;
+import jakarta.persistence.RollbackException;
+import jakarta.transaction.Status;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;

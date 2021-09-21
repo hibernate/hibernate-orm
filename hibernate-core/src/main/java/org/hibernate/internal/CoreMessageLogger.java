@@ -19,8 +19,8 @@ import java.util.ServiceConfigurationError;
 import java.util.Set;
 import javax.naming.NameNotFoundException;
 import javax.naming.NamingException;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.SystemException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;

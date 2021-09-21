@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.cacheable.api;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.cfg.AvailableSettings;
 

@@ -7,7 +7,7 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.reflection;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

@@ -9,9 +9,9 @@ package org.hibernate.orm.test.mapping.type.java;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.engine.spi.SessionImplementor;

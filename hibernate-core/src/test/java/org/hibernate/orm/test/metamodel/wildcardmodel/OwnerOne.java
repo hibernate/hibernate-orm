@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.metamodel.wildcardmodel;
 
 import java.util.List;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 public class OwnerOne extends AbstractOwner {

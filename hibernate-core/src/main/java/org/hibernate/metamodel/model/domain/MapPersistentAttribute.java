@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.Map;
-import javax.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.MapAttribute;
 
 import org.hibernate.query.sqm.SqmPathSource;
 

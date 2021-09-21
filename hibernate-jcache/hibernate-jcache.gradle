@@ -7,9 +7,12 @@ dependencies {
     implementation project( ':hibernate-core' )
     implementation libraries.jcache
 
+    implementation 'org.glassfish.jaxb:jaxb-xjc:3.0.2'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:3.0.2'
+
     testImplementation project( ':hibernate-testing' )
     testImplementation libraries.mockito
     testImplementation libraries.mockito_inline
 
-    testRuntimeOnly libraries.ehcache3
+    testRuntimeOnly rootProject.fileTree(dir: 'patched-libs/caching', include: '*.jar')
 }

@@ -1,12 +1,13 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -24,6 +25,8 @@ import javax.xml.stream.util.EventReaderDelegate;
 import org.hibernate.boot.xsd.LocalXsdResolver;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 
+import org.jboss.logging.Logger;
+
 /**
  * A JPA {@code orm.xml} specific StAX EVentReader to handle a few oddities.
  *
@@ -39,10 +42,13 @@ import org.hibernate.boot.xsd.MappingXsdSupport;
  * @author Hardy Ferentschik
  */
 public class JpaOrmXmlEventReader extends EventReaderDelegate {
+	private static final Logger log = Logger.getLogger( JpaOrmXmlEventReader.class );
 
-	private static final List<String> NAMESPACE_URIS_TO_MAP = Collections.singletonList(
+	private static final List<String> NAMESPACE_URIS_TO_MAP = Arrays.asList(
 			// JPA 1.0 and 2.0 namespace uri
-			"http://java.sun.com/xml/ns/persistence/orm"
+			"http://java.sun.com/xml/ns/persistence/orm",
+			// JPA 2.1 and 2.2 namespace uri
+			"http://xmlns.jcp.org/xml/ns/persistence"
 	);
 
 	private static final String ROOT_ELEMENT_NAME = "entity-mappings";
@@ -88,11 +94,17 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// Transfer the location info from the incoming event to the event factory
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( startElement.getLocation() );
-		return xmlEventFactory.createStartElement(
-				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), startElement.getName().getLocalPart() ),
+
+		final StartElement replacementElement = xmlEventFactory.createStartElement(
+				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), startElement.getName()
+						.getLocalPart() ),
 				newElementAttributeList.iterator(),
 				newNamespaceList.iterator()
 		);
+
+		log.debugf( "JPA orm.xml element replacement : %s", replacementElement );
+
+		return replacementElement;
 	}
 
 	private List<Attribute> mapAttributes(StartElement startElement) {
@@ -132,6 +144,13 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 
 				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, LocalXsdResolver.latestJpaVerison() );
 			}
+
+//			if ( "schemaLocation".equals( originalAttribute.getName().getLocalPart() ) ) {
+//				if ( NAMESPACE_URIS_TO_MAP.contains( originalAttribute.getValue() ) ) {
+//					// this is a namespace "to map" so map it
+//					return xmlEventFactory.createAttribute( "schemaLocation", MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri() );
+//				}
+//			}
 		}
 
 		return originalAttribute;

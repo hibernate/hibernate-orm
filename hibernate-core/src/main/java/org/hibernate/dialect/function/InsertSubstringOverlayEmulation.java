@@ -28,7 +28,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
 
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import static java.util.Arrays.asList;
 

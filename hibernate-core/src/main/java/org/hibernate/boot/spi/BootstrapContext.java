@@ -9,7 +9,7 @@ package org.hibernate.boot.spi;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBContext;
 import javax.xml.stream.XMLInputFactory;
 
 import org.hibernate.Incubating;
@@ -56,7 +56,7 @@ public interface BootstrapContext {
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by
-	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
 	 *
 	 * @return The tempo ClassLoader
 	 */

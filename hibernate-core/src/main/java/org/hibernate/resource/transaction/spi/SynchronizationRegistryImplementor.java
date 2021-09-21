@@ -13,15 +13,15 @@ package org.hibernate.resource.transaction.spi;
  */
 public interface SynchronizationRegistryImplementor extends SynchronizationRegistry {
 	/**
-	 * Delegates the {@link javax.transaction.Synchronization#beforeCompletion} call to each registered Synchronization
+	 * Delegates the {@link jakarta.transaction.Synchronization#beforeCompletion} call to each registered Synchronization
 	 */
 	void notifySynchronizationsBeforeTransactionCompletion();
 
 	/**
-	 * Delegates the {@link javax.transaction.Synchronization#afterCompletion} call to each registered Synchronization.  Will also
+	 * Delegates the {@link jakarta.transaction.Synchronization#afterCompletion} call to each registered Synchronization.  Will also
 	 * clear the registered Synchronizations after all have been notified.
 	 *
-	 * @param status The transaction status, per {@link javax.transaction.Status} constants
+	 * @param status The transaction status, per {@link jakarta.transaction.Status} constants
 	 */
 	void notifySynchronizationsAfterTransactionCompletion(int status);
 

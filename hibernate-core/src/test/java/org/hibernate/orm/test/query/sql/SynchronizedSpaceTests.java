@@ -10,14 +10,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.Id;
-import javax.persistence.Query;
-import javax.persistence.QueryHint;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.Table;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.QueryHint;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -374,11 +374,11 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 			query = "select * from non_cached_entity",
 			querySpaces = "non_cached_entity"
 	)
-	@javax.persistence.NamedNativeQuery(
+	@jakarta.persistence.NamedNativeQuery(
 			name = "NonCachedEntity_raw_jpa",
 			query = "select * from non_cached_entity"
 	)
-	@javax.persistence.NamedNativeQuery(
+	@jakarta.persistence.NamedNativeQuery(
 			name = "NonCachedEntity_hint_jpa",
 			query = "select * from non_cached_entity",
 			hints = {

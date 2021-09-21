@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.cache.polymorphism;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 
 /**

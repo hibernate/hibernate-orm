@@ -11,11 +11,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
@@ -245,7 +245,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	private void insertMappedSuperclasses(List<XClass> original, List<XClass> copy) {
 		final boolean debug = log.isDebugEnabled();
 		for ( XClass clazz : original ) {
-			if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+			if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
 				if ( debug ) {
 					log.debugf(
 							"Skipping explicit MappedSuperclass %s, the class will be discovered analyzing the implementing class",
@@ -260,7 +260,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 						&& !reflectionManager.equals( superClass, Object.class )
 						&& !copy.contains( superClass ) ) {
 					if ( superClass.isAnnotationPresent( Entity.class )
-							|| superClass.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+							|| superClass.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
 						copy.add( superClass );
 					}
 					superClass = superClass.getSuperclass();

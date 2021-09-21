@@ -6,9 +6,9 @@
  */
 package org.hibernate.boot.jaxb.internal;
 
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
+import jakarta.xml.bind.ValidationEvent;
+import jakarta.xml.bind.ValidationEventHandler;
+import jakarta.xml.bind.ValidationEventLocator;
 
 /**
  * ValidationEventHandler implementation providing easier access to where (line/column) an error occurred.

@@ -24,17 +24,17 @@ public enum SqmJoinType {
 	/**
 	 * Represents an inner join.
 	 */
-	INNER( "inner", SqlAstJoinType.INNER, javax.persistence.criteria.JoinType.INNER ),
+	INNER( "inner", SqlAstJoinType.INNER, jakarta.persistence.criteria.JoinType.INNER ),
 
 	/**
 	 * Represents a left outer join.
 	 */
-	LEFT( "left outer", SqlAstJoinType.LEFT, javax.persistence.criteria.JoinType.LEFT ),
+	LEFT( "left outer", SqlAstJoinType.LEFT, jakarta.persistence.criteria.JoinType.LEFT ),
 
 	/**
 	 * Represents a right outer join.
 	 */
-	RIGHT( "right outer", SqlAstJoinType.RIGHT, javax.persistence.criteria.JoinType.RIGHT ),
+	RIGHT( "right outer", SqlAstJoinType.RIGHT, jakarta.persistence.criteria.JoinType.RIGHT ),
 
 	/**
 	 * Represents a cross join (aka a cartesian product).
@@ -48,12 +48,12 @@ public enum SqmJoinType {
 
 	private final String text;
 	private final SqlAstJoinType correspondingSqlAstJoinType;
-	private final javax.persistence.criteria.JoinType correspondingJpaJoinType;
+	private final jakarta.persistence.criteria.JoinType correspondingJpaJoinType;
 
 	SqmJoinType(
 			String text,
 			SqlAstJoinType correspondingSqlAstJoinType,
-			javax.persistence.criteria.JoinType correspondingJpaJoinType) {
+			jakarta.persistence.criteria.JoinType correspondingJpaJoinType) {
 		this.text = text;
 		this.correspondingSqlAstJoinType = correspondingSqlAstJoinType;
 		this.correspondingJpaJoinType = correspondingJpaJoinType;
@@ -72,12 +72,12 @@ public enum SqmJoinType {
 		return correspondingSqlAstJoinType;
 	}
 
-	public javax.persistence.criteria.JoinType getCorrespondingJpaJoinType() {
+	public jakarta.persistence.criteria.JoinType getCorrespondingJpaJoinType() {
 		return correspondingJpaJoinType;
 	}
 
 	@SuppressWarnings("DuplicateBranchesInSwitch")
-	public static SqmJoinType from(javax.persistence.criteria.JoinType jpaJoinType) {
+	public static SqmJoinType from(jakarta.persistence.criteria.JoinType jpaJoinType) {
 		switch ( jpaJoinType ) {
 			case INNER: {
 				return INNER;

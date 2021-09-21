@@ -53,7 +53,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.Types;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * An SQL dialect for Ingres 9.2.

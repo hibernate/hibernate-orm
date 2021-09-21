@@ -8,15 +8,15 @@ package org.hibernate.orm.test.jpa.cascade;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
-import javax.persistence.Access;
+import jakarta.persistence.Access;
 
 @Entity
 @Access(AccessType.FIELD)

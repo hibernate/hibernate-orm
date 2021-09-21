@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.performance;
 
 import java.io.IOException;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.entities.StrTestEntity;
 

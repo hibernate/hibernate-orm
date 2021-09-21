@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -19,7 +19,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
  * @see JpaMetamodel
  */
 @Deprecated
-public interface Metamodel extends javax.persistence.metamodel.Metamodel {
+public interface Metamodel extends jakarta.persistence.metamodel.Metamodel {
 	/**
 	 * Access to the SessionFactory that this Metamodel instance is bound to.
 	 *

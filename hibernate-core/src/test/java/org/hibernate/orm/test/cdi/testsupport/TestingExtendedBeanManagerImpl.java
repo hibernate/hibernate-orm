@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.cdi.testsupport;
 
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.resource.beans.container.spi.ExtendedBeanManager;
 

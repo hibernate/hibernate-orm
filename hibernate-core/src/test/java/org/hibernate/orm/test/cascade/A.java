@@ -8,7 +8,7 @@ package org.hibernate.orm.test.cascade;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.OneToMany;
+import jakarta.persistence.OneToMany;
 
 public class A
 {

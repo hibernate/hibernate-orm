@@ -6,11 +6,11 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.boot.Metadata;

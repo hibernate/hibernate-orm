@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.composite;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Steve Ebersole

@@ -6,12 +6,12 @@
  */
 package org.hibernate.test.bytecode.enhancement.lazy.proxy.inlinedirtychecking;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.OneToOne;
-import javax.persistence.Version;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Version;
 
 @Entity(name = "Customer")
 public class Customer extends BaseEntity {

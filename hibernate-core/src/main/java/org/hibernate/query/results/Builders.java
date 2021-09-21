@@ -7,9 +7,9 @@
 package org.hibernate.query.results;
 
 import java.util.Locale;
-import javax.persistence.AttributeConverter;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;

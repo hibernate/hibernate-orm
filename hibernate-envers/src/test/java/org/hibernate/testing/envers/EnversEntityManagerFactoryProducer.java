@@ -6,7 +6,7 @@
  */
 package org.hibernate.testing.envers;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * Envers contract for something that can build an EntityManagerFactory based on an audit strategy.

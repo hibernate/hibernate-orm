@@ -7,7 +7,7 @@
 
 package org.hibernate.procedure.internal;
 
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;

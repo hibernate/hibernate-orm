@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.statistics;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;

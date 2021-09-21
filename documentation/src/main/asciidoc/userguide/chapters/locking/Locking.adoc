@@ -40,7 +40,7 @@ especially useful if you use assigned identifiers or composite keys.
 ==== Mapping optimistic locking
 
 JPA defines support for optimistic locking based on either a version (sequential numeric) or timestamp strategy.
-To enable this style of optimistic locking simply add the `javax.persistence.Version` to the persistent attribute that defines the optimistic locking value.
+To enable this style of optimistic locking simply add the `jakarta.persistence.Version` to the persistent attribute that defines the optimistic locking value.
 According to JPA, the valid types for these attributes are limited to:
 
 * `int` or `Integer`
@@ -324,8 +324,8 @@ JPA comes with its own {jpaJavadocUrlPrefix}LockModeType.html[`LockModeType`] en
 |`PESSIMISTIC_FORCE_INCREMENT`|`PESSIMISTIC_FORCE_INCREMENT` | The entity is locked pessimistically and its version is incremented automatically even if the entity has not changed.
 |`PESSIMISTIC_READ`|`PESSIMISTIC_READ` | The entity is locked pessimistically using a shared lock if the database supports such a feature. Otherwise, an explicit lock is used.
 |`PESSIMISTIC_WRITE`|`PESSIMISTIC_WRITE`, `UPGRADE` | The entity is locked using an explicit lock.
-|`PESSIMISTIC_WRITE` with a `javax.persistence.lock.timeout` setting of 0 |`UPGRADE_NOWAIT` | The lock acquisition request fails fast if the row s already locked.
-|`PESSIMISTIC_WRITE` with a `javax.persistence.lock.timeout` setting of -2 |`UPGRADE_SKIPLOCKED` | The lock acquisition request skips the already locked rows. It uses a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle and PostgreSQL 9.5, or `SELECT ... with (rowlock, updlock, readpast) in SQL Server`.
+|`PESSIMISTIC_WRITE` with a `jakarta.persistence.lock.timeout` setting of 0 |`UPGRADE_NOWAIT` | The lock acquisition request fails fast if the row s already locked.
+|`PESSIMISTIC_WRITE` with a `jakarta.persistence.lock.timeout` setting of -2 |`UPGRADE_SKIPLOCKED` | The lock acquisition request skips the already locked rows. It uses a `SELECT ... FOR UPDATE SKIP LOCKED` in Oracle and PostgreSQL 9.5, or `SELECT ... with (rowlock, updlock, readpast) in SQL Server`.
 |=======================================================================
 
 The explicit user request mentioned above occurs as a consequence of any of the following actions:
@@ -350,12 +350,12 @@ This ensures that applications are portable.
 
 JPA 2.0 introduced two query hints:
 
-javax.persistence.lock.timeout:: it gives the number of milliseconds a lock acquisition request will wait before throwing an exception
-javax.persistence.lock.scope:: defines the {jpaJavadocUrlPrefix}PessimisticLockScope.html[_scope_] of the lock acquisition request.
+jakarta.persistence.lock.timeout:: it gives the number of milliseconds a lock acquisition request will wait before throwing an exception
+jakarta.persistence.lock.scope:: defines the {jpaJavadocUrlPrefix}PessimisticLockScope.html[_scope_] of the lock acquisition request.
 The scope can either be `NORMAL` (default value) or `EXTENDED`. The `EXTENDED` scope will cause a lock acquisition request to be passed to other owned table structured (e.g. `@Inheritance(strategy=InheritanceType.JOINED)`, `@ElementCollection`)
 
 [[locking-jpa-query-hints-timeout-example]]
-.`javax.persistence.lock.timeout` example
+.`jakarta.persistence.lock.timeout` example
 ====
 [source, JAVA,indent=0]
 ----
@@ -376,7 +376,7 @@ If not supported, the Hibernate dialect ignores this query hint.
 
 [NOTE]
 ====
-The `javax.persistence.lock.scope` is https://hibernate.atlassian.net/browse/HHH-9636[not yet supported] as specified by the JPA standard.
+The `jakarta.persistence.lock.scope` is https://hibernate.atlassian.net/browse/HHH-9636[not yet supported] as specified by the JPA standard.
 ====
 
 [[locking-buildLockRequest]]

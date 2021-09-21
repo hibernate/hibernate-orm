@@ -7,7 +7,7 @@
 package org.hibernate.query.internal;
 
 import java.util.function.Consumer;
-import javax.persistence.ColumnResult;
+import jakarta.persistence.ColumnResult;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.named.ResultMementoBasic;

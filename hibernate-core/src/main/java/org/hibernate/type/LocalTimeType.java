@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import java.time.LocalTime;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;

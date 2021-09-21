@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.inheritance.mixed.entities;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class ActivityId implements Serializable {

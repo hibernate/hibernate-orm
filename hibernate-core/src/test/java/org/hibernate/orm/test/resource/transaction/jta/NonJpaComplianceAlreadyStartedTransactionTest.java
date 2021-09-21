@@ -7,11 +7,11 @@
 package org.hibernate.orm.test.resource.transaction.jta;
 
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

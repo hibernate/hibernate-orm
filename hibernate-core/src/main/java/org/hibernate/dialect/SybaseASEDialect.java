@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.QuantifiedLeastGreatestEmulation;

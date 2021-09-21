@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.id.generationmappings;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Christian Beikov

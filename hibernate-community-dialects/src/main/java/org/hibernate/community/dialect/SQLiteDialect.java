@@ -7,7 +7,7 @@
 package org.hibernate.community.dialect;
 
 import java.sql.Types;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;

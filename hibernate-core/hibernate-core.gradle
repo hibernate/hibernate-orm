@@ -1,151 +1,112 @@
-plugins {
-	id 'org.hibernate.build.xjc'
-}
-
-/*
- * Hibernate, Relational Persistence for Idiomatic Java
- *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
- */
 import org.apache.tools.ant.filters.ReplaceTokens
 
-description = 'Hibernate\'s core ORM functionality'
+plugins {
+    id 'org.hibernate.build.xjc-jakarta'
+}
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
 
 
+ext {
+    jaxbTargetDir = project.file( "${buildDir}/generated/sources/xjc/main" )
+}
+
 configurations {
-    tests {
-        description = 'Configuration for the produced test jar'
-    }
+    xjc
 }
 
 
 dependencies {
-    api libraries.jpa
-    api libraries.jta
+    api libraries.jakarta_jpa
+    api libraries.jakarta_jta
+    api libraries.jakarta_activation
+    api libraries.jakarta_jaxb_api
+    api libraries.jakarta_jaxb_runtime
+
+    compileOnly libraries.jakarta_jacc
+    compileOnly libraries.jakarta_validation
+    compileOnly libraries.jakarta_cdi
+
+    api libraries.antlr
+
+    // This can now be made provided
+    // Could be made optional?
+    api libraries.byteBuddy
     api libraries.jandex
     api libraries.classmate
-    api libraries.commons_annotations
-    api libraries.jaxb_api
 
-    implementation libraries.byteBuddy
-    implementation libraries.activation
-    implementation libraries.jaxb_runtime
-    implementation libraries.antlr
-
-    compileOnly libraries.jacc
-    compileOnly libraries.validation
     compileOnly libraries.ant
-    compileOnly libraries.cdi
+
+    api libraries.dom4j
+    api libraries.commons_annotations
 
     testImplementation project(':hibernate-testing')
+
     testImplementation libraries.shrinkwrap_api
     testImplementation libraries.shrinkwrap
-    testImplementation libraries.shrinkwrap_descriptors_api_javaee
-    testImplementation libraries.shrinkwrap_descriptors_impl_javaee
-    testImplementation libraries.jacc
-    testImplementation libraries.validation
-    testImplementation( libraries.validator ) {
-        // for test runtime
-        transitive = true
-    }
+    testImplementation libraries.jakarta_jacc
+    testImplementation libraries.jakarta_validation
     testImplementation libraries.jandex
     testImplementation libraries.classmate
     testImplementation libraries.mockito
     testImplementation libraries.mockito_inline
     testImplementation libraries.jodaTime
     testImplementation libraries.assertj
-    testImplementation libraries.cdi
+
+    testImplementation libraries.jakarta_cdi
+
+    testImplementation( libraries.jakarta_validator ) {
+        // for test runtime
+        transitive = true
+    }
+
+    // for testing stored procedure support
+    testImplementation libraries.derby
+
+	testRuntimeOnly libraries.wildfly_transaction_client
+    testRuntimeOnly libraries.jakarta_el
+    testRuntimeOnly libraries.jakarta_weld
+
+    testRuntimeOnly 'org.hamcrest:hamcrest-all:1.3'
+    testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
+    testRuntimeOnly 'jaxen:jaxen:1.1'
+    testRuntimeOnly libraries.byteBuddy
+    testRuntimeOnly libraries.atomikos
+    testRuntimeOnly libraries.atomikos_jta
+
+    testImplementation libraries.shrinkwrap_descriptors_api_javaee
+    testImplementation libraries.shrinkwrap_descriptors_impl_javaee
+
     testImplementation libraries.jboss_ejb_spec_jar
     testImplementation libraries.jboss_annotation_spec_jar
 
-    testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
-    testRuntimeOnly libraries.expression_language
-    testRuntimeOnly 'jaxen:jaxen:1.1'
-    testRuntimeOnly libraries.byteBuddy
-    testRuntimeOnly libraries.weld
-    testRuntimeOnly libraries.atomikos
-    testRuntimeOnly libraries.atomikos_jta
-    testRuntimeOnly libraries.wildfly_transaction_client
+    antlr libraries.antlr
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
 
-    antlr libraries.antlr
+    xjc 'org.glassfish.jaxb:jaxb-xjc:3.0.2'
+//    xjc 'jakarta.xml.bind:jakarta.xml.bind-api:3.0.1'
+    xjc 'org.glassfish.jaxb:jaxb-runtime:3.0.2'
+//    xjc 'org.jvnet.jaxb2_commons:jaxb2-basics:3.0.0-SNAPSHOT'
+//    xjc 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:3.0.0-SNAPSHOT'
 
-    xjc libraries.jaxb_runtime
-    xjc libraries.jaxb_xjc
-    xjc libraries.jaxb2_basics
-    xjc libraries.jaxb2_basics_ant
-    xjc libraries.activation
+//    xjc 'org.jvnet.jaxb2_commons:jaxb2-basics:3.0.0-SNAPSHOT'
+//    xjc 'org.jvnet.jaxb2_commons:jaxb2-basics-ant:3.0.0-SNAPSHOT'
+
+    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
+//    xjc libraries.ant
 }
 
-jar {
-    manifest {
-        attributes(
-                'Main-Class': 'org.hibernate.Version',
-
-                // BND Plugin instructions (for OSGi):
-                'Import-Package': [
-                         'javax.security.auth;resolution:=optional',
-                         // Make javax.security.jacc optional and do not reference a version range (because that's what we used to do)
-                        'javax.security.jacc;resolution:=optional;version=!',
-                        // Make javax.validation optional and do not reference a version range (because that's what we used to do)
-                        'javax.validation;resolution:=optional;version=!',
-                        'javax.validation.constraints;resolution:=optional;version=!',
-                        'javax.validation.groups;resolution:=optional;version=!',
-                        'javax.validation.metadata;resolution:=optional;version=!',
-                        // Make javax.enterprise optional and do not reference a version range (because that's what we used to do)
-                        '!javax.enterprise*',
-                        'javax.enterprise.context.spi;resolution:=optional;version=!',
-                        'javax.enterprise.inject.spi;resolution:=optional;version=!',
-                        // For JPA, we don't want to target the automatically generated range, but a specific version
-                         "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-                         // optionals
-                         'jakarta.persistence.spi;resolution:=optional',
-                         'javax.management;resolution:=optional',
-                         'javax.naming.event;resolution:=optional',
-                         'javax.naming.spi;resolution:=optional',
-                         'org.apache.tools.ant;resolution:=optional',
-                         'org.apache.tools.ant.taskdefs;resolution:=optional',
-                         'org.apache.tools.ant.types;resolution:=optional',
-                         'javax.inject;resolution:=optional',
-                         'net.bytebuddy.*;resolution:=optional',
-                         'org.objectweb.jonas_tm;resolution:=optional',
-                         'com.ibm.websphere.jtaextensions;resolution:=optional',
-                         // We must specify the version explicitly to allow Karaf
-                         // to use an older version of JAXB (the only one we can use in Karaf)
-                         "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\"",
-                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                        // use it.  Without this, the plugin generates [1.2,2).
-                        'javax.transaction;version="[1.1,2)"',
-                        // Also import every package referenced in the code
-                        '*'
-                ].join( ',' ),
-                '-exportcontents': [
-                        // Legacy resource packages containing XSDs that were traditionally not exported
-                        "!org.hibernate.xsd.cfg",
-                        "!org.hibernate.xsd.mapping",
-                        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer uses ClassLoaderServiceImpl.
-                        //'org.hibernate.boot.registry.classloading.internal',
-                        "*;version=${project.version}"
-                ].join( ',' ),
-        )
-    }
-}
-
-ext {
-    jaxbTargetDir = project.file( "${buildDir}/generated/sources/xjc/main" )
-}
 
 sourceSets {
     main {
         // add the XJC generated JAXB classes to the main source-set
         java{
-            srcDir project.jaxbTargetDir
+            srcDir "${buildDir}/generated/sources/xjc/main/cfg"
+            srcDir "${buildDir}/generated/sources/xjc/main/hbm"
+            srcDir "${buildDir}/generated/sources/xjc/main/mapping"
         }
     }
 
@@ -157,6 +118,27 @@ sourceSets {
             srcDir 'src/test/bundles'
         }
     }
+}
+
+task copyBundleResources (type: Copy) {
+    ext {
+        bundlesTargetDir = file( "${buildDir}/bundles" )
+        bundleTokens = dbBundle[db]
+        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
+    }
+
+    from file('src/test/bundles/templates')
+    into ext.bundlesTargetDir
+    filter( ReplaceTokens, tokens: ext.bundleTokens)
+
+    doFirst {
+        ext.bundlesTargetDir.mkdirs()
+    }
+}
+
+processTestResources {
+    dependsOn tasks.copyBundleResources
+    duplicatesStrategy = DuplicatesStrategy.WARN
 }
 
 xjc {
@@ -178,43 +160,6 @@ xjc {
             xjcExtensions += ['inheritance']
         }
     }
-}
-
-
-task copyBundleResources (type: Copy) {
-    ext {
-        bundlesTargetDir = file( "${buildDir}/bundles" )
-        bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
-    }
-
-    from file('src/test/bundles/templates')
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
-
-    doFirst {
-        ext.bundlesTargetDir.mkdirs()
-    }
-}
-
-processTestResources {
-    dependsOn copyBundleResources
-    duplicatesStrategy = DuplicatesStrategy.WARN
-}
-
-sourcesJar {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-}
-
-task testJar(type: Jar, dependsOn: testClasses) {
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    archiveClassifier.set( 'test' )
-    from sourceSets.test.output
-}
-
-artifacts {
-    tests testJar
 }
 
 task generateEnversStaticMetamodel(
@@ -266,4 +211,3 @@ tasks.withType( Test.class ).each { test ->
     test.include 'org/hibernate/event/service/internal/**'
     test.include 'org/hibernate/tool/schema/internal/**'
 }
-

@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

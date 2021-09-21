@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.spi;
 
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

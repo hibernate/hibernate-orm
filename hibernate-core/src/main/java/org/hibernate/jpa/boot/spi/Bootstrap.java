@@ -8,8 +8,8 @@ package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
 import java.util.Map;
-import javax.persistence.spi.PersistenceUnitInfo;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;

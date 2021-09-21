@@ -9,9 +9,9 @@ package org.hibernate.orm.test.jpa.beanvalidation;
 import java.net.URL;
 import java.util.Collections;
 
-import javax.persistence.EntityManagerFactory;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;

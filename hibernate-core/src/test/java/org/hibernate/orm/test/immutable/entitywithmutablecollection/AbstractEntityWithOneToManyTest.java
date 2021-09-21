@@ -9,11 +9,11 @@ package org.hibernate.orm.test.immutable.entitywithmutablecollection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.EntityGraph;
-import javax.persistence.PersistenceException;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;

@@ -9,7 +9,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;

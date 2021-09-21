@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.envers.integration.superclass.auditoverride;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.AuditOverride;
 import org.hibernate.envers.AuditOverrides;

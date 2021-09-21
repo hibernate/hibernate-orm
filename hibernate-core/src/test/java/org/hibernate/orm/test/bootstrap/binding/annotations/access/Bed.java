@@ -7,11 +7,11 @@
 
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
-import javax.persistence.AccessType;
-import javax.persistence.Entity;
-import javax.persistence.Transient;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Transient;
 
-import javax.persistence.Access;
+import jakarta.persistence.Access;
 
 /**
  * @author Emmanuel Bernard

@@ -40,7 +40,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.Types;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * A SQL dialect for TimesTen 5.1.

@@ -6,17 +6,8 @@
  */
 package org.hibernate.spatial.predicate;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
-
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.predicate.AbstractNegatableSqmPredicate;
-import org.hibernate.spatial.jts.EnvelopeAdapter;
-
-import org.locationtech.jts.geom.Envelope;
-import org.locationtech.jts.geom.Geometry;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * JPA Spatial Filter {@link Predicate}

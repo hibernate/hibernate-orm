@@ -19,14 +19,12 @@ dependencies {
 
     compile( libraries.postgresql )
 
-
     testCompile(project(':hibernate-testing'))
 
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )    
-    testCompile(libraries.validation)
+    testCompile(libraries.jakarta_validation)
     testCompile(libraries.jandex)
     testCompile(libraries.classmate)
-    testCompile(libraries.validator) {
+    testCompile(libraries.jakarta_validator) {
         // for test runtime
         transitive = true
     }
@@ -34,7 +32,7 @@ dependencies {
         transitive = false
     }
 
-    testRuntime( libraries.expression_language )
+    testRuntime( libraries.jakarta_el )
 
     testRuntime('jaxen:jaxen:1.1')
     testRuntime(libraries.byteBuddy)

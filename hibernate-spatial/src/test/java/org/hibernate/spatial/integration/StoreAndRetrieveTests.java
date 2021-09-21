@@ -10,7 +10,7 @@ package org.hibernate.spatial.integration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionImplementor;

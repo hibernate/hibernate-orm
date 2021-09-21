@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Target({ ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 
-@ExtendWith({ SessionFactoryExtension.class, RequireFunctionExtension.class })
+@ExtendWith({ SessionFactoryExtension.class, RequiresFunctionExtension.class })
 public @interface RequiresFunction {
 	/**
 	 * The key for the function (as used in the SqmFunctionRegistry)

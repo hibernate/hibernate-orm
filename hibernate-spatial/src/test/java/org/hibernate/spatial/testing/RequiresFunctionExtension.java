@@ -23,12 +23,12 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 
 import org.jboss.logging.Logger;
 
-public class RequireFunctionExtension implements ExecutionCondition {
+public class RequiresFunctionExtension implements ExecutionCondition {
 
 	private static final ConditionEvaluationResult ENABLED = ConditionEvaluationResult.enabled(
 			"No applicable @RequireFunction annotation" );
 
-	private static final Logger log = Logger.getLogger( RequireFunctionExtension.class );
+	private static final Logger log = Logger.getLogger( RequiresFunctionExtension.class );
 
 	@Override
 	public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
@@ -37,8 +37,6 @@ public class RequireFunctionExtension implements ExecutionCondition {
 		if ( !testInstance.isPresent() ) {
 			return ENABLED;
 		}
-
-		final SqmFunctionRegistry functionRegistry = new SqmFunctionRegistry();
 
 		ExtensionContext.Store store = JUnitHelper.locateExtensionStore(
 				SessionFactoryExtension.class,
@@ -59,11 +57,9 @@ public class RequireFunctionExtension implements ExecutionCondition {
 
 		if ( requiresFunctions.isPresent() ) {
 			String functionKey = requiresFunctions.get().key();
-			SpatialFunctionContributor contributor = new SpatialFunctionContributor();
-			contributor.contributeFunctions(
-					functionRegistry,
-					existing.getSessionFactory().getServiceRegistry()
-			);
+			SqmFunctionRegistry functionRegistry = existing.getSessionFactory()
+					.getQueryEngine()
+					.getSqmFunctionRegistry();
 			if ( functionRegistry.findFunctionDescriptor( functionKey ) == null ) {
 				return ConditionEvaluationResult.disabled( String.format(
 						Locale.ROOT,

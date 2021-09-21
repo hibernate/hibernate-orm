@@ -4,10 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.annotations.comment;
+package org.hibernate.orm.test.annotations.comment;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
 
 import java.util.Iterator;
 import java.util.stream.StreamSupport;
@@ -26,13 +26,14 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Table;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Yanming Zhou
  */
-public class CommentTest extends BaseUnitTestCase {
+@BaseUnitTest
+public class CommentTest {
 
 	private static final String TABLE_NAME = "TestEntity";
 	private static final String TABLE_COMMENT = "I am table";

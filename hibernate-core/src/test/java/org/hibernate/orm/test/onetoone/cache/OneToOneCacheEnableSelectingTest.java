@@ -1,4 +1,4 @@
-package org.hibernate.test.onetoone.cache;
+package org.hibernate.orm.test.onetoone.cache;
 
 import java.util.concurrent.atomic.AtomicLong;
 import javax.persistence.Cacheable;
@@ -11,65 +11,67 @@ import javax.persistence.OneToOne;
 import javax.persistence.Version;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestForIssue( jiraKey = "HHH-14826")
-public class OneToOneCacheEnableSelectingTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Product.class,
-				ProductConfig.class
-		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		configuration.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "true");
-		configuration.setProperty(AvailableSettings.JPA_SHARED_CACHE_MODE, "ENABLE_SELECTIVE");
-		configuration.setProperty(AvailableSettings.GENERATE_STATISTICS, "true");
-	}
+@DomainModel(
+		annotatedClasses = {
+				OneToOneCacheEnableSelectingTest.Product.class,
+				OneToOneCacheEnableSelectingTest.ProductConfig.class
+		}
+)
+@SessionFactory(generateStatistics = true)
+@ServiceRegistry(
+		settings = {
+				@Setting( name =  AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true"),
+				@Setting( name =  AvailableSettings.JPA_SHARED_CACHE_MODE, value = "ENABLE_SELECTIVE")
+		}
+)
+public class OneToOneCacheEnableSelectingTest {
 
 	@Test
-	public void testFieldShouldNotBeNull() {
+	public void testFieldShouldNotBeNull(SessionFactoryScope scope) {
 		final AtomicLong pid = new AtomicLong();
 
 		// create Product
-		inTransaction(s -> {
+		scope.inTransaction(s -> {
 			Product product = new Product();
 			s.persist(product);
 			pid.set(product.getId());
 		});
 
 		// create ProductConfig and associate with a Product
-		inTransaction(s -> {
+		scope.inTransaction(s -> {
 			Product product = s.find(Product.class, pid.get());
 			ProductConfig config = new ProductConfig();
 			config.setProduct(product);
 			s.persist(config);
 		});
 
-		assertTrue(sessionFactory().getCache().containsEntity(Product.class, pid.get()));
+		assertTrue(scope.getSessionFactory().getCache().containsEntity(Product.class, pid.get()));
 
-		sessionFactory().getStatistics().clear();
+		scope.getSessionFactory().getStatistics().clear();
 
 		// now fetch the Product again
-		inTransaction(s -> {
+		scope.inTransaction(s -> {
 			Product product = s.find(Product.class, pid.get());
 
 			// should have been from cache
-			assertNotEquals (0, sessionFactory().getStatistics().getSecondLevelCacheHitCount());
+			assertNotEquals (0, scope.getSessionFactory().getStatistics().getSecondLevelCacheHitCount());
 
 			// this should not fail
-			assertNotNull("one-to-one field should not be null", product.getConfig());
+			assertNotNull( product.getConfig(), "one-to-one field should not be null");
 		});
 	}
 

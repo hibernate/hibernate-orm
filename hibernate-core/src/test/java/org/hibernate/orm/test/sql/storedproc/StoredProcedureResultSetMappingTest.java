@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.sql.storedproc;
+package org.hibernate.orm.test.sql.storedproc;
 
 import java.util.Date;
 import javax.persistence.ColumnResult;
@@ -16,29 +16,29 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.ResultSetOutput;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
+@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
+public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunctionalTest {
 	@Entity( name = "Employee" )
 	@Table( name = "EMP" )
 	// ignore the questionable-ness of constructing a partial entity
@@ -121,24 +121,29 @@ public class StoredProcedureResultSetMappingTest extends BaseUnitTestCase {
 		}
 	}
 
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Employee.class
+		};
+	}
+
+	@Override
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.applyMetadataBuilder( metadataBuilder );
+		metadataBuilder.applyAuxiliaryDatabaseObject( new ProcedureDefinition() );
+	}
+
 	@Test
 	public void testPartialResults() {
-		Configuration cfg = new Configuration()
-				.addAnnotatedClass( Employee.class )
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.addAuxiliaryDatabaseObject( new ProcedureDefinition() );
-		try (SessionFactory sf = cfg.buildSessionFactory()) {
-			Session session = sf.openSession();
-			session.beginTransaction();
-
-			ProcedureCall call = session.createStoredProcedureCall( "allEmployeeNames", "id-fname-lname" );
-			ProcedureOutputs outputs = call.getOutputs();
-			ResultSetOutput output = assertTyping( ResultSetOutput.class, outputs.getCurrent() );
-			assertEquals( 3, output.getResultList().size() );
-			assertTyping( Employee.class, output.getResultList().get( 0 ) );
-
-			session.getTransaction().commit();
-			session.close();
-		}
+		inTransaction(
+				session -> {
+					ProcedureCall call = session.createStoredProcedureCall( "allEmployeeNames", "id-fname-lname" );
+					ProcedureOutputs outputs = call.getOutputs();
+					ResultSetOutput output = assertTyping( ResultSetOutput.class, outputs.getCurrent() );
+					assertEquals( 3, output.getResultList().size() );
+					assertTyping( Employee.class, output.getResultList().get( 0 ) );
+				}
+		);
 	}
 }

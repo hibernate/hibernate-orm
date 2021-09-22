@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.sql.storedproc;
+package org.hibernate.orm.test.sql.storedproc;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -15,11 +15,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
@@ -28,21 +25,20 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.ResultSetOutput;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect( value = PostgreSQLDialect.class, strictMatching = false )
-@FailureExpected( jiraKey = "HHH-8445", message = "Waiting on EG clarification" )
-public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
+@RequiresDialect( value = PostgreSQLDialect.class )
+//@FailureExpected( jiraKey = "HHH-8445", reason = "Waiting on EG clarification" )
+@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
+public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTest {
 
 	public static class ProcedureDefinitions implements AuxiliaryDatabaseObject, AuxiliaryDatabaseObject.Expandable {
 		/**
@@ -105,36 +101,28 @@ public class PostgresRefCursorSupportTest extends BaseUnitTestCase {
 		private Date availabilityEndDate;
 	}
 
-	private SessionFactory sf;
-
-	@Before
-	public void beforeTest() {
-		Configuration cfg = new Configuration()
-				.addAnnotatedClass( Item.class )
-				.setProperty( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
-		cfg.addAuxiliaryDatabaseObject( ProcedureDefinitions.INSTANCE );
-
-		sf = cfg.buildSessionFactory();
+	@Override
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				Item.class
+		};
 	}
 
-	@After
-	public void afterTest() {
-		if ( sf != null ) {
-			sf.close();
-		}
+	@Override
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.applyMetadataBuilder( metadataBuilder );
+		metadataBuilder.applyAuxiliaryDatabaseObject( ProcedureDefinitions.INSTANCE );
 	}
 
 	@Test
 	public void testExplicitClassReturn() {
-		Session session = sf.openSession();
-		session.beginTransaction();
-
-		ProcedureCall call = session.createStoredProcedureCall( "all_items", Item.class );
-		call.registerParameter( 1, void.class, ParameterMode.REF_CURSOR );
-		ProcedureOutputs outputs = call.getOutputs();
-		ResultSetOutput results = assertTyping( ResultSetOutput.class, outputs.getCurrent() );
-
-		session.getTransaction().commit();
-		session.close();
+		inTransaction(
+				session -> {
+					ProcedureCall call = session.createStoredProcedureCall( "all_items", Item.class );
+					call.registerParameter( 1, void.class, ParameterMode.REF_CURSOR );
+					ProcedureOutputs outputs = call.getOutputs();
+					ResultSetOutput results = assertTyping( ResultSetOutput.class, outputs.getCurrent() );
+				}
+		);
 	}
 }

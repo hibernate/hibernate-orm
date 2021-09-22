@@ -47,6 +47,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
@@ -67,6 +68,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
@@ -269,6 +271,7 @@ import org.hibernate.sql.ast.tree.from.LazyTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
+import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
@@ -462,6 +465,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	protected void popProcessingStateStack() {
 		lastPoppedFromClauseIndex = fromClauseIndexStack.pop();
 		lastPoppedProcessingState = processingStateStack.pop();
+	}
+
+	private QuerySpec currentQuerySpec() {
+		return currentQueryPart().getLastQuerySpec();
+	}
+
+	private QueryPart currentQueryPart() {
+		final SqlAstQueryPartProcessingState processingState = (SqlAstQueryPartProcessingState) getProcessingStateStack()
+				.getCurrent();
+		return processingState.getInflightQueryPart();
+	}
+
+	protected SqmAliasedNodeCollector currentSqlSelectionCollector() {
+		return (SqmAliasedNodeCollector) getCurrentProcessingState().getSqlExpressionResolver();
 	}
 
 	protected SqmStatement<?> getStatement() {
@@ -1732,47 +1749,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return new SqlTuple( expressions, null );
 		}
 
-		final Expression expression = (Expression) groupByClauseExpression.accept( this );
-		// When a join alias is put into the GROUP BY or ORDER BY clause, we have to transform this to interpretations
-		if ( expression instanceof TableGroup ) {
-			final TableGroup tableGroup = (TableGroup) expression;
-			if ( tableGroup.getModelPart() instanceof EmbeddableValuedModelPart ) {
-				final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) tableGroup.getModelPart();
-				return new EmbeddableValuedPathInterpretation<>(
-						mapping.toSqlExpression(
-								tableGroup,
-								getCurrentClauseStack().getCurrent(),
-								this,
-								this
-						),
-						tableGroup.getNavigablePath(),
-						mapping,
-						tableGroup
-				);
-			}
-			else if ( tableGroup.getModelPart() instanceof EntityValuedModelPart ) {
-				final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup.getModelPart();
-				final boolean expandToAllColumns;
-				if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
-					// When the table group is known to be fetched i.e. a fetch join
-					// but also when the from clause is part of the select clause
-					// we need to expand to all columns, as we also expand this to all columns in the select clause
-					expandToAllColumns = tableGroup.isFetched()
-							|| groupByClauseExpression instanceof SqmFrom<?, ?> && selectClauseContains( (SqmFrom<?, ?>) groupByClauseExpression );
-				}
-				else {
-					expandToAllColumns = false;
-				}
-				return EntityValuedPathInterpretation.from(
-						tableGroup.getNavigablePath(),
-						tableGroup,
-						mapping,
-						expandToAllColumns,
-						this
-				);
-			}
-		}
-		return expression;
+		return (Expression) groupByClauseExpression.accept( this );
 	}
 
 	private int indexOfExpression(List<? extends SqmAliasedNode<?>> selections, SqmExpression<?> node) {
@@ -2365,70 +2342,166 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	//			handled during `#visitFromClause`
 
 	@Override
-	public TableGroup visitRootPath(SqmRoot<?> sqmRoot) {
+	public Expression visitRootPath(SqmRoot<?> sqmRoot) {
 		final TableGroup resolved = getFromClauseAccess().findTableGroup( sqmRoot.getNavigablePath() );
 		if ( resolved != null ) {
 			log.tracef( "SqmRoot [%s] resolved to existing TableGroup [%s]", sqmRoot, resolved );
-			return resolved;
+			return visitTableGroup( resolved, sqmRoot );
 		}
 
 		throw new InterpretationException( "SqmRoot not yet resolved to TableGroup" );
 	}
 
 	@Override
-	public TableGroup visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
+	public Expression visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin) {
 		// todo (6.0) : have this resolve to TableGroup instead?
 		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmAttributeJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
-			return existing;
+			return visitTableGroup( existing, sqmJoin );
 		}
 
 		throw new InterpretationException( "SqmAttributeJoin not yet resolved to TableGroup" );
 	}
 
-	private QuerySpec currentQuerySpec() {
-		return currentQueryPart().getLastQuerySpec();
-	}
-
-	private QueryPart currentQueryPart() {
-		final SqlAstQueryPartProcessingState processingState = (SqlAstQueryPartProcessingState) getProcessingStateStack()
-				.getCurrent();
-		return processingState.getInflightQueryPart();
-	}
-
-	protected SqmAliasedNodeCollector currentSqlSelectionCollector() {
-		return (SqmAliasedNodeCollector) getCurrentProcessingState().getSqlExpressionResolver();
-	}
-
 	@Override
-	public TableGroup visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
+	public Expression visitCrossJoin(SqmCrossJoin<?> sqmJoin) {
 		// todo (6.0) : have this resolve to TableGroup instead?
 		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmCrossJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
-			return existing;
+			return visitTableGroup( existing, sqmJoin );
 		}
 
 		throw new InterpretationException( "SqmCrossJoin not yet resolved to TableGroup" );
 	}
 
 	@Override
-	public TableGroup visitQualifiedEntityJoin(SqmEntityJoin sqmJoin) {
+	public Expression visitQualifiedEntityJoin(SqmEntityJoin sqmJoin) {
 		// todo (6.0) : have this resolve to TableGroup instead?
 		//		- trying to remove tracking of TableGroupJoin in the x-refs
 
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );
-			return existing;
+			return visitTableGroup( existing, sqmJoin );
 		}
 
 		throw new InterpretationException( "SqmEntityJoin not yet resolved to TableGroup" );
+	}
+
+	private Expression visitTableGroup(TableGroup tableGroup, SqmFrom<?, ?> path) {
+		final ModelPartContainer modelPart = tableGroup.getModelPart();
+		final ModelPart keyPart;
+		final ModelPart resultPart;
+		if ( modelPart instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) modelPart;
+			keyPart = toOneAttributeMapping.findSubPart( toOneAttributeMapping.getTargetKeyPropertyName() );
+			resultPart = toOneAttributeMapping;
+		}
+		else if ( modelPart instanceof PluralAttributeMapping ) {
+			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
+			final CollectionPart elementDescriptor = pluralAttributeMapping.getElementDescriptor();
+			if ( elementDescriptor instanceof EntityCollectionPart ) {
+				keyPart = ( (EntityCollectionPart) elementDescriptor ).getKeyTargetMatchPart();
+			}
+			else {
+				keyPart = elementDescriptor;
+			}
+			resultPart = elementDescriptor;
+		}
+		else if ( modelPart instanceof EntityCollectionPart ) {
+			keyPart = ( (EntityCollectionPart) modelPart ).getKeyTargetMatchPart();
+			resultPart = modelPart;
+		}
+		else if ( modelPart instanceof EntityMappingType ) {
+			keyPart = ( (EntityMappingType) modelPart ).getIdentifierMapping();
+			resultPart = modelPart;
+		}
+		else {
+			keyPart = modelPart;
+			resultPart = modelPart;
+		}
+
+		final Expression result;
+		if ( resultPart instanceof EntityValuedModelPart ) {
+			final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup.getModelPart();
+			final boolean expandToAllColumns;
+			if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
+				// When the table group is known to be fetched i.e. a fetch join
+				// but also when the from clause is part of the select clause
+				// we need to expand to all columns, as we also expand this to all columns in the select clause
+				expandToAllColumns = tableGroup.isFetched() || selectClauseContains( path );
+			}
+			else {
+				expandToAllColumns = false;
+			}
+			result = EntityValuedPathInterpretation.from(
+					tableGroup.getNavigablePath(),
+					tableGroup,
+					mapping,
+					expandToAllColumns,
+					this
+			);
+		}
+		else if ( resultPart instanceof EmbeddableValuedModelPart ) {
+			final EmbeddableValuedModelPart mapping = (EmbeddableValuedModelPart) keyPart;
+			result = new EmbeddableValuedPathInterpretation<>(
+					mapping.toSqlExpression(
+							tableGroup,
+							currentClauseStack.getCurrent(),
+							this,
+							getSqlAstCreationState()
+					),
+					tableGroup.getNavigablePath(),
+					(EmbeddableValuedModelPart) resultPart,
+					tableGroup
+			);
+		}
+		else {
+			assert resultPart instanceof BasicValuedModelPart;
+			final BasicValuedModelPart mapping = (BasicValuedModelPart) keyPart;
+			final TableReference tableReference = tableGroup.resolveTableReference(
+					tableGroup.getNavigablePath().append( keyPart.getPartName() ),
+					mapping.getContainingTableExpression()
+			);
+
+			final Expression expression = getSqlExpressionResolver().resolveSqlExpression(
+					SqlExpressionResolver.createColumnReferenceKey(
+							tableReference,
+							mapping.getSelectionExpression()
+					),
+					sacs -> new ColumnReference(
+							tableReference.getIdentificationVariable(),
+							mapping,
+							getCreationContext().getSessionFactory()
+					)
+			);
+			final ColumnReference columnReference;
+			if ( expression instanceof ColumnReference ) {
+				columnReference = (ColumnReference) expression;
+			}
+			else if ( expression instanceof SqlSelectionExpression ) {
+				final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getSelection().getExpression();
+				assert selectedExpression instanceof ColumnReference;
+				columnReference = (ColumnReference) selectedExpression;
+			}
+			else {
+				throw new UnsupportedOperationException( "Unsupported basic-valued path expression : " + expression );
+			}
+			result = new BasicValuedPathInterpretation<>(
+					columnReference,
+					tableGroup.getNavigablePath(),
+					(BasicValuedModelPart) resultPart,
+					tableGroup
+			);
+		}
+
+		return withTreatRestriction( result, path );
 	}
 
 

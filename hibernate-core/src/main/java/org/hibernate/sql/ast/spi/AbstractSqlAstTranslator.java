@@ -37,7 +37,6 @@ import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
@@ -49,16 +48,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
-import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ComparisonOperator;
@@ -3500,53 +3493,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		// TableGroup and TableGroup handling should be performed as part of `#visitFromClause`...
-
-		// todo (6.0) : what is the correct behavior here?
-		appendSql( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
-		appendSql( '.' );
-		//TODO: pretty sure the typecast to Loadable is quite wrong here
-
-		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof Loadable ) {
-			appendSql( ( (Loadable) tableGroup.getModelPart() ).getIdentifierColumnNames()[0] );
-		}
-		else if ( modelPart instanceof PluralAttributeMapping ) {
-			final CollectionPart elementDescriptor = ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
-			if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
-				String mappedColumnExpression = ( (BasicValuedCollectionPart) elementDescriptor ).getSelectionExpression();
-				appendSql( mappedColumnExpression );
-			}
-			else if ( elementDescriptor instanceof EntityCollectionPart ) {
-				final ForeignKeyDescriptor foreignKeyDescriptor = ( (EntityCollectionPart) elementDescriptor ).getForeignKeyDescriptor();
-				if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-					foreignKeyDescriptor.visitTargetSelectables(
-							(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
-					);
-				}
-			}
-		}
-		else if ( modelPart instanceof ToOneAttributeMapping ) {
-			final ForeignKeyDescriptor foreignKeyDescriptor = ( (ToOneAttributeMapping) modelPart ).getForeignKeyDescriptor();
-			if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-				foreignKeyDescriptor.visitTargetSelectables(
-						(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
-				);
-			}
-		}
-		else {
-			throw new NotYetImplementedFor6Exception( getClass() );
-		}
+		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this!" );
 	}
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		// TableGroup and TableGroupJoin handling should be performed as part of `#visitFromClause`...
-
-		// todo (6.0) : what is the correct behavior here?
-		appendSql( tableGroupJoin.getJoinedGroup().getPrimaryTableReference().getIdentificationVariable() );
-		appendSql( '.' );
-		//TODO: pretty sure the typecast to Loadable is quite wrong here
-		appendSql( ( (Loadable) tableGroupJoin.getJoinedGroup().getModelPart() ).getIdentifierColumnNames()[0] );
+		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this!" );
 	}
 
 	@Override

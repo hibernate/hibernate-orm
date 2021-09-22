@@ -25,7 +25,7 @@ public interface NonIdentifierAttribute extends Attribute, AttributeDefinition {
 	public boolean isNullable();
 
 	/**
-	 * @deprecated Use {@link org.hibernate.tuple.NonIdentifierAttribute#isDirtyCheckable()} instead
+	 * @deprecated Use {@link NonIdentifierAttribute#isDirtyCheckable()} instead
 	 */
 	@Deprecated
 	public boolean isDirtyCheckable(boolean hasUninitializedProperties);

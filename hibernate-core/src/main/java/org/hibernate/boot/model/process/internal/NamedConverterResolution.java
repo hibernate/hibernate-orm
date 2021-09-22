@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.util.function.Function;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;

@@ -7,7 +7,7 @@
 package org.hibernate.dialect.function;
 
 import java.util.List;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;

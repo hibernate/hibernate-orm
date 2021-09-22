@@ -34,7 +34,7 @@ public final class IdentifierGeneratorHelper {
 	/**
 	 * Marker object returned from {@link IdentifierGenerator#generate} to indicate that we should short-circuit any
 	 * continued generated id checking.  Currently this is only used in the case of the
-	 * {@link org.hibernate.id.ForeignGenerator foreign} generator as a way to signal that we should use the associated
+	 * {@link ForeignGenerator foreign} generator as a way to signal that we should use the associated
 	 * entity's id value.
 	 */
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {

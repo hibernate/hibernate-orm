@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.persistence.Persistence;
+import jakarta.persistence.Persistence;
 
 import org.hibernate.cfg.AvailableSettings;
 

@@ -6,21 +6,21 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.Version;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import jakarta.persistence.Version;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Transaction;
@@ -323,10 +323,10 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 		}
 
 		@OneToMany(mappedBy = "parent", cascade = {
-				javax.persistence.CascadeType.DETACH,
-				javax.persistence.CascadeType.MERGE,
-				javax.persistence.CascadeType.REFRESH,
-				javax.persistence.CascadeType.REMOVE
+				jakarta.persistence.CascadeType.DETACH,
+				jakarta.persistence.CascadeType.MERGE,
+				jakarta.persistence.CascadeType.REFRESH,
+				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
 		@Cascade({
 				org.hibernate.annotations.CascadeType.DELETE,
@@ -434,10 +434,10 @@ public class NewlyInstantiatdCollectionSkipDeleteOrphanTest {
 		}
 
 		@OneToMany(mappedBy = "parent", cascade = {
-				javax.persistence.CascadeType.DETACH,
-				javax.persistence.CascadeType.MERGE,
-				javax.persistence.CascadeType.REFRESH,
-				javax.persistence.CascadeType.REMOVE
+				jakarta.persistence.CascadeType.DETACH,
+				jakarta.persistence.CascadeType.MERGE,
+				jakarta.persistence.CascadeType.REFRESH,
+				jakarta.persistence.CascadeType.REMOVE
 		}, orphanRemoval = true)
 		@Cascade({
 				org.hibernate.annotations.CascadeType.DELETE,

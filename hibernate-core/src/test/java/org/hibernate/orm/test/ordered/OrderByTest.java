@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.ordered;
 
 import java.util.Iterator;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.Hibernate;
 

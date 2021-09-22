@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.query;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

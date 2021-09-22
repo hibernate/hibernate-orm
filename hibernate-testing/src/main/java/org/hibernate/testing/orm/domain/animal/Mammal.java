@@ -7,10 +7,10 @@
 package org.hibernate.testing.orm.domain.animal;
 
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 @Entity
 @PrimaryKeyJoinColumn( name = "mammal_id_fk" )

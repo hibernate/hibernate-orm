@@ -144,7 +144,7 @@ public class RelationalValueSourceHelper {
 	public static RelationalValueSource buildValueSource(
 			MappingDocument mappingDocument,
 			String containingTableName,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
+			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		final List<RelationalValueSource> sources = buildValueSources(
 				mappingDocument,
 				containingTableName,
@@ -189,7 +189,7 @@ public class RelationalValueSourceHelper {
 	public static ColumnSource buildColumnSource(
 			MappingDocument mappingDocument,
 			String containingTableName,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
+			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		final List<RelationalValueSource> sources = buildValueSources(
 				mappingDocument,
 				containingTableName,
@@ -257,7 +257,7 @@ public class RelationalValueSourceHelper {
 	public static List<ColumnSource> buildColumnSources(
 			MappingDocument mappingDocument,
 			String containingTableName,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
+			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		final List<RelationalValueSource> sources = buildValueSources(
 				mappingDocument,
 				containingTableName,
@@ -306,7 +306,7 @@ public class RelationalValueSourceHelper {
 	public static List<RelationalValueSource> buildValueSources(
 			MappingDocument mappingDocument,
 			String containingTableName,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
+			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		List<RelationalValueSource> result = new ArrayList<>();
 
 		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getFormulaAttribute() ) ) {
@@ -383,7 +383,7 @@ public class RelationalValueSourceHelper {
 
 	private static void validateUseOfFormulaAttribute(
 			MappingDocument sourceDocument,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
+			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		//		1) make sure there is no column attribute
 		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getColumnAttribute() ) ) {
 			final String errorMessage;
@@ -436,7 +436,7 @@ public class RelationalValueSourceHelper {
 
 	private static void validateUseOfColumnOrFormulaNestedElements(
 			MappingDocument sourceDocument,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource) {
+			ColumnsAndFormulasSource columnsAndFormulasSource) {
 		if ( StringHelper.isNotEmpty( columnsAndFormulasSource.getColumnAttribute() ) ) {
 			final String errorMessage;
 			if ( columnsAndFormulasSource.getSourceType().canBeNamed()
@@ -463,7 +463,7 @@ public class RelationalValueSourceHelper {
 
 	private static void validateCustomWriteFragment(
 			MappingDocument sourceDocument,
-			RelationalValueSourceHelper.ColumnsAndFormulasSource columnsAndFormulasSource,
+			ColumnsAndFormulasSource columnsAndFormulasSource,
 			JaxbHbmColumnType columnMapping,
 			String customWrite) {
 		if ( customWrite != null && !customWrite.matches("[^?]*\\?[^?]*") ) {

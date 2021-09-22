@@ -7,7 +7,7 @@
 package org.hibernate.envers.configuration.internal.metadata;
 
 import java.util.Iterator;
-import javax.persistence.JoinColumn;
+import jakarta.persistence.JoinColumn;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.dialect.Dialect;
@@ -404,8 +404,8 @@ public final class MetadataTools {
 	 * Adds all <code>column</code> or <code>formula</code> elements.
 	 *
 	 * @param element Parent element.
-	 * @param columnIterator Iterator pointing at {@link org.hibernate.mapping.Column} and/or
-	 * {@link org.hibernate.mapping.Formula} objects.
+	 * @param columnIterator Iterator pointing at {@link Column} and/or
+	 * {@link Formula} objects.
 	 */
 	public static void addColumnsOrFormulas(Element element, Iterator columnIterator) {
 		while ( columnIterator.hasNext() ) {

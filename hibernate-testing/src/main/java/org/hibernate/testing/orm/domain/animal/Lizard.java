@@ -6,8 +6,8 @@
  */
 package org.hibernate.testing.orm.domain.animal;
 
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 
 @Entity
 @PrimaryKeyJoinColumn( name = "lizard_id_fk" )

@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 
 /**
  * @author Steve Ebersole

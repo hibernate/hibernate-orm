@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.arraytype;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik

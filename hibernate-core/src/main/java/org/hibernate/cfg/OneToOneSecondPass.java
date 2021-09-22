@@ -9,8 +9,8 @@ package org.hibernate.cfg;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinColumns;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.FetchMode;
@@ -79,7 +79,7 @@ public class OneToOneSecondPass implements SecondPass {
 
 	//TODO refactor this code, there is a lot of duplication in this method
 	public void doSecondPass(Map persistentClasses) throws MappingException {
-		org.hibernate.mapping.OneToOne value = new org.hibernate.mapping.OneToOne(
+		OneToOne value = new OneToOne(
 				buildingContext,
 				propertyHolder.getTable(),
 				propertyHolder.getPersistentClass()
@@ -101,7 +101,7 @@ public class OneToOneSecondPass implements SecondPass {
 		AnnotationBinder.bindForeignKeyNameAndDefinition(
 				value,
 				inferredData.getProperty(),
-				inferredData.getProperty().getAnnotation( javax.persistence.ForeignKey.class ),
+				inferredData.getProperty().getAnnotation( jakarta.persistence.ForeignKey.class ),
 				inferredData.getProperty().getAnnotation( JoinColumn.class ),
 				inferredData.getProperty().getAnnotation( JoinColumns.class),
 				buildingContext

@@ -54,10 +54,10 @@ public class XmlMetaEntity implements MetaEntity {
 	static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
 	static {
-		COLLECTIONS.put( "java.util.Collection", "javax.persistence.metamodel.CollectionAttribute" );
-		COLLECTIONS.put( "java.util.Set", "javax.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( "java.util.List", "javax.persistence.metamodel.ListAttribute" );
-		COLLECTIONS.put( "java.util.Map", "javax.persistence.metamodel.MapAttribute" );
+		COLLECTIONS.put( "java.util.Collection", "jakarta.persistence.metamodel.CollectionAttribute" );
+		COLLECTIONS.put( "java.util.Set", "jakarta.persistence.metamodel.SetAttribute" );
+		COLLECTIONS.put( "java.util.List", "jakarta.persistence.metamodel.ListAttribute" );
+		COLLECTIONS.put( "java.util.Map", "jakarta.persistence.metamodel.MapAttribute" );
 	}
 
 	private final String clazzName;
@@ -244,7 +244,7 @@ public class XmlMetaEntity implements MetaEntity {
 		String[] types = new String[3];
 		determineTargetType( type, propertyName, explicitTargetEntity, types );
 		determineCollectionType( type, types );
-		if ( types[1].equals( "javax.persistence.metamodel.MapAttribute" ) ) {
+		if ( types[1].equals( "jakarta.persistence.metamodel.MapAttribute" ) ) {
 			determineMapType( type, explicitMapKeyClass, types );
 		}
 		return types;

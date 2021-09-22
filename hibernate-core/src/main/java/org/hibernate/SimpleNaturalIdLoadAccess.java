@@ -19,7 +19,7 @@ import java.util.Optional;
  */
 public interface SimpleNaturalIdLoadAccess<T> {
 	/**
-	 * Specify the {@link org.hibernate.LockOptions} to use when retrieving the entity.
+	 * Specify the {@link LockOptions} to use when retrieving the entity.
 	 *
 	 * @param lockOptions The lock options to use.
 	 *

@@ -135,7 +135,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
 /**
- * In-flight state of {@link org.hibernate.boot.spi.SessionFactoryOptions}
+ * In-flight state of {@link SessionFactoryOptions}
  * during {@link org.hibernate.boot.SessionFactoryBuilder} processing.
  *
  * The intention is that SessionFactoryBuilder internally creates and populates

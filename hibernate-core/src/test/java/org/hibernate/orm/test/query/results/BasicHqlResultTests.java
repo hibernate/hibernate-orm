@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.query.results;
 
 import java.util.List;
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

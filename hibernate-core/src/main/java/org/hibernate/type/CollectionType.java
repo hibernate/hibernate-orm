@@ -304,7 +304,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 *
 	 * @param session The session from which the request is originating.
 	 * @return True if the collection owner is versioned; false otherwise.
-	 * @throws org.hibernate.MappingException Indicates our persister could not be located.
+	 * @throws MappingException Indicates our persister could not be located.
 	 */
 	private boolean isOwnerVersioned(SharedSessionContractImplementor session) throws MappingException {
 		return getPersister( session ).getOwnerEntityPersister().isVersioned();
@@ -571,12 +571,12 @@ public abstract class CollectionType extends AbstractType implements Association
 			Object owner,
 			Map copyCache,
 			SharedSessionContractImplementor session) {
-		java.util.Collection result = ( java.util.Collection ) target;
+		Collection result = ( Collection ) target;
 		result.clear();
 
 		// copy elements into newly empty target collection
 		Type elemType = getElementType( session.getFactory() );
-		Iterator iter = ( (java.util.Collection) original ).iterator();
+		Iterator iter = ( (Collection) original ).iterator();
 		while ( iter.hasNext() ) {
 			result.add( elemType.replace( iter.next(), null, session, owner, copyCache ) );
 		}

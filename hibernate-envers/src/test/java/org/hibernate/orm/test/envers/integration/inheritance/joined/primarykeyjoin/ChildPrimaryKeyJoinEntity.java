@@ -7,9 +7,9 @@
 
 package org.hibernate.orm.test.envers.integration.inheritance.joined.primarykeyjoin;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.integration.inheritance.joined.ParentEntity;

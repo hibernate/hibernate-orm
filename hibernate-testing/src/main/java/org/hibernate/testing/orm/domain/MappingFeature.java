@@ -14,7 +14,7 @@ import java.util.EnumSet;
  * The intent is to help categorize which models use specific mapping features
  * to help facilitate testing various outcomes based on those features.
  *
- * For example, when writing a test that depends on JPA's {@link javax.persistence.AttributeConverter},
+ * For example, when writing a test that depends on JPA's {@link jakarta.persistence.AttributeConverter},
  * we could just see which DomainModel reports using {@link #CONVERTER} and re-use that
  * model.
  *

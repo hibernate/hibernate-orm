@@ -27,7 +27,7 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
 import static org.hibernate.internal.log.UrlMessageBundle.URL_MESSAGE_LOGGER;
 
 /**
- * An ArchiveDescriptor implementation leveraging the {@link java.util.jar.JarFile} API for processing.
+ * An ArchiveDescriptor implementation leveraging the {@link JarFile} API for processing.
  *
  * @author Steve Ebersole
  */

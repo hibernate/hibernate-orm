@@ -55,7 +55,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	 */
 	public void onLoad(
 			final LoadEvent event,
-			final LoadEventListener.LoadType loadType) throws HibernateException {
+			final LoadType loadType) throws HibernateException {
 
 		final EntityPersister persister = getPersister( event );
 
@@ -91,7 +91,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	private void doOnLoad(
 			final EntityPersister persister,
 			final LoadEvent event,
-			final LoadEventListener.LoadType loadType) {
+			final LoadType loadType) {
 
 		try {
 			final EventSource session = event.getSession();
@@ -120,7 +120,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	private void checkIdClass(
 			final EntityPersister persister,
 			final LoadEvent event,
-			final LoadEventListener.LoadType loadType,
+			final LoadType loadType,
 			final Class idClass) {
 		// we may have the jpa requirement of allowing find-by-id where id is the "simple pk value" of a
 		// dependent objects parent.  This is part of its generally goofy derived identity "feature"
@@ -156,7 +156,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 
 	private void loadByDerivedIdentitySimplePkValue(
 			LoadEvent event,
-			LoadEventListener.LoadType options,
+			LoadType options,
 			EntityPersister dependentPersister,
 //			EmbeddedComponentType dependentIdType,
 			EntityPersister parentPersister) {
@@ -186,7 +186,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options) {
+			final LoadType options) {
 
 		final EventSource session = event.getSession();
 		if ( event.getInstanceToLoad() != null ) {
@@ -235,7 +235,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options) {
+			final LoadType options) {
 
 		final EventSource session = event.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
@@ -341,7 +341,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options,
+			final LoadType options,
 			final PersistenceContext persistenceContext,
 			final Object proxy) {
 		if ( LOG.isTraceEnabled() ) {
@@ -392,7 +392,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options,
+			final LoadType options,
 			final PersistenceContext persistenceContext) {
 		Object existing = persistenceContext.getEntity( keyToLoad );
 		final boolean traceEnabled = LOG.isTraceEnabled();
@@ -444,7 +444,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options,
+			final LoadType options,
 			final SessionImplementor source) {
 		SoftLock lock = null;
 		final Object ck;
@@ -494,7 +494,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 			final LoadEvent event,
 			final EntityPersister persister,
 			final EntityKey keyToLoad,
-			final LoadEventListener.LoadType options) {
+			final LoadType options) {
 
 		final EventSource session = event.getSession();
 		final boolean traceEnabled = LOG.isTraceEnabled();

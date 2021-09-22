@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.mapping.lazytoone.collectioninitializer;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class Company {

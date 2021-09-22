@@ -19,7 +19,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.jboss.logging.Logger;
 
 /**
- * Standard initiator for the standard {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform}
+ * Standard initiator for the standard {@link JtaPlatform}
  *
  * @author Steve Ebersole
  */

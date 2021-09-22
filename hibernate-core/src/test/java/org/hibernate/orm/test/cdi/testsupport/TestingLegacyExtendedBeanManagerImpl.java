@@ -6,17 +6,17 @@
  */
 package org.hibernate.orm.test.cdi.testsupport;
 
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager;
 
 class TestingLegacyExtendedBeanManagerImpl
-		implements TestingExtendedBeanManager, org.hibernate.jpa.event.spi.jpa.ExtendedBeanManager {
+		implements TestingExtendedBeanManager, ExtendedBeanManager {
 
-	private ExtendedBeanManager.LifecycleListener lifecycleListener;
+	private LifecycleListener lifecycleListener;
 
 	@Override
-	public void registerLifecycleListener(ExtendedBeanManager.LifecycleListener lifecycleListener) {
+	public void registerLifecycleListener(LifecycleListener lifecycleListener) {
 		if ( this.lifecycleListener != null ) {
 			throw new RuntimeException( "LifecycleListener already registered" );
 		}

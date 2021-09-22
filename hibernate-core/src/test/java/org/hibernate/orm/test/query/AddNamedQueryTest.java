@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.query;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Tests for {@link javax.persistence.EntityManagerFactory#addNamedQuery} handling.
+ * Tests for {@link jakarta.persistence.EntityManagerFactory#addNamedQuery} handling.
  *
  * @author Steve Ebersole
  */

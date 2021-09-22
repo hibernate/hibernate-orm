@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.hql.set;
 
 import java.util.List;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.query.SemanticException;
 

@@ -8,10 +8,10 @@ package org.hibernate.testing.orm.domain.retail;
 
 import java.util.UUID;
 import javax.money.MonetaryAmount;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.NaturalId;
 

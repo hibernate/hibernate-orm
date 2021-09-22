@@ -20,10 +20,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.MapsId;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MapsId;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -1124,7 +1124,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		else if ( clazz.isAnnotationPresent( Embeddable.class ) ) {
 			type = AnnotatedClassType.EMBEDDABLE;
 		}
-		else if ( clazz.isAnnotationPresent( javax.persistence.MappedSuperclass.class ) ) {
+		else if ( clazz.isAnnotationPresent( jakarta.persistence.MappedSuperclass.class ) ) {
 			type = AnnotatedClassType.EMBEDDABLE_SUPERCLASS;
 		}
 		else {

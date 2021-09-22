@@ -8,19 +8,19 @@ package org.hibernate.orm.test.insertordering;
 
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.SequenceGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
 
-import static javax.persistence.CascadeType.PERSIST;
-import static javax.persistence.GenerationType.SEQUENCE;
+import static jakarta.persistence.CascadeType.PERSIST;
+import static jakarta.persistence.GenerationType.SEQUENCE;
 
 @TestForIssue(jiraKey = "HHH-12074")
 public class InsertOrderingWithBidirectionalOneToManyFlushProblem extends BaseInsertOrderingTest {

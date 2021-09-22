@@ -35,7 +35,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.jboss.logging.Logger;
 
 import java.sql.Types;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).

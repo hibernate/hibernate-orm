@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_ONLY} access type.
+ * using the {@link AccessType#READ_ONLY} access type.
  *
  * @author Steve Ebersole
  */

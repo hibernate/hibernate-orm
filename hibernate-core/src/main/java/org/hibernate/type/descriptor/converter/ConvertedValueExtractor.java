@@ -9,8 +9,8 @@ package org.hibernate.type.descriptor.converter;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import javax.persistence.AttributeConverter;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueExtractor;

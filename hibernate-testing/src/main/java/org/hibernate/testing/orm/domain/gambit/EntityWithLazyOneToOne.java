@@ -6,10 +6,10 @@
  */
 package org.hibernate.testing.orm.domain.gambit;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 /**
  * @author Andrea Boriero

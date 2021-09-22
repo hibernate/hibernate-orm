@@ -7,8 +7,8 @@
 package org.hibernate.jpamodelgen.test.inheritance.deep;
 
 import java.util.Date;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.PrePersist;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.PrePersist;
 
 /**
  * A mapped super class that does not define an id attribute.

@@ -25,7 +25,7 @@ public class MapProxy<K, V> implements Map<K, V>, Serializable {
 	public MapProxy() {
 	}
 
-	public MapProxy(org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<Map<K, V>> initializor) {
+	public MapProxy(Initializor<Map<K, V>> initializor) {
 		this.initializor = initializor;
 	}
 

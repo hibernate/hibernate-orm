@@ -12,10 +12,10 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.stream.StreamSupport;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -51,7 +51,7 @@ public class HHH14230 {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = TABLE_NAME)
+	@jakarta.persistence.Table(name = TABLE_NAME)
 	public static class TestEntity {
 
 		@Id

@@ -10,7 +10,7 @@ import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Outputs;
 
 /**
- * Specialization of the {@link org.hibernate.result.Outputs} contract providing access to the stored procedure's registered
+ * Specialization of the {@link Outputs} contract providing access to the stored procedure's registered
  * output parameters.
  *
  * @author Steve Ebersole
@@ -26,7 +26,7 @@ public interface ProcedureOutputs extends Outputs {
 	 *
 	 * @return The output value.
 	 *
-	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, jakarta.persistence.ParameterMode)
 	 */
 	<T> T getOutputParameterValue(ProcedureParameter<T> parameter);
 
@@ -40,7 +40,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using positional parameters
 	 * @throws NoSuchParameterException If no parameter with that name exists
 	 *
-	 * @see ProcedureCall#registerParameter(String, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(String, Class, jakarta.persistence.ParameterMode)
 	 */
 	Object getOutputParameterValue(String name);
 
@@ -54,7 +54,7 @@ public interface ProcedureOutputs extends Outputs {
 	 * @throws ParameterStrategyException If the ProcedureCall is defined using named parameters
 	 * @throws NoSuchParameterException If no parameter with that position exists
 	 *
-	 * @see ProcedureCall#registerParameter(int, Class, javax.persistence.ParameterMode)
+	 * @see ProcedureCall#registerParameter(int, Class, jakarta.persistence.ParameterMode)
 	 */
 	Object getOutputParameterValue(int position);
 }

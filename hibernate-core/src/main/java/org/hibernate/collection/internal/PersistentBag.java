@@ -614,7 +614,7 @@ public class PersistentBag<E> extends AbstractPersistentCollection<E> implements
 	 * The semantic is broken not to have to initialize a
 	 * collection for a simple equals() operation.
 	 *
-	 * @see java.lang.Object#equals(java.lang.Object)
+	 * @see Object#equals(Object)
 	 * <p>
 	 * {@inheritDoc}
 	 */

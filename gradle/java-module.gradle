@@ -54,8 +54,29 @@ if ( !project.description ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
-configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
 
+configurations.all {
+	resolutionStrategy {
+		dependencySubstitution {
+			// will handle dependencies pulled in transitively
+			substitute module( 'javax.persistence:javax.persistence-api' ) with module( libraries.jakarta_jpa )
+			substitute module( 'javax.transaction:jta' ) with module( libraries.jakarta_jta )
+			substitute module( 'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec' ) with module( libraries.jakarta_jta )
+			substitute module( 'javax.validation:validation-api' ) with module( libraries.jakarta_validation )
+			substitute module( 'javax.interceptor:javax.interceptor-api' ) with module( libraries.jakarta_interceptor )
+			substitute module( 'javax.activation:javax.activation-api' ) with module( libraries.jakarta_activation )
+			substitute module( 'javax.enterprise:cdi-api' ) with module( libraries.jakarta_cdi )
+			substitute module( 'org.jboss.weld.se:weld-se-shaded' ) with module( libraries.jakarta_weld )
+			substitute module( 'javax.xml.bind:jaxb-api' ) with module( libraries.jakarta_jaxb_api )
+			substitute module( 'org.glassfish.jaxb:jaxb-runtime' ) with module( libraries.jakarta_jaxb_runtime )
+			substitute module( 'org.jboss.narayana.jta:narayana-jta' ) with module( libraries.jboss_jta_jakarta )
+			substitute module( 'org.jboss:jboss-transaction-spi' ) with module( libraries.jboss_tx_spi_jakarta )
+			substitute module( 'org.hibernate.validator:hibernate-validator' ) with module( libraries.jakarta_validator )
+			substitute module( 'org.glassfish:javax.el' ) with module( libraries.jakarta_el )
+		}
+	}
+	exclude group: 'xml-apis', module: 'xml-apis'
+}
 
 dependencies {
 	implementation libraries.logging

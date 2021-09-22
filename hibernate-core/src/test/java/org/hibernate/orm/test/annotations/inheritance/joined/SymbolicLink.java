@@ -8,8 +8,8 @@
 //$Id$
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 public class SymbolicLink extends File {

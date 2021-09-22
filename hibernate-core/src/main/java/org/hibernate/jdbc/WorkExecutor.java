@@ -22,7 +22,7 @@ public class WorkExecutor<T> {
 	 * using the supplied connection.
 	 *
 	 * Because {@link Work} does not return a value when executed
-	 * (via {@link Work#execute(java.sql.Connection)}, this method
+	 * (via {@link Work#execute(Connection)}, this method
 	 * always returns null.
 	 *
 	 * @param work The @link ReturningWork} instance encapsulating the discrete work
@@ -41,7 +41,7 @@ public class WorkExecutor<T> {
 	/**
 	 * Execute the discrete work encapsulated by a {@link ReturningWork} instance
 	 * using the supplied connection, returning the result of
-	 * {@link ReturningWork#execute(java.sql.Connection)}
+	 * {@link ReturningWork#execute(Connection)}
 	 *
 	 * @param work The @link ReturningWork} instance encapsulating the discrete work
 	 * @param connection The connection on which to perform the work.

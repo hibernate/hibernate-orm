@@ -130,11 +130,11 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private static SimpleDomainType<?> determineListIndexOrMapKeyType(
 			PluralAttributeMetadata<?,?,?> attributeMetadata,
 			MetadataContext metadataContext) {
-		if ( java.util.Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
+		if ( Map.class.isAssignableFrom( attributeMetadata.getJavaType() ) ) {
 			return determineSimpleType( attributeMetadata.getMapKeyValueContext(), metadataContext );
 		}
 
-		if ( java.util.List.class.isAssignableFrom( attributeMetadata.getJavaType() )
+		if ( List.class.isAssignableFrom( attributeMetadata.getJavaType() )
 				|| attributeMetadata.getJavaType().isArray() ) {
 			return metadataContext.getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( Integer.class );
 		}

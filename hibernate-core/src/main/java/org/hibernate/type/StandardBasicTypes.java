@@ -123,14 +123,14 @@ public final class StandardBasicTypes {
 	public static final DoubleType DOUBLE = DoubleType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.math.BigInteger} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
+	 * The standard Hibernate type for mapping {@link BigInteger} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 *
 	 * @see BigIntegerType
 	 */
 	public static final BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.math.BigDecimal} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
+	 * The standard Hibernate type for mapping {@link BigDecimal} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 *
 	 * @see BigDecimalType
 	 */
@@ -198,7 +198,7 @@ public final class StandardBasicTypes {
 	public static final NTextType NTEXT = NTextType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.sql.Clob} to JDBC {@link java.sql.Types#CLOB CLOB}.
+	 * The standard Hibernate type for mapping {@link Clob} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
 	 * @see ClobType
 	 * @see #MATERIALIZED_CLOB
@@ -206,7 +206,7 @@ public final class StandardBasicTypes {
 	public static final ClobType CLOB = ClobType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.sql.NClob} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
+	 * The standard Hibernate type for mapping {@link NClob} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
 	 * @see NClobType
 	 * @see #MATERIALIZED_NCLOB
@@ -306,7 +306,7 @@ public final class StandardBasicTypes {
 	public static final ZonedDateTimeType ZONED_DATE_TIME = ZonedDateTimeType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.time.Instant} to JDBC
+	 * The standard Hibernate type for mapping {@link Instant} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 *
 	 * @see TimeType
@@ -314,7 +314,7 @@ public final class StandardBasicTypes {
 	public static final InstantType INSTANT = InstantType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Time}) to JDBC
+	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Time}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 *
 	 * @see TimeType
@@ -322,7 +322,7 @@ public final class StandardBasicTypes {
 	public static final TimeType TIME = TimeType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Date}) to JDBC
+	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Date}) to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 *
 	 * @see TimeType
@@ -330,7 +330,7 @@ public final class StandardBasicTypes {
 	public static final DateType DATE = DateType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Date} ({@link java.sql.Timestamp}) to JDBC
+	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Timestamp}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 *
 	 * @see TimeType
@@ -338,7 +338,7 @@ public final class StandardBasicTypes {
 	public static final TimestampType TIMESTAMP = TimestampType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
+	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 *
 	 * @see CalendarType
@@ -346,7 +346,7 @@ public final class StandardBasicTypes {
 	public static final CalendarType CALENDAR = CalendarType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
+	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
 	 *
 	 * @see CalendarDateType
@@ -354,7 +354,7 @@ public final class StandardBasicTypes {
 	public static final CalendarDateType CALENDAR_DATE = CalendarDateType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Calendar} to JDBC
+	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
 	public static final CalendarTimeType CALENDAR_TIME = CalendarTimeType.INSTANCE;
@@ -387,7 +387,7 @@ public final class StandardBasicTypes {
 	public static final ImageType IMAGE = ImageType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.sql.Blob} to JDBC {@link java.sql.Types#BLOB BLOB}.
+	 * The standard Hibernate type for mapping {@link Blob} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
 	 * @see BlobType
 	 * @see #MATERIALIZED_BLOB
@@ -404,7 +404,7 @@ public final class StandardBasicTypes {
 	public static final MaterializedBlobType MATERIALIZED_BLOB = MaterializedBlobType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.io.Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
+	 * The standard Hibernate type for mapping {@link Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 * <p/>
 	 * See especially the discussion wrt {@link ClassLoader} determination on {@link SerializableType}
 	 *
@@ -427,28 +427,28 @@ public final class StandardBasicTypes {
 	public static final ClassType CLASS = ClassType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Locale} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link Locale} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see LocaleType
 	 */
 	public static final LocaleType LOCALE = LocaleType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.Currency} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link Currency} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see CurrencyType
 	 */
 	public static final CurrencyType CURRENCY = CurrencyType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.time.ZoneOffset} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link ZoneOffset} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see ZoneOffsetType
 	 */
 	public static final ZoneOffsetType ZONE_OFFSET = ZoneOffsetType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
+	 * The standard Hibernate type for mapping {@link TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
 	 *
 	 * @see TimeZoneType
 	 */
@@ -466,14 +466,14 @@ public final class StandardBasicTypes {
 	// UUID mappings
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.UUID} to JDBC {@link java.sql.Types#BINARY BINARY}.
+	 * The standard Hibernate type for mapping {@link UUID} to JDBC {@link java.sql.Types#BINARY BINARY}.
 	 *
 	 * @see UUIDBinaryType
 	 */
 	public static final UUIDBinaryType UUID_BINARY = UUIDBinaryType.INSTANCE;
 
 	/**
-	 * The standard Hibernate type for mapping {@link java.util.UUID} to JDBC {@link java.sql.Types#CHAR CHAR}.
+	 * The standard Hibernate type for mapping {@link UUID} to JDBC {@link java.sql.Types#CHAR CHAR}.
 	 *
 	 * @see UUIDCharType
 	 */

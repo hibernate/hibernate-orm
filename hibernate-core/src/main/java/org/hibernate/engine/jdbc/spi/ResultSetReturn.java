@@ -30,7 +30,7 @@ public interface ResultSetReturn {
 	 * Extract the ResultSet from the PreparedStatement.
 	 * <p/>
 	 * If user passes {@link CallableStatement} reference, this method calls {@link #extract(CallableStatement)}
-	 * internally.  Otherwise, generally speaking, {@link java.sql.PreparedStatement#executeQuery()} is called
+	 * internally.  Otherwise, generally speaking, {@link PreparedStatement#executeQuery()} is called
 	 *
 	 * @param statement The PreparedStatement from which to extract the ResultSet
 	 *
@@ -84,7 +84,7 @@ public interface ResultSetReturn {
 	 *
 	 * @param statement The PreparedStatement to execute
 	 *
-	 * @return The {@link java.sql.PreparedStatement#executeUpdate()} result
+	 * @return The {@link PreparedStatement#executeUpdate()} result
 	 */
 	public int executeUpdate(PreparedStatement statement);
 	
@@ -94,7 +94,7 @@ public interface ResultSetReturn {
 	 * @param statement The JDBC Statement object to use
 	 * @param sql The SQL to execute
 	 *
-	 * @return The {@link java.sql.PreparedStatement#executeUpdate(String)} result
+	 * @return The {@link PreparedStatement#executeUpdate(String)} result
 	 */
 	public int executeUpdate(Statement statement, String sql);
 }

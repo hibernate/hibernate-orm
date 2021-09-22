@@ -9,8 +9,8 @@ package org.hibernate.engine.spi;
 import java.sql.Connection;
 import java.util.Set;
 import java.util.UUID;
-import javax.persistence.FlushModeType;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -42,7 +42,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>
  *     <li>
- *         {@link org.hibernate.resource.jdbc.spi.JdbcSessionOwner} to drive the behavior of a "JDBC session".
+ *         {@link JdbcSessionOwner} to drive the behavior of a "JDBC session".
  *         Can therefor be used to construct a JdbcCoordinator, which (for now) models a "JDBC session"
  *     </li>
  *     <li>
@@ -52,10 +52,10 @@ import org.hibernate.type.spi.TypeConfiguration;
  *         {@link org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder#buildTransactionCoordinator}
  *     </li>
  *     <li>
- *         {@link org.hibernate.engine.jdbc.LobCreationContext} to act as the context for JDBC LOB instance creation
+ *         {@link LobCreationContext} to act as the context for JDBC LOB instance creation
  *     </li>
  *     <li>
- *         {@link org.hibernate.type.descriptor.WrapperOptions} to fulfill the behavior needed while
+ *         {@link WrapperOptions} to fulfill the behavior needed while
  *         binding/extracting values to/from JDBC as part of the Type contracts
  *     </li>
  * </ul>

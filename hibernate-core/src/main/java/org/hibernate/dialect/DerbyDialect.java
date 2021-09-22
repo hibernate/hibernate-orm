@@ -63,7 +63,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.useArgType;
 
@@ -288,7 +288,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	/**
-	 * Derby does have a real {@link java.sql.Types#BOOLEAN}
+	 * Derby does have a real {@link Types#BOOLEAN}
 	 * type, but it doesn't know how to cast to it. Worse,
 	 * Derby makes us use the {@code double()} function to
 	 * cast things to its floating point types.

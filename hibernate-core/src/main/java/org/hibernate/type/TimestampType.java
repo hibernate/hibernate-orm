@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.Date;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.sql.Timestamp}
+ * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -42,7 +42,7 @@ public class TimestampType
 
 	@Override
 	public String[] getRegistrationKeys() {
-		return new String[] { getName(), Timestamp.class.getName(), java.util.Date.class.getName() };
+		return new String[] { getName(), Timestamp.class.getName(), Date.class.getName() };
 	}
 
 	@Override

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.interfaces.components;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Adam Warski (adam at warski dot org)

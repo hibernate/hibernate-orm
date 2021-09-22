@@ -69,7 +69,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * An abstract base class for SAP HANA dialects.
@@ -702,7 +702,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	private final StandardTableExporter hanaTableExporter = new StandardTableExporter( this ) {
 
 		@Override
-		public String[] getSqlCreateStrings(org.hibernate.mapping.Table table, org.hibernate.boot.Metadata metadata) {
+		public String[] getSqlCreateStrings(Table table, org.hibernate.boot.Metadata metadata) {
 			String[] sqlCreateStrings = super.getSqlCreateStrings( table, metadata );
 			return quoteTypeIfNecessary( table, sqlCreateStrings, getCreateTableString() );
 		}
@@ -713,7 +713,7 @@ public abstract class AbstractHANADialect extends Dialect {
 			return quoteTypeIfNecessary( table, sqlDropStrings, "drop table" );
 		}
 
-		private String[] quoteTypeIfNecessary(org.hibernate.mapping.Table table, String[] strings, String prefix) {
+		private String[] quoteTypeIfNecessary(Table table, String[] strings, String prefix) {
 			if ( table.getNameIdentifier() == null || table.getNameIdentifier().isQuoted()
 					|| !"type".equals( table.getNameIdentifier().getText().toLowerCase() ) ) {
 				return strings;

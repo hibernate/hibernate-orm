@@ -8,8 +8,8 @@ package org.hibernate.testing.orm.junit;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 

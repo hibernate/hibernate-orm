@@ -6,7 +6,7 @@
  */
 package org.hibernate.annotations;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Steve Ebersole

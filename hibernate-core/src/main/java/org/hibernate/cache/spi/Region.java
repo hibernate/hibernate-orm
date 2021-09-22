@@ -47,7 +47,7 @@ public interface Region {
 	 * during {@link org.hibernate.SessionFactory#close()} to give
 	 * the region a chance to cleanup.
 	 *
-	 * @throws org.hibernate.cache.CacheException Indicates problem shutting down
+	 * @throws CacheException Indicates problem shutting down
 	 */
 	void destroy() throws CacheException;
 }

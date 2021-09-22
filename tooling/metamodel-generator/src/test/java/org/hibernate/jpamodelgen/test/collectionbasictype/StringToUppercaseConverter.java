@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.collectionbasictype;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Chris Cranford

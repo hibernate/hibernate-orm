@@ -11,7 +11,7 @@ import org.hibernate.event.spi.EntityCopyObserverFactory;
 import org.hibernate.event.spi.EventSource;
 
 /**
- * An {@link org.hibernate.event.spi.EntityCopyObserver} implementation that allows multiple representations of
+ * An {@link EntityCopyObserver} implementation that allows multiple representations of
  * the same persistent entity to be merged.
  *
  * @author Gail Badner

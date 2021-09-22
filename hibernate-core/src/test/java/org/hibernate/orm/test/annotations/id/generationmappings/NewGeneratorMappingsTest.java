@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Test mapping the {@link javax.persistence.GenerationType GenerationTypes} to the corresponding
+ * Test mapping the {@link jakarta.persistence.GenerationType GenerationTypes} to the corresponding
  * hibernate generators using the new scheme
  *
  * @author Steve Ebersole

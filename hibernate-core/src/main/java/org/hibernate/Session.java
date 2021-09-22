@@ -9,12 +9,12 @@ package org.hibernate;
 import java.io.Closeable;
 import java.sql.Connection;
 import java.util.List;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.FlushModeType;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.stat.SessionStatistics;
@@ -422,7 +422,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * @param object a transient or detached instance containing new or updated state
 	 *
-	 * @see Session#save(java.lang.Object)
+	 * @see Session#save(Object)
 	 * @see Session#update(Object object)
 	 */
 	void saveOrUpdate(Object object);
@@ -918,7 +918,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 *
 	 * To get the default read-only/modifiable setting used for
 	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.Session#isDefaultReadOnly()
+	 * @see Session#isDefaultReadOnly()
 	 *
 	 * @param entityOrProxy an entity or HibernateProxy
 	 * @return {@code true} if the entity or proxy is read-only, {@code false} if the entity or proxy is modifiable.
@@ -935,7 +935,7 @@ public interface Session extends SharedSessionContract, EntityManager, AutoClose
 	 * 
 	 * To set the default read-only/modifiable setting used for
 	 * entities and proxies that are loaded into the session:
-	 * @see org.hibernate.Session#setDefaultReadOnly(boolean)
+	 * @see Session#setDefaultReadOnly(boolean)
 	 *
 	 * To override this session's read-only/modifiable setting for entities
 	 * and proxies loaded by a Query:

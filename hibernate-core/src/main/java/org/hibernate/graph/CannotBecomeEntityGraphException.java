@@ -10,7 +10,7 @@ import org.hibernate.HibernateException;
 
 /**
  * Indicates an illegal attempt to make a {@link Graph} become
- * an {@link javax.persistence.EntityGraph} via {@link Graph#makeRootGraph(String, boolean)}.
+ * an {@link jakarta.persistence.EntityGraph} via {@link Graph#makeRootGraph(String, boolean)}.
  * Generally this happens because the Graph describes an embeddable, whereas an EntityGraph
  * by definition is only valid for an entity.
  *

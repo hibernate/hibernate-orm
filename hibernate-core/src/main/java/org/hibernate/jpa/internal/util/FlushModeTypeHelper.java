@@ -8,7 +8,7 @@ package org.hibernate.jpa.internal.util;
 
 
 import java.util.Locale;
-import javax.persistence.FlushModeType;
+import jakarta.persistence.FlushModeType;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
@@ -17,7 +17,7 @@ import org.hibernate.MappingException;
 import org.jboss.logging.Logger;
 
 /**
- * Helper to deal with {@link FlushModeType} <-> {@link org.hibernate.FlushMode} conversions.
+ * Helper to deal with {@link FlushModeType} <-> {@link FlushMode} conversions.
  *
  * @author Steve Ebersole
  */

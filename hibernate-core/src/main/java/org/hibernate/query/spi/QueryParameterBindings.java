@@ -80,7 +80,7 @@ public interface QueryParameterBindings {
 
 	/**
 	 * Generate a "memento" for these parameter bindings that can be used
-	 * in creating a {@link org.hibernate.cache.spi.QueryKey}
+	 * in creating a {@link QueryKey}
 	 * @param persistenceContext
 	 */
 	default QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {

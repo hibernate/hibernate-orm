@@ -24,7 +24,7 @@ public abstract class AbstractWork implements Work, WorkExecutorVisitable<Void> 
 	 * encapsulated by this work instance using the supplied connection.
 	 *
 	 * Because {@link Work} does not return a value when executed
-	 * (via {@link Work#execute(java.sql.Connection)}, this method
+	 * (via {@link Work#execute(Connection)}, this method
 	 * always returns null.
 	 *
 	 * @param connection The connection on which to perform the work.

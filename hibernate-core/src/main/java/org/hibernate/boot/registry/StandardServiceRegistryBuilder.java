@@ -28,12 +28,12 @@ import org.hibernate.service.internal.ProvidedService;
 import org.hibernate.service.spi.ServiceContributor;
 
 /**
- * Builder for standard {@link org.hibernate.service.ServiceRegistry} instances.
+ * Builder for standard {@link ServiceRegistry} instances.
  *
  * @author Steve Ebersole
  * 
  * @see StandardServiceRegistryImpl
- * @see org.hibernate.boot.registry.BootstrapServiceRegistryBuilder
+ * @see BootstrapServiceRegistryBuilder
  */
 public class StandardServiceRegistryBuilder {
 	/**

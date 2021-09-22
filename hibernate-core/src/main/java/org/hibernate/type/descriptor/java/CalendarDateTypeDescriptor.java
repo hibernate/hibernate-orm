@@ -11,7 +11,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for {@link java.util.Calendar} handling, but just for the date (month, day, year) portion.
+ * Descriptor for {@link Calendar} handling, but just for the date (month, day, year) portion.
  *
  * @author Steve Ebersole
  */

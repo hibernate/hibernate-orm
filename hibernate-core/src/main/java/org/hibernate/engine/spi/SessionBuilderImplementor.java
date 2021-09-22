@@ -12,7 +12,7 @@ import org.hibernate.SessionBuilder;
  * Defines the internal contract between the <tt>SessionBuilder</tt> and other parts of
  * Hibernate..
  *
- * @see org.hibernate.SessionBuilder
+ * @see SessionBuilder
  *
  * @author Gail Badner
  */

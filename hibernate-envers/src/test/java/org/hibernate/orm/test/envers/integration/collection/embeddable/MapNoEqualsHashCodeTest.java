@@ -10,10 +10,10 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.Embeddable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
@@ -32,7 +32,7 @@ import static org.junit.Assert.assertNotNull;
  * are audited that the same number of audit rows are generated regardless whether the embeddable
  * implements proper {@code equals} and {@code hashCode} methods.
  * 
- * The {@link org.hibernate.envers.strategy.ValidityAuditStrategy} with equals/hashcode.
+ * The {@link ValidityAuditStrategy} with equals/hashcode.
  * 
  * +-----+---------+---------------+-----------+--------+--------+
  * | REV | REVTYPE | TESTENTITY_ID | EMBS1_KEY | REVEND | VALUE  |

@@ -19,7 +19,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -81,8 +81,8 @@ public class OffsetTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<Off
 			return (X) offsetTime;
 		}
 
-		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Time.valueOf( offsetTime.toLocalTime() );
+		if ( Time.class.isAssignableFrom( type ) ) {
+			return (X) Time.valueOf( offsetTime.toLocalTime() );
 		}
 
 		final ZonedDateTime zonedDateTime = offsetTime.atDate( LocalDate.of( 1970, 1, 1 ) ).toZonedDateTime();
@@ -107,8 +107,8 @@ public class OffsetTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<Off
 			return (X) Long.valueOf( instant.toEpochMilli() );
 		}
 
-		if ( java.util.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.util.Date.from( instant );
+		if ( Date.class.isAssignableFrom( type ) ) {
+			return (X) Date.from( instant );
 		}
 
 		throw unknownUnwrap( type );

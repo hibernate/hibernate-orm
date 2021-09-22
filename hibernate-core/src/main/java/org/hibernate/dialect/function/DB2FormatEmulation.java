@@ -19,7 +19,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * DB2's varchar_format() can't handle quoted literal strings in

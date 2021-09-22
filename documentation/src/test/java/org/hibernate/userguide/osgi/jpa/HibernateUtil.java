@@ -1,8 +1,8 @@
 package org.hibernate.userguide.osgi.jpa;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.spi.PersistenceProvider;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.spi.PersistenceProvider;
 
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;

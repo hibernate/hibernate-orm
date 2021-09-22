@@ -68,7 +68,7 @@ public enum LocalSchema {
 		return schema;
 	}
 
-	private static javax.xml.validation.Schema resolveLocalSchema(String schemaName) {
+	private static Schema resolveLocalSchema(String schemaName) {
 		return resolveLocalSchema( resolveLocalSchemaUrl( schemaName ) );
 	}
 
@@ -80,7 +80,7 @@ public enum LocalSchema {
 		return url;
 	}
 
-	private static javax.xml.validation.Schema resolveLocalSchema(URL schemaUrl) {
+	private static Schema resolveLocalSchema(URL schemaUrl) {
 		try {
 			InputStream schemaStream = schemaUrl.openStream();
 			try {

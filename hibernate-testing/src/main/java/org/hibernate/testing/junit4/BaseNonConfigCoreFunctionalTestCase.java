@@ -71,7 +71,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Applies functional testing logic for core Hibernate testing on top of {@link BaseUnitTestCase}.
- * Much like {@link org.hibernate.testing.junit4.BaseCoreFunctionalTestCase}, except that
+ * Much like {@link BaseCoreFunctionalTestCase}, except that
  * this form uses the new bootstrapping APIs while BaseCoreFunctionalTestCase continues to
  * use (the neutered form of) Configuration.
  *

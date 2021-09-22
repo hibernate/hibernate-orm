@@ -10,8 +10,8 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import javax.persistence.AttributeConverter;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.ValueBinder;

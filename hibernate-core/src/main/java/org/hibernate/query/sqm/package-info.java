@@ -21,7 +21,7 @@
  * == Criteria
  *
  * The SQM tree implements the JPA Criteria contracts.  Hibernate's implementation of the
- * JPA {@link javax.persistence.criteria.CriteriaBuilder} contract
+ * JPA {@link jakarta.persistence.criteria.CriteriaBuilder} contract
  * ({@link org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder}) returns SQM nodes
  * that are arranged into an SQM tree via the normal JPA Criteria building approach
  *

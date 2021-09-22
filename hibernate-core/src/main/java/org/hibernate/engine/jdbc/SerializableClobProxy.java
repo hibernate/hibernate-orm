@@ -28,10 +28,10 @@ public class SerializableClobProxy implements InvocationHandler, Serializable {
 	private final transient Clob clob;
 
 	/**
-	 * Builds a serializable {@link java.sql.Clob} wrapper around the given {@link java.sql.Clob}.
+	 * Builds a serializable {@link Clob} wrapper around the given {@link Clob}.
 	 *
-	 * @param clob The {@link java.sql.Clob} to be wrapped.
-	 * @see #generateProxy(java.sql.Clob)
+	 * @param clob The {@link Clob} to be wrapped.
+	 * @see #generateProxy(Clob)
 	 */
 	protected SerializableClobProxy(Clob clob) {
 		this.clob = clob;

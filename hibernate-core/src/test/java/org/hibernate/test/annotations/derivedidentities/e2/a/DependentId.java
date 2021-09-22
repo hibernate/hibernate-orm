@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.derivedidentities.e2.a;
 import java.io.Serializable;
-import javax.persistence.Embedded;
+import jakarta.persistence.Embedded;
 
 /**
  * @author Emmanuel Bernard

@@ -30,7 +30,7 @@ public class BagType extends CollectionType {
 
 	@Override
 	public Class getReturnedClass() {
-		return java.util.Collection.class;
+		return Collection.class;
 	}
 
 	@Override

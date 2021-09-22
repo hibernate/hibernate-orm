@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.envers.entities.onetomany.ids;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.entities.ids.EmbId;

@@ -39,7 +39,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.jboss.logging.Logger;
 
 /**
- * Coordinates the process of executing {@link org.hibernate.boot.archive.scan.spi.Scanner} (if enabled)
+ * Coordinates the process of executing {@link Scanner} (if enabled)
  * and applying the resources (classes, packages and mappings) discovered.
  *
  * @author Steve Ebersole

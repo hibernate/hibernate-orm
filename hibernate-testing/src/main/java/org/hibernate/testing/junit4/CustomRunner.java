@@ -110,7 +110,7 @@ public class CustomRunner extends BlockJUnit4ClassRunner {
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @see org.junit.runners.ParentRunner#classBlock(org.junit.runner.notification.RunNotifier)
+	 * @see org.junit.runners.ParentRunner#classBlock(RunNotifier)
 	 */
 	@Override
 	protected Statement classBlock(RunNotifier notifier) {

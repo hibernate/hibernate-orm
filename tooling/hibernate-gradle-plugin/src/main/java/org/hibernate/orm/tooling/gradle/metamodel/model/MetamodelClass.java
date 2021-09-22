@@ -103,9 +103,9 @@ public class MetamodelClass {
 		writer.write( LINE_SEPARATOR );
 		writer.write( LINE_SEPARATOR );
 
-		writer.write( "import javax.persistence.*;" );
+		writer.write( "import jakarta.persistence.*;" );
 		writer.write( LINE_SEPARATOR );
-		writer.write( "import javax.persistence.metamodel.*;" );
+		writer.write( "import jakarta.persistence.metamodel.*;" );
 		writer.write( LINE_SEPARATOR );
 		writer.write( LINE_SEPARATOR );
 
@@ -117,7 +117,7 @@ public class MetamodelClass {
 			final JavaVersion javaVersion = spec.getTargetJavaVersionAccess().getOrElse( JavaVersion.current() );
 			final String qualifiedAnnotationName = javaVersion.isJava9Compatible()
 					? "javax.annotation.processing.Generated"
-					: "javax.annotation.Generated";
+					: "jakarta.annotation.Generated";
 			final String generatedAnnotationFragment = String.format(
 					Locale.ROOT,
 					"@%s( value=\"%s\", date=\"%s\", comments=\"%s\" )",

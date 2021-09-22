@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.From;
+import jakarta.persistence.criteria.From;
 
 /**
  * API extension to the JPA {@link From} contract

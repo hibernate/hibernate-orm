@@ -46,7 +46,7 @@ public interface UniqueDelegate {
 
 	/**
 	 * Get the fragment that can be used to apply unique constraints as part of table creation.  The implementation
-	 * should iterate over the {@link org.hibernate.mapping.UniqueKey} instances for the given table (see
+	 * should iterate over the {@link UniqueKey} instances for the given table (see
 	 * {@link org.hibernate.mapping.Table#getUniqueKeyIterator()} and generate the whole fragment for all
 	 * unique keys
 	 * <p/>

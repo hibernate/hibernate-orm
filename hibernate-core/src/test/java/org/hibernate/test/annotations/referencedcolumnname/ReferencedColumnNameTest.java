@@ -16,10 +16,10 @@ import org.junit.Test;
 import java.math.BigDecimal;
 import java.util.Iterator;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;

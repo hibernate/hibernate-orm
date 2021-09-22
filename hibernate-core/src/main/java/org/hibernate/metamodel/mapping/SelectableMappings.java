@@ -33,7 +33,7 @@ public interface SelectableMappings {
 	 *
 	 * The return is the number of selectables we directly contain
 	 *
-	 * @see SelectableConsumer#accept(int, org.hibernate.metamodel.mapping.SelectableMapping)
+	 * @see SelectableConsumer#accept(int, SelectableMapping)
 	 */
 	int forEachSelectable(int offset, SelectableConsumer consumer);
 

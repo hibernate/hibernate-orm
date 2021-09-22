@@ -35,8 +35,8 @@ public interface SingleColumnType<T> extends Type {
 	 *
 	 * @return The extracted value.
 	 *
-	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
-	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
+	 * @throws HibernateException Generally some form of mismatch error.
+	 * @throws SQLException Indicates problem making the JDBC call(s).
 	 */
 	T nullSafeGet(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
@@ -49,8 +49,8 @@ public interface SingleColumnType<T> extends Type {
 	 *
 	 * @return The extracted value.
 	 *
-	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
-	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
+	 * @throws HibernateException Generally some form of mismatch error.
+	 * @throws SQLException Indicates problem making the JDBC call(s).
 	 */
 	Object get(ResultSet rs, String name, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 
@@ -64,8 +64,8 @@ public interface SingleColumnType<T> extends Type {
 	 * @param index The position or index at which to bind the param value.
 	 * @param session The session from which the request originates
 	 *
-	 * @throws org.hibernate.HibernateException Generally some form of mismatch error.
-	 * @throws java.sql.SQLException Indicates problem making the JDBC call(s).
+	 * @throws HibernateException Generally some form of mismatch error.
+	 * @throws SQLException Indicates problem making the JDBC call(s).
 	 */
 	void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException;
 }

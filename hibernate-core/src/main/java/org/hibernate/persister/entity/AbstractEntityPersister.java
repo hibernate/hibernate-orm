@@ -2351,7 +2351,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			public Type getResolutionType() {
-				return new DiscriminatorType( (org.hibernate.type.BasicType) getDiscriminatorType(), AbstractEntityPersister.this );
+				return new DiscriminatorType( (BasicType) getDiscriminatorType(), AbstractEntityPersister.this );
 			}
 		};
 	}

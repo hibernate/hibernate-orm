@@ -22,7 +22,7 @@ public interface SequenceInformationExtractor {
 	 *
 	 * @return The extracted information about existing sequences.
 	 *
-	 * @throws java.sql.SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
+	 * @throws SQLException Don't bother handling SQLExceptions (unless you want to), we will deal with them in the
 	 * caller.
 	 */
 	public Iterable<SequenceInformation> extractMetadata(ExtractionContext extractionContext) throws SQLException;

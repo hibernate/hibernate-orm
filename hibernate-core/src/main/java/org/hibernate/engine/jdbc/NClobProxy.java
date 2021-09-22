@@ -45,7 +45,7 @@ public class NClobProxy extends ClobProxy {
 	}
 
 	/**
-	 * Generates a {@link java.sql.NClob} proxy using a character reader of given length.
+	 * Generates a {@link NClob} proxy using a character reader of given length.
 	 *
 	 * @param reader The character reader
 	 * @param length The length of the character reader

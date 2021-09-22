@@ -28,7 +28,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
- * Implementation of {@link org.hibernate.stat.Statistics} based on the {@link java.util.concurrent} package.
+ * Implementation of {@link Statistics} based on the {@link java.util.concurrent} package.
  *
  * @author Alex Snaps
  * @author Sanne Grinovero

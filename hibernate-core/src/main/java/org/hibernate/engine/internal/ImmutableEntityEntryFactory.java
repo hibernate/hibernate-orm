@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Factory for the safe approach implementation of {@link org.hibernate.engine.spi.EntityEntry}.
+ * Factory for the safe approach implementation of {@link EntityEntry}.
  * <p/>
  * Smarter implementations could store less state.
  *

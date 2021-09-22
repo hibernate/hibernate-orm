@@ -24,7 +24,7 @@ import org.hibernate.persister.collection.BasicCollectionPersister;
  * A persistent wrapper for a <tt>java.util.SortedMap</tt>. Underlying
  * collection is a <tt>TreeMap</tt>.
  *
- * @see java.util.TreeMap
+ * @see TreeMap
  * @author <a href="mailto:doug.currie@alum.mit.edu">e</a>
  */
 public class PersistentSortedMap<K,E> extends PersistentMap<K,E> implements SortedMap<K,E> {

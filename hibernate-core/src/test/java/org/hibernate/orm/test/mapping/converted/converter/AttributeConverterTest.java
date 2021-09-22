@@ -10,13 +10,13 @@ import java.sql.Clob;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
@@ -64,7 +64,7 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.fail;
 
 /**
- * Tests the principle of adding "AttributeConverter" to the mix of {@link org.hibernate.type.Type} resolution
+ * Tests the principle of adding "AttributeConverter" to the mix of {@link Type} resolution
  *
  * @author Steve Ebersole
  */

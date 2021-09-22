@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.optlock;
 
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;

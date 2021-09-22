@@ -8,8 +8,8 @@ package org.hibernate.testing.orm.junit;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -21,13 +21,13 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import org.jboss.logging.Logger;
 
 abstract class AbstractEntityManagerFactoryScope implements EntityManagerFactoryScope, ExtensionContext.Store.CloseableResource {
-	private static final org.jboss.logging.Logger log = Logger.getLogger( EntityManagerFactoryScope.class );
+	private static final Logger log = Logger.getLogger( EntityManagerFactoryScope.class );
 
-	protected javax.persistence.EntityManagerFactory emf;
+	protected EntityManagerFactory emf;
 	protected boolean active = true;
 
 	@Override
-	public javax.persistence.EntityManagerFactory getEntityManagerFactory() {
+	public EntityManagerFactory getEntityManagerFactory() {
 		if ( emf == null ) {
 			if ( !active ) {
 				throw new IllegalStateException( "EntityManagerFactoryScope is no longer active" );

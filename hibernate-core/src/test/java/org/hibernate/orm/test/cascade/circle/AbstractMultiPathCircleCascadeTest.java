@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.cascade.circle;
 
 import java.util.Iterator;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.PropertyValueException;

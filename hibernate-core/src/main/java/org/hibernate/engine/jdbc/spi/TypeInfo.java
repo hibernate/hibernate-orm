@@ -17,7 +17,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.jboss.logging.Logger;
 
 /**
- * Models type info extracted from {@link java.sql.DatabaseMetaData#getTypeInfo()}
+ * Models type info extracted from {@link DatabaseMetaData#getTypeInfo()}
  *
  * @author Steve Ebersole
  */

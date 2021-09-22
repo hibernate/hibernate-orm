@@ -24,7 +24,7 @@ import org.hibernate.type.Type;
  * A persistent wrapper for a <tt>java.util.List</tt>. Underlying
  * collection is an <tt>ArrayList</tt>.
  *
- * @see java.util.ArrayList
+ * @see ArrayList
  * @author Gavin King
  */
 public class PersistentList<E> extends AbstractPersistentCollection<E> implements List<E> {
@@ -390,7 +390,7 @@ public class PersistentList<E> extends AbstractPersistentCollection<E> implement
 	}
 
 	@Override
-	public java.util.List<E> subList(int from, int to) {
+	public List<E> subList(int from, int to) {
 		read();
 		return new ListProxy( list.subList( from, to ) );
 	}

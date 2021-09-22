@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.flush;
 
 import java.io.IOException;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.FlushMode;
 import org.hibernate.Session;

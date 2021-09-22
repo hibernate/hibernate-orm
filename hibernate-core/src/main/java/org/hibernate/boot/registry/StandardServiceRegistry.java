@@ -9,7 +9,7 @@ package org.hibernate.boot.registry;
 import org.hibernate.service.ServiceRegistry;
 
 /**
- * Specialization of the {@link org.hibernate.service.ServiceRegistry} contract mainly for type safety.
+ * Specialization of the {@link ServiceRegistry} contract mainly for type safety.
  *
  * @author Steve Ebersole
  */

@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Character}
+ * A type that maps between {@link Types#CHAR CHAR(1)} and {@link Character}
  *
  * @author Gavin King
  * @author Steve Ebersole

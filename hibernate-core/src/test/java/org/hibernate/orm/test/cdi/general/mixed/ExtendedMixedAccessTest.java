@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.cdi.general.mixed;
 
-import javax.enterprise.inject.se.SeContainer;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

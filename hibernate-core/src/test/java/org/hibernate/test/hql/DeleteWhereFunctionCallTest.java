@@ -8,9 +8,9 @@ package org.hibernate.test.hql;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.query.Query;

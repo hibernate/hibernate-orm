@@ -14,9 +14,9 @@ import java.util.Date;
  */
 public class TestInterSystemsFunctionsClass {
 	private Long id;
-    private java.util.Date date3;
-    private java.util.Date date1;
-    private java.util.Date date;
+    private Date date3;
+    private Date date1;
+    private Date date;
     private String dateText;
 
 	public TestInterSystemsFunctionsClass() {

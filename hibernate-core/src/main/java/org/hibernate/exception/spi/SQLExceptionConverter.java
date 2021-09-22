@@ -19,7 +19,7 @@ import org.hibernate.JDBCException;
  * Implementations <b>must</b> have a constructor which takes a
  * {@link ViolatedConstraintNameExtractor} parameter.
  * <p/>
- * Implementations may implement {@link org.hibernate.exception.spi.Configurable} if they need to perform
+ * Implementations may implement {@link Configurable} if they need to perform
  * configuration steps prior to first use.
  *
  * @author Steve Ebersole

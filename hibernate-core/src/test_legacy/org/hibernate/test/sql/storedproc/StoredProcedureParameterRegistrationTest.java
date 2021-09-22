@@ -7,7 +7,7 @@
 package org.hibernate.test.sql.storedproc;
 
 import java.util.List;
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 import org.hibernate.JDBCException;
 import org.hibernate.Session;

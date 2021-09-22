@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.stat;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class AccountId implements java.io.Serializable {

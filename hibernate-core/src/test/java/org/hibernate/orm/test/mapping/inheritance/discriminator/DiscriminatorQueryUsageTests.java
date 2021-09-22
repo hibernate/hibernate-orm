@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.inheritance.discriminator;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;

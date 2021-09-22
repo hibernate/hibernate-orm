@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags.naming;
 
-import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
 
 import org.hibernate.envers.Audited;
 

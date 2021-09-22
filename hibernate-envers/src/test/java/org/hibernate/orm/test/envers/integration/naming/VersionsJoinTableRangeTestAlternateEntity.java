@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.envers.integration.naming;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 /**
  * Alternate implementation of mapped superclass for Audit join table test.

@@ -334,7 +334,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	}
 
 	@Override
-	public java.util.Set<String> getSynchronizedTables() {
+	public Set<String> getSynchronizedTables() {
 		return synchronizedTables;
 	}
 

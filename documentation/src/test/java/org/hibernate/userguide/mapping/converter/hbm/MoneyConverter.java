@@ -6,7 +6,7 @@
  */
 package org.hibernate.userguide.mapping.converter.hbm;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 //tag::basic-hbm-attribute-converter-mapping-moneyconverter-example[]
 public class MoneyConverter

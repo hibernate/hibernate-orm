@@ -6,10 +6,10 @@
  */
 package org.hibernate.orm.test.jpa.association;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OneToOne;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToOne;
 
 /**
  * @author Emmanuel Bernard

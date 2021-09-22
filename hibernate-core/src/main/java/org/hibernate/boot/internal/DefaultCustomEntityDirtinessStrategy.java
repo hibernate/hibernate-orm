@@ -11,7 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * The default implementation of {@link org.hibernate.CustomEntityDirtinessStrategy} which does nada.
+ * The default implementation of {@link CustomEntityDirtinessStrategy} which does nada.
  *
  * @author Steve Ebersole
  */

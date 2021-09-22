@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.annotations.id.entities;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * Entity with assigned identity

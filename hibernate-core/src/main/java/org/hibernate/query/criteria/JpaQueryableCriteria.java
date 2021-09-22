@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.CommonAbstractCriteria;
+import jakarta.persistence.criteria.CommonAbstractCriteria;
 
 /**
  * Common contract for the forms of criteria that are "queryable" - can be

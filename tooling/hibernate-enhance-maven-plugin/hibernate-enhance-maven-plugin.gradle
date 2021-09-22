@@ -22,8 +22,8 @@ processResources {
 
 dependencies {
     implementation( project(':hibernate-core') ) { transitive = false }
-    implementation( libraries.jpa ) { transitive = false }
-    implementation( libraries.jta ) { transitive = false }
+    implementation( libraries.jakarta_jpa ) { transitive = false }
+    implementation( libraries.jakarta_jta ) { transitive = false }
     implementation( libraries.maven_core ) { transitive = false }
     implementation( libraries.maven_artifact ) { transitive = false }
     implementation( libraries.maven_plugin ) { transitive = false }
@@ -47,9 +47,9 @@ task processPluginXml(type: Copy) {
     from "src/main/resources/META-INF/maven/plugin.xml"
     into "$processResources.destinationDir/META-INF/maven"
     filter(ReplaceTokens, tokens: ['version' : project.version, 'generated-dependencies' :\
-            generateMavenDependency(libraries.jpa)\
+            generateMavenDependency(libraries.jakarta_jpa)\
             + generateMavenDependency(libraries.antlr)\
-            + generateMavenDependency(libraries.jta)\
+            + generateMavenDependency(libraries.jakarta_jta)\
             + generateMavenDependency(libraries.commons_annotations)\
             + generateMavenDependency(libraries.byteBuddy)\
             + generateMavenDependency(libraries.logging)\
@@ -71,21 +71,21 @@ def generateMavenDependency(String gradleDependency) {
 // Writes pom.xml using merged Gradle dependency and MavenPom configuration.
 processResources.doLast {
     ext.pomDefinition = pom {
-	configurations {
-		// avoiding test dependencies in generated pom
-		compile
-		runtime
-	}
+        configurations {
+            // avoiding test dependencies in generated pom
+            compile
+            runtime
+        }
 
-       project {
-         groupId  project.group
-         packaging 'maven-plugin'
-         name 'Hibernate Enhance Maven Plugin'
-         description 'Enhance Plugin of the Hibernate project for use with Maven build system.'
-         properties {
-            'project.build.sourceEncoding' 'UTF-8'
-         }
-      }
+        project {
+            groupId  project.group
+            packaging 'maven-plugin'
+            name 'Hibernate Enhance Maven Plugin'
+            description 'Enhance Plugin of the Hibernate project for use with Maven build system.'
+            properties {
+                'project.build.sourceEncoding' 'UTF-8'
+            }
+        }
     }
 
     // HHH-9679 --- build in pom{} conflicts with FactoryBuilderSupport#build so we write that portion of XML by hand

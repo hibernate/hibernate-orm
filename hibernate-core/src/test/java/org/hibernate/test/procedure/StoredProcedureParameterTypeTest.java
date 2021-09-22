@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 import java.util.UUID;
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 

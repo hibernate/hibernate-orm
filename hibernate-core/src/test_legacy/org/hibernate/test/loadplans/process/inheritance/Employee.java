@@ -6,8 +6,8 @@
  */
 package org.hibernate.test.loadplans.process.inheritance;
 
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Steve Ebersole

@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.envers.integration.inheritance.single.notownedrelation;
 
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 import org.hibernate.envers.Audited;
 

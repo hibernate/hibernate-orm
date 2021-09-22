@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 import java.sql.PreparedStatement;
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
@@ -233,8 +233,8 @@ public class HANADecimalTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected java.lang.Class<?>[] getAnnotatedClasses() {
-		return new java.lang.Class[]{
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{
 				DecimalEntity.class
 		};
 	}

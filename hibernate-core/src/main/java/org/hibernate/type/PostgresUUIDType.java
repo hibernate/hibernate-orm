@@ -57,8 +57,8 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		private static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
 
 		/**
-		 * Postgres reports its UUID type as {@link java.sql.Types#OTHER}.  Unfortunately
-		 * it reports a lot of its types as {@link java.sql.Types#OTHER}, making that
+		 * Postgres reports its UUID type as {@link Types#OTHER}.  Unfortunately
+		 * it reports a lot of its types as {@link Types#OTHER}, making that
 		 * value useless for distinguishing one SqlTypeDescriptor from another.
 		 * So here we define a "magic value" that is a (hopefully no collisions)
 		 * unique key within the {@link JdbcTypeDescriptorRegistry}

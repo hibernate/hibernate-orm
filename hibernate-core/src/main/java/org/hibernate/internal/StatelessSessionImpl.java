@@ -9,7 +9,7 @@ package org.hibernate.internal;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.util.Set;
-import javax.transaction.SystemException;
+import jakarta.transaction.SystemException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.EntityMode;

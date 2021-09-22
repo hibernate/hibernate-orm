@@ -14,8 +14,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Apply a cascade strategy on an association.  Used to apply Hibernate specific cascades.  For JPA cascading, prefer
- * using {@link javax.persistence.CascadeType} on {@link javax.persistence.OneToOne},
- * {@link javax.persistence.OneToMany}, etc.  Hibernate will merge together both sets of cascades.
+ * using {@link jakarta.persistence.CascadeType} on {@link jakarta.persistence.OneToOne},
+ * {@link jakarta.persistence.OneToMany}, etc.  Hibernate will merge together both sets of cascades.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole

@@ -6,7 +6,7 @@
  */
 package org.hibernate.engine.transaction.internal;
 
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TransactionException;

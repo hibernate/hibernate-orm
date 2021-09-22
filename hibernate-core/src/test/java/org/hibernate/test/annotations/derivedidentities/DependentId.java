@@ -9,7 +9,7 @@
 
 package org.hibernate.test.annotations.derivedidentities;
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik

@@ -3,13 +3,13 @@ package org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.inlinedirtychecki
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.FlushMode;
 import org.hibernate.cfg.AvailableSettings;

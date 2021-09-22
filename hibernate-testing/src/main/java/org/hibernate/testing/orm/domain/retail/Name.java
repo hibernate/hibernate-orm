@@ -6,7 +6,7 @@
  */
 package org.hibernate.testing.orm.domain.retail;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Steve Ebersole

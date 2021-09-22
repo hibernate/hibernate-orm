@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.query.hql.nullPrecedence;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Nathan Xu

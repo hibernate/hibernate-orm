@@ -8,10 +8,10 @@
 //$Id$
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 import java.io.Serializable;
-import javax.persistence.AccessType;
-import javax.persistence.Embeddable;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Embeddable;
 
-import javax.persistence.Access;
+import jakarta.persistence.Access;
 
 /**
  * Regional article pk

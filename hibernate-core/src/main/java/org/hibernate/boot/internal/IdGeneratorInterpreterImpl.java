@@ -8,9 +8,9 @@ package org.hibernate.boot.internal;
 
 import java.util.ArrayList;
 import java.util.UUID;
-import javax.persistence.GenerationType;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.TableGenerator;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
 
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
@@ -215,7 +215,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 					return "identity";
 				}
 				case SEQUENCE: {
-					return org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName();
+					return SequenceStyleGenerator.class.getName();
 				}
 				case TABLE: {
 					return org.hibernate.id.enhanced.TableGenerator.class.getName();
@@ -232,7 +232,7 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 						return UUIDGenerator.class.getName();
 					}
 
-					return org.hibernate.id.enhanced.SequenceStyleGenerator.class.getName();
+					return SequenceStyleGenerator.class.getName();
 				}
 			}
 		}

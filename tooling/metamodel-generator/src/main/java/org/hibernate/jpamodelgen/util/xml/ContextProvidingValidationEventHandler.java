@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpamodelgen.util.xml;
 
-import javax.xml.bind.ValidationEvent;
-import javax.xml.bind.ValidationEventHandler;
-import javax.xml.bind.ValidationEventLocator;
+import jakarta.xml.bind.ValidationEvent;
+import jakarta.xml.bind.ValidationEventHandler;
+import jakarta.xml.bind.ValidationEventLocator;
 
 /**
  * Validation event handler used for obtaining line and column numbers in case of parsing failures.

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.proxy.narrow;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Yoann Rodière

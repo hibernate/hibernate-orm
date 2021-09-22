@@ -6,8 +6,8 @@
  */
 package org.hibernate.jpamodelgen.test.accesstype;
 
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
 
 /**
  * @author gsmet

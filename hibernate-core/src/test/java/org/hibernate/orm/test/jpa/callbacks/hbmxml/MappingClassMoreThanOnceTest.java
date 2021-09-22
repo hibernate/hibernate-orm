@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.callbacks.hbmxml;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

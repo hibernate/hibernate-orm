@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import javax.persistence.criteria.CollectionJoin;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.metamodel.LineItem;
 import org.hibernate.jpa.test.metamodel.LineItem_;

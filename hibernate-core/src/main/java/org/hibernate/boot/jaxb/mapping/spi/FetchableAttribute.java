@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi;
 
-import javax.persistence.FetchType;
+import jakarta.persistence.FetchType;
 
 /**
  * Common interface for JAXB bindings that represent attributes with laziness and fetch style.

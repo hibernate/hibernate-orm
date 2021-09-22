@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.EmbeddableType;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.Incubating;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -22,13 +22,13 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Hibernate extension to the JPA {@link javax.persistence.metamodel.Metamodel} contract
+ * Hibernate extension to the JPA {@link jakarta.persistence.metamodel.Metamodel} contract
  *
  * @author Steve Ebersole
  * @see MappingMetamodel
  */
 @Incubating
-public interface JpaMetamodel extends javax.persistence.metamodel.Metamodel {
+public interface JpaMetamodel extends jakarta.persistence.metamodel.Metamodel {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Context

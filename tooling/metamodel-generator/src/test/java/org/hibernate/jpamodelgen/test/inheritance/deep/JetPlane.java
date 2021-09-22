@@ -6,9 +6,9 @@
  */
 package org.hibernate.jpamodelgen.test.inheritance.deep;
 
-import javax.persistence.Basic;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
+import jakarta.persistence.Basic;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
 
 /**
  * A {@link Plane} subclass entity that defines extra attributes

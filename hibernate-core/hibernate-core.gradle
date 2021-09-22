@@ -1,7 +1,3 @@
-plugins {
-	id 'org.hibernate.build.xjc'
-}
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -9,6 +5,10 @@ plugins {
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'org.hibernate.build.xjc-jakarta'
+}
 
 description = 'Hibernate\'s core ORM functionality'
 
@@ -25,49 +25,50 @@ configurations {
 
 
 dependencies {
-    api libraries.jpa
-    api libraries.jta
+    api libraries.jakarta_jpa
+    api libraries.jakarta_jta
+    api libraries.jakarta_activation
+    api libraries.jakarta_jaxb_api
+    api libraries.jakarta_jaxb_runtime
     api libraries.jandex
     api libraries.classmate
     api libraries.commons_annotations
-    api libraries.jaxb_api
 
     implementation libraries.byteBuddy
     implementation libraries.activation
     implementation libraries.jaxb_runtime
     implementation libraries.antlr
 
-    compileOnly libraries.jacc
-    compileOnly libraries.validation
+    compileOnly libraries.jakarta_jacc
+    compileOnly libraries.jakarta_validation
+    compileOnly libraries.jakarta_cdi
+
     compileOnly libraries.ant
-    compileOnly libraries.cdi
 
     testImplementation project(':hibernate-testing')
     testImplementation libraries.shrinkwrap_api
     testImplementation libraries.shrinkwrap
     testImplementation libraries.shrinkwrap_descriptors_api_javaee
     testImplementation libraries.shrinkwrap_descriptors_impl_javaee
-    testImplementation libraries.jacc
-    testImplementation libraries.validation
-    testImplementation( libraries.validator ) {
+    testImplementation libraries.jakarta_jacc
+    testImplementation libraries.jakarta_validation
+    testImplementation( libraries.jakarta_validator ) {
         // for test runtime
         transitive = true
     }
-    testImplementation libraries.jandex
-    testImplementation libraries.classmate
     testImplementation libraries.mockito
     testImplementation libraries.mockito_inline
     testImplementation libraries.jodaTime
     testImplementation libraries.assertj
-    testImplementation libraries.cdi
+    testImplementation libraries.jakarta_cdi
     testImplementation libraries.jboss_ejb_spec_jar
     testImplementation libraries.jboss_annotation_spec_jar
 
     testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
-    testRuntimeOnly libraries.expression_language
+    testRuntimeOnly libraries.jakarta_el
     testRuntimeOnly 'jaxen:jaxen:1.1'
     testRuntimeOnly libraries.byteBuddy
-    testRuntimeOnly libraries.weld
+    testRuntimeOnly libraries.jakarta_weld
     testRuntimeOnly libraries.atomikos
     testRuntimeOnly libraries.atomikos_jta
     testRuntimeOnly libraries.wildfly_transaction_client
@@ -76,11 +77,9 @@ dependencies {
 
     antlr libraries.antlr
 
-    xjc libraries.jaxb_runtime
-    xjc libraries.jaxb_xjc
-    xjc libraries.jaxb2_basics
-    xjc libraries.jaxb2_basics_ant
-    xjc libraries.activation
+    xjc libraries.jakarta_jaxb_xjc
+    xjc libraries.jakarta_jaxb_runtime
+    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 
 jar {

@@ -7,13 +7,13 @@
 package org.hibernate.test.bytecode.enhancement.lazy.proxy.batch;
 
 import java.util.UUID;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.Hibernate;
 import org.hibernate.boot.MetadataSources;
@@ -52,8 +52,8 @@ public abstract class AbstractBatchingTest extends BaseNonConfigCoreFunctionalTe
 
 	@Override
 	protected void applyMetadataSources(MetadataSources sources) {
-		sources.addAnnotatedClass( PaddedBatchingTest.ParentEntity.class );
-		sources.addAnnotatedClass( PaddedBatchingTest.ChildEntity.class );
+		sources.addAnnotatedClass( ParentEntity.class );
+		sources.addAnnotatedClass( ChildEntity.class );
 	}
 
 	@Test
@@ -78,10 +78,10 @@ public abstract class AbstractBatchingTest extends BaseNonConfigCoreFunctionalTe
 
 	@Before
 	public void setUp() {
-		PaddedBatchingTest.ParentEntity parent = new PaddedBatchingTest.ParentEntity();
+		ParentEntity parent = new ParentEntity();
 		inTransaction(
 				session -> {
-					PaddedBatchingTest.ChildEntity childEntity = new PaddedBatchingTest.ChildEntity();
+					ChildEntity childEntity = new ChildEntity();
 
 					childEntity.setName( childName );
 

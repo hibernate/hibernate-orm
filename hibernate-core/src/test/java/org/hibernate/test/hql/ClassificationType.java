@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.usertype.EnhancedUserType;
 
 /**
- * A custom type for mapping {@link org.hibernate.test.hql.Classification} instances
+ * A custom type for mapping {@link Classification} instances
  * to the respective db column.
  * </p>
  * THis is largely intended to mimic JDK5 enum support in JPA.  Here we are

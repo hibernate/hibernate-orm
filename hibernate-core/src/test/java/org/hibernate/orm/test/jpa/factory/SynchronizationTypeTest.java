@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.factory;
 
-import javax.persistence.SynchronizationType;
+import jakarta.persistence.SynchronizationType;
 
 import java.util.Collections;
 

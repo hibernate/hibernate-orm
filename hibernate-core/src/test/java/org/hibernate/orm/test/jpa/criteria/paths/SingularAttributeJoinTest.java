@@ -6,11 +6,11 @@
  */
 package org.hibernate.orm.test.jpa.criteria.paths;
 
-import javax.persistence.TypedQuery;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.From;
-import javax.persistence.criteria.Path;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Path;
 
 import org.hibernate.cfg.AvailableSettings;
 
@@ -35,7 +35,7 @@ public class SingularAttributeJoinTest {
                 entityManager -> {
                     CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
                     CriteriaQuery criteriaQuery = criteriaBuilder.createQuery();
-                    javax.persistence.metamodel.EntityType distributionEntity = getEntityType(scope, "Distribution");
+                    jakarta.persistence.metamodel.EntityType distributionEntity = getEntityType(scope, "Distribution");
                     From distributionFrom = criteriaQuery.from(distributionEntity);
                     From policyJoin = distributionFrom.join("policy");
                     Path policyId = policyJoin.get("policyId");
@@ -45,8 +45,8 @@ public class SingularAttributeJoinTest {
         );
     }
 
-    private javax.persistence.metamodel.EntityType getEntityType(EntityManagerFactoryScope scope, String entityName) {
-        for(javax.persistence.metamodel.EntityType entityType : scope.getEntityManagerFactory().getMetamodel().getEntities()) {
+    private jakarta.persistence.metamodel.EntityType getEntityType(EntityManagerFactoryScope scope, String entityName) {
+        for(jakarta.persistence.metamodel.EntityType entityType : scope.getEntityManagerFactory().getMetamodel().getEntities()) {
             if (entityType.getName().equals("Distribution")) {
                 return entityType;
             }

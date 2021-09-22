@@ -30,7 +30,7 @@ import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
 /**
- * The contract for building a {@link org.hibernate.SessionFactory} given a number of options.
+ * The contract for building a {@link SessionFactory} given a number of options.
  *
  * @author Steve Ebersole
  * @author Gail Badner
@@ -178,7 +178,7 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * Specifies a custom entity dirtiness strategy to be applied to the SessionFactory.  See the contract
-	 * of {@link org.hibernate.CustomEntityDirtinessStrategy} for details.
+	 * of {@link CustomEntityDirtinessStrategy} for details.
 	 *
 	 * @param strategy The custom strategy to be used.
 	 *
@@ -189,7 +189,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyCustomEntityDirtinessStrategy(CustomEntityDirtinessStrategy strategy);
 
 	/**
-	 * Specifies one or more entity name resolvers to be applied to the SessionFactory (see the {@link org.hibernate.EntityNameResolver}
+	 * Specifies one or more entity name resolvers to be applied to the SessionFactory (see the {@link EntityNameResolver}
 	 * contract for more information..  Can be called multiple times to add additional resolvers..
 	 *
 	 * @param entityNameResolvers The entityNameResolvers to add
@@ -199,7 +199,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder addEntityNameResolver(EntityNameResolver... entityNameResolvers);
 
 	/**
-	 * Names the {@link org.hibernate.proxy.EntityNotFoundDelegate} to be applied to the SessionFactory.  EntityNotFoundDelegate is a
+	 * Names the {@link EntityNotFoundDelegate} to be applied to the SessionFactory.  EntityNotFoundDelegate is a
 	 * strategy that accounts for different exceptions thrown between Hibernate and JPA when an entity cannot be found.
 	 *
 	 * @param entityNotFoundDelegate The delegate/strategy to use.
@@ -267,7 +267,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyEntityTuplizerFactory(EntityTuplizerFactory entityTuplizerFactory);
 
 	/**
-	 * Register the default {@link org.hibernate.tuple.entity.EntityTuplizer} to be applied to the SessionFactory.
+	 * Register the default {@link EntityTuplizer} to be applied to the SessionFactory.
 	 *
 	 * @param entityMode The entity mode that which this tuplizer will be applied.
 	 * @param tuplizerClass The custom tuplizer class.
@@ -402,10 +402,10 @@ public interface SessionFactoryBuilder {
 
 	/**
 	 * If using the built-in Hibernate JTA-based TransactionCoordinator/Builder, should it prefer to use
-	 * {@link javax.transaction.UserTransaction} over {@link javax.transaction.Transaction}?
+	 * {@link jakarta.transaction.UserTransaction} over {@link jakarta.transaction.Transaction}?
 	 *
-	 * @param preferUserTransactions {@code true} indicates we should prefer {@link javax.transaction.UserTransaction};
-	 * {@code false} indicates we should prefer {@link javax.transaction.Transaction}
+	 * @param preferUserTransactions {@code true} indicates we should prefer {@link jakarta.transaction.UserTransaction};
+	 * {@code false} indicates we should prefer {@link jakarta.transaction.Transaction}
 	 *
 	 * @return {@code this}, for method chaining
 	 *
@@ -702,7 +702,7 @@ public interface SessionFactoryBuilder {
 	/**
 	 * Apply a SQLFunction to the underlying {@link org.hibernate.query.sqm.function.SqmFunctionRegistry}.
 	 * <p/>
-	 * TODO : Ultimately I would like this to move to {@link org.hibernate.boot.MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
+	 * TODO : Ultimately I would like this to move to {@link MetadataBuilder} in conjunction with allowing mappings to reference SQLFunctions.
 	 * today mappings can only name SQL functions directly, not through the SQLFunctionRegistry indirection
 	 *
 	 * @param registrationName The name to register it under.
@@ -715,7 +715,7 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder allowOutOfTransactionUpdateOperations(boolean allow);
 
 	/**
-	 * Should resources held by {@link javax.persistence.EntityManager} instance be released immediately on close?
+	 * Should resources held by {@link jakarta.persistence.EntityManager} instance be released immediately on close?
 	 * <p/>
 	 * The other option is to release them as part of an after-transaction callback.
 	 *

@@ -28,7 +28,7 @@ import org.hibernate.dialect.Dialect;
  * second argument (date, time, or timestamp), and
  * according to capabilities of the database platform.
  *
- * @see org.hibernate.dialect.Dialect#extractPattern(TemporalUnit)
+ * @see Dialect#extractPattern(TemporalUnit)
  *
  * @author Gavin King
  */

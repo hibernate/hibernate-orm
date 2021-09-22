@@ -8,7 +8,7 @@
 //$Id$
 package org.hibernate.orm.test.annotations.onetoone;
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

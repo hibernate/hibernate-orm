@@ -30,7 +30,7 @@ import java.util.Map;
  *         the entity->EntityEntry association is maintained in a Map within this class
  *     </li>
  *     <li>
- *         the EntityEntry is injected into the entity via it implementing the {@link org.hibernate.engine.spi.ManagedEntity} contract,
+ *         the EntityEntry is injected into the entity via it implementing the {@link ManagedEntity} contract,
  *         either directly or through bytecode enhancement.
  *     </li>
  * </ul>

@@ -8,8 +8,8 @@ package org.hibernate.test.rowid;
 
 import java.math.BigDecimal;
 import java.sql.Statement;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

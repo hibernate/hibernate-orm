@@ -20,7 +20,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 
 /**
  * Wraps a {@link TableReference} representing the CTE and adapts it to
- * {@link org.hibernate.sql.ast.tree.from.TableGroup} for use in SQL AST
+ * {@link TableGroup} for use in SQL AST
  *
  * @author Steve Ebersole
  */

@@ -35,8 +35,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * @author Steve Ebersole
  * @author Scott Marlow
  *
- * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
- * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
+ * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
+ * @see org.hibernate.dialect.Dialect#appendLockHint(LockMode, String)
  *
  * @since 3.5
  */

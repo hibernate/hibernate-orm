@@ -9,14 +9,14 @@ package org.hibernate.orm.test.annotations.collectionelement;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import javax.persistence.Column;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.OrderBy;
+import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.OrderBy;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,10 +29,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DomainModel(
 		annotatedClasses = {
-				org.hibernate.orm.test.annotations.collectionelement.OrderByColumnNameTest.Product.class,
-				org.hibernate.orm.test.annotations.collectionelement.OrderByColumnNameTest.Widgets.class,
-				org.hibernate.orm.test.annotations.collectionelement.OrderByColumnNameTest.Widget1.class,
-				org.hibernate.orm.test.annotations.collectionelement.OrderByColumnNameTest.Widget2.class,
+				OrderByColumnNameTest.Product.class,
+				OrderByColumnNameTest.Widgets.class,
+				OrderByColumnNameTest.Widget1.class,
+				OrderByColumnNameTest.Widget2.class,
 		}
 )
 @SessionFactory

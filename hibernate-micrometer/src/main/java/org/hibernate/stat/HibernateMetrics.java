@@ -19,8 +19,8 @@ import io.micrometer.core.lang.Nullable;
 import org.hibernate.SessionFactory;
 import org.hibernate.stat.Statistics;
 
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;

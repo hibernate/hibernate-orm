@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.envers.integration.merge;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;

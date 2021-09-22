@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.converted.converter.inheritence;
 
 import java.util.List;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.cfg.AttributeConverterDefinition;

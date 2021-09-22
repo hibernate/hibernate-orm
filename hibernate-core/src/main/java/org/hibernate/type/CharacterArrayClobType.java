@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Character Character[]}
+ * A type that maps between {@link Types#CLOB CLOB} and {@link Character Character[]}
  * <p/>
  * Essentially a {@link MaterializedClobType} but represented as a Character[] in Java rather than String.
  *

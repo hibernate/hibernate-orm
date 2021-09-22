@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.EntityDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#NONSTRICT_READ_WRITE} access type.
+ * using the {@link AccessType#NONSTRICT_READ_WRITE} access type.
  *
  * @author Steve Ebersole
  */

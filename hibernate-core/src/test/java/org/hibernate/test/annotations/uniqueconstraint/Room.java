@@ -6,9 +6,9 @@
  */
 package org.hibernate.test.annotations.uniqueconstraint;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author <a href="mailto:bernhardt.manuel@gmail.com">Manuel Bernhardt</a>

@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.resource.transaction.jta;
 
 import java.util.Map;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;

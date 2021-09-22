@@ -10,16 +10,16 @@ package org.hibernate.orm.test.legacy;
 /**
  * @author hbm2java
  */
-public class Medication extends org.hibernate.orm.test.legacy.Intervention {
+public class Medication extends Intervention {
 
-   org.hibernate.orm.test.legacy.Drug prescribedDrug;
+   Drug prescribedDrug;
 
   
-  org.hibernate.orm.test.legacy.Drug getPrescribedDrug() {
+  Drug getPrescribedDrug() {
     return prescribedDrug;
   }
 
-  void  setPrescribedDrug(org.hibernate.orm.test.legacy.Drug newValue) {
+  void  setPrescribedDrug(Drug newValue) {
     prescribedDrug = newValue;
   }
 

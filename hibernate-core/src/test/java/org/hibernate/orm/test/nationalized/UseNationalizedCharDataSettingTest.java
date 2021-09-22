@@ -6,10 +6,10 @@
  */
 package org.hibernate.orm.test.nationalized;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -32,7 +32,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertSame;
 
 /**
- * Test the use of {@link org.hibernate.cfg.AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
+ * Test the use of {@link AvailableSettings#USE_NATIONALIZED_CHARACTER_DATA}
  * to indicate that nationalized character data should be used.
  *
  * @author Steve Ebersole

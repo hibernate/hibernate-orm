@@ -27,7 +27,7 @@ public class SortedMapProxy<K, V> implements SortedMap<K, V>, Serializable {
 	public SortedMapProxy() {
 	}
 
-	public SortedMapProxy(org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<SortedMap<K, V>> initializor) {
+	public SortedMapProxy(Initializor<SortedMap<K, V>> initializor) {
 		this.initializor = initializor;
 	}
 

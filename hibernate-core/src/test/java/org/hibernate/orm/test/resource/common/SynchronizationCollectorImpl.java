@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.resource.common;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
 
 /**
  * @author Steve Ebersole

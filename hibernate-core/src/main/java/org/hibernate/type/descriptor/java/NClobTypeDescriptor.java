@@ -22,9 +22,9 @@ import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
- * Descriptor for {@link java.sql.NClob} handling.
+ * Descriptor for {@link NClob} handling.
  * <p/>
- * Note, {@link java.sql.NClob nclobs} really are mutable (their internal state can in fact be mutated).  We simply
+ * Note, {@link NClob nclobs} really are mutable (their internal state can in fact be mutated).  We simply
  * treat them as immutable because we cannot properly check them for changes nor deep copy them.
  *
  * @author Steve Ebersole

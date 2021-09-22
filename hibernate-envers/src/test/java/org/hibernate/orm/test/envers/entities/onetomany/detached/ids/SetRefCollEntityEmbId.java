@@ -7,10 +7,10 @@
 package org.hibernate.orm.test.envers.entities.onetomany.detached.ids;
 
 import java.util.Set;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.entities.ids.EmbId;

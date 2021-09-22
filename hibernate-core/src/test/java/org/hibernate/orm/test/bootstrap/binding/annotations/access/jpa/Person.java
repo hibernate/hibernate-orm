@@ -8,8 +8,8 @@
 //$Id$
 
 package org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa;
-import javax.persistence.Access;
-import javax.persistence.Entity;
+import jakarta.persistence.Access;
+import jakarta.persistence.Entity;
 
 
 /**
@@ -17,7 +17,7 @@ import javax.persistence.Entity;
  */
 @Entity
 // explicitly override the access type to be property (default is field, see Being)
-@Access(javax.persistence.AccessType.PROPERTY)
+@Access(jakarta.persistence.AccessType.PROPERTY)
 public class Person extends Being {
 
 	String firstname;

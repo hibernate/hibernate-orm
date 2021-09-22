@@ -7,9 +7,9 @@
 package org.hibernate.jpamodelgen.test.mappedsuperclass.typedmappedsuperclass;
 
 import java.util.Set;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.OneToMany;
 
 @MappedSuperclass
 public abstract class AttachmentGroup<GroupType extends AttachmentGroup, PostType extends AttachmentGroupPost<UserRoleType, GroupType>, UserRoleType extends UserRole> {

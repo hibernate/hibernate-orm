@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.emops;
 
-import javax.persistence.EntityManager;
-import javax.persistence.OptimisticLockException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
 
 import org.hibernate.cfg.AvailableSettings;
 

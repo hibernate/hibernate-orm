@@ -11,10 +11,10 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToOne;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.internal.EntityManagerMessageLogger;
@@ -216,8 +216,8 @@ public class AttributeFactory {
 			}
 			case ENTITY: {
 				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
-				if ( type instanceof org.hibernate.type.EntityType ) {
-					final org.hibernate.type.EntityType entityType = (EntityType) type;
+				if ( type instanceof EntityType ) {
+					final EntityType entityType = (EntityType) type;
 					return context.locateEntityType( entityType.getAssociatedEntityName() );
 				}
 

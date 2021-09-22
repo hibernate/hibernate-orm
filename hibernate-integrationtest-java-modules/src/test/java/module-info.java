@@ -13,7 +13,7 @@ module org.hibernate.orm.integrationtest.java.module.test {
 	opens org.hibernate.orm.integrationtest.java.module.test.entity to
 			org.hibernate.orm.core;
 
-	requires java.persistence;
+	requires jakarta.persistence;
 	// IDEA will not find the modules below because it apparently doesn't support automatic module names
 	// for modules in the current project.
 	// Everything should work fine when building from the command line, though.

@@ -347,7 +347,7 @@ public class DefaultNamingCollectionElementTest {
 			Class<?> ownerEntityClass,
 			String ownerCollectionPropertyName,
 			String expectedCollectionTableName) {
-		final org.hibernate.mapping.Collection collection = metadataImplementor.getCollectionBinding(
+		final Collection collection = metadataImplementor.getCollectionBinding(
 				ownerEntityClass.getName() + '.' + ownerCollectionPropertyName
 		);
 		final org.hibernate.mapping.Table table = collection.getCollectionTable();
@@ -401,7 +401,7 @@ public class DefaultNamingCollectionElementTest {
 			Class<?> ownerEntityClass,
 			String ownerCollectionPropertyName,
 			String ownerForeignKeyNameExpected) {
-		final org.hibernate.mapping.Collection ownerCollection = metadataImplementor.getCollectionBinding(
+		final Collection ownerCollection = metadataImplementor.getCollectionBinding(
 				ownerEntityClass.getName() + '.' + ownerCollectionPropertyName
 		);
 		// The default owner join column can only be computed if it has a PK with 1 column.

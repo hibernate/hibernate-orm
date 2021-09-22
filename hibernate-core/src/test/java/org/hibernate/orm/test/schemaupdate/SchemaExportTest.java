@@ -109,7 +109,7 @@ public class SchemaExportTest extends BaseUnitTestCase {
     public void testGenerateDdlToFile() {
 		final SchemaExport schemaExport = new SchemaExport();
 
-        java.io.File outFile = new java.io.File("schema.ddl");
+        File outFile = new File("schema.ddl");
         schemaExport.setOutputFile( outFile.getPath() );
 
         // do not script to console or export to database

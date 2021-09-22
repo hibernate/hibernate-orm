@@ -16,7 +16,7 @@ import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.util.Locale;
 import java.util.regex.Pattern;
-import javax.persistence.Transient;
+import jakarta.persistence.Transient;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -173,7 +173,7 @@ public final class ReflectHelper {
 	 *
 	 * @throws ClassNotFoundException From {@link Class#forName(String)}.
 	 *
-	 * @deprecated Depending on context, either {@link org.hibernate.boot.registry.classloading.spi.ClassLoaderService}
+	 * @deprecated Depending on context, either {@link ClassLoaderService}
 	 * or {@link org.hibernate.boot.spi.ClassLoaderAccess} should be preferred
 	 */
 	@Deprecated

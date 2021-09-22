@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel;
 
-import javax.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
 
 /**
  * Classifications of the plurality.

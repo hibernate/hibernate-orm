@@ -6,7 +6,7 @@
  */
 package org.hibernate.query;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 /**
  * @author Steve Ebersole

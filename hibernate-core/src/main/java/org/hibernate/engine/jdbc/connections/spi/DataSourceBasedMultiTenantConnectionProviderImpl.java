@@ -27,7 +27,7 @@ import org.hibernate.service.spi.Stoppable;
  *         to a single base JNDI context
  *     </li>
  *     <li>
- *         {@link org.hibernate.cfg.AvailableSettings#DATASOURCE} is a string naming either the {@literal any}
+ *         {@link AvailableSettings#DATASOURCE} is a string naming either the {@literal any}
  *         data source or the base JNDI context.  If the latter, {@link #TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY} must
  *         also be set.
  *     </li>

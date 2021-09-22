@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.id.idClass;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 
 @Entity
 @IdClass( MyEntityId.class )

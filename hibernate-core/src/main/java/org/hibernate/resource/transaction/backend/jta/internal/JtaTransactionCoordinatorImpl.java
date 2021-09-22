@@ -9,9 +9,9 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.spi.SessionFactoryOptions;

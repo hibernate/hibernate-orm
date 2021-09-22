@@ -9,11 +9,11 @@ package org.hibernate.orm.test.tm;
 import java.util.Arrays;
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
-import javax.transaction.Status;
+import jakarta.transaction.Status;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Session;

@@ -9,8 +9,8 @@
 
 package org.hibernate.orm.test.jpa;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -55,8 +55,8 @@ public class EntityManagerFactoryUnwrapTest {
 
 	@Test
 	public void testEntityManagerCanBeUnwrappedToHibernateEntityManagerFactory(EntityManagerFactoryScope scope) {
-		org.hibernate.jpa.HibernateEntityManagerFactory hibernateEntityManagerFactory = scope.getEntityManagerFactory().unwrap(
-				org.hibernate.jpa.HibernateEntityManagerFactory.class );
+		HibernateEntityManagerFactory hibernateEntityManagerFactory = scope.getEntityManagerFactory().unwrap(
+				HibernateEntityManagerFactory.class );
 		assertNotNull( hibernateEntityManagerFactory, "Unwrapping to SPI class HibernateEntityManagerFactory should be ok"	);
 	}
 

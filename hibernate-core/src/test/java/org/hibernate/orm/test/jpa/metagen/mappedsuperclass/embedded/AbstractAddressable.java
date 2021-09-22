@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.embedded;
 
-import javax.persistence.Embedded;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole

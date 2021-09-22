@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.data;
 
 import java.util.Arrays;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.hibernate.envers.test.integration.data.LobSerializableTestEntity;

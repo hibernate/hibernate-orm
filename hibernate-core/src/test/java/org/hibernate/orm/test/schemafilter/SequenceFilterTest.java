@@ -11,11 +11,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
@@ -114,7 +114,7 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 
 	@Entity
 	@SequenceGenerator(initialValue = 1, name = "idgen", sequenceName = "entity_1_seq_gen")
-	@javax.persistence.Table(name = "the_entity_1", schema = "the_schema_1")
+	@jakarta.persistence.Table(name = "the_entity_1", schema = "the_schema_1")
 	public static class Schema1Entity1 {
 
 		@Id
@@ -132,7 +132,7 @@ public class SequenceFilterTest extends BaseUnitTestCase {
 
 	@Entity
 	@SequenceGenerator(initialValue = 1, name = "idgen2", sequenceName = "entity_2_seq_gen")
-	@javax.persistence.Table(name = "the_entity_2", schema = "the_schema_2")
+	@jakarta.persistence.Table(name = "the_entity_2", schema = "the_schema_2")
 	public static class Schema2Entity2 {
 
 		@Id

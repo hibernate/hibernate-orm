@@ -27,7 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test that makes sure the input stream inside {@link ConfigLoader#loadConfigXmlResource(java.lang.String)}
+ * Test that makes sure the input stream inside {@link ConfigLoader#loadConfigXmlResource(String)}
  * gets closed.
  *
  * @author Steve Ebersole

@@ -15,8 +15,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import javax.persistence.RollbackException;
-import javax.validation.ConstraintViolationException;
+import jakarta.persistence.RollbackException;
+import jakarta.validation.ConstraintViolationException;
 import java.math.BigDecimal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

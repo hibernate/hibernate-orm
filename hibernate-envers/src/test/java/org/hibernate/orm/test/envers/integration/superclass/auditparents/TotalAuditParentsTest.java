@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.superclass.auditparents;
 
 import java.util.Set;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

@@ -8,7 +8,7 @@ package org.hibernate.test.cid;
 
 import java.util.Calendar;
 import java.util.Collections;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.Oracle8iDialect;

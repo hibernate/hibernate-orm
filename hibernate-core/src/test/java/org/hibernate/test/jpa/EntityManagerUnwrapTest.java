@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.jpa;
 
-import javax.persistence.metamodel.Metamodel;
+import jakarta.persistence.metamodel.Metamodel;
 
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -47,10 +47,10 @@ public class EntityManagerUnwrapTest extends BaseEntityManagerFunctionalTestCase
 
 		entityManagerFactory().unwrap( JdbcServices.class );
 
-		entityManagerFactory().unwrap( javax.persistence.Cache.class );
+		entityManagerFactory().unwrap( jakarta.persistence.Cache.class );
 		entityManagerFactory().unwrap( org.hibernate.Cache.class );
 
-		entityManagerFactory().unwrap( javax.persistence.metamodel.Metamodel.class );
+		entityManagerFactory().unwrap( jakarta.persistence.metamodel.Metamodel.class );
 		entityManagerFactory().unwrap( Metamodel.class );
 		entityManagerFactory().unwrap( MetamodelImplementor.class );
 		entityManagerFactory().unwrap( MappingMetamodel.class );

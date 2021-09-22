@@ -95,8 +95,8 @@ public abstract class ObjectNameNormalizer {
 
 	/**
 	 * Intended only for use in handling quoting requirements for {@code column-definition}
-	 * as defined by {@link javax.persistence.Column#columnDefinition()},
-	 *  {@link javax.persistence.JoinColumn#columnDefinition}, etc.  This method should not
+	 * as defined by {@link jakarta.persistence.Column#columnDefinition()},
+	 *  {@link jakarta.persistence.JoinColumn#columnDefinition}, etc.  This method should not
 	 * be called in any other scenario.
 	 *
 	 * @param text The specified column definition
@@ -112,9 +112,9 @@ public abstract class ObjectNameNormalizer {
 	/**
 	 * Access the contextual information related to the current process of building metadata.  Here,
 	 * that typically might be needed for accessing:<ul>
-	 *     <li>{@link org.hibernate.boot.model.naming.ImplicitNamingStrategy}</li>
-	 *     <li>{@link org.hibernate.boot.model.naming.PhysicalNamingStrategy}</li>
-	 *     <li>{@link org.hibernate.boot.model.relational.Database}</li>
+	 *     <li>{@link ImplicitNamingStrategy}</li>
+	 *     <li>{@link PhysicalNamingStrategy}</li>
+	 *     <li>{@link Database}</li>
 	 * </ul>
 	 *
 	 * @return The current building context

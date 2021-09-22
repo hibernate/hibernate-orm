@@ -47,7 +47,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.regex.Pattern;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static java.util.regex.Pattern.compile;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;

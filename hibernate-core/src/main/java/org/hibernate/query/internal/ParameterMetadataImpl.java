@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
@@ -209,7 +209,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			return (QueryParameterImplementor) param;
 		}
 
-		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
+		throw new IllegalArgumentException( "Could not resolve jakarta.persistence.Parameter to org.hibernate.query.QueryParameter" );
 	}
 
 

@@ -9,8 +9,8 @@ package org.hibernate.resource.transaction.backend.jdbc.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.RollbackException;
-import javax.transaction.Status;
+import jakarta.persistence.RollbackException;
+import jakarta.transaction.Status;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
@@ -31,11 +31,11 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
  * An implementation of TransactionCoordinator based on managing a transaction through the JDBC Connection
- * via {@link org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction}
+ * via {@link JdbcResourceTransaction}
  *
  * @author Steve Ebersole
  *
- * @see org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction
+ * @see JdbcResourceTransaction
  */
 public class JdbcResourceLocalTransactionCoordinatorImpl implements TransactionCoordinator {
 	private static final CoreMessageLogger log = messageLogger( JdbcResourceLocalTransactionCoordinatorImpl.class );

@@ -41,8 +41,8 @@ public interface JdbcConnectionAccess extends Serializable {
 	 *
 	 * @return true/false
 	 *
-	 * @see org.hibernate.engine.jdbc.connections.spi.ConnectionProvider#supportsAggressiveRelease()
-	 * @see org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider#supportsAggressiveRelease()
+	 * @see ConnectionProvider#supportsAggressiveRelease()
+	 * @see MultiTenantConnectionProvider#supportsAggressiveRelease()
 	 */
 	boolean supportsAggressiveRelease();
 }

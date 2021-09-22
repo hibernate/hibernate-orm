@@ -24,7 +24,7 @@ public enum ValueClassification {
 	 */
 	ANY,
 	/**
-	 * An {@link javax.persistence.Embeddable} value
+	 * An {@link jakarta.persistence.Embeddable} value
 	 */
 	EMBEDDABLE,
 	/**

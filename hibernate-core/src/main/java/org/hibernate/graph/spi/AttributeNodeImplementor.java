@@ -8,7 +8,7 @@ package org.hibernate.graph.spi;
 
 import java.util.Map;
 import java.util.function.BiConsumer;
-import javax.persistence.Subgraph;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.SubGraph;

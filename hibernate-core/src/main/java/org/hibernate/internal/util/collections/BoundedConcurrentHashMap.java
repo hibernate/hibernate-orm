@@ -170,7 +170,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	final Segment<K, V>[] segments;
 
 	transient Set<K> keySet;
-	transient Set<Map.Entry<K, V>> entrySet;
+	transient Set<Entry<K, V>> entrySet;
 	transient Collection<V> values;
 
 	/* ---------------- Small Utilities -------------- */
@@ -2008,7 +2008,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	@Override
 	public void putAll(Map<? extends K, ? extends V> m) {
-		for ( Map.Entry<? extends K, ? extends V> e : m.entrySet() ) {
+		for ( Entry<? extends K, ? extends V> e : m.entrySet() ) {
 			put( e.getKey(), e.getValue() );
 		}
 	}
@@ -2146,8 +2146,8 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * reflect any modifications subsequent to construction.
 	 */
 	@Override
-	public Set<Map.Entry<K, V>> entrySet() {
-		Set<Map.Entry<K, V>> es = entrySet;
+	public Set<Entry<K, V>> entrySet() {
+		Set<Entry<K, V>> es = entrySet;
 		return es != null ? es : ( entrySet = new EntrySet() );
 	}
 
@@ -2271,7 +2271,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 	 * Custom Entry class used by EntryIterator.next(), that relays
 	 * setValue changes to the underlying map.
 	 */
-	final class WriteThroughEntry extends AbstractMap.SimpleEntry<K, V> {
+	final class WriteThroughEntry extends SimpleEntry<K, V> {
 
 		private static final long serialVersionUID = -7041346694785573824L;
 
@@ -2301,7 +2301,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 
 	final class EntryIterator extends HashIterator implements Iterator<Entry<K, V>> {
 		@Override
-		public Map.Entry<K, V> next() {
+		public Entry<K, V> next() {
 			HashEntry<K, V> e = super.nextEntry();
 			return new WriteThroughEntry( e.key, e.value );
 		}
@@ -2366,9 +2366,9 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	final class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+	final class EntrySet extends AbstractSet<Entry<K, V>> {
 		@Override
-		public Iterator<Map.Entry<K, V>> iterator() {
+		public Iterator<Entry<K, V>> iterator() {
 			return new EntryIterator();
 		}
 
@@ -2377,7 +2377,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			if ( !( o instanceof Map.Entry ) ) {
 				return false;
 			}
-			Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+			Entry<?, ?> e = (Entry<?, ?>) o;
 			V v = BoundedConcurrentHashMap.this.get( e.getKey() );
 			return v != null && v.equals( e.getValue() );
 		}
@@ -2387,7 +2387,7 @@ public class BoundedConcurrentHashMap<K, V> extends AbstractMap<K, V>
 			if ( !( o instanceof Map.Entry ) ) {
 				return false;
 			}
-			Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+			Entry<?, ?> e = (Entry<?, ?>) o;
 			return BoundedConcurrentHashMap.this.remove( e.getKey(), e.getValue() );
 		}
 

@@ -48,7 +48,7 @@ public final class BlobProxy implements Blob, BlobImplementer {
 	 *
 	 * @param stream The binary stream
 	 * @param length The length of the stream
-	 * @see #generateProxy(java.io.InputStream, long)
+	 * @see #generateProxy(InputStream, long)
 	 */
 	private BlobProxy(InputStream stream, long length) {
 		this.binaryStream = new StreamBackedBinaryStream( stream, length );

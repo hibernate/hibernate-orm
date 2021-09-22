@@ -25,7 +25,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * an attribute, an entity identifier, collection elements, etc
  *
  * @see DomainResultProducer
- * @see javax.persistence.metamodel.Bindable
+ * @see jakarta.persistence.metamodel.Bindable
  *
  * @author Steve Ebersole
  */

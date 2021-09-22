@@ -30,7 +30,7 @@ public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geome
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] {
-				org.locationtech.jts.geom.Geometry.class.getCanonicalName(),
+				Geometry.class.getCanonicalName(),
 				org.locationtech.jts.geom.Point.class.getCanonicalName(),
 				org.locationtech.jts.geom.Polygon.class.getCanonicalName(),
 				org.locationtech.jts.geom.MultiPolygon.class.getCanonicalName(),

@@ -6,10 +6,10 @@
  */
 package org.hibernate.engine.transaction.internal.jta;
 
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.TransactionException;
 
@@ -45,7 +45,7 @@ public final class JtaStatusHelper {
 	}
 
 	/**
-	 * Extract the status code from the current {@link javax.transaction.Transaction} associated with the
+	 * Extract the status code from the current {@link jakarta.transaction.Transaction} associated with the
 	 * given {@link TransactionManager}
 	 *
 	 * @param transactionManager The {@link TransactionManager} from which to extract the status.

@@ -8,18 +8,18 @@ package org.hibernate.orm.test.constraint;
 
 import java.util.Iterator;
 import java.util.List;
-import javax.persistence.CollectionTable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.PrimaryKeyJoinColumn;
-import javax.persistence.Table;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.ForeignKey;
@@ -237,7 +237,7 @@ public class NonRootTablePolymorphicTests {
 	@Inheritance( strategy = InheritanceType.JOINED )
 	public static class Root {
 		@Id
-		@javax.persistence.Column( name = "root_id" )
+		@jakarta.persistence.Column( name = "root_id" )
 		private Integer id;
 		private String name;
 	}
@@ -265,7 +265,7 @@ public class NonRootTablePolymorphicTests {
 	@Table( name = "sub_parent" )
 	public static class SubParent {
 		@Id
-		@javax.persistence.Column( name = "parent_id" )
+		@jakarta.persistence.Column( name = "parent_id" )
 		private Integer id;
 		private String name;
 		@ManyToOne
@@ -278,7 +278,7 @@ public class NonRootTablePolymorphicTests {
 	@Table( name = "sub_child" )
 	public static class SubChild {
 		@Id
-		@javax.persistence.Column( name = "child_id" )
+		@jakarta.persistence.Column( name = "child_id" )
 		private Integer id;
 		private String name;
 	}
@@ -287,7 +287,7 @@ public class NonRootTablePolymorphicTests {
 	@Table( name = "sub_group" )
 	public static class SubGroup {
 		@Id
-		@javax.persistence.Column( name = "group_id" )
+		@jakarta.persistence.Column( name = "group_id" )
 		private Integer id;
 		private String name;
 

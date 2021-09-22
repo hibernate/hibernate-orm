@@ -24,18 +24,11 @@ ext {
 }
 
 dependencies {
-//	compileOnly project( ':hibernate-core' )
-//
-//	implementation gradleApi()
-//	implementation localGroovy()
-//
-//	testRuntimeOnly project( ':hibernate-core' ) {
-//	}
-
 	implementation project( ':hibernate-core' )
-	implementation libraries.jpa
 	implementation libraries.byteBuddy
 	implementation gradleApi()
+	// for Gradle
+	implementation 'jakarta.inject:jakarta.inject-api:2.0.0'
 	implementation localGroovy()
 }
 

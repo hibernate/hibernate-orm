@@ -38,7 +38,7 @@ public interface DomainModelDescriptor {
 	 * to use which would not need any (more) test-specific Dialect feature.
 	 *
 	 * Note however that this might be a useful feature as well for users instead of
-	 * JPA's {@link javax.persistence.Table#catalog} / {@link javax.persistence.Table#schema}.
+	 * JPA's {@link jakarta.persistence.Table#catalog} / {@link jakarta.persistence.Table#schema}.
 	 * AKA, something like `@org.hibernate.annotations.Namespace("a_name")` or
 	 * `@org.hibernate.annotations.Table( namespace="a_name", ... )`.
 	 *

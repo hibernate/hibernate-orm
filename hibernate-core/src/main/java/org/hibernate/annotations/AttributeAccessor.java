@@ -16,7 +16,7 @@ import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Names a persistent property access strategy ({@link org.hibernate.property.access.spi.PropertyAccessStrategy}) to use.
+ * Names a persistent property access strategy ({@link PropertyAccessStrategy}) to use.
  *
  * Can be specified at either:<ul>
  *     <li>
@@ -28,13 +28,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     </li>
  * </ul>
  *
- * Should only be used to name custom {@link org.hibernate.property.access.spi.PropertyAccessStrategy}.  For
- * {@code property/field} access, the JPA {@link javax.persistence.Access} annotation should be preferred
- * using the appropriate {@link javax.persistence.AccessType}.  However, if this annotation is used with
+ * Should only be used to name custom {@link PropertyAccessStrategy}.  For
+ * {@code property/field} access, the JPA {@link jakarta.persistence.Access} annotation should be preferred
+ * using the appropriate {@link jakarta.persistence.AccessType}.  However, if this annotation is used with
  * either {@code value="property"} or {@code value="field"}, it will act just as the corresponding usage
- * of {@link javax.persistence.Access}.
+ * of {@link jakarta.persistence.Access}.
  *
- * @see org.hibernate.property.access.spi.PropertyAccessStrategy
+ * @see PropertyAccessStrategy
  * @see org.hibernate.property.access.spi.PropertyAccessStrategyResolver
  *
  * @author Steve Ebersole
@@ -44,14 +44,14 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface AttributeAccessor {
 	/**
-	 * Names the {@link org.hibernate.property.access.spi.PropertyAccessStrategy} strategy.
+	 * Names the {@link PropertyAccessStrategy} strategy.
 	 *
 	 * @deprecated use {@link #strategy()}
 	 */
 	@Deprecated
 	String value() default "";
 	/**
-	 * A class implementing {@link org.hibernate.property.access.spi.PropertyAccessStrategy}.
+	 * A class implementing {@link PropertyAccessStrategy}.
 	 */
 	Class<? extends PropertyAccessStrategy> strategy() default PropertyAccessStrategy.class;
 }

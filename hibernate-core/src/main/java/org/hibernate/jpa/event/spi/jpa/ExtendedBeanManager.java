@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.event.spi.jpa;
 
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 /**
  * @deprecated Use {@link org.hibernate.resource.beans.container.spi.ExtendedBeanManager} instead

@@ -4,37 +4,42 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.sql.storedproc;
+package org.hibernate.orm.test.sql.storedproc;
 
-import org.hibernate.cfg.Configuration;
+import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.Test;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-public class ResultMappingTest extends BaseCoreFunctionalTestCase {
+@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
+public class ResultMappingTest extends BaseSessionFactoryFunctionalTest {
+
 	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { H2ProcTesting.MyEntity.class };
+	protected Class[] getAnnotatedClasses() {
+		return new Class[] {
+				H2ProcTesting.MyEntity.class
+		};
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		H2ProcTesting.applyProcDefinitions( configuration );
+	protected void applyMetadataBuilder(MetadataBuilder metadataBuilder) {
+		super.applyMetadataBuilder( metadataBuilder );
+		H2ProcTesting.applyProcDefinitions( metadataBuilder );
 	}
 
 	@Test

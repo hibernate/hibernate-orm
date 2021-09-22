@@ -15,15 +15,12 @@ import javax.persistence.Table;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.QueryParameter;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.test.sql.storedproc.StoredProcedureResultSetMappingTest;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;

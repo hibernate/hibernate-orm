@@ -2401,7 +2401,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( modelPart instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) modelPart;
 			keyPart = toOneAttributeMapping.findSubPart( toOneAttributeMapping.getTargetKeyPropertyName() );
-			resultPart = toOneAttributeMapping;
+			resultPart = modelPart;
 		}
 		else if ( modelPart instanceof PluralAttributeMapping ) {
 			final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) modelPart;
@@ -2426,10 +2426,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			keyPart = modelPart;
 			resultPart = modelPart;
 		}
+		final NavigablePath navigablePath;
+		if ( resultPart == modelPart ) {
+			navigablePath = tableGroup.getNavigablePath();
+		}
+		else {
+			navigablePath = tableGroup.getNavigablePath().append( resultPart.getPartName() );
+		}
 
 		final Expression result;
 		if ( resultPart instanceof EntityValuedModelPart ) {
-			final EntityValuedModelPart mapping = (EntityValuedModelPart) tableGroup.getModelPart();
+			final EntityValuedModelPart mapping = (EntityValuedModelPart) resultPart;
 			final boolean expandToAllColumns;
 			if ( currentClauseStack.getCurrent() == Clause.GROUP ) {
 				// When the table group is known to be fetched i.e. a fetch join
@@ -2440,9 +2447,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			else {
 				expandToAllColumns = false;
 			}
+			final TableGroup parentGroupToUse = findTableGroup( navigablePath.getParent() );
 			result = EntityValuedPathInterpretation.from(
-					tableGroup.getNavigablePath(),
-					tableGroup,
+					navigablePath,
+					parentGroupToUse == null ? tableGroup : parentGroupToUse,
 					mapping,
 					expandToAllColumns,
 					this
@@ -2457,7 +2465,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							this,
 							getSqlAstCreationState()
 					),
-					tableGroup.getNavigablePath(),
+					navigablePath,
 					(EmbeddableValuedModelPart) resultPart,
 					tableGroup
 			);
@@ -2466,7 +2474,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			assert resultPart instanceof BasicValuedModelPart;
 			final BasicValuedModelPart mapping = (BasicValuedModelPart) keyPart;
 			final TableReference tableReference = tableGroup.resolveTableReference(
-					tableGroup.getNavigablePath().append( keyPart.getPartName() ),
+					navigablePath.append( keyPart.getPartName() ),
 					mapping.getContainingTableExpression()
 			);
 
@@ -2495,7 +2503,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			result = new BasicValuedPathInterpretation<>(
 					columnReference,
-					tableGroup.getNavigablePath(),
+					navigablePath,
 					(BasicValuedModelPart) resultPart,
 					tableGroup
 			);
@@ -5199,7 +5207,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final List<String> bagRoles = new ArrayList<>();
 
 		final BiConsumer<Fetchable, Boolean> fetchableBiConsumer = (fetchable, isKeyFetchable) -> {
-			final NavigablePath fetchablePath = fetchParent.resolveNavigablePath( fetchable );
+			final NavigablePath resolvedNavigablePath = fetchParent.resolveNavigablePath( fetchable );
 
 			final String alias;
 			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
@@ -5207,16 +5215,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 			final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-			final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( fetchablePath );
+			final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( resolvedNavigablePath );
 			boolean explicitFetch = false;
 
+			final NavigablePath fetchablePath;
 			if ( fetchedJoin != null ) {
+				fetchablePath = fetchedJoin.getNavigablePath();
 				// there was an explicit fetch in the SQM
 				//		there should be a TableGroupJoin registered for this `fetchablePath` already
-				//		because it
-				assert fromClauseIndex.getTableGroup( fetchablePath ) != null;
+				assert fromClauseIndex.getTableGroup( fetchedJoin.getNavigablePath() ) != null;
 
-//
 				if ( fetchedJoin.isFetched() ) {
 					fetchTiming = FetchTiming.IMMEDIATE;
 				}
@@ -5225,6 +5233,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				explicitFetch = true;
 			}
 			else {
+				fetchablePath = resolvedNavigablePath;
 				// there was not an explicit fetch in the SQM
 				alias = null;
 

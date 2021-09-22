@@ -14,6 +14,7 @@ import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
+import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -35,6 +36,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
+	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
 	private final boolean nullable;
 
@@ -54,7 +56,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		this.hasTableGroup = hasTableGroup;
 		this.nullable = nullable;
 
-		creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
+		this.tableGroup = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
 				getNavigablePath(),
 				np -> {
 					final TableGroup lhsTableGroup = creationState.getSqlAstCreationState()
@@ -104,6 +106,19 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	@Override
 	public Fetchable getFetchedMapping() {
 		return getReferencedMappingContainer();
+	}
+
+
+	@Override
+	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
+		if ( fetchable instanceof TableGroupProducer ) {
+			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {
+				if ( tableGroupJoin.getJoinedGroup().isFetched() && tableGroupJoin.getJoinedGroup().getModelPart() == fetchable ) {
+					return tableGroupJoin.getNavigablePath();
+				}
+			}
+		}
+		return super.resolveNavigablePath( fetchable );
 	}
 
 	@Override

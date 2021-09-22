@@ -105,7 +105,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			reusablePaths = new HashMap<>();
 		}
 
-		final String relativeName = path.getNavigablePath().getLocalName();
+		final String relativeName = path.getNavigablePath().getUnaliasedLocalName();
 
 		final SqmPath<?> previous = reusablePaths.put( relativeName, path );
 		if ( previous != null && previous != path ) {

@@ -275,14 +275,29 @@ public class ToOneAttributeMapping
 			) );
 		}
 		if ( referencedPropertyName == null ) {
+			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
+			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 			final IdentifierProperty identifierProperty = getEntityMappingType()
 					.getEntityPersister()
 					.getEntityMetamodel()
 					.getIdentifierProperty();
-			this.targetKeyPropertyName = identifierProperty.getName();
-			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-			addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, identifierProperty.getType() );
+			final Type propertyType = identifierProperty.getType();
+			if ( identifierProperty.getName() == null ) {
+				final CompositeType compositeType;
+				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+						&& compositeType.getPropertyNames().length == 1 ) {
+					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
+					addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, compositeType.getSubtypes()[0] );
+				}
+				else {
+					this.targetKeyPropertyName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
+					addPrefixedPropertyNames( targetKeyPropertyNames, null, propertyType );
+				}
+			}
+			else {
+				this.targetKeyPropertyName = identifierProperty.getName();
+				addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, propertyType );
+			}
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else if ( bootValue.isReferenceToPrimaryKey() ) {
@@ -334,21 +349,23 @@ public class ToOneAttributeMapping
 			Set<String> targetKeyPropertyNames,
 			String prefix,
 			Type type) {
-		if ( type.isComponentType() ) {
+		if ( prefix != null ) {
 			targetKeyPropertyNames.add( prefix );
+		}
+		if ( type.isComponentType() ) {
 			final ComponentType componentType = (ComponentType) type;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {
-				addPrefixedPropertyNames(
-						targetKeyPropertyNames,
-						prefix + "." + propertyNames[i],
-						componentTypeSubtypes[i]
-				);
+				final String newPrefix;
+				if ( prefix == null ) {
+					newPrefix = propertyNames[i];
+				}
+				else {
+					newPrefix = prefix + "." + propertyNames[i];
+				}
+				addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, componentTypeSubtypes[i] );
 			}
-		}
-		else {
-			targetKeyPropertyNames.add( prefix );
 		}
 	}
 
@@ -849,6 +866,7 @@ public class ToOneAttributeMapping
 		);
 	}
 
+	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
 		if ( isNullable ) {
 			return SqlAstJoinType.LEFT;
@@ -903,6 +921,7 @@ public class ToOneAttributeMapping
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
+				fetched,
 				() -> createTableGroupJoinInternal(
 						canUseInnerJoin,
 						navigablePath,
@@ -916,10 +935,10 @@ public class ToOneAttributeMapping
 					if ( !canUseParentTableGroup ) {
 						return false;
 					}
-					// Special case for resolving the table group for entity valued paths
-					if ( np == navigablePath ) {
-						return true;
-					}
+//					// Special case for resolving the table group for entity valued paths
+//					if ( np == navigablePath ) {
+//						return true;
+//					}
 					NavigablePath path = np.getParent();
 					// Fast path
 					if ( path != null && navigablePath.equals( path ) ) {

@@ -192,11 +192,17 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		public Object assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options) {
 			EntityInitializer initializer = resolveCircularInitializer( rowProcessingState );
 			if ( initializer == null ) {
-				final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
 				if ( circularPath.getParent() != null ) {
-					initializer = (EntityInitializer) rowProcessingState.resolveInitializer( circularPath.getParent() );
+					NavigablePath path = circularPath.getParent();
+					Initializer parentInitializer = rowProcessingState.resolveInitializer( path );
+					while ( !( parentInitializer instanceof EntityInitializer ) && path.getParent() != null ) {
+						path = path.getParent();
+						parentInitializer = rowProcessingState.resolveInitializer( path );
+					}
+					initializer = (EntityInitializer) parentInitializer;
 				}
 				else {
+					final Initializer parentInitializer = rowProcessingState.resolveInitializer( circularPath );
 					assert parentInitializer instanceof CollectionInitializer;
 					final CollectionInitializer circ = (CollectionInitializer) parentInitializer;
 					final EntityPersister entityPersister = (EntityPersister) ( (AttributeMapping) fetchable ).getMappedType();
@@ -280,7 +286,6 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 			while ( !( parentInitializer instanceof EntityInitializer ) && path.getParent() != null ) {
 				path = path.getParent();
 				parentInitializer = rowProcessingState.resolveInitializer( path );
-
 			}
 
 			if ( !( parentInitializer instanceof EntityInitializer ) ) {

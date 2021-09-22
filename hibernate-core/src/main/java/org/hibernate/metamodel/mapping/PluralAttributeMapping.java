@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.function.Consumer;
 
 import org.hibernate.loader.ast.spi.Loadable;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
@@ -60,7 +61,7 @@ public interface PluralAttributeMapping
 
 	String getSeparateCollectionTable();
 
-	boolean isBidirectionalAttributeName(NavigablePath fetchablePath);
+	boolean isBidirectionalAttributeName(NavigablePath fetchablePath, ToOneAttributeMapping modelPart);
 
 	@Override
 	default boolean incrementFetchDepth(){

@@ -729,7 +729,7 @@ public class LoaderSelectBuilder {
 
 			FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 			boolean joined = fetchable.getMappedFetchOptions().getStyle() == FetchStyle.JOIN;
-
+			boolean explicitFetch = false;
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 
 			if ( !( fetchable instanceof CollectionPart ) ) {
@@ -738,6 +738,7 @@ public class LoaderSelectBuilder {
 					traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 					fetchTiming = traversalResult.getFetchTiming();
 					joined = traversalResult.isJoined();
+					explicitFetch = true;
 				}
 				else if ( loadQueryInfluencers.hasEnabledFetchProfiles() ) {
 					// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -753,6 +754,7 @@ public class LoaderSelectBuilder {
 							if ( profileFetch != null ) {
 								fetchTiming = FetchTiming.IMMEDIATE;
 								joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+								explicitFetch = true;
 							}
 						}
 					}
@@ -796,7 +798,8 @@ public class LoaderSelectBuilder {
 					fetchDepth++;
 				}
 
-				if ( !creationState.isResolvingCircularFetch() ) {
+				// There is no need to check for circular fetches if this is an explicit fetch
+				if ( !explicitFetch && !creationState.isResolvingCircularFetch() ) {
 					final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 							fetchablePath,
 							fetchParent,

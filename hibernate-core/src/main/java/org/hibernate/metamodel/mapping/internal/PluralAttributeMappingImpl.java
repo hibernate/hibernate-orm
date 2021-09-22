@@ -104,7 +104,6 @@ public class PluralAttributeMappingImpl
 	private final FetchStyle fetchStyle;
 
 	private final String bidirectionalAttributeName;
-	private final Boolean isInverse;
 
 	private final CollectionPersister collectionDescriptor;
 	private final String separateCollectionTable;
@@ -184,8 +183,6 @@ public class PluralAttributeMappingImpl
 
 		this.bidirectionalAttributeName = StringHelper.subStringNullIfEmpty( bootDescriptor.getMappedByProperty(), '.');
 
-		this.isInverse = bootDescriptor.isInverse();
-
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( attributeName );
 
 		if ( bootDescriptor.isOneToMany() ) {
@@ -232,14 +229,13 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public boolean isBidirectionalAttributeName(NavigablePath fetchablePath) {
-		if ( isInverse ) {
-			return true;
-		}
+	public boolean isBidirectionalAttributeName(NavigablePath fetchablePath, ToOneAttributeMapping modelPart) {
 		if ( bidirectionalAttributeName == null ) {
-			return false;
+			// If the FK-target of the to-one mapping is the same as the FK-target of this plural mapping,
+			// then we say this is bidirectional, given that this is only invoked for model parts of the collection elements
+			return fkDescriptor.getTargetPart() == modelPart.getForeignKeyDescriptor().getTargetPart();
 		}
-		return fetchablePath.getFullPath().endsWith( bidirectionalAttributeName );
+		return fetchablePath.getUnaliasedLocalName().endsWith( bidirectionalAttributeName );
 	}
 
 	@SuppressWarnings("unused")

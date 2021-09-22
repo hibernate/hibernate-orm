@@ -5134,7 +5134,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			EntityGraphTraversalState.TraversalResult traversalResult = null;
 			final FromClauseIndex fromClauseIndex = getFromClauseIndex();
-			final SqmAttributeJoin fetchedJoin = fromClauseIndex.findFetchedJoinByPath( fetchablePath );
+			final SqmAttributeJoin<?, ?> fetchedJoin = fromClauseIndex.findFetchedJoinByPath( fetchablePath );
+			boolean explicitFetch = false;
 
 			if ( fetchedJoin != null ) {
 				// there was an explicit fetch in the SQM
@@ -5148,6 +5149,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				joined = true;
 				alias = fetchedJoin.getExplicitAlias();
+				explicitFetch = true;
 			}
 			else {
 				// there was not an explicit fetch in the SQM
@@ -5158,6 +5160,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						traversalResult = entityGraphTraversalState.traverse( fetchParent, fetchable, isKeyFetchable );
 						fetchTiming = traversalResult.getFetchTiming();
 						joined = traversalResult.isJoined();
+						explicitFetch = true;
 					}
 					else if ( getLoadQueryInfluencers().hasEnabledFetchProfiles() ) {
 						// There is no point in checking the fetch profile if it can't affect this fetchable
@@ -5173,6 +5176,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								if ( profileFetch != null ) {
 									fetchTiming = FetchTiming.IMMEDIATE;
 									joined = joined || profileFetch.getStyle() == org.hibernate.engine.profile.Fetch.Style.JOIN;
+									explicitFetch = true;
 								}
 							}
 						}
@@ -5224,8 +5228,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( incrementFetchDepth ) {
 					fetchDepth++;
 				}
-				// There is no need to check for circular fetches if this is a fetch join
-				if ( fetchedJoin == null && !isResolvingCircularFetch() ) {
+				// There is no need to check for circular fetches if this is an explicit fetch
+				if ( !explicitFetch && !isResolvingCircularFetch() ) {
 					final Fetch biDirectionalFetch = fetchable.resolveCircularFetch(
 							fetchablePath,
 							fetchParent,

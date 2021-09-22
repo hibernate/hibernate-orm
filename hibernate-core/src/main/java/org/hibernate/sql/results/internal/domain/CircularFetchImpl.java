@@ -28,6 +28,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
+import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchByUniqueKeyInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -37,12 +38,13 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Andrea Boriero
  */
 public class CircularFetchImpl implements BiDirectionalFetch, Association {
-	private DomainResult keyResult;
-	private EntityValuedModelPart referencedModelPart;
+	private final DomainResult<?> keyResult;
+	private final EntityValuedModelPart referencedModelPart;
 	private final EntityMappingType entityMappingType;
 	private final FetchTiming timing;
 	private final NavigablePath navigablePath;
 	private final ToOneAttributeMapping fetchable;
+	private final boolean selectByUniqueKey;
 
 	private final FetchParent fetchParent;
 	private final NavigablePath referencedNavigablePath;
@@ -54,13 +56,15 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 			NavigablePath navigablePath,
 			FetchParent fetchParent,
 			ToOneAttributeMapping fetchable,
+			boolean selectByUniqueKey,
 			NavigablePath referencedNavigablePath,
-			DomainResult keyResult) {
+			DomainResult<?> keyResult) {
 		this.referencedModelPart = referencedModelPart;
 		this.entityMappingType = entityMappingType;
 		this.timing = timing;
 		this.fetchParent = fetchParent;
 		this.navigablePath = navigablePath;
+		this.selectByUniqueKey = selectByUniqueKey;
 		this.referencedNavigablePath = referencedNavigablePath;
 		this.fetchable = fetchable;
 		this.keyResult = keyResult;
@@ -102,6 +106,15 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 				getNavigablePath(),
 				referencedModelPart,
 				() -> {
+					if ( selectByUniqueKey ) {
+						return new EntitySelectFetchByUniqueKeyInitializer(
+								parentAccess,
+								fetchable,
+								getNavigablePath(),
+								entityMappingType.getEntityPersister(),
+								resultAssembler
+						);
+					}
 					if ( timing == FetchTiming.IMMEDIATE ) {
 						return new EntitySelectFetchInitializer(
 								parentAccess,

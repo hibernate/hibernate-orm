@@ -13,7 +13,6 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
@@ -77,13 +76,4 @@ public interface EntityDiscriminatorMapping extends VirtualModelPart, BasicValue
 		return FetchTiming.IMMEDIATE;
 	}
 
-	@Override
-	default Fetch resolveCircularFetch(
-			NavigablePath fetchablePath,
-			FetchParent fetchParent,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		// can never be circular
-		return null;
-	}
 }

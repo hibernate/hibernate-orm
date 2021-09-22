@@ -24,7 +24,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -474,34 +473,21 @@ public class ToOneAttributeMapping
 				return null;
 			}
 
-			ModelPart modelPart = creationState.resolveModelPart( parentNavigablePath );
-			if ( modelPart instanceof EmbeddedIdentifierMappingImpl ) {
+			ModelPart parentModelPart = creationState.resolveModelPart( parentNavigablePath );
+			if ( parentModelPart instanceof EmbeddedIdentifierMappingImpl ) {
 				while ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
 					parentNavigablePath = parentNavigablePath.getParent();
+					assert parentNavigablePath != null;
+					parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 				}
 			}
-			while ( modelPart instanceof EmbeddableValuedFetchable ) {
+			while ( parentModelPart instanceof EmbeddableValuedFetchable ) {
 				parentNavigablePath = parentNavigablePath.getParent();
 				assert parentNavigablePath != null;
-				modelPart = creationState.resolveModelPart( parentNavigablePath );
+				parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 			}
 
-			if ( isBidirectionalAttributeName( parentNavigablePath ) ) {
-				/*
-					class Child {
-						@OneToOne(mappedBy = "biologicalChild")
-						private Mother mother;
-					}
-
-					class Mother {
-						@OneToOne
-						private Child biologicalChild;
-					}
-
-					fetchablePath= Mother.biologicalChild.mother
-					this.mappedBy = "biologicalChild"
-					parent.getFullPath() = "Mother.biologicalChild"
-				 */
+			if ( isBidirectionalAttributeName( parentNavigablePath, parentModelPart, fetchablePath, creationState ) ) {
 				return createCircularBiDirectionalFetch(
 						fetchablePath,
 						fetchParent,
@@ -510,39 +496,6 @@ public class ToOneAttributeMapping
 				);
 			}
 
-			/*
-				check if mappedBy is on the other side of the association
-			 */
-			final boolean isBiDirectional = isBidirectional(
-					modelPart,
-					parentNavigablePath.getParent(),
-					fetchablePath,
-					creationState
-			);
-			if ( isBiDirectional ) {
-					/*
-						class Child {
-							@OneToOne(mappedBy = "biologicalChild")
-							private Mother mother;
-						}
-
-						class Mother {
-							@OneToOne
-							private Child biologicalChild;
-						}
-
-						fetchablePath = "Child.mother.biologicalChild"
-						otherSideAssociationModelPart = ToOneAttributeMapping("Child.mother")
-						otherSideMappedBy = "biologicalChild"
-
-					 */
-				return createCircularBiDirectionalFetch(
-						fetchablePath,
-						fetchParent,
-						parentNavigablePath,
-						LockMode.READ
-				);
-			}
 			/*
 						class Child {
 							@OneToOne
@@ -554,7 +507,7 @@ public class ToOneAttributeMapping
 							private Child stepMother;
 						}
 
-				We have a cirularity but it is not bidirectional
+				We have a circularity but it is not bidirectional
 			 */
 			if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 				final TableGroup parentTableGroup = creationState
@@ -581,6 +534,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						fetchParent,
 						this,
+						isSelectByUniqueKey( sideNature ),
 						fetchablePath,
 						foreignKeyDomainResult
 				);
@@ -589,35 +543,95 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	private boolean isBidirectional(
-			ModelPart modelPart,
-			NavigablePath parentOfParent,
+	protected boolean isBidirectionalAttributeName(
+			NavigablePath parentNavigablePath,
+			ModelPart parentModelPart,
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState) {
-		if ( modelPart instanceof ToOneAttributeMapping ) {
-			return ( (ToOneAttributeMapping) modelPart ).isBidirectionalAttributeName( fetchablePath );
-		}
-
-		if ( modelPart instanceof PluralAttributeMapping ) {
-			return ( (PluralAttributeMapping) modelPart ).isBidirectionalAttributeName( fetchablePath );
-		}
-
-		if ( modelPart instanceof EntityCollectionPart ) {
-			if ( parentOfParent instanceof EntityIdentifierNavigablePath ) {
-				parentOfParent = parentOfParent.getParent();
-			}
-			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).isBidirectionalAttributeName(
-					fetchablePath );
-		}
-
-		return false;
-	}
-
-	protected boolean isBidirectionalAttributeName(NavigablePath fetchablePath) {
 		if ( bidirectionalAttributeName == null ) {
+			/*
+				check if mappedBy is on the other side of the association
+			 */
+
+			/*
+				class Child {
+					@OneToOne(mappedBy = "biologicalChild")
+					private Mother mother;
+				}
+
+				class Mother {
+					@OneToOne
+					private Child biologicalChild;
+				}
+
+				fetchablePath = "Child.mother.biologicalChild"
+				otherSideAssociationModelPart = ToOneAttributeMapping("Child.mother")
+				otherSideMappedBy = "biologicalChild"
+
+			 */
+			if ( parentModelPart instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) parentModelPart;
+				if ( toOneAttributeMapping.bidirectionalAttributeName != null ) {
+					return toOneAttributeMapping.isBidirectionalAttributeName(
+							fetchablePath,
+							this,
+							parentNavigablePath,
+							creationState
+					);
+				}
+			}
+			else if ( parentModelPart instanceof PluralAttributeMapping ) {
+				return ( (PluralAttributeMapping) parentModelPart ).isBidirectionalAttributeName( fetchablePath, this );
+			}
+			else if ( parentModelPart instanceof EntityCollectionPart ) {
+				NavigablePath parentOfParent = parentNavigablePath.getParent();
+				if ( parentOfParent instanceof EntityIdentifierNavigablePath ) {
+					parentOfParent = parentOfParent.getParent();
+				}
+				return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) )
+						.isBidirectionalAttributeName( fetchablePath, this );
+			}
 			return false;
 		}
-		return fetchablePath.getFullPath().endsWith( bidirectionalAttributeName );
+		if ( cardinality == Cardinality.MANY_TO_ONE ) {
+			/*
+				class Child {
+					@OneToOne(mappedBy = "biologicalChild")
+					private Mother mother;
+				}
+
+				class Mother {
+					@OneToOne
+					private Child biologicalChild;
+				}
+
+				fetchablePath= Mother.biologicalChild.mother
+				this.mappedBy = "biologicalChild"
+				parent.getFullPath() = "Mother.biologicalChild"
+			 */
+			final String fullPath = parentNavigablePath.getFullPath();
+			if ( fullPath.endsWith( bidirectionalAttributeName + "." + CollectionPart.Nature.ELEMENT.getName() ) ) {
+				final NavigablePath parentPath = parentNavigablePath.getParent().getParent();
+				// This can be null for a collection loader
+				if ( parentPath != null ) {
+					// If the parent is null, this is a simple collection fetch of a root, in which case the types must match
+					if ( parentPath.getParent() == null ) {
+						final String entityName = entityMappingType.getPartName();
+						return parentPath.getFullPath().startsWith( entityName ) && (
+								parentPath.getFullPath().length() == entityName.length()
+										// Ignore a possible alias
+										|| parentPath.getFullPath().charAt( entityName.length() ) == '('
+						);
+					}
+					// If we have a parent, we ensure that the parent is the same as the attribute name
+					else {
+						return parentPath.getUnaliasedLocalName().equals( navigableRole.getLocalName() );
+					}
+				}
+			}
+			return false;
+		}
+		return parentNavigablePath.getUnaliasedLocalName().equals( bidirectionalAttributeName );
 	}
 
 	public String getBidirectionalAttributeName(){
@@ -744,16 +758,7 @@ public class ToOneAttributeMapping
 				side,
 				creationState
 		);
-		boolean selectByUniqueKey;
-		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
-			// case 1.2
-			selectByUniqueKey = !getKeyTargetMatchPart().getNavigableRole()
-					.equals( entityMappingType.getIdentifierMapping().getNavigableRole() );
-		}
-		else {
-			// case 1.1
-			selectByUniqueKey = bidirectionalAttributeName != null;
-		}
+		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
 			return new EntityFetchSelectImpl(
@@ -772,6 +777,18 @@ public class ToOneAttributeMapping
 				fetchablePath,
 				keyResult
 		);
+	}
+
+	private boolean isSelectByUniqueKey(ForeignKeyDescriptor.Nature side) {
+		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
+			// case 1.2
+			return !getKeyTargetMatchPart().getNavigableRole()
+					.equals( entityMappingType.getIdentifierMapping().getNavigableRole() );
+		}
+		else {
+			// case 1.1
+			return bidirectionalAttributeName != null;
+		}
 	}
 
 	@Override

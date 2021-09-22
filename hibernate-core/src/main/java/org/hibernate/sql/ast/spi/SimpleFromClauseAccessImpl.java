@@ -21,7 +21,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 
 	protected final FromClauseAccess parent;
-	protected final Map<String, TableGroup> tableGroupMap = new HashMap<>();
+	protected final Map<NavigablePath, TableGroup> tableGroupMap = new HashMap<>();
 
 	public SimpleFromClauseAccessImpl() {
 		this( null );
@@ -33,7 +33,7 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 
 	@Override
 	public TableGroup findTableGroup(NavigablePath navigablePath) {
-		final TableGroup tableGroup = tableGroupMap.get( navigablePath.getIdentifierForTableGroup() );
+		final TableGroup tableGroup = tableGroupMap.get( navigablePath );
 		if ( tableGroup == null && parent != null ) {
 			return parent.findTableGroup( navigablePath );
 		}
@@ -48,7 +48,7 @@ public class SimpleFromClauseAccessImpl implements FromClauseAccess {
 				tableGroup.getNavigablePath().getIdentifierForTableGroup(),
 				navigablePath.getIdentifierForTableGroup()
 		);
-		final TableGroup previous = tableGroupMap.put( navigablePath.getIdentifierForTableGroup(), tableGroup );
+		final TableGroup previous = tableGroupMap.put( navigablePath, tableGroup );
 		if ( previous != null ) {
 			SqlTreeCreationLogger.LOGGER.debugf(
 					"Registration of TableGroup [%s] for NavigablePath [%s] overrode previous registration : %s",

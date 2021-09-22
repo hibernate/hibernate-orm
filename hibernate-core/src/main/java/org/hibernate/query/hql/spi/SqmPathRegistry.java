@@ -56,6 +56,22 @@ public interface SqmPathRegistry {
 	<X extends SqmFrom<?, ?>> X findFromExposing(String navigableName);
 
 	/**
+	 * Similar to {@link #findFromByPath}, but accepting a producer to be used
+	 * to create and register a SqmFrom if none yet registered.
+	 *
+	 * @return The existing or just-created SqmFrom
+	 */
+	<X extends SqmFrom<?, ?>> X resolveFrom(NavigablePath path, Function<NavigablePath, SqmFrom<?, ?>> creator);
+
+	/**
+	 * Similar to {@link #resolveFrom}, but accepting a SqmPath to be used
+	 * to create and register a SqmFrom if none yet registered.
+	 *
+	 * @return The existing or just-created SqmFrom
+	 */
+	<X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path);
+
+	/**
 	 * Find an SqmPath by its NavigablePath.  Will return a SqmFrom if the NavigablePath
 	 * has (yet) been resolved to a SqmFrom.  Otherwise, it will be a non-SqmFrom SqmPath
 	 *

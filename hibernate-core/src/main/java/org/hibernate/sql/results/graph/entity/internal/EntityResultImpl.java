@@ -61,8 +61,6 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 
 	@Override
 	public NavigablePath resolveNavigablePath(Fetchable fetchable) {
-		// todo: this is not ideal yet as we could potentially resolve a path that we did not intend
-		//  to fix this, we'd need to know if the table group is for a fetch
 		if ( fetchable instanceof TableGroupProducer &&
 			!getNavigablePath().getUnaliasedLocalName().equals( getNavigablePath().getLocalName() ) ) {
 			for ( TableGroupJoin tableGroupJoin : tableGroup.getTableGroupJoins() ) {

@@ -275,7 +275,8 @@ public class EmbeddedAttributeMapping
 		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
 				navigablePath,
 				this,
-				lhs
+				lhs,
+				fetched
 		);
 
 		TableGroupJoin tableGroupJoin = new TableGroupJoin(

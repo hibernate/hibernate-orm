@@ -20,7 +20,9 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -88,10 +90,12 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					entityMappingType.getJdbcTypeCount() + identifierMapping.getJdbcTypeCount()
 							+ ( discriminatorMapping == null ? 0 : 1 )
 			);
+			final TableGroup parentTableGroup = tableGroup;
 			final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
-				final TableReference tableReference = tableGroup.resolveTableReference(
+				final TableReference tableReference = parentTableGroup.resolveTableReference(
 						navigablePath,
-						selectableMapping.getContainingTableExpression()
+						selectableMapping.getContainingTableExpression(),
+						false
 				);
 				expressions.add(
 						sqlExprResolver.resolveSqlExpression(
@@ -119,7 +123,21 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final ForeignKeyDescriptor fkDescriptor = associationMapping.getForeignKeyDescriptor();
 			final String lhsTable;
 			final ModelPart lhsPart;
-			if ( associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY ) {
+			boolean useKeyPart = associationMapping.getSideNature() == ForeignKeyDescriptor.Nature.KEY;
+			if ( mapping instanceof EntityCollectionPart ) {
+				// EntityCollectionPart always returns TARGET, but sometimes we still want to use the KEY (element) side.
+				// With a collection table, we can always use the TARGET for referring to the collection,
+				// but in case of a one-to-many without collection table, this would be problematic,
+				// as we can't use e.g. the primary key of the owner entity as substitution.
+				final TableGroup pluralTableGroup = sqlAstCreationState.getFromClauseAccess()
+						.findTableGroup( navigablePath.getParent() );
+				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) pluralTableGroup.getModelPart();
+				if ( pluralAttributeMapping.getSeparateCollectionTable() == null ) {
+					useKeyPart = true;
+					tableGroup = pluralTableGroup;
+				}
+			}
+			if ( useKeyPart ) {
 				lhsTable = fkDescriptor.getKeyTable();
 				lhsPart = fkDescriptor.getKeyPart();
 			}
@@ -167,12 +185,13 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		else {
 			assert mapping instanceof EntityMappingType;
 
+			final TableGroup parentTableGroup = tableGroup;
 			final EntityMappingType entityMappingType = (EntityMappingType) mapping;
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
 			if ( identifierMapping instanceof BasicEntityIdentifierMapping ) {
 				final BasicEntityIdentifierMapping simpleIdMapping = (BasicEntityIdentifierMapping) identifierMapping;
 
-				final TableReference tableReference = tableGroup.resolveTableReference(
+				final TableReference tableReference = parentTableGroup.resolveTableReference(
 						navigablePath,
 						simpleIdMapping.getContainingTableExpression()
 				);
@@ -191,7 +210,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				final List<Expression> expressions = new ArrayList<>();
 				identifierMapping.forEachSelectable(
 						(selectionIndex, selectableMapping) -> {
-							final TableReference tableReference = tableGroup.resolveTableReference(
+							final TableReference tableReference = parentTableGroup.resolveTableReference(
 									navigablePath, selectableMapping.getContainingTableExpression() );
 
 							expressions.add(

@@ -85,7 +85,7 @@ public class FromClauseIndex extends SimpleFromClauseAccessImpl {
 	}
 
 	public boolean isResolved(SqmFrom fromElement) {
-		return tableGroupMap.containsKey( fromElement.getNavigablePath().getIdentifierForTableGroup() )
+		return tableGroupMap.containsKey( fromElement.getNavigablePath() )
 				|| parent != null && ( (FromClauseIndex) parent ).isResolved( fromElement );
 	}
 

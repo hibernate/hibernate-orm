@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.spi;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
+import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
@@ -29,8 +31,11 @@ public class SqmCreationHelper {
 					"`lhs` cannot be null for a sub-navigable reference - " + subNavigable
 			);
 		}
-
-		return buildSubNavigablePath( lhs.getNavigablePath(), subNavigable, alias );
+		NavigablePath navigablePath = lhs.getNavigablePath();
+		if ( lhs.getReferencedPathSource() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
+		}
+		return buildSubNavigablePath( navigablePath, subNavigable, alias );
 	}
 
 	private SqmCreationHelper() {

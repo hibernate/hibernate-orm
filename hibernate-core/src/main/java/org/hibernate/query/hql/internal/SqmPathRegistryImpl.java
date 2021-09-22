@@ -216,6 +216,38 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
+	public <X extends SqmFrom<?, ?>> X resolveFrom(NavigablePath navigablePath, Function<NavigablePath, SqmFrom<?, ?>> creator) {
+		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
+
+		final SqmFrom<?, ?> existing = sqmFromByPath.get( navigablePath );
+		if ( existing != null ) {
+			//noinspection unchecked
+			return (X) existing;
+		}
+
+		final SqmFrom<?, ?> sqmFrom = creator.apply( navigablePath );
+		register( sqmFrom );
+		//noinspection unchecked
+		return (X) sqmFrom;
+	}
+
+	@Override
+	public <X extends SqmFrom<?, ?>> X resolveFrom(SqmPath<?> path) {
+		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(SqmPath) : %s", path );
+
+		final SqmFrom<?, ?> existing = sqmFromByPath.get( path.getNavigablePath() );
+		if ( existing != null ) {
+			//noinspection unchecked
+			return (X) existing;
+		}
+
+		final SqmFrom<?, ?> sqmFrom = resolveFrom( path.getLhs() ).join( path.getNavigablePath().getUnaliasedLocalName() );
+		register( sqmFrom );
+		//noinspection unchecked
+		return (X) sqmFrom;
+	}
+
+	@Override
 	public <X> SqmPath<X> resolvePath(NavigablePath navigablePath, Function<NavigablePath, SqmPath<X>> creator) {
 		SqmTreeCreationLogger.LOGGER.tracef( "SqmProcessingIndex#resolvePath(NavigablePath) : %s", navigablePath );
 

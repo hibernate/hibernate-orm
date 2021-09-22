@@ -17,7 +17,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
  * @author Archie Cobbs
  * @author Nathan Xu
  */
-@RequiresDialect( MySQLDialect.class )
+@RequiresDialect( value = MySQLDialect.class, strictMatching = true )
 public class HHH13908Test extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

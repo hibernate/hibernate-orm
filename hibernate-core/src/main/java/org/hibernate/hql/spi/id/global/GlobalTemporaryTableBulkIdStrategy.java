@@ -41,7 +41,7 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public class GlobalTemporaryTableBulkIdStrategy
-		extends AbstractMultiTableBulkIdStrategyImpl<IdTableInfoImpl,PreparationContextImpl>
+		extends AbstractMultiTableBulkIdStrategyImpl<IdTableInfoImpl, PreparationContextImpl>
 		implements MultiTableBulkIdStrategy {
 	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables";
 

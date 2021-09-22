@@ -39,7 +39,7 @@ public class NonBatchingBatch extends AbstractBatchImpl {
 	@Override
 	public void addToBatch() {
 		notifyObserversImplicitExecution();
-		for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
+		for ( Map.Entry<String, PreparedStatement> entry : getStatements().entrySet() ) {
 			final String statementSQL = entry.getKey();
 			try {
 				final PreparedStatement statement = entry.getValue();

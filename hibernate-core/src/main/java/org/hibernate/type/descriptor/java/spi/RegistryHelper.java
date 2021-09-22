@@ -32,7 +32,7 @@ public class RegistryHelper {
 
 	@SuppressWarnings("unchecked")
 	public <J> JavaTypeDescriptor<J> resolveDescriptor(
-			Map<Class,JavaTypeDescriptor> descriptorsByClass,
+			Map<Class, JavaTypeDescriptor> descriptorsByClass,
 			Class<J> cls,
 			Supplier<JavaTypeDescriptor<J>> defaultValueSupplier) {
 		if ( cls == null ) {

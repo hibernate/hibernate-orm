@@ -264,7 +264,7 @@ public interface MetadataBuildingOptions {
 	 *  @deprecated  Use {@link BootstrapContext#getSqlFunctions()} instead.
 	 */
 	@Deprecated
-	Map<String,SQLFunction> getSqlFunctions();
+	Map<String, SQLFunction> getSqlFunctions();
 
 	/**
 	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This

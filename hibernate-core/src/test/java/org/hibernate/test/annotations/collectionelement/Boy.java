@@ -49,7 +49,7 @@ public class Boy {
 	private int[] favoriteNumbers;
 	private Set<Toy> favoriteToys = new HashSet<Toy>();
 	private Set<Character> characters = new HashSet<Character>();
-	private Map<String, FavoriteFood> foods = new HashMap<String,FavoriteFood>();
+	private Map<String, FavoriteFood> foods = new HashMap<String, FavoriteFood>();
 	private Set<CountryAttitude> countryAttitudes = new HashSet<CountryAttitude>();
 
 	@Id

@@ -85,7 +85,7 @@ public class PackagePrivateAttributeConverterSessionFactoryTest extends BaseNonC
 	}
 
 	@Converter( autoApply = true )
-	static class IntegerToVarcharConverter implements AttributeConverter<Integer,String> {
+	static class IntegerToVarcharConverter implements AttributeConverter<Integer, String> {
 		@Override
 		public String convertToDatabaseColumn(Integer attribute) {
 			return attribute == null ? null : attribute.toString();

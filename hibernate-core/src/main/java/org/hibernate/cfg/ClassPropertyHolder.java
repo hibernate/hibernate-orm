@@ -37,7 +37,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 	private EntityBinder entityBinder;
 	private final Map<XClass, InheritanceState> inheritanceStatePerClass;
 
-	private Map<String,AttributeConversionInfo> attributeConversionInfoMap;
+	private Map<String, AttributeConversionInfo> attributeConversionInfoMap;
 
 	public ClassPropertyHolder(
 			PersistentClass persistentClass,

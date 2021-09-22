@@ -60,8 +60,8 @@ public class ToolingHintContext {
 	 *
 	 * @return The underlying Map
 	 */
-	public Map<String,MetaAttribute> getMetaAttributeMap() {
-		final Map<String,MetaAttribute> collectedAttributeMap = new ConcurrentHashMap<String, MetaAttribute>();
+	public Map<String, MetaAttribute> getMetaAttributeMap() {
+		final Map<String, MetaAttribute> collectedAttributeMap = new ConcurrentHashMap<String, MetaAttribute>();
 		for ( ToolingHint toolingHint : toolingHintMap.values() ) {
 			collectedAttributeMap.put( toolingHint.getName(), toolingHint.asMetaAttribute() );
 		}

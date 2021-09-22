@@ -51,8 +51,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private boolean canElementBeConverted = true;
 	private boolean canKeyBeConverted = true;
 
-	private Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap;
-	private Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap;
+	private Map<String, AttributeConversionInfo> elementAttributeConversionInfoMap;
+	private Map<String, AttributeConversionInfo> keyAttributeConversionInfoMap;
 
 	public CollectionPropertyHolder(
 			Collection collection,
@@ -75,8 +75,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 
 	private void buildAttributeConversionInfoMaps(
 			XProperty collectionProperty,
-			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
-			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
+			Map<String, AttributeConversionInfo> elementAttributeConversionInfoMap,
+			Map<String, AttributeConversionInfo> keyAttributeConversionInfoMap) {
 		if ( collectionProperty == null ) {
 			// not sure this is valid condition
 			return;
@@ -107,8 +107,8 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 	private void applyLocalConvert(
 			Convert convertAnnotation,
 			XProperty collectionProperty,
-			Map<String,AttributeConversionInfo> elementAttributeConversionInfoMap,
-			Map<String,AttributeConversionInfo> keyAttributeConversionInfoMap) {
+			Map<String, AttributeConversionInfo> elementAttributeConversionInfoMap,
+			Map<String, AttributeConversionInfo> keyAttributeConversionInfoMap) {
 
 		// IMPL NOTE : the rules here are quite more lenient than what JPA says.  For example, JPA says
 		// that @Convert on a Map always needs to specify attributeName of key/value (or prefixed with

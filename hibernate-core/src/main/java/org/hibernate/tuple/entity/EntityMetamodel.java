@@ -124,7 +124,7 @@ public class EntityMetamodel implements Serializable {
 	private final boolean inherited;
 	private final boolean hasSubclasses;
 	private final Set subclassEntityNames;
-	private final Map<Class,String> entityNameByInheritenceClassMap;
+	private final Map<Class, String> entityNameByInheritenceClassMap;
 
 	private final EntityMode entityMode;
 	private final EntityTuplizer entityTuplizer;

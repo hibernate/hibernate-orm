@@ -26,14 +26,14 @@ public class MetaType extends AbstractType {
 	public static final String[] REGISTRATION_KEYS = new String[0];
 
 	private final Type baseType;
-	private final Map<Object,String> discriminatorValuesToEntityNameMap;
-	private final Map<String,Object> entityNameToDiscriminatorValueMap;
+	private final Map<Object, String> discriminatorValuesToEntityNameMap;
+	private final Map<String, Object> entityNameToDiscriminatorValueMap;
 
-	public MetaType(Map<Object,String> discriminatorValuesToEntityNameMap, Type baseType) {
+	public MetaType(Map<Object, String> discriminatorValuesToEntityNameMap, Type baseType) {
 		this.baseType = baseType;
 		this.discriminatorValuesToEntityNameMap = discriminatorValuesToEntityNameMap;
 		this.entityNameToDiscriminatorValueMap = new HashMap<>();
-		for ( Map.Entry<Object,String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
+		for ( Map.Entry<Object, String> entry : discriminatorValuesToEntityNameMap.entrySet() ) {
 			entityNameToDiscriminatorValueMap.put( entry.getValue(), entry.getKey() );
 		}
 	}

@@ -56,15 +56,15 @@ public class EnabledCaching implements CacheImplementor, DomainDataRegionBuildin
 	private final SessionFactoryImplementor sessionFactory;
 	private final RegionFactory regionFactory;
 
-	private final Map<String,Region> regionsByName = new ConcurrentHashMap<>();
+	private final Map<String, Region> regionsByName = new ConcurrentHashMap<>();
 
 	// A map by name for QueryResultsRegion instances that have the same name as a Region
 	// in #regionsByName.
 	private final Map<String, QueryResultsRegion> queryResultsRegionsByDuplicateName = new ConcurrentHashMap<>();
 
-	private final Map<NavigableRole,EntityDataAccess> entityAccessMap = new ConcurrentHashMap<>();
-	private final Map<NavigableRole,NaturalIdDataAccess> naturalIdAccessMap = new ConcurrentHashMap<>();
-	private final Map<NavigableRole,CollectionDataAccess> collectionAccessMap = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, EntityDataAccess> entityAccessMap = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, NaturalIdDataAccess> naturalIdAccessMap = new ConcurrentHashMap<>();
+	private final Map<NavigableRole, CollectionDataAccess> collectionAccessMap = new ConcurrentHashMap<>();
 
 	private final TimestampsCache timestampsCache;
 

@@ -25,7 +25,7 @@ public interface EmbeddableSource extends AttributeSourceContainer {
 
 	public String getParentReferenceAttributeName();
 
-	public Map<EntityMode,String> getTuplizerClassMap();
+	public Map<EntityMode, String> getTuplizerClassMap();
 
 	/**
 	 * Indicates whether this embeddable/component is dynamic (represented as a Map),

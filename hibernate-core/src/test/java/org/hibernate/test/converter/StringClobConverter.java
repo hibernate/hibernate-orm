@@ -14,7 +14,7 @@ import javax.persistence.Converter;
  * @author Brett Meyer
  */
 @Converter( autoApply = true )
-public class StringClobConverter implements AttributeConverter<String,Clob> {
+public class StringClobConverter implements AttributeConverter<String, Clob> {
 	
 	@Override
 	public Clob convertToDatabaseColumn(String attribute) {

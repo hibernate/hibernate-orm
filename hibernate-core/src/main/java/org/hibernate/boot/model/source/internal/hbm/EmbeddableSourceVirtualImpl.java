@@ -92,7 +92,7 @@ public class EmbeddableSourceVirtualImpl extends AbstractHbmSourceNode implement
 	}
 
 	@Override
-	public Map<EntityMode,String> getTuplizerClassMap() {
+	public Map<EntityMode, String> getTuplizerClassMap() {
 		return Collections.emptyMap();
 	}
 

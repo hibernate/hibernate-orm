@@ -55,7 +55,7 @@ public class MapKeyColumnOneToManyJoinTableTest extends BaseNonConfigCoreFunctio
 				session -> {
 					AddressCapable2 holder = session.get( AddressCapable2.class, 1 );
 					assertEquals( 1, holder.addresses.size() );
-					final Map.Entry<String,Address2> entry = holder.addresses.entrySet().iterator().next();
+					final Map.Entry<String, Address2> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
 					assertEquals( null, entry.getValue().type );
 					session.remove( holder );
@@ -89,7 +89,7 @@ public class MapKeyColumnOneToManyJoinTableTest extends BaseNonConfigCoreFunctio
 				session -> {
 					AddressCapable holder = session.get( AddressCapable.class, 1 );
 					assertEquals( 1, holder.addresses.size() );
-					final Map.Entry<String,Address> entry = holder.addresses.entrySet().iterator().next();
+					final Map.Entry<String, Address> entry = holder.addresses.entrySet().iterator().next();
 					assertEquals( "work", entry.getKey() );
 					session.remove( holder );
 				}
@@ -114,7 +114,7 @@ public class MapKeyColumnOneToManyJoinTableTest extends BaseNonConfigCoreFunctio
 		public String name;
 		@MapKeyColumn( name = "a_type" )
 		@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
-		public Map<String,Address> addresses = new HashMap<>();
+		public Map<String, Address> addresses = new HashMap<>();
 
 		public AddressCapable() {
 		}
@@ -149,7 +149,7 @@ public class MapKeyColumnOneToManyJoinTableTest extends BaseNonConfigCoreFunctio
 		public String name;
 		@MapKeyColumn( name = "a_type" )
 		@OneToMany( cascade = {CascadeType.PERSIST, CascadeType.REMOVE} )
-		public Map<String,Address2> addresses = new HashMap<>();
+		public Map<String, Address2> addresses = new HashMap<>();
 
 		public AddressCapable2() {
 		}

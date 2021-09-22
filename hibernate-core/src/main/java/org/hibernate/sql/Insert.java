@@ -23,7 +23,7 @@ public class Insert {
 	protected String tableName;
 	protected String comment;
 
-	protected Map<String,String> columns = new LinkedHashMap<>();
+	protected Map<String, String> columns = new LinkedHashMap<>();
 
 	private Dialect dialect;
 

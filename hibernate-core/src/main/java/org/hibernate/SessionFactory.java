@@ -234,7 +234,7 @@ public interface SessionFactory extends EntityManagerFactory, HibernateEntityMan
 	 * @deprecated Use the descriptors from {@link #getMetamodel()} instead
 	 */
 	@Deprecated
-	Map<String,ClassMetadata> getAllClassMetadata();
+	Map<String, ClassMetadata> getAllClassMetadata();
 
 	/**
 	 * Get the {@link CollectionMetadata} for all mapped collections.

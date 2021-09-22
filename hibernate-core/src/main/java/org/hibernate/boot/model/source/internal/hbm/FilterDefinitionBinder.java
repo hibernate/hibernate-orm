@@ -36,7 +36,7 @@ public class FilterDefinitionBinder {
 	public static void processFilterDefinition(
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
-		Map<String,Type> parameterMap = null;
+		Map<String, Type> parameterMap = null;
 		String condition = jaxbFilterDefinitionMapping.getCondition();
 
 		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {

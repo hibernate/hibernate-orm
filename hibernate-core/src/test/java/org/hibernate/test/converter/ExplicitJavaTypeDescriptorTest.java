@@ -197,7 +197,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Converter
-	public static class MutableConverterImpl implements AttributeConverter<MutableState,String> {
+	public static class MutableConverterImpl implements AttributeConverter<MutableState, String> {
 		@Override
 		public String convertToDatabaseColumn(MutableState attribute) {
 			mutableToDatabaseCallCount++;
@@ -249,7 +249,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Converter
-	public static class ImmutableConverterImpl implements AttributeConverter<ImmutableState,String> {
+	public static class ImmutableConverterImpl implements AttributeConverter<ImmutableState, String> {
 		@Override
 		public String convertToDatabaseColumn(ImmutableState attribute) {
 			immutableToDatabaseCallCount++;
@@ -306,7 +306,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 	}
 
 	@Converter
-	public static class ImmutableMutable2ConverterImpl implements AttributeConverter<MutableState2,String> {
+	public static class ImmutableMutable2ConverterImpl implements AttributeConverter<MutableState2, String> {
 		@Override
 		public String convertToDatabaseColumn(MutableState2 attribute) {
 			immutableMutableToDatabaseCallCount++;

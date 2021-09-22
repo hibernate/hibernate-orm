@@ -72,7 +72,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private final transient SqlTypeDescriptorRegistry sqlTypeDescriptorRegistry;
 	private final transient BasicTypeRegistry basicTypeRegistry;
 
-	private final transient Map<String,String> importMap = new ConcurrentHashMap<>();
+	private final transient Map<String, String> importMap = new ConcurrentHashMap<>();
 
 	private final transient Map<Integer, Set<String>> jdbcToHibernateTypeContributionMap = new HashMap<>();
 

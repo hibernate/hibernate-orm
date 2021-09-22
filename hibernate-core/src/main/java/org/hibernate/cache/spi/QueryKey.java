@@ -75,13 +75,13 @@ public class QueryKey implements Serializable {
 		}
 
 		// disassemble named parameters
-		final Map<String,TypedValue> namedParameters;
+		final Map<String, TypedValue> namedParameters;
 		if ( queryParameters.getNamedParameters() == null ) {
 			namedParameters = null;
 		}
 		else {
 			namedParameters = CollectionHelper.mapOfSize( queryParameters.getNamedParameters().size() );
-			for ( Map.Entry<String,TypedValue> namedParameterEntry : queryParameters.getNamedParameters().entrySet() ) {
+			for ( Map.Entry<String, TypedValue> namedParameterEntry : queryParameters.getNamedParameters().entrySet() ) {
 				namedParameters.put(
 						namedParameterEntry.getKey(),
 						new TypedValue(

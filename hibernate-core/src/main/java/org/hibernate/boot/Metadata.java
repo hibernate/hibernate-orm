@@ -108,7 +108,7 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return All imports
 	 */
-	Map<String,String> getImports();
+	Map<String, String> getImports();
 
 	/**
 	 * Retrieve named query metadata by name.
@@ -161,7 +161,7 @@ public interface Metadata extends Mapping {
 	 *
 	 * @return The filter definition map.
 	 */
-	Map<String,FilterDefinition> getFilterDefinitions();
+	Map<String, FilterDefinition> getFilterDefinitions();
 
 	/**
 	 * Retrieves a filter definition by name.
@@ -184,5 +184,5 @@ public interface Metadata extends Mapping {
 
 	java.util.Collection<Table> collectTableMappings();
 
-	Map<String,SQLFunction> getSqlFunctionMap();
+	Map<String, SQLFunction> getSqlFunctionMap();
 }

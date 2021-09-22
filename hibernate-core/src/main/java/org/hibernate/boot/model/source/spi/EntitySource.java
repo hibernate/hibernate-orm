@@ -34,7 +34,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	 *
 	 * @return returns an iterator over the secondary tables for this entity
 	 */
-	Map<String,SecondaryTableSource> getSecondaryTableMap();
+	Map<String, SecondaryTableSource> getSecondaryTableMap();
 
 	String getXmlNodeName();
 
@@ -43,7 +43,7 @@ public interface EntitySource extends IdentifiableTypeSource, ToolingHintContext
 	 *
 	 * @return The custom tuplizer class names
 	 */
-	Map<EntityMode,String> getTuplizerClassMap();
+	Map<EntityMode, String> getTuplizerClassMap();
 
 	/**
 	 * Obtain the name of a custom persister class to be used.

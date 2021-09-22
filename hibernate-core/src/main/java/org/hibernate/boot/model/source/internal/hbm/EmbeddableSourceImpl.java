@@ -41,7 +41,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 	private final boolean isDynamic;
 	private final boolean isUnique;
 
-	private final Map<EntityMode,String> tuplizerClassMap;
+	private final Map<EntityMode, String> tuplizerClassMap;
 
 	private final List<AttributeSource> attributeSources;
 
@@ -129,7 +129,7 @@ public class EmbeddableSourceImpl extends AbstractHbmSourceNode implements Embed
 	}
 
 	@Override
-	public Map<EntityMode,String> getTuplizerClassMap() {
+	public Map<EntityMode, String> getTuplizerClassMap() {
 		return tuplizerClassMap;
 	}
 

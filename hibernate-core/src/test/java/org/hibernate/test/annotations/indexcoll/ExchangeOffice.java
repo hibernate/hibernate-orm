@@ -42,7 +42,7 @@ public class ExchangeOffice {
     @javax.persistence.MapKey(name="key")
     private Map<ExchangeRateKey, ExchangeRate> exchangeRates = new java.util.HashMap<ExchangeRateKey, ExchangeRate>();
 	
-	public Map<ExchangeRateKey,ExchangeRate> getExchangeRates() {
+	public Map<ExchangeRateKey, ExchangeRate> getExchangeRates() {
 		return exchangeRates;
 	}
 
@@ -50,7 +50,7 @@ public class ExchangeOffice {
 	@CollectionTable(name = "ExchangeO_exchangeRateFees")
 	private Map<ExchangeRateKey, BigDecimal> exchangeRateFees = new java.util.HashMap<ExchangeRateKey, BigDecimal>();
 
-	public Map<ExchangeRateKey,BigDecimal> getExchangeRateFees() {
+	public Map<ExchangeRateKey, BigDecimal> getExchangeRateFees() {
 		return exchangeRateFees;
 	}
 	

@@ -43,16 +43,16 @@ public class EntityEntryContext {
 
 	private transient PersistenceContext persistenceContext;
 
-	private transient IdentityHashMap<ManagedEntity,ImmutableManagedEntityHolder> immutableManagedEntityXref;
+	private transient IdentityHashMap<ManagedEntity, ImmutableManagedEntityHolder> immutableManagedEntityXref;
 
 	private transient ManagedEntity head;
 	private transient ManagedEntity tail;
 	private transient int count;
 
-	private transient IdentityHashMap<Object,ManagedEntity> nonEnhancedEntityXref;
+	private transient IdentityHashMap<Object, ManagedEntity> nonEnhancedEntityXref;
 
 	@SuppressWarnings( {"unchecked"})
-	private transient Map.Entry<Object,EntityEntry>[] reentrantSafeEntries = new Map.Entry[0];
+	private transient Map.Entry<Object, EntityEntry>[] reentrantSafeEntries = new Map.Entry[0];
 	private transient boolean dirty;
 
 	/**
@@ -654,7 +654,7 @@ public class EntityEntryContext {
 	/**
 	 * Used in building the {@link #reentrantSafeEntityEntries()} entries
 	 */
-	public static interface EntityEntryCrossRef extends Map.Entry<Object,EntityEntry> {
+	public static interface EntityEntryCrossRef extends Map.Entry<Object, EntityEntry> {
 		/**
 		 * The entity
 		 *

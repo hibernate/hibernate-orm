@@ -16,14 +16,14 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  * @author Steve Ebersole
  */
 public class TestingConnectionProvider extends AbstractMultiTenantConnectionProvider {
-	private Map<String,ConnectionProvider> connectionProviderMap;
+	private Map<String, ConnectionProvider> connectionProviderMap;
 
 	public TestingConnectionProvider(Map<String, ConnectionProvider> connectionProviderMap) {
 		this.connectionProviderMap = connectionProviderMap;
 	}
 
 	public TestingConnectionProvider(NamedConnectionProviderPair... pairs) {
-		Map<String,ConnectionProvider> map = new HashMap<String, ConnectionProvider>();
+		Map<String, ConnectionProvider> map = new HashMap<String, ConnectionProvider>();
 		for ( NamedConnectionProviderPair pair : pairs ) {
 			map.put( pair.name, pair.connectionProvider );
 		}

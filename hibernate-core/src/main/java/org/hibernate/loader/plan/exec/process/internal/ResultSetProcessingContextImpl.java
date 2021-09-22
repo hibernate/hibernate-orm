@@ -57,7 +57,7 @@ public class ResultSetProcessingContextImpl implements ResultSetProcessingContex
 	private List<HydratedEntityRegistration> hydratedEntityRegistrationList;
 	private int nRowsRead = 0;
 
-	private Map<EntityReference,EntityReferenceProcessingState> identifierResolutionContextMap;
+	private Map<EntityReference, EntityReferenceProcessingState> identifierResolutionContextMap;
 
 	/**
 	 * Builds a ResultSetProcessingContextImpl

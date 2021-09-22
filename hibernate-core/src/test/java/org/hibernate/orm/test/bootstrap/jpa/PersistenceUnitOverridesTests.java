@@ -324,7 +324,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 
 		// Now create "integration Map" that overrides the DataSource to use
 		final DataSource override = new DataSourceStub( "integrationDataSource" );
-		final Map<String,Object> integrationSettings = new HashMap<>();
+		final Map<String, Object> integrationSettings = new HashMap<>();
 		integrationSettings.put( AvailableSettings.JPA_NON_JTA_DATASOURCE, override );
 		integrationSettings.put( AvailableSettings.HQL_BULK_ID_STRATEGY, new MultiTableBulkIdStrategyStub() );
 
@@ -367,7 +367,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 			}
 		};
 
-		final Map<String,Object> integrationSettings = new HashMap<>();
+		final Map<String, Object> integrationSettings = new HashMap<>();
 		integrationSettings.put( AvailableSettings.JPA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_URL, ConnectionProviderBuilder.URL );
 		integrationSettings.put( AvailableSettings.JPA_JDBC_USER, ConnectionProviderBuilder.USER );

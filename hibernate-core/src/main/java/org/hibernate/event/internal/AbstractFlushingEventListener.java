@@ -141,7 +141,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		final Object anything = getAnything();
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
-		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
+		for ( Map.Entry<Object, EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
 			EntityEntry entry = (EntityEntry) me.getValue();
 			Status status = entry.getStatus();
@@ -215,10 +215,10 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 		// So this needs to be safe from concurrent modification problems.
 
-		final Map.Entry<Object,EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
+		final Map.Entry<Object, EntityEntry>[] entityEntries = persistenceContext.reentrantSafeEntityEntries();
 		final int count = entityEntries.length;
 
-		for ( Map.Entry<Object,EntityEntry> me : entityEntries ) {
+		for ( Map.Entry<Object, EntityEntry> me : entityEntries ) {
 			// Update the status of the object and if necessary, schedule an update
 
 			EntityEntry entry = me.getValue();

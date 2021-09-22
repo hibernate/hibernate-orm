@@ -85,7 +85,7 @@ public class MappedSuperclassMapTest extends BaseNonConfigCoreFunctionalTestCase
 
 			assertEquals(2, library.getBooksOnInventory().size());
 
-			for (Entry<String,Book> entry : library.getBooksOnInventory().entrySet()) {
+			for (Entry<String, Book> entry : library.getBooksOnInventory().entrySet()) {
 				log.info("Found SKU " + entry.getKey() + " with ISBN " + entry.getValue().getIsbn());
 			}
 		} );

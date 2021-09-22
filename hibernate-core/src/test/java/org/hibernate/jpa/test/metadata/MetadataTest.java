@@ -115,9 +115,9 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		final EntityType<Fridge> fridgeType = entityManagerFactory().getMetamodel().entity( Fridge.class );
 		assertEquals( Fridge.class, fridgeType.getBindableJavaType() );
 		assertEquals( Bindable.BindableType.ENTITY_TYPE, fridgeType.getBindableType() );
-		SingularAttribute<Fridge,Integer> wrapped = fridgeType.getDeclaredSingularAttribute( "temperature", Integer.class );
+		SingularAttribute<Fridge, Integer> wrapped = fridgeType.getDeclaredSingularAttribute( "temperature", Integer.class );
 		assertNotNull( wrapped );
-		SingularAttribute<Fridge,Integer> primitive = fridgeType.getDeclaredSingularAttribute( "temperature", int.class );
+		SingularAttribute<Fridge, Integer> primitive = fridgeType.getDeclaredSingularAttribute( "temperature", int.class );
 		assertNotNull( primitive );
 		assertNotNull( fridgeType.getDeclaredSingularAttribute( "temperature" ) );
 		assertNotNull( fridgeType.getDeclaredAttribute( "temperature" ) );
@@ -280,7 +280,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 	@Test
 	public void testElementCollection() throws Exception {
 		final EntityType<House> entityType = entityManagerFactory().getMetamodel().entity( House.class );
-		final SetAttribute<House,Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );
+		final SetAttribute<House, Room> rooms = entityType.getDeclaredSet( "rooms", Room.class );
 		assertNotNull( rooms );
 		assertFalse( rooms.isAssociation() );
 		assertTrue( rooms.isCollection() );
@@ -292,7 +292,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( 3, entityType.getDeclaredPluralAttributes().size() );
 		assertEquals( Type.PersistenceType.EMBEDDABLE, rooms.getElementType().getPersistenceType() );
 
-		final MapAttribute<House,String,Room> roomsByName = entityType.getDeclaredMap(
+		final MapAttribute<House, String, Room> roomsByName = entityType.getDeclaredMap(
 				"roomsByName", String.class, Room.class
 		);
 		assertNotNull( roomsByName );
@@ -300,7 +300,7 @@ public class MetadataTest extends BaseEntityManagerFunctionalTestCase {
 		assertEquals( Type.PersistenceType.BASIC, roomsByName.getKeyType().getPersistenceType() );
 		assertEquals( PluralAttribute.CollectionType.MAP, roomsByName.getCollectionType() );
 
-		final ListAttribute<House,Room> roomsBySize = entityType.getDeclaredList( "roomsBySize", Room.class );
+		final ListAttribute<House, Room> roomsBySize = entityType.getDeclaredList( "roomsBySize", Room.class );
 		assertNotNull( roomsBySize );
 		assertEquals( Type.PersistenceType.EMBEDDABLE, roomsBySize.getElementType().getPersistenceType() );
 		assertEquals( PluralAttribute.CollectionType.LIST, roomsBySize.getCollectionType() );

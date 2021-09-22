@@ -111,7 +111,7 @@ public class BatchingBatch extends AbstractBatchImpl {
 		LOG.debugf( "Executing batch size: %s", batchPosition );
 		final JdbcObserver observer = getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext().getObserver();
 		try {
-			for ( Map.Entry<String,PreparedStatement> entry : getStatements().entrySet() ) {
+			for ( Map.Entry<String, PreparedStatement> entry : getStatements().entrySet() ) {
 				final String sql = entry.getKey();
 				try {
 					final PreparedStatement statement = entry.getValue();

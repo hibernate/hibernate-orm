@@ -356,5 +356,5 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 			Identifier primaryTableLogicalName,
 			Table primaryTable,
 			EntityTableXref superEntityTableXref);
-	Map<String,Join> getJoins(String entityName);
+	Map<String, Join> getJoins(String entityName);
 }

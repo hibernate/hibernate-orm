@@ -149,7 +149,7 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			return parameters;
 		}
 
-		public void addParams(Map<String,String> parameters) {
+		public void addParams(Map<String, String> parameters) {
 			parameters().putAll( parameters );
 		}
 

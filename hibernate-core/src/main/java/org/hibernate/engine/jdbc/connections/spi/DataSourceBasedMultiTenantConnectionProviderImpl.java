@@ -44,7 +44,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 	 */
 	public static final String TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY = "hibernate.multi_tenant.datasource.identifier_for_any";
 
-	private Map<String,DataSource> dataSourceMap;
+	private Map<String, DataSource> dataSourceMap;
 	private JndiService jndiService;
 	private String tenantIdentifierForAny;
 	private String baseJndiNamespace;
@@ -64,7 +64,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		return dataSource;
 	}
 
-	private Map<String,DataSource> dataSourceMap() {
+	private Map<String, DataSource> dataSourceMap() {
 		if ( dataSourceMap == null ) {
 			dataSourceMap = new ConcurrentHashMap<String, DataSource>();
 		}

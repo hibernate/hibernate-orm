@@ -56,7 +56,7 @@ public class ComponentJoinTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	interface JoinBuilder {
-		Join<EmbeddedType,ManyToOneType> buildJoinToManyToOneType(Join<Entity, EmbeddedType> source);
+		Join<EmbeddedType, ManyToOneType> buildJoinToManyToOneType(Join<Entity, EmbeddedType> source);
 	}
 
 	private void doTest(JoinBuilder joinBuilder) {

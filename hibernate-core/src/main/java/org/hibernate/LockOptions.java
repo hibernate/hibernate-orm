@@ -56,7 +56,7 @@ public class LockOptions implements Serializable {
 	private LockMode lockMode = LockMode.NONE;
 	private int timeout = WAIT_FOREVER;
 
-	private Map<String,LockMode> aliasSpecificLockModes;
+	private Map<String, LockMode> aliasSpecificLockModes;
 
 	private Boolean followOnLocking;
 
@@ -186,7 +186,7 @@ public class LockOptions implements Serializable {
 	 *
 	 * @return Iterator for accessing the Map.Entry's
 	 */
-	public Iterator<Map.Entry<String,LockMode>> getAliasLockIterator() {
+	public Iterator<Map.Entry<String, LockMode>> getAliasLockIterator() {
 		return getAliasSpecificLocks().iterator();
 	}
 
@@ -195,7 +195,7 @@ public class LockOptions implements Serializable {
 	 *
 	 * @return Iterable for accessing the Map.Entry's
 	 */
-	public Iterable<Map.Entry<String,LockMode>> getAliasSpecificLocks() {
+	public Iterable<Map.Entry<String, LockMode>> getAliasSpecificLocks() {
 		if ( aliasSpecificLockModes == null ) {
 			return Collections.emptyList();
 		}
@@ -324,7 +324,7 @@ public class LockOptions implements Serializable {
 		destination.setScope( source.getScope() );
 		destination.setTimeOut( source.getTimeOut() );
 		if ( source.aliasSpecificLockModes != null ) {
-			destination.aliasSpecificLockModes = new HashMap<String,LockMode>( source.aliasSpecificLockModes );
+			destination.aliasSpecificLockModes = new HashMap<String, LockMode>( source.aliasSpecificLockModes );
 		}
 		destination.setFollowOnLocking( source.getFollowOnLocking() );
 		return destination;

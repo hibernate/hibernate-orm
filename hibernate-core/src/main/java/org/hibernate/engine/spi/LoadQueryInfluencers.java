@@ -48,7 +48,7 @@ public class LoadQueryInfluencers implements Serializable {
 	private HashSet<String> enabledFetchProfileNames;
 
 	//Lazily initialized!
-	private HashMap<String,Filter> enabledFilters;
+	private HashMap<String, Filter> enabledFilters;
 
 	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
@@ -94,7 +94,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return enabledFilters != null && !enabledFilters.isEmpty();
 	}
 
-	public Map<String,Filter> getEnabledFilters() {
+	public Map<String, Filter> getEnabledFilters() {
 		if ( enabledFilters == null ) {
 			return Collections.EMPTY_MAP;
 		}

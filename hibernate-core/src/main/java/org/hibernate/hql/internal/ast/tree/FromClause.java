@@ -35,9 +35,9 @@ public class FromClause extends HqlSqlWalkerNode implements HqlSqlTokenTypes, Di
 
 	private int level = ROOT_LEVEL;
 	private Set<FromElement> fromElements = new LinkedHashSet<FromElement>();
-	private Map<String,FromElement> fromElementByClassAlias = new HashMap<String,FromElement>();
-	private Map<String,FromElement> fromElementByTableAlias = new HashMap<String,FromElement>();
-	private Map<String,FromElement> fromElementsByPath = new HashMap<String,FromElement>();
+	private Map<String, FromElement> fromElementByClassAlias = new HashMap<String, FromElement>();
+	private Map<String, FromElement> fromElementByTableAlias = new HashMap<String, FromElement>();
+	private Map<String, FromElement> fromElementsByPath = new HashMap<String, FromElement>();
 
 	/**
 	 * All of the implicit FROM xxx JOIN yyy elements that are the destination of a collection.  These are created from

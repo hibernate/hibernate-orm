@@ -26,7 +26,7 @@ public class FetchProfile {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( FetchProfile.class );
 
 	private final String name;
-	private Map<String,Fetch> fetches = new HashMap<String,Fetch>();
+	private Map<String, Fetch> fetches = new HashMap<String, Fetch>();
 
 	private boolean containsJoinFetchedCollection;
 	private boolean containsJoinFetchedBag;
@@ -119,7 +119,7 @@ public class FetchProfile {
 	 * @return Value for property 'fetches'.
 	 */
 	@SuppressWarnings({ "UnusedDeclaration" })
-	public Map<String,Fetch> getFetches() {
+	public Map<String, Fetch> getFetches() {
 		return fetches;
 	}
 

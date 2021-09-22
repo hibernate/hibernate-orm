@@ -76,7 +76,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 * the possibility for multiple SessionFactory instances being used during execution
 	 * of the given thread.
 	 */
-	private static final ThreadLocal<Map<SessionFactory,Session>> CONTEXT_TL = ThreadLocal.withInitial( HashMap::new );
+	private static final ThreadLocal<Map<SessionFactory, Session>> CONTEXT_TL = ThreadLocal.withInitial( HashMap::new );
 
 	/**
 	 * Constructs a ThreadLocal
@@ -237,7 +237,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 		return sessionMap().get( factory );
 	}
 
-	protected static Map<SessionFactory,Session> sessionMap() {
+	protected static Map<SessionFactory, Session> sessionMap() {
 		return CONTEXT_TL.get();
 	}
 

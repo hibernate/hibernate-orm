@@ -31,7 +31,7 @@ public class Database {
 	private final Dialect dialect;
 	private final JdbcEnvironment jdbcEnvironment;
 	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<Namespace.Name, Namespace>();
-	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<String,AuxiliaryDatabaseObject>();
+	private final Map<String, AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<String, AuxiliaryDatabaseObject>();
 	private final ServiceRegistry serviceRegistry;
 	private final PhysicalNamingStrategy physicalNamingStrategy;
 

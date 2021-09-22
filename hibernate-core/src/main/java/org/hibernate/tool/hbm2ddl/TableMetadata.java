@@ -35,7 +35,7 @@ public class TableMetadata {
 	private final String schema;
 	private final String name;
 	private final Map<String, ColumnMetadata> columns = new HashMap<String, ColumnMetadata>();
-	private final Map<String,ForeignKeyMetadata> foreignKeys = new HashMap<String,ForeignKeyMetadata>();
+	private final Map<String, ForeignKeyMetadata> foreignKeys = new HashMap<String, ForeignKeyMetadata>();
 	private final Map<String, IndexMetadata> indexes = new HashMap<String, IndexMetadata>();
 
 	TableMetadata(ResultSet rs, DatabaseMetaData meta, boolean extras) throws SQLException {

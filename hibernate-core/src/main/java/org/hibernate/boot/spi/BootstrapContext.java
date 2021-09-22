@@ -129,7 +129,7 @@ public interface BootstrapContext {
 	 *
 	 * @return The SQLFunctions registered through MetadataBuilder
 	 */
-	Map<String,SQLFunction> getSqlFunctions();
+	Map<String, SQLFunction> getSqlFunctions();
 
 	/**
 	 * Access to any AuxiliaryDatabaseObject explicitly registered with the MetadataBuilder.  This

@@ -108,7 +108,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 					SharedSessionContractImplementor entityManager,
 					final InterpretedParameterMetadata interpretedParameterMetadata) {
 
-				final Map<String,Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );
+				final Map<String, Class> implicitParameterTypes = extractTypeMap( interpretedParameterMetadata.implicitParameterBindings() );
 
 				QueryImplementor query = entityManager.createQuery(
 						jpaqlString,
@@ -140,7 +140,7 @@ public abstract class AbstractManipulationCriteriaQuery<T> implements Compilable
 			}
 
 			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
-				final HashMap<String,Class> map = new HashMap<>();
+				final HashMap<String, Class> map = new HashMap<>();
 				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
 					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
 				}

@@ -994,7 +994,7 @@ public abstract class AbstractProducedQuery<R> implements QueryImplementor<R> {
 		// If the TCK ever adds a check for this, we may need to change this behavior
 		getProducer().checkOpen( false );
 
-		final Map<String,Object> hints = new HashMap<>();
+		final Map<String, Object> hints = new HashMap<>();
 		collectBaselineHints( hints );
 		collectHints( hints );
 		return hints;

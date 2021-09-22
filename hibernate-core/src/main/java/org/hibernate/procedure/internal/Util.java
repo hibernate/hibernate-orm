@@ -67,7 +67,7 @@ public class Util {
 	 *
 	 * @return The copy
 	 */
-	public static Map<String,Object> copy(Map<String, Object> hints) {
+	public static Map<String, Object> copy(Map<String, Object> hints) {
 		return CollectionHelper.makeCopy( hints );
 	}
 

@@ -46,7 +46,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	};
 
 	//Map based approach: most suited for explicit registrations from integrators
-	private final Map<Class,Map<String,Class>> namedStrategyImplementorByStrategyMap = new ConcurrentHashMap<>();
+	private final Map<Class,Map<String, Class>> namedStrategyImplementorByStrategyMap = new ConcurrentHashMap<>();
 
 	//"Lazy" approach: more efficient as we aim to not initialize all implementation classes;
 	//this is preferable for internal services such as Dialect, as we have a significant amount of them, making
@@ -73,7 +73,7 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> void registerStrategyImplementor(Class<T> strategy, String name, Class<? extends T> implementation) {
-		Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		Map<String, Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
 			namedStrategyImplementorMap = new ConcurrentHashMap<>();
 			namedStrategyImplementorByStrategyMap.put( strategy, namedStrategyImplementorMap );
@@ -109,7 +109,7 @@ public class StrategySelectorImpl implements StrategySelector {
 
 	@Override
 	public <T> void unRegisterStrategyImplementor(Class<T> strategy, Class<? extends T> implementation) {
-		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		final Map<String, Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap == null ) {
 			log.debug( "Named strategy map did not exist on call to un-register" );
 			return;
@@ -132,7 +132,7 @@ public class StrategySelectorImpl implements StrategySelector {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> Class<? extends T> selectStrategyImplementor(Class<T> strategy, String name) {
-		final Map<String,Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
+		final Map<String, Class> namedStrategyImplementorMap = namedStrategyImplementorByStrategyMap.get( strategy );
 		if ( namedStrategyImplementorMap != null ) {
 			final Class registered = namedStrategyImplementorMap.get( name );
 			if ( registered != null ) {

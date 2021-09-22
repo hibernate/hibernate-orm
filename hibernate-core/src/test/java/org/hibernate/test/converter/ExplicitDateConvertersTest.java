@@ -41,7 +41,7 @@ public class ExplicitDateConvertersTest extends BaseNonConfigCoreFunctionalTestC
 		convertToEntityAttributeCalled = false;
 	}
 
-	public static class LongToDateConverter implements AttributeConverter<Date,Long> {
+	public static class LongToDateConverter implements AttributeConverter<Date, Long> {
 		@Override
 		public Long convertToDatabaseColumn(Date attribute) {
 			convertToDatabaseColumnCalled = true;

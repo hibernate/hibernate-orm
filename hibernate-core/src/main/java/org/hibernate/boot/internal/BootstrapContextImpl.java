@@ -69,9 +69,9 @@ public class BootstrapContextImpl implements BootstrapContext {
 
 	private IndexView jandexView;
 
-	private HashMap<String,SQLFunction> sqlFunctionMap;
+	private HashMap<String, SQLFunction> sqlFunctionMap;
 	private ArrayList<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class,AttributeConverterInfo> attributeConverterInfoMap;
+	private HashMap<Class, AttributeConverterInfo> attributeConverterInfoMap;
 	private ArrayList<CacheRegionDefinition> cacheRegionDefinitions;
 
 	public BootstrapContextImpl(

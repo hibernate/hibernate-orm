@@ -72,7 +72,7 @@ public class MapElementConversionTest extends BaseNonConfigCoreFunctionalTestCas
 		@CollectionTable( name = "cust_color", joinColumns = @JoinColumn( name = "cust_fk" ) )
 		@MapKeyColumn( name = "color_key" )
 		@Column(name = "color", nullable = false)
-		private Map<String,ColorType> colors = new HashMap<String,ColorType>();
+		private Map<String, ColorType> colors = new HashMap<String, ColorType>();
 
 		public Customer() {
 		}

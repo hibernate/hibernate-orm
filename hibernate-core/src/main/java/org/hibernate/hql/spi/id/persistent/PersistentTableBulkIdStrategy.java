@@ -43,7 +43,7 @@ import org.hibernate.persister.entity.Queryable;
  * @author Steve Ebersole
  */
 public class PersistentTableBulkIdStrategy
-		extends AbstractMultiTableBulkIdStrategyImpl<IdTableInfoImpl,PreparationContextImpl>
+		extends AbstractMultiTableBulkIdStrategyImpl<IdTableInfoImpl, PreparationContextImpl>
 		implements MultiTableBulkIdStrategy {
 
 	public static final String SHORT_NAME = "persistent";

@@ -66,7 +66,7 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 
 //	private boolean virtual;
 	private String embeddedAttributeName;
-	private Map<String,AttributeConversionInfo> attributeConversionInfoMap;
+	private Map<String, AttributeConversionInfo> attributeConversionInfoMap;
 
 	public ComponentPropertyHolder(
 			Component component,
@@ -118,8 +118,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 	 *
 	 * @param embeddedXProperty The property that is the composite being described by this ComponentPropertyHolder
 	 */
-	private Map<String,AttributeConversionInfo> processAttributeConversions(XProperty embeddedXProperty) {
-		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+	private Map<String, AttributeConversionInfo> processAttributeConversions(XProperty embeddedXProperty) {
+		final Map<String, AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
 
 		final XClass embeddableXClass = embeddedXProperty.getType();
 
@@ -185,8 +185,8 @@ public class ComponentPropertyHolder extends AbstractPropertyHolder {
 		}
 	}
 
-	private Map<String,AttributeConversionInfo> processAttributeConversions(XClass embeddableXClass) {
-		final Map<String,AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
+	private Map<String, AttributeConversionInfo> processAttributeConversions(XClass embeddableXClass) {
+		final Map<String, AttributeConversionInfo> infoMap = new HashMap<String, AttributeConversionInfo>();
 		processAttributeConversions( embeddableXClass, infoMap );
 		return infoMap;
 	}

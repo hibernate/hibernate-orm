@@ -119,9 +119,9 @@ public class EntityJoinWalker extends AbstractEntityJoinWalker {
 
 	private static class AssociationInitCallbackImpl implements AssociationInitCallback {
 		private final SessionFactoryImplementor factory;
-		private final HashMap<String,OuterJoinableAssociation> associationsByAlias
+		private final HashMap<String, OuterJoinableAssociation> associationsByAlias
 				= new HashMap<String, OuterJoinableAssociation>();
-		private final HashMap<String,Integer> positionsByAlias = new HashMap<String, Integer>();
+		private final HashMap<String, Integer> positionsByAlias = new HashMap<String, Integer>();
 		private final ArrayList<String> aliasesForAssociationsWithCompositesIds
 				= new ArrayList<String>();
 

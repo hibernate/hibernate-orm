@@ -21,5 +21,5 @@ public interface InterpretedParameterMetadata {
 //	public Map<ParameterExpression<?>,String> explicitParameterMapping();
 //	public Map<String,ParameterExpression<?>> explicitParameterNameMapping();
 	public List<ImplicitParameterBinding> implicitParameterBindings();
-//	public Map<String,Class> implicitParameterTypes();
+//	public Map<String, Class> implicitParameterTypes();
 }

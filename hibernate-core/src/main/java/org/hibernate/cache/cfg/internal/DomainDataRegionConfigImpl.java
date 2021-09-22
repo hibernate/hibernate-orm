@@ -72,7 +72,7 @@ public class DomainDataRegionConfigImpl implements DomainDataRegionConfig {
 	public static class Builder {
 		private final String regionName;
 
-		private Map<NavigableRole,EntityDataCachingConfigImpl> entityConfigsByRootName;
+		private Map<NavigableRole, EntityDataCachingConfigImpl> entityConfigsByRootName;
 		private List<NaturalIdDataCachingConfig> naturalIdConfigs;
 		private List<CollectionDataCachingConfig> collectionConfigs;
 

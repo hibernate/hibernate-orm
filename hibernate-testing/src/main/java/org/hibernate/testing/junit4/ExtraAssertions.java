@@ -61,9 +61,9 @@ public final class ExtraAssertions {
 		}
 	}
 
-	private static Map<Integer,String> jdbcTypeCodeMap;
+	private static Map<Integer, String> jdbcTypeCodeMap;
 
-	private static synchronized Map<Integer,String> jdbcTypeCodeMap() {
+	private static synchronized Map<Integer, String> jdbcTypeCodeMap() {
 		if ( jdbcTypeCodeMap == null ) {
 			jdbcTypeCodeMap = generateJdbcTypeCache();
 		}

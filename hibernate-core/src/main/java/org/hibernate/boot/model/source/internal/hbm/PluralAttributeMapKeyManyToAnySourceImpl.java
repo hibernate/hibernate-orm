@@ -96,7 +96,7 @@ public class PluralAttributeMapKeyManyToAnySourceImpl
 			private final RelationalValueSource discriminatorRelationalValueSource = relationalValueSources.get( 0 );
 
 			// the DTD/XSD currently do not allow discriminator mapping here
-			private final Map<String,String> discriminatorValueMapping = Collections.emptyMap();
+			private final Map<String, String> discriminatorValueMapping = Collections.emptyMap();
 //		this.discriminatorValueMapping = new HashMap<String, String>();
 //		for ( JaxbHbmAnyValueMappingType valueMapping : jaxbMapKeyManyToAnyMapping.getMetaValue() ) {
 //			discriminatorValueMapping.put(

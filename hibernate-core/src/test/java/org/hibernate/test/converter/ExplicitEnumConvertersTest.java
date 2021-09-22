@@ -54,7 +54,7 @@ public class ExplicitEnumConvertersTest extends BaseNonConfigCoreFunctionalTestC
 		convertToEntityAttributeCalled = false;
 	}
 
-	public static class MediaTypeConverter implements AttributeConverter<MediaType,String> {
+	public static class MediaTypeConverter implements AttributeConverter<MediaType, String> {
 		@Override
 		public String convertToDatabaseColumn(MediaType attribute) {
 			convertToDatabaseColumnCalled = true;

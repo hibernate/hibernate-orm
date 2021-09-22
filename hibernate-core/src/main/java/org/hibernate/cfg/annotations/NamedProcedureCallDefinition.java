@@ -78,7 +78,7 @@ public class NamedProcedureCallDefinition {
 
 	public ProcedureCallMemento toMemento(
 			final SessionFactoryImpl sessionFactory,
-			final Map<String,ResultSetMappingDefinition> resultSetMappingDefinitions) {
+			final Map<String, ResultSetMappingDefinition> resultSetMappingDefinitions) {
 		final List<NativeSQLQueryReturn> collectedQueryReturns = new ArrayList<NativeSQLQueryReturn>();
 		final Set<String> collectedQuerySpaces = new HashSet<String>();
 

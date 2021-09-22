@@ -92,7 +92,7 @@ public class AndNationalizedTests extends BaseUnitTestCase {
 		}
 	}
 
-	public static class NameConverter implements AttributeConverter<Name,String> {
+	public static class NameConverter implements AttributeConverter<Name, String> {
 		@Override
 		public String convertToDatabaseColumn(Name attribute) {
 			return attribute.getText();

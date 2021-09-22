@@ -7,7 +7,7 @@ import javax.persistence.Converter;
  * @author Vlad Mihalcea
  */
 @Converter( autoApply = true )
-class IntegerToVarcharConverter implements AttributeConverter<Integer,String> {
+class IntegerToVarcharConverter implements AttributeConverter<Integer, String> {
 	@Override
 	public String convertToDatabaseColumn(Integer attribute) {
 		return attribute == null ? null : attribute.toString();

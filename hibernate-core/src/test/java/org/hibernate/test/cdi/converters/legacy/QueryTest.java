@@ -193,7 +193,7 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Converter( autoApply = true )
-	public static class SalaryConverter implements AttributeConverter<Float,Long> {
+	public static class SalaryConverter implements AttributeConverter<Float, Long> {
 		@Override
 		@SuppressWarnings("UnnecessaryBoxing")
 		public Long convertToDatabaseColumn(Float attribute) {

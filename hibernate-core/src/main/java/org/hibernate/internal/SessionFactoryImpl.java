@@ -166,7 +166,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 	private final transient SessionFactoryOptions sessionFactoryOptions;
 	private final transient Settings settings;
-	private final transient Map<String,Object> properties;
+	private final transient Map<String, Object> properties;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
 	private final transient EventEngine eventEngine;
@@ -188,7 +188,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private volatile DelayedDropAction delayedDropAction;
 
 	// todo : move to MetamodelImpl
-	private final transient Map<String,IdentifierGenerator> identifierGenerators;
+	private final transient Map<String, IdentifierGenerator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
@@ -580,7 +580,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		return queryPlanCache;
 	}
 
-	private Map<String,HibernateException> checkNamedQueries() throws HibernateException {
+	private Map<String, HibernateException> checkNamedQueries() throws HibernateException {
 		return namedQueryRepository.checkNamedQueries( queryPlanCache );
 	}
 
@@ -761,7 +761,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	}
 
 	@Override
-	public Map<String,ClassMetadata> getAllClassMetadata() throws HibernateException {
+	public Map<String, ClassMetadata> getAllClassMetadata() throws HibernateException {
 		throw new UnsupportedOperationException( "org.hibernate.SessionFactory.getAllClassMetadata is no longer supported" );
 	}
 

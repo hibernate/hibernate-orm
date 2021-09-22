@@ -58,7 +58,7 @@ public class Table implements RelationalModel, Serializable, Exportable {
 	private PrimaryKey primaryKey;
 	private Map<ForeignKeyKey, ForeignKey> foreignKeys = new LinkedHashMap<>();
 	private Map<String, Index> indexes = new LinkedHashMap<>();
-	private Map<String,UniqueKey> uniqueKeys = new LinkedHashMap<>();
+	private Map<String, UniqueKey> uniqueKeys = new LinkedHashMap<>();
 	private int uniqueInteger;
 	private List<String> checkConstraints = new ArrayList<>();
 	private String rowId;
@@ -335,16 +335,16 @@ public class Table implements RelationalModel, Serializable, Exportable {
 		}
 		else if ( uniqueKeys.size() == 1 ) {
 			// we have to worry about condition 2 above, but not condition 1
-			final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
+			final Map.Entry<String, UniqueKey> uniqueKeyEntry = uniqueKeys.entrySet().iterator().next();
 			if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
 				uniqueKeys.remove( uniqueKeyEntry.getKey() );
 			}
 		}
 		else {
 			// we have to check both conditions 1 and 2
-			final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
+			final Iterator<Map.Entry<String, UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
 			while ( uniqueKeyEntries.hasNext() ) {
-				final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
+				final Map.Entry<String, UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
 				final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
 				boolean removeIt = false;
 

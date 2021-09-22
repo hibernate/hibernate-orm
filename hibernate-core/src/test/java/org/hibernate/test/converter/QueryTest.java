@@ -119,7 +119,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Converter( autoApply = true )
-	public static class SalaryConverter implements AttributeConverter<Float,Long> {
+	public static class SalaryConverter implements AttributeConverter<Float, Long> {
 		@Override
 		@SuppressWarnings("UnnecessaryBoxing")
 		public Long convertToDatabaseColumn(Float attribute) {
@@ -141,7 +141,7 @@ public class QueryTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
-	public static class BooleanConverter implements AttributeConverter<Boolean,Integer> {
+	public static class BooleanConverter implements AttributeConverter<Boolean, Integer> {
 
 		@Override
 		public Integer convertToDatabaseColumn(Boolean attribute) {

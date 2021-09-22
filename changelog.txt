@@ -2210,7 +2210,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/24150
     * [HHH-10900] - ExceptionConverter throws an exception if the Proxy is no longer reachable
     * [HHH-10907] - Fix connection leak problem in hibernate-core tests
     * [HHH-10915] - NullPointerException from AbstractProducedQuery.getParameters()
-    * [HHH-10919] - HQL: Sql syntax exception when joining a Map<Entity,Component>
+    * [HHH-10919] - HQL: Sql syntax exception when joining a Map<Entity, Component>
     * [HHH-10920] - Joined inheritance : Same super class field name in embedded type causes embedded field to be ignored
     * [HHH-10922] - flush triggers load when using enableDirtyTracking
     * [HHH-10937] - The generation of the drop schema does not filter sequence with schemaFilter

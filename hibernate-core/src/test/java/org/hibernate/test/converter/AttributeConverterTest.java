@@ -81,7 +81,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	public static class BlewUpException extends RuntimeException {
 	}
 
-	public static class BlowsUpConverter implements AttributeConverter<String,String> {
+	public static class BlowsUpConverter implements AttributeConverter<String, String> {
 		public BlowsUpConverter() {
 			throw new BlewUpException();
 		}
@@ -671,7 +671,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	// Converter declarations used in the test ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Converter(autoApply = false)
-	public static class NotAutoAppliedConverter implements AttributeConverter<String,String> {
+	public static class NotAutoAppliedConverter implements AttributeConverter<String, String> {
 		@Override
 		public String convertToDatabaseColumn(String attribute) {
 			throw new IllegalStateException( "AttributeConverter should not have been applied/called" );
@@ -684,7 +684,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Converter( autoApply = true )
-	public static class IntegerToVarcharConverter implements AttributeConverter<Integer,String> {
+	public static class IntegerToVarcharConverter implements AttributeConverter<Integer, String> {
 		@Override
 		public String convertToDatabaseColumn(Integer attribute) {
 			return attribute == null ? null : attribute.toString();

@@ -116,7 +116,7 @@ public class Helper {
 		if ( xmlParamElements == null || xmlParamElements.isEmpty() ) {
 			return Collections.emptyMap();
 		}
-		final HashMap<String,String> params = new HashMap<>();
+		final HashMap<String, String> params = new HashMap<>();
 		for ( JaxbHbmConfigParameterType paramElement : xmlParamElements ) {
 			params.put( paramElement.getName(), paramElement.getValue() );
 		}

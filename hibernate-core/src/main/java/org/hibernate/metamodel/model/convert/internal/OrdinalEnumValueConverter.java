@@ -27,7 +27,7 @@ import org.hibernate.type.descriptor.sql.IntegerTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E,Integer>, Serializable {
+public class OrdinalEnumValueConverter<E extends Enum> implements EnumValueConverter<E, Integer>, Serializable {
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 

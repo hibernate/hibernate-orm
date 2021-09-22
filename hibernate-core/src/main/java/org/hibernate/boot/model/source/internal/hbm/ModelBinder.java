@@ -432,7 +432,7 @@ public class ModelBinder {
 			if ( entitySource.getTuplizerClassMap().size() > 1 ) {
 				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
 			}
-			for ( Map.Entry<EntityMode,String> tuplizerEntry : entitySource.getTuplizerClassMap().entrySet() ) {
+			for ( Map.Entry<EntityMode, String> tuplizerEntry : entitySource.getTuplizerClassMap().entrySet() ) {
 				entityDescriptor.addTuplizer(
 						tuplizerEntry.getKey(),
 						tuplizerEntry.getValue()
@@ -2369,7 +2369,7 @@ public class ModelBinder {
 						.heuristicType( discriminatorTypeResolution.typeName );
 
 				final HashMap anyValueBindingMap = new HashMap();
-				for ( Map.Entry<String,String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
+				for ( Map.Entry<String, String> discriminatorValueMappings : anyMapping.getDiscriminatorSource().getValueMappings().entrySet() ) {
 					try {
 						final Object discriminatorValue = metaType.stringToObject( discriminatorValueMappings.getKey() );
 						final String mappedEntityName = sourceDocument.qualifyClassName( discriminatorValueMappings.getValue() );
@@ -2701,7 +2701,7 @@ public class ModelBinder {
 			if ( embeddableSource.getTuplizerClassMap().size() > 1 ) {
 				DeprecationLogger.DEPRECATION_LOGGER.logDeprecationOfMultipleEntityModeSupport();
 			}
-			for ( Map.Entry<EntityMode,String> tuplizerEntry : embeddableSource.getTuplizerClassMap().entrySet() ) {
+			for ( Map.Entry<EntityMode, String> tuplizerEntry : embeddableSource.getTuplizerClassMap().entrySet() ) {
 				componentBinding.addTuplizer(
 						tuplizerEntry.getKey(),
 						tuplizerEntry.getValue()

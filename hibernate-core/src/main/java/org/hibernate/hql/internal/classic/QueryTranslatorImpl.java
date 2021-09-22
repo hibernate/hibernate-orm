@@ -91,7 +91,7 @@ public class QueryTranslatorImpl extends BasicLoader implements FilterTranslator
 	private final Map uniqueKeyOwnerReferences = new HashMap();
 	private final Map decoratedPropertyMappings = new HashMap();
 
-	private final Map<String,NamedParameterInformationImpl> namedParameters = new HashMap<>();
+	private final Map<String, NamedParameterInformationImpl> namedParameters = new HashMap<>();
 	private final Map<Integer, PositionalParameterInformationImpl> ordinalParameters = new HashMap<>();
 	private final List<ParameterBinder> paramValueBinders = new ArrayList<>();
 

@@ -91,7 +91,7 @@ class PropertyContainer {
 
 		preFilter( fields, getters );
 
-		final Map<String,XProperty> persistentAttributesFromGetters = new HashMap<String, XProperty>();
+		final Map<String, XProperty> persistentAttributesFromGetters = new HashMap<String, XProperty>();
 
 		final TreeMap<String, XProperty> localAttributeMap = new TreeMap<>();
 		collectPersistentAttributesUsingLocalAccessType(
@@ -133,7 +133,7 @@ class PropertyContainer {
 	private static void collectPersistentAttributesUsingLocalAccessType(
 			XClass xClass,
 			TreeMap<String, XProperty> persistentAttributeMap,
-			Map<String,XProperty> persistentAttributesFromGetters,
+			Map<String, XProperty> persistentAttributesFromGetters,
 			List<XProperty> fields,
 			List<XProperty> getters) {
 
@@ -187,7 +187,7 @@ class PropertyContainer {
 			XClass xClass,
 			AccessType classLevelAccessType,
 			TreeMap<String, XProperty> persistentAttributeMap,
-			Map<String,XProperty> persistentAttributesFromGetters,
+			Map<String, XProperty> persistentAttributesFromGetters,
 			List<XProperty> fields,
 			List<XProperty> getters) {
 		if ( classLevelAccessType == AccessType.FIELD ) {

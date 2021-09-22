@@ -11,7 +11,7 @@ import javax.persistence.AttributeConverter;
 /**
  * @author Steve Ebersole
  */
-public class ConverterBean implements AttributeConverter<Integer,String> {
+public class ConverterBean implements AttributeConverter<Integer, String> {
 	private final MonitorBean monitor;
 
 	@javax.inject.Inject

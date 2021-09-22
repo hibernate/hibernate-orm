@@ -24,9 +24,9 @@ import org.hibernate.type.Type;
  */
 public final class FilterKey implements Serializable {
 	private final String filterName;
-	private final Map<String,TypedValue> filterParameters = new HashMap<String,TypedValue>();
+	private final Map<String, TypedValue> filterParameters = new HashMap<String, TypedValue>();
 
-	FilterKey(String name, Map<String,?> params, Map<String,Type> types) {
+	FilterKey(String name, Map<String,?> params, Map<String, Type> types) {
 		filterName = name;
 		for ( Map.Entry<String, ?> paramEntry : params.entrySet() ) {
 			final Type type = types.get( paramEntry.getKey() );
@@ -65,7 +65,7 @@ public final class FilterKey implements Serializable {
 	 *
 	 * @return The filter keys, one per enabled filter
 	 */
-	public static Set<FilterKey> createFilterKeys(Map<String,Filter> enabledFilters) {
+	public static Set<FilterKey> createFilterKeys(Map<String, Filter> enabledFilters) {
 		if ( enabledFilters.size() == 0 ) {
 			return null;
 		}

@@ -38,7 +38,7 @@ public class StandardAnyTypeDefinition implements AnyMappingDefinition {
 
 		final MetaType metaType = (MetaType) discriminatorType;
 		final List<DiscriminatorMapping> discriminatorMappings = new ArrayList<DiscriminatorMapping>();
-		for ( final Map.Entry<Object,String> entry : metaType.getDiscriminatorValuesToEntityNameMap().entrySet() ) {
+		for ( final Map.Entry<Object, String> entry : metaType.getDiscriminatorValuesToEntityNameMap().entrySet() ) {
 			discriminatorMappings.add(
 					new DiscriminatorMapping() {
 						private final Object discriminatorValue = entry.getKey();

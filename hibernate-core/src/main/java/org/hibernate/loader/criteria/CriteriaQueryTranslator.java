@@ -68,7 +68,7 @@ public class CriteriaQueryTranslator implements CriteriaQuery {
 	private final Map<Criteria, String> criteriaSQLAliasMap = new HashMap<Criteria, String>();
 	private final Map<String, Criteria> aliasCriteriaMap = new HashMap<String, Criteria>();
 	private final Map<String, Criteria> associationPathCriteriaMap = new LinkedHashMap<String, Criteria>();
-	private final Map<String, JoinType> associationPathJoinTypesMap = new LinkedHashMap<String,JoinType>();
+	private final Map<String, JoinType> associationPathJoinTypesMap = new LinkedHashMap<String, JoinType>();
 	private final Map<String, Criterion> withClauseMap = new HashMap<String, Criterion>();
 	private Set<String> associations;
 

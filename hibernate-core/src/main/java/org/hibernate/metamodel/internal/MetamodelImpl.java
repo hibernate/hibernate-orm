@@ -91,12 +91,12 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 
 	private final SessionFactoryImplementor sessionFactory;
 
-	private final Map<String,String> imports = new ConcurrentHashMap<>();
-	private final Map<String,EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
-	private final Map<Class,String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
-	private final Map<String,CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
+	private final Map<String, String> imports = new ConcurrentHashMap<>();
+	private final Map<String, EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final Map<Class, String> entityProxyInterfaceMap = new ConcurrentHashMap<>();
+	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
 	private final Map<String,Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
-	private final ConcurrentMap<EntityNameResolver,Object> entityNameResolvers = new ConcurrentHashMap<>();
+	private final ConcurrentMap<EntityNameResolver, Object> entityNameResolvers = new ConcurrentHashMap<>();
 
 	private final Map<Class<?>, EntityTypeDescriptor<?>> jpaEntityTypeMap = new ConcurrentHashMap<>();
 	private final Map<String, EntityTypeDescriptor<?>> jpaEntityTypesByEntityName = new ConcurrentHashMap<>();
@@ -136,7 +136,7 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 	private final Map<Class<?>, EmbeddedTypeDescriptor<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private final transient Map<String,RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
+	private final transient Map<String, RootGraphImplementor> entityGraphMap = new ConcurrentHashMap<>();
 
 	private final TypeConfiguration typeConfiguration;
 
@@ -415,14 +415,14 @@ public class MetamodelImpl implements MetamodelImplementor, Serializable {
 		return entityNameResolvers.keySet();
 	}
 
-	private static void registerEntityNameResolvers(EntityPersister persister, Map<EntityNameResolver,Object> entityNameResolvers) {
+	private static void registerEntityNameResolvers(EntityPersister persister, Map<EntityNameResolver, Object> entityNameResolvers) {
 		if ( persister.getEntityMetamodel() == null || persister.getEntityMetamodel().getTuplizer() == null ) {
 			return;
 		}
 		registerEntityNameResolvers( persister.getEntityMetamodel().getTuplizer(), entityNameResolvers );
 	}
 
-	private static void registerEntityNameResolvers(EntityTuplizer tuplizer, Map<EntityNameResolver,Object> entityNameResolvers) {
+	private static void registerEntityNameResolvers(EntityTuplizer tuplizer, Map<EntityNameResolver, Object> entityNameResolvers) {
 		EntityNameResolver[] resolvers = tuplizer.getEntityNameResolvers();
 		if ( resolvers == null ) {
 			return;

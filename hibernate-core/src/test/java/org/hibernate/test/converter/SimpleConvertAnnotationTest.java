@@ -73,7 +73,7 @@ public class SimpleConvertAnnotationTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Converter(autoApply = false)
-	public static class UrlConverter implements AttributeConverter<URL,String> {
+	public static class UrlConverter implements AttributeConverter<URL, String> {
 		@Override
 		public String convertToDatabaseColumn(URL attribute) {
 			convertToDatabaseColumnCalled = true;
@@ -97,7 +97,7 @@ public class SimpleConvertAnnotationTest extends BaseNonConfigCoreFunctionalTest
 	}
 
 	@Converter( autoApply = true )
-	public static class AutoUrlConverter implements AttributeConverter<URL,String> {
+	public static class AutoUrlConverter implements AttributeConverter<URL, String> {
 		@Override
 		public String convertToDatabaseColumn(URL attribute) {
 			throw new IllegalStateException( "Should not be called" );

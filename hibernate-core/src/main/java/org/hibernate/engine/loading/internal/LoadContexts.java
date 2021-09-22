@@ -35,10 +35,10 @@ public class LoadContexts {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( LoadContexts.class );
 
 	private final PersistenceContext persistenceContext;
-	private Map<ResultSet,CollectionLoadContext> collectionLoadContexts;
-	private Map<ResultSet,EntityLoadContext> entityLoadContexts;
+	private Map<ResultSet, CollectionLoadContext> collectionLoadContexts;
+	private Map<ResultSet, EntityLoadContext> entityLoadContexts;
 
-	private Map<CollectionKey,LoadingCollectionEntry> xrefLoadingCollectionEntries;
+	private Map<CollectionKey, LoadingCollectionEntry> xrefLoadingCollectionEntries;
 
 	/**
 	 * Creates and binds this to the given persistence context.
@@ -202,7 +202,7 @@ public class LoadContexts {
 	 */
 	void registerLoadingCollectionXRef(CollectionKey entryKey, LoadingCollectionEntry entry) {
 		if ( xrefLoadingCollectionEntries == null ) {
-			xrefLoadingCollectionEntries = new HashMap<CollectionKey,LoadingCollectionEntry>();
+			xrefLoadingCollectionEntries = new HashMap<CollectionKey, LoadingCollectionEntry>();
 		}
 		xrefLoadingCollectionEntries.put( entryKey, entry );
 	}

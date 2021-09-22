@@ -18,5 +18,5 @@ import org.hibernate.boot.model.naming.ImplicitAnyDiscriminatorColumnNameSource;
 public interface AnyDiscriminatorSource extends ImplicitAnyDiscriminatorColumnNameSource {
 	HibernateTypeSource getTypeSource();
 	RelationalValueSource getRelationalValueSource();
-	Map<String,String> getValueMappings();
+	Map<String, String> getValueMappings();
 }

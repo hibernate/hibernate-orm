@@ -61,5 +61,5 @@ public class Thing {
 	}
 
 	@Transient
-	Map<String,Object> changedValues = new HashMap<String, Object>();
+	Map<String, Object> changedValues = new HashMap<String, Object>();
 }

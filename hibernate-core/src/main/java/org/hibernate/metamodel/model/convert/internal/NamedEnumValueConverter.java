@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.sql.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class NamedEnumValueConverter<E extends Enum> implements EnumValueConverter<E,String>, Serializable {
+public class NamedEnumValueConverter<E extends Enum> implements EnumValueConverter<E, String>, Serializable {
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 

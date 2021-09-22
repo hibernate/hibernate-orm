@@ -179,7 +179,7 @@ public class SQLFunctionsTest extends LegacyTestCase {
 		simple.setName("Simple 1");
 		s.save( simple );
 
-		Map<String,Object> parameters = new HashMap<>();
+		Map<String, Object> parameters = new HashMap<>();
 		parameters.put( "name", simple.getName() );
 		parameters.put( "count", simple.getCount() );
 		Query q = s.createQuery("from Simple s where s.name=:name and s.count=:count");

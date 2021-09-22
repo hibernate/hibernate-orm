@@ -54,16 +54,16 @@ public class AliasResolutionContextImpl implements AliasResolutionContext {
 	private int currentTableAliasSuffix;
 
 	// Mapping from query space UID to entity reference aliases
-	private Map<String,EntityReferenceAliases> entityReferenceAliasesMap;
+	private Map<String, EntityReferenceAliases> entityReferenceAliasesMap;
 
 	// Mapping from query space UID to collection reference aliases
-	private Map<String,CollectionReferenceAliases> collectionReferenceAliasesMap;
+	private Map<String, CollectionReferenceAliases> collectionReferenceAliasesMap;
 
 	// Mapping from query space UID to SQL table alias
-	private Map<String,String> querySpaceUidToSqlTableAliasMap;
+	private Map<String, String> querySpaceUidToSqlTableAliasMap;
 
 	// Mapping from composite query space UID to SQL table alias
-	private Map<String,String> compositeQuerySpaceUidToSqlTableAliasMap;
+	private Map<String, String> compositeQuerySpaceUidToSqlTableAliasMap;
 
 	/**
 	 * Constructs a {@link AliasResolutionContextImpl} without any source aliases.  This form is used in

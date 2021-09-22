@@ -52,11 +52,11 @@ public abstract class AbstractServiceRegistryImpl
 	private volatile ServiceRegistryImplementor parent;
 	private final boolean allowCrawling;
 
-	private final ConcurrentMap<Class,ServiceBinding> serviceBindingMap = new ConcurrentHashMap<>();
-	private final ConcurrentMap<Class,Class> roleXref = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class, ServiceBinding> serviceBindingMap = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class, Class> roleXref = new ConcurrentHashMap<>();
 	// The services stored in initializedServiceByRole are completely initialized
 	// (i.e., configured, dependencies injected, and started)
-	private final ConcurrentMap<Class,Service> initializedServiceByRole = new ConcurrentHashMap<>();
+	private final ConcurrentMap<Class, Service> initializedServiceByRole = new ConcurrentHashMap<>();
 
 	// IMPL NOTE : the list used for ordered destruction.  Cannot used map above because we need to
 	// iterate it in reverse order which is only available through ListIterator

@@ -68,7 +68,7 @@ public abstract class AbstractEntitySourceImpl
 
 	// logically final, but built during 'afterInstantiation' callback
 	private List<AttributeSource> attributeSources;
-	private Map<String,SecondaryTableSource> secondaryTableMap;
+	private Map<String, SecondaryTableSource> secondaryTableMap;
 	private final FilterSource[] filterSources;
 
 	private final Map<EntityMode, String> tuplizerClassMap;
@@ -232,12 +232,12 @@ public abstract class AbstractEntitySourceImpl
 		);
 	}
 
-	private Map<String,SecondaryTableSource> buildSecondaryTableMap() {
+	private Map<String, SecondaryTableSource> buildSecondaryTableMap() {
 		if ( !SecondaryTableContainer.class.isInstance( jaxbEntityMapping ) ) {
 			return Collections.emptyMap();
 		}
 
-		final HashMap<String,SecondaryTableSource> secondaryTableSourcesMap =
+		final HashMap<String, SecondaryTableSource> secondaryTableSourcesMap =
 				new HashMap<String, SecondaryTableSource>();
 
 		for ( final JaxbHbmSecondaryTableType joinElement :  ( (SecondaryTableContainer) jaxbEntityMapping ).getJoin() ) {
@@ -405,7 +405,7 @@ public abstract class AbstractEntitySourceImpl
 	}
 
 	@Override
-	public Map<String,SecondaryTableSource> getSecondaryTableMap() {
+	public Map<String, SecondaryTableSource> getSecondaryTableMap() {
 		return secondaryTableMap;
 	}
 

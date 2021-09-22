@@ -65,9 +65,9 @@ public class NamedQueryRepository {
 	}
 
 	public NamedQueryRepository(
-			Map<String,NamedQueryDefinition> namedQueryDefinitionMap,
-			Map<String,NamedSQLQueryDefinition> namedSqlQueryDefinitionMap,
-			Map<String,ResultSetMappingDefinition> namedSqlResultSetMappingMap,
+			Map<String, NamedQueryDefinition> namedQueryDefinitionMap,
+			Map<String, NamedSQLQueryDefinition> namedSqlQueryDefinitionMap,
+			Map<String, ResultSetMappingDefinition> namedSqlResultSetMappingMap,
 			Map<String, ProcedureCallMemento> namedProcedureCallMap) {
 		this.namedQueryDefinitionMap = toSmallMap( namedQueryDefinitionMap );
 		this.namedSqlQueryDefinitionMap = toSmallMap( namedSqlQueryDefinitionMap );
@@ -164,8 +164,8 @@ public class NamedQueryRepository {
 		this.procedureCallMementoMap = toSmallMap( copy );
 	}
 
-	public Map<String,HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {
-		Map<String,HibernateException> errors = new HashMap<String,HibernateException>();
+	public Map<String, HibernateException> checkNamedQueries(QueryPlanCache queryPlanCache) {
+		Map<String, HibernateException> errors = new HashMap<String, HibernateException>();
 
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", namedQueryDefinitionMap.size() );

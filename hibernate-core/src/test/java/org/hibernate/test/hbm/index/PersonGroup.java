@@ -15,7 +15,7 @@ public class PersonGroup {
 	private long id;
 	private String name;
 	private Set<Person> persons = new HashSet<Person>();
-	private Map<String, String> comments = new HashMap<String,String>();
+	private Map<String, String> comments = new HashMap<String, String>();
 
 	public PersonGroup(String name) {
 		this.name = name;

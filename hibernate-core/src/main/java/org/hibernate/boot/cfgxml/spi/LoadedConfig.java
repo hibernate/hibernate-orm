@@ -42,7 +42,7 @@ public class LoadedConfig {
 
 	private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
 
-	private Map<String,JaccPermissionDeclarations> jaccPermissionsByContextId;
+	private Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId;
 	private List<CacheRegionDefinition> cacheRegionDefinitions;
 	private List<MappingReference> mappingReferences;
 	private Map<EventType,Set<String>> eventListenerMap;

@@ -309,7 +309,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 					SharedSessionContractImplementor entityManager,
 					final InterpretedParameterMetadata parameterMetadata) {
 
-				final Map<String,Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );
+				final Map<String, Class> implicitParameterTypes = extractTypeMap( parameterMetadata.implicitParameterBindings() );
 
 				QueryImplementor<T> jpaqlQuery = entityManager.createQuery(
 						jpaqlString,
@@ -373,7 +373,7 @@ public class CriteriaQueryImpl<T> extends AbstractNode implements CriteriaQuery<
 			}
 
 			private Map<String, Class> extractTypeMap(List<ImplicitParameterBinding> implicitParameterBindings) {
-				final HashMap<String,Class> map = new HashMap<String, Class>();
+				final HashMap<String, Class> map = new HashMap<String, Class>();
 				for ( ImplicitParameterBinding implicitParameter : implicitParameterBindings ) {
 					map.put( implicitParameter.getParameterName(), implicitParameter.getJavaType() );
 				}

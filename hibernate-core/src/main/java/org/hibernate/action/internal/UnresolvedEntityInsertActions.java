@@ -50,7 +50,7 @@ public class UnresolvedEntityInsertActions {
 
 	private static final int INIT_SIZE = 5;
 
-	private final Map<AbstractEntityInsertAction,NonNullableTransientDependencies> dependenciesByAction = new IdentityHashMap<>( INIT_SIZE );
+	private final Map<AbstractEntityInsertAction, NonNullableTransientDependencies> dependenciesByAction = new IdentityHashMap<>( INIT_SIZE );
 	private final Map<Object,Set<AbstractEntityInsertAction>> dependentActionsByTransientEntity = new IdentityHashMap<>( INIT_SIZE );
 
 	/**
@@ -253,7 +253,7 @@ public class UnresolvedEntityInsertActions {
 	public String toString() {
 		final StringBuilder sb = new StringBuilder( getClass().getSimpleName() )
 				.append( '[' );
-		for ( Map.Entry<AbstractEntityInsertAction,NonNullableTransientDependencies> entry : dependenciesByAction.entrySet() ) {
+		for ( Map.Entry<AbstractEntityInsertAction, NonNullableTransientDependencies> entry : dependenciesByAction.entrySet() ) {
 			final AbstractEntityInsertAction insert = entry.getKey();
 			final NonNullableTransientDependencies dependencies = entry.getValue();
 			sb.append( "[insert=" )

@@ -276,7 +276,7 @@ public final class FastSessionServices {
 	}
 
 	private static Map<String, Object> initializeDefaultSessionProperties(SessionFactoryImpl sf) {
-		HashMap<String,Object> p = new HashMap<>();
+		HashMap<String, Object> p = new HashMap<>();
 
 		//Static defaults:
 		p.putIfAbsent( AvailableSettings.FLUSH_MODE, FlushMode.AUTO.name() );

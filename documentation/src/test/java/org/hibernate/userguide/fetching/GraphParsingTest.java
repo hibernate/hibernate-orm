@@ -195,7 +195,7 @@ public class GraphParsingTest extends AbstractEntityGraphTest {
 
 		@ElementCollection
 //		@OneToMany
-				Map<Person,String> cast;
+				Map<Person, String> cast;
 	}
 
 	@Entity( name = "Theater" )

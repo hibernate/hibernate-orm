@@ -53,12 +53,12 @@ public class Atmosphere {
 	@MapKeyTemporal(TemporalType.DATE)
 	@ElementCollection(fetch = FetchType.EAGER)
 	@MapKeyColumn(nullable=false)
-	public Map<Date, String> colorPerDate = new HashMap<Date,String>();
+	public Map<Date, String> colorPerDate = new HashMap<Date, String>();
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@MapKeyEnumerated(EnumType.STRING)
 	@MapKeyColumn(nullable=false)
-	public Map<Level, String> colorPerLevel = new HashMap<Level,String>();
+	public Map<Level, String> colorPerLevel = new HashMap<Level, String>();
 
 	@ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
 	@MapKeyJoinColumn(name="gas_id" )

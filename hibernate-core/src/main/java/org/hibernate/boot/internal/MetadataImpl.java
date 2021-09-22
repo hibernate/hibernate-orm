@@ -75,9 +75,9 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
-	private final Map<String,PersistentClass> entityBindingMap;
+	private final Map<String, PersistentClass> entityBindingMap;
 	private final Map<Class, MappedSuperclass> mappedSuperclassMap;
-	private final Map<String,Collection> collectionBindingMap;
+	private final Map<String, Collection> collectionBindingMap;
 	private final Map<String, TypeDefinition> typeDefinitionMap;
 	private final Map<String, FilterDefinition> filterDefinitionMap;
 	private final Map<String, FetchProfile> fetchProfileMap;
@@ -443,7 +443,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 
 	//Specific for copies only:
 
-	public Map<String,PersistentClass> getEntityBindingMap() {
+	public Map<String, PersistentClass> getEntityBindingMap() {
 		return entityBindingMap;
 	}
 

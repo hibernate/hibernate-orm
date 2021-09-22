@@ -23,7 +23,7 @@ public class Delete {
 	protected String where;
 	protected String comment;
 
-	protected Map<String,String> primaryKeyColumns = new LinkedHashMap<>();
+	protected Map<String, String> primaryKeyColumns = new LinkedHashMap<>();
 
 	public Delete setComment(String comment) {
 		this.comment = comment;
@@ -45,9 +45,9 @@ public class Delete {
 			buf.append( " where " );
 		}
 		boolean conditionsAppended = false;
-		Iterator<Map.Entry<String,String>> iter = primaryKeyColumns.entrySet().iterator();
+		Iterator<Map.Entry<String, String>> iter = primaryKeyColumns.entrySet().iterator();
 		while ( iter.hasNext() ) {
-			Map.Entry<String,String> e = iter.next();
+			Map.Entry<String, String> e = iter.next();
 			buf.append( e.getKey() ).append( '=' ).append( e.getValue() );
 			if ( iter.hasNext() ) {
 				buf.append( " and " );

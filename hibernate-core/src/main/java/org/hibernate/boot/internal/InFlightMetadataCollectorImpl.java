@@ -128,8 +128,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final UUID uuid;
 	private final MutableIdentifierGeneratorFactory identifierGeneratorFactory;
 
-	private final Map<String,PersistentClass> entityBindingMap = new HashMap<>();
-	private final Map<String,Collection> collectionBindingMap = new HashMap<>();
+	private final Map<String, PersistentClass> entityBindingMap = new HashMap<>();
+	private final Map<String, Collection> collectionBindingMap = new HashMap<>();
 
 	private final Map<String, TypeDefinition> typeDefinitionMap = new HashMap<>();
 	private final Map<String, FilterDefinition> filterDefinitionMap = new HashMap<>();
@@ -713,7 +713,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	// imports
 
 	@Override
-	public Map<String,String> getImports() {
+	public Map<String, String> getImports() {
 		return imports;
 	}
 
@@ -850,8 +850,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	}
 
 
-	private Map<Identifier,Identifier> logicalToPhysicalTableNameMap = new HashMap<>();
-	private Map<Identifier,Identifier> physicalToLogicalTableNameMap = new HashMap<>();
+	private Map<Identifier, Identifier> logicalToPhysicalTableNameMap = new HashMap<>();
+	private Map<Identifier, Identifier> physicalToLogicalTableNameMap = new HashMap<>();
 
 	@Override
 	public void addTableNameBinding(Identifier logicalName, Table table) {
@@ -953,7 +953,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private Map<Table,TableColumnNameBinding> columnNameBindingByTableMap;
+	private Map<Table, TableColumnNameBinding> columnNameBindingByTableMap;
 
 	@Override
 	public void addColumnNameBinding(Table table, String logicalName, Column column) throws DuplicateMappingException {
@@ -1061,7 +1061,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		getDatabase().addAuxiliaryDatabaseObject( auxiliaryDatabaseObject );
 	}
 
-	private final Map<String,AnnotatedClassType> annotatedClassTypeMap = new HashMap<>();
+	private final Map<String, AnnotatedClassType> annotatedClassTypeMap = new HashMap<>();
 
 	@Override
 	public AnnotatedClassType getClassType(XClass clazz) {
@@ -1335,7 +1335,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		holderList.addAll( holders );
 	}
 
-	private final Map<String,EntityTableXrefImpl> entityTableXrefMap = new HashMap<>();
+	private final Map<String, EntityTableXrefImpl> entityTableXrefMap = new HashMap<>();
 
 	@Override
 	public EntityTableXref getEntityTableXref(String entityName) {
@@ -1370,9 +1370,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		private final Table primaryTable;
 		private EntityTableXrefImpl superEntityTableXref;
 
-		//annotations needs a Map<String,Join>
-		//private Map<Identifier,Join> secondaryTableJoinMap;
-		private Map<String,Join> secondaryTableJoinMap;
+		//annotations needs a Map<String, Join>
+		//private Map<Identifier, Join> secondaryTableJoinMap;
+		private Map<String, Join> secondaryTableJoinMap;
 
 		public EntityTableXrefImpl(Identifier primaryTableLogicalName, Table primaryTable, EntityTableXrefImpl superEntityTableXref) {
 			this.primaryTableLogicalName = primaryTableLogicalName;
@@ -1395,7 +1395,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 			if ( secondaryTableJoinMap == null ) {
-				//secondaryTableJoinMap = new HashMap<Identifier,Join>();
+				//secondaryTableJoinMap = new HashMap<Identifier, Join>();
 				//secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
 				secondaryTableJoinMap = new HashMap<>();
 				secondaryTableJoinMap.put( logicalName.getCanonicalName(), secondaryTableJoin );
@@ -1434,7 +1434,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 
 			if ( secondaryTableJoinMap == null ) {
-				//secondaryTableJoinMap = new HashMap<Identifier,Join>();
+				//secondaryTableJoinMap = new HashMap<Identifier, Join>();
 				//secondaryTableJoinMap.put( logicalName, secondaryTableJoin );
 				secondaryTableJoinMap = new HashMap<>();
 				secondaryTableJoinMap.put( logicalName.getCanonicalName(), secondaryTableJoin );
@@ -2155,7 +2155,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 	}
 
-	private Map<String,NaturalIdUniqueKeyBinder> naturalIdUniqueKeyBinderMap;
+	private Map<String, NaturalIdUniqueKeyBinder> naturalIdUniqueKeyBinderMap;
 
 	@Override
 	public NaturalIdUniqueKeyBinder locateNaturalIdUniqueKeyBinder(String entityName) {

@@ -361,7 +361,7 @@ public interface SessionFactoryImplementor extends Mapping, SessionFactory, Quer
 	 * @deprecated (since 5.2) Use {@link MetamodelImplementor#entityPersisters} instead.
 	 */
 	@Deprecated
-	default Map<String,EntityPersister> getEntityPersisters() {
+	default Map<String, EntityPersister> getEntityPersisters() {
 		return getMetamodel().entityPersisters();
 	}
 

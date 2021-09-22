@@ -633,7 +633,7 @@ public abstract class AbstractLoadPlanBuildingAssociationVisitationStrategy
 		currentPropertyPath = currentPropertyPath.getParent();
 	}
 
-	private Map<AssociationKey,FetchSource> fetchedAssociationKeySourceMap = new HashMap<AssociationKey, FetchSource>();
+	private Map<AssociationKey, FetchSource> fetchedAssociationKeySourceMap = new HashMap<AssociationKey, FetchSource>();
 
 	@Override
 	public boolean isDuplicateAssociationKey(AssociationKey associationKey) {

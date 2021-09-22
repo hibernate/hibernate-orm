@@ -104,7 +104,7 @@ public class Configuration {
 
 	private Map<String, SQLFunction> sqlFunctions;
 	private List<AuxiliaryDatabaseObject> auxiliaryDatabaseObjectList;
-	private HashMap<Class,AttributeConverterDefinition> attributeConverterDefinitionsByClass;
+	private HashMap<Class, AttributeConverterDefinition> attributeConverterDefinitionsByClass;
 
 	// used to build SF
 	private StandardServiceRegistryBuilder standardServiceRegistryBuilder;
@@ -151,8 +151,8 @@ public class Configuration {
 	protected void reset() {
 		implicitNamingStrategy = ImplicitNamingStrategyJpaCompliantImpl.INSTANCE;
 		physicalNamingStrategy = PhysicalNamingStrategyStandardImpl.INSTANCE;
-		namedQueries = new HashMap<String,NamedQueryDefinition>();
-		namedSqlQueries = new HashMap<String,NamedSQLQueryDefinition>();
+		namedQueries = new HashMap<String, NamedQueryDefinition>();
+		namedSqlQueries = new HashMap<String, NamedSQLQueryDefinition>();
 		sqlResultSetMappings = new HashMap<String, ResultSetMappingDefinition>();
 		namedEntityGraphMap = new HashMap<String, NamedEntityGraphDefinition>();
 		namedProcedureCallMap = new HashMap<String, NamedProcedureCallDefinition>(  );
@@ -753,7 +753,7 @@ public class Configuration {
 
 
 
-	public Map<String,SQLFunction> getSqlFunctions() {
+	public Map<String, SQLFunction> getSqlFunctions() {
 		return sqlFunctions;
 	}
 

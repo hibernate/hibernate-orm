@@ -77,7 +77,7 @@ public class SynchronizedSpaceTests extends BaseNonConfigCoreFunctionalTestCase 
 	}
 
 	private void checkUseCase(
-			Function<SessionImplementor,Query> queryProducer,
+			Function<SessionImplementor, Query> queryProducer,
 			Consumer<Query> executor,
 			boolean shouldExistAfter) {
 

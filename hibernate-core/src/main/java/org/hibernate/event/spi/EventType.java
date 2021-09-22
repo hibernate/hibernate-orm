@@ -84,7 +84,7 @@ public final class EventType<T> {
 	 * resolution.
 	 */
 	@SuppressWarnings({"rawtypes", "Convert2Lambda"})
-	private static final Map<String,EventType> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
+	private static final Map<String, EventType> STANDARD_TYPE_BY_NAME_MAP = AccessController.doPrivileged(
 			new PrivilegedAction<Map<String, EventType>>() {
 				@Override
 				public Map<String, EventType> run() {

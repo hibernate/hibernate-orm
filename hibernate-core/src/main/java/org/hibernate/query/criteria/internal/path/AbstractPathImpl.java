@@ -36,7 +36,7 @@ public abstract class AbstractPathImpl<X>
 
 	private final PathSource pathSource;
 	private final Expression<Class<? extends X>> typeExpression;
-	private Map<String,Path> attributePathRegistry;
+	private Map<String, Path> attributePathRegistry;
 
 	/**
 	 * Constructs a basic path instance.
@@ -108,7 +108,7 @@ public abstract class AbstractPathImpl<X>
 
 	protected final void registerAttributePath(String attributeName, Path path) {
 		if ( attributePathRegistry == null ) {
-			attributePathRegistry = new HashMap<String,Path>();
+			attributePathRegistry = new HashMap<String, Path>();
 		}
 		attributePathRegistry.put( attributeName, path );
 	}

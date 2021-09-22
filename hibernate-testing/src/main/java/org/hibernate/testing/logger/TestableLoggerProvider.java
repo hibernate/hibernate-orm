@@ -24,7 +24,7 @@ import org.apache.logging.log4j.ThreadContext;
 public class TestableLoggerProvider implements org.jboss.logging.LoggerProvider {
 
 	//We LEAK Logger instances: good only for testing as we know the set of categories is limited in practice
-	private static final ConcurrentMap<String,Logger> reuseLoggerInstances = new ConcurrentHashMap<>();
+	private static final ConcurrentMap<String, Logger> reuseLoggerInstances = new ConcurrentHashMap<>();
 
 	// Maintainer note:
 	// Except the next method, which is adjusted to return our own Log4DelegatingLogger

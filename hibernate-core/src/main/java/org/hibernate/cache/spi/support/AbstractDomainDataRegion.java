@@ -38,9 +38,9 @@ public abstract class AbstractDomainDataRegion extends AbstractRegion implements
 	private final SessionFactoryImplementor sessionFactory;
 	private final CacheKeysFactory effectiveKeysFactory;
 
-	private Map<NavigableRole,EntityDataAccess> entityDataAccessMap;
-	private Map<NavigableRole,NaturalIdDataAccess> naturalIdDataAccessMap;
-	private Map<NavigableRole,CollectionDataAccess> collectionDataAccessMap;
+	private Map<NavigableRole, EntityDataAccess> entityDataAccessMap;
+	private Map<NavigableRole, NaturalIdDataAccess> naturalIdDataAccessMap;
+	private Map<NavigableRole, CollectionDataAccess> collectionDataAccessMap;
 
 	public AbstractDomainDataRegion(
 			DomainDataRegionConfig regionConfig,

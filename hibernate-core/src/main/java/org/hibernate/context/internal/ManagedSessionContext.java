@@ -40,7 +40,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  * @author Steve Ebersole
  */
 public class ManagedSessionContext extends AbstractCurrentSessionContext {
-	private static final ThreadLocal<Map<SessionFactory,Session>> CONTEXT_TL = new ThreadLocal<Map<SessionFactory,Session>>();
+	private static final ThreadLocal<Map<SessionFactory, Session>> CONTEXT_TL = new ThreadLocal<Map<SessionFactory, Session>>();
 
 	/**
 	 * Constructs a new ManagedSessionContext
@@ -93,7 +93,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	 * @return The bound session if one, else null.
 	 */
 	public static Session unbind(SessionFactory factory) {
-		final Map<SessionFactory,Session> sessionMap = sessionMap();
+		final Map<SessionFactory, Session> sessionMap = sessionMap();
 		Session existing = null;
 		if ( sessionMap != null ) {
 			existing = sessionMap.remove( factory );
@@ -103,7 +103,7 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	private static Session existingSession(SessionFactory factory) {
-		final Map<SessionFactory,Session> sessionMap = sessionMap();
+		final Map<SessionFactory, Session> sessionMap = sessionMap();
 		if ( sessionMap == null ) {
 			return null;
 		}
@@ -112,21 +112,21 @@ public class ManagedSessionContext extends AbstractCurrentSessionContext {
 		}
 	}
 
-	protected static Map<SessionFactory,Session> sessionMap() {
+	protected static Map<SessionFactory, Session> sessionMap() {
 		return sessionMap( false );
 	}
 
-	private static Map<SessionFactory,Session> sessionMap(boolean createMap) {
-		Map<SessionFactory,Session> sessionMap = CONTEXT_TL.get();
+	private static Map<SessionFactory, Session> sessionMap(boolean createMap) {
+		Map<SessionFactory, Session> sessionMap = CONTEXT_TL.get();
 		if ( sessionMap == null && createMap ) {
-			sessionMap = new HashMap<SessionFactory,Session>();
+			sessionMap = new HashMap<SessionFactory, Session>();
 			CONTEXT_TL.set( sessionMap );
 		}
 		return sessionMap;
 	}
 
 	private static void doCleanup() {
-		final Map<SessionFactory,Session> sessionMap = sessionMap( false );
+		final Map<SessionFactory, Session> sessionMap = sessionMap( false );
 		if ( sessionMap != null ) {
 			if ( sessionMap.isEmpty() ) {
 				CONTEXT_TL.remove();

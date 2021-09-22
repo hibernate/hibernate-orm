@@ -15,8 +15,8 @@ import java.util.Map;
  * @author Steve Ebersole
  */
 public interface ParameterTranslations {
-	Map<String,NamedParameterInformation> getNamedParameterInformationMap();
-	Map<Integer,PositionalParameterInformation> getPositionalParameterInformationMap();
+	Map<String, NamedParameterInformation> getNamedParameterInformationMap();
+	Map<Integer, PositionalParameterInformation> getPositionalParameterInformationMap();
 
 	PositionalParameterInformation getPositionalParameterInformation(int position);
 

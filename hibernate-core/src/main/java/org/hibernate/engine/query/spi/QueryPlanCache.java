@@ -72,7 +72,7 @@ public class QueryPlanCache implements Serializable {
 	 * Used solely for caching param metadata for native-sql queries, see {@link #getSQLParameterMetadata} for a
 	 * discussion as to why...
 	 */
-	private final BoundedConcurrentHashMap<ParameterMetadataKey,ParameterMetadataImpl> parameterMetadataCache;
+	private final BoundedConcurrentHashMap<ParameterMetadataKey, ParameterMetadataImpl> parameterMetadataCache;
 
 
 	private NativeQueryInterpreter nativeQueryInterpreter;
@@ -197,7 +197,7 @@ public class QueryPlanCache implements Serializable {
 			String filterString,
 			String collectionRole,
 			boolean shallow,
-			Map<String,Filter> enabledFilters) throws QueryException, MappingException {
+			Map<String, Filter> enabledFilters) throws QueryException, MappingException {
 		final FilterQueryPlanKey key =  new FilterQueryPlanKey( filterString, collectionRole, shallow, enabledFilters );
 		FilterQueryPlan value = (FilterQueryPlan) queryPlanCache.get( key );
 		final StatisticsImplementor statistics = factory.getStatistics();
@@ -365,7 +365,7 @@ public class QueryPlanCache implements Serializable {
 
 	private static class DynamicFilterKey implements Serializable {
 		private final String filterName;
-		private final Map<String,Integer> parameterMetadata;
+		private final Map<String, Integer> parameterMetadata;
 		private final int hashCode;
 
 		private DynamicFilterKey(FilterImpl filter) {
@@ -375,7 +375,7 @@ public class QueryPlanCache implements Serializable {
 				parameterMetadata = Collections.emptyMap();
 			}
 			else {
-				parameterMetadata = new HashMap<String,Integer>(
+				parameterMetadata = new HashMap<String, Integer>(
 						CollectionHelper.determineProperSizing( parameters ),
 						CollectionHelper.LOAD_FACTOR
 				);

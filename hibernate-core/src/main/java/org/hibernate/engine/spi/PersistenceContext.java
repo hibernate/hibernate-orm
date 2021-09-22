@@ -497,7 +497,7 @@ public interface PersistenceContext {
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that
 	 * is safe from reentrant access.  Specifically, it is safe from additions/removals while iterating.
 	 */
-	Map.Entry<Object,EntityEntry>[] reentrantSafeEntityEntries();
+	Map.Entry<Object, EntityEntry>[] reentrantSafeEntityEntries();
 
 	/**
 	 * Get the mapping from entity instance to entity entry
@@ -523,7 +523,7 @@ public interface PersistenceContext {
 	 * @param action the lambda to apply on each PersistentCollection,CollectionEntry map entry of the PersistenceContext.
 	 * @param concurrent set this to false for improved efficiency, but that would make it illegal to make changes to the underlying collectionEntries map.
 	 */
-	void forEachCollectionEntry(BiConsumer<PersistentCollection,CollectionEntry> action, boolean concurrent);
+	void forEachCollectionEntry(BiConsumer<PersistentCollection, CollectionEntry> action, boolean concurrent);
 
 	/**
 	 * Get the mapping from collection key to collection instance

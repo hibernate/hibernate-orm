@@ -47,12 +47,12 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	//Used instead of Collections.EMPTY_SET to avoid polymorphic calls on xref;
 	//Also, uses an HashMap as it were an HashSet, as technically we just need the Set semantics
 	//but in this case the overhead of HashSet is not negligible.
-	private static final HashMap<ResultSet,Object> EMPTY = new HashMap<ResultSet,Object>( 1, 0.2f );
+	private static final HashMap<ResultSet, Object> EMPTY = new HashMap<ResultSet, Object>( 1, 0.2f );
 
 	private final JdbcObserver jdbcObserver;
 
-	private final HashMap<Statement, HashMap<ResultSet,Object>> xref = new HashMap<>();
-	private HashMap<ResultSet,Object> unassociatedResultSets;
+	private final HashMap<Statement, HashMap<ResultSet, Object>> xref = new HashMap<>();
+	private HashMap<ResultSet, Object> unassociatedResultSets;
 
 	private ArrayList<Blob> blobs;
 	private ArrayList<Clob> clobs;
@@ -82,7 +82,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void register(Statement statement, boolean cancelable) {
 		log.tracef( "Registering statement [%s]", statement );
 
-		HashMap<ResultSet,Object> previousValue = xref.putIfAbsent( statement, EMPTY );
+		HashMap<ResultSet, Object> previousValue = xref.putIfAbsent( statement, EMPTY );
 		if ( previousValue != null ) {
 			throw new HibernateException( "JDBC Statement already registered" );
 		}
@@ -96,7 +96,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 	public void release(Statement statement) {
 		log.tracev( "Releasing statement [{0}]", statement );
 
-		final HashMap<ResultSet,Object> resultSets = xref.remove( statement );
+		final HashMap<ResultSet, Object> resultSets = xref.remove( statement );
 		if ( resultSets != null ) {
 			closeAll( resultSets );
 		}
@@ -126,7 +126,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			final HashMap<ResultSet,Object> resultSets = xref.get( statement );
+			final HashMap<ResultSet, Object> resultSets = xref.get( statement );
 			if ( resultSets == null ) {
 				log.unregisteredStatement();
 			}
@@ -146,7 +146,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 		close( resultSet );
 	}
 
-	private static void closeAll(final HashMap<ResultSet,Object> resultSets) {
+	private static void closeAll(final HashMap<ResultSet, Object> resultSets) {
 		if ( resultSets == null ) {
 			return;
 		}
@@ -222,7 +222,7 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 		}
 		if ( statement != null ) {
-			HashMap<ResultSet,Object> resultSets = xref.get( statement );
+			HashMap<ResultSet, Object> resultSets = xref.get( statement );
 
 			// Keep this at DEBUG level, rather than warn.  Numerous connection pool implementations can return a
 			// proxy/wrapper around the JDBC Statement, causing excessive logging here.  See HHH-8210.
@@ -231,14 +231,14 @@ public final class ResourceRegistryStandardImpl implements ResourceRegistry {
 			}
 
 			if ( resultSets == null || resultSets == EMPTY ) {
-				resultSets = new HashMap<ResultSet,Object>();
+				resultSets = new HashMap<ResultSet, Object>();
 				xref.put( statement, resultSets );
 			}
 			resultSets.put( resultSet, PRESENT );
 		}
 		else {
 			if ( unassociatedResultSets == null ) {
-				this.unassociatedResultSets = new HashMap<ResultSet,Object>();
+				this.unassociatedResultSets = new HashMap<ResultSet, Object>();
 			}
 			unassociatedResultSets.put( resultSet, PRESENT );
 		}

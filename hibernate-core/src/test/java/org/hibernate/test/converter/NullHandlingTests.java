@@ -139,7 +139,7 @@ public class NullHandlingTests extends BaseCoreFunctionalTestCase {
 		UNKNOWN
 	}
 
-	public static class SexConverter implements AttributeConverter<Sex,String> {
+	public static class SexConverter implements AttributeConverter<Sex, String> {
 		@Override
 		public String convertToDatabaseColumn(Sex attribute) {
 			// HHH-8697

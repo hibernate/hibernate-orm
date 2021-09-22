@@ -45,7 +45,7 @@ public class EntityHierarchyBuilder {
 
 	private final List<EntityHierarchySourceImpl> entityHierarchyList = new ArrayList<EntityHierarchySourceImpl>();
 
-	private final Map<String,AbstractEntitySourceImpl> entitySourceByNameMap = new HashMap<String, AbstractEntitySourceImpl>();
+	private final Map<String, AbstractEntitySourceImpl> entitySourceByNameMap = new HashMap<String, AbstractEntitySourceImpl>();
 	private Map<String,List<ExtendsQueueEntry>> toBeLinkedQueue;
 
 	public EntityHierarchyBuilder() {

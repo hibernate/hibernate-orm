@@ -68,12 +68,12 @@ public class HQLQueryPlan implements Serializable {
 	 * @param enabledFilters The enabled filters (we only keep the names)
 	 * @param factory The factory
 	 */
-	public HQLQueryPlan(String hql, boolean shallow, Map<String,Filter> enabledFilters,
+	public HQLQueryPlan(String hql, boolean shallow, Map<String, Filter> enabledFilters,
 			SessionFactoryImplementor factory) {
 		this( hql, null, shallow, enabledFilters, factory, null );
 	}
 
-	public HQLQueryPlan(String hql, boolean shallow, Map<String,Filter> enabledFilters,
+	public HQLQueryPlan(String hql, boolean shallow, Map<String, Filter> enabledFilters,
 			SessionFactoryImplementor factory, EntityGraphQueryHint entityGraphQueryHint) {
 		this( hql, null, shallow, enabledFilters, factory, entityGraphQueryHint );
 	}
@@ -83,7 +83,7 @@ public class HQLQueryPlan implements Serializable {
 			String hql,
 			String collectionRole,
 			boolean shallow,
-			Map<String,Filter> enabledFilters,
+			Map<String, Filter> enabledFilters,
 			SessionFactoryImplementor factory,
 			EntityGraphQueryHint entityGraphQueryHint) {
 		this.sourceQuery = hql;
@@ -380,12 +380,12 @@ public class HQLQueryPlan implements Serializable {
 	}
 
 	private ParameterMetadataImpl buildParameterMetadata(ParameterTranslations parameterTranslations, String hql) {
-		final Map<Integer,OrdinalParameterDescriptor> ordinalParamDescriptors;
+		final Map<Integer, OrdinalParameterDescriptor> ordinalParamDescriptors;
 		if ( parameterTranslations.getPositionalParameterInformationMap().isEmpty() ) {
 			ordinalParamDescriptors = Collections.emptyMap();
 		}
 		else {
-			final Map<Integer,OrdinalParameterDescriptor> temp = new HashMap<>();
+			final Map<Integer, OrdinalParameterDescriptor> temp = new HashMap<>();
 			for ( Map.Entry<Integer, PositionalParameterInformation> entry :
 					parameterTranslations.getPositionalParameterInformationMap().entrySet() ) {
 				final int position = entry.getKey();

@@ -35,8 +35,8 @@ import org.hibernate.type.Type;
  */
 public class ParameterMetadataImpl implements ParameterMetadata {
 
-	private final Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap;
-	private final Map<String,NamedParameterDescriptor> namedDescriptorMap;
+	private final Map<Integer, OrdinalParameterDescriptor> ordinalDescriptorMap;
+	private final Map<String, NamedParameterDescriptor> namedDescriptorMap;
 
 	//Important: queries with large amounts of parameters need the following
 	//cache to have efficient performance on #containsReference(QueryParameter).
@@ -44,7 +44,7 @@ public class ParameterMetadataImpl implements ParameterMetadata {
 	private final Set<QueryParameter> namedDescriptorValueCache;
 
 	public ParameterMetadataImpl(
-			Map<Integer,OrdinalParameterDescriptor> ordinalDescriptorMap,
+			Map<Integer, OrdinalParameterDescriptor> ordinalDescriptorMap,
 			Map<String, NamedParameterDescriptor> namedDescriptorMap) {
 		this.ordinalDescriptorMap = ordinalDescriptorMap == null
 				? Collections.emptyMap()

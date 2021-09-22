@@ -26,7 +26,7 @@ public class ExplicitlyNamedConverterClassesTest extends BaseNonConfigCoreFuncti
 	// test handling of explicitly named, but non-auto-applied converter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Converter(autoApply = false)
-	public static class NotAutoAppliedConverter implements AttributeConverter<String,String> {
+	public static class NotAutoAppliedConverter implements AttributeConverter<String, String> {
 		@Override
 		public String convertToDatabaseColumn(String attribute) {
 			throw new IllegalStateException( "AttributeConverter should not have been applied/called" );

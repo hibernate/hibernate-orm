@@ -56,7 +56,7 @@ public class WhereParser implements Parser {
 	private static final Set<String> EXPRESSION_TERMINATORS = new HashSet<String>();   //tokens that close a sub expression
 	private static final Set<String> EXPRESSION_OPENERS = new HashSet<String>();       //tokens that open a sub expression
 	private static final Set<String> BOOLEAN_OPERATORS = new HashSet<String>();        //tokens that would indicate a sub expression is a boolean expression
-	private static final Map<String,String> NEGATIONS = new HashMap<String,String>();
+	private static final Map<String, String> NEGATIONS = new HashMap<String, String>();
 
 	static {
 		EXPRESSION_TERMINATORS.add( "and" );

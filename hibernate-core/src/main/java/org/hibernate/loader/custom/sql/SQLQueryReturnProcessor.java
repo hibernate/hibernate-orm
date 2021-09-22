@@ -73,10 +73,10 @@ public class SQLQueryReturnProcessor {
 	private final Map alias2Return = new HashMap();
 	private final Map alias2OwnerAlias = new HashMap();
 
-	private final Map<String,EntityPersister> alias2Persister = new HashMap<String,EntityPersister>();
+	private final Map<String, EntityPersister> alias2Persister = new HashMap<String, EntityPersister>();
 	private final Map alias2Suffix = new HashMap();
 
-	private final Map<String,CollectionPersister> alias2CollectionPersister = new HashMap<String,CollectionPersister>();
+	private final Map<String, CollectionPersister> alias2CollectionPersister = new HashMap<String, CollectionPersister>();
 	private final Map alias2CollectionSuffix = new HashMap();
 
 	private final Map entityPropertyResultMaps = new HashMap();
@@ -220,7 +220,7 @@ public class SQLQueryReturnProcessor {
 
 	public List<Return> generateCustomReturns(boolean queryHadAliases) {
 		List<Return> customReturns = new ArrayList<Return>();
-		Map<String,Return> customReturnsByAlias = new HashMap<String,Return>();
+		Map<String, Return> customReturnsByAlias = new HashMap<String, Return>();
 		for ( NativeSQLQueryReturn queryReturn : queryReturns ) {
 			if ( queryReturn instanceof NativeSQLQueryScalarReturn ) {
 				NativeSQLQueryScalarReturn rtn = (NativeSQLQueryScalarReturn) queryReturn;

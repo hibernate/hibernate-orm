@@ -45,7 +45,7 @@ public final class QueryParameters {
 
 	private Type[] positionalParameterTypes;
 	private Object[] positionalParameterValues;
-	private Map<String,TypedValue> namedParameters;
+	private Map<String, TypedValue> namedParameters;
 
 	private LockOptions lockOptions;
 	private RowSelection rowSelection;
@@ -109,7 +109,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map<String,TypedValue> namedParameters,
+			final Map<String, TypedValue> namedParameters,
 			final Serializable[] collectionKeys) {
 		this(
 				positionalParameterTypes,
@@ -163,7 +163,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map<String,TypedValue> namedParameters,
+			final Map<String, TypedValue> namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean isReadOnlyInitialized,
@@ -194,7 +194,7 @@ public final class QueryParameters {
 	public QueryParameters(
 			final Type[] positionalParameterTypes,
 			final Object[] positionalParameterValues,
-			final Map<String,TypedValue> namedParameters,
+			final Map<String, TypedValue> namedParameters,
 			final LockOptions lockOptions,
 			final RowSelection rowSelection,
 			final boolean isReadOnlyInitialized,
@@ -270,7 +270,7 @@ public final class QueryParameters {
 		return rowSelection != null;
 	}
 
-	public Map<String,TypedValue> getNamedParameters() {
+	public Map<String, TypedValue> getNamedParameters() {
 		return namedParameters;
 	}
 
@@ -291,7 +291,7 @@ public final class QueryParameters {
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
-	public void setNamedParameters(Map<String,TypedValue> map) {
+	public void setNamedParameters(Map<String, TypedValue> map) {
 		namedParameters = map;
 	}
 

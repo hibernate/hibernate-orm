@@ -26,7 +26,7 @@ import org.jboss.logging.Logger;
  * Adapter for incorporating JPA {@link AttributeConverter} handling into the SqlTypeDescriptor contract.
  * <p/>
  * Essentially this is responsible for mapping to/from the intermediate database type representation.  Continuing the
- * {@code AttributeConverter<Integer,String>} example from
+ * {@code AttributeConverter<Integer, String>} example from
  * {@link org.hibernate.mapping.SimpleValue#buildAttributeConverterTypeAdapter()}, the "intermediate database type
  * representation" would be the String representation.  So on binding, we convert the incoming Integer to String;
  * on extraction we extract the value as String and convert to Integer.

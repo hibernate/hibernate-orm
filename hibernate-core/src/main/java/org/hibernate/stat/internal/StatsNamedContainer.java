@@ -25,7 +25,7 @@ import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
  */
 final class StatsNamedContainer<V> {
 
-	private final ConcurrentMap<String,Object> map;
+	private final ConcurrentMap<String, Object> map;
 	private final static Object NULL_TOKEN = new Object();
 
 	/**

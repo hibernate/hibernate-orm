@@ -12,7 +12,7 @@ import org.hibernate.LockMode;
 import org.hibernate.internal.util.collections.LazyIndexedMap;
 import org.hibernate.loader.entity.UniqueEntityLoader;
 
-final class EntityLoaderLazyCollection extends LazyIndexedMap<Object,UniqueEntityLoader> {
+final class EntityLoaderLazyCollection extends LazyIndexedMap<Object, UniqueEntityLoader> {
 
 	/**
 	 * The need here is weird: we need to store an instance of UniqueEntityLoader
@@ -30,15 +30,15 @@ final class EntityLoaderLazyCollection extends LazyIndexedMap<Object,UniqueEntit
 		super( TOTAL_STORAGE_SIZE );
 	}
 
-	UniqueEntityLoader getOrBuildByLockMode(LockMode lockMode, Function<LockMode,UniqueEntityLoader> builderFunction) {
+	UniqueEntityLoader getOrBuildByLockMode(LockMode lockMode, Function<LockMode, UniqueEntityLoader> builderFunction) {
 		return super.computeIfAbsent( lockMode.ordinal(), lockMode, builderFunction );
 	}
 
-	UniqueEntityLoader getOrCreateByInternalFetchProfileMerge(Function<LockMode,UniqueEntityLoader> builderFunction) {
+	UniqueEntityLoader getOrCreateByInternalFetchProfileMerge(Function<LockMode, UniqueEntityLoader> builderFunction) {
 		return super.computeIfAbsent( MERGE_INDEX, null, builderFunction );
 	}
 
-	UniqueEntityLoader getOrCreateByInternalFetchProfileRefresh(Function<LockMode,UniqueEntityLoader> builderFunction) {
+	UniqueEntityLoader getOrCreateByInternalFetchProfileRefresh(Function<LockMode, UniqueEntityLoader> builderFunction) {
 		return super.computeIfAbsent( REFRESH_INDEX, null, builderFunction );
 	}
 

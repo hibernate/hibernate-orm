@@ -50,7 +50,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private boolean isKey;
 	private String roleName;
 
-	private java.util.Map<EntityMode,String> tuplizerImpls;
+	private java.util.Map<EntityMode, String> tuplizerImpls;
 
 	// cache the status of the type
 	private volatile Type type;

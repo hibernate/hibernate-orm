@@ -15,7 +15,7 @@ import java.util.TreeSet;
 public class Search {
 	private String searchString;
 	private SortedSet searchResults = new TreeSet();
-	private SortedMap<String,String> tokens = new TreeMap<>();
+	private SortedMap<String, String> tokens = new TreeMap<>();
 
 	Search() {}
 	

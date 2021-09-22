@@ -29,7 +29,7 @@ public class FilterImpl implements Filter, Serializable {
 
 	private transient FilterDefinition definition;
 	private String filterName;
-	private Map<String,Object> parameters = new HashMap<>();
+	private Map<String, Object> parameters = new HashMap<>();
 	
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );

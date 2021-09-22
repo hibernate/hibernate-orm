@@ -141,11 +141,11 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// A container for collections we load up when the owning entity is not
 	// yet loaded ... for now, this is purely transient!
-	private HashMap<CollectionKey,PersistentCollection> unownedCollections;
+	private HashMap<CollectionKey, PersistentCollection> unownedCollections;
 
 	// Parent entities cache by their child for cascading
 	// May be empty or not contains all relation
-	private IdentityHashMap<Object,Object> parentsByChild;
+	private IdentityHashMap<Object, Object> parentsByChild;
 
 	private int cascading;
 	private int loadCounter;
@@ -1132,7 +1132,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void forEachCollectionEntry(BiConsumer<PersistentCollection, CollectionEntry> action, boolean concurrent) {
 		if ( collectionEntries != null ) {
 			if ( concurrent ) {
-				for ( Map.Entry<PersistentCollection,CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
+				for ( Map.Entry<PersistentCollection, CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
 					action.accept( entry.getKey(), entry.getValue() );
 				}
 			}
@@ -1246,7 +1246,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
-	public Entry<Object,EntityEntry>[] reentrantSafeEntityEntries() {
+	public Entry<Object, EntityEntry>[] reentrantSafeEntityEntries() {
 		return entityEntryContext.reentrantSafeEntityEntries();
 	}
 
@@ -1273,7 +1273,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		//not found in case, proceed
 		// iterate all the entities currently associated with the persistence context.
-		for ( Entry<Object,EntityEntry> me : reentrantSafeEntityEntries() ) {
+		for ( Entry<Object, EntityEntry> me : reentrantSafeEntityEntries() ) {
 			final EntityEntry entityEntry = me.getValue();
 			// does this entity entry pertain to the entity persister in which we are interested (owner)?
 			if ( persister.isSubclassEntityName( entityEntry.getEntityName() ) ) {

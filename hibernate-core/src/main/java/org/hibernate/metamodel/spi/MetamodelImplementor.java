@@ -93,7 +93,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 *
 	 * @return The Map contains all entity persisters.
 	 */
-	Map<String,EntityPersister> entityPersisters();
+	Map<String, EntityPersister> entityPersisters();
 
 	/**
 	 * Get the persister object for a collection role.
@@ -111,7 +111,7 @@ public interface MetamodelImplementor extends Metamodel {
 	 *
 	 * @return The Map contains all collection persisters.
 	 */
-	Map<String,CollectionPersister> collectionPersisters();
+	Map<String, CollectionPersister> collectionPersisters();
 
 	/**
 	 * Retrieves a set of all the collection roles in which the given entity is a participant, as either an

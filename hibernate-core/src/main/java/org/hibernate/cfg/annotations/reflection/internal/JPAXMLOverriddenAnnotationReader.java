@@ -513,7 +513,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		// todo : revisit this
 		// although bear in mind that this code is no longer used in 5.0...
 
-		final Map<String,Convert> convertAnnotationsMap = new HashMap<>();
+		final Map<String, Convert> convertAnnotationsMap = new HashMap<>();
 
 		for ( JaxbBasic element : elementsForProperty.getBasic() ) {
 			JaxbConvert convert = element.getConvert();
@@ -549,7 +549,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 	private Converts getConverts(ManagedType root, XMLContext.Default defaults) {
 		// NOTE : we use a map here to make sure that an xml and annotation referring to the same attribute
 		// properly overrides.  Bit sparse, but easy...
-		final Map<String,Convert> convertAnnotationsMap = new HashMap<>();
+		final Map<String, Convert> convertAnnotationsMap = new HashMap<>();
 
 		if ( root instanceof JaxbEntity ) {
 			applyXmlDefinedConverts( ( (JaxbEntity) root ).getConvert(), defaults, null, convertAnnotationsMap );
@@ -575,7 +575,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			List<JaxbConvert> elements,
 			XMLContext.Default defaults,
 			String attributeNamePrefix,
-			Map<String,Convert> convertAnnotationsMap) {
+			Map<String, Convert> convertAnnotationsMap) {
 		for ( JaxbConvert convertElement : elements ) {
 			final AnnotationDescriptor convertAnnotationDescriptor = new AnnotationDescriptor( Convert.class );
 			copyAttribute( convertAnnotationDescriptor, "attribute-name", convertElement.getAttributeName(), false );

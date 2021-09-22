@@ -102,7 +102,7 @@ public abstract class AbstractBatchImpl implements Batch {
 	 *
 	 * @return This batch's statements.
 	 */
-	protected LinkedHashMap<String,PreparedStatement> getStatements() {
+	protected LinkedHashMap<String, PreparedStatement> getStatements() {
 		return statements;
 	}
 

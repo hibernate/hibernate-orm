@@ -28,7 +28,7 @@ public interface HibernateTypeSource {
 	 *
 	 * @return The Hibernate type parameters.
 	 */
-	Map<String,String> getParameters();
+	Map<String, String> getParameters();
 
 	/**
 	 * Obtain the attribute's java type if possible.

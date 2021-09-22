@@ -165,11 +165,11 @@ public class StringMapNationalizedLobTest extends BaseEnversJPAFunctionalTestCas
 			this.id = id;
 		}
 
-		public Map<String,String> getEmbeddedMap() {
+		public Map<String, String> getEmbeddedMap() {
 			return embeddedMap;
 		}
 
-		public void setEmbeddedMap(Map<String,String> embeddedMap) {
+		public void setEmbeddedMap(Map<String, String> embeddedMap) {
 			this.embeddedMap = embeddedMap;
 		}
 	}

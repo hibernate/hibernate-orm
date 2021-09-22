@@ -258,13 +258,13 @@ public abstract class AbstractEntityPersister
 
 	private final EntityLoaderLazyCollection loaders = new EntityLoaderLazyCollection();
 
-	private volatile Map<String,UniqueEntityLoader> uniqueKeyLoaders;
-	private volatile Map<LockMode,EntityLoader> naturalIdLoaders;
+	private volatile Map<String, UniqueEntityLoader> uniqueKeyLoaders;
+	private volatile Map<LockMode, EntityLoader> naturalIdLoaders;
 
 	// SQL strings
 	private String sqlVersionSelectString;
 	private String sqlSnapshotSelectString;
-	private Map<String,String> sqlLazySelectStringsByFetchGroup;
+	private Map<String, String> sqlLazySelectStringsByFetchGroup;
 
 	private String sqlIdentityInsertString;
 	private String sqlUpdateByRowIdString;
@@ -1048,14 +1048,14 @@ public abstract class AbstractEntityPersister
 				Template.renderWhereStringTemplate( string, factory.getDialect(), factory.getSqlFunctionRegistry() );
 	}
 
-	protected Map<String,String> generateLazySelectStringsByFetchGroup() {
+	protected Map<String, String> generateLazySelectStringsByFetchGroup() {
 		final BytecodeEnhancementMetadata enhancementMetadata = entityMetamodel.getBytecodeEnhancementMetadata();
 		if ( !enhancementMetadata.isEnhancedForLazyLoading()
 				|| !enhancementMetadata.getLazyAttributesMetadata().hasLazyAttributes() ) {
 			return Collections.emptyMap();
 		}
 
-		Map<String,String> result = new HashMap<>();
+		Map<String, String> result = new HashMap<>();
 
 		final LazyAttributesMetadata lazyAttributesMetadata = enhancementMetadata.getLazyAttributesMetadata();
 		for ( String groupName : lazyAttributesMetadata.getFetchGroupNames() ) {

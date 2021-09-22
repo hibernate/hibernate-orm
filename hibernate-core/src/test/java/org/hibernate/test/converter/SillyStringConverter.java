@@ -13,7 +13,7 @@ import javax.persistence.Converter;
  * @author Steve Ebersole
  */
 @Converter
-public class SillyStringConverter implements AttributeConverter<String,String> {
+public class SillyStringConverter implements AttributeConverter<String, String> {
 	@Override
 	public String convertToDatabaseColumn(String attribute) {
 		return attribute;

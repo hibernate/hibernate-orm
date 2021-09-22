@@ -78,10 +78,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	// mapping from legacy connection provider name to actual
 	// connection provider that will be used
-	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING;
+	private static final Map<String, String> LEGACY_CONNECTION_PROVIDER_MAPPING;
 
 	static {
-		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<String,String>( 5 );
+		LEGACY_CONNECTION_PROVIDER_MAPPING = new HashMap<String, String>( 5 );
 
 		LEGACY_CONNECTION_PROVIDER_MAPPING.put(
 				"org.hibernate.connection.DatasourceConnectionProvider",
@@ -404,7 +404,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static final Set<String> SPECIAL_PROPERTIES;
 
-	private static final Map<String,Integer> ISOLATION_VALUE_MAP;
+	private static final Map<String, Integer> ISOLATION_VALUE_MAP;
 	private static final Map<Integer, String> ISOLATION_VALUE_CONSTANT_NAME_MAP;
 	private static final Map<Integer, String> ISOLATION_VALUE_NICE_NAME_MAP;
 

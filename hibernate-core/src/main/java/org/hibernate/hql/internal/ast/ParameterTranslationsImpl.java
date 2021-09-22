@@ -25,7 +25,7 @@ import org.hibernate.param.PositionalParameterSpecification;
  * @author Steve Ebersole
  */
 public class ParameterTranslationsImpl implements ParameterTranslations {
-	private final Map<String,NamedParameterInformationImpl> namedParameters;
+	private final Map<String, NamedParameterInformationImpl> namedParameters;
 	private final Map<Integer,PositionalParameterInformationImpl > ordinalParameters;
 	/**
 	 * Constructs a parameter metadata object given a list of parameter

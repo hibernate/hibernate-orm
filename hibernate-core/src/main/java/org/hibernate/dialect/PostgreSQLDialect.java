@@ -532,6 +532,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
 	public boolean requiresParensForTupleDistinctCounts() {
 		return true;
 	}

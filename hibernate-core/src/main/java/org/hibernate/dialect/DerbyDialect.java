@@ -21,7 +21,6 @@ import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.DerbyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
@@ -53,7 +52,6 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -185,7 +183,7 @@ public class DerbyDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		CommonFunctionFactory.aggregates( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );

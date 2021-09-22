@@ -476,7 +476,7 @@ public abstract class Dialect implements ConversionContext {
 
 		//aggregate functions, supported on every database
 
-		CommonFunctionFactory.aggregates( queryEngine, SqlAstNodeRenderingMode.DEFAULT );
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT );
 
 		//the ANSI SQL-defined aggregate functions any() and every() are only
 		//supported on one database, but can be emulated using sum() and case,

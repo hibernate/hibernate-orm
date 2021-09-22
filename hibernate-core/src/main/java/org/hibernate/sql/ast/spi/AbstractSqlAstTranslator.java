@@ -531,6 +531,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	@Override
+	public QueryPart getCurrentQueryPart() {
+		return queryPartStack.getCurrent();
+	}
+
+	@Override
 	public T translate(JdbcParameterBindings jdbcParameterBindings, QueryOptions queryOptions) {
 		try {
 			this.jdbcParameterBindings = jdbcParameterBindings;

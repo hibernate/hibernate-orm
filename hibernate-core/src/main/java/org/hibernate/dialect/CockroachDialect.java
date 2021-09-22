@@ -216,6 +216,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
 	public boolean requiresParensForTupleDistinctCounts() {
 		return true;
 	}

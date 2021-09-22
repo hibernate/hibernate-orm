@@ -456,7 +456,7 @@ public final class QueryParameters {
 	 *
 	 * @see QueryParameters#isReadOnlyInitialized()
 	 * @see QueryParameters#setReadOnly(boolean)
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 * @see PersistenceContext#isDefaultReadOnly()
 	 *
 	 * The read-only/modifiable setting has no impact on entities/proxies returned by the
 	 * query that existed in the session before the query was executed.
@@ -480,7 +480,7 @@ public final class QueryParameters {
 	 * @see QueryParameters#isReadOnlyInitialized()
 	 * @see QueryParameters#isReadOnly(SharedSessionContractImplementor)
 	 * @see QueryParameters#setReadOnly(boolean)
-	 * @see org.hibernate.engine.spi.PersistenceContext#isDefaultReadOnly()
+	 * @see PersistenceContext#isDefaultReadOnly()
 	 */
 	public void setReadOnly(boolean readOnly) {
 		this.readOnly = readOnly;

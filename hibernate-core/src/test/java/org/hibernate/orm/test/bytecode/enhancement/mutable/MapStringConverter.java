@@ -10,7 +10,7 @@ package org.hibernate.orm.test.bytecode.enhancement.mutable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 public class MapStringConverter implements AttributeConverter<Map<String, String>, String> {
 

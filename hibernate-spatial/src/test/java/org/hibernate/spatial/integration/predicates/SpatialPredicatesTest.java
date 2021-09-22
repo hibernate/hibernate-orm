@@ -12,10 +12,10 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.spatial.integration.Model;
 import org.hibernate.spatial.predicate.GeolatteSpatialPredicates;

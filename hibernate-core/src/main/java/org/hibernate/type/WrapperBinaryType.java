@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type mapping {@link java.sql.Types#VARBINARY VARBINARY} and {@link Byte Byte[]}
+ * A type mapping {@link Types#VARBINARY VARBINARY} and {@link Byte Byte[]}
  * 
  * @author Emmanuel Bernard
  * @author Steve Ebersole

@@ -32,8 +32,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  *
  * This class is a clone of SelectLockingStrategy.
  *
- * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
- * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
+ * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
+ * @see org.hibernate.dialect.Dialect#appendLockHint(LockMode, String)
  *
  * @author Steve Ebersole
  * @author Scott Marlow

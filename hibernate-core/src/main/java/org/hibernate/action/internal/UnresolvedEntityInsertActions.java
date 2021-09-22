@@ -87,14 +87,14 @@ public class UnresolvedEntityInsertActions {
 	}
 
 	/**
-	 * Throws {@link org.hibernate.PropertyValueException} if there are any unresolved
+	 * Throws {@link PropertyValueException} if there are any unresolved
 	 * entity insert actions that depend on non-nullable associations with
 	 * a transient entity. This method should be called on completion of
 	 * an operation (after all cascades are completed) that saves an entity.
 	 *
-	 * @throws org.hibernate.PropertyValueException if there are any unresolved entity
-	 * insert actions; {@link org.hibernate.PropertyValueException#getEntityName()}
-	 * and {@link org.hibernate.PropertyValueException#getPropertyName()} will
+	 * @throws PropertyValueException if there are any unresolved entity
+	 * insert actions; {@link PropertyValueException#getEntityName()}
+	 * and {@link PropertyValueException#getPropertyName()} will
 	 * return the entity name and property value for the first unresolved
 	 * entity insert action.
 	 */

@@ -73,8 +73,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private Class collectionPersisterClass;
 	private String typeName;
 	private Properties typeParameters;
-	private final java.util.List filters = new ArrayList();
-	private final java.util.List manyToManyFilters = new ArrayList();
+	private final List filters = new ArrayList();
+	private final List manyToManyFilters = new ArrayList();
 	private final java.util.Set<String> synchronizedTables = new HashSet<>();
 
 	private String customSQLInsert;
@@ -598,7 +598,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		);
 	}
 
-	public java.util.List getFilters() {
+	public List getFilters() {
 		return filters;
 	}
 
@@ -620,7 +620,7 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		);
 	}
 
-	public java.util.List getManyToManyFilters() {
+	public List getManyToManyFilters() {
 		return manyToManyFilters;
 	}
 

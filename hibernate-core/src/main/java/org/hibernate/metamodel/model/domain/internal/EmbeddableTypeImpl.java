@@ -20,7 +20,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Standard Hibernate implementation of JPA's {@link javax.persistence.metamodel.EmbeddableType}
+ * Standard Hibernate implementation of JPA's {@link jakarta.persistence.metamodel.EmbeddableType}
  * contract
  *
  * @author Emmanuel Bernard

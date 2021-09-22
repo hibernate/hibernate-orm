@@ -15,7 +15,7 @@ import java.util.Set;
 public class Role {
 
    long id;
-   java.lang.String name;
+   String name;
    Set interventions = new HashSet();
 private List bunchOfStrings;
 
@@ -27,11 +27,11 @@ private List bunchOfStrings;
     id = newValue;
   }
 
-  java.lang.String getName() {
+  String getName() {
     return name;
   }
 
-  void  setName(java.lang.String newValue) {
+  void  setName(String newValue) {
     name = newValue;
   }
 

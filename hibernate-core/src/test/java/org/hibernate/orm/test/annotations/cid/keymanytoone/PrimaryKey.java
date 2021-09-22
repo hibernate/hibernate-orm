@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.annotations.cid.keymanytoone;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
 
 /**
  * TODO : javadoc

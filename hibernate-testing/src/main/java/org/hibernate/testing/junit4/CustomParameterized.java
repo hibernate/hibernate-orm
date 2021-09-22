@@ -39,7 +39,7 @@ import org.junit.runners.model.Statement;
  * Hibernate-specific {@link org.hibernate.testing.BeforeClassOnce} and {@link org.hibernate.testing.AfterClassOnce}
  * will be executed before and after each set of tests with given parameters.
  *
- * Class can override the parameters list (annotated by {@link org.junit.runners.Parameterized.Parameters}
+ * Class can override the parameters list (annotated by {@link Parameterized.Parameters}
  * by defining static method of the same name in inheriting class (this works although usually static
  * methods cannot override each other in Java).
  *
@@ -47,9 +47,9 @@ import org.junit.runners.model.Statement;
  * of all the options, concatenating the argument list according to {@link Order} values.
  *
  * Contrary to {@link Parameterized}, non-static parameters methods are allowed, but the test class needs
- * to have parameterless constructor, and therefore use {@link org.junit.runners.Parameterized.Parameter}
+ * to have parameterless constructor, and therefore use {@link Parameterized.Parameter}
  * for setting these parameters. This allow type-safe overriding of the method; note that only the base
- * method needs the {@link org.junit.runners.Parameterized.Parameters} annotation, overriding methods
+ * method needs the {@link Parameterized.Parameters} annotation, overriding methods
  * are invoked automatically.
  *
  * @author Radim Vansa &lt;rvansa@redhat.com&gt;

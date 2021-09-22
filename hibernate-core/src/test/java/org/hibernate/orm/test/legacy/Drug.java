@@ -9,16 +9,16 @@ package org.hibernate.orm.test.legacy;
 /**
  * @author hbm2java
  */
-public class Drug extends org.hibernate.orm.test.legacy.Resource {
+public class Drug extends Resource {
 
-   java.lang.String id;
+   String id;
 
 
-  java.lang.String getId() {
+  String getId() {
     return id;
   }
 
-  void  setId(java.lang.String newValue) {
+  void  setId(String newValue) {
     id = newValue;
   }
 

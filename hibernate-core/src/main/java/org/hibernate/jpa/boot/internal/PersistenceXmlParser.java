@@ -16,8 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.persistence.PersistenceException;
-import javax.persistence.spi.PersistenceUnitTransactionType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -480,6 +480,10 @@ public class PersistenceXmlParser {
 		}
 	}
 
+	/**
+	 * Validate the document using the
+	 * @param document
+	 */
 	private void validate(Document document) {
 		// todo : add ability to disable validation...
 

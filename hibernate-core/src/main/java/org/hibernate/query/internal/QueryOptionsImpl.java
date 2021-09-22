@@ -9,8 +9,8 @@ package org.hibernate.query.internal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;

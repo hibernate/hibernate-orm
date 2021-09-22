@@ -26,7 +26,7 @@ public interface AttributeContainer<J> {
 
 		/**
 		 * Callback used when we have a singular id attribute of some form - either a simple id
-		 * or an aggregated composite id ({@link javax.persistence.EmbeddedId})
+		 * or an aggregated composite id ({@link jakarta.persistence.EmbeddedId})
 		 */
 		default void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
 			throw new UnsupportedOperationException(

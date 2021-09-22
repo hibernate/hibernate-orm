@@ -19,9 +19,10 @@ def projectsToIncludeInAggregatedJavadoc = [
 		':hibernate-c3p0',
 		':hibernate-graalvm',
 		':hibernate-hikaricp',
-		':hibernate-jcache',
+//		':hibernate-jcache',
 		':hibernate-micrometer',
 		':hibernate-proxool',
+		':hibernate-spatial',
 		':hibernate-vibur',
 		':hibernate-gradle-plugin',
 		':hibernate-enhance-maven-plugin',
@@ -48,10 +49,8 @@ dependencies {
 
 	testImplementation project(':hibernate-testing')
 	testImplementation project(':hibernate-envers')
-	// todo (6.0) - add back hibernate-spatial dependency
-	//testImplementation project(':hibernate-spatial')
-	testImplementation project( ':hibernate-jcache' )
-	testImplementation libraries.jcache
+	testImplementation project(':hibernate-spatial')
+//	testImplementation project( ':hibernate-jcache' )
 	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 
 	testImplementation 'org.apache.commons:commons-lang3:3.4'

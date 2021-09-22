@@ -6,8 +6,8 @@
  */
 package org.hibernate;
 
-import javax.persistence.EntityTransaction;
-import javax.transaction.Synchronization;
+import jakarta.persistence.EntityTransaction;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
@@ -17,7 +17,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
  * implementation (eg. JTA, JDBC).
  * <p/>
  * A transaction is associated with a {@link Session} and is usually initiated by a call to
- * {@link org.hibernate.Session#beginTransaction()}.  A single session might span multiple transactions since
+ * {@link Session#beginTransaction()}.  A single session might span multiple transactions since
  * the notion of a session (a conversation between the application and the datastore) is of coarser granularity than
  * the notion of a transaction.  However, it is intended that there be at most one uncommitted transaction associated
  * with a particular {@link Session} at any time.

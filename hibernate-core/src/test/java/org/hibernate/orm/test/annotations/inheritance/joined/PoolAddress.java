@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class PoolAddress {

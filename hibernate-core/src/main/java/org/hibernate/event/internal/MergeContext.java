@@ -25,7 +25,7 @@ import org.jboss.logging.Logger;
  * the merge operation has cascaded to that entity.
  *
  * "Merge entity" and "mergeEntity" method parameter refer to an entity that is (or will be)
- * merged via {@link org.hibernate.event.spi.EventSource#merge(Object mergeEntity)}.
+ * merged via {@link EventSource#merge(Object mergeEntity)}.
  *
  * "Managed entity" and "managedEntity" method parameter refer to the managed entity that is
  * the result of merging an entity.
@@ -37,8 +37,8 @@ import org.jboss.logging.Logger;
  * MergeContext already contains an entry with a different entity as the key, but
  * with the same (managedEntity) value, this means that multiple entity representations
  * for the same persistent entity are being merged. If this happens,
- * {@link org.hibernate.event.spi.EntityCopyObserver#entityCopyDetected(
- * Object managedEntity, Object mergeEntity1, Object mergeEntity2, org.hibernate.event.spi.EventSource)}
+ * {@link EntityCopyObserver#entityCopyDetected(
+ * Object managedEntity, Object mergeEntity1, Object mergeEntity2, EventSource)}
  * will be called. It is up to that method to determine the property course of
  * action for this situation.
  *
@@ -149,7 +149,7 @@ public class MergeContext implements Map {
 	 * Returns an unmodifiable set view of the merge-to-managed entity cross-references contained in this MergeContext.
 	 * @return an unmodifiable set view of the merge-to-managed entity cross-references contained in this MergeContext
 	 *
-	 * @see Collections#unmodifiableSet(java.util.Set)
+	 * @see Collections#unmodifiableSet(Set)
 	 */
 	public Set entrySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.entrySet() );
@@ -180,7 +180,7 @@ public class MergeContext implements Map {
 	 * Returns an unmodifiable set view of the merge entities contained in this MergeContext
 	 * @return an unmodifiable set view of the merge entities contained in this MergeContext
 	 *
-	 * @see Collections#unmodifiableSet(java.util.Set)
+	 * @see Collections#unmodifiableSet(Set)
 	 */
 	public Set keySet() {
 		return Collections.unmodifiableSet( mergeToManagedEntityXref.keySet() );
@@ -319,7 +319,7 @@ public class MergeContext implements Map {
 	 * Returns an unmodifiable Set view of managed entities contained in this MergeContext.
 	 * @return an unmodifiable Set view of managed entities contained in this MergeContext
 	 *
-	 * @see Collections#unmodifiableSet(java.util.Set)
+	 * @see Collections#unmodifiableSet(Set)
 	 */
 	public Collection values() {
 		return Collections.unmodifiableSet( managedToMergeEntityXref.keySet() );
@@ -367,7 +367,7 @@ public class MergeContext implements Map {
 	 *
 	 * @return an unmodifiable map view of the managed-to-merge entity cross-references.
 	 *
-	 * @see Collections#unmodifiableMap(java.util.Map)
+	 * @see Collections#unmodifiableMap(Map)
 	 */
 	public Map invertMap() {
 		return Collections.unmodifiableMap( managedToMergeEntityXref );

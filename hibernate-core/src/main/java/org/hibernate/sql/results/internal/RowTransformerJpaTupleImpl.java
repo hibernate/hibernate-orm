@@ -7,7 +7,7 @@
 
 package org.hibernate.sql.results.internal;
 
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.sql.results.spi.RowTransformer;
 

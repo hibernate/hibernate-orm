@@ -39,12 +39,12 @@ public class MapType extends CollectionType {
 
 	@Override
 	public Iterator getElementsIterator(Object collection) {
-		return ( (java.util.Map) collection ).values().iterator();
+		return ( (Map) collection ).values().iterator();
 	}
 
 	@Override
 	public PersistentCollection wrap(SharedSessionContractImplementor session, Object collection) {
-		return new PersistentMap( session, (java.util.Map) collection );
+		return new PersistentMap( session, (Map) collection );
 	}
 
 	@Override
@@ -59,11 +59,11 @@ public class MapType extends CollectionType {
 			final Object original,
 			final Object target,
 			final Object owner,
-			final java.util.Map copyCache,
+			final Map copyCache,
 			final SharedSessionContractImplementor session) throws HibernateException {
 		CollectionPersister cp = session.getFactory().getMetamodel().collectionPersister( getRole() );
 
-		java.util.Map result = (java.util.Map) target;
+		Map result = (Map) target;
 		result.clear();
 
 		for ( Object o : ( (Map) original ).entrySet() ) {

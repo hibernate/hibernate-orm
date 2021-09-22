@@ -6,7 +6,7 @@
  */
 
 /**
- * Internal implementation details for reacting to JTA transaction completion via {@link javax.transaction.Synchronization}
+ * Internal implementation details for reacting to JTA transaction completion via {@link jakarta.transaction.Synchronization}
  * callbacks
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;

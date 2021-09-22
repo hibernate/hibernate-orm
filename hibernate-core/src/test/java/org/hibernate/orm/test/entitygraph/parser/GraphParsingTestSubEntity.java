@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.entitygraph.parser;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
 
 @Entity( name = "GraphParsingTestSubEntity" )
 public class GraphParsingTestSubEntity extends GraphParsingTestEntity {

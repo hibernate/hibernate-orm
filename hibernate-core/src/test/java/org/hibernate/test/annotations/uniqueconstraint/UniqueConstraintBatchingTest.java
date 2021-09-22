@@ -7,7 +7,7 @@
 package org.hibernate.test.annotations.uniqueconstraint;
 
 import java.util.Map;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;

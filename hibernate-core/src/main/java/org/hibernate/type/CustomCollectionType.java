@@ -22,8 +22,8 @@ import org.hibernate.usertype.UserCollectionType;
 /**
  * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
  *
- * @see org.hibernate.collection.spi.PersistentCollection
- * @see org.hibernate.usertype.UserCollectionType
+ * @see PersistentCollection
+ * @see UserCollectionType
  * @author Gavin King
  */
 public class CustomCollectionType extends CollectionType {

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.metamodel.attributeInSuper;
 
-import javax.persistence.metamodel.EmbeddableType;
+import jakarta.persistence.metamodel.EmbeddableType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

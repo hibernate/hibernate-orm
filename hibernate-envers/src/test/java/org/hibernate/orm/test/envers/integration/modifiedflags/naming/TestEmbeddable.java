@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.modifiedflags.naming;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Cranford

@@ -1,6 +1,6 @@
 package org.hibernate.jpamodelgen.test.collectionbasictype;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity(name = "ConcreteLike")
 public class ConcreteLike extends Like<ConcreteLike.Target> {
@@ -10,6 +10,6 @@ public class ConcreteLike extends Like<ConcreteLike.Target> {
 		return new Reference<>();
 	}
 
-	public static class Target implements Like.I1, Like.I2 {
+	public static class Target implements I1, I2 {
 	}
 }

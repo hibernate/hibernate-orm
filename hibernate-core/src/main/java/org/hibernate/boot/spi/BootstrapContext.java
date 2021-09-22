@@ -9,7 +9,7 @@ package org.hibernate.boot.spi;
 import java.util.Collection;
 import java.util.Map;
 
-import javax.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBContext;
 import javax.xml.stream.XMLInputFactory;
 
 import org.hibernate.Incubating;
@@ -56,7 +56,7 @@ public interface BootstrapContext {
 
 	/**
 	 * Access the temporary ClassLoader passed to us as defined by
-	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}, if any.
 	 *
 	 * @return The tempo ClassLoader
 	 */
@@ -119,7 +119,7 @@ public interface BootstrapContext {
 
 	/**
 	 * Access to the Jandex index passed by call to
-	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(org.jboss.jandex.IndexView)}, if any.
+	 * {@link org.hibernate.boot.MetadataBuilder#applyIndexView(IndexView)}, if any.
 	 * <p/>
 	 * Note that Jandex is currently not used.  See https://github.com/hibernate/hibernate-orm/wiki/Roadmap7.0
 	 *

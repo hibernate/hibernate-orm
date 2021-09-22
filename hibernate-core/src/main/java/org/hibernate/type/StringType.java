@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}
+ * A type that maps between {@link Types#VARCHAR VARCHAR} and {@link String}
  *
  * @author Gavin King
  * @author Steve Ebersole

@@ -7,8 +7,8 @@
 
 package org.hibernate.orm.test.envers.integration.inheritance.joined.relation.unidirectional;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import org.hibernate.envers.Audited;
 

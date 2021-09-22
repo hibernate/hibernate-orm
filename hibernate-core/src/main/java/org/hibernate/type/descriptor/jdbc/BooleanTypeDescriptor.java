@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterBoolean;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for {@link java.sql.Types#BOOLEAN BOOLEAN} handling.
+ * Descriptor for {@link Types#BOOLEAN BOOLEAN} handling.
  *
  * @author Steve Ebersole
  */

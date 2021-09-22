@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -519,7 +519,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	}
 
 	protected boolean readCommittedIsolationMaintained(String scenario) {
-		int isolation = java.sql.Connection.TRANSACTION_READ_UNCOMMITTED;
+		int isolation = Connection.TRANSACTION_READ_UNCOMMITTED;
 		Session testSession = null;
 		try {
 			testSession = openSession();
@@ -543,7 +543,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 				}
 			}
 		}
-		if ( isolation < java.sql.Connection.TRANSACTION_READ_COMMITTED ) {
+		if ( isolation < Connection.TRANSACTION_READ_COMMITTED ) {
 			SkipLog.reportSkip( "environment does not support at least read committed isolation", scenario );
 			return false;
 		}

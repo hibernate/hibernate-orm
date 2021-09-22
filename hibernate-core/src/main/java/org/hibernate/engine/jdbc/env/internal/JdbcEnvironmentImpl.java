@@ -56,7 +56,7 @@ public class JdbcEnvironmentImpl implements JdbcEnvironment {
 	private final NameQualifierSupport nameQualifierSupport;
 
 	/**
-	 * Constructor form used when the JDBC {@link java.sql.DatabaseMetaData} is not available.
+	 * Constructor form used when the JDBC {@link DatabaseMetaData} is not available.
 	 *
 	 * @param serviceRegistry The service registry
 	 * @param dialect The resolved dialect.

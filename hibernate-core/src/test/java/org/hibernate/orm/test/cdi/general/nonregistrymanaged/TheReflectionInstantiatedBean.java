@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
 
-import javax.enterprise.inject.Vetoed;
+import jakarta.enterprise.inject.Vetoed;
 
 /**
  * @author Yoann Rodiere

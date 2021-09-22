@@ -18,7 +18,7 @@ import org.hibernate.persister.collection.CollectionPersister;
  * A custom type for mapping user-written classes that implement <tt>PersistentCollection</tt>
  *
  * @author Gavin King
- * @see org.hibernate.collection.spi.PersistentCollection
+ * @see PersistentCollection
  */
 public interface UserCollectionType {
 

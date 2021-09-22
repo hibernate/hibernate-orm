@@ -67,8 +67,8 @@ public class ListCollectionInitializor extends AbstractCollectionInitializor<Lis
 		// otherwise it will be a List
 		Object elementData = collectionRow;
 		Object indexData = collectionRow;
-		if ( java.util.List.class.isInstance( collectionRow ) ) {
-			final java.util.List row = java.util.List.class.cast( collectionRow );
+		if ( List.class.isInstance( collectionRow ) ) {
+			final List row = List.class.cast( collectionRow );
 			elementData = row.get( elementComponentData.getComponentIndex() );
 			indexData = row.get( indexComponentData.getComponentIndex() );
 		}

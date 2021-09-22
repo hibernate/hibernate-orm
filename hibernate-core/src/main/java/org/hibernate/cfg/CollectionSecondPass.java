@@ -34,7 +34,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 	Collection collection;
 	private Map localInheritedMetas;
 
-	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection, java.util.Map inheritedMetas) {
+	public CollectionSecondPass(MetadataBuildingContext buildingContext, Collection collection, Map inheritedMetas) {
 		this.collection = collection;
 		this.buildingContext = buildingContext;
 		this.localInheritedMetas = inheritedMetas;
@@ -44,7 +44,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		this( buildingContext, collection, Collections.EMPTY_MAP );
 	}
 
-	public void doSecondPass(java.util.Map persistentClasses)
+	public void doSecondPass(Map persistentClasses)
 			throws MappingException {
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Second pass for collection: %s", collection.getRole() );
@@ -68,7 +68,7 @@ public abstract class CollectionSecondPass implements SecondPass {
 		}
 	}
 
-	abstract public void secondPass(java.util.Map persistentClasses, java.util.Map inheritedMetas)
+	abstract public void secondPass(Map persistentClasses, Map inheritedMetas)
 			throws MappingException;
 
 	private static String columns(Value val) {

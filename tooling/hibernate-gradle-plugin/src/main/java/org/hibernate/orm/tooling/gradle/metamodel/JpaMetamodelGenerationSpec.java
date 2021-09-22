@@ -7,7 +7,7 @@
 package org.hibernate.orm.tooling.gradle.metamodel;
 
 import java.util.Arrays;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;

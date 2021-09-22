@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.annotations.tableperclass;
 
 import java.util.List;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.JDBCException;
 import org.hibernate.query.Query;

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.basic;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

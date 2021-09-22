@@ -46,7 +46,7 @@ public class CompositeElement implements Comparable, Serializable {
 	}
 
 	/**
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
+	 * @see Comparable#compareTo(Object)
 	 */
 	public int compareTo(Object o) {
 		return ( (CompositeElement) o ).foo.compareTo(foo);

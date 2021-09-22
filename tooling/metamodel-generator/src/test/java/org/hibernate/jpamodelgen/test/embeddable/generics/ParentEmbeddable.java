@@ -8,7 +8,7 @@ package org.hibernate.jpamodelgen.test.embeddable.generics;
 
 import java.util.Set;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Chris Cranford

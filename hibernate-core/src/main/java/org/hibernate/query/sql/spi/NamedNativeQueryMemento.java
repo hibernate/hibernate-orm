@@ -8,7 +8,7 @@ package org.hibernate.query.sql.spi;
 
 import java.util.Set;
 
-import javax.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;

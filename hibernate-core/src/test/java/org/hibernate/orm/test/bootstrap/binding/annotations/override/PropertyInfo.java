@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
 import java.math.BigDecimal;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

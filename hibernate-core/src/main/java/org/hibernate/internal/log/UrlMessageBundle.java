@@ -19,7 +19,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 import static org.jboss.logging.Logger.Level.WARN;
 
 /**
- * Acts as the {@link org.jboss.logging.annotations.MessageLogger} and
+ * Acts as the {@link MessageLogger} and
  * {@link org.jboss.logging.annotations.MessageBundle} for messages related to
  * processing URLs.
  *
@@ -37,9 +37,9 @@ public interface UrlMessageBundle {
 	boolean TRACE_ENABLED = URL_LOGGER.isTraceEnabled();
 
 	/**
-	 * Logs a warning about a malformed URL, caused by a {@link java.net.URISyntaxException}
+	 * Logs a warning about a malformed URL, caused by a {@link URISyntaxException}
 	 *
-	 * @param jarUrl The URL that lead to the {@link java.net.URISyntaxException}
+	 * @param jarUrl The URL that lead to the {@link URISyntaxException}
 	 * @param e The underlying URISyntaxException
 	 */
 	@LogMessage( level = WARN )

@@ -48,7 +48,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * An SQL dialect for DB2.

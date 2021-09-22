@@ -7,7 +7,7 @@
 package org.hibernate.orm.tooling.gradle.enhance;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;

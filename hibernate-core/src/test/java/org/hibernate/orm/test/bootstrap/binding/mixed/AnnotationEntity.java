@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.mixed;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Entity
 public class AnnotationEntity {

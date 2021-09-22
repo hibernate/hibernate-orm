@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.metamodel;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 import org.hibernate.jpa.test.metamodel.BaseEmbeddedEntity;
 

@@ -12,11 +12,11 @@ import static org.hamcrest.core.Is.is;
 import java.util.Iterator;
 import java.util.stream.StreamSupport;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.Comment;
 import org.hibernate.boot.Metadata;
@@ -55,7 +55,7 @@ public class CommentTest {
 	}
 
 	@Entity(name = "Person")
-	@javax.persistence.Table(name = TABLE_NAME)
+	@jakarta.persistence.Table(name = TABLE_NAME)
 	@org.hibernate.annotations.Table(comment = TABLE_COMMENT, appliesTo = TABLE_NAME)
 	public static class TestEntity {
 
@@ -65,7 +65,7 @@ public class CommentTest {
 		private Long id;
 
 		@Comment("I am name")
-		@javax.persistence.Column(length = 50)
+		@jakarta.persistence.Column(length = 50)
 		private String name;
 
 		@ManyToOne

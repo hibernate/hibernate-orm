@@ -9,11 +9,11 @@ package org.hibernate.orm.test.envers.integration.jta;
 import java.lang.reflect.Field;
 import java.util.Map;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.transaction.RollbackException;
-import javax.transaction.Status;
-import javax.transaction.Transaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
+import jakarta.transaction.RollbackException;
+import jakarta.transaction.Status;
+import jakarta.transaction.Transaction;
 
 import org.hibernate.action.spi.BeforeTransactionCompletionProcess;
 import org.hibernate.cfg.AvailableSettings;

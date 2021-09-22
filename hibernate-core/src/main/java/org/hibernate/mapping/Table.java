@@ -126,7 +126,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	/**
 	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 * obtained from {@link JdbcEnvironment}
 	 */
 	@Deprecated
 	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
@@ -145,7 +145,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	/**
 	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 * obtained from {@link JdbcEnvironment}
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {

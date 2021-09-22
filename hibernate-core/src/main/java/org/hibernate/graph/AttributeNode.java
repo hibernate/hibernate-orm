@@ -7,7 +7,7 @@
 package org.hibernate.graph;
 
 import java.util.Map;
-import javax.persistence.Subgraph;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
-public interface AttributeNode<J> extends GraphNode<J>, javax.persistence.AttributeNode<J> {
+public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.AttributeNode<J> {
 	PersistentAttribute<?, J> getAttributeDescriptor();
 
 	Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs();

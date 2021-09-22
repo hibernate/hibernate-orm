@@ -294,7 +294,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType
+	 * @see JaxbHbmNativeQueryReturnType
 	 */
 	public static class EntityResultDescriptor implements ResultDescriptor, HbmFetchParent {
 		private final String entityName;
@@ -480,7 +480,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryPropertyReturnType
+	 * @see JaxbHbmNativeQueryPropertyReturnType
 	 */
 	public static class PropertyFetchDescriptor implements HbmFetchDescriptor {
 		private final HbmFetchParent parent;
@@ -562,7 +562,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryJoinReturnType
+	 * @see JaxbHbmNativeQueryJoinReturnType
 	 */
 	public static class JoinDescriptor implements HbmFetchDescriptor, HbmFetchParent {
 		private final String ownerTableAlias;
@@ -688,7 +688,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryCollectionLoadReturnType
+	 * @see JaxbHbmNativeQueryCollectionLoadReturnType
 	 */
 	public static class CollectionResultDescriptor implements ResultDescriptor, HbmFetchParent {
 		private final NavigablePath collectionPath;
@@ -776,7 +776,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType
+	 * @see JaxbHbmNativeQueryScalarReturnType
 	 */
 	public static class ScalarDescriptor implements ResultDescriptor {
 		private final String columnName;

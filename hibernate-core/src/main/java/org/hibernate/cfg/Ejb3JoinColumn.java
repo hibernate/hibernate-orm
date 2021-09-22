@@ -11,8 +11,8 @@ import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.JoinColumn;
-import javax.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.PrimaryKeyJoinColumn;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -893,7 +893,7 @@ public class Ejb3JoinColumn extends Ejb3Column {
 	 *
 	 * @param column the referenced column.
 	 */
-	public void overrideFromReferencedColumnIfNecessary(org.hibernate.mapping.Column column) {
+	public void overrideFromReferencedColumnIfNecessary(Column column) {
 		if (getMappingColumn() != null) {
 			// columnDefinition can also be specified using @JoinColumn, hence we have to check
 			// whether it is set or not

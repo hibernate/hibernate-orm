@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.jpa;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.Environment;
 

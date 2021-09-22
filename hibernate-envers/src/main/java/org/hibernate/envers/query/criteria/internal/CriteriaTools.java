@@ -71,7 +71,7 @@ public abstract class CriteriaTools {
 	 * @param entityName Original entity name (not audited).
 	 * @param propertyName Property name or placeholder.
 	 *
-	 * @return Path to property. Handles identifier placeholder used by {@link org.hibernate.envers.query.criteria.AuditId}.
+	 * @return Path to property. Handles identifier placeholder used by {@link AuditId}.
 	 */
 	public static String determinePropertyName(
 			EnversService enversService,

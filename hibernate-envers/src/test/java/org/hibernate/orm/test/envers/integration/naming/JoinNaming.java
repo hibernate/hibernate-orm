@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.naming;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;

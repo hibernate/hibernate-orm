@@ -10,8 +10,8 @@ import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.persistence.EnumType;
-import javax.persistence.TemporalType;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.BasicValue;
@@ -49,7 +49,7 @@ public class InferredBasicValueResolver {
 	public static BasicValue.Resolution from(
 			Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess,
-			java.lang.reflect.Type resolvedJavaType,
+			Type resolvedJavaType,
 			Supplier<JavaTypeDescriptor> reflectedJtdResolver,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			Table table,
@@ -364,7 +364,7 @@ public class InferredBasicValueResolver {
 			TemporalJavaTypeDescriptor reflectedJtd,
 			BasicJavaDescriptor explicitJavaType,
 			JdbcTypeDescriptor explicitJdbcType,
-			java.lang.reflect.Type resolvedJavaType,
+			Type resolvedJavaType,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
@@ -384,7 +384,7 @@ public class InferredBasicValueResolver {
 
 			if ( requestedTemporalPrecision != null && explicitTemporalJtd.getPrecision() != requestedTemporalPrecision ) {
 				throw new MappingException(
-						"Temporal precision (`javax.persistence.TemporalType`) mismatch... requested precision = " + requestedTemporalPrecision +
+						"Temporal precision (`jakarta.persistence.TemporalType`) mismatch... requested precision = " + requestedTemporalPrecision +
 								"; explicit JavaTypeDescriptor (`" + explicitTemporalJtd + "`) precision = " + explicitTemporalJtd.getPrecision()
 
 				);

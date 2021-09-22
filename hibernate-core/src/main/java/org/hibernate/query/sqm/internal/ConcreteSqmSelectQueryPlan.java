@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
-import javax.persistence.criteria.CompoundSelection;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -56,7 +56,7 @@ import org.hibernate.sql.results.spi.RowTransformer;
 /**
  * Standard Hibernate implementation of SelectQueryPlan for SQM-backed
  * {@link org.hibernate.query.Query} implementations, which means
- * HQL/JPQL or {@link javax.persistence.criteria.CriteriaQuery}
+ * HQL/JPQL or {@link jakarta.persistence.criteria.CriteriaQuery}
  *
  * @author Steve Ebersole
  */

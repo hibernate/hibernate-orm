@@ -66,7 +66,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestampWithMillis;
 
@@ -325,7 +325,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	/**
-	 * Firebird 2.5 doesn't have a real {@link java.sql.Types#BOOLEAN}
+	 * Firebird 2.5 doesn't have a real {@link Types#BOOLEAN}
 	 * type, so...
 	 */
 	@Override

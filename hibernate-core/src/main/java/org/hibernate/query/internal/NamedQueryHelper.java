@@ -7,8 +7,8 @@
 package org.hibernate.query.internal;
 
 import java.util.Map;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;

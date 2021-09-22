@@ -49,7 +49,7 @@ import org.hibernate.type.UUIDBinaryType;
 import org.hibernate.type.UUIDCharType;
 
 /**
- * Base class implementing {@link org.hibernate.collection.spi.PersistentCollection}
+ * Base class implementing {@link PersistentCollection}
  *
  * @author Gavin King
  */
@@ -1019,7 +1019,7 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 		}
 	}
 
-	protected final class ListProxy implements java.util.List<E> {
+	protected final class ListProxy implements List<E> {
 		protected final List<E> list;
 
 		public ListProxy(List<E> list) {

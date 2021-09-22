@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.accesstype;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

@@ -8,6 +8,6 @@
 /**
  * Hibernate extensions to and implementations of the JPA metamodel
  *
- * @see javax.persistence.metamodel
+ * @see jakarta.persistence.metamodel
  */
 package org.hibernate.metamodel.model.domain;

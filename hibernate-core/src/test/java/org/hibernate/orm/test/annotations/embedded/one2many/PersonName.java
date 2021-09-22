@@ -7,12 +7,12 @@
 package org.hibernate.orm.test.annotations.embedded.one2many;
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.AccessType;
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.OneToMany;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.OneToMany;
 
-import javax.persistence.Access;
+import jakarta.persistence.Access;
 
 /**
  * TODO : javadoc

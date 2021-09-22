@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.metamodel;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Christian Beikov

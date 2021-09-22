@@ -18,7 +18,7 @@ import org.jboss.logging.Logger;
 
 /**
  * Standard support for {@link org.hibernate.cache.spi.access.EntityDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_ONLY} access type.
+ * using the {@link AccessType#READ_ONLY} access type.
  *
  * @author Steve Ebersole
  */

@@ -16,7 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -96,7 +96,7 @@ public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instan
 			return (X) GregorianCalendar.from( instant.atZone( zoneId ) );
 		}
 
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
+		if ( Timestamp.class.isAssignableFrom( type ) ) {
 			/*
 			 * This works around two bugs:
 			 * - HHH-13266 (JDK-8061577): around and before 1900,
@@ -124,7 +124,7 @@ public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instan
 			return (X) java.sql.Time.from( instant );
 		}
 
-		if ( java.util.Date.class.isAssignableFrom( type ) ) {
+		if ( Date.class.isAssignableFrom( type ) ) {
 			return (X) Date.from( instant );
 		}
 
@@ -175,7 +175,7 @@ public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instan
 		}
 
 		if ( value instanceof Date ) {
-			return ( (java.util.Date) value ).toInstant();
+			return ( (Date) value ).toInstant();
 		}
 
 		throw unknownWrap( value.getClass() );

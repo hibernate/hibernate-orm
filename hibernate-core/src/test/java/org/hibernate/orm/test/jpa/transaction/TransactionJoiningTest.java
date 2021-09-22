@@ -7,12 +7,12 @@
 package org.hibernate.orm.test.jpa.transaction;
 
 import java.util.concurrent.CountDownLatch;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceException;
-import javax.persistence.SynchronizationType;
-import javax.persistence.TransactionRequiredException;
-import javax.transaction.Status;
-import javax.transaction.TransactionManager;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.SynchronizationType;
+import jakarta.persistence.TransactionRequiredException;
+import jakarta.transaction.Status;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

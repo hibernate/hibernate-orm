@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
@@ -310,9 +310,9 @@ public abstract class AbstractIdentifiableType<J>
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	private class InFlightAccessImpl extends AbstractManagedType.InFlightAccessImpl {
-		private final AbstractManagedType.InFlightAccess managedTypeAccess;
+		private final InFlightAccess managedTypeAccess;
 
-		private InFlightAccessImpl(AttributeContainer.InFlightAccess managedTypeAccess) {
+		private InFlightAccessImpl(InFlightAccess managedTypeAccess) {
 			this.managedTypeAccess = managedTypeAccess;
 		}
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.spi;
 
-import javax.persistence.AccessType;
+import jakarta.persistence.AccessType;
 
 /**
  * Common interface for JAXB bindings that represent persistent attributes.

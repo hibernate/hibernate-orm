@@ -9,13 +9,13 @@ package org.hibernate.orm.test.annotations.cid;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.ManyToOne;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
@@ -252,7 +252,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "Node")
-	@IdClass(CompositeIdFkGeneratedValueTest.Node.PK.class)
+	@IdClass(Node.PK.class)
 	public static class Node {
 
 		@Id
@@ -309,7 +309,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "NodeS")
-	@IdClass(CompositeIdFkGeneratedValueTest.NodeS.PK.class)
+	@IdClass(NodeS.PK.class)
 	public static class NodeS {
 
 		@Id
@@ -367,7 +367,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "NodeA")
-	@IdClass(CompositeIdFkGeneratedValueTest.NodeA.PK.class)
+	@IdClass(NodeA.PK.class)
 	public static class NodeA {
 
 		@Id
@@ -425,7 +425,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "NodeT")
-	@IdClass(CompositeIdFkGeneratedValueTest.NodeT.PK.class)
+	@IdClass(NodeT.PK.class)
 	public static class NodeT {
 
 		@Id
@@ -473,7 +473,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "ComplexNodeS")
-	@IdClass(CompositeIdFkGeneratedValueTest.ComplexNodeS.PK.class)
+	@IdClass(ComplexNodeS.PK.class)
 	public static class ComplexNodeS {
 
 		@Id
@@ -524,7 +524,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "ComplexNodeT")
-	@IdClass(CompositeIdFkGeneratedValueTest.ComplexNodeT.PK.class)
+	@IdClass(ComplexNodeT.PK.class)
 	public static class ComplexNodeT {
 
 		@Id
@@ -575,7 +575,7 @@ public class CompositeIdFkGeneratedValueTest {
 	}
 
 	@Entity(name = "ComplexNodeA")
-	@IdClass(CompositeIdFkGeneratedValueTest.ComplexNodeA.PK.class)
+	@IdClass(ComplexNodeA.PK.class)
 	public static class ComplexNodeA {
 
 		@Id

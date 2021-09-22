@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.resource.transaction.jta;
 
-import javax.transaction.Status;
-import javax.transaction.SystemException;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.Status;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.TransactionException;
 import org.hibernate.orm.test.resource.common.SynchronizationCollectorImpl;

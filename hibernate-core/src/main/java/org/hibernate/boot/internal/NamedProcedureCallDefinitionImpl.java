@@ -11,9 +11,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureParameter;
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -38,7 +38,7 @@ import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMem
  *
  * @author Steve Ebersole
  *
- * @see javax.persistence.NamedStoredProcedureQuery
+ * @see jakarta.persistence.NamedStoredProcedureQuery
  */
 public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefinition {
 	private final String registeredName;

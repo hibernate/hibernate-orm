@@ -25,6 +25,7 @@ configurations {
 //    testing
 
     envers
+    spatial
 
     agroal
     c3p0
@@ -35,30 +36,21 @@ configurations {
     jcache
 
     jpamodelgen
-
-    coreJakarta
-//    testingJakarta
-    enversJakarta
-    jpamodelgenJakarta
 }
 
 dependencies {
     core project( ':hibernate-core' )
 //    testing project( ':hibernate-testing' )
     envers project( ':hibernate-envers' )
+    spatial project( ':hibernate-spatial' )
     agroal project( ':hibernate-agroal' )
     c3p0 project( ':hibernate-c3p0' )
     hikaricp project( ':hibernate-hikaricp' )
     proxool project( ':hibernate-proxool' )
     vibur project( ':hibernate-vibur' )
-    jcache project( ':hibernate-jcache' )
+//    jcache project( ':hibernate-jcache' )
 
     jpamodelgen project( ':hibernate-jpamodelgen' )
-
-    coreJakarta project( ':hibernate-core-jakarta' )
-//    testingJakarta project( ':hibernate-testing-jakarta' )
-    enversJakarta project( ':hibernate-envers-jakarta' )
-    jpamodelgenJakarta project( ':hibernate-jpamodelgen-jakarta' )
 }
 
 /**
@@ -153,15 +145,9 @@ distributions {
 //                from project( ':project-template' ).files( 'src/main/dist' )
 //            }
 
-            // todo (6.0) - add back spatial
-//            into( 'lib/spatial' ) {
-//                from(
-//                        ( parent.project( 'hibernate-spatial' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
-//                                + parent.project( 'hibernate-spatial' ).configurations.runtime )
-//                                - parent.project( 'hibernate-core' ).configurations.runtime
-//                                - parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files
-//                )
-//            }
+            into( 'lib/spatial' ) {
+                from( configurations.spatial - configurations.core )
+            }
 
             into( 'lib/jpa-metamodel-generator' ) {
                 from( configurations.jpamodelgen - configurations.core )
@@ -174,7 +160,7 @@ distributions {
 //            into( 'lib/testing' ) {
 //                from( configurations.testing - configurations.core )
 //            }
-
+//
             into( 'lib/optional' ) {
                 into( 'agroal' ) {
                     from( configurations.agroal - configurations.core )
@@ -193,21 +179,6 @@ distributions {
                 }
                 into( 'vibur' ) {
                     from( configurations.vibur - configurations.core )
-                }
-            }
-
-            into( 'lib/jakarta' ) {
-                into( 'required' ) {
-                    from configurations.coreJakarta
-                }
-//                into( 'testing' ) {
-//                   from( configurations.testingJakarta - configurations.coreJakarta )
-//                }
-                into( 'envers' ) {
-                    from( configurations.enversJakarta - configurations.coreJakarta )
-                }
-                into( 'jpa-metamodel-generator' ) {
-                    from( configurations.jpamodelgenJakarta - configurations.coreJakarta )
                 }
             }
 

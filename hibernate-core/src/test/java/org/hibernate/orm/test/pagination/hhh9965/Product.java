@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.pagination.hhh9965;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * Created on 17/12/17.

@@ -10,7 +10,7 @@ import org.hibernate.internal.util.StringHelper;
 
 /**
  * Indicates the manner in which JDBC Connections should be acquired.  Inverse to
- * {@link org.hibernate.ConnectionReleaseMode}.
+ * {@link ConnectionReleaseMode}.
  *
  * @author Steve Ebersole
  */

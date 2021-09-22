@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import javax.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.graph.internal.SubGraphImpl;
 import org.hibernate.graph.spi.SubGraphImplementor;

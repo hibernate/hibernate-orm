@@ -9,9 +9,9 @@ package org.hibernate.orm.test.jpa.criteria.basic;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.jpa.test.metamodel.Product;

@@ -22,16 +22,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.PersistenceException;
-import javax.persistence.StoredProcedureQuery;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -153,8 +153,8 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
  * Concrete implementation of a Session.
  * <p/>
  * Exposes two interfaces:<ul>
- * <li>{@link org.hibernate.Session} to the application</li>
- * <li>{@link org.hibernate.engine.spi.SessionImplementor} to other Hibernate components (SPI)</li>
+ * <li>{@link Session} to the application</li>
+ * <li>{@link SessionImplementor} to other Hibernate components (SPI)</li>
  * </ul>
  * <p/>
  * This class is not thread-safe.
@@ -1055,7 +1055,7 @@ public class SessionImpl
 		}
 
 		try {
-			final LoadEventListener.LoadType type;
+			final LoadType type;
 			if ( nullable ) {
 				type = LoadEventListener.INTERNAL_LOAD_NULLABLE;
 			}

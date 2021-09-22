@@ -55,7 +55,7 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 

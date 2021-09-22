@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.attribute;
 
 import java.util.Arrays;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;

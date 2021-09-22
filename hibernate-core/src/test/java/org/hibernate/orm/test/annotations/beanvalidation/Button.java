@@ -6,10 +6,10 @@
  */
 
 package org.hibernate.orm.test.annotations.beanvalidation;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Emmanuel Bernard

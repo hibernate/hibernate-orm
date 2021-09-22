@@ -17,7 +17,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  *
- * @deprecated Using {@link javax.persistence.Index} instead.
+ * @deprecated Using {@link jakarta.persistence.Index} instead.
  */
 @Target({FIELD, METHOD})
 @Retention(RUNTIME)

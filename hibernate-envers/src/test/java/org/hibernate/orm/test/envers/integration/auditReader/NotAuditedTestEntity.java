@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.envers.integration.auditReader;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 /**
  * @author Adam Warski (adam at warski dot org)

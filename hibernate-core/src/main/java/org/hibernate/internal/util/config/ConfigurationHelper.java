@@ -343,7 +343,7 @@ public final class ConfigurationHelper {
 	 * The exact behavior here is largely dependant upon what is passed in as
 	 * the delimiter.
 	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
+	 * @see #extractPropertyValue(String, Properties)
 	 *
 	 * @param propertyName The name of the property for which to retrieve value
 	 * @param delim The string defining tokens used as both entry and key/value delimiters.
@@ -368,7 +368,7 @@ public final class ConfigurationHelper {
 	 * The exact behavior here is largely dependant upon what is passed in as
 	 * the delimiter.
 	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
+	 * @see #extractPropertyValue(String, Properties)
 	 *
 	 * @param propertyName The name of the property for which to retrieve value
 	 * @param delim The string defining tokens used as both entry and key/value delimiters.
@@ -390,7 +390,7 @@ public final class ConfigurationHelper {
 	/**
 	 * Get a property value as a string array.
 	 *
-	 * @see #extractPropertyValue(String, java.util.Properties)
+	 * @see #extractPropertyValue(String, Properties)
 	 * @see #toStringArray(String, String)
 	 *
 	 * @param propertyName The name of the property for which to retrieve value

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.collectionelement;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class Person {

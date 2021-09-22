@@ -9,10 +9,10 @@
 
 package org.hibernate.orm.test.bootstrap.binding.annotations.access.xml;
 import java.util.Set;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Hardy Ferentschik

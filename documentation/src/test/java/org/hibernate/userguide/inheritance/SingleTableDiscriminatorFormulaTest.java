@@ -8,11 +8,11 @@ package org.hibernate.userguide.inheritance;
 
 import java.math.BigDecimal;
 import java.util.List;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
 
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.dialect.PostgreSQL81Dialect;

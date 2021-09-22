@@ -200,7 +200,7 @@ public class Column implements Selectable, Serializable, Cloneable {
 	}
 
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
-		org.hibernate.type.Type type = getValue().getType();
+		Type type = getValue().getType();
 		try {
 			int sqlTypeCode = type.getSqlTypeCodes( mapping )[getTypeIndex()];
 			if ( getSqlTypeCode() != null && getSqlTypeCode() != sqlTypeCode ) {

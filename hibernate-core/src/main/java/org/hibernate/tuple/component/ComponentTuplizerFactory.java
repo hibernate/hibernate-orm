@@ -96,7 +96,7 @@ public class ComponentTuplizerFactory implements Serializable {
 	 *
 	 * @return The instantiated tuplizer
 	 *
-	 * @throws HibernateException if the {@link java.lang.reflect.Constructor#newInstance} call fails.
+	 * @throws HibernateException if the {@link Constructor#newInstance} call fails.
 	 */
 	public ComponentTuplizer constructTuplizer(Class<? extends ComponentTuplizer> tuplizerClass, Component metadata) {
 		Constructor<? extends ComponentTuplizer> constructor = getProperConstructor( tuplizerClass );

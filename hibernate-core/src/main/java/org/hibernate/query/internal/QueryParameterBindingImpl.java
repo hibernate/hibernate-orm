@@ -9,7 +9,7 @@ package org.hibernate.query.internal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;

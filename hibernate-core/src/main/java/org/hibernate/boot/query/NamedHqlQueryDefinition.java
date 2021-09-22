@@ -17,7 +17,7 @@ import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
  * Boot-time descriptor of a named HQL query, as defined in
  * annotations or xml
  *
- * @see javax.persistence.NamedQuery
+ * @see jakarta.persistence.NamedQuery
  * @see org.hibernate.annotations.NamedQuery
  *
  * @author Steve Ebersole

@@ -30,7 +30,7 @@ import org.hibernate.type.Type;
  * @see java.util.HashSet
  * @author Gavin King
  */
-public class PersistentSet<E> extends AbstractPersistentCollection<E> implements java.util.Set<E> {
+public class PersistentSet<E> extends AbstractPersistentCollection<E> implements Set<E> {
 	protected Set<E> set;
 
 	/**
@@ -71,7 +71,7 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	 * @param session The session to which this set will belong.
 	 * @param set The underlying set data.
 	 */
-	public PersistentSet(SharedSessionContractImplementor session, java.util.Set<E> set) {
+	public PersistentSet(SharedSessionContractImplementor session, Set<E> set) {
 		super( session );
 		// Sets can be just a view of a part of another collection.
 		// do we need to copy it to be sure it won't be changing
@@ -88,10 +88,10 @@ public class PersistentSet<E> extends AbstractPersistentCollection<E> implements
 	 *
 	 * @param session The session to which this set will belong.
 	 * @param set The underlying set data.
-	 * @deprecated {@link #PersistentSet(SharedSessionContractImplementor, java.util.Set)} should be used instead.
+	 * @deprecated {@link #PersistentSet(SharedSessionContractImplementor, Set)} should be used instead.
 	 */
 	@Deprecated
-	public PersistentSet(SessionImplementor session, java.util.Set<E> set) {
+	public PersistentSet(SessionImplementor session, Set<E> set) {
 		this( (SharedSessionContractImplementor) session, set );
 	}
 

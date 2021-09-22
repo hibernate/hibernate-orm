@@ -7,8 +7,8 @@
 package org.hibernate.procedure;
 
 import java.util.List;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.MappingException;
 import org.hibernate.SynchronizeableQuery;
@@ -100,7 +100,7 @@ public interface ProcedureCall
 	<T> ProcedureParameter<T> registerParameter(int position, Class<T> type, ParameterMode mode);
 
 	/**
-	 * Chained form of {@link #registerParameter(int, Class, javax.persistence.ParameterMode)}
+	 * Chained form of {@link #registerParameter(int, Class, jakarta.persistence.ParameterMode)}
 	 *
 	 * @param position The position
 	 * @param type The Java type of the parameter
@@ -139,7 +139,7 @@ public interface ProcedureCall
 			throws NamedParametersNotSupportedException;
 
 	/**
-	 * Chained form of {@link #registerParameter(String, Class, javax.persistence.ParameterMode)}
+	 * Chained form of {@link #registerParameter(String, Class, jakarta.persistence.ParameterMode)}
 	 *
 	 * @param parameterName The parameter name
 	 * @param type The Java type of the parameter

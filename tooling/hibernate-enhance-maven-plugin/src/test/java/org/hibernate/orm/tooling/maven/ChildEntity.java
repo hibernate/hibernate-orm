@@ -1,6 +1,6 @@
 package org.hibernate.orm.tooling.maven;
 
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 @MappedSuperclass
 public class ChildEntity extends ParentEntity {

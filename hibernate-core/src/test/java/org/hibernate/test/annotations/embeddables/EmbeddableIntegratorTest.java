@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.annotations.embeddables;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;

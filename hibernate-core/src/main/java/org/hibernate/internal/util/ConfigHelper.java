@@ -83,8 +83,8 @@ public final class ConfigHelper {
 
 	/**
 	 * Open an InputStream to the URL represented by the incoming path.  First makes a call
-	 * to {@link #locateConfig(java.lang.String)} in order to find an appropriate URL.
-	 * {@link java.net.URL#openStream()} is then called to obtain the stream.
+	 * to {@link #locateConfig(String)} in order to find an appropriate URL.
+	 * {@link URL#openStream()} is then called to obtain the stream.
 	 *
 	 * @param path The path representing the config location.
 	 *

@@ -66,7 +66,7 @@ import org.hibernate.type.Type;
  * </ol>
  *
  * @see QueryableCollection
- * @see org.hibernate.collection.spi.PersistentCollection
+ * @see PersistentCollection
  * @author Gavin King
  */
 public interface CollectionPersister extends CollectionDefinition {

@@ -12,13 +12,13 @@ import java.sql.SQLException;
 import org.hibernate.dialect.Dialect;
 
 /**
- * Contract for resolving the schema of a {@link java.sql.Connection}.
+ * Contract for resolving the schema of a {@link Connection}.
  *
  * @author Steve Ebersole
  */
 public interface SchemaNameResolver {
 	/**
-	 * Given a JDBC {@link java.sql.Connection}, resolve the name of the schema (if one) to which it connects.
+	 * Given a JDBC {@link Connection}, resolve the name of the schema (if one) to which it connects.
 	 *
 	 * @param connection The JDBC connection
 	 * @param dialect The Dialect

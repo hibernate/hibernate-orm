@@ -8,7 +8,7 @@ package org.hibernate.orm.test.flush;
 
 import java.util.Map;
 
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;

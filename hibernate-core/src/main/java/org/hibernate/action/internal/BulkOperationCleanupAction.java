@@ -35,7 +35,7 @@ import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
- * An {@link org.hibernate.engine.spi.ActionQueue} {@link org.hibernate.action.spi.Executable} for ensuring
+ * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for ensuring
  * shared cache cleanup in relation to performed bulk HQL queries.
  * <p/>
  * NOTE: currently this executes for <tt>INSERT</tt> queries as well as

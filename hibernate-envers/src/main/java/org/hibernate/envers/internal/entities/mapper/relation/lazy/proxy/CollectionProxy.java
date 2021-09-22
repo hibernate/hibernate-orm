@@ -18,7 +18,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.I
 public abstract class CollectionProxy<U, T extends Collection<U>> implements Collection<U>, Serializable {
 	private static final long serialVersionUID = 8698249863871832402L;
 
-	private transient org.hibernate.envers.internal.entities.mapper.relation.lazy.initializor.Initializor<T> initializor;
+	private transient Initializor<T> initializor;
 	protected T delegate;
 
 	protected CollectionProxy() {

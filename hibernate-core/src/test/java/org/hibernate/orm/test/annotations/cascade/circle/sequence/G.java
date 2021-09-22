@@ -9,24 +9,24 @@ package org.hibernate.orm.test.annotations.cascade.circle.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class G extends AbstractEntity {
     private static final long serialVersionUID = 325417437L;
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToMany(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToMany(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , mappedBy = "g")
-    private java.util.Set<org.hibernate.orm.test.annotations.cascade.circle.sequence.C> cCollection = new java.util.HashSet<org.hibernate.orm.test.annotations.cascade.circle.sequence.C>();
+    private java.util.Set<C> cCollection = new java.util.HashSet<C>();
 
-    public java.util.Set<org.hibernate.orm.test.annotations.cascade.circle.sequence.C> getCCollection() {
+    public java.util.Set<C> getCCollection() {
         return cCollection;
     }
 
     public void setCCollection(
-        java.util.Set<org.hibernate.orm.test.annotations.cascade.circle.sequence.C> parameter) {
+        java.util.Set<C> parameter) {
         this.cCollection = parameter;
     }
 }

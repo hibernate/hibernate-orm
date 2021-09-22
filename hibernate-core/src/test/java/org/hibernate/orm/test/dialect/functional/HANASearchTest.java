@@ -11,8 +11,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.sql.PreparedStatement;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
@@ -239,8 +239,8 @@ public class HANASearchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected java.lang.Class<?>[] getAnnotatedClasses() {
-		return new java.lang.Class[]{ SearchEntity.class };
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[]{ SearchEntity.class };
 	}
 
 	@Entity(name = ENTITY_NAME)

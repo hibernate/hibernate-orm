@@ -8,10 +8,10 @@ package org.hibernate.jpa.test.persistenceunit;
 
 import java.util.Collections;
 import java.util.Map;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;

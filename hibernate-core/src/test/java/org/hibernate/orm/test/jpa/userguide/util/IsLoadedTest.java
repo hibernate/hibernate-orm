@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.userguide.util;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 

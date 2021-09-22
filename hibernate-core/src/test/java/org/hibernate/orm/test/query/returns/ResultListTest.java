@@ -8,8 +8,8 @@ package org.hibernate.orm.test.query.returns;
 
 import java.util.List;
 import java.util.function.Consumer;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import org.hibernate.query.Query;
 import org.hibernate.query.spi.QueryImplementor;

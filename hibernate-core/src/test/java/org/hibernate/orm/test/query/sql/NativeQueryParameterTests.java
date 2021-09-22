@@ -8,7 +8,7 @@ package org.hibernate.orm.test.query.sql;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

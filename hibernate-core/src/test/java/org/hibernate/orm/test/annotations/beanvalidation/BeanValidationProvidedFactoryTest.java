@@ -8,10 +8,10 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
 import java.util.Locale;
-import javax.validation.ConstraintViolationException;
-import javax.validation.MessageInterpolator;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.MessageInterpolator;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
 
 import org.junit.Test;
 
@@ -66,10 +66,10 @@ public class BeanValidationProvidedFactoryTest extends BaseCoreFunctionalTestCas
 				return interpolate( s, context );
 			}
 		};
-		final javax.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
+		final jakarta.validation.Configuration<?> configuration = Validation.byDefaultProvider().configure();
 		configuration.messageInterpolator( messageInterpolator );
 		ValidatorFactory vf = configuration.buildValidatorFactory();
-		cfg.getProperties().put( "javax.persistence.validation.factory", vf );
+		cfg.getProperties().put( "jakarta.persistence.validation.factory", vf );
 		cfg.setProperty( "javax.persistence.validation.mode", "AUTO" );
 	}
 }

@@ -703,7 +703,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public java.util.List<AttributeMapping> getAttributeMappings() {
+		public List<AttributeMapping> getAttributeMappings() {
 			return null;
 		}
 

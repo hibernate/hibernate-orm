@@ -152,7 +152,7 @@ public class ArchiveHelper {
 	 *
 	 * @throws IOException Indicates a problem accessing the stream
 	 *
-	 * @see #getBytesFromInputStreamSafely(java.io.InputStream)
+	 * @see #getBytesFromInputStreamSafely(InputStream)
 	 */
 	public static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
 		// Optimized by HHH-7835

@@ -16,8 +16,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.EntityManager;
-import javax.persistence.StoredProcedureQuery;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.DerbyTenSevenDialect;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;

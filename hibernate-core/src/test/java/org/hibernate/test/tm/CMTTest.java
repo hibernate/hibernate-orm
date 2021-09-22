@@ -9,7 +9,7 @@ package org.hibernate.test.tm;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.transaction.Transaction;
+import jakarta.transaction.Transaction;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.EntityMode;

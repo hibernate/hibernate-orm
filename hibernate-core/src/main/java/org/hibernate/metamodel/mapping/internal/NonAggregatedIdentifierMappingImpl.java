@@ -27,7 +27,7 @@ import org.hibernate.type.ComponentType;
 /**
  * A "non-aggregated" composite identifier.
  * <p>
- * This is an identifier mapped using JPA's {@link javax.persistence.MapsId} feature.
+ * This is an identifier mapped using JPA's {@link jakarta.persistence.MapsId} feature.
  *
  * @author Steve Ebersole
  * @apiNote Technically a MapsId id does not have to be composite; we still handle that this class however

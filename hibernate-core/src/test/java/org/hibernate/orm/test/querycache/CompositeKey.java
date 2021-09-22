@@ -8,7 +8,7 @@ package org.hibernate.orm.test.querycache;
 
 import java.io.Serializable;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 @Embeddable
 public class CompositeKey implements Serializable {

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.entities.ids;
 
 import java.io.Serializable;
 import java.util.Date;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Adam Warski (adam at warski dot org)

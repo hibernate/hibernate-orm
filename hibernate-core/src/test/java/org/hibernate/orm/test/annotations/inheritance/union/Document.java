@@ -8,9 +8,9 @@
 //$Id$
 package org.hibernate.orm.test.annotations.inheritance.union;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 /**
  * @author Emmanuel Bernard

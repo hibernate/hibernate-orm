@@ -14,7 +14,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -38,7 +38,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTemporalTypeDescriptor<Date>
 	public static final DateTimeFormatter LITERAL_FORMATTER = DateTimeFormatter.ISO_LOCAL_TIME;
 
 	/**
-	 * Alias for {@link java.time.format.DateTimeFormatter#ISO_LOCAL_TIME}.
+	 * Alias for {@link DateTimeFormatter#ISO_LOCAL_TIME}.
 	 *
 	 * Intended for use with logging
 	 *
@@ -84,7 +84,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTemporalTypeDescriptor<Date>
 	}
 
 	@Override
-	public java.util.Date fromString(String string) {
+	public Date fromString(String string) {
 		try {
 			return new Time( new SimpleDateFormat( TIME_FORMAT ).parse( string ).getTime() );
 		}
@@ -153,7 +153,7 @@ public class JdbcTimeTypeDescriptor extends AbstractTemporalTypeDescriptor<Date>
 					: new java.sql.Timestamp( value.getTime() );
 			return (X) rtn;
 		}
-		if ( java.util.Date.class.isAssignableFrom( type ) ) {
+		if ( Date.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
 		if ( Calendar.class.isAssignableFrom( type ) ) {

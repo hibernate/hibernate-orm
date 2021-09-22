@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
-import javax.persistence.EntityGraph;
+import jakarta.persistence.EntityGraph;
 
 import org.hibernate.Filter;
 import org.hibernate.UnknownProfileException;
@@ -159,7 +159,7 @@ public class LoadQueryInfluencers implements Serializable {
 			return Collections.EMPTY_SET;
 		}
 		else {
-			return java.util.Collections.unmodifiableSet( enabledFilters.keySet() );
+			return Collections.unmodifiableSet( enabledFilters.keySet() );
 		}
 	}
 

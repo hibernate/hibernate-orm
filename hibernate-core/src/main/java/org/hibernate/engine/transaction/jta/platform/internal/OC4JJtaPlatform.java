@@ -6,8 +6,8 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 /**
  * {@link org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform} implementation for the OC4J (Oracle) AS.

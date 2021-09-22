@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.query.returns;
 
 import java.util.function.Consumer;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;

@@ -9,7 +9,7 @@ package org.hibernate.cfg.annotations;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.UniqueConstraint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -107,7 +107,7 @@ public class TableBinder {
 		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
 	}
 
-	public void setJpaIndex(javax.persistence.Index[] jpaIndex){
+	public void setJpaIndex(jakarta.persistence.Index[] jpaIndex){
 		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
 	}
 
@@ -665,7 +665,7 @@ public class TableBinder {
 					}
 					//explicit referencedColumnName
 					Iterator idColItr = referencedEntity.getKey().getColumnIterator();
-					org.hibernate.mapping.Column col;
+					Column col;
 					//works cause the pk has to be on the primary table
 					Table table = referencedEntity.getTable();
 					if ( !idColItr.hasNext() ) {
@@ -674,7 +674,7 @@ public class TableBinder {
 					while ( idColItr.hasNext() ) {
 						boolean match = false;
 						//for each PK column, find the associated FK column.
-						col = (org.hibernate.mapping.Column) idColItr.next();
+						col = (Column) idColItr.next();
 						final String colName = col.getQuotedName( buildingContext.getMetadataCollector().getDatabase().getJdbcEnvironment().getDialect() );
 						for (Ejb3JoinColumn joinCol : columns) {
 							String referencedColumn = joinCol.getReferencedColumn();
@@ -754,13 +754,13 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table hibTable, javax.persistence.Index[] indexes, MetadataBuildingContext buildingContext) {
+	public static void addIndexes(Table hibTable, jakarta.persistence.Index[] indexes, MetadataBuildingContext buildingContext) {
 		buildingContext.getMetadataCollector().addJpaIndexHolders( hibTable, buildJpaIndexHolder( indexes ) );
 	}
 
-	public static List<JPAIndexHolder> buildJpaIndexHolder(javax.persistence.Index[] indexes){
+	public static List<JPAIndexHolder> buildJpaIndexHolder(jakarta.persistence.Index[] indexes){
 		List<JPAIndexHolder> holders = new ArrayList<>( indexes.length );
-		for(javax.persistence.Index index : indexes){
+		for(jakarta.persistence.Index index : indexes){
 			holders.add( new JPAIndexHolder( index ) );
 		}
 		return holders;
@@ -782,12 +782,12 @@ public class TableBinder {
 	}
 
 	/**
-	 * Build a list of {@link org.hibernate.cfg.UniqueConstraintHolder} instances given a list of
+	 * Build a list of {@link UniqueConstraintHolder} instances given a list of
 	 * {@link UniqueConstraint} annotations.
 	 *
 	 * @param annotations The {@link UniqueConstraint} annotations.
 	 *
-	 * @return The built {@link org.hibernate.cfg.UniqueConstraintHolder} instances.
+	 * @return The built {@link UniqueConstraintHolder} instances.
 	 */
 	public static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] annotations) {
 		List<UniqueConstraintHolder> result;

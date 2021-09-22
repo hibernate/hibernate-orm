@@ -17,7 +17,7 @@ import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.ConnectionReleaseMode;
 import org.hibernate.HibernateException;
@@ -39,7 +39,7 @@ import org.jboss.logging.Logger;
  * session by the current thread of execution.  Unlike the JTA counterpart, threads do not give us a nice
  * hook to perform any type of cleanup making it questionable for this impl to actually generate Session
  * instances.  In the interest of usability, it was decided to have this default impl actually generate
- * a session upon first request and then clean it up after the {@link org.hibernate.Transaction}
+ * a session upon first request and then clean it up after the {@link Transaction}
  * associated with that session is committed/rolled-back.  In order for ensuring that happens, the
  * sessions generated here are unusable until after {@link Session#beginTransaction()} has been
  * called. If <tt>close()</tt> is called on a session managed by this class, it will be automatically
@@ -192,7 +192,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	 *
 	 * @param session The session to bind.
 	 */
-	public static void bind(org.hibernate.Session session) {
+	public static void bind(Session session) {
 		final SessionFactory factory = session.getSessionFactory();
 		doBind( session, factory );
 	}
@@ -242,7 +242,7 @@ public class ThreadLocalSessionContext extends AbstractCurrentSessionContext {
 	}
 
 	@SuppressWarnings({"unchecked"})
-	private static void doBind(org.hibernate.Session session, SessionFactory factory) {
+	private static void doBind(Session session, SessionFactory factory) {
 		Session orphanedPreviousSession = sessionMap().put( factory, session );
 		terminateOrphanedSession( orphanedPreviousSession );
 	}

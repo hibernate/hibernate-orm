@@ -6,8 +6,8 @@
  */
 
 package org.hibernate.orm.test.annotations.beanvalidation;
-import javax.persistence.Entity;
-import javax.validation.constraints.NotNull;
+import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * @author Emmanuel Bernard

@@ -25,8 +25,8 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import java.lang.reflect.Field;
 import java.util.Collection;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.junit.jupiter.api.Test;
 

@@ -7,7 +7,7 @@
 package org.hibernate.cache.spi.access;
 
 import java.io.Serializable;
-import javax.persistence.Cache;
+import jakarta.persistence.Cache;
 
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.DomainDataRegion;
@@ -190,7 +190,7 @@ public interface CachedDomainDataAccess {
 	 * isolation and/or locking.  This behavior is exactly Hibernate legacy behavior, but
 	 * it is also required by JPA - so we cannot remove it.
 	 * <p/>
-	 * Used from JPA's {@link javax.persistence.Cache#evict(Class, Object)}, as well as the
+	 * Used from JPA's {@link jakarta.persistence.Cache#evict(Class, Object)}, as well as the
 	 * Hibernate extension {@link org.hibernate.Cache#evictEntityData(Class, Serializable)}
 	 * and {@link org.hibernate.Cache#evictEntityData(String, Serializable)}
 	 *

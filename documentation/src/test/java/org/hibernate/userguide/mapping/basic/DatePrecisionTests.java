@@ -9,10 +9,10 @@ package org.hibernate.userguide.mapping.basic;
 import java.sql.Types;
 import java.time.Instant;
 import java.util.Date;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -45,7 +45,7 @@ public class DatePrecisionTests {
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
 			assertThat( jtd, is( attribute.getJavaTypeDescriptor() ) );
-			assertThat( jtd.getJavaTypeClass(), equalTo( java.util.Date.class ) );
+			assertThat( jtd.getJavaTypeClass(), equalTo( Date.class ) );
 			assertThat( jtd.getPrecision(), equalTo( TemporalType.TIMESTAMP ) );
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIMESTAMP ) );
 		}
@@ -55,7 +55,7 @@ public class DatePrecisionTests {
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
 			assertThat( jtd, is( attribute.getJavaTypeDescriptor() ) );
-			assertThat( jtd.getJavaTypeClass(), equalTo( java.util.Date.class ) );
+			assertThat( jtd.getJavaTypeClass(), equalTo( Date.class ) );
 			assertThat( jtd.getPrecision(), equalTo( TemporalType.DATE ) );
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.DATE ) );
 		}
@@ -65,7 +65,7 @@ public class DatePrecisionTests {
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			final TemporalJavaTypeDescriptor jtd = (TemporalJavaTypeDescriptor) jdbcMapping.getJavaTypeDescriptor();
 			assertThat( jtd, is( attribute.getJavaTypeDescriptor() ) );
-			assertThat( jtd.getJavaTypeClass(), equalTo( java.util.Date.class ) );
+			assertThat( jtd.getJavaTypeClass(), equalTo( Date.class ) );
 			assertThat( jtd.getPrecision(), equalTo( TemporalType.TIME ) );
 			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( Types.TIME ) );
 		}

@@ -2,8 +2,8 @@ package org.hibernate.orm.test.query.criteria.internal.hhh14197;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToMany;
 
 /**
  * @author Archie Cobbs

@@ -14,7 +14,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Optional annotation in conjunction with {@link javax.persistence.Version} and timestamp version properties
+ * Optional annotation in conjunction with {@link jakarta.persistence.Version} and timestamp version properties
  * indicating the source of the timestamp value.
  *
  * @author Hardy Ferentschik

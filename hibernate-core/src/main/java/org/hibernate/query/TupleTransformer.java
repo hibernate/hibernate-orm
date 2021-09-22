@@ -17,7 +17,7 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
  * contract, which is the thing actually used to process the results internally.
  *
  * Note that {@link JpaTupleTransformer} is a special sub-type applications may use
- * to transform the row into a JPA {@link javax.persistence.Tuple}.  JpaTupleTransformer is
+ * to transform the row into a JPA {@link jakarta.persistence.Tuple}.  JpaTupleTransformer is
  * deprecated as it is much more appropriate (and simpler) to simply specify the Query
  * return type as Tuple
  *

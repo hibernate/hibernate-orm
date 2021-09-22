@@ -10,22 +10,8 @@ description = 'Hibernate\'s community supported dialects'
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 
 dependencies {
-    api( project( ':hibernate-core' ) ) {
-        // Exclude access to this to avoid future use.
-        // todo (6.0) : this should no longer be transitive from core.  Come back and verify this
-        exclude group: "org.javassist", module: "javassist"
-    }
-
-    implementation libraries.commons_annotations
-
-    // TODO HHH-13703: get rid of this dependency
-    implementation libraries.dom4j
+    api project( ':hibernate-core' )
 
     testImplementation project( ':hibernate-testing' )
     testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 }
-
-//test {
-//    dependsOn project(':hibernate-core').tasks.compileTestJava
-//    test.testClassesDirs = project(':hibernate-core').tasks.test.testClassesDirs
-//}

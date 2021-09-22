@@ -19,7 +19,7 @@ public class Building extends Area {
 		return address;
 	}
 
-	public void setAddress(org.hibernate.jpamodelgen.test.accesstype.Address address) {
+	public void setAddress(Address address) {
 		this.address = address;
 	}
 }

@@ -7,11 +7,11 @@
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.util.Map;
-import javax.transaction.Synchronization;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
+import jakarta.transaction.UserTransaction;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jndi.spi.JndiService;

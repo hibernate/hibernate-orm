@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.ids.idclass;
 
 import org.hibernate.envers.Audited;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 /**

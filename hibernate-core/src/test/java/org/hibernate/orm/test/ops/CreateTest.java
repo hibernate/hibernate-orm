@@ -8,7 +8,7 @@ package org.hibernate.orm.test.ops;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.PersistentObjectException;
 import org.hibernate.dialect.AbstractHANADialect;

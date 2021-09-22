@@ -28,8 +28,8 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * For non-read locks, this is achieved through the Dialect's specific
  * SELECT ... FOR UPDATE syntax.
  *
- * @see org.hibernate.dialect.Dialect#getForUpdateString(org.hibernate.LockMode)
- * @see org.hibernate.dialect.Dialect#appendLockHint(org.hibernate.LockMode, String)
+ * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
+ * @see org.hibernate.dialect.Dialect#appendLockHint(LockMode, String)
  *
  * @author Steve Ebersole
  * @since 3.2

@@ -11,7 +11,7 @@ import java.io.Serializable;
 import org.hibernate.engine.spi.SessionImplementor;
 
 /**
- * A pluggable strategy for defining how the {@link javax.transaction.Synchronization} registered by Hibernate determines
+ * A pluggable strategy for defining how the {@link jakarta.transaction.Synchronization} registered by Hibernate determines
  * whether to perform a managed flush.  An exceptions from either this delegate or the subsequent flush are routed
  * through the sister strategy {@link ExceptionMapper}.
  *

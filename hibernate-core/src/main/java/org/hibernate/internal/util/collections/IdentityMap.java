@@ -24,7 +24,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	private final LinkedHashMap<IdentityKey<K>,V> map;
 	@SuppressWarnings( {"unchecked"})
-	private transient Map.Entry<IdentityKey<K>,V>[] entryArray = null;
+	private transient Entry<IdentityKey<K>,V>[] entryArray = null;
 
 	/**
 	 * Return a new instance of this class, with iteration
@@ -54,7 +54,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	 * @param map The map of entries
 	 * @return Collection
 	 */
-	public static <K,V> Map.Entry<K,V>[] concurrentEntries(Map<K,V> map) {
+	public static <K,V> Entry<K,V>[] concurrentEntries(Map<K,V> map) {
 		return ( (IdentityMap<K,V>) map ).entryArray();
 	}
 
@@ -152,9 +152,9 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 	}
 
 	@SuppressWarnings( {"unchecked"})
-	public Map.Entry[] entryArray() {
+	public Entry[] entryArray() {
 		if ( entryArray == null ) {
-			entryArray = new Map.Entry[ map.size() ];
+			entryArray = new Entry[ map.size() ];
 			final Iterator<Entry<IdentityKey<K>, V>> itr = map.entrySet().iterator();
 			int i = 0;
 			while ( itr.hasNext() ) {
@@ -191,7 +191,7 @@ public final class IdentityMap<K,V> implements Map<K,V> {
 
 	}
 
-	private static final class IdentityMapEntry<K,V> implements java.util.Map.Entry<K,V> {
+	private static final class IdentityMapEntry<K,V> implements Entry<K,V> {
 
 		private final K key;
 		private final V value;

@@ -23,11 +23,11 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -371,8 +371,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@TypeDef(name = FloatAsRealType.NAME, typeClass = FloatAsRealType.class)
 	public static class RealEntity extends TestedEntity<Float> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#REAL}
-		 * instead of the default {@link java.sql.Types#FLOAT}.
+		 * The custom type sets the SQL type to {@link Types#REAL}
+		 * instead of the default {@link Types#FLOAT}.
 		 */
 		@Type(type = FloatAsRealType.NAME)
 		public Float getTestedProperty() {
@@ -392,8 +392,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@TypeDef(name = BigDecimalAsDecimalType.NAME, typeClass = BigDecimalAsDecimalType.class)
 	public static class DecimalEntity extends TestedEntity<BigDecimal> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#DECIMAL}
-		 * instead of the default {@link java.sql.Types#NUMERIC}.
+		 * The custom type sets the SQL type to {@link Types#DECIMAL}
+		 * instead of the default {@link Types#NUMERIC}.
 		 */
 		@Type(type = BigDecimalAsDecimalType.NAME)
 		@Column(precision = 50, scale = 15)
@@ -429,8 +429,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@TypeDef(name = StringAsNonVarCharType.NAME, typeClass = StringAsNonVarCharType.class)
 	public static class Char255Entity extends TestedEntity<String> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#CHAR}
-		 * instead of the default {@link java.sql.Types#VARCHAR}.
+		 * The custom type sets the SQL type to {@link Types#CHAR}
+		 * instead of the default {@link Types#VARCHAR}.
 		 */
 		@Type(type = StringAsNonVarCharType.NAME)
 		@Column(length = 255)
@@ -442,8 +442,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Entity(name = "longvarcharEntity")
 	public static class LongvarcharEntity extends TestedEntity<String> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#LONGVARCHAR}
-		 * instead of the default {@link java.sql.Types#VARCHAR}.
+		 * The custom type sets the SQL type to {@link Types#LONGVARCHAR}
+		 * instead of the default {@link Types#VARCHAR}.
 		 */
 		@Type(type = "text")
 		public String getTestedProperty() {
@@ -455,8 +455,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@TypeDef(name = ByteArrayAsNonVarBinaryType.NAME, typeClass = ByteArrayAsNonVarBinaryType.class)
 	public static class BinaryEntity extends TestedEntity<byte[]> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#BINARY}
-		 * instead of the default {@link java.sql.Types#VARBINARY}.
+		 * The custom type sets the SQL type to {@link Types#BINARY}
+		 * instead of the default {@link Types#VARBINARY}.
 		 */
 		@Type(type = ByteArrayAsNonVarBinaryType.NAME)
 		public byte[] getTestedProperty() {
@@ -474,8 +474,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Entity(name = "longvarbinaryEntity")
 	public static class LongvarbinaryEntity extends TestedEntity<byte[]> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#LONGVARBINARY}
-		 * instead of the default {@link java.sql.Types#VARBINARY}.
+		 * The custom type sets the SQL type to {@link Types#LONGVARBINARY}
+		 * instead of the default {@link Types#VARBINARY}.
 		 */
 		@Type(type = "image")
 		public byte[] getTestedProperty() {
@@ -529,8 +529,8 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@TypeDef(name = BooleanAsBitType.NAME, typeClass = BooleanAsBitType.class)
 	public static class BitEntity extends TestedEntity<Boolean> {
 		/**
-		 * The custom type sets the SQL type to {@link java.sql.Types#BIT}
-		 * instead of the default {@link java.sql.Types#BOOLEAN}.
+		 * The custom type sets the SQL type to {@link Types#BIT}
+		 * instead of the default {@link Types#BOOLEAN}.
 		 */
 		@Type(type = BooleanAsBitType.NAME)
 		public Boolean getTestedProperty() {

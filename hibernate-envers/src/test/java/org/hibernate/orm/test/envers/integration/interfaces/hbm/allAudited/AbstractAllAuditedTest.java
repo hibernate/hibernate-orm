@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.interfaces.hbm.allAudited;
 
 import java.util.Arrays;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.exception.NotAuditedException;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

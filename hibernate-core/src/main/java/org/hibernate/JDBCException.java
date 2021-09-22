@@ -13,7 +13,7 @@ import java.sql.SQLException;
  *
  * @author Gavin King
  *
- * @see java.sql.SQLException
+ * @see SQLException
  */
 public class JDBCException extends HibernateException {
 	private final SQLException sqlException;
@@ -47,7 +47,7 @@ public class JDBCException extends HibernateException {
 	 *
 	 * @return The X/Open or ANSI SQL SQLState error code; may return null.
 	 *
-	 * @see java.sql.SQLException#getSQLState()
+	 * @see SQLException#getSQLState()
 	 */
 	public String getSQLState() {
 		return sqlException.getSQLState();
@@ -58,7 +58,7 @@ public class JDBCException extends HibernateException {
 	 *
 	 * @return The vendor specific error code
 	 *
-	 * @see java.sql.SQLException#getErrorCode()
+	 * @see SQLException#getErrorCode()
 	 */
 	public int getErrorCode() {
 		return sqlException.getErrorCode();

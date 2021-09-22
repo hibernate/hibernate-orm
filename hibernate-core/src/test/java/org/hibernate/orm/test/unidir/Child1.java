@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.unidir;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

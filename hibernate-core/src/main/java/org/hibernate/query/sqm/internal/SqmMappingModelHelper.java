@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.function.Function;
-import javax.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

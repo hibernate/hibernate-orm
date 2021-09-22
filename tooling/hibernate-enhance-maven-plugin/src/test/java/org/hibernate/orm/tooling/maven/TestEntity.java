@@ -1,7 +1,7 @@
 package org.hibernate.orm.tooling.maven;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 @Entity
 public class TestEntity extends ChildEntity {

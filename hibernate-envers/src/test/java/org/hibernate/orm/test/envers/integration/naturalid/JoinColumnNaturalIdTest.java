@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.naturalid;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;

@@ -11,5 +11,5 @@ package org.hibernate.metamodel.model.domain;
  *
  * @author Steve Ebersole
  */
-public interface SimpleDomainType<J> extends DomainType<J>, javax.persistence.metamodel.Type<J> {
+public interface SimpleDomainType<J> extends DomainType<J>, jakarta.persistence.metamodel.Type<J> {
 }

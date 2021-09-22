@@ -10,7 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.EntityGraph;
+import jakarta.persistence.EntityGraph;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
@@ -51,7 +51,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * Defines the internal contract between the <tt>SessionFactory</tt> and other parts of
  * Hibernate such as implementors of <tt>Type</tt>.
  *
- * @see org.hibernate.SessionFactory
+ * @see SessionFactory
  * @see org.hibernate.internal.SessionFactoryImpl
  *
  * @author Gavin King
@@ -319,7 +319,7 @@ public interface SessionFactoryImplementor
 	/**
 	 * Get the names of all persistent classes that implement/extend the given interface/class
 	 *
-	 * @deprecated Use {@link Metamodel#getImplementors(java.lang.String)} instead
+	 * @deprecated Use {@link Metamodel#getImplementors(String)} instead
 	 */
 	@Deprecated
 	default String[] getImplementors(String entityName) {
@@ -329,7 +329,7 @@ public interface SessionFactoryImplementor
 	/**
 	 * Get a class name, using query language imports
 	 *
-	 * @deprecated Use {@link Metamodel#getImportedClassName(java.lang.String)} instead
+	 * @deprecated Use {@link Metamodel#getImportedClassName(String)} instead
 	 */
 	@Deprecated
 	default String getImportedClassName(String name) {

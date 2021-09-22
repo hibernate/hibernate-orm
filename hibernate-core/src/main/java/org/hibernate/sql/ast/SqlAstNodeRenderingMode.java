@@ -9,7 +9,7 @@ package org.hibernate.sql.ast;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 
 /**
- * The rendering mode to use for {@link org.hibernate.sql.ast.tree.SqlAstNode}.
+ * The rendering mode to use for {@link SqlAstNode}.
  *
  * Some functions/contexts require the use of literals/expressions rather than parameters
  * like for example the `char` function in Derby which requires the length as literal.
@@ -29,19 +29,19 @@ public enum SqlAstNodeRenderingMode {
 
 	/**
 	 * Render parameters as literals.
-	 * All parameters within the {@link org.hibernate.sql.ast.tree.SqlAstNode} are rendered as literals.
+	 * All parameters within the {@link SqlAstNode} are rendered as literals.
 	 */
 	INLINE_PARAMETERS,
 
 	/**
 	 * Render all nested parameters as literals.
-	 * All parameters within the {@link org.hibernate.sql.ast.tree.SqlAstNode} are rendered as literals.
+	 * All parameters within the {@link SqlAstNode} are rendered as literals.
 	 */
 	INLINE_ALL_PARAMETERS,
 
 	/**
 	 * Don't render plain parameters. Render it as literal or as expression.
-	 * If the {@link org.hibernate.sql.ast.tree.SqlAstNode} to render is a parameter,
+	 * If the {@link SqlAstNode} to render is a parameter,
 	 * it will be rendered either as literal or wrapped into a semantically equivalent expression
 	 * such that it doesn't appear as plain parameter.
 	 */

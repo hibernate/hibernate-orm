@@ -13,8 +13,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
@@ -112,7 +112,7 @@ public class PersisterClassProviderTest {
 
 		@SuppressWarnings( {"UnusedParameters"})
 		public GoofyProvider(
-				org.hibernate.mapping.PersistentClass persistentClass,
+				PersistentClass persistentClass,
 				EntityDataAccess entityDataAccessstrategy,
 				NaturalIdDataAccess naturalIdRegionAccessStrategy,
 				PersisterCreationContext creationContext) {
@@ -716,7 +716,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public java.util.List<AttributeMapping> getAttributeMappings() {
+		public List<AttributeMapping> getAttributeMappings() {
 			return null;
 		}
 

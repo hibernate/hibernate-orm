@@ -22,7 +22,7 @@ import org.hibernate.service.ServiceRegistry;
 
 /**
  * Helper class for helping deal with the reflection calls relating to CDI
- * in terms of building CDI-based {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+ * in terms of building CDI-based {@link BeanContainer}
  * instance
  *
  * We need to to avoid statically linking CDI classed into the ClassLoader which

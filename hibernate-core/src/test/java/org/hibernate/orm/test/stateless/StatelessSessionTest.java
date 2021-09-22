@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.stateless;
 
 import java.util.Date;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;

@@ -8,12 +8,12 @@
   -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns="http://www.hibernate.org/xsd/orm/hbm"
-           xmlns:jaxb="http://java.sun.com/xml/ns/jaxb"
+           xmlns:jaxb="https://jakarta.ee/xml/ns/jaxb"
            xmlns:simplify="http://jaxb2-commons.dev.java.net/basic/simplify"
            targetNamespace="http://www.hibernate.org/xsd/orm/hbm"
            elementFormDefault="qualified"
            jaxb:extensionBindingPrefixes="simplify"
-           jaxb:version="1.0"
+           jaxb:version="3.0"
            version="4.0">
     <xs:annotation>
         <xs:documentation>

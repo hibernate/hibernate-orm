@@ -33,7 +33,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	}
 
 	/**
-	 * Return the {@linkplain java.sql.Types JDBC type code} used when interacting
+	 * Return the {@linkplain Types JDBC type code} used when interacting
 	 * with JDBC APIs.
 	 *
 	 * For example, it's used when calling {@link java.sql.PreparedStatement#setNull(int, int)}.

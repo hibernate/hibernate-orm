@@ -8,9 +8,9 @@
 //$Id: $
 
 package org.hibernate.orm.test.annotations.lob;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * An entity containing data that is materialized into a byte array immediately.

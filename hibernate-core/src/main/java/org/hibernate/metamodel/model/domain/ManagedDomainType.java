@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.function.Consumer;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;

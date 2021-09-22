@@ -272,7 +272,7 @@ public final class SerializationHelper {
 	/**
 	 * Deserializes an object from an array of bytes.
 	 * <p/>
-	 * Delegates to {@link #deserialize(java.io.InputStream, ClassLoader)} using a
+	 * Delegates to {@link #deserialize(InputStream, ClassLoader)} using a
 	 * {@link ByteArrayInputStream} to wrap the array.
 	 *
 	 * @param objectData the serialized object, must not be null

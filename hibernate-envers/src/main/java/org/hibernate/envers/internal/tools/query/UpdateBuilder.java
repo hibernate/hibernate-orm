@@ -47,7 +47,7 @@ public class UpdateBuilder {
 		sb.append( "update " ).append( entityName ).append( " " ).append( alias );
 		sb.append( " set " );
 		int i = 1;
-		for ( java.util.Map.Entry<String, Object> entry : updates.entrySet() ) {
+		for ( Map.Entry<String, Object> entry : updates.entrySet() ) {
 			final String property = entry.getKey();
 			final String paramName = generateParameterName();
 			sb.append( alias ).append( "." ).append( property ).append( " = " ).append( ":" ).append( paramName );

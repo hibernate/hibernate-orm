@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Pattern;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
@@ -110,8 +110,8 @@ public class SchemaScriptFileGenerationFailureTest {
 
 	private Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
-		config.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
+		config.put( AvailableSettings.HBM2DDL_SCRIPTS_DROP_TARGET, writer );
+		config.put( AvailableSettings.HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );
 		config.put( AvailableSettings.HBM2DDL_HALT_ON_ERROR, "true" );
 		ArrayList<Class> classes = new ArrayList<>();
 

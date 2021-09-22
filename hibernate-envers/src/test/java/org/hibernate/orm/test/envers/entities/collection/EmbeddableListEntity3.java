@@ -9,7 +9,7 @@ package org.hibernate.orm.test.envers.entities.collection;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.entities.components.relations.ManyToOneEagerComponent;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 

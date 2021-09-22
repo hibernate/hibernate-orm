@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.envers.integration.components.mappedsuperclass;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Jakob Braeuchi.

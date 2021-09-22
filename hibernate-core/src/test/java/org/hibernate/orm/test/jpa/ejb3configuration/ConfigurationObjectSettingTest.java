@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.util.Collections;
-import javax.persistence.SharedCacheMode;
-import javax.persistence.ValidationMode;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.AvailableSettings;

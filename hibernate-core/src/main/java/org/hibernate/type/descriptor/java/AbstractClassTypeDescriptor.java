@@ -18,7 +18,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
  *
  * @apiNote This abstract descriptor implements BasicJavaDescriptor
  * because we currently only categorize "basic" JavaTypeDescriptors,
- * as in the {@link javax.persistence.metamodel.Type.PersistenceType#BASIC}
+ * as in the {@link jakarta.persistence.metamodel.Type.PersistenceType#BASIC}
  * sense
  *
  * @author Steve Ebersole

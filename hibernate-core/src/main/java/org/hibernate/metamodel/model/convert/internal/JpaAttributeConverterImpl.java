@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.model.convert.internal;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;

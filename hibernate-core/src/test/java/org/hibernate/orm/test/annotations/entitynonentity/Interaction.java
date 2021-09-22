@@ -7,8 +7,8 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.entitynonentity;
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Emmanuel Bernard

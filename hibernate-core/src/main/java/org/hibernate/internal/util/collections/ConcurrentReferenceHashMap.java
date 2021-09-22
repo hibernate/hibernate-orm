@@ -235,7 +235,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	boolean identityComparisons;
 
 	transient Set<K> keySet;
-	transient Set<Map.Entry<K, V>> entrySet;
+	transient Set<Entry<K, V>> entrySet;
 	transient Collection<V> values;
 
 	/* ---------------- Small Utilities -------------- */
@@ -1353,7 +1353,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	 */
 	@Override
 	public void putAll(Map<? extends K, ? extends V> m) {
-		for ( Map.Entry<? extends K, ? extends V> e : m.entrySet() ) {
+		for ( Entry<? extends K, ? extends V> e : m.entrySet() ) {
 			put( e.getKey(), e.getValue() );
 		}
 	}
@@ -1512,8 +1512,8 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	 * reflect any modifications subsequent to construction.
 	 */
 	@Override
-	public Set<Map.Entry<K, V>> entrySet() {
-		Set<Map.Entry<K, V>> es = entrySet;
+	public Set<Entry<K, V>> entrySet() {
+		Set<Entry<K, V>> es = entrySet;
 		return ( es != null ) ? es : ( entrySet = new EntrySet() );
 	}
 
@@ -1649,7 +1649,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 	/*
 		  * This class is needed for JDK5 compatibility.
 		  */
-	static class SimpleEntry<K, V> implements Entry<K, V>, java.io.Serializable {
+	static class SimpleEntry<K, V> implements Entry<K, V>, Serializable {
 		private static final long serialVersionUID = -8499721149061103585L;
 
 		private final K key;
@@ -1688,7 +1688,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 				return false;
 			}
 			@SuppressWarnings("unchecked")
-			Map.Entry e = (Map.Entry) o;
+			Entry e = (Entry) o;
 			return eq( key, e.getKey() ) && eq( value, e.getValue() );
 		}
 
@@ -1744,7 +1744,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			extends HashIterator
 			implements Iterator<Entry<K, V>> {
 		@Override
-		public Map.Entry<K, V> next() {
+		public Entry<K, V> next() {
 			HashEntry<K, V> e = super.nextEntry();
 			return new WriteThroughEntry( e.key(), e.value() );
 		}
@@ -1809,9 +1809,9 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	final class EntrySet extends AbstractSet<Map.Entry<K, V>> {
+	final class EntrySet extends AbstractSet<Entry<K, V>> {
 		@Override
-		public Iterator<Map.Entry<K, V>> iterator() {
+		public Iterator<Entry<K, V>> iterator() {
 			return new EntryIterator();
 		}
 
@@ -1820,7 +1820,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			if ( !( o instanceof Map.Entry ) ) {
 				return false;
 			}
-			Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+			Entry<?, ?> e = (Entry<?, ?>) o;
 			V v = ConcurrentReferenceHashMap.this.get( e.getKey() );
 			return v != null && v.equals( e.getValue() );
 		}
@@ -1830,7 +1830,7 @@ public class ConcurrentReferenceHashMap<K, V> extends AbstractMap<K, V>
 			if ( !( o instanceof Map.Entry ) ) {
 				return false;
 			}
-			Map.Entry<?, ?> e = (Map.Entry<?, ?>) o;
+			Entry<?, ?> e = (Entry<?, ?>) o;
 			return ConcurrentReferenceHashMap.this.remove( e.getKey(), e.getValue() );
 		}
 

@@ -9,10 +9,10 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.basics.sql;
 import java.sql.Types;
 import java.util.Map;
 import java.util.function.Consumer;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;

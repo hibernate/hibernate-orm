@@ -11,7 +11,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * Manages callbacks from the {@link javax.transaction.Synchronization} registered by Hibernate.
+ * Manages callbacks from the {@link jakarta.transaction.Synchronization} registered by Hibernate.
  * 
  * @author Steve Ebersole
  */

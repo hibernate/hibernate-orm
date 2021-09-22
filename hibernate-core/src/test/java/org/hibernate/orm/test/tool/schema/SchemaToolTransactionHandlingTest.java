@@ -8,11 +8,11 @@ package org.hibernate.orm.test.tool.schema;
 
 import java.util.Collections;
 import java.util.EnumSet;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.Transaction;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;

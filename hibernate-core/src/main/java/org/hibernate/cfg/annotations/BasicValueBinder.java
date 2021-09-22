@@ -12,15 +12,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.MapKeyEnumerated;
-import javax.persistence.MapKeyTemporal;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
-import javax.persistence.Version;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Version;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -379,7 +379,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				if ( enumType == null ) {
 					// should never happen, but to be safe
 					throw new IllegalStateException(
-							"javax.persistence.EnumType was null on @javax.persistence.MapKeyEnumerated " +
+							"jakarta.persistence.EnumType was null on @jakarta.persistence.MapKeyEnumerated " +
 									" associated with attribute " + mapAttribute.getDeclaringClass().getName() +
 									'.' + mapAttribute.getName()
 					);
@@ -421,7 +421,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			temporalPrecision = temporalAnn.value();
 			if ( temporalPrecision == null ) {
 				throw new IllegalStateException(
-						"No javax.persistence.TemporalType defined for @javax.persistence.Temporal " +
+						"No jakarta.persistence.TemporalType defined for @jakarta.persistence.Temporal " +
 								"associated with attribute " + attributeXProperty.getDeclaringClass().getName() +
 								'.' + attributeXProperty.getName()
 				);
@@ -437,7 +437,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				enumType = enumeratedAnn.value();
 				if ( enumType == null ) {
 					throw new IllegalStateException(
-							"javax.persistence.EnumType was null on @javax.persistence.Enumerated " +
+							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
 									" associated with attribute " + attributeXProperty.getDeclaringClass().getName() +
 									'.' + attributeXProperty.getName()
 					);
@@ -464,7 +464,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			this.temporalPrecision = temporalAnn.value();
 			if ( this.temporalPrecision == null ) {
 				throw new IllegalStateException(
-						"No javax.persistence.TemporalType defined for @javax.persistence.Temporal " +
+						"No jakarta.persistence.TemporalType defined for @jakarta.persistence.Temporal " +
 								"associated with attribute " + attributeDescriptor.getDeclaringClass().getName() +
 								'.' + attributeDescriptor.getName()
 				);
@@ -480,7 +480,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				this.enumType = enumeratedAnn.value();
 				if ( this.enumType == null ) {
 					throw new IllegalStateException(
-							"javax.persistence.EnumType was null on @javax.persistence.Enumerated " +
+							"jakarta.persistence.EnumType was null on @jakarta.persistence.Enumerated " +
 									" associated with attribute " + attributeDescriptor.getDeclaringClass().getName() +
 									'.' + attributeDescriptor.getName()
 					);

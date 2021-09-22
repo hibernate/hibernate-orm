@@ -6,7 +6,7 @@
  */
 package org.hibernate.userguide.model;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Vlad Mihalcea

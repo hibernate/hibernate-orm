@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
  *
  * @author Steve Ebersole
  *
- * @deprecated Use one of the {@link org.hibernate.tuple.Attribute}-based impls instead.
+ * @deprecated Use one of the {@link Attribute}-based impls instead.
  */
 @Deprecated
 public class StandardProperty extends AbstractNonIdentifierAttribute implements NonIdentifierAttribute {

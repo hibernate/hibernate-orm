@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
- * A type that maps between {@link java.sql.Types#BOOLEAN BOOLEAN} and {@link Boolean}
+ * A type that maps between {@link Types#BOOLEAN BOOLEAN} and {@link Boolean}
  *
  * @author Gavin King
  * @author Steve Ebersole

@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 /**
  * Marshalling support for dealing with JPA LockModeType enums.  Plugged into JAXB for binding

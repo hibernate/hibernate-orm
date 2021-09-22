@@ -8,9 +8,9 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 
 import java.lang.annotation.Annotation;
 import java.math.BigDecimal;
-import javax.validation.ConstraintViolationException;
-import javax.validation.constraints.NotNull;
-import javax.validation.groups.Default;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.groups.Default;
 
 import org.junit.Test;
 

@@ -39,7 +39,7 @@ import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_LOG
 import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MESSAGE_LOGGER;
 
 /**
- * A connection provider that uses the {@link java.sql.DriverManager} directly to open connections and provides
+ * A connection provider that uses the {@link DriverManager} directly to open connections and provides
  * a very rudimentary connection pool.
  * <p/>
  * IMPL NOTE : not intended for production use!

@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.xsd;
 
+import org.hibernate.Internal;
+
 /**
  * Support for XSD handling related to Hibernate's `cfg.xml` and
  * JPA's `persistence.xml`.
@@ -16,6 +18,7 @@ package org.hibernate.boot.xsd;
  * @author Steve Ebersole
  * @author Sanne Grinovero
  */
+@Internal
 @SuppressWarnings("unused")
 public class ConfigXsdSupport {
 
@@ -33,6 +36,11 @@ public class ConfigXsdSupport {
 
 	public XsdDescriptor latestJpaDescriptor() {
 		return getJPA22();
+	}
+
+	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
+		// JPA 1.0 and 2.0 share the same namespace URI
+		return getJPA10().getNamespaceUri().matches( uri );
 	}
 
 	public XsdDescriptor jpaXsd(String version) {
@@ -58,7 +66,7 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	public XsdDescriptor cfgXsd() {
+	public static XsdDescriptor cfgXsd() {
 		final int index = 0;
 		synchronized ( xsdCache ) {
 			XsdDescriptor cfgXml = xsdCache[index];
@@ -74,7 +82,7 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	private XsdDescriptor getJPA10() {
+	public static XsdDescriptor getJPA10() {
 		final int index = 1;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa10 = xsdCache[index];
@@ -90,7 +98,7 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	private XsdDescriptor getJPA20() {
+	public static XsdDescriptor getJPA20() {
 		final int index = 2;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa20 = xsdCache[index];
@@ -106,7 +114,7 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	private XsdDescriptor getJPA21() {
+	public static XsdDescriptor getJPA21() {
 		final int index = 3;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa21 = xsdCache[index];
@@ -122,7 +130,7 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	private XsdDescriptor getJPA22() {
+	public static XsdDescriptor getJPA22() {
 		final int index = 4;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa22 = xsdCache[index];
@@ -138,7 +146,7 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	private XsdDescriptor getJPA30() {
+	public static XsdDescriptor getJPA30() {
 		final int index = 5;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa30 = xsdCache[index];

@@ -182,15 +182,15 @@ The standardized approach has some limitations in certain environments, but asid
 [[bootstrap-jpa-compliant]]
 ==== JPA-compliant bootstrapping
 
-In JPA, we are ultimately interested in bootstrapping a `javax.persistence.EntityManagerFactory` instance.
-The JPA specification defines two primary standardized bootstrap approaches depending on how the application intends to access the `javax.persistence.EntityManager` instances from an `EntityManagerFactory`.
+In JPA, we are ultimately interested in bootstrapping a `jakarta.persistence.EntityManagerFactory` instance.
+The JPA specification defines two primary standardized bootstrap approaches depending on how the application intends to access the `jakarta.persistence.EntityManager` instances from an `EntityManagerFactory`.
 
 It uses the terms _EE_ and _SE_ for these two approaches, but those terms are very misleading in this context.
 What the JPA spec calls EE bootstrapping implies the existence of a container (EE, OSGi, etc), who'll manage and inject the persistence context on behalf of the application.
 What it calls SE bootstrapping is everything else. We will use the terms container-bootstrapping and application-bootstrapping in this guide.
 
 For compliant container-bootstrapping, the container will build an `EntityManagerFactory` for each persistent-unit defined in the `META-INF/persistence.xml` configuration file
-and make that available to the application for injection via the `javax.persistence.PersistenceUnit` annotation or via JNDI lookup.
+and make that available to the application for injection via the `jakarta.persistence.PersistenceUnit` annotation or via JNDI lookup.
 
 [[bootstrap-jpa-compliant-PersistenceUnit-example]]
 .Injecting the default `EntityManagerFactory`
@@ -224,7 +224,7 @@ include::{extrasdir}/persistence.xml[]
 ----
 ====
 
-For compliant application-bootstrapping, rather than the container building the `EntityManagerFactory` for the application, the application builds the `EntityManagerFactory` itself using the `javax.persistence.Persistence` bootstrap class.
+For compliant application-bootstrapping, rather than the container building the `EntityManagerFactory` for the application, the application builds the `EntityManagerFactory` itself using the `jakarta.persistence.Persistence` bootstrap class.
 The application creates an `EntityManagerFactory` by calling the `createEntityManagerFactory` method:
 
 [[bootstrap-jpa-compliant-EntityManagerFactory-example]]
@@ -240,7 +240,7 @@ include::{sourcedir}/BootstrapTest.java[tags=bootstrap-jpa-compliant-EntityManag
 ====
 If you don't want to provide a `persistence.xml` configuration file, JPA allows you to provide all the configuration options in a
 {jpaJavadocUrlPrefix}spi/PersistenceUnitInfo.html[`PersistenceUnitInfo`] implementation and call
-https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-javax.persistence.spi.PersistenceUnitInfo-java.util.Map-[`HibernatePersistenceProvider.html#createContainerEntityManagerFactory`].
+https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/HibernatePersistenceProvider.html#createContainerEntityManagerFactory-jakarta.persistence.spi.PersistenceUnitInfo-java.util.Map-[`HibernatePersistenceProvider.html#createContainerEntityManagerFactory`].
 ====
 
 To inject the default Persistence Context, you can use the {jpaJavadocUrlPrefix}PersistenceContext.html[`@PersistenceContext`] annotation.

@@ -23,7 +23,7 @@ import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.type.Type;
 import org.junit.Test;
 
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 import java.util.List;
 import java.util.function.Consumer;
 

@@ -18,9 +18,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Transient;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Transient;
 
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
@@ -359,7 +359,7 @@ public class EnhancerImpl implements Enhancer {
 
 	// See HHH-10977 HHH-11284 HHH-11404 --- check for declaration of Managed interface on the class, not inherited
 	private boolean alreadyEnhanced(TypeDescription managedCtClass) {
-		for ( TypeDescription.Generic declaredInterface : managedCtClass.getInterfaces() ) {
+		for ( Generic declaredInterface : managedCtClass.getInterfaces() ) {
 			if ( declaredInterface.asErasure().isAssignableTo( Managed.class ) ) {
 				return true;
 			}

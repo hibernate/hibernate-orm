@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.resource.transaction;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Status;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.orm.test.resource.common.SynchronizationCollectorImpl;
 import org.hibernate.orm.test.resource.common.SynchronizationErrorImpl;

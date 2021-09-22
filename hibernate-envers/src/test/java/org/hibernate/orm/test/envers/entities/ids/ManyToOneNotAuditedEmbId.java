@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.envers.entities.ids;
 
 import java.io.Serializable;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.orm.test.envers.entities.UnversionedStrTestEntity;
 

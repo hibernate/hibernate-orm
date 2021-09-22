@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
 
 /**
  * @author Yoann Rodiere
@@ -16,7 +16,7 @@ import javax.enterprise.context.ApplicationScoped;
 @ApplicationScoped
 public class TheApplicationScopedBean {
 
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	private TheNestedDependentBean nestedDependentBean;
 
 	public TheApplicationScopedBean() {

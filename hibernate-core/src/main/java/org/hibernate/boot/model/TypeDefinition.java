@@ -41,13 +41,13 @@ import org.hibernate.usertype.UserType;
 
 /**
  * Models the information pertaining to a custom type definition supplied by the user.  Used
- * to delay instantiation of the actual {@link org.hibernate.type.Type} instance.
+ * to delay instantiation of the actual {@link Type} instance.
  *
  * Generally speaking this information would come from annotations
  * ({@link org.hibernate.annotations.TypeDef}) or XML mappings.  An alternative form of
  * supplying custom types is programmatically via one of:<ul>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.type.BasicType)}</li>
- *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(org.hibernate.usertype.UserType, String[])}</li>
+ *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(BasicType)}</li>
+ *     <li>{@link org.hibernate.boot.MetadataBuilder#applyBasicType(UserType, String[])}</li>
  *     <li>{@link org.hibernate.boot.MetadataBuilder#applyTypes(TypeContributor)}</li>
  * </ul>
  *

@@ -132,7 +132,7 @@ public interface EntityEntry {
 	 *
 	 * @param oos The stream to which we should write the serial data.
 	 *
-	 * @throws java.io.IOException If a stream error occurs
+	 * @throws IOException If a stream error occurs
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException;
 

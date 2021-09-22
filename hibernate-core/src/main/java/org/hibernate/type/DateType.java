@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import java.util.Date;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;

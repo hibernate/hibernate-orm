@@ -56,7 +56,7 @@ public final class StatsNamedContainer<V> {
 	}
 
 	/**
-	 * Similar semantics as you'd get by invoking {@link java.util.concurrent.ConcurrentMap#computeIfAbsent(Object, Function)},
+	 * Similar semantics as you'd get by invoking {@link ConcurrentMap#computeIfAbsent(Object, Function)},
 	 * but we check for the key existence first.
 	 * This is technically a redundant check, but it has been shown to perform better when the key existing is very likely,
 	 * as in our case.

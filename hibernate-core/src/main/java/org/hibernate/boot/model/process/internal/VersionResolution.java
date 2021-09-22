@@ -7,7 +7,7 @@
 package org.hibernate.boot.model.process.internal;
 
 import java.util.function.Function;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;

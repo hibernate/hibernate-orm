@@ -121,7 +121,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * specified in the offset clause?
 	 * <p/>
 	 * NOTE: what gets passed into
-	 * {@link AbstractLimitHandler#processSql(String, org.hibernate.engine.spi.RowSelection)}
+	 * {@link AbstractLimitHandler#processSql(String, RowSelection)}
      * is the zero-based offset. Handlers which do not {@link #supportsVariableLimit}
 	 * should take care to perform any needed first-row-conversion calls prior
 	 * to injecting the limit values into the SQL string.

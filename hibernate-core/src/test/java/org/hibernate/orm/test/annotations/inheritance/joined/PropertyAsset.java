@@ -8,7 +8,7 @@
 //$Id$
 package org.hibernate.orm.test.annotations.inheritance.joined;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

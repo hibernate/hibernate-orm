@@ -27,7 +27,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.w3c.dom.Document;
 
 /**
- * Helper for building and handling {@link org.hibernate.boot.jaxb.spi.XmlSource} references
+ * Helper for building and handling {@link XmlSource} references
  *
  * @author Steve Ebersole
  */

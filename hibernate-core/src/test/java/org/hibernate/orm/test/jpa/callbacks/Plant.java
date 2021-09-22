@@ -7,9 +7,9 @@
 
 //$Id$
 package org.hibernate.orm.test.jpa.callbacks;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 
 /**
  * @author Emmanuel Bernard

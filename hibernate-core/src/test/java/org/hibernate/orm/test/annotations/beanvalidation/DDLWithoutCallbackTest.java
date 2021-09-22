@@ -8,11 +8,11 @@ package org.hibernate.orm.test.annotations.beanvalidation;
 
 import java.math.BigDecimal;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.PersistenceException;
-import javax.validation.ConstraintViolationException;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.PersistenceException;
+import jakarta.validation.ConstraintViolationException;
 
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;

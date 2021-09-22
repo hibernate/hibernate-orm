@@ -9,9 +9,9 @@ package org.hibernate.mapping;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
-import javax.persistence.AttributeConverter;
-import javax.persistence.EnumType;
-import javax.persistence.TemporalType;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.TypeDefinition;

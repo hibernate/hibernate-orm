@@ -7,10 +7,10 @@
 package org.hibernate.query.sqm.tree.update;
 
 import java.util.List;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.sqm.NodeBuilder;

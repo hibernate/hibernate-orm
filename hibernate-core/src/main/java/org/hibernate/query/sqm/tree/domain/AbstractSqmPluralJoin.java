@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import javax.persistence.criteria.PluralJoin;
+import jakarta.persistence.criteria.PluralJoin;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.criteria.JpaJoin;

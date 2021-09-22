@@ -62,7 +62,7 @@ public class DB2UniqueDelegate extends DefaultUniqueDelegate {
 		}
 	}
 	
-	private boolean hasNullable(org.hibernate.mapping.UniqueKey uniqueKey) {
+	private boolean hasNullable(UniqueKey uniqueKey) {
 		final Iterator<org.hibernate.mapping.Column> iter = uniqueKey.getColumnIterator();
 		while ( iter.hasNext() ) {
 			if ( iter.next().isNullable() ) {

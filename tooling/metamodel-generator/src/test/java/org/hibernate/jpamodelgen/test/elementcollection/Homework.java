@@ -9,7 +9,7 @@ package org.hibernate.jpamodelgen.test.elementcollection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * @author Bogdan Știrbăț

@@ -6,14 +6,14 @@
  */
 package org.hibernate.userguide.associations;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
@@ -71,7 +71,7 @@ public class OneToOneBidirectionalTest extends BaseEntityManagerFunctionalTestCa
 				entityManager.flush();
 				entityManager.clear();
 
-				//throws javax.persistence.PersistenceException: org.hibernate.HibernateException: More than one row with the given identifier was found: 1
+				//throws jakarta.persistence.PersistenceException: org.hibernate.HibernateException: More than one row with the given identifier was found: 1
 				phone = entityManager.find( Phone.class, phone.getId() );
 				//end::associations-one-to-one-bidirectional-constraint-example[]
 				phone.getDetails().getProvider();

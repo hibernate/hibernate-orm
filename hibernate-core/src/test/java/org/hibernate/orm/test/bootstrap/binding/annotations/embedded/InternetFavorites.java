@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.bootstrap.binding.annotations.embedded;
 import java.util.Collection;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
 
 @Embeddable
 public class InternetFavorites {

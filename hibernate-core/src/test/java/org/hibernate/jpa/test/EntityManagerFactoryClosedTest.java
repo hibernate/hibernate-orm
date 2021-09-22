@@ -10,7 +10,7 @@
 package org.hibernate.jpa.test;
 
 import java.util.Map;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.jpa.AvailableSettings;

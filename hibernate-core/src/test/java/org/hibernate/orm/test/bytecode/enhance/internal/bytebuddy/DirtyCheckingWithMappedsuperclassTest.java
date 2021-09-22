@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.bytecode.enhance.internal.bytebuddy;
 
 import java.lang.reflect.Method;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.bytecode.enhance.internal.tracker.SimpleFieldTracker;
 

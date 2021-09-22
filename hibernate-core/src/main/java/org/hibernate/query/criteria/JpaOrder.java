@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.Order;
+import jakarta.persistence.criteria.Order;
 
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortOrder;

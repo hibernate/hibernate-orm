@@ -23,7 +23,7 @@ public class FetchProfileBinder {
 	 * <p/>
 	 * This form handles fetch profiles defined at the {@code <hibernate-mapping/>}
 	 * root.  For handling of fetch profiles defined within an entity, see
-	 * {@link #processFetchProfile(HbmLocalMetadataBuildingContext, org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFetchProfileType, String)}
+	 * {@link #processFetchProfile(HbmLocalMetadataBuildingContext, JaxbHbmFetchProfileType, String)}
 	 *
 	 * @param context Access to information relative to the mapping document containing this binding
 	 * @param fetchProfileBinding The {@code <fetch-profile/>} binding

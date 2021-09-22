@@ -9,8 +9,8 @@ package org.hibernate.loader.ast.internal;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;

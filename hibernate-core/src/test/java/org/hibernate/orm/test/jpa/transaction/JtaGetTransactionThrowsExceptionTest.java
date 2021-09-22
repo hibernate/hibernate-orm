@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.transaction;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.AvailableSettings;
 
@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @Jpa(
 		integrationSettings = {
 				@Setting(name = AvailableSettings.JPA_TRANSACTION_TYPE, value = "JTA"),
-				@Setting(name = org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
-				@Setting( name = org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")
+				@Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.testing.jta.JtaAwareConnectionProviderImpl"),
+				@Setting( name = AvailableSettings.JPA_TRANSACTION_COMPLIANCE, value = "true")
 		},
 		nonStringValueSettingProviders = { JtaPlatformNonStringValueSettingProvider.class }
 )

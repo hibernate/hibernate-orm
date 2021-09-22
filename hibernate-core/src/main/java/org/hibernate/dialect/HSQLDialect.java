@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;

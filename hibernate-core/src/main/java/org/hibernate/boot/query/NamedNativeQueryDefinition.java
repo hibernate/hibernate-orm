@@ -20,7 +20,7 @@ import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
  * Boot-time descriptor of a named native query, as defined in
  * annotations or xml
  *
- * @see javax.persistence.NamedNativeQuery
+ * @see jakarta.persistence.NamedNativeQuery
  * @see org.hibernate.annotations.NamedNativeQuery
  *
  * @author Steve Ebersole

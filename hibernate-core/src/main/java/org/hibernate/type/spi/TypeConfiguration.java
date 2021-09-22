@@ -66,7 +66,7 @@ import org.hibernate.type.internal.StandardBasicTypeImpl;
 import java.sql.Time;
 import java.sql.Timestamp;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.query.BinaryArithmeticOperator.DIVIDE;

@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.mapping.inheritance;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.persister.entity.EntityPersister;
 

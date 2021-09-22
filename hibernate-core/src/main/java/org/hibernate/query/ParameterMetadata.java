@@ -8,7 +8,7 @@ package org.hibernate.query;
 
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;

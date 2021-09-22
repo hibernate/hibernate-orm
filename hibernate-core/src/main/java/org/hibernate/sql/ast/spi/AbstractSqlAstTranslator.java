@@ -244,7 +244,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * A lazy session implementation that is needed for rendering literals.
-	 * Usually, only the {@link org.hibernate.type.descriptor.WrapperOptions} interface is needed,
+	 * Usually, only the {@link WrapperOptions} interface is needed,
 	 * but for creating LOBs, it might be to have a full blown session.
 	 */
 	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {

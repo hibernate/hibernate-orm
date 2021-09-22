@@ -8,7 +8,7 @@
 //$Id$
 package org.hibernate.orm.test.annotations.reflection;
 import java.io.Serializable;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Emmanuel Bernard

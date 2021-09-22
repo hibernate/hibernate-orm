@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import javax.persistence.ParameterMode;
+import jakarta.persistence.ParameterMode;
 
 /**
  * Marshalling support for dealing with JPA ParameterMode enums.  Plugged into JAXB for binding

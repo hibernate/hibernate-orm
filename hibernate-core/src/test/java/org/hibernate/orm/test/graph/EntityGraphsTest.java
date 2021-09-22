@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.graph;
 
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.graph.EntityGraphs;
 import org.hibernate.graph.spi.RootGraphImplementor;

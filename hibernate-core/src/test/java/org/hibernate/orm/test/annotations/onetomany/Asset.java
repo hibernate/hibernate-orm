@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.onetomany;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Entity

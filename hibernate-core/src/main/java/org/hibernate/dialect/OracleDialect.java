@@ -69,7 +69,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -233,8 +233,8 @@ public class OracleDialect extends Dialect {
 
 
 	/**
-	 * Oracle doesn't have any sort of {@link java.sql.Types#BOOLEAN}
-	 * type or {@link java.sql.Types#TIME} type, and its default behavior
+	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
+	 * type or {@link Types#TIME} type, and its default behavior
 	 * for casting dates and timestamps to and from strings is just awful.
 	 */
 	@Override

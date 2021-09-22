@@ -15,7 +15,7 @@ package org.hibernate.test.hql;
 public class ComponentContainer {
 
 	private Long id;
-	private ComponentContainer.Address address;
+	private Address address;
 
 	public ComponentContainer() {
 	}
@@ -32,11 +32,11 @@ public class ComponentContainer {
 		this.id = id;
 	}
 
-	public ComponentContainer.Address getAddress() {
+	public Address getAddress() {
 		return address;
 	}
 
-	public void setAddress(ComponentContainer.Address address) {
+	public void setAddress(Address address) {
 		this.address = address;
 	}
 
@@ -44,12 +44,12 @@ public class ComponentContainer {
 		private String street;
 		private String city;
 		private String state;
-		private ComponentContainer.Address.Zip zip;
+		private Zip zip;
 
 		public Address() {
 		}
 
-		public Address(String street, String city, String state, ComponentContainer.Address.Zip zip) {
+		public Address(String street, String city, String state, Zip zip) {
 			this.street = street;
 			this.city = city;
 			this.state = state;
@@ -80,11 +80,11 @@ public class ComponentContainer {
 			this.state = state;
 		}
 
-		public ComponentContainer.Address.Zip getZip() {
+		public Zip getZip() {
 			return zip;
 		}
 
-		public void setZip(ComponentContainer.Address.Zip zip) {
+		public void setZip(Zip zip) {
 			this.zip = zip;
 		}
 

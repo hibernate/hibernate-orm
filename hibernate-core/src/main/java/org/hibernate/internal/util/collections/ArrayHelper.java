@@ -112,7 +112,7 @@ public final class ArrayHelper {
 	}
 
 	public static Object[] typecast(Object[] array, Object[] to) {
-		return java.util.Arrays.asList( array ).toArray( to );
+		return Arrays.asList( array ).toArray( to );
 	}
 
 	//Arrays.asList doesn't do primitive arrays
@@ -330,7 +330,7 @@ public final class ArrayHelper {
 	/**
 	 * Compare 2 arrays only at the first level
 	 *
-	 * @deprecated Use {@link java.util.Arrays#equals(Object[], Object[])} instead
+	 * @deprecated Use {@link Arrays#equals(Object[], Object[])} instead
 	 */
 	@Deprecated
 	public static boolean isEquals(Object[] o1, Object[] o2) {
@@ -355,7 +355,7 @@ public final class ArrayHelper {
 	/**
 	 * Compare 2 arrays only at the first level
 	 *
-	 * @deprecated Use {@link java.util.Arrays#equals(char[], char[])} instead
+	 * @deprecated Use {@link Arrays#equals(char[], char[])} instead
 	 */
 	@Deprecated
 	public static boolean isEquals(char[] o1, char[] o2) {
@@ -380,7 +380,7 @@ public final class ArrayHelper {
 	/**
 	 * Compare 2 arrays only at the first level
 	 *
-	 * @deprecated Use {@link java.util.Arrays#equals(byte[], byte[])} instead
+	 * @deprecated Use {@link Arrays#equals(byte[], byte[])} instead
 	 */
 	@Deprecated
 	public static boolean isEquals(byte[] b1, byte[] b2) {

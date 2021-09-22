@@ -14,7 +14,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Calendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;

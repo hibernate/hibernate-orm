@@ -7,7 +7,7 @@
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.io.Serializable;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.TransactionManager;
 
 /**
  * Provides access to a {@link TransactionManager} for use by {@link TransactionManager}-based

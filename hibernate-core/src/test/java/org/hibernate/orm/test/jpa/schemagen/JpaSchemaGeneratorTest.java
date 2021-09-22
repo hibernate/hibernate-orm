@@ -9,8 +9,8 @@ package org.hibernate.orm.test.jpa.schemagen;
 import java.net.URL;
 import java.util.Map;
 import java.util.function.Function;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;

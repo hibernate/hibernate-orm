@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 import java.sql.Types;
 
 /**
- * Descriptor for {@link java.sql.Types#BINARY BINARY} handling.
+ * Descriptor for {@link Types#BINARY BINARY} handling.
  *
  * @author Steve Ebersole
  */

@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.metamodel;
 
-import javax.persistence.Id;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole

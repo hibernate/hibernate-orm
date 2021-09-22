@@ -320,7 +320,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	/**
 	 * Controls whether Hibernate should try to map named parameter names
 	 * specified in a {@link org.hibernate.procedure.ProcedureCall} or
-	 * {@link javax.persistence.StoredProcedureQuery} to named parameters in
+	 * {@link jakarta.persistence.StoredProcedureQuery} to named parameters in
 	 * the JDBC {@link java.sql.CallableStatement}.
 	 * <p/>
 	 * As JPA is defined, the use of named parameters is essentially of dubious

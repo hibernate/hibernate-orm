@@ -99,7 +99,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 *
 	 * @param sorter The Sorter to use; may be {@code null}
 	 */
-	public ExecutableList(ExecutableList.Sorter<E> sorter) {
+	public ExecutableList(Sorter<E> sorter) {
 		this( INIT_QUEUE_LIST_SIZE, sorter );
 	}
 
@@ -109,7 +109,7 @@ public class ExecutableList<E extends Executable & Comparable & Serializable> im
 	 * @param initialCapacity The initial capacity for instantiating the internal List
 	 * @param sorter The Sorter to use; may be {@code null}
 	 */
-	public ExecutableList(int initialCapacity, ExecutableList.Sorter<E> sorter) {
+	public ExecutableList(int initialCapacity, Sorter<E> sorter) {
 		this.sorter = sorter;
 		this.executables = new ArrayList<>( initialCapacity );
 		this.querySpaces = null;

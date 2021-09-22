@@ -9,12 +9,12 @@
 
 package org.hibernate.orm.test.annotations.idclass;
 import java.io.Serializable;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.Table;
 
 
 /**
@@ -27,7 +27,7 @@ import javax.persistence.Table;
 @IdClass(DomainAdminId.class)
 @NamedNativeQuery(name = "DomainAdmin.testQuery",
 		query = "select * from domainadmin da where da.domain_name = 'org'",
-		resultClass = org.hibernate.orm.test.annotations.idclass.DomainAdmin.class)
+		resultClass = DomainAdmin.class)
 public class DomainAdmin implements Serializable {
 
 	@Id

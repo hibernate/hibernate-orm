@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.internal;
 
 import java.util.List;
-import javax.persistence.TupleElement;
+import jakarta.persistence.TupleElement;
 
 import org.hibernate.query.JpaTuple;
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import javax.persistence.InheritanceType;
+import jakarta.persistence.InheritanceType;
 
 /**
  * Marshalling support for dealing with JPA InheritanceType enums.  Plugged into JAXB for binding

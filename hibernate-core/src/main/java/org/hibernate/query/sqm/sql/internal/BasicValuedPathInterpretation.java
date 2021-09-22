@@ -43,7 +43,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqlAstCreationState sqlAstCreationState,
 			SemanticQueryWalker sqmWalker,
 			boolean jpaQueryComplianceEnabled) {
-		TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( sqmPath.getLhs().getNavigablePath() );
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess()
+				.getTableGroup( sqmPath.getLhs().getNavigablePath() );
 
 		EntityMappingType treatTarget = null;
 		if ( jpaQueryComplianceEnabled ) {
@@ -114,7 +115,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 
 	private final ColumnReference columnReference;
 
-	private BasicValuedPathInterpretation(
+	public BasicValuedPathInterpretation(
 			ColumnReference columnReference,
 			NavigablePath navigablePath,
 			BasicValuedModelPart mapping,

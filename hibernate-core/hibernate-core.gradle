@@ -182,6 +182,7 @@ xjc {
 
 
 task copyBundleResources (type: Copy) {
+    inputs.property( "db", db )
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
         bundleTokens = dbBundle[db]

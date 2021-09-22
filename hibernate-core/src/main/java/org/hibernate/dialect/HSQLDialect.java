@@ -651,6 +651,11 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsTupleDistinctCounts() {
 		// from v. 2.2.9 is added support for COUNT(DISTINCT ...) with multiple arguments
 		return version >= 229;

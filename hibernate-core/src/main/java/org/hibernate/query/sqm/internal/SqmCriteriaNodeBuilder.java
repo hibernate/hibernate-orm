@@ -1835,7 +1835,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
-				(SqmExpression<?>) y,
+				value( y, (SqmExpression<?>) x ),
 				this
 		);
 	}

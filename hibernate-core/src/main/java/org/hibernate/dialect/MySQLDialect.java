@@ -495,6 +495,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsUnionAll() {
 		return getMySQLVersion() >= 500;
 	}

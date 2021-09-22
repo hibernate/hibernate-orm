@@ -10,6 +10,7 @@ import java.util.Set;
 
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -27,6 +28,11 @@ public interface SqlAstTranslator<T extends JdbcOperation> extends SqlAstWalker 
 	 * Whether the FILTER clause for aggregate functions is supported.
 	 */
 	boolean supportsFilterClause();
+
+	/**
+	 * Returns the current query part that is translated.
+	 */
+	QueryPart getCurrentQueryPart();
 
 	/**
 	 * Not the best spot for this.  Its the table names collected while walking the SQL AST.

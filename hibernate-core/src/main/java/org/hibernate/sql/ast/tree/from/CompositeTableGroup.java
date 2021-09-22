@@ -55,18 +55,6 @@ public class CompositeTableGroup implements VirtualTableGroup {
 
 	@Override
 	public boolean isFetched() {
-//		if ( fetched ) {
-//			return true;
-//		}
-//		// We also consider it "fetched" if it contains fetched joins
-//		if ( tableGroupJoins != null ) {
-//			for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
-//				if ( tableGroupJoin.getJoinedGroup().isFetched() ) {
-//					return true;
-//				}
-//			}
-//		}
-//		return false;
 		return fetched;
 	}
 

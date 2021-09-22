@@ -935,10 +935,6 @@ public class ToOneAttributeMapping
 					if ( !canUseParentTableGroup ) {
 						return false;
 					}
-//					// Special case for resolving the table group for entity valued paths
-//					if ( np == navigablePath ) {
-//						return true;
-//					}
 					NavigablePath path = np.getParent();
 					// Fast path
 					if ( path != null && navigablePath.equals( path ) ) {

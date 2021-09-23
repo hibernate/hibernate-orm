@@ -36,6 +36,14 @@ buildCache {
 
     local { enabled = !isCi }
     remote(HttpBuildCache) { enabled = false }
+
+
+    buildCache {
+        remote(HttpBuildCache) {
+            push = true
+            enabled = true
+            url = 'https://ge.hibernate.org/cache/' // note the trailing slash!
+        }}
 }
 
 gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 8 )

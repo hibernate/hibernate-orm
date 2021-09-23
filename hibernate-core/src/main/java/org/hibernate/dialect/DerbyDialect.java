@@ -52,6 +52,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -183,7 +184,13 @@ public class DerbyDialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		CommonFunctionFactory.aggregates(
+				this,
+				queryEngine,
+				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
+				"||",
+				getCastTypeName( StandardBasicTypes.STRING, null, null, null )
+		);
 
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
@@ -211,7 +218,7 @@ public class DerbyDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction() );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction( this ) );
 
 		//no way I can see to pad with anything other than spaces
 		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation() );

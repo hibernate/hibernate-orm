@@ -33,6 +33,7 @@ import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -146,6 +147,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
+
+		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
 
 		CommonFunctionFactory.truncate_round( queryEngine );
 		CommonFunctionFactory.everyAny_sumIif( queryEngine );

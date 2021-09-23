@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.boot.TempTableDdlTransactionHandling;

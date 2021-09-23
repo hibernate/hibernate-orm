@@ -35,7 +35,7 @@ import static org.junit.Assert.assertThat;
 /**
  * @author Andrea Boriero
  */
-@TestForIssue(jiraKey = "HHH-XXX")
+@TestForIssue(jiraKey = "HHH-14835")
 @RunWith(CustomRunner.class)
 @RequiresDialect(SQLServer2012Dialect.class)
 public class SchemaExportSqlServerWithSequenceDefaultSchemaCatalog {

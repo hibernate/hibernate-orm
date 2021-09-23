@@ -113,7 +113,7 @@ task aggregateJavadocs(type: Javadoc) {
 	maxMemory = '512m'
 	destinationDir = javadocDir
 	configure( options ) {
-		overview = project.file( 'src/main/javadoc/overview.html' )
+		overview = 'src/main/javadoc/overview.html'
 		windowTitle = 'Hibernate JavaDocs'
 		docTitle = "Hibernate JavaDoc ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."

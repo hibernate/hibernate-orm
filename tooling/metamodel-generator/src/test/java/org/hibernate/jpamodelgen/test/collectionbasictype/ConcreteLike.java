@@ -10,6 +10,6 @@ public class ConcreteLike extends Like<ConcreteLike.Target> {
 		return new Reference<>();
 	}
 
-	public static class Target implements I1, I2 {
+	public static class Target implements Like.I1, Like.I2 {
 	}
 }

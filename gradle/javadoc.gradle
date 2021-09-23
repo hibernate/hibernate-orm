@@ -32,9 +32,7 @@ javadoc {
         encoding = 'UTF-8'
         links += [
                 'https://docs.oracle.com/javase/8/docs/api/',
-//                'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-//                'https://docs.jboss.org/cdi/api/2.0/',
-                'https://jakarta.ee/specifications/platform/10/apidocs/'
+                'https://jakarta.ee/specifications/platform/9/apidocs/'
         ]
         tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
 

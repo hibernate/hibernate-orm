@@ -61,16 +61,16 @@ dependencies {
     testImplementation libraries.jodaTime
     testImplementation libraries.assertj
     testImplementation libraries.jakarta_cdi
-    testImplementation libraries.jboss_ejb_spec_jar
-    testImplementation libraries.jboss_annotation_spec_jar
+//    testImplementation libraries.jboss_ejb_spec_jar
+//    testImplementation libraries.jboss_annotation_spec_jar
 
-    testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
+//    testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
     testRuntimeOnly libraries.jakarta_el
-    testRuntimeOnly 'jaxen:jaxen:1.1'
+//    testRuntimeOnly 'jaxen:jaxen:1.1'
     testRuntimeOnly libraries.byteBuddy
     testRuntimeOnly libraries.jakarta_weld
-    testRuntimeOnly libraries.atomikos
-    testRuntimeOnly libraries.atomikos_jta
+//    testRuntimeOnly libraries.atomikos
+//    testRuntimeOnly libraries.atomikos_jta
     testRuntimeOnly libraries.wildfly_transaction_client
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )

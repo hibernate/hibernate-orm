@@ -252,10 +252,10 @@ if ( gradle.ext.javaToolchainEnabled ) {
 }
 class HeapDumpPathProvider implements CommandLineArgumentProvider {
 //	@InputFile
-	@OutputFile
+	@OutputDirectory
 	@PathSensitive(PathSensitivity.RELATIVE)
 //	@Optional
-	Provider<RegularFile> path
+	Provider<Directory> path
 //	File path
 
 	@Override
@@ -276,7 +276,7 @@ tasks.withType( Test.class ).each { test ->
 	}
 
 	test.jvmArgumentProviders.add(
-			new HeapDumpPathProvider( path: project.layout.buildDirectory.file("OOM-dump.hprof") )
+			new HeapDumpPathProvider( path: project.layout.buildDirectory.dir("OOM-dump") )
 //			new HeapDumpPathProvider( path: project.file( "${buildDir}/OOM-dump.hprof" ) )
 	)
 

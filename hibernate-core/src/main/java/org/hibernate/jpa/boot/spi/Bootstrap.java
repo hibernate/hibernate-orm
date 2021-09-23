@@ -8,13 +8,16 @@ package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
 import java.util.Map;
-import jakarta.persistence.spi.PersistenceUnitInfo;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
+import java.util.function.Consumer;
 
+import org.hibernate.Internal;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.jpa.boot.internal.PersistenceXmlParser;
+
+import jakarta.persistence.spi.PersistenceUnitInfo;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 /**
  * Entry into the bootstrap process.
@@ -82,6 +85,17 @@ public final class Bootstrap {
 		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, providedClassLoaderService );
 	}
 
+	/**
+	 * For tests only
+	 */
+	@Internal
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitDescriptor persistenceUnitDescriptor,
+			Map integration,
+			Consumer<EntityManagerFactoryBuilderImpl.MergedSettings> mergedSettingsBaseline) {
+		return new EntityManagerFactoryBuilderImpl( persistenceUnitDescriptor, integration, mergedSettingsBaseline );
+	}
+
 	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
 			PersistenceUnitInfo persistenceUnitInfo,
 			Map integration) {
@@ -100,5 +114,16 @@ public final class Bootstrap {
 			Map integration,
 			ClassLoaderService providedClassLoaderService) {
 		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, providedClassLoaderService );
+	}
+
+	/**
+	 * For tests only
+	 */
+	@Internal
+	public static EntityManagerFactoryBuilder getEntityManagerFactoryBuilder(
+			PersistenceUnitInfo persistenceUnitInfo,
+			Map integration,
+			Consumer<EntityManagerFactoryBuilderImpl.MergedSettings> mergedSettingsBaseline) {
+		return getEntityManagerFactoryBuilder( new PersistenceUnitInfoDescriptor( persistenceUnitInfo ), integration, mergedSettingsBaseline );
 	}
 }

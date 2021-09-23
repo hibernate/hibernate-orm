@@ -60,6 +60,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -612,14 +613,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// normalize SharedCacheMode
 		final Object intgCacheMode = integrationSettingsCopy.remove( JPA_SHARED_CACHE_MODE );
 		final Object jakartaIntgCacheMode = integrationSettingsCopy.remove( JAKARTA_JPA_SHARED_CACHE_MODE );
-		if ( intgCacheMode != null ) {
-			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, intgCacheMode );
-		}
-		else if ( jakartaIntgCacheMode != null ) {
+		if ( jakartaIntgCacheMode != null ) {
 			mergedSettings.configurationValues.put( JAKARTA_JPA_SHARED_CACHE_MODE, jakartaIntgCacheMode );
 		}
+		else if ( intgCacheMode != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					JPA_SHARED_CACHE_MODE,
+					JAKARTA_JPA_SHARED_CACHE_MODE
+			);
+			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, intgCacheMode );
+		}
 		else if ( persistenceUnit.getSharedCacheMode() != null ) {
-			mergedSettings.configurationValues.put( JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 			mergedSettings.configurationValues.put( JAKARTA_JPA_SHARED_CACHE_MODE, persistenceUnit.getSharedCacheMode() );
 		}
 
@@ -861,31 +865,29 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						integrationJdbcUrl,
 						NullnessHelper.coalesceSuppliedValues(
 								() -> ConfigurationHelper.getString( DRIVER, integrationSettingsCopy ),
-								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy ),
 								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, integrationSettingsCopy ),
+								() -> {
+									final String driver = ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
+									if ( driver != null ) {
+										DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+												org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER,
+												org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER
+										);
+									}
+									return driver;
+								},
 								() -> ConfigurationHelper.getString( DRIVER, mergedSettings.configurationValues ),
-								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
-								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues )
-						),
-						integrationSettingsCopy,
-						mergedSettings
-				);
-
-				// EARLY EXIT!!
-				return;
-			}
-		}
-
-		if ( integrationSettingsCopy.containsKey( JPA_JDBC_URL ) ) {
-			final Object integrationJdbcUrl = integrationSettingsCopy.get( JPA_JDBC_URL );
-
-			if ( integrationJdbcUrl != null ) {
-				//noinspection unchecked
-				applyJdbcSettings(
-						integrationJdbcUrl,
-						NullnessHelper.coalesceSuppliedValues(
-								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy ),
-								() -> ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues )
+								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
+								() -> {
+									final String driver = ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues );
+									if ( driver != null ) {
+										DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+												org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER,
+												org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER
+										);
+									}
+									return driver;
+								}
 						),
 						integrationSettingsCopy,
 						mergedSettings
@@ -906,6 +908,49 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						NullnessHelper.coalesceSuppliedValues(
 								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, integrationSettingsCopy ),
 								() -> ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues )
+						),
+						integrationSettingsCopy,
+						mergedSettings
+				);
+
+				// EARLY EXIT!!
+				return;
+			}
+		}
+
+		if ( integrationSettingsCopy.containsKey( JPA_JDBC_URL ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL,
+					org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_URL
+			);
+
+			final Object integrationJdbcUrl = integrationSettingsCopy.get( JPA_JDBC_URL );
+
+			if ( integrationJdbcUrl != null ) {
+				//noinspection unchecked
+				applyJdbcSettings(
+						integrationJdbcUrl,
+						NullnessHelper.coalesceSuppliedValues(
+								() -> {
+									final String driver = ConfigurationHelper.getString( JPA_JDBC_DRIVER, integrationSettingsCopy );
+									if ( driver != null ) {
+										DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+												org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER,
+												org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER
+										);
+									}
+									return driver;
+								},
+								() -> {
+									final String driver = ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues );
+									if ( driver != null ) {
+										DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+												org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER,
+												org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER
+										);
+									}
+									return driver;
+								}
 						),
 						integrationSettingsCopy,
 						mergedSettings
@@ -956,13 +1001,13 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		if ( mergedSettings.configurationValues.containsKey( JPA_JDBC_URL ) ) {
-			final Object url = mergedSettings.configurationValues.get( JPA_JDBC_URL );
+		if ( mergedSettings.configurationValues.containsKey( JAKARTA_JPA_JDBC_URL ) ) {
+			final Object url = mergedSettings.configurationValues.get( JAKARTA_JPA_JDBC_URL );
 
 			if ( url != null && ( ! ( url instanceof String ) || StringHelper.isNotEmpty( (String) url ) ) ) {
 				applyJdbcSettings(
 						url,
-						ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
+						ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
 						integrationSettingsCopy,
 						mergedSettings
 				);
@@ -972,13 +1017,25 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-		if ( mergedSettings.configurationValues.containsKey( JAKARTA_JPA_JDBC_URL ) ) {
-			final Object url = mergedSettings.configurationValues.get( JAKARTA_JPA_JDBC_URL );
+		if ( mergedSettings.configurationValues.containsKey( JPA_JDBC_URL ) ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL,
+					org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_URL
+			);
+
+			final Object url = mergedSettings.configurationValues.get( JPA_JDBC_URL );
 
 			if ( url != null && ( ! ( url instanceof String ) || StringHelper.isNotEmpty( (String) url ) ) ) {
+				final String driver = ConfigurationHelper.getString( JPA_JDBC_DRIVER, mergedSettings.configurationValues );
+				if ( driver != null ) {
+					DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+							org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER,
+							org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER
+					);
+				}
 				applyJdbcSettings(
 						url,
-						ConfigurationHelper.getString( JAKARTA_JPA_JDBC_DRIVER, mergedSettings.configurationValues ),
+						driver,
 						integrationSettingsCopy,
 						mergedSettings
 				);

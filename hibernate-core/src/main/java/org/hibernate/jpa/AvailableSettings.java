@@ -20,12 +20,6 @@ public interface AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_PERSISTENCE_PROVIDER} instead
-	 */
-	@Deprecated
-	String PROVIDER = org.hibernate.cfg.AvailableSettings.JPA_PERSISTENCE_PROVIDER;
-
-	/**
 	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_TRANSACTION_TYPE} instead
 	 */
 	@Deprecated
@@ -66,24 +60,6 @@ public interface AvailableSettings {
 	 */
 	@Deprecated
 	String JDBC_PASSWORD = org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
-
-	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_MODE} instead
-	 */
-	@Deprecated
-	String SHARED_CACHE_MODE = org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_MODE;
-
-	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_RETRIEVE_MODE} instead
-	 */
-	@Deprecated
-	String SHARED_CACHE_RETRIEVE_MODE = org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
-
-	/**
-	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_SHARED_CACHE_STORE_MODE} instead
-	 */
-	@Deprecated
-	String SHARED_CACHE_STORE_MODE = org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 
 	/**
 	 * @deprecated (since 5.2) use {@link org.hibernate.cfg.AvailableSettings#JPA_VALIDATION_MODE} instead

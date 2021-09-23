@@ -151,7 +151,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	/**
 	 * Used to pass along any discovered validator factory.
 	 */
-	String JPA_VALIDATION_FACTORY = "jakarta.persistence.validation.factory";
+	String JPA_VALIDATION_FACTORY = "javax.persistence.validation.factory";
 
 	/**
 	 * Used to coordinate with bean validators

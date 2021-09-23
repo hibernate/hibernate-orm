@@ -20,7 +20,7 @@ ext {
 
 dependencies {
     implementation libraries.jaxb_api
-    implementation libraries.jaxb_runtime
+    implementation libraries.jakarta_jaxb_runtime
 
     xjc libraries.jakarta_jaxb_xjc
     xjc libraries.jakarta_jaxb_runtime
@@ -28,7 +28,9 @@ dependencies {
 
     testImplementation project( ':hibernate-core' )
     testImplementation libraries.junit
-    testImplementation libraries.validation
+//    testImplementation libraries.jakarta_jpa
+
+    testImplementation libraries.jakarta_validation
 }
 
 sourceSets.main {

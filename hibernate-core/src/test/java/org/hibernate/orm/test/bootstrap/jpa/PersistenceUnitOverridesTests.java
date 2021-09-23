@@ -394,6 +394,45 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-13640" )
+	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfoUsingJakarta() {
+
+		// mimics a DataSource defined in the persistence.xml
+		final DataSourceStub dataSource = new DataSourceStub( "puDataSource" );
+		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
+
+			@Override
+			public DataSource getNonJtaDataSource() {
+				return dataSource;
+			}
+		};
+
+		final Map<String,Object> integrationSettings = new HashMap<>();
+		integrationSettings.put( AvailableSettings.JAKARTA_JPA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
+		integrationSettings.put( AvailableSettings.JAKARTA_JPA_JDBC_URL, ConnectionProviderBuilder.URL );
+		integrationSettings.put( AvailableSettings.JAKARTA_JPA_JDBC_USER, ConnectionProviderBuilder.USER );
+		integrationSettings.put( AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
+		integrationSettings.put( "hibernate.connection.init_sql", "" );
+
+		final PersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+				info,
+				integrationSettings
+		);
+
+		try {
+			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
+			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
+					ConnectionProvider.class );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	@Test
 	public void testCfgXmlBaseline() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();

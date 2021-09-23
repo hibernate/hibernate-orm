@@ -23,11 +23,11 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.StandardBasicTypes;
 
-public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class SybaseConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
 
-	public DerbyConcatFunction(Dialect dialect) {
+	public SybaseConcatFunction(Dialect dialect) {
 		super(
 				"concat",
 				StandardArgumentsValidators.min( 1 ),
@@ -41,7 +41,7 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 		sqlAppender.appendSql( '(' );
 		renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( 0 ) );
 		for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
-			sqlAppender.appendSql( "||" );
+			sqlAppender.appendSql( '+' );
 			renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( i ) );
 		}
 		sqlAppender.appendSql( ')' );
@@ -51,7 +51,7 @@ public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 		final JdbcMapping sourceMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
 		// No need to cast if we already have a string
 		if ( sourceMapping.getCastType() == CastType.STRING ) {
-			translator.render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			translator.render( expression, SqlAstNodeRenderingMode.DEFAULT );
 		}
 		else {
 			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );

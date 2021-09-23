@@ -72,7 +72,6 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9182")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby can't cast from integer to varchar i.e. it requires an intermediary step")
 	public void testCountDistinctExpression() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -84,6 +83,26 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 				"LEFT JOIN c.localized l " +
 				"GROUP BY d.id")
 			.getResultList();
+
+			assertEquals(1, results.size());
+			Object[] tuple = (Object[]) results.get( 0 );
+			assertEquals(1, tuple[0]);
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11042")
+	public void testCountDistinctTuple() {
+		doInHibernate( this::sessionFactory, session -> {
+			List results = session.createQuery(
+							"SELECT " +
+									"	d.id, " +
+									"	COUNT(DISTINCT (KEY(l), l)) " +
+									"FROM Document d " +
+									"LEFT JOIN d.contacts c " +
+									"LEFT JOIN c.localized l " +
+									"GROUP BY d.id")
+					.getResultList();
 
 			assertEquals(1, results.size());
 			Object[] tuple = (Object[]) results.get( 0 );

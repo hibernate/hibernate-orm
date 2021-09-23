@@ -3340,6 +3340,15 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
+	 * If {@link #supportsTupleCounts()} is true, does the Dialect require the tuple to be wrapped with parens?
+	 *
+	 * @return boolean
+	 */
+	public boolean requiresParensForTupleCounts() {
+		return supportsTupleCounts();
+	}
+
+	/**
 	 * Does this dialect support `count(distinct a,b)`?
 	 *
 	 * @return True if the database supports counting distinct tuples; false otherwise.

@@ -398,11 +398,6 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsOrderByInSubquery() {
 		// This is just a guess
 		return false;

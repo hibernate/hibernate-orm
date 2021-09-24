@@ -788,11 +788,6 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsLobValueChangePropagation() {
 		// note: at least my local MySQL 5.1 install shows this not working...
 		return false;

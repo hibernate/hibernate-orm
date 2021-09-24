@@ -482,19 +482,6 @@ public class SybaseASEDialect extends SybaseDialect {
 		return 30;
 	}
 
-	/**
-	 * By default, Sybase string comparisons are case-insensitive.
-	 * <p/>
-	 * If the DB is configured to be case-sensitive, then this return
-	 * value will be incorrect.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
-	}
-
 	@Override
 	@SuppressWarnings("deprecation")
 	public String getCurrentTimestampSQLFunctionName() {

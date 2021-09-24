@@ -2931,18 +2931,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Are string comparisons implicitly case insensitive.
-	 * <p/>
-	 * In other words, does [where 'XYZ' = 'xyz'] resolve to true?
-	 *
-	 * @return True if comparisons are case insensitive.
-	 * @since 3.2
-	 */
-	public boolean areStringComparisonsCaseInsensitive() {
-		return false;
-	}
-
-	/**
 	 * Is this dialect known to support what ANSI-SQL terms "row value
 	 * constructor" syntax; sometimes called tuple syntax.
 	 * <p/>

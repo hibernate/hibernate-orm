@@ -371,15 +371,11 @@ public class QueryCacheTest {
 	}
 
 	@Test
-	@RequiresDialectFeature(
-			feature = DialectFeatureChecks.CaseSensitiveCheck.class,
-			comment = "i.name='widget' should not match on case sensitive database."
-	)
-	public void testCaseInsensitiveComparison(SessionFactoryScope scope) {
+	public void testComparison(SessionFactoryScope scope) {
 		Item item = new Item();
 		scope.inTransaction(
 				session -> {
-					item.setName( "Widget" );
+					item.setName( "widget" );
 					item.setDescription( "A really top-quality, full-featured widget." );
 					session.save( item );
 				}
@@ -390,7 +386,7 @@ public class QueryCacheTest {
 					List result = session.createQuery( queryString ).list();
 					assertEquals( 1, result.size() );
 					Item i = session.get( Item.class, item.getId() );
-					assertEquals( "Widget", i.getName() );
+					assertEquals( "widget", i.getName() );
 					session.delete( i );
 				}
 		);

@@ -342,11 +342,6 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return getVersion() < 14;
-	}
-
-	@Override
 	public boolean supportsEmptyInList() {
 		return false;
 	}

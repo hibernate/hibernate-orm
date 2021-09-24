@@ -388,11 +388,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}

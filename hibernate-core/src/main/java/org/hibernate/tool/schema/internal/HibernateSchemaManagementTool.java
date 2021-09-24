@@ -51,9 +51,19 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
+import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MINOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_DIALECT_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
+import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 
 /**
  * The standard Hibernate implementation for performing schema management.
@@ -208,66 +218,91 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		final JdbcContextBuilder jdbcContextBuilder = new JdbcContextBuilder( serviceRegistry );
 
 		// see if a specific connection has been provided
-		final Connection providedConnection = (Connection) configurationValues.get( HBM2DDL_CONNECTION );
+		final Connection providedConnection = (Connection) coalesceSuppliedValues(
+				() -> configurationValues.get( JAKARTA_HBM2DDL_CONNECTION ),
+				() -> {
+					final Object value = configurationValues.get( HBM2DDL_CONNECTION );
+					if ( value != null ) {
+						DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_CONNECTION, JAKARTA_HBM2DDL_CONNECTION );
+					}
+					return value;
+				}
+		);
 		if ( providedConnection != null ) {
 			jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( providedConnection );
 		}
-		else {
-			final Connection jakartaProvidedConnection = (Connection) configurationValues.get( JAKARTA_HBM2DDL_CONNECTION );
-			if ( jakartaProvidedConnection != null ) {
-				jdbcContextBuilder.jdbcConnectionAccess = new JdbcConnectionAccessProvidedConnectionImpl( jakartaProvidedConnection );
-			}
-		}
 
-		// see if a specific Dialect override has been provided...
-		String dbName = (String) configurationValues.get( AvailableSettings.DIALECT_DB_NAME );
-		if ( dbName == null ) {
-			dbName = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_NAME );
-		}
-		final String explicitDbName = dbName;
-		if ( StringHelper.isNotEmpty( explicitDbName ) ) {
-			String dbVersion = (String) configurationValues.get( AvailableSettings.DIALECT_DB_VERSION );
-			if ( dbVersion == null ) {
-				dbVersion = (String) configurationValues.get( AvailableSettings.JAKARTA_DIALECT_DB_VERSION );
-			}
-			String dbMajor = (String) configurationValues.get( AvailableSettings.DIALECT_DB_MAJOR_VERSION );
-			if ( dbMajor == null ) {
-				dbMajor = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
-			}
-			String dbMinor = (String) configurationValues.get( AvailableSettings.DIALECT_DB_MINOR_VERSION );
-			if ( dbMinor == null ) {
-				dbMinor = (String) configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION );
-			}
-			final String explicitDbVersion = dbVersion;
-			final String explicitDbMajor = dbMajor;
-			final String explicitDbMinor = dbMinor;
+		// see if a specific Dialect override has been provided through database name, version, etc
+		final String dbName = (String) coalesceSuppliedValues(
+				() -> configurationValues.get( JAKARTA_HBM2DDL_DB_NAME ),
+				() -> {
+					final String name = (String) configurationValues.get( DIALECT_DB_NAME );
+					if ( StringHelper.isNotEmpty( name ) ) {
+						DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_NAME, JAKARTA_HBM2DDL_DB_NAME );
+					}
+					return name;
+				}
+		);
+		if ( dbName != null ) {
+			final String dbVersion = (String) coalesceSuppliedValues(
+					() -> configurationValues.get( JAKARTA_DIALECT_DB_VERSION ),
+					() -> {
+						final String name = (String) configurationValues.get( DIALECT_DB_VERSION );
+						if ( StringHelper.isNotEmpty( name ) ) {
+							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_VERSION, JAKARTA_DIALECT_DB_VERSION );
+						}
+						return name;
+					}
+			);
+
+			final String dbMajor = (String) coalesceSuppliedValues(
+					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_MAJOR_VERSION ),
+					() -> {
+						final String name = (String) configurationValues.get( HBM2DDL_DB_MAJOR_VERSION );
+						if ( StringHelper.isNotEmpty( name ) ) {
+							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DB_MAJOR_VERSION, JAKARTA_HBM2DDL_DB_MAJOR_VERSION );
+						}
+						return name;
+					}
+			);
+
+			final String dbMinor = (String) coalesceSuppliedValues(
+					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_MINOR_VERSION ),
+					() -> {
+						final String name = (String) configurationValues.get( HBM2DDL_DB_MINOR_VERSION );
+						if ( StringHelper.isNotEmpty( name ) ) {
+							DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DB_MINOR_VERSION, JAKARTA_HBM2DDL_DB_MINOR_VERSION );
+						}
+						return name;
+					}
+			);
 
 			final Dialect indicatedDialect = serviceRegistry.getService( DialectResolver.class ).resolveDialect(
 					new DialectResolutionInfo() {
 						@Override
 						public String getDatabaseName() {
-							return explicitDbName;
+							return dbName;
 						}
 
 						@Override
 						public String getDatabaseVersion() {
-							return explicitDbVersion == null
+							return dbVersion == null
 									? String.valueOf( NO_VERSION ) :
-									explicitDbVersion;
+									dbVersion;
 						}
 
 						@Override
 						public int getDatabaseMajorVersion() {
-							return StringHelper.isEmpty( explicitDbMajor )
+							return StringHelper.isEmpty( dbMajor )
 									? NO_VERSION
-									: Integer.parseInt( explicitDbMajor );
+									: Integer.parseInt( dbMajor );
 						}
 
 						@Override
 						public int getDatabaseMinorVersion() {
-							return StringHelper.isEmpty( explicitDbMinor )
+							return StringHelper.isEmpty( dbMinor )
 									? NO_VERSION
-									: Integer.parseInt( explicitDbMinor );
+									: Integer.parseInt( dbMinor );
 						}
 
 						@Override
@@ -290,9 +325,9 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 			if ( indicatedDialect == null ) {
 				log.debugf(
 						"Unable to resolve indicated Dialect resolution info (%s, %s, %s)",
-						explicitDbName,
-						explicitDbMajor,
-						explicitDbMinor
+						dbName,
+						dbMajor,
+						dbMinor
 				);
 			}
 			else {

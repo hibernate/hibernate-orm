@@ -90,9 +90,13 @@ public class JakartaSchemaToolingTests {
 				JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP,
 				HBM2DDL_DATABASE_ACTION, Action.NONE,
 				JAKARTA_JPA_JDBC_DRIVER, Environment.getProperties().get( AvailableSettings.DRIVER ),
+				JPA_JDBC_DRIVER, "does.not.exist",
 				JAKARTA_JPA_JDBC_URL, Environment.getProperties().get( AvailableSettings.URL ),
+				JPA_JDBC_URL, "jdbc:na:nowhere",
 				JAKARTA_JPA_JDBC_USER, Environment.getProperties().get( AvailableSettings.USER ),
-				JAKARTA_JPA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS )
+				JPA_JDBC_USER, "goofy",
+				JAKARTA_JPA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS ),
+				JPA_JDBC_PASSWORD, "goober"
 		) ) {
 			tryQuery( sessionFactory );
 		}

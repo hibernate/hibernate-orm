@@ -272,7 +272,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		if ( result instanceof List ) {
 			return ( (List) result ).size();
 		}
-		return ( (ScrollableResultsImplementor) result ).getRowNumber();
+		return -1;
 	}
 
 	@SuppressWarnings("unchecked")

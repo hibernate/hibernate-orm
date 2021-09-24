@@ -296,7 +296,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final QueryKey queryResultsCacheKey;
 
-		if ( queryCacheEnabled && cacheMode.isGetEnabled() ) {
+		if ( queryCacheEnabled && cacheMode.isGetEnabled() && canBeCached ) {
 			SqlExecLogger.INSTANCE.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
 			final QueryResultsCache queryCache = factory
@@ -348,7 +348,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						cacheMode.name()
 			);
 			cachedResults = null;
-			if ( queryCacheEnabled ) {
+			if ( queryCacheEnabled && canBeCached ) {
 				queryResultsCacheKey = QueryKey.from(
 						jdbcSelect.getSql(),
 						executionContext.getQueryOptions().getLimit(),
@@ -364,7 +364,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		if ( cachedResults == null ) {
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
-					canBeCached && queryCacheEnabled ? queryResultsCacheKey : null,
+					queryResultsCacheKey,
 					queryIdentifier,
 					executionContext.getQueryOptions(),
 					jdbcValuesMapping,

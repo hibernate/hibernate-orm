@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.*;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -42,6 +43,7 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -66,6 +68,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	private final int version;
 
+	private StandardSequenceExporter exporter;
+
 	public SQLServerDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
 	}
@@ -89,8 +93,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
 		}
 
-		if(getVersion() >= 11) {
-			sequenceExporter = new SqlServerSequenceExporter( this );
+		if ( getVersion() >= 11 ) {
+			exporter = new SqlServerSequenceExporter( this );
 		}
 
 		registerColumnType( Types.VARCHAR, 8000, "varchar($l)" );
@@ -785,6 +789,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.BOTH;
+	}
+
+	public Exporter<Sequence> getSequenceExporter() {
+		if ( exporter == null ) {
+			return super.getSequenceExporter();
+		}
+		return exporter;
 	}
 
 	private class SqlServerSequenceExporter extends StandardSequenceExporter {

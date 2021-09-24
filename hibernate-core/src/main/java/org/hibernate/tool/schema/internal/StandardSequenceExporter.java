@@ -25,7 +25,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 
 	@Override
 	public String[] getSqlCreateStrings(Sequence sequence, Metadata metadata) {
-		return dialect.getCreateSequenceStrings(
+		return dialect.getSequenceSupport().getCreateSequenceStrings(
 				getFormattedSequenceName( sequence.getName(), metadata ),
 				sequence.getInitialValue(),
 				sequence.getIncrementSize()
@@ -34,7 +34,7 @@ public class StandardSequenceExporter implements Exporter<Sequence> {
 
 	@Override
 	public String[] getSqlDropStrings(Sequence sequence, Metadata metadata) {
-		return dialect.getDropSequenceStrings(
+		return dialect.getSequenceSupport().getDropSequenceStrings(
 				getFormattedSequenceName( sequence.getName(), metadata )
 		);
 	}

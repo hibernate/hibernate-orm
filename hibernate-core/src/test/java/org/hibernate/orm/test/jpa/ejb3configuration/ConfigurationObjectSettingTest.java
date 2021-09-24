@@ -7,14 +7,25 @@
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
+import java.util.Set;
 
 import org.hibernate.HibernateException;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.engine.jdbc.dialect.internal.DialectResolverInitiator;
+import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.orm.test.dialect.resolver.TestingDialectResolutionInfo;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.tool.schema.Action;
+import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGrouping;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -203,7 +214,7 @@ public class ConfigurationObjectSettingTest {
 		{
 			builder = (EntityManagerFactoryBuilderImpl) Bootstrap.getEntityManagerFactoryBuilder(
 					empty,
-					toMap(
+					CollectionHelper.toMap(
 							jdbcUrl, urlValue,
 							jdbcDriver, driverValue,
 							jdbcUser, userValue,
@@ -221,7 +232,7 @@ public class ConfigurationObjectSettingTest {
 		}
 
 		PersistenceUnitInfoAdapter pui = new PersistenceUnitInfoAdapter();
-		applyToMap(
+		CollectionHelper.applyToProperties(
 				pui.getProperties(),
 				jdbcUrl, urlValue,
 				jdbcDriver, driverValue,
@@ -242,34 +253,67 @@ public class ConfigurationObjectSettingTest {
 
 			builder.cancel();
 		}
-
-
 	}
 
-	private static Map<String,String> toMap(String... pairs) {
-		assert pairs.length %2 == 0;
-		if ( pairs.length == 2 ) {
-			return Collections.singletonMap( pairs[0], pairs[1] );
-		}
-
-		final Map<String,String> result = new HashMap<>();
-		for ( int i = 0; i < pairs.length; i+=2 ) {
-			result.put( pairs[i], pairs[i+1] );
-		}
-		return result;
+	@Test
+	public void testSchemaGenSettings() {
+		verifySchemaGenSettings(
+				AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+				AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION,
+				AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS,
+				AvailableSettings.JAKARTA_HBM2DDL_DB_NAME
+		);
+		verifySchemaGenSettings(
+				AvailableSettings.HBM2DDL_DATABASE_ACTION,
+				AvailableSettings.HBM2DDL_SCRIPTS_ACTION,
+				AvailableSettings.HBM2DDL_CREATE_SCHEMAS,
+				AvailableSettings.DIALECT_DB_NAME
+		);
+//		verifySchemaGenSettingsPrecedence();
 	}
 
-	private static void applyToMap(Map<String,String> map, String... pairs) {
-		assert pairs.length %2 == 0;
-		for ( int i = 0; i < pairs.length; i+=2 ) {
-			map.put( pairs[i], pairs[i+1] );
-		}
+	private void verifySchemaGenSettings(
+			String dbActionSettingName,
+			String scriptActionSettingName,
+			String createSchemasSettingName,
+			String dbNameSettingName) {
+		final Action dbAction = Action.CREATE_ONLY;
+		final Action scriptAction = Action.CREATE_ONLY;
+		final boolean createSchemas = true;
+		final String dbName = "H2";
+
+		final Map<String, String> settings = CollectionHelper.toMap(
+				dbActionSettingName, dbAction.getExternalJpaName(),
+				scriptActionSettingName, scriptAction.getExternalJpaName(),
+				createSchemasSettingName, Boolean.toString( createSchemas ),
+				dbNameSettingName, dbName
+		);
+
+		// first verify the individual interpretations
+		final Action interpretedDbAction = ActionGrouping.determineJpaDbActionSetting( settings, null, null );
+		assertThat( interpretedDbAction ).isEqualTo( dbAction );
+		final Action interpretedScriptAction = ActionGrouping.determineJpaScriptActionSetting( settings, null, null );
+		assertThat( interpretedScriptAction ).isEqualTo( scriptAction );
+
+		// next verify the action-group determination
+		final ActionGrouping actionGrouping = ActionGrouping.interpret( settings );
+		assertThat( actionGrouping.getDatabaseAction() ).isEqualTo( dbAction );
+		assertThat( actionGrouping.getScriptAction() ).isEqualTo( scriptAction );
+
+		// the check above uses a "for testing only" form of what happens for "real".
+		// verify the "real" path as well
+		final Metadata metadata = new MetadataSources().addAnnotatedClass( Bell.class ).buildMetadata();
+		final Set<ActionGrouping> actionGroupings = ActionGrouping.interpret( metadata, settings );
+		assertThat( actionGroupings ).hasSize( 1 );
+		final ActionGrouping grouping = actionGroupings.iterator().next();
+		assertThat( grouping.getContributor() ).isEqualTo( "orm" );
+		assertThat( grouping.getDatabaseAction() ).isEqualTo( dbAction );
+		assertThat( grouping.getScriptAction() ).isEqualTo( scriptAction );
+
+		// verify also interpreting the db-name, etc... they are used by SF/EMF to resolve Dialect
+		final DialectResolver dialectResolver = new DialectResolverInitiator().initiateService( settings, (ServiceRegistryImplementor) new StandardServiceRegistryBuilder().build() );
+		final Dialect dialect = dialectResolver.resolveDialect( TestingDialectResolutionInfo.forDatabaseInfo( dbName ) );
+		assertThat( dialect ).isInstanceOf( H2Dialect.class );
 	}
 
-	private static void applyToMap(Properties map, String... pairs) {
-		assert pairs.length %2 == 0;
-		for ( int i = 0; i < pairs.length; i+=2 ) {
-			map.put( pairs[i], pairs[i+1] );
-		}
-	}
 }

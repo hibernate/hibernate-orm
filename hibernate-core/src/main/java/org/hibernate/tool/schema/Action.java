@@ -135,6 +135,13 @@ public enum Action {
 			}
 		}
 
+		// lastly, look at the enum name
+		for ( Action action : values() ) {
+			if ( action.name().equals( name ) ) {
+				return action;
+			}
+		}
+
 		throw new IllegalArgumentException( "Unrecognized JPA schema generation action value : " + value );
 	}
 

@@ -47,6 +47,7 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DROP_SOURCE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_ACTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
  * Responsible for coordinating SchemaManagementTool execution(s) for auto-tooling whether
@@ -630,71 +631,142 @@ public class SchemaManagementToolCoordinator {
 		}
 
 		/**
-		 * For test use
+		 * For test use.  See {@link #interpret(Metadata, Map)} for the "real" impl
 		 */
 		@Internal
-		public static ActionGrouping interpret(Map configurationValues) {
-			Object databaseActionSetting = configurationValues.get( HBM2DDL_DATABASE_ACTION );
-			Object scriptsActionSetting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION );
-			if ( databaseActionSetting == null ) {
-				databaseActionSetting = configurationValues.get( JAKARTA_HBM2DDL_DATABASE_ACTION );
-			}
-			if ( scriptsActionSetting == null ) {
-				scriptsActionSetting = configurationValues.get( JAKARTA_HBM2DDL_SCRIPTS_ACTION );
-			}
-			// interpret the JPA settings first
-			Action databaseAction = Action.interpretJpaSetting( databaseActionSetting );
-			Action scriptAction = Action.interpretJpaSetting( scriptsActionSetting );
+		public static ActionGrouping interpret(Map<?,?> configurationValues) {
+			// default to the JPA settings
+			Action databaseAction = determineJpaDbActionSetting( configurationValues );
+			Action scriptAction = determineJpaScriptActionSetting( configurationValues );
 
 			// if no JPA settings were specified, look at the legacy HBM2DDL_AUTO setting...
-			if ( databaseAction == Action.NONE && scriptAction == Action.NONE ) {
-				final Action hbm2ddlAutoAction = Action.interpretHbm2ddlSetting( configurationValues.get( HBM2DDL_AUTO ) );
-				if ( hbm2ddlAutoAction != Action.NONE ) {
-					databaseAction = hbm2ddlAutoAction;
+			if ( databaseAction == null && scriptAction == null ) {
+				final Action autoAction = determineAutoSettingImpliedAction( configurationValues, null, null );
+				if ( autoAction != null ) {
+					databaseAction = autoAction;
 				}
+			}
+
+			if ( databaseAction == null ) {
+				databaseAction = Action.NONE;
+			}
+			if ( scriptAction == null ) {
+				scriptAction = Action.NONE;
 			}
 
 			return new ActionGrouping( "orm", databaseAction, scriptAction );
 		}
 
+		private static Action determineJpaDbActionSetting(Map<?,?> configurationValues) {
+			return determineJpaDbActionSetting( configurationValues, null, null );
+		}
+
+		/**
+		 * Exposed for tests
+		 */
+		@Internal
+		public static Action determineJpaDbActionSetting(
+				Map<?,?> configurationValues,
+				String contributor,
+				Action defaultValue) {
+			final String jakartaSettingName = contributor == null
+					? JAKARTA_HBM2DDL_DATABASE_ACTION
+					: JAKARTA_HBM2DDL_DATABASE_ACTION + "." + contributor;
+			final String javaxSettingName = contributor == null
+					? HBM2DDL_DATABASE_ACTION
+					: HBM2DDL_DATABASE_ACTION + "." + contributor;
+
+			Object databaseActionSetting = configurationValues.get( jakartaSettingName );
+			if ( databaseActionSetting == null ) {
+				databaseActionSetting = configurationValues.get( javaxSettingName );
+				if ( databaseActionSetting != null ) {
+					DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_DATABASE_ACTION, JAKARTA_HBM2DDL_DATABASE_ACTION );
+				}
+			}
+
+			return databaseActionSetting == null ? defaultValue : Action.interpretJpaSetting( databaseActionSetting );
+		}
+
+		private static Action determineJpaScriptActionSetting(Map<?,?> configurationValues) {
+			return determineJpaScriptActionSetting( configurationValues, null, null );
+		}
+
+		/**
+		 * Exposed for tests
+		 */
+		@Internal
+		public static Action determineJpaScriptActionSetting(
+				Map<?,?> configurationValues,
+				String contributor,
+				Action defaultValue) {
+			final String jakartaSettingName = contributor == null
+					? JAKARTA_HBM2DDL_SCRIPTS_ACTION
+					: JAKARTA_HBM2DDL_SCRIPTS_ACTION + "." + contributor;
+			final String javaxSettingName = contributor == null
+					? HBM2DDL_SCRIPTS_ACTION
+					: HBM2DDL_SCRIPTS_ACTION + "." + contributor;
+
+			Object scriptsActionSetting = configurationValues.get( jakartaSettingName );
+			if ( scriptsActionSetting == null ) {
+				scriptsActionSetting = configurationValues.get( javaxSettingName );
+				if ( scriptsActionSetting != null ) {
+					DEPRECATION_LOGGER.deprecatedSetting( HBM2DDL_SCRIPTS_ACTION, JAKARTA_HBM2DDL_SCRIPTS_ACTION );
+				}
+			}
+
+			return scriptsActionSetting == null ? defaultValue : Action.interpretJpaSetting( scriptsActionSetting );
+		}
+
+		public static Action determineAutoSettingImpliedAction(Map<?,?> settings, String contributor, Action defaultValue) {
+			final String settingName = contributor == null
+					? HBM2DDL_AUTO
+					: HBM2DDL_AUTO + "." + contributor;
+
+			final Object scriptsActionSetting = settings.get( settingName );
+			if ( scriptsActionSetting == null ) {
+				return defaultValue;
+			}
+
+			return Action.interpretHbm2ddlSetting( scriptsActionSetting );
+		}
+
 		public static Set<ActionGrouping> interpret(Metadata metadata, Map<?,?> configurationValues) {
 			// these represent the base (non-contributor-specific) values
-			final Action rootDatabaseAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_DATABASE_ACTION ) );
-			final Action rootScriptAction = Action.interpretJpaSetting( configurationValues.get( HBM2DDL_SCRIPTS_ACTION ) );
-			final Action rootExportAction = Action.interpretHbm2ddlSetting( configurationValues.get( HBM2DDL_AUTO ) );
+			final Action rootDatabaseAction = determineJpaDbActionSetting( configurationValues, null, null );
+			final Action rootScriptAction = determineJpaScriptActionSetting( configurationValues, null, null );
+
+			final Action rootAutoAction = determineAutoSettingImpliedAction( configurationValues, null, null );
 
 			final Set<String> contributors = metadata.getContributors();
 			final Set<ActionGrouping> groupings = new HashSet<>( contributors.size() );
 
 			// for each contributor, look for specific tooling config values
 			for ( String contributor : contributors ) {
-				final Object contributorDatabaseActionSetting = configurationValues.get( HBM2DDL_DATABASE_ACTION + "." + contributor );
-				final Object contributorScriptActionSetting = configurationValues.get( HBM2DDL_SCRIPTS_ACTION + "." + contributor );
-				final Object contributorExportActionSetting = configurationValues.get( HBM2DDL_AUTO + "." + contributor );
+				Action databaseActionToUse = determineJpaDbActionSetting( configurationValues, contributor, rootDatabaseAction );;
+				Action scriptActionToUse = determineJpaScriptActionSetting( configurationValues, contributor, rootScriptAction );
 
-				final Action contributorDatabaseAction = contributorDatabaseActionSetting == null
-						? rootDatabaseAction
-						: Action.interpretJpaSetting( contributorDatabaseActionSetting );
-				final Action contributorScriptAction = contributorScriptActionSetting == null
-						? rootScriptAction
-						: Action.interpretJpaSetting( contributorScriptActionSetting );
-				final Action contributorExportAction = contributorExportActionSetting == null
-						? rootExportAction
-						: Action.interpretJpaSetting( contributorExportActionSetting );
-
-				Action databaseAction = contributorDatabaseAction;
-				if ( databaseAction == Action.NONE && contributorScriptAction == Action.NONE ) {
-					if ( contributorExportAction != Action.NONE ) {
-						databaseAction = contributorExportAction;
-					}
-
-					if ( databaseAction == Action.NONE ) {
-						log.debugf( "No schema actions specified for contributor `%s`; doing nothing", contributor );
-						continue;
+				if ( databaseActionToUse == null && scriptActionToUse == null ) {
+					// no JPA (jakarta nor javax) settings were specified, use the legacy Hibernate
+					// `hbm2ddl.auto` setting to possibly set the database-action
+					final Action contributorAutoSetting = determineAutoSettingImpliedAction( configurationValues, contributor, rootAutoAction );
+					if ( contributorAutoSetting != null ) {
+						databaseActionToUse = contributorAutoSetting;
 					}
 				}
 
-				groupings.add( new ActionGrouping( contributor, databaseAction, contributorScriptAction ) );
+				if ( databaseActionToUse == null ) {
+					databaseActionToUse = Action.NONE;
+				}
+				if ( scriptActionToUse == null ) {
+					scriptActionToUse = Action.NONE;
+				}
+
+				if ( databaseActionToUse == Action.NONE &&  scriptActionToUse == Action.NONE ) {
+					log.debugf( "No schema actions specified for contributor `%s`; doing nothing", contributor );
+					continue;
+				}
+
+				groupings.add( new ActionGrouping( contributor, databaseActionToUse, scriptActionToUse ) );
 			}
 
 			return groupings;

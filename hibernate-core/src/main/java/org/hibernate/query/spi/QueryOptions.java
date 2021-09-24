@@ -162,15 +162,6 @@ public interface QueryOptions {
 	}
 
 	/**
-	 * Determine if the query execution has to be considered by the {@link org.hibernate.stat.Statistics}.
-	 *
-	 * @return true if the query execution has to be added to the {@link org.hibernate.stat.Statistics}, false otherwise.
-	 */
-	default boolean hasQueryExecutionToBeAddedToStatistics() {
-		return false;
-	}
-
-	/**
 	 * Did the application explicitly request paging limits?
 	 *
 	 * @see #getLimit

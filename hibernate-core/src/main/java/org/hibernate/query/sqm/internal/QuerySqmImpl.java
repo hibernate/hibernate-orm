@@ -858,4 +858,10 @@ public class QuerySqmImpl<R>
 				getHints()
 		);
 	}
+
+	@Override
+	public boolean hasQueryExecutionToBeAddedToStatistics() {
+		return !CRITERIA_HQL_STRING.equals( hqlString );
+	}
+
 }

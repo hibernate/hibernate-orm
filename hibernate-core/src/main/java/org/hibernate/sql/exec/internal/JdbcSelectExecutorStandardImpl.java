@@ -184,7 +184,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		final boolean stats;
 		long startTime = 0;
 		final StatisticsImplementor statistics = executionContext.getSession().getFactory().getStatistics();
-		if ( executionContext.getQueryOptions().hasQueryExecutionToBeAddedToStatistics()
+		if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
 				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
 			stats = statistics.isStatisticsEnabled();
 			if ( stats ) {

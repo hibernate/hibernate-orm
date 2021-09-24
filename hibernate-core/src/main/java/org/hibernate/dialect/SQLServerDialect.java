@@ -7,6 +7,8 @@
 package org.hibernate.dialect;
 
 import org.hibernate.*;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -39,6 +41,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -84,6 +87,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
+		}
+
+		if(getVersion() >= 11) {
+			sequenceExporter = new SqlServerSequenceExporter( this );
 		}
 
 		registerColumnType( Types.VARCHAR, 8000, "varchar($l)" );
@@ -778,6 +785,24 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public NameQualifierSupport getNameQualifierSupport() {
 		return NameQualifierSupport.BOTH;
+	}
+
+	private class SqlServerSequenceExporter extends StandardSequenceExporter {
+
+		public SqlServerSequenceExporter(Dialect dialect) {
+			super( dialect );
+		}
+
+		@Override
+		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata) {
+			if ( name.getCatalogName() != null ) {
+				// SQL Server does not allow the catalog in the sequence name.
+				// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
+				// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
+				name = new QualifiedSequenceName( null, name.getSchemaName(), name.getObjectName() );
+			}
+			return super.getFormattedSequenceName( name, metadata );
+		}
 	}
 
 }

@@ -21,7 +21,6 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.Service;
-import org.hibernate.service.spi.Manageable;
 import org.hibernate.stat.Statistics;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -34,7 +33,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @author Sanne Grinovero
  */
 @SuppressWarnings({ "unchecked" })
-public class StatisticsImpl implements StatisticsImplementor, Service, Manageable {
+public class StatisticsImpl implements StatisticsImplementor, Service {
 
 	private static final CoreMessageLogger LOG = messageLogger( StatisticsImpl.class );
 

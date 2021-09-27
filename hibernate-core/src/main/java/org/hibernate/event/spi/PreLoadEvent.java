@@ -7,14 +7,13 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
  * Called before injecting property values into a newly loaded entity instance.
  *
  * @author Gavin King
  */
-public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntityInformation {
+public class PreLoadEvent extends AbstractEvent {
 	private Object entity;
 	private Object[] state;
 	private Object id;
@@ -31,11 +30,10 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		persister = null;
 	}
 
-	@Override
 	public Object getEntity() {
 		return entity;
 	}
-	
+
 	public Object getId() {
 		return id;
 	}
@@ -57,7 +55,7 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 		this.id = id;
 		return this;
 	}
-	
+
 	public PreLoadEvent setPersister(EntityPersister persister) {
 		this.persister = persister;
 		return this;
@@ -66,15 +64,5 @@ public class PreLoadEvent extends AbstractEvent implements PermissionCheckEntity
 	public PreLoadEvent setState(Object[] state) {
 		this.state = state;
 		return this;
-	}
-
-	@Override
-	public String getEntityName() {
-		return persister.getEntityName();
-	}
-
-	@Override
-	public Object getIdentifier() {
-		return id;
 	}
 }

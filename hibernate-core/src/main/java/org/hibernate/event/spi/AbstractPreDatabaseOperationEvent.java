@@ -7,16 +7,13 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 /**
  * Represents an operation we are about to perform against the database.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractPreDatabaseOperationEvent
-		extends AbstractEvent
-		implements PermissionCheckEntityInformation {
+public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 
 	private final Object entity;
 	private final Object id;
@@ -46,7 +43,6 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 *
 	 * @return The entity.
 	 */
-	@Override
 	public Object getEntity() {
 		return entity;
 	}
@@ -61,7 +57,7 @@ public abstract class AbstractPreDatabaseOperationEvent
 	}
 
 	/**
-	 * The persister for the {@link #getEntity entity}.
+	 * The persister for the entity.
 	 *
 	 * @return The entity persister.
 	 */
@@ -84,15 +80,5 @@ public abstract class AbstractPreDatabaseOperationEvent
 	@Deprecated
 	public EventSource getSource() {
 		return getSession();
-	}
-
-	@Override
-	public String getEntityName() {
-		return persister.getEntityName();
-	}
-
-	@Override
-	public Object getIdentifier() {
-		return id;
 	}
 }

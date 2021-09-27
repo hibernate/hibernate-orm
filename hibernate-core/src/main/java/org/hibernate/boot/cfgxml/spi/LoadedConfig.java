@@ -24,8 +24,6 @@ import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEventListenerType;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgMappingReferenceType;
 import org.hibernate.event.spi.EventType;
-import org.hibernate.secure.spi.GrantedPermission;
-import org.hibernate.secure.spi.JaccPermissionDeclarations;
 
 import org.jboss.logging.Logger;
 
@@ -42,7 +40,6 @@ public class LoadedConfig {
 
 	private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
 
-	private Map<String,JaccPermissionDeclarations> jaccPermissionsByContextId;
 	private List<CacheRegionDefinition> cacheRegionDefinitions;
 	private List<MappingReference> mappingReferences;
 	private Map<EventType,Set<String>> eventListenerMap;
@@ -57,14 +54,6 @@ public class LoadedConfig {
 
 	public Map getConfigurationValues() {
 		return configurationValues;
-	}
-
-	public Map<String, JaccPermissionDeclarations> getJaccPermissionsByContextId() {
-		return jaccPermissionsByContextId;
-	}
-
-	public JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
-		return jaccPermissionsByContextId.get( jaccContextId );
 	}
 
 	public List<CacheRegionDefinition> getCacheRegionDefinitions() {
@@ -100,22 +89,6 @@ public class LoadedConfig {
 
 		for ( Object cacheDeclaration : jaxbCfg.getSessionFactory().getClassCacheOrCollectionCache() ) {
 			cfg.addCacheRegionDefinition( parseCacheRegionDefinition( cacheDeclaration ) );
-		}
-
-		if ( jaxbCfg.getSecurity() != null ) {
-			for ( JaxbCfgHibernateConfiguration.JaxbCfgSecurity.JaxbCfgGrant grant : jaxbCfg.getSecurity().getGrant() ) {
-				final JaccPermissionDeclarations jaccPermissions = cfg.getOrCreateJaccPermissions(
-						jaxbCfg.getSecurity()
-								.getContext()
-				);
-				jaccPermissions.addPermissionDeclaration(
-						new GrantedPermission(
-								grant.getRole(),
-								grant.getEntityName(),
-								grant.getActions()
-						)
-				);
-			}
 		}
 
 		if ( !jaxbCfg.getSessionFactory().getListener().isEmpty() ) {
@@ -216,20 +189,6 @@ public class LoadedConfig {
 		listenerClasses.add( listenerClass );
 	}
 
-	public JaccPermissionDeclarations getOrCreateJaccPermissions(String contextId) {
-		if ( jaccPermissionsByContextId == null ) {
-			jaccPermissionsByContextId = new HashMap<>();
-		}
-
-		JaccPermissionDeclarations jaccPermission = jaccPermissionsByContextId.get( contextId );
-		if ( jaccPermission == null ) {
-			jaccPermission = new JaccPermissionDeclarations( contextId );
-		}
-		jaccPermissionsByContextId.put( contextId, jaccPermission );
-
-		return jaccPermission;
-	}
-
 	/**
 	 * Merge information from loaded a {@code cfg.xml} represented by the incoming parameter
 	 * into this LoadedConfig representation
@@ -254,7 +213,6 @@ public class LoadedConfig {
 		addConfigurationValues( incoming.getConfigurationValues() );
 		addMappingReferences( incoming.getMappingReferences() );
 		addCacheRegionDefinitions( incoming.getCacheRegionDefinitions() );
-		addJaccPermissions( incoming.getJaccPermissionsByContextId() );
 		addEventListeners( incoming.getEventListenerMap() );
 	}
 
@@ -287,26 +245,6 @@ public class LoadedConfig {
 			this.cacheRegionDefinitions = new ArrayList<>();
 		}
 		this.cacheRegionDefinitions.addAll( cacheRegionDefinitions );
-	}
-
-	private void addJaccPermissions(Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId) {
-		if ( jaccPermissionsByContextId == null ) {
-			return;
-		}
-
-		if ( this.jaccPermissionsByContextId == null ) {
-			this.jaccPermissionsByContextId = new HashMap<>();
-		}
-
-		for ( Map.Entry<String, JaccPermissionDeclarations> incomingEntry : jaccPermissionsByContextId.entrySet() ) {
-			JaccPermissionDeclarations permissions = jaccPermissionsByContextId.get( incomingEntry.getKey() );
-			if ( permissions == null ) {
-				permissions = new JaccPermissionDeclarations( incomingEntry.getKey() );
-				this.jaccPermissionsByContextId.put( incomingEntry.getKey(), permissions );
-			}
-
-			permissions.addPermissionDeclarations( incomingEntry.getValue().getPermissionDeclarations() );
-		}
 	}
 
 	private void addEventListeners(Map<EventType, Set<String>> eventListenerMap) {

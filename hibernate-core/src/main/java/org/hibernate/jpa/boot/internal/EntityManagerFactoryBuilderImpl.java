@@ -76,8 +76,6 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.secure.spi.GrantedPermission;
-import org.hibernate.secure.spi.JaccPermissionDeclarations;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
@@ -89,9 +87,6 @@ import org.jboss.jandex.Index;
 
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
-import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
-import static org.hibernate.cfg.AvailableSettings.JACC_ENABLED;
-import static org.hibernate.cfg.AvailableSettings.JACC_PREFIX;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_URL;
@@ -518,8 +513,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		normalizeSettings( persistenceUnit, integrationSettings, mergedSettings );
 
-		final String jaccContextId = (String) mergedSettings.configurationValues.get( JACC_CONTEXT_ID );
-
 		// here we are going to iterate the merged config settings looking for:
 		//		1) additional JACC permissions
 		//		2) additional cache region declarations
@@ -538,22 +531,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				final String keyString = (String) entry.getKey();
 				final String valueString = (String) entry.getValue();
 
-				if ( keyString.startsWith( JACC_PREFIX ) ) {
-					if( !JACC_CONTEXT_ID.equals( keyString ) && !JACC_ENABLED.equals( keyString )) {
-						if ( jaccContextId == null ) {
-							LOG.debugf(
-									"Found JACC permission grant [%s] in properties, but no JACC context id was specified; ignoring",
-									keyString
-							);
-						}
-						else {
-							mergedSettings.getJaccPermissions( jaccContextId ).addPermissionDeclaration(
-									parseJaccConfigEntry( keyString, valueString )
-							);
-						}
-					}
-				}
-				else if ( keyString.startsWith( CLASS_CACHE_PREFIX ) ) {
+				if ( keyString.startsWith( CLASS_CACHE_PREFIX ) ) {
 					mergedSettings.addCacheRegionDefinition(
 							parseCacheRegionDefinitionEntry(
 									keyString.substring( CLASS_CACHE_PREFIX.length() + 1 ),
@@ -1135,19 +1113,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		ssrBuilder.getAggregatedCfgXml().merge( loadedConfig );
 	}
 
-	private GrantedPermission parseJaccConfigEntry(String keyString, String valueString) {
-		try {
-			final int roleStart = JACC_PREFIX.length() + 1;
-			final String role = keyString.substring( roleStart, keyString.indexOf( '.', roleStart ) );
-			final int classStart = roleStart + role.length() + 1;
-			final String clazz = keyString.substring( classStart );
-			return new GrantedPermission( role, clazz, valueString );
-		}
-		catch ( IndexOutOfBoundsException e ) {
-			throw persistenceException( "Illegal usage of " + JACC_PREFIX + ": " + keyString );
-		}
-	}
-
 	private CacheRegionDefinition parseCacheRegionDefinitionEntry(String role, String value, CacheRegionDefinition.CacheRegionType cacheType) {
 		final StringTokenizer params = new StringTokenizer( value, ";, " );
 		if ( !params.hasMoreTokens() ) {
@@ -1522,7 +1487,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 	private static class MergedSettings {
 		private final Map configurationValues = new ConcurrentHashMap( 16, 0.75f, 1 );
 
-		private Map<String, JaccPermissionDeclarations> jaccPermissionsByContextId;
 		private List<CacheRegionDefinition> cacheRegionDefinitions;
 
 		/**
@@ -1559,19 +1523,6 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 
 		public Map getConfigurationValues() {
 			return configurationValues;
-		}
-
-		private JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
-			if ( jaccPermissionsByContextId == null ) {
-				jaccPermissionsByContextId = new HashMap<>();
-			}
-
-			JaccPermissionDeclarations jaccPermissions = jaccPermissionsByContextId.get( jaccContextId );
-			if ( jaccPermissions == null ) {
-				jaccPermissions = new JaccPermissionDeclarations( jaccContextId );
-				jaccPermissionsByContextId.put( jaccContextId, jaccPermissions );
-			}
-			return jaccPermissions;
 		}
 
 		private void addCacheRegionDefinition(CacheRegionDefinition cacheRegionDefinition) {

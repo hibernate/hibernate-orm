@@ -2162,10 +2162,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 
-	String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
-	String JACC_PREFIX = "hibernate.jacc";
-	String JACC_ENABLED = "hibernate.jacc.enabled";
-
 	/**
 	 * If enabled, allows schema update and validation to support synonyms.  Due
 	 * to the possibility that this would return duplicate tables (especially in

@@ -30,3 +30,8 @@ Multiple component mappings for the same java class with different property mapp
 * Functions
 * Multi-table bulk manipulation HQL/Criteria query handling
 
+
+=== Removal
+
+* JMX integration
+* JACC integration

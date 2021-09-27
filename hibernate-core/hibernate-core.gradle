@@ -44,9 +44,8 @@ dependencies {
     compileOnly libraries.jakarta_validation
     compileOnly libraries.jakarta_cdi
 
-    compileOnly libraries.ant
-
     testImplementation project(':hibernate-testing')
+    testImplementation project(':hibernate-ant')
     testImplementation libraries.shrinkwrap_api
     testImplementation libraries.shrinkwrap
     testImplementation libraries.shrinkwrap_descriptors_api_javaee

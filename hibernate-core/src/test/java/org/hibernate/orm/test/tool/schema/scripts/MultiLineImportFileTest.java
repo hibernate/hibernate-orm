@@ -6,16 +6,9 @@
  */
 package org.hibernate.orm.test.tool.schema.scripts;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-
-import org.hibernate.Session;
-import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jdbc.Work;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
 import org.hibernate.testing.AfterClassOnce;

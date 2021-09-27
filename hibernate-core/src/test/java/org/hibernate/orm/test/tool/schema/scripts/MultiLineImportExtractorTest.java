@@ -12,7 +12,6 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
 
 import org.hibernate.testing.orm.junit.DialectContext;

@@ -258,4 +258,25 @@ public interface DeprecationLogger extends BasicLogger {
 			"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
 	)
 	void deprecatedComponentMapping(String name);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000026,
+			value = "JMX support has been enabled via `%s`.  This feature is scheduled for removal in 6.0"
+	)
+	void deprecatedJmxSupport(String jmxEnabledSetting);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000026,
+			value = "Manageable service was registered with JMX support (`%s`).  JMX support is scheduled for removal in 6.0"
+	)
+	void deprecatedJmxManageableServiceRegistration(String jmxEnabledSetting);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000027,
+			value = "MBean was registered with JMX support (`%s`).  JMX support is scheduled for removal in 6.0"
+	)
+	void deprecatedJmxBeanRegistration(String name);
 }

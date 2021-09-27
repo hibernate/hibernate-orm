@@ -10,7 +10,10 @@ package org.hibernate.secure.spi;
  * Describes a Hibernate (persistence) permission.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public class GrantedPermission {
 	private final String role;
 	private final String entityName;

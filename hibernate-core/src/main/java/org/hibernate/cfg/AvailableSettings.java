@@ -2053,10 +2053,6 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String JTA_TRACK_BY_THREAD = "hibernate.jta.track_by_thread";
 
-	String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
-	String JACC_PREFIX = "hibernate.jacc";
-	String JACC_ENABLED = "hibernate.jacc.enabled";
-
 	/**
 	 * If enabled, allows schema update and validation to support synonyms.  Due
 	 * to the possibility that this would return duplicate tables (especially in
@@ -2460,4 +2456,19 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 */
 	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
+	@Deprecated
+	String JACC_CONTEXT_ID = "hibernate.jacc_context_id";
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
+	@Deprecated
+	String JACC_PREFIX = "hibernate.jacc";
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
+	@Deprecated
+	String JACC_ENABLED = "hibernate.jacc.enabled";
 }

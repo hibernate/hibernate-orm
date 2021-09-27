@@ -120,7 +120,7 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 		final JdbcMutationExecutor executor = StandardJdbcMutationExecutor.INSTANCE;
 
 		final SharedSessionContractImplementor session = executionContext.getSession();
-		// TODO: use configurable executor instead?
+		// todo (6.0): use configurable executor instead?
 //		final SessionFactoryImplementor factory = session.getFactory();
 //		final JdbcServices jdbcServices = factory.getJdbcServices();
 //		return jdbcServices.getJdbcMutationExecutor().execute(

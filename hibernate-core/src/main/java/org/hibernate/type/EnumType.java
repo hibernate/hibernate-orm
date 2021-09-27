@@ -197,7 +197,11 @@ public class EnumType<T extends Enum<T>>
 	private BasicJavaDescriptor<?> resolveRelationalJavaTypeDescriptor(
 			LocalJdbcTypeDescriptorIndicators indicators,
 			EnumJavaTypeDescriptor<?> enumJavaDescriptor) {
-		return enumJavaDescriptor.getRecommendedJdbcType( indicators ).getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+		return enumJavaDescriptor.getRecommendedJdbcType( indicators ).getJdbcRecommendedJavaTypeMapping(
+				null,
+				null,
+				typeConfiguration
+		);
 	}
 
 	private jakarta.persistence.EnumType getEnumType(ParameterType reader) {

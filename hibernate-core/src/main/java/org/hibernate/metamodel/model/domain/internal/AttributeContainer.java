@@ -9,6 +9,7 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 
@@ -34,7 +35,9 @@ public interface AttributeContainer<J> {
 			);
 		}
 
-		default void applyNonAggregatedIdAttributes(Set<SingularPersistentAttribute<? super J, ?>> idAttributes) {
+		default void applyNonAggregatedIdAttributes(
+				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
+				EmbeddableDomainType<?> idClassType) {
 			throw new UnsupportedOperationException(
 					"AttributeContainer [" + getClass().getName() + "] does not support identifiers"
 			);

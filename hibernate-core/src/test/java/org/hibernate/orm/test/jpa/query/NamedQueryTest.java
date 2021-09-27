@@ -182,7 +182,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11413")
-	public void testNamedNativeQueryExceptionNoRedultDefined() {
+	public void testNamedNativeQueryExceptionNoResultDefined() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			assertThrows(
 					"Named query exists but its result type is not compatible",

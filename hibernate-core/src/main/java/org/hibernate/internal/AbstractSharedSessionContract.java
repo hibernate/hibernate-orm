@@ -15,6 +15,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -52,6 +53,7 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.jdbc.WorkExecutorVisitable;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
+import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
@@ -704,7 +706,12 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 		try {
 			NativeQueryImplementor query = createNativeQuery( sqlString );
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			if ( Tuple.class.equals( resultClass ) ) {
+				query.setTupleTransformer( new NativeQueryTupleTransformer() );
+			}
+			else {
+				query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+			}
 			return query;
 		}
 		catch (RuntimeException he) {
@@ -740,7 +747,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 
 		return query;
-//		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 

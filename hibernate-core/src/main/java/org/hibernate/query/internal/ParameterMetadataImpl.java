@@ -266,6 +266,13 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			}
 		}
 
-		return null;
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"Could not locate ordinal parameter [%s], expecting one of [%s]",
+						positionLabel,
+						StringHelper.join( ", ", labels)
+				)
+		);
 	}
 }

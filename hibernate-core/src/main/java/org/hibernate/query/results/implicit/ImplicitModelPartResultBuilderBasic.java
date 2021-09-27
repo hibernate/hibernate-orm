@@ -33,6 +33,11 @@ public class ImplicitModelPartResultBuilderBasic
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return modelPart.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

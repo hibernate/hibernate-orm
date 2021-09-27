@@ -86,7 +86,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			sqlStatementInterceptor.assertExecutedCount(1);
 
 			sqlStatementInterceptor.assertExecuted(
-				"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_ where namedquery0_.title=?"
+				"/* COMMENT_SELECT_INDEX_game_title */ select g1_0.id,g1_0.title from game g1_0 where g1_0.title=?"
 			);
 		} );
 	}
@@ -206,8 +206,8 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			sqlStatementInterceptor.assertExecutedCount(1);
 
 			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_SELECT_INDEX_game_title */ select namedquery0_.id as id1_0_, namedquery0_.title as title2_0_ from game namedquery0_  use index (idx_game_id) where namedquery0_.title=?"			)
-			;
+					"/* COMMENT_SELECT_INDEX_game_title */ select g1_0.id,g1_0.title from game g1_0  use index (idx_game_id) where g1_0.title=?"
+			);
 		} );
 	}
 

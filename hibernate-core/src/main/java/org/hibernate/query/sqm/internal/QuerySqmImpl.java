@@ -143,7 +143,11 @@ public class QuerySqmImpl<R>
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		this.parameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				producer.getFactory(),
+				producer.isQueryParametersValidationEnabled()
+		);
 
 		applyOptions( memento );
 	}
@@ -186,7 +190,7 @@ public class QuerySqmImpl<R>
 		this.sqmStatement = hqlInterpretation.getSqmStatement();
 
 		if ( resultType != null ) {
-			SqmUtil.verifyIsSelectStatement( sqmStatement );
+			SqmUtil.verifyIsSelectStatement( sqmStatement, hqlString );
 			visitQueryReturnType(
 					( (SqmSelectStatement<R>) sqmStatement ).getQueryPart(),
 					resultType,
@@ -200,7 +204,11 @@ public class QuerySqmImpl<R>
 		this.parameterMetadata = hqlInterpretation.getParameterMetadata();
 		this.domainParameterXref = hqlInterpretation.getDomainParameterXref();
 
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		this.parameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				producer.getFactory(),
+				producer.isQueryParametersValidationEnabled()
+		);
 	}
 
 	/**
@@ -213,7 +221,7 @@ public class QuerySqmImpl<R>
 		super( producer );
 
 		if ( resultType != null ) {
-			SqmUtil.verifyIsSelectStatement( sqmStatement );
+			SqmUtil.verifyIsSelectStatement( sqmStatement, null );
 			final SqmQueryPart<R> queryPart = ( (SqmSelectStatement<R>) sqmStatement ).getQueryPart();
 			// For criteria queries, we have to validate the fetch structure here
 			queryPart.validateQueryGroupFetchStructure();
@@ -243,7 +251,11 @@ public class QuerySqmImpl<R>
 			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		this.parameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				producer.getFactory(),
+				producer.isQueryParametersValidationEnabled()
+		);
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
 		for ( SqmParameter<?> sqmParameter : this.domainParameterXref.getParameterResolutions().getSqmParameters() ) {
 			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
@@ -575,7 +587,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	protected List<R> doList() {
-		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
+		SqmUtil.verifyIsSelectStatement( getSqmStatement(), hqlString );
 		final SqmSelectStatement<?> selectStatement = (SqmSelectStatement<?>) getSqmStatement();
 
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
@@ -710,7 +722,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		SqmUtil.verifyIsSelectStatement( getSqmStatement() );
+		SqmUtil.verifyIsSelectStatement( getSqmStatement(), hqlString );
 		getSession().prepareForQueryExecution( requiresTxn( getLockOptions().findGreatestLockMode() ) );
 
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
@@ -718,7 +730,7 @@ public class QuerySqmImpl<R>
 
 	@Override
 	protected int doExecuteUpdate() {
-		SqmUtil.verifyIsNonSelectStatement( getSqmStatement() );
+		SqmUtil.verifyIsNonSelectStatement( getSqmStatement(), hqlString );
 		getSession().prepareForQueryExecution( true );
 
 		return resolveNonSelectQueryPlan().executeUpdate( this );

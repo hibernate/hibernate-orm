@@ -51,6 +51,11 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

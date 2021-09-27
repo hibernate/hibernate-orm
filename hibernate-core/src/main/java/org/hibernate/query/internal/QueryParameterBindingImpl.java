@@ -106,11 +106,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return;
 		}
 
-		if ( bindType != null ) {
-			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
-		}
-		else if ( queryParameter.getHibernateType() != null ) {
-			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			if ( bindType != null ) {
+				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
+			else if ( queryParameter.getHibernateType() != null ) {
+				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
 		}
 
 		if ( isBindingValidationRequired ) {
@@ -162,11 +164,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			this.bindType = clarifiedType;
 		}
 
-		if ( bindType != null ) {
-			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
-		}
-		else if ( queryParameter.getHibernateType() != null ) {
-			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			if ( bindType != null ) {
+				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
+			else if ( queryParameter.getHibernateType() != null ) {
+				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
 		}
 
 		if ( isBindingValidationRequired ) {
@@ -186,24 +190,26 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			bindType = queryParameter.getHibernateType();
 		}
 
-		if ( bindType != null ) {
-			try {
-				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			if ( bindType != null ) {
+				try {
+					value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+				}
+				catch (CoercionException ex) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Parameter value [%s] did not match expected type [%s (%s)]",
+									value,
+									bindType.getTypeName(),
+									temporalTypePrecision == null ? "n/a" : temporalTypePrecision.name()
+							),
+							ex
+					);
+				}
 			}
-			catch ( CoercionException ex ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value [%s] did not match expected type [%s (%s)]",
-								value,
-								bindType.getTypeName(),
-								temporalTypePrecision == null ? "n/a" : temporalTypePrecision.name()
-						),
-						ex
-				);
+			else if ( queryParameter.getHibernateType() != null ) {
+				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
 			}
-		}
-		else if ( queryParameter.getHibernateType() != null ) {
-			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
 		}
 
 		if ( isBindingValidationRequired ) {

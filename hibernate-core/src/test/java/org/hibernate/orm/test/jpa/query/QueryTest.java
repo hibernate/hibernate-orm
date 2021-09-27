@@ -27,8 +27,8 @@ import org.hibernate.QueryException;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL9Dialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -382,8 +382,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
-	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = OracleDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
@@ -419,10 +419,10 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10161")
-	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = Oracle8iDialect.class, comment = "ORA-00932: inconsistent datatypes: expected NUMBER got BINARY")
+	@SkipForDialect(value = OracleDialect.class, comment = "ORA-00932: inconsistent datatypes: expected NUMBER got BINARY")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
 	public void testNativeQueryNullPositionalParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
@@ -472,8 +472,8 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
-	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = OracleDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
@@ -509,10 +509,10 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10161")
-	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
+	@SkipForDialect(value = PostgreSQLDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
 	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = Oracle8iDialect.class, comment = "ORA-00932: inconsistent datatypes: expected NUMBER got BINARY")
+	@SkipForDialect(value = OracleDialect.class, comment = "ORA-00932: inconsistent datatypes: expected NUMBER got BINARY")
 	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to INTEGER")
 	public void testNativeQueryNullNamedParameterParameter() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

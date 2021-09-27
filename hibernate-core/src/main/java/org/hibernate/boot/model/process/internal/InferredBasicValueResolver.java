@@ -15,6 +15,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -187,7 +188,28 @@ public class InferredBasicValueResolver {
 			if ( explicitJdbcType != null ) {
 				// we have an explicit STD, but no JTD - infer JTD
 				//		- NOTE : yes its an odd case, but its easy to implement here, so...
-				final BasicJavaDescriptor recommendedJtd = explicitJdbcType.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+				Integer length = null;
+				Integer scale = null;
+				if ( selectable instanceof Column ) {
+					final Column column = (Column) selectable;
+					if ( column.getPrecision() != null && column.getPrecision() > 0 ) {
+						length = column.getPrecision();
+						scale = column.getScale();
+					}
+					else if ( column.getLength() != null ) {
+						if ( column.getLength() > (long) Integer.MAX_VALUE ) {
+							length = Integer.MAX_VALUE;
+						}
+						else {
+							length = column.getLength().intValue();
+						}
+					}
+				}
+				final BasicJavaDescriptor recommendedJtd = explicitJdbcType.getJdbcRecommendedJavaTypeMapping(
+						length,
+						scale,
+						typeConfiguration
+				);
 				final BasicType<?> resolved = typeConfiguration.getBasicTypeRegistry().resolve(
 						recommendedJtd,
 						explicitJdbcType
@@ -460,7 +482,10 @@ public class InferredBasicValueResolver {
 			);
 		}
 		else {
-			basicType = registeredType;
+			basicType = (BasicType) legacyTemporalType.resolveTemporalPrecision(
+					reflectedJtd.getPrecision(),
+					typeConfiguration
+			);
 		}
 
 		return new InferredBasicValueResolution(

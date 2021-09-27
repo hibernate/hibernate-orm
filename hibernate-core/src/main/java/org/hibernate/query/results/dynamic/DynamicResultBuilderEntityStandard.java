@@ -72,6 +72,11 @@ public class DynamicResultBuilderEntityStandard
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return entityMapping.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public EntityMappingType getEntityMapping() {
 		return entityMapping;
 	}

@@ -30,6 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBasic {
 	private final String columnName;
+	private final int columnPosition;
 	private final String resultAlias;
 
 	private final BasicType<?> explicitType;
@@ -38,7 +39,18 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias) {
 		assert columnName != null;
 		this.columnName = columnName;
+		this.columnPosition = 0;
 		this.resultAlias = resultAlias != null ? resultAlias : columnName;
+
+		this.explicitType = null;
+		this.explicitJavaTypeDescriptor = null;
+	}
+
+	public DynamicResultBuilderBasicStandard(int columnPosition) {
+		assert columnPosition > 0;
+		this.columnName = "c" + columnPosition;
+		this.columnPosition = columnPosition;
+		this.resultAlias = columnName;
 
 		this.explicitType = null;
 		this.explicitJavaTypeDescriptor = null;
@@ -47,6 +59,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias, JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
 		assert columnName != null;
 		this.columnName = columnName;
+		this.columnPosition = 0;
 		this.resultAlias = resultAlias != null ? resultAlias : columnName;
 
 		assert explicitJavaTypeDescriptor != null;
@@ -58,12 +71,36 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias, BasicType<?> explicitType) {
 		assert columnName != null;
 		this.columnName = columnName;
+		this.columnPosition = 0;
 		this.resultAlias = resultAlias != null ? resultAlias : columnName;
 
 		assert explicitType != null;
 		this.explicitType = explicitType;
 
 		this.explicitJavaTypeDescriptor = null;
+	}
+
+	public DynamicResultBuilderBasicStandard(int columnPosition, BasicType<?> explicitType) {
+		assert columnPosition > 0;
+		this.columnName = "c" + columnPosition;
+		this.columnPosition = columnPosition;
+		this.resultAlias = columnName;
+
+		assert explicitType != null;
+		this.explicitType = explicitType;
+
+		this.explicitJavaTypeDescriptor = null;
+	}
+
+	@Override
+	public Class<?> getJavaType() {
+		if ( explicitJavaTypeDescriptor != null ) {
+			return explicitJavaTypeDescriptor.getJavaTypeClass();
+		}
+		if ( explicitType != null ) {
+			return explicitType.getJavaType();
+		}
+		return null;
 	}
 
 	public String getColumnName() {
@@ -84,7 +121,13 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression(
 				columnName,
 				state -> {
-					final int jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
+					final int jdbcPosition;
+					if ( columnPosition > 0 ) {
+						jdbcPosition = columnPosition;
+					}
+					else {
+						jdbcPosition = jdbcResultsMetadata.resolveColumnPosition( columnName );
+					}
 					final int valuesArrayPosition = ResultsHelper.jdbcPositionToValuesArrayPosition( jdbcPosition );
 
 					final BasicType<?> basicType;

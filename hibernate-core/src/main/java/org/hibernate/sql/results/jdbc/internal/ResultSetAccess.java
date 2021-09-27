@@ -9,6 +9,9 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Types;
+
+import javax.persistence.EnumType;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -16,6 +19,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -69,28 +73,60 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 
 	@Override
 	default <J> BasicType<J> resolveType(int position, JavaTypeDescriptor<J> explicitJavaTypeDescriptor) {
+		final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {
-			final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 			final ResultSetMetaData metaData = getResultSet().getMetaData();
-			final JdbcTypeDescriptor jdbcTypeDescriptor = jdbcServices.getDialect()
+			final int columnType = metaData.getColumnType( position );
+			final int scale = metaData.getScale( position );
+			final int precision = metaData.getPrecision( position );
+			final int length;
+			if ( columnType == Types.CHAR && precision == 0 ) {
+				length = metaData.getColumnDisplaySize( position );
+			}
+			else {
+				length = precision;
+			}
+			final JdbcTypeDescriptor resolvedJdbcTypeDescriptor = jdbcServices.getDialect()
 					.resolveSqlTypeDescriptor(
-							metaData.getColumnType( position ),
-							metaData.getPrecision( position ),
-							metaData.getScale( position ),
+							columnType,
+							length,
+							scale,
 							typeConfiguration.getJdbcTypeDescriptorRegistry()
 					);
 			final JavaTypeDescriptor<J> javaTypeDescriptor;
-			if ( explicitJavaTypeDescriptor == null ) {
-				javaTypeDescriptor = jdbcTypeDescriptor.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+			final JdbcTypeDescriptor jdbcTypeDescriptor;
+			// If there is an explicit JavaTypeDescriptor, then prefer its recommended JDBC type
+			if ( explicitJavaTypeDescriptor != null ) {
+				javaTypeDescriptor = explicitJavaTypeDescriptor;
+				jdbcTypeDescriptor = explicitJavaTypeDescriptor.getRecommendedJdbcType(
+						new JdbcTypeDescriptorIndicators() {
+							@Override
+							public TypeConfiguration getTypeConfiguration() {
+								return typeConfiguration;
+							}
+
+							@Override
+							public long getColumnLength() {
+								return length;
+							}
+
+							@Override
+							public EnumType getEnumeratedType() {
+								return resolvedJdbcTypeDescriptor.isNumber() ? EnumType.ORDINAL : EnumType.STRING;
+							}
+						}
+				);
 			}
 			else {
-				javaTypeDescriptor = explicitJavaTypeDescriptor;
+				jdbcTypeDescriptor = resolvedJdbcTypeDescriptor;
+				javaTypeDescriptor = jdbcTypeDescriptor.getJdbcRecommendedJavaTypeMapping(
+						length,
+						scale,
+						typeConfiguration
+				);
 			}
-			return typeConfiguration.getBasicTypeRegistry().resolve(
-					javaTypeDescriptor,
-					jdbcTypeDescriptor
-			);
+			return typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, jdbcTypeDescriptor );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

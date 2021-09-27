@@ -124,12 +124,12 @@ public class Builders {
 
 	public static ResultBuilderBasicValued scalar(int position) {
 		// will be needed for interpreting legacy HBM <resultset/> mappings
-		throw new NotYetImplementedFor6Exception();
+		return new DynamicResultBuilderBasicStandard( position );
 	}
 
 	public static ResultBuilderBasicValued scalar(int position, BasicType<?> type) {
 		// will be needed for interpreting legacy HBM <resultset/> mappings
-		throw new NotYetImplementedFor6Exception();
+		return new DynamicResultBuilderBasicStandard( position, type );
 	}
 
 	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {

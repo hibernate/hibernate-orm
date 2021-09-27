@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.SqmPathSource;
  * @author Steve Ebersole
  */
 public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, IdentifiableType<J> {
-	SqmPathSource getIdentifierDescriptor();
+	SqmPathSource<?> getIdentifierDescriptor();
 
 	@Override
 	<Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> type);

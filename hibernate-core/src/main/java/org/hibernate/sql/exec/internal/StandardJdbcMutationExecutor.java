@@ -11,8 +11,10 @@ import java.sql.SQLException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
@@ -44,11 +46,23 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				.getLogicalConnection();
 
 		final JdbcServices jdbcServices = session.getJdbcServices();
-
-		final String sql = jdbcMutation.getSql();
+		final QueryOptions queryOptions = executionContext.getQueryOptions();
+		final String finalSql;
+		if ( queryOptions == null ) {
+			finalSql = jdbcMutation.getSql();
+		}
+		else {
+			final Dialect dialect = jdbcServices.getDialect();
+			final String sql = jdbcMutation.getSql();
+			finalSql = dialect.addSqlHintOrComment(
+					sql,
+					queryOptions,
+					executionContext.getSession().getFactory().getSessionFactoryOptions().isCommentsEnabled()
+			);
+		}
 		try {
 			// prepare the query
-			final PreparedStatement preparedStatement = statementCreator.apply( sql );
+			final PreparedStatement preparedStatement = statementCreator.apply( finalSql );
 
 			try {
 				if ( executionContext.getQueryOptions().getTimeout() != null ) {
@@ -84,7 +98,7 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
-					"JDBC exception executing SQL [" + sql + "]"
+					"JDBC exception executing SQL [" + finalSql + "]"
 			);
 		}
 		finally {

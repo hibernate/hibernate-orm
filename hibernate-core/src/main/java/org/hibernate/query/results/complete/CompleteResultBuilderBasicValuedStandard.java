@@ -52,6 +52,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return explicitJavaTypeDescriptor.getJavaTypeClass();
+	}
+
+	@Override
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

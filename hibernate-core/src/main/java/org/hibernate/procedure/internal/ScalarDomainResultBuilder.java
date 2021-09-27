@@ -27,6 +27,11 @@ public class ScalarDomainResultBuilder<T> implements ResultBuilder {
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return typeDescriptor.getJavaTypeClass();
+	}
+
+	@Override
 	public DomainResult<T> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

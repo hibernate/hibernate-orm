@@ -19,8 +19,6 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	private final SqmPath<?> pluralDomainPath;
 	private final PluralPersistentAttribute<?, ?, T> pluralAttribute;
 
-	private String alias;
-
 	@SuppressWarnings("WeakerAccess")
 	public AbstractSqmSpecificPluralPartPath(
 			NavigablePath navigablePath,
@@ -49,16 +47,6 @@ public abstract class AbstractSqmSpecificPluralPartPath<T> extends AbstractSqmPa
 	@Override
 	public SqmPath<?> getLhs() {
 		return pluralDomainPath;
-	}
-
-	@Override
-	public String getExplicitAlias() {
-		return alias;
-	}
-
-	@Override
-	public void setExplicitAlias(String explicitAlias) {
-		this.alias = explicitAlias;
 	}
 
 	@Override

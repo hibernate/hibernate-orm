@@ -73,6 +73,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
@@ -2710,7 +2711,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			final MappingModelExpressable keyExpressable = getKeyExpressable( mappingModelExpressable );
 			if ( keyExpressable == null ) {
-				throw new IllegalArgumentException( "Could not determine type for null literal" );
+				// todo (6.0): this should be fine, right?
+				return new NullnessLiteral( JavaObjectType.INSTANCE );
+//				throw new IllegalArgumentException( "Could not determine type for null literal" );
 			}
 
 			final List<Expression> expressions = new ArrayList<>( keyExpressable.getJdbcTypeCount() );
@@ -2774,6 +2777,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 				else if ( literalValue instanceof String ) {
 					discriminatorValue = javaTypeDescriptor.fromString( (String) literalValue );
+				}
+				else if ( creationContext.getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+					discriminatorValue = literalValue;
 				}
 				else {
 					discriminatorValue = javaTypeDescriptor.coerce( literalValue, null );
@@ -3171,7 +3177,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
-		assert parameterSqmType != null;
+		if ( parameterSqmType == null || parameterSqmType == StandardBasicTypes.OBJECT_TYPE ) {
+			assert binding.getBindValue() == null;
+				// todo (6.0): this should be fine, right?
+			return StandardBasicTypes.OBJECT_TYPE;
+		}
 
 		if ( parameterSqmType instanceof SqmPath ) {
 			final SqmPath sqmPath = (SqmPath) parameterSqmType;
@@ -3191,16 +3201,25 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return (BasicValuedMapping) parameterSqmType;
 		}
 
-		if ( parameterSqmType instanceof SqmPathSource<?> ) {
+		if ( parameterSqmType instanceof CompositeSqmPathSource ) {
 			// Try to infer the value mapping since the other side apparently is a path source
 			final MappingModelExpressable<?> inferredValueMapping = getInferredValueMapping();
 			if ( inferredValueMapping != null ) {
 				return inferredValueMapping;
 			}
+			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
 		}
 
-		if ( parameterSqmType instanceof CompositeSqmPathSource ) {
-			throw new NotYetImplementedFor6Exception( "Support for embedded-valued parameters not yet implemented" );
+		if ( parameterSqmType instanceof SqmPathSource<?> || parameterSqmType instanceof BasicDomainType<?> ) {
+			// Try to infer the value mapping since the other side apparently is a path source
+			final MappingModelExpressable<?> inferredValueMapping = getInferredValueMapping();
+			if ( inferredValueMapping != null ) {
+				return inferredValueMapping;
+			}
+			return getTypeConfiguration().getBasicTypeForJavaType(
+					( (SqmExpressable<?>) parameterSqmType ).getExpressableJavaTypeDescriptor()
+							.getJavaTypeClass()
+			);
 		}
 
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );

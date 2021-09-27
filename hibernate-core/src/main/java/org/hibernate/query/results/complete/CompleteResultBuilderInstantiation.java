@@ -40,6 +40,11 @@ public class CompleteResultBuilderInstantiation
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return javaTypeDescriptor.getJavaTypeClass();
+	}
+
+	@Override
 	public DomainResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

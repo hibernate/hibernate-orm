@@ -46,7 +46,6 @@ public interface NativeQueryInterpreter extends Service {
 				queryDefinition.getAffectedTableNames(),
 				queryDefinition.getQueryParameterList(),
 				queryDefinition.getResultSetMapping(),
-				queryDefinition.getRowTransformer(),
 				sessionFactory
 		);
 	}

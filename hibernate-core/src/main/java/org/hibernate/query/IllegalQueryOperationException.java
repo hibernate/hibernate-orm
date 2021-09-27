@@ -7,7 +7,7 @@
 
 package org.hibernate.query;
 
-import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 
 /**
  * Indicates an attempt to perform some operation on a Query that is illegal
@@ -16,12 +16,12 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public class IllegalQueryOperationException extends HibernateException {
+public class IllegalQueryOperationException extends QueryException {
 	public IllegalQueryOperationException(String message) {
 		super( message );
 	}
 
-	public IllegalQueryOperationException(String message, Throwable cause) {
-		super( message, cause );
+	public IllegalQueryOperationException(String message, String queryString, Exception cause) {
+		super( message, queryString, cause );
 	}
 }

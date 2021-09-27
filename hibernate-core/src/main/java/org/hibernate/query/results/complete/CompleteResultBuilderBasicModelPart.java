@@ -45,6 +45,11 @@ public class CompleteResultBuilderBasicModelPart
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return modelPart.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public NavigablePath getNavigablePath() {
 		return navigablePath;
 	}

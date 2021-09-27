@@ -34,7 +34,7 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public final void applyInferableType(SqmExpressable<?> type) {
+	public void applyInferableType(SqmExpressable<?> type) {
 //		if ( type == null ) {
 //			return;
 //		}

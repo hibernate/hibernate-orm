@@ -11,7 +11,7 @@
 
     <persistence-unit name="org.hibernate.tutorial.jpa">
         <description>
-            Persistence unit for the JPA tutorial of the Hibernate Getting Started Guide
+            Persistence unit for the Jakarta Persistence tutorial of the Hibernate Getting Started Guide
         </description>
 
         <class>org.hibernate.tutorial.em.Event</class>

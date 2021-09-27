@@ -1,4 +1,5 @@
-= JPA Static Metamodel Generator
+[[jpamodelgen-guide]]
+= Jakarta Persistence Static Metamodel Generator
 :imagesdir: images
 :version: {fullVersion}
 :toc:
@@ -6,19 +7,19 @@
 [[whatisit]]
 == What is it about?
 
-JPA 2 defines a typesafe Criteria API which allows `Criteria` queries
+Jakarta Persistence defines a typesafe Criteria API which allows `Criteria` queries
 to be constructed in a strongly-typed manner, utilizing so called 
 static metamodel classes. 
 For developers it is important that the task of the metamodel generation 
 can be automated.
 Hibernate Static Metamodel Generator is an annotation processor based on 
-https://jcp.org/en/jsr/detail?id=269[JSR_269] with the task of creating JPA 2
+https://jcp.org/en/jsr/detail?id=269[JSR_269] with the task of creating Jakarta Persistence 2
 static metamodel classes.
-The following example shows two JPA 2 entities `Order` and `Item`, together
+The following example shows two native-bootstrap entities `Order` and `Item`, together
 with the metamodel class `Order_` and a typesafe query.
 
 [[jpa2-entity-example]]
-.JPA 2 annotated entities `Order` and `Item`
+.Jakarta Persistence annotated entities `Order` and `Item`
 
 ====
 [source, JAVA]
@@ -110,7 +111,7 @@ persistence unit metadata:
 
 == Canonical Metamodel
 
-The structure of the metamodel classes is described in the JPA 2 
+The structure of the metamodel classes is described in the Jakarta Persistence
 (JSR 317) https://jcp.org/en/jsr/detail?id=317[specification], but for
 completeness the definition is repeated in the following paragraphs.
 Feel free to skip ahead to the <<chapter-usage,usage chapter>>, if you
@@ -372,7 +373,7 @@ classes will be available in IntelliJ Idea.
 In Eclipse exists also an additional configuration section under Java Compiler. 
 There you can configure all kinds of aspects of annotation processing. 
 Just check the "Enable annotation processing" option, configure the directory for the
-generated sources and finally add the Hibernate Static Metamodel Generator and JPA 2 jar
+generated sources and finally add the Hibernate Static Metamodel Generator and Jakarta Persistence jar
 files to the factory path.
 
 If you use JDK 11+, you also need to add the `javax.xml.bind:jaxb-api` and

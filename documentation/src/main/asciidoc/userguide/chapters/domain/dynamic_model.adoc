@@ -6,7 +6,7 @@
 
 [IMPORTANT]
 ====
-JPA only acknowledges the entity model mapping so, if you are concerned about JPA provider portability, it's best to stick to the strict POJO model.
+Jakarta Persistence only acknowledges the POJO entity model mapping so, if you are concerned about Jakarta Persistence provider portability, it's best to stick to the strict POJO model.
 On the other hand, Hibernate can work with both POJO entities and dynamic entity models.
 ====
 

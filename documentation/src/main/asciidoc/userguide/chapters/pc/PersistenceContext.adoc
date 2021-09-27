@@ -18,12 +18,12 @@ It may or may not physically exist in the database yet.
 Much of the `org.hibernate.Session` and `jakarta.persistence.EntityManager` methods deal with moving entities among these states.
 
 [[pc-unwrap]]
-=== Accessing Hibernate APIs from JPA
+=== Accessing Hibernate APIs from Jakarta Persistence
 
-JPA defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
+Jakarta Persistence defines an incredibly useful method to allow applications access to the APIs of the underlying provider.
 
 [[pc-unwrap-example]]
-.Accessing Hibernate APIs from JPA
+.Accessing Hibernate APIs from Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -40,7 +40,7 @@ Once you've created a new entity instance (using the standard `new` operator) it
 You can make it persistent by associating it to either an `org.hibernate.Session` or a `jakarta.persistence.EntityManager`.
 
 [[pc-persist-jpa-example]]
-.Making an entity persistent with JPA
+.Making an entity persistent with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -57,7 +57,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-persist-native-example]
 ----
 ====
 
-`org.hibernate.Session` also has a method named persist which follows the exact semantics defined in the JPA specification for the persist method.
+`org.hibernate.Session` also has a method named persist which follows the exact semantics defined in the Jakarta Persistence specification for the persist method.
 It is this `org.hibernate.Session` method to which the Hibernate `jakarta.persistence.EntityManager` implementation delegates.
 
 If the `DomesticCat` entity type has a generated identifier, the value is associated with the instance when the save or persist is called.
@@ -69,7 +69,7 @@ If the identifier is not automatically generated, the manually assigned (usually
 Entities can also be deleted.
 
 [[pc-remove-jpa-example]]
-.Deleting an entity with JPA
+.Deleting an entity with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -89,7 +89,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-remove-native-example]
 [NOTE]
 ====
 Hibernate itself can handle deleting entities in detached state.
-JPA, however, disallows this behavior.
+Jakarta Persistence, however, disallows this behavior.
 
 The implication here is that the entity instance passed to the `org.hibernate.Session` delete method can be either in managed or detached state,
 while the entity instance passed to remove on `jakarta.persistence.EntityManager` must be in the managed state.
@@ -102,7 +102,7 @@ Sometimes referred to as lazy loading, the ability to obtain a reference to an e
 The most common case being the need to create an association between an entity and another existing entity.
 
 [[pc-get-reference-jpa-example]]
-.Obtaining an entity reference without initializing its data with JPA
+.Obtaining an entity reference without initializing its data with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -133,7 +133,7 @@ Unless the entity class is declared `final`, the proxy extends the entity class.
 It is also quite common to want to obtain an entity along with its data (e.g. like when we need to display it in the UI).
 
 [[pc-find-jpa-example]]
-.Obtaining an entity reference with its data initialized with JPA
+.Obtaining an entity reference with its data initialized with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -181,7 +181,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-find-optional-by-id-nat
 If you want to load multiple entities by providing their identifiers, calling the `EntityManager#find` method multiple times is not only inconvenient,
 but also inefficient.
 
-While the JPA standard does not support retrieving multiple entities at once, other than running a JPQL or Criteria API query,
+While the Jakarta Persistence standard does not support retrieving multiple entities at once, other than running a JPQL or Criteria API query,
 Hibernate offers this functionality via the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#byMultipleIds-java.lang.Class-[`byMultipleIds` method] of the Hibernate `Session`.
 
@@ -228,7 +228,7 @@ The default is to use a batch sizing strategy defined by the `Dialect.getDefault
 +
 Any greater-than-one value here will override that default behavior.
 `with(RootGraph<T> graph)`::
-The `RootGraph` is a Hibernate extension to the JPA `EntityGraph` contract,
+The `RootGraph` is a Hibernate extension to the Jakarta Persistence `EntityGraph` contract,
 and this method allows you to pass a specific `RootGraph` to the multi-load query
 so that it can fetch additional relationships of the current loading entity.
 
@@ -718,7 +718,7 @@ Entities in managed/persistent state may be manipulated by the application, and 
 There is no need to call a particular method to make your modifications persistent.
 
 [[pc-managed-state-jpa-example]]
-.Modifying managed state with JPA
+.Modifying managed state with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -818,7 +818,7 @@ The dynamic update allows you to set just the columns that were modified in the 
 You can reload an entity instance and its collections at any time.
 
 [[pc-refresh-jpa-example]]
-.Refreshing entity state with JPA
+.Refreshing entity state with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -850,13 +850,13 @@ See the discussion of non-identifier <<chapters/domain/basic_types.adoc#mapping-
 [IMPORTANT]
 ====
 Traditionally, Hibernate allowed detached entities to be refreshed.
-Unfortunately, JPA prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead.
+Unfortunately, Jakarta Persistence prohibits this practice and specifies that an `IllegalArgumentException` should be thrown instead.
 
 For this reason, when bootstrapping the Hibernate `SessionFactory` using the native API, the legacy detached entity refresh behavior is going to be preserved.
-On the other hand, when bootstrapping Hibernate through the JPA `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
+On the other hand, when bootstrapping Hibernate through the Jakarta Persistence `EntityManagerFactory` building process, detached entities are not allowed to be refreshed by default.
 
 However, this default behavior can be overwritten through the `hibernate.allow_refresh_detached_entity` configuration property.
-If this property is explicitly set to `true`, then you can refresh detached entities even when using the JPA bootstraps mechanism, therefore bypassing the JPA specification restriction.
+If this property is explicitly set to `true`, then you can refresh detached entities even when using the Jakarta Persistence bootstraps mechanism, therefore bypassing the Jakarta Persistence specification restriction.
 
 For more about the `hibernate.allow_refresh_detached_entity` configuration property,
 check out the <<appendices/Configurations.adoc#misc,Configurations>> section as well.
@@ -904,7 +904,7 @@ Reattachment is the process of taking an incoming entity instance that is in the
 
 [IMPORTANT]
 ====
-JPA does not support reattaching detached data. This is only available through Hibernate `org.hibernate.Session`.
+Jakarta Persistence does not support reattaching detached data. This is only available through Hibernate `org.hibernate.Session`.
 ====
 
 [[pc-detach-reattach-lock-example]]
@@ -952,7 +952,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-merge-visualize-example
 ====
 
 [[pc-merge-jpa-example]]
-.Merging a detached entity with JPA
+.Merging a detached entity with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -1025,7 +1025,7 @@ The log should be reviewed to determine if multiple representations of entities 
 If so, the application should be modified so there is only one representation, and a custom implementation of `org.hibernate.event.spi.EntityCopyObserver` should be provided to disallow entity copies for entities with critical data.
 
 Using optimistic locking is recommended to detect if different representations are from different versions of the same persistent entity.
-If they are not from the same version, Hibernate will throw either the JPA `OptimisticEntityLockException` or the native `StaleObjectStateException` depending on your bootstrapping strategy.
+If they are not from the same version, Hibernate will throw either the Jakarta Persistence `OptimisticEntityLockException` or the native `StaleObjectStateException` depending on your bootstrapping strategy.
 ====
 
 [[pc-contains]]
@@ -1034,7 +1034,7 @@ If they are not from the same version, Hibernate will throw either the JPA `Opti
 An application can verify the state of entities and collections in relation to the persistence context.
 
 [[pc-contains-jpa-example]]
-.Verifying managed state with JPA
+.Verifying managed state with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -1052,7 +1052,7 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-contains-native-example
 ====
 
 [[pc-verify-lazy-jpa-example]]
-.Verifying laziness with JPA
+.Verifying laziness with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -1069,10 +1069,10 @@ include::{sourcedir}/PersistenceContextTest.java[tags=pc-verify-lazy-native-exam
 ----
 ====
 
-In JPA there is an alternative means to check laziness using the following `jakarta.persistence.PersistenceUtil` pattern (which is recommended wherever possible).
+In Jakarta Persistence there is an alternative means to check laziness using the following `jakarta.persistence.PersistenceUtil` pattern (which is recommended wherever possible).
 
 [[pc-verify-lazy-jpa-alternative-example]]
-.Alternative JPA means to verify laziness
+.Alternative Jakarta Persistence means to verify laziness
 ====
 [source, JAVA, indent=0]
 ----
@@ -1129,8 +1129,8 @@ include::{sourcedir-caching}/FirstLevelCacheTest.java[tags=caching-management-co
 [[pc-cascade]]
 === Cascading entity state transitions
 
-JPA allows you to propagate the state transition from a parent entity to a child.
-For this purpose, the JPA `jakarta.persistence.CascadeType` defines various cascade types:
+Jakarta Persistence allows you to propagate the state transition from a parent entity to a child.
+For this purpose, the Jakarta Persistence `jakarta.persistence.CascadeType` defines various cascade types:
 
 `ALL`:: cascades all entity state transitions.
 `PERSIST`:: cascades the entity persist operation.
@@ -1382,13 +1382,13 @@ This way, only the parent entity gets deleted, and all the associated child reco
 [[pc-exception-handling]]
 === Exception handling
 
-If the JPA `EntityManager` or the Hibernate-specific `Session` throws an exception, including any JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/SQLException.html[`SQLException`], you have to immediately rollback the database transaction and close the current `EntityManager` or `Session`.
+If the Jakarta Persistence `EntityManager` or the Hibernate-specific `Session` throws an exception, including any JDBC https://docs.oracle.com/javase/8/docs/api/java/sql/SQLException.html[`SQLException`], you have to immediately rollback the database transaction and close the current `EntityManager` or `Session`.
 
-Certain methods of the JPA `EntityManager` or the Hibernate `Session` will not leave the Persistence Context in a consistent state. As a rule of thumb, no exception thrown by Hibernate can be treated as recoverable. Ensure that the Session will be closed by calling the `close()` method in a finally block.
+Certain methods of the Jakarta Persistence `EntityManager` or the Hibernate `Session` will not leave the Persistence Context in a consistent state. As a rule of thumb, no exception thrown by Hibernate can be treated as recoverable. Ensure that the Session will be closed by calling the `close()` method in a finally block.
 
 Rolling back the database transaction does not put your business objects back into the state they were at the start of the transaction. This means that the database state and the business objects will be out of sync. Usually, this is not a problem because exceptions are not recoverable and you will have to start over after rollback anyway.
 
-The JPA {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] or the
+The Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] or the
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/HibernateException.html[`HibernateException`] wraps most of the errors that can occur in a Hibernate persistence layer.
 
 Both the `PersistenceException` and the `HibernateException` are runtime exceptions because, in our opinion, we should not force the application developer to catch an unrecoverable exception at a low layer. In most systems, unchecked and fatal exceptions are handled in one of the first frames of the method call stack (i.e., in higher layers) and either an error message is presented to the application user or some other appropriate action is taken. Note that Hibernate might also throw other unchecked exceptions that are not a `HibernateException`. These are not recoverable either, and appropriate action should be taken.
@@ -1430,12 +1430,12 @@ SQLGrammarException::
 
 [NOTE]
 ====
-Starting with Hibernate 5.2, the Hibernate `Session` extends the JPA `EntityManager`. For this reason, when a `SessionFactory` is built via Hibernate's native bootstrapping,
-the `HibernateException` or `SQLException` can be wrapped in a JPA {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] when thrown
+Starting with Hibernate 5.2, the Hibernate `Session` extends the Jakarta Persistence `EntityManager`. For this reason, when a `SessionFactory` is built via Hibernate's native bootstrapping,
+the `HibernateException` or `SQLException` can be wrapped in a Jakarta Persistence {jpaJavadocUrlPrefix}PersistenceException.html[`PersistenceException`] when thrown
 by `Session` methods that implement `EntityManager` methods (e.g., https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#merge-java.lang.Object-[Session.merge(Object object)],
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#flush--[Session.flush()]).
 
-If your `SessionFactory` is built via Hibernate's native bootstrapping, and you don't want the Hibernate exceptions to be wrapped in the JPA `PersistenceException`, you need to set the
+If your `SessionFactory` is built via Hibernate's native bootstrapping, and you don't want the Hibernate exceptions to be wrapped in the Jakarta Persistence `PersistenceException`, you need to set the
 `hibernate.native_exception_handling_51_compliance` configuration property to `true`. See the
 <<appendices/Configurations.adoc#configurations-exception-handling,`hibernate.native_exception_handling_51_compliance`>> configuration property for more details.
 ====

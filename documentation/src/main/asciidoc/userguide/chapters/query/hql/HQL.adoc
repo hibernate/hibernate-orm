@@ -44,21 +44,21 @@ include::{modeldir}/WireTransferPayment.java[tags=hql-examples-domain-model-exam
 [[query-api]]
 === Query API
 
-When using Hibernate, you can execute entity queries either via JPA or the Hibernate-specific API.
-Since 5.2, the Hibernate `Session` interface extends the JPA `EntityManager` interface.
-For this reason, the query API was also merged, and now the Hibernate `org.hibernate.query.Query` interface extends the JPA `jakarta.persistence.Query`.
+When using Hibernate, you can execute entity queries either via Jakarta Persistence or the Hibernate-specific API.
+Since 5.2, the Hibernate `Session` interface extends the Jakarta Persistence `EntityManager` interface.
+For this reason, the query API was also merged, and now the Hibernate `org.hibernate.query.Query` interface extends the Jakarta Persistence `jakarta.persistence.Query`.
 
-Next, we are going to see how the query API differs between the standard JPA interfaces and the Hibernate-specific API.
+Next, we are going to see how the query API differs between the standard Jakarta Persistence interfaces and the Hibernate-specific API.
 
 [[jpql-api]]
-==== JPA Query API
+==== Jakarta Persistence Query API
 
-In JPA, the query is represented by `jakarta.persistence.Query` or `jakarta.persistence.TypedQuery` as obtained from the `EntityManager`.
+In Jakarta Persistence, the query is represented by `jakarta.persistence.Query` or `jakarta.persistence.TypedQuery` as obtained from the `EntityManager`.
 The create an inline `Query` or `TypedQuery`, you need to use the `EntityManager#createQuery` method.
 For named queries, the `EntityManager#createNamedQuery` method is needed.
 
 [[jpql-api-example]]
-.Obtaining a JPA `Query` or a `TypedQuery` reference
+.Obtaining a Jakarta Persistence `Query` or a `TypedQuery` reference
 ====
 [source, JAVA, indent=0]
 ----
@@ -67,7 +67,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-example]
 ====
 
 [[jpql-api-named-query-example]]
-.Obtaining a JPA `Query` or a `TypedQuery` reference for a named query
+.Obtaining a Jakarta Persistence `Query` or a `TypedQuery` reference for a named query
 ====
 [source, JAVA, indent=0]
 ----
@@ -96,7 +96,7 @@ The `Query` interface can then be used to control the execution of the query.
 For example, we may want to specify an execution timeout or control caching.
 
 [[jpql-api-basic-usage-example]]
-.Basic JPA `Query` usage
+.Basic Jakarta Persistence `Query` usage
 ====
 [source, JAVA, indent=0]
 ----
@@ -106,7 +106,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-basic-usage-example]
 
 For complete details, see the `Query` {jpaJavadocUrlPrefix}Query.html[Javadocs].
 Many of the settings controlling the execution of the query are defined as hints.
-JPA defines some standard hints (like timeout in the example), but most are provider specific.
+Jakarta Persistence defines some standard hints (like timeout in the example), but most are provider specific.
 Relying on provider specific hints limits your applications portability to some degree.
 
 `jakarta.persistence.query.timeout`::
@@ -135,11 +135,11 @@ Relying on provider specific hints limits your applications portability to some 
 `org.hibernate.readOnly`:: Defines that entities and collections loaded by this query should be marked as read-only. See `org.hibernate.query.Query#setReadOnly`.
 
 The final thing that needs to happen before the query can be executed is to bind the values for any defined parameters.
-JPA defines a simplified set of parameter binding methods.
+Jakarta Persistence defines a simplified set of parameter binding methods.
 Essentially, it supports setting the parameter value (by name/position) and a specialized form for `Calendar`/`Date` types additionally accepting a `TemporalType`.
 
 [[jpql-api-parameter-example]]
-.JPA name parameter binding
+.Jakarta Persistence name parameter binding
 ====
 [source, JAVA, indent=0]
 ----
@@ -152,7 +152,7 @@ The ordinals start with 1.
 Just like with named parameters, positional parameters can also appear multiple times in a query.
 
 [[jpql-api-positional-parameter-example]]
-.JPA positional parameter binding
+.Jakarta Persistence positional parameter binding
 ====
 [source, JAVA, indent=0]
 ----
@@ -165,14 +165,14 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-positional-parameter-example]
 It's good practice not to mix parameter binding forms in a given query.
 ====
 
-In terms of execution, JPA `Query` offers 3 different methods for retrieving a result set.
+In terms of execution, Jakarta Persistence `Query` offers 3 different methods for retrieving a result set.
 
 * `Query#getResultList()` - executes the select query and returns back the list of results.
 * `Query#getResultStream()` - executes the select query and returns back a `Stream` over the results.
 * `Query#getSingleResult()` - executes the select query and returns a single result. If there were more than one result an exception is thrown.
 
 [[jpql-api-list-example]]
-.JPA `getResultList()` result
+.Jakarta Persistence `getResultList()` result
 ====
 [source, JAVA, indent=0]
 ----
@@ -181,7 +181,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-list-example]
 ====
 
 [[jpql-api-stream-example]]
-.JPA `getResultStream()` result
+.Jakarta Persistence `getResultStream()` result
 ====
 [source, JAVA, indent=0]
 ----
@@ -190,7 +190,7 @@ include::{sourcedir}/HQLTest.java[tags=jpql-api-stream-example]
 ====
 
 [[jpql-api-unique-result-example]]
-.JPA `getSingleResult()`
+.Jakarta Persistence `getSingleResult()`
 ====
 [source, JAVA, indent=0]
 ----
@@ -224,7 +224,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-api-named-query-example]
 
 [NOTE]
 ====
-Not only was the JPQL syntax heavily inspired by HQL, but many of the JPA APIs were heavily inspired by Hibernate too.
+Not only was the JPQL syntax heavily inspired by HQL, but many of the Jakarta Persistence APIs were heavily inspired by Hibernate too.
 The two `Query` contracts are very similar.
 ====
 
@@ -247,7 +247,7 @@ For complete details, see the https://docs.jboss.org/hibernate/orm/{majorMinorVe
 Query hints here are database query hints.
 They are added directly to the generated SQL according to `Dialect#getQueryHintString`.
 
-The JPA notion of query hints, on the other hand, refer to hints that target the provider (Hibernate).
+The Jakarta Persistence notion of query hints, on the other hand, refer to hints that target the provider (Hibernate).
 So even though they are called the same, be aware they have a very different purpose.
 Also, be aware that Hibernate query hints generally make the application non-portable across databases unless the code adding them first checks the Dialect.
 ====
@@ -427,7 +427,7 @@ Just like with `ScrollableResults`, you should always close a Hibernate `Stream`
 [[jpql-api-stream]]
 ==== Query streaming
 
-Since version 2.2, the JPA `Query` interface offers support for returning a `Stream` via the `getResultStream` method.
+The Jakarta Persistence `Query` interface offers support for returning a `Stream` via the `getResultStream` method.
 
 Just like the `scroll` method, you can use a try-with-resources block to close the `Stream`
 prior to closing the currently running Persistence Context.
@@ -468,7 +468,7 @@ HQL additionally allows `INSERT` statements, in a form similar to a SQL `INSERT 
 ====
 Care should be taken as to when an `UPDATE` or `DELETE` statement is executed.
 
-[quote, Section 4.10 of the JPA 2.0 Specification]
+[quote, Section 4.10 of the Java Persistence 2.0 Specification]
 ____
 Caution should be used when executing bulk update or delete operations because they may result in
 inconsistencies between the database and the entities in the active persistence context. In general, bulk
@@ -514,7 +514,7 @@ For simple queries the intent is clear and so the intended result of the `select
 But on more complex queries that is not always the case.
 
 It is usually better to explicitly specify intent.
-Hibernate does not actually enforce that a `select_clause` be present even when parsing JPQL queries, however, applications interested in JPA portability should take heed of this.
+Hibernate does not actually enforce that a `select_clause` be present even when parsing JPQL queries, however, applications interested in Jakarta Persistence portability should take heed of this.
 ====
 
 [[hql-update]]
@@ -654,7 +654,7 @@ In other words, JPQL says they _can be_ case-insensitive and so Hibernate must b
 [[hql-root-reference]]
 === Root entity references
 
-A root entity reference, or what JPA calls a `range variable declaration`, is specifically a reference to a mapped entity type from the application.
+A root entity reference, or what Jakarta Persistence calls a `range variable declaration`, is specifically a reference to a mapped entity type from the application.
 It cannot name component/embeddable types.
 And associations, including collections, are handled in a different manner, as later discussed.
 
@@ -977,7 +977,7 @@ VALUE::
 INDEX::
   According to HQL rules, this is valid for both `Maps` and `Lists` which specify a `jakarta.persistence.OrderColumn` annotation to refer to the `Map` key or the `List` position (aka the `OrderColumn` value).
   JPQL however, reserves this for use in the `List` case and adds `KEY` for the `Map` case.
-  Applications interested in JPA provider portability should be aware of this distinction.
+  Applications interested in Jakarta Persistence provider portability should be aware of this distinction.
 KEY::
   Valid only for `Maps`. Refers to the map's key. If the key is itself an entity, it can be further navigated.
 ENTRY::
@@ -1180,7 +1180,7 @@ HQL can also understand additional functions defined by the Dialect as well as t
 === JPQL standardized functions
 
 Here is the list of functions defined as supported by JPQL.
-Applications interested in remaining portable between JPA providers should stick to these functions.
+Applications interested in remaining portable between Jakarta Persistence providers should stick to these functions.
 
 CONCAT::
   	String concatenation function. Variable argument length of 2 or more string values to be concatenated together.
@@ -1389,7 +1389,7 @@ include::{sourcedir}/HQLTest.java[tags=hql-str-function-example]
 === User-defined functions
 
 Hibernate Dialects can register additional functions known to be available for that particular database product.
-These functions are also available in HQL (and JPQL, though only when using Hibernate as the JPA provider, obviously).
+These functions are also available in HQL (and JPQL, though only when using Hibernate as the Jakarta Persistence provider, obviously).
 However, they would only be available when using that database Dialect.
 Applications that aim for database portability should avoid using functions in this category.
 
@@ -1435,8 +1435,8 @@ include::{sourcedir}/PostgreSQLFunctionWhereClauseTest.java[tags=hql-user-define
 ----
 ====
 
-While this works just fine with Hibernate, it might be a problem with other JPA providers.
-For this purpose, JPA offers the `function` JPQL keyword which works as follows.
+While this works just fine with Hibernate, it might be a problem with other Jakarta Persistence providers.
+For this purpose, Jakarta Persistence offers the `function` JPQL keyword which works as follows.
 
 [[hql-user-defined-function-postgresql-jpql-example]]
 .Using the JPQL `function` keyword
@@ -2009,7 +2009,7 @@ include::{extrasdir}/hql-read-only-entities-example.sql[]
 
 As you can see, there is no SQL `UPDATE` being executed.
 
-You can also pass the read-only hint to named queries using the JPA {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation.
+You can also pass the read-only hint to named queries using the Jakarta Persistence {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation.
 
 [[jpa-read-only-entities-native-example]]
 .Fetching read-only entities using a named query and the read-only hint
@@ -2020,7 +2020,7 @@ include::{modeldir}/Person.java[tags=jpa-read-only-entities-native-example]
 ----
 ====
 
-The Hibernate native API offers a `Query#setReadOnly` method, as an alternative to using a JPA query hint:
+The Hibernate native API offers a `Query#setReadOnly` method, as an alternative to using a Jakarta Persistence query hint:
 
 [[hql-read-only-entities-native-example]]
 .Read-only entities native query example

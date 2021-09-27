@@ -1,3 +1,4 @@
+[[registries-guide]]
 = Services and Registries
 :imagesdir: images
 :toc:

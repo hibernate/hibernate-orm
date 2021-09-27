@@ -62,7 +62,7 @@ Collection-valued properties do not support null value semantics because Hiberna
 Collections of value type include basic and embeddable types.
 Collections cannot be nested, and, when used in collections, embeddable types are not allowed to define other collections.
 
-For collections of value types, JPA 2.0 defines the `@ElementCollection` annotation.
+For collections of value types, Jakarta Persistence defines the `@ElementCollection` annotation.
 The lifecycle of the value-type collection is entirely controlled by its owning entity.
 
 Considering the previous example mapping, when clearing the phone collection, Hibernate deletes all the associated phones.
@@ -416,7 +416,7 @@ include::{extrasdir}/collections-customizing-ordered-list-ordinal-persist-exampl
 [[collections-customizing-ordered-by-sql-clause]]
 ===== Customizing ORDER BY SQL clause
 
-While the JPA
+While the Jakarta Persistence
 {jpaJavadocUrlPrefix}OrderBy.html[`@OrderBy`] annotation allows you to specify the entity attributes used for sorting
 when fetching the current annotated collection, the Hibernate specific
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* clause instead.

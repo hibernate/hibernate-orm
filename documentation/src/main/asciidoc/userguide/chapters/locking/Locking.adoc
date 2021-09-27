@@ -39,9 +39,9 @@ especially useful if you use assigned identifiers or composite keys.
 [[locking-optimistic-mapping]]
 ==== Mapping optimistic locking
 
-JPA defines support for optimistic locking based on either a version (sequential numeric) or timestamp strategy.
+Jakarta Persistence defines support for optimistic locking based on either a version (sequential numeric) or timestamp strategy.
 To enable this style of optimistic locking simply add the `jakarta.persistence.Version` to the persistent attribute that defines the optimistic locking value.
-According to JPA, the valid types for these attributes are limited to:
+According to Jakarta Persistence, the valid types for these attributes are limited to:
 
 * `int` or `Integer`
 * `short` or `Short`
@@ -311,8 +311,8 @@ Hibernate always uses the locking mechanism of the database, and never lock obje
 [[locking-LockMode]]
 === `LockMode` and `LockModeType`
 
-Long before JPA 1.0, Hibernate already defined various explicit locking strategies through its `LockMode` enumeration.
-JPA comes with its own {jpaJavadocUrlPrefix}LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
+Long before Java Persistence 1.0, Hibernate already defined various explicit locking strategies through its `LockMode` enumeration.
+Jakarta Persistence comes with its own {jpaJavadocUrlPrefix}LockModeType.html[`LockModeType`] enumeration which defines similar strategies as the Hibernate-native `LockMode`.
 
 [cols=",,",, options="header"]
 |=======================================================================
@@ -346,9 +346,9 @@ If the requested lock mode is not supported by the database, Hibernate uses an a
 This ensures that applications are portable.
 
 [[locking-jpa-query-hints]]
-=== JPA locking query hints
+=== Jakarta Persistence locking query hints
 
-JPA 2.0 introduced two query hints:
+Jakarta Persistence defined two locking-related query hints:
 
 jakarta.persistence.lock.timeout:: it gives the number of milliseconds a lock acquisition request will wait before throwing an exception
 jakarta.persistence.lock.scope:: defines the {jpaJavadocUrlPrefix}PessimisticLockScope.html[_scope_] of the lock acquisition request.
@@ -376,7 +376,7 @@ If not supported, the Hibernate dialect ignores this query hint.
 
 [NOTE]
 ====
-The `jakarta.persistence.lock.scope` is https://hibernate.atlassian.net/browse/HHH-9636[not yet supported] as specified by the JPA standard.
+The `jakarta.persistence.lock.scope` is https://hibernate.atlassian.net/browse/HHH-9636[not yet supported] as specified by the Jakarta Persistence standard.
 ====
 
 [[locking-buildLockRequest]]

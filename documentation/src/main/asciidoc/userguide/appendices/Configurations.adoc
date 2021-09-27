@@ -35,14 +35,14 @@ The definition of what exactly _current_ means is controlled by the https://docs
 Note that for backward compatibility, if a `CurrentSessionContext` is not configured but JTA is configured this will default to the `JTASessionContext`.
 
 [[configurations-jpa-compliance]]
-=== JPA compliance
+=== Jakarta Persistence compliance
 
 `*hibernate.jpa.compliance.transaction*` (e.g. `true` or `false` (default value))::
-This setting controls if Hibernate  `Transaction` should behave as defined by the spec for JPA's `jakarta.persistence.EntityTransaction`
-since it extends the JPA one.
+This setting controls if Hibernate  `Transaction` should behave as defined by the spec for Jakarta Persistence's `jakarta.persistence.EntityTransaction`
+since it extends the Jakarta Persistence one.
 
 `*hibernate.jpa.compliance.query*` (e.g. `true` or `false` (default value))::
-Controls whether Hibernate's handling of `jakarta.persistence.Query` (JPQL, Criteria and native query) should strictly follow the JPA spec.
+Controls whether Hibernate's handling of `jakarta.persistence.Query` (JPQL, Criteria and native query) should strictly follow the Jakarta Persistence spec.
 +
 This includes both in terms of parsing or translating a query as well as calls to the `jakarta.persistence.Query` methods throwing spec
 defined exceptions whereas Hibernate might not.
@@ -55,15 +55,15 @@ If enabled, we will recognize it as a List where `jakarta.persistence.OrderColum
 is just missing (and its defaults will apply).
 
 `*hibernate.jpa.compliance.closed*` (e.g. `true` or `false` (default value))::
-JPA defines specific exceptions upon calling specific methods on `jakarta.persistence.EntityManager` and `jakarta.persistence.EntityManagerFactory`
+Jakarta Persistence defines specific exceptions upon calling specific methods on `jakarta.persistence.EntityManager` and `jakarta.persistence.EntityManagerFactory`
 objects which have been closed previously.
 +
-This setting controls whether the JPA spec-defined behavior or the Hibernate behavior will be used.
+This setting controls whether the Jakarta Persistence spec-defined behavior or the Hibernate behavior will be used.
 +
-If enabled, Hibernate will operate in the JPA specified way, throwing exceptions when the spec says it should.
+If enabled, Hibernate will operate in the Jakarta Persistence specified way, throwing exceptions when the spec says it should.
 
 `*hibernate.jpa.compliance.proxy*` (e.g. `true` or `false` (default value))::
-The JPA spec says that a `jakarta.persistence.EntityNotFoundException` should be thrown when accessing an entity proxy
+The Jakarta Persistence spec says that a `jakarta.persistence.EntityNotFoundException` should be thrown when accessing an entity proxy
 which does not have an associated table row in the database.
 +
 Traditionally, Hibernate does not initialize an entity proxy when accessing its identifier since we already know the identifier value,
@@ -72,7 +72,7 @@ hence we can save a database roundtrip.
 If enabled Hibernate will initialize the entity proxy even when accessing its identifier.
 
 `*hibernate.jpa.compliance.global_id_generators*` (e.g. `true` or `false` (default value) )::
-The JPA spec says that the scope of TableGenerator and SequenceGenerator names is global to the persistence unit (across all generator types).
+The Jakarta Persistence spec says that the scope of TableGenerator and SequenceGenerator names is global to the persistence unit (across all generator types).
 +
 Traditionally, Hibernate has considered the names locally scoped.
 +
@@ -112,7 +112,7 @@ For the Hibernate provided implementation this will depend on the value of `hibe
 +
 Hibernate uses this assurance as an opportunity to opt out of certain operations that may have a performance
 impact (although this impact is generally negligible).  Specifically, when a transaction is started via the
-Hibernate or JPA transaction APIs Hibernate will generally immediately acquire a Connection from the
+Hibernate or Jakarta Persistence transaction APIs Hibernate will generally immediately acquire a Connection from the
 provider and:
 * check whether the Connection is initially in auto-commit mode via a call to `Connection#getAutocommit` to know how to clean up the Connection when released.
 * start a JDBC transaction by calling `Connection#setAutocommit(false)`.
@@ -298,18 +298,18 @@ Specifies whether to automatically quote any names that are deemed keywords.
 ==== Discriminator options
 `*hibernate.discriminator.implicit_for_joined*` (e.g. `true` or `false` (default value))::
 The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need the discriminator).
-However, some JPA providers do need the discriminator for handling joined inheritance so, in the interest of portability, this capability has been added to Hibernate too.
+However, some Jakarta Persistence providers do need the discriminator for handling joined inheritance so, in the interest of portability, this capability has been added to Hibernate too.
 +
 Because want to make sure that legacy applications continue to work as well, that puts us in a bind in terms of how to handle _implicit_ discriminator mappings.
 The solution is to assume that the absence of discriminator metadata means to follow the legacy behavior _unless_ this setting is enabled.
 +
-With this setting enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the JPA-defined defaults for these absent annotations.
+With this setting enabled, Hibernate will interpret the absence of discriminator metadata as an indication to use the Jakarta Persistence-defined defaults for these absent annotations.
 +
 See Hibernate Jira issue https://hibernate.atlassian.net/browse/HHH-6911[HHH-6911] for additional background info.
 
 `*hibernate.discriminator.ignore_explicit_for_joined*` (e.g. `true` or `false` (default value))::
 The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need the discriminator).
-However, some JPA providers do need the discriminator for handling joined inheritance so, in the interest of portability, this capability has been added to Hibernate too.
+However, some Jakarta Persistence providers do need the discriminator for handling joined inheritance so, in the interest of portability, this capability has been added to Hibernate too.
 +
 Existing applications rely (implicitly or explicitly) on Hibernate ignoring any `DiscriminatorColumn` declarations on joined inheritance hierarchies.
 This setting allows these applications to maintain the legacy behavior of `DiscriminatorColumn` annotations being ignored when paired with joined inheritance.
@@ -365,9 +365,9 @@ Allowable values include:
 `hbm`::: scan `hbm` mapping files (e.g. `hbm.xml`) to extract entity mapping metadata
 +
 
-By default HBM, annotations, and JPA XML mappings are scanned.
+By default HBM, annotations, and Jakarta Persistence XML mappings are scanned.
 +
-When using JPA, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to true.
+When using Jakarta Persistence, to disable the automatic scanning of all entity classes, the `exclude-unlisted-classes` `persistence.xml` element must be set to true.
 Therefore, when setting `exclude-unlisted-classes` to true, only the classes that are explicitly declared in the `persistence.xml` configuration files are going to be taken into consideration.
 
 `*hibernate.mapping.precedence*` (e.g. `hbm,class` (default value))::
@@ -376,7 +376,7 @@ Value is a delimited-list whose elements are defined by https://docs.jboss.org/h
 +
 The default is `hbm,class`, therefore `hbm.xml` files are processed first, followed by annotations (combined with `orm.xml` mappings).
 +
-When using JPA, the XML mapping overrides a conflicting annotation mapping that targets the same entity attribute.
+When using Jakarta Persistence, the XML mapping overrides a conflicting annotation mapping that targets the same entity attribute.
 
 ==== JDBC-related options
 
@@ -471,7 +471,7 @@ Chooses the HQL parser implementation.
 `*hibernate.query.jpaql_strict_compliance*` (e.g. `true` or `false` (default value))::
 Map from tokens in Hibernate queries to SQL tokens, such as function or literal names.
 +
-Should we strictly adhere to JPA Query Language (JPQL) syntax, or more broadly support all of Hibernate's superset (HQL)?
+Should we strictly adhere to Jakarta Persistence Query Language (JPQL) syntax, or more broadly support all of Hibernate's superset (HQL)?
 +
 Setting this to `true` may cause valid HQL to throw an exception because it violates the JPQL subset.
 
@@ -498,11 +498,11 @@ Can reference a
 `StatementInspector` implementation class name (fully-qualified class name).
 
 `*hibernate.query.validate_parameters*` (e.g. `true` (default value) or `false`)::
-This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via JPA
+This configuration property can be used to disable parameters validation performed by `org.hibernate.query.Query#setParameter` when the Session is bootstrapped via Jakarta Persistence
 `jakarta.persistence.EntityManagerFactory`.
 
 `*hibernate.criteria.value_handling_mode*` (e.g. `BIND` (default value) or `INLINE`)::
-By default, Criteria queries uses bind parameters for any value passed through the JPA Criteria API.
+By default, Criteria queries uses bind parameters for any value passed through the Jakarta Persistence Criteria API.
 +
 The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND} mode (default) will use bind variables for any value.
 +
@@ -750,16 +750,16 @@ Can be a `TransactionCoordinatorBuilder` instance, `TransactionCoordinatorBuilde
 +
 The following short names are defined for this setting:
 +
-`jdbc`::: Manages transactions via calls to `java.sql.Connection` (default for non-JPA applications).
+`jdbc`::: Manages transactions via calls to `java.sql.Connection` (default for non-Jakarta Persistence applications).
 `jta`::: Manages transactions via JTA. See <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant,Java EE bootstrapping>>.
 +
 
-If a JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
+If a Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate will
 automatically build the proper transaction coordinator based on the transaction type for the persistence unit.
 +
-If a non-JPA application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate
+If a non-Jakarta Persistence application does not provide a setting for `hibernate.transaction.coordinator_class`, Hibernate
 will use `jdbc` as the default. This default will cause problems if the application actually uses JTA-based transactions.
-A non-JPA application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta`
+A non-Jakarta Persistence application that uses JTA-based transactions should explicitly set `hibernate.transaction.coordinator_class=jta`
 or provide a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinatorBuilder.html[`TransactionCoordinatorBuilder`] that builds a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/resource/transaction/TransactionCoordinator.html[`TransactionCoordinator`] that properly coordinates with JTA-based transactions.
 
 `*hibernate.jta.track_by_thread*` (e.g. `true` (default value) or `false`)::
@@ -774,12 +774,12 @@ WARNING: This is a legacy setting that's been deprecated and you should use the 
 
 `*hibernate.jta.allowTransactionAccess*`(e.g. `true` (default value) or `false`)::
 It allows access to the underlying `org.hibernate.Transaction` even when using JTA
-since the JPA specification prohibits this behavior.
+since the Jakarta Persistence specification prohibits this behavior.
 +
 If this configuration property is set to `true`, access is granted to the underlying `org.hibernate.Transaction`.
 If it's set to `false`, you won't be able to access the `org.hibernate.Transaction`.
 +
-The default behavior is to allow access unless the `Session` is bootstrapped via JPA.
+The default behavior is to allow access unless the `Session` is bootstrapped via Jakarta Persistence.
 
 [[configurations-multi-tenancy]]
 === Multi-tenancy settings
@@ -896,7 +896,7 @@ These statements are only executed if the schema is created, meaning that `hiber
 `jakarta.persistence.schema-generation.create-script-source` / `jakarta.persistence.schema-generation.drop-script-source` should be preferred.
 
 `*jakarta.persistence.sql-load-script-source*`::
-JPA variant of `hibernate.hbm2ddl.import_files`. Specifies a `java.io.Reader` configured for reading of the SQL load script or a string designating the file `java.net.URL` for the SQL load script.
+Jakarta Persistence variant of `hibernate.hbm2ddl.import_files`. Specifies a `java.io.Reader` configured for reading of the SQL load script or a string designating the file `java.net.URL` for the SQL load script.
 A "SQL load script" is a script that performs some database initialization (INSERT, etc).
 
 `*hibernate.hbm2ddl.import_files_sql_extractor*`::
@@ -912,7 +912,7 @@ The default value is https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/ja
 Specifies whether to automatically create the database schema/catalog also.
 
 `*jakarta.persistence.create-database-schemas*` (e.g. `true` or `false` (default value))::
-The JPA variant of `hibernate.hbm2ddl.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
+The Jakarta Persistence variant of `hibernate.hbm2ddl.create_namespaces`. Specifies whether the persistence provider is to create the database schema(s) in addition to creating database objects (tables, sequences, constraints, etc).
 The value of this boolean property should be set to `true` if the persistence provider is to create schemas in the database or to generate DDL that contains "CREATE SCHEMA" commands.
 +
 If this property is not supplied (or is explicitly `false`), the provider should not attempt to create database schemas.
@@ -973,8 +973,8 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 `*hibernate.native_exception_handling_51_compliance*` (e.g. `true` or `false` (default value))::
 Indicates if exception handling for a `SessionFactory` built via Hibernate's native bootstrapping
 should behave the same as native exception handling in Hibernate ORM 5.1. When set to `true`,
-`HibernateException` will not be wrapped or converted according to the JPA specification. This
-setting will be ignored for a `SessionFactory` built via JPA bootstrapping.
+`HibernateException` will not be wrapped or converted according to the Jakarta Persistence specification. This
+setting will be ignored for a `SessionFactory` built via Jakarta Persistence bootstrapping.
 
 [[configurations-session-events]]
 === Session events
@@ -1099,7 +1099,7 @@ Like a `PersisterClassResolver`, the `PersisterFactory` can be used to customize
 Crawl all available service bindings for an alternate registration of a given Hibernate `Service`.
 
 `*hibernate.metadata_builder_contributor*` (e.g. The instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`])::
-Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the JPA `EntityManagerFactory`.
+Used to define an instance, the class or the fully qualified class name of a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/boot/spi/MetadataBuilderContributor.html[`MetadataBuilderContributor`] which can be used to configure the `MetadataBuilder` when bootstrapping via the Jakarta Persistence `EntityManagerFactory`.
 
 [[configurations-misc]]
 === Miscellaneous properties
@@ -1129,22 +1129,22 @@ If true, the persistence context will be discarded (think `clear()` when the met
 Otherwise, the persistence context will stay alive till the transaction completion: all objects will remain managed, and any change will be synchronized with the database (default to false, ie wait for transaction completion).
 
 `*hibernate.ejb.metamodel.population*` (e.g. `enabled` or `disabled`, or `ignoreUnsupported` (default value))::
-Setting that indicates whether to build the JPA types.
+Setting that indicates whether to build the Jakarta Persistence types.
 +
 Accepts three values:
 +
 enabled::: Do the build.
 disabled::: Do not do the build.
-ignoreUnsupported::: Do the build, but ignore any non-JPA features that would otherwise result in a failure (e.g. `@Any` annotation).
+ignoreUnsupported::: Do the build, but ignore any non-Jakarta Persistence features that would otherwise result in a failure (e.g. `@Any` annotation).
 
 `*hibernate.jpa.static_metamodel.population*` (e.g. `enabled` or `disabled`, or `skipUnsupported` (default value))::
-Setting that controls whether we seek out JPA _static metamodel_ classes and populate them.
+Setting that controls whether we seek out Jakarta Persistence _static metamodel_ classes and populate them.
 +
 Accepts three values:
 +
 enabled::: Do the population.
 disabled::: Do not do the population.
-skipUnsupported::: Do the population, but ignore any non-JPA features that would otherwise result in the population failing (e.g. `@Any` annotation).
+skipUnsupported::: Do the population, but ignore any non-Jakarta Persistence features that would otherwise result in the population failing (e.g. `@Any` annotation).
 
 `*hibernate.delay_cdi_access*` (e.g. `true` or `false` (default value))::
 Defines delayed access to CDI `BeanManager`. Starting in 5.1 the preferred means for CDI bootstrapping is through https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/jpa/event/spi/jpa/ExtendedBeanManager.html[`ExtendedBeanManager`].
@@ -1168,8 +1168,8 @@ false::: does not allow
 `*hibernate.collection_join_subquery*` (e.g. `true` (default value) or `false`)::
 Setting which indicates whether or not the new JOINs over collection tables should be rewritten to subqueries.
 
-`*hibernate.allow_refresh_detached_entity*` (e.g. `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using JPA bootstrapping))::
-Setting that allows to call `jakarta.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a JPA `jakarta.persistence.EntityManager`.
+`*hibernate.allow_refresh_detached_entity*` (e.g. `true` (default value when using Hibernate native bootstrapping) or `false` (default value when using Jakarta Persistence bootstrapping))::
+Setting that allows to call `jakarta.persistence.EntityManager#refresh(entity)` or `Session#refresh(entity)` on a detached instance even when the `org.hibernate.Session` is obtained from a Jakarta Persistence `jakarta.persistence.EntityManager`.
 
 `*hibernate.use_entity_where_clause_for_collections*` (e.g., `true` (default) or `false`)::
 Setting controls whether an entity's "where" clause, mapped using `@Where(clause = "...")` or `<entity ... where="...">` is taken into account when loading one-to-many or many-to-many collections of that type of entity.
@@ -1218,7 +1218,7 @@ Define the fully-qualified name of class implementing the `org.geolatte.geom.cod
 The following configuration properties are used internally, and you shouldn't probably have to configured them in your application.
 
 `*hibernate.enable_specj_proprietary_syntax*` (e.g. `true` or `false` (default value))::
-Enable or disable the SpecJ proprietary mapping syntax which differs from JPA specification. Used during performance testing only.
+Enable or disable the SpecJ proprietary mapping syntax which differs from Jakarta Persistence specification. Used during performance testing only.
 
 `*hibernate.temp.use_jdbc_metadata_defaults*` (e.g. `true` (default value) or `false`)::
 This setting is used to control whether we should consult the JDBC metadata to determine certain Settings default values when the database may not be available (mainly in tools usage).

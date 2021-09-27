@@ -34,14 +34,14 @@ repetitive information a developer must provide for mapping a domain model.
 
 
 [NOTE]
-.JPA Compatibility
+.Jakarta Persistence Compatibility
 ====
-JPA defines inherent rules about implicit logical name determination.  If JPA provider
-portability is a major concern, or if you really just like the JPA-defined implicit
+Jakarta Persistence defines inherent rules about implicit logical name determination.  If Jakarta Persistence provider
+portability is a major concern, or if you really just like the Jakarta Persistence-defined implicit
 naming rules, be sure to stick with ImplicitNamingStrategyJpaCompliantImpl (the default).
 
-Also, JPA defines no separation between logical and physical name.  Following the JPA
-specification, the logical name *is* the physical name.  If JPA provider portability
+Also, Jakarta Persistence defines no separation between logical and physical name.  Following the Jakarta Persistence
+specification, the logical name *is* the physical name.  If Jakarta Persistence provider portability
 is important, applications should prefer not to specify a PhysicalNamingStrategy.
 ====
 
@@ -66,9 +66,9 @@ the implementation using the `hibernate.implicit_naming_strategy` configuration 
 * pre-defined "short names" for the out-of-the-box implementations
 +
 `default`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - an alias for `jpa`
-`jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - the JPA 2.0 compliant naming strategy
+`jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl` - the Jakarta Persistence compliant naming strategy
 `legacy-hbm`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyHbmImpl` - compliant with the original Hibernate NamingStrategy
-`legacy-jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy NamingStrategy developed for JPA 1.0, which was unfortunately unclear in many respects regarding implicit naming rules
+`legacy-jpa`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl` - compliant with the legacy NamingStrategy developed for Java Persistence 1.0, which was unfortunately unclear in many respects regarding implicit naming rules
 `component-path`:: for `org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl` - mostly follows `ImplicitNamingStrategyJpaCompliantImpl` rules, except that it uses the full composite paths, as opposed to just the ending property part
 +
 * reference to a Class that implements the `org.hibernate.boot.model.naming.ImplicitNamingStrategy` contract

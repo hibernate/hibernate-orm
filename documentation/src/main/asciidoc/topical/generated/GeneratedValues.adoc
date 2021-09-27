@@ -1,7 +1,8 @@
+[[generated-values-guide]]
 = Generated Values
 :toc:
 
-This guide discusses the Hibernate feature of generating non-identifier values.  JPA allows for the generation of
+This guide discusses the Hibernate feature of generating non-identifier values.  Jakarta Persistence allows for the generation of
 identifier values.  Beyond generation of identifier values, Hibernate allows for the generation of other types of
 values.  At a high level Hibernate supports both in-database and in-memory generation.  In-database
 refers to generation strategy where the value is actually generated in the database as part of an INSERT/UPDATE

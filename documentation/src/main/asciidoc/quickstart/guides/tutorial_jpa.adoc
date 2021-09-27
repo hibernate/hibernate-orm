@@ -1,21 +1,21 @@
 [[tutorial_jpa]]
-== Tutorial Using the Java Persistence API (JPA)
+== Tutorial Using the Java Persistence API (Jakarta Persistence)
 
 NOTE: This tutorial is located within the download bundle under `entitymanager/`.
 
 .Objectives
-- [*] Bootstrap a JPA `EntityManagerFactory`
+- [*] Bootstrap a Jakarta Persistence `EntityManagerFactory`
 - [*] Use annotations to provide mapping information
-- [*] Use JPA API calls
+- [*] Use Jakarta Persistence API calls
 
 
 [[hibernate-gsg-tutorial-jpa-config]]
 === persistence.xml
 
-The previous tutorials used the Hibernate-specific `hibernate.cfg.xml` configuration file.  JPA, however, defines
+The previous tutorials used the Hibernate-specific `hibernate.cfg.xml` configuration file.  Jakarta Persistence, however, defines
 a different bootstrap process that uses its own configuration file named `persistence.xml`.  This bootstrapping process
-is defined by the JPA specification.  In Java(TM) SE environments the persistence provider (Hibernate in this case)
-is required to locate all JPA configuration files by classpath lookup of the `META-INF/persistence.xml` resource name.
+is defined by the Jakarta Persistence specification.  In Java(TM) SE environments the persistence provider (Hibernate in this case)
+is required to locate all Jakarta Persistence configuration files by classpath lookup of the `META-INF/persistence.xml` resource name.
 
 
 [[hibernate-gsg-tutorial-jpa-config-pu]]
@@ -56,7 +56,7 @@ The entity is exactly the same as in <<hibernate-gsg-tutorial-annotations-entity
 [[hibernate-gsg-tutorial-jpa-test]]
 === Example code
 
-The previous tutorials used the Hibernate native APIs.  This tutorial uses the JPA APIs.
+The previous tutorials used the Hibernate native APIs.  This tutorial uses the Jakarta Persistence APIs.
 
 [[hibernate-gsg-tutorial-jpa-test-setUp]]
 .Obtaining the jakarta.persistence.EntityManagerFactory
@@ -87,7 +87,7 @@ entityManager.close();
 ====
 
 The code is similar to <<hibernate-gsg-tutorial-basic-test-saving>>.  The `jakarta.persistence.EntityManager` interface
-is used instead of the `org.hibernate.Session` interface.  JPA calls this operation "persist" instead of "save".
+is used instead of the `org.hibernate.Session` interface.  Jakarta Persistence calls this operation "persist" instead of "save".
 
 
 [[hibernate-gsg-tutorial-jpa-test-list]]

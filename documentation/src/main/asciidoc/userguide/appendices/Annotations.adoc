@@ -2,7 +2,7 @@
 == Mapping annotations
 
 [[annotations-jpa]]
-=== JPA annotations
+=== Jakarta Persistence annotations
 
 [[annotations-jpa-access]]
 ==== `@Access`
@@ -93,9 +93,9 @@ See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `Att
 [[annotations-jpa-converter]]
 ==== `@Converter`
 
-The {jpaJavadocUrlPrefix}Converter.html[`@Converter`] annotation is used to specify that the currently annotated {jpaJavadocUrlPrefix}AttributeConverter.html[`AttributeConverter`] implementation can be used as a JPA basic attribute converter.
+The {jpaJavadocUrlPrefix}Converter.html[`@Converter`] annotation is used to specify that the currently annotated {jpaJavadocUrlPrefix}AttributeConverter.html[`AttributeConverter`] implementation can be used as a Jakarta Persistence basic attribute converter.
 
-If the {jpaJavadocUrlPrefix}Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the JPA provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
+If the {jpaJavadocUrlPrefix}Converter.html#autoApply--[`autoApply`] attribute is set to `true`, then the Jakarta Persistence provider will automatically convert all basic attributes with the same Java type as defined by the current converter.
 
 See the <<chapters/domain/basic_types.adoc#basic-enums-attribute-converter, `AttributeConverter`>> section for more info.
 
@@ -161,7 +161,7 @@ See the <<chapters/domain/entity.adoc#entity, Entity>> section for more info.
 
 The {jpaJavadocUrlPrefix}EntityListeners.html[`@EntityListeners`] annotation is used to specify an array of callback listener classes that are used by the currently annotated entity.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-entityresult]]
 ==== `@EntityResult`
@@ -453,7 +453,7 @@ The {jpaJavadocUrlPrefix}PersistenceContexts.html[`@PersistenceContexts`] annota
 [[annotations-jpa-persistenceproperty]]
 ==== `@PersistenceProperty`
 
-The {jpaJavadocUrlPrefix}PersistenceProperty.html[`@PersistenceProperty`] annotation is used by the <<annotations-jpa-persistencecontext>> annotation to declare JPA provider properties that are passed to the underlying container when the `EntityManager` instance is created.
+The {jpaJavadocUrlPrefix}PersistenceProperty.html[`@PersistenceProperty`] annotation is used by the <<annotations-jpa-persistencecontext>> annotation to declare Jakarta Persistence provider properties that are passed to the underlying container when the `EntityManager` instance is created.
 
 See the <<chapters/bootstrap/Bootstrap.adoc#bootstrap-jpa-compliant-PersistenceContext-configurable-example, `@PersistenceProperty` mapping>> section for more info.
 
@@ -474,49 +474,49 @@ The {jpaJavadocUrlPrefix}PersistenceUnits.html[`@PersistenceUnits`] annotation i
 
 The {jpaJavadocUrlPrefix}PostLoad.html[`@PostLoad`] annotation is used to specify a callback method that fires after an entity is loaded.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-postpersist]]
 ==== `@PostPersist`
 
 The {jpaJavadocUrlPrefix}PostPersist.html[`@PostPersist`] annotation is used to specify a callback method that fires after an entity is persisted.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-postremove]]
 ==== `@PostRemove`
 
 The {jpaJavadocUrlPrefix}PostRemove.html[`@PostRemove`] annotation is used to specify a callback method that fires after an entity is removed.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-postupdate]]
 ==== `@PostUpdate`
 
 The {jpaJavadocUrlPrefix}PostUpdate.html[`@PostUpdate`] annotation is used to specify a callback method that fires after an entity is updated.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-prepersist]]
 ==== `@PrePersist`
 
 The {jpaJavadocUrlPrefix}PrePersist.html[`@PrePersist`] annotation is used to specify a callback method that fires before an entity is persisted.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-preremove]]
 ==== `@PreRemove`
 
 The {jpaJavadocUrlPrefix}PreRemove.html[`@PreRemove`] annotation is used to specify a callback method that fires before an entity is removed.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-preupdate]]
 ==== `@PreUpdate`
 
 The {jpaJavadocUrlPrefix}PreUpdate.html[`@PreUpdate`] annotation is used to specify a callback method that fires before an entity is updated.
 
-See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, JPA callbacks>> section for more info.
+See the <<chapters/events/Events.adoc#events-jpa-callbacks-example, Jakarta Persistence callbacks>> section for more info.
 
 [[annotations-jpa-primarykeyjoincolumn]]
 ==== `@PrimaryKeyJoinColumn`
@@ -534,7 +534,7 @@ The {jpaJavadocUrlPrefix}PrimaryKeyJoinColumns.html[`@PrimaryKeyJoinColumns`] an
 [[annotations-jpa-queryhint]]
 ==== `@QueryHint`
 
-The {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation is used to specify a JPA provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
+The {jpaJavadocUrlPrefix}QueryHint.html[`@QueryHint`] annotation is used to specify a Jakarta Persistence provider hint used by a `@NamedQuery` or a `@NamedNativeQuery` annotation.
 
 See the <<chapters/query/hql/HQL.adoc#jpa-read-only-entities-native-example, `@QueryHint`>> section for more info.
 
@@ -647,9 +647,9 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/AttributeAccessor.html[`@AttributeAccessor`] annotation is used to specify a custom https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/property/access/spi/PropertyAccessStrategy.html[`PropertyAccessStrategy`].
 
 Should only be used to name a custom `PropertyAccessStrategy`.
-For property/field access type, the JPA <<annotations-jpa-access>> annotation should be preferred.
+For property/field access type, the Jakarta Persistence <<annotations-jpa-access>> annotation should be preferred.
 
-However, if this annotation is used with either value="property" or value="field", it will act just as the corresponding usage of the JPA <<annotations-jpa-access>> annotation.
+However, if this annotation is used with either value="property" or value="field", it will act just as the corresponding usage of the Jakarta Persistence <<annotations-jpa-access>> annotation.
 
 [[annotations-hibernate-batchsize]]
 ==== `@BatchSize`
@@ -670,9 +670,9 @@ See the <<chapters/caching/Caching.adoc#caching,Caching>> chapter for more info.
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Cascade.html[`@Cascade`] annotation is used to apply the Hibernate specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CascadeType.html[`CascadeType`] strategies (e.g. `CascadeType.LOCK`, `CascadeType.SAVE_UPDATE`, `CascadeType.REPLICATE`) on a given association.
 
-For JPA cascading, prefer using the {jpaJavadocUrlPrefix}CascadeType.html[`jakarta.persistence.CascadeType`] instead.
+For Jakarta Persistence cascading, prefer using the {jpaJavadocUrlPrefix}CascadeType.html[`jakarta.persistence.CascadeType`] instead.
 
-When combining both JPA and Hibernate `CascadeType` strategies, Hibernate will merge both sets of cascades.
+When combining both Jakarta Persistence and Hibernate `CascadeType` strategies, Hibernate will merge both sets of cascades.
 
 See the <<chapters/pc/PersistenceContext.adoc#pc-cascade,Cascading>> chapter for more info.
 
@@ -688,7 +688,7 @@ See the <<chapters/schema/Schema.adoc#schema-generation-database-checks,Database
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CollectionId.html[`@CollectionId`] annotation is used to specify an identifier column for an idbag collection.
 
-You might want to use the JPA <<annotations-jpa-ordercolumn>> instead.
+You might want to use the Jakarta Persistence <<annotations-jpa-ordercolumn>> instead.
 
 [[annotations-hibernate-collectiontype]]
 ==== `@CollectionType`
@@ -704,14 +704,14 @@ See the <<chapters/domain/collections.adoc#collections-custom,Custom collection 
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ColumnDefault.html[`@ColumnDefault`] annotation is used to specify the `DEFAULT` DDL value to apply when using the automated schema generator.
 
-The same behavior can be achieved using the `definition` attribute of the JPA <<annotations-jpa-column>> annotation.
+The same behavior can be achieved using the `definition` attribute of the Jakarta Persistence <<annotations-jpa-column>> annotation.
 
 See the <<chapters/schema/Schema.adoc#schema-generation-column-default-value,Default value for a database column>> chapter for more info.
 
 [[annotations-hibernate-columns]]
 ==== `@Columns`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Columns.html[`@Columns`] annotation is used to group multiple JPA <<annotations-jpa-column>> annotations.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Columns.html[`@Columns`] annotation is used to group multiple Jakarta Persistence <<annotations-jpa-column>> annotations.
 
 See the <<chapters/domain/basic_types.adoc#mapping-column-read-and-write-composite-type-example,`@Columns` mapping>> section for more info.
 
@@ -783,7 +783,7 @@ See the <<chapters/fetching/Fetching.adoc#fetching-fetch-annotation, `@Fetch` ma
 [[annotations-hibernate-fetchprofile]]
 ==== `@FetchProfile`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.html[`@FetchProfile`] annotation is used to specify a custom fetching profile, similar to a JPA Entity Graph.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/FetchProfile.html[`@FetchProfile`] annotation is used to specify a custom fetching profile, similar to a Jakarta Persistence Entity Graph.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-strategies-dynamic-fetching-profile-example, Fetch mapping>> section for more info.
 
@@ -838,7 +838,6 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 ==== [line-through]#`@ForeignKey`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/ForeignKey.html[[line-through]#`@ForeignKey`#] annotation is deprecated. Use the JPA 2.1 <<annotations-jpa-foreignkey>> annotation instead.
 
 [[annotations-hibernate-formula]]
 ==== `@Formula`
@@ -884,12 +883,12 @@ See the <<chapters/domain/immutability.adoc#entity-immutability,`@Immutable` map
 [[annotations-hibernate-index]]
 ==== [line-through]#`@Index`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@Index`#] annotation is deprecated. Use the JPA <<annotations-jpa-index>> annotation instead.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Index.html[[line-through]#`@Index`#] annotation is deprecated. Use the Jakarta Persistence <<annotations-jpa-index>> annotation instead.
 
 [[annotations-hibernate-indexcolumn]]
 ==== [line-through]#`@IndexColumn`#
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/IndexColumn.html[[line-through]#`@IndexColumn`#] annotation is deprecated. Use the JPA <<annotations-jpa-ordercolumn>> annotation instead.
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/IndexColumn.html[[line-through]#`@IndexColumn`#] annotation is deprecated. Use the Jakarta Persistence <<annotations-jpa-ordercolumn>> annotation instead.
 
 [[annotations-hibernate-joincolumnorformula]]
 ==== `@JoinColumnOrFormula`
@@ -919,9 +918,9 @@ The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majo
 `FALSE`:: Eagerly load it.
 `EXTRA`:: Prefer extra queries over full collection loading.
 
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+The `TRUE` and `FALSE` values are deprecated since you should be using the Jakarta Persistence {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
 
-The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
+The `EXTRA` value has no equivalent in the Jakarta Persistence specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
 Each element is fetched individually using a secondary query.
 
 See the <<chapters/fetching/Fetching.adoc#fetching-LazyCollection, `@LazyCollection` mapping>> section for more info.
@@ -945,7 +944,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 
 `LazyToOneOption` defines the following alternatives:
 
-FALSE:: Eagerly load the association. This one is not needed since the JPA `FetchType.EAGER` offers the same behavior.
+FALSE:: Eagerly load the association. This one is not needed since the Jakarta Persistence `FetchType.EAGER` offers the same behavior.
 NO_PROXY:: This option will fetch the association lazily while returning real entity object.
 PROXY:: This option will fetch the association lazily while returning a proxy instead.
 
@@ -996,7 +995,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[annotations-hibernate-namednativequery]]
 ==== `@NamedNativeQuery`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the JPA <<annotations-jpa-namednativequery>> with Hibernate specific features, like:
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedNativeQuery.html[`@NamedNativeQuery`] annotation extends the Jakarta Persistence <<annotations-jpa-namednativequery>> with Hibernate specific features, like:
 
 - flush mode for this particular query
 - if the query should be cached, and which cache region should be used
@@ -1017,7 +1016,7 @@ The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibern
 [[annotations-hibernate-namedquery]]
 ==== `@NamedQuery`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the JPA <<annotations-jpa-namedquery>> with Hibernate specific features, like:
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/NamedQuery.html[`@NamedQuery`] annotation extends the Jakarta Persistence <<annotations-jpa-namedquery>> with Hibernate specific features, like:
 
 - flush mode for this particular query
 - if the query should be cached, and which cache region should be used
@@ -1102,7 +1101,7 @@ See the <<chapters/locking/Locking.adoc#locking-optimistic-versionless, Versionl
 
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/OrderBy.html[`@OrderBy`] annotation is used to specify a *SQL* ordering directive for sorting the currently annotated collection.
 
-It differs from the JPA <<annotations-jpa-orderby>> annotation because the JPA annotation expects a JPQL order-by fragment, not an SQL directive.
+It differs from the Jakarta Persistence <<annotations-jpa-orderby>> annotation because the Jakarta Persistence annotation expects a JPQL order-by fragment, not an SQL directive.
 
 See the <<chapters/domain/collections.adoc#collections-customizing-ordered-by-sql-clause, `@OrderBy` mapping>> section for more info.
 
@@ -1258,7 +1257,7 @@ See the <<chapters/domain/entity.adoc#entity-sql-query-mapping, Mapping the enti
 [[annotations-hibernate-table]]
 ==== `@Table`
 
-The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a JPA <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/Table.html[`@Table`] annotation is used to specify additional information to a Jakarta Persistence <<annotations-hibernate-table>> annotation, like custom `INSERT`, `UPDATE` or `DELETE` statements or a specific https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/FetchMode.html[`FetchMode`].
 
 See the <<chapters/query/native/Native.adoc#sql-custom-crud-secondary-table-example, `@SecondaryTable` mapping>> section for more info about Hibernate-specific `@Table` mapping.
 

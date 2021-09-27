@@ -18,8 +18,8 @@ Throughout this chapter and thereafter, entity types will be simply referred to 
 [[entity-pojo]]
 ==== POJO Models
 
-Section _2.1 The Entity Class_ of the _JPA 2.1 specification_ defines its requirements for an entity class.
-Applications that wish to remain portable across JPA providers should adhere to these requirements:
+Section _2.1 The Entity Class_ of the _Java Persistence 2.1 specification_ defines its requirements for an entity class.
+Applications that wish to remain portable across Jakarta Persistence providers should adhere to these requirements:
 
 * The entity class must be annotated with the `jakarta.persistence.Entity` annotation (or be denoted as such in XML mapping).
 * The entity class must have a public or protected no-argument constructor. It may define additional constructors as well.
@@ -62,16 +62,16 @@ See the <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,Bytecode Enha
 [[entity-pojo-constructor]]
 ==== Implement a no-argument constructor
 
-The entity class should have a no-argument constructor. Both Hibernate and JPA require this.
+The entity class should have a no-argument constructor. Both Hibernate and Jakarta Persistence require this.
 
-JPA requires that this constructor be defined as public or protected.
+Jakarta Persistence requires that this constructor be defined as public or protected.
 Hibernate, for the most part, does not care about the constructor visibility, as long as the system SecurityManager allows overriding the visibility setting.
 That said, the constructor should be defined with at least package visibility if you wish to leverage runtime proxy generation.
 
 [[entity-pojo-accessors]]
 ==== Declare getters and setters for persistent attributes
 
-The JPA specification requires this, otherwise, the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
+The Jakarta Persistence specification requires this, otherwise, the model would prevent accessing the entity persistent state fields directly from outside the entity itself.
 
 Although Hibernate does not require it, it is recommended to follow the JavaBean conventions and define getters and setters for entity persistent attributes.
 Nevertheless, you can still tell Hibernate to directly access the entity fields.
@@ -168,7 +168,7 @@ include::{sourcedir-mapping}/identifier/SimpleEntityTableTest.java[tag=entity-po
 
 Without specifying the catalog of the associated database table a given entity is mapped to, Hibernate will use the default catalog associated with the current database connection.
 
-However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the JPA {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
+However, if your database hosts multiple catalogs, you can specify the catalog where a given table is located using the `catalog` attribute of the Jakarta Persistence {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
 
 Let's assume we are using MySQL and want to map a `Book` entity to the `book` table located in the `public` catalog
 which looks as follows.
@@ -182,7 +182,7 @@ include::{extrasdir}/entity/mapping-post-table-catalog-mysql-example.sql[]
 ----
 ====
 
-Now, to map the `Book` entity to the `book` table in the `public` catalog we can use the `catalog` attribute of the `@Table` JPA annotation.
+Now, to map the `Book` entity to the `book` table in the `public` catalog we can use the `catalog` attribute of the `@Table` Jakarta Persistence annotation.
 
 [[mapping-entity-table-catalog-mysql-example]]
 .Specifying the database catalog using the `@Table` annotation
@@ -198,7 +198,7 @@ include::{sourcedir-mapping}/identifier/EntityTableCatalogTest.java[tag=mapping-
 
 Without specifying the schema of the associated database table a given entity is mapped to, Hibernate will use the default schema associated with the current database connection.
 
-However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the JPA {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
+However, if your database supports schemas, you can specify the schema where a given table is located using the `schema` attribute of the Jakarta Persistence {jpaJavadocUrlPrefix}Table.html[`@Table`] annotation.
 
 Let's assume we are using PostgreSQL and want to map a `Book` entity to the `book` table located in the `library` schema
 which looks as follows.
@@ -212,7 +212,7 @@ include::{extrasdir}/entity/mapping-post-table-schema-postgresql-example.sql[]
 ----
 ====
 
-Now, to map the `Book` entity to the `book` table in the `library` schema we can use the `schema` attribute of the `@Table` JPA annotation.
+Now, to map the `Book` entity to the `book` table in the `library` schema we can use the `schema` attribute of the `@Table` Jakarta Persistence annotation.
 
 [[mapping-entity-table-catalog-mysql-example]]
 .Specifying the database schema using the `@Table` annotation
@@ -346,7 +346,7 @@ include::{sourcedir-mapping}/identifier/NaiveEqualsHashCodeEntityTest.java[tag=e
 
 The issue here is a conflict between the use of the generated identifier, the contract of `Set`, and the equals/hashCode implementations.
 `Set` says that the equals/hashCode value for an object should not change while the object is part of the `Set`.
-But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the JPA transaction is committed.
+But that is exactly what happened here because the equals/hasCode are based on the (generated) id, which was not set until the Jakarta Persistence transaction is committed.
 
 Note that this is just a concern when using generated identifiers.
 If you are using assigned identifiers this will not be a problem, assuming the identifier value is assigned prior to adding to the `Set`.

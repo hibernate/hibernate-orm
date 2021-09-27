@@ -113,7 +113,7 @@ TODO: document the following as well
 [[portability-types-bool]]
 ==== Boolean mappings
 
-JPA portability
+Jakarta Persistence portability
 
 * HQL/JPQL differences
 * naming strategies

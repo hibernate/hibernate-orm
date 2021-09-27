@@ -22,7 +22,7 @@ should be mapped to the database.
 
 [TIP]
 ====
-The JPA specification strictly limits the Java types that can be marked as basic to the following:
+The Jakarta Persistence specification strictly limits the Java types that can be marked as basic to the following:
 
 * Java primitive types (`boolean`, `int`, etc)
 * wrappers for the primitive types (`java.lang.Boolean`, `java.lang.Integer`, etc)
@@ -43,11 +43,11 @@ The JPA specification strictly limits the Java types that can be marked as basic
 * `byte[]` or `Byte[]`
 * `char[]` or `Character[]`
 * enums
-* any other type that implements `Serializable`footnote:[JPA's support for Serializable types is to directly serialize their state to the database]
+* any other type that implements `Serializable`footnote:[Jakarta Persistence's support for Serializable types is to directly serialize their state to the database]
 
 If provider portability is a concern, you should stick to just these basic types.
 
-JPA 2.1 introduced the `jakarta.persistence.AttributeConverter` providing support for handling
+Java Persistence 2.1 introduced the `jakarta.persistence.AttributeConverter` providing support for handling
 types beyond those defined in the specification. See <<basic-jpa-convert>> for more on this topic.
 ====
 
@@ -94,13 +94,13 @@ include::{sourcedir}/basic/ImplicitBasicTypeTest.java[tags=basic-annotation-impl
 
 The `@Basic` annotation defines 2 attributes.
 
-`optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.  JPA defines
-    this as "a hint", which means the provider is free to ignore it.  JPA also says that it will be
+`optional` - boolean (defaults to true):: Defines whether this attribute allows nulls.  Jakarta Persistence defines
+    this as "a hint", which means the provider is free to ignore it.  Jakarta Persistence also says that it will be
     ignored if the type is primitive.  As long as the type is not primitive, Hibernate will honor this
     value.  Works in conjunction with `@Column#nullable` - see <<basic-column-annotation>>.
 `fetch` - FetchType (defaults to EAGER):: Defines whether this attribute should be fetched eagerly or lazily.
     `EAGER` indicates that the value will be fetched as part of loading the owner.  `LAZY` values are
-    fetched only when the value is accessed.  JPA requires providers to support `EAGER`, while support for
+    fetched only when the value is accessed.  Jakarta Persistence requires providers to support `EAGER`, while support for
     `LAZY` is optional meaning that a provider is free to not support it.  Hibernate supports lazy loading
     of basic values as long as you are using its <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancement>>
     support.
@@ -113,7 +113,7 @@ The `@Basic` annotation defines 2 attributes.
 [[basic-column-annotation]]
 ==== @Column
 
-JPA defines rules for implicitly determining the name of tables and columns.
+Jakarta Persistence defines rules for implicitly determining the name of tables and columns.
 For a detailed discussion of implicit naming see <<chapters/domain/naming.adoc#naming,Naming strategies>>.
 
 For basic type attributes, the implicit naming rule is that the column name is the same as the attribute name.
@@ -787,7 +787,7 @@ include::{extrasdir}/basic/basic-clob-sql-example.sql[]
 ----
 ====
 
-Let's first map this using the `@Lob` JPA annotation and the `java.sql.Clob` type:
+Let's first map this using the `@Lob` Jakarta Persistence annotation and the `java.sql.Clob` type:
 
 [[basic-clob-example]]
 .`CLOB` mapped to `java.sql.Clob`
@@ -1381,7 +1381,7 @@ Hibernate supports the mapping of Java enums as basic value types in a number of
 [[basic-enums-Enumerated]]
 ===== `@Enumerated`
 
-The original JPA-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated`  annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `jakarta.persistence.EnumType`:
+The original Jakarta Persistence-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated`  annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `jakarta.persistence.EnumType`:
 
 `ORDINAL`::
 stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
@@ -1469,7 +1469,7 @@ include::{sourcedir}/basic/Gender.java[tags=basic-enums-converter-example]
 ----
 ====
 
-You can map enums in a JPA compliant way using a JPA 2.1 AttributeConverter.
+You can map enums in a Jakarta Persistence compliant way using a Jakarta Persistence AttributeConverter.
 
 [[basic-enums-attribute-converter-example]]
 .Enum mapping with `AttributeConverter` example
@@ -1490,7 +1490,7 @@ For additional details on using AttributeConverters, see <<basic-jpa-convert>> s
 
 [NOTE]
 ====
-JPA explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
+Jakarta Persistence explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
 
 So, when using the `AttributeConverter` approach, be sure not to mark the attribute as `@Enumerated`.
 ====
@@ -1575,7 +1575,7 @@ the BitSet gets mapped to the database.
 
 We've seen uses of `AttributeConverter` previously.
 
-This works well in most cases and is portable across JPA providers.
+This works well in most cases and is portable across Jakarta Persistence providers.
 
 [[basic-bitset-example-converter]]
 .BitSet AttributeConverter
@@ -1730,7 +1730,7 @@ include::{sourcedir}/basic/BitSetJdbcTypeRegistrationTests.java[tags=basic-bitse
 [[basic-jpa-convert]]
 ==== AttributeConverters
 
-Although Hibernate has long been offering <<basic-custom-type,custom types>>, as a JPA 2.1 provider,
+Although Hibernate has long been offering <<basic-custom-type,custom types>>, as a Jakarta Persistence provider,
 it also supports `AttributeConverter` as well.
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
@@ -1793,7 +1793,7 @@ entries.  This way, Hibernate will also know how to handle a specific Java Objec
 [[basic-hbm-attribute-converter]]
 ===== Mapping an AttributeConverter using HBM mappings
 
-When using HBM mappings, you can still make use of the JPA `AttributeConverter` because Hibernate supports
+When using HBM mappings, you can still make use of the Jakarta Persistence `AttributeConverter` because Hibernate supports
 such mapping via the `type` attribute as demonstrated by the following example.
 
 Let's consider we have an application-specific `Money` type:
@@ -1818,12 +1818,12 @@ include::{sourcedir}/converter/hbm/Account.java[tags=basic-hbm-attribute-convert
 ----
 ====
 
-Since Hibernate has no knowledge how to persist the `Money` type, we could use a JPA `AttributeConverter`
+Since Hibernate has no knowledge how to persist the `Money` type, we could use a Jakarta Persistence `AttributeConverter`
 to transform the `Money` type as a `Long`. For this purpose, we are going to use the following
 `MoneyConverter` utility:
 
 [[basic-hbm-attribute-converter-mapping-moneyconverter-example]]
-.`MoneyConverter` implementing the JPA `AttributeConverter` interface
+.`MoneyConverter` implementing the Jakarta Persistence `AttributeConverter` interface
 ====
 [source, JAVA, indent=0]
 ----
@@ -1849,7 +1849,7 @@ include::{resourcedir}/mapping/converter/hbm/MoneyConverterHbmTest.hbm.xml[]
 [[basic-jpa-convert-mutability]]
 ===== `AttributeConverter` Mutability Plan
 
-A basic type that's converted by a JPA `AttributeConverter` is immutable if the underlying Java type is immutable
+A basic type that's converted by a Jakarta Persistence `AttributeConverter` is immutable if the underlying Java type is immutable
 and is mutable if the associated attribute type is mutable as well.
 
 Therefore, mutability is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/descriptor/java/JavaTypeDescriptor.html#getMutabilityPlan--[`JavaTypeDescriptor#getMutabilityPlan`]
@@ -1984,7 +1984,7 @@ By passing the associated Hibernate `Type`, you can use the `Caption` object whe
 ==== SQL quoted identifiers
 
 You can force Hibernate to quote an identifier in the generated SQL by enclosing the table or column name in backticks in the mapping document.
-While traditionally, Hibernate used backticks for escaping SQL reserved keywords, JPA uses double quotes instead.
+While traditionally, Hibernate used backticks for escaping SQL reserved keywords, Jakarta Persistence uses double quotes instead.
 
 Once the reserved keywords are escaped, Hibernate will use the correct quotation style for the SQL `Dialect`.
 This is usually double quotes, but SQL Server uses brackets and MySQL uses backticks.
@@ -1999,7 +1999,7 @@ include::{sourcedir}/basic/QuotingTest.java[tags=basic-quoting-example]
 ====
 
 [[basic-jpa-quoting-example]]
-.JPA quoting
+.Jakarta Persistence quoting
 ====
 [source, JAVA, indent=0]
 ----
@@ -2043,7 +2043,7 @@ Hibernate can also quote all identifiers (e.g. table, columns) using the followi
 This way, we don't need to manually quote any identifier:
 
 [[basic-auto-quoting-example]]
-.JPA quoting
+.Jakarta Persistence quoting
 ====
 [source, JAVA, indent=0]
 ----

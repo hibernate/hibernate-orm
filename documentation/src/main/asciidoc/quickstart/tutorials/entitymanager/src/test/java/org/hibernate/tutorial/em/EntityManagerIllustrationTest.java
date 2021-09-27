@@ -32,7 +32,7 @@ import jakarta.persistence.Persistence;
 import junit.framework.TestCase;
 
 /**
- * Illustrates basic use of Hibernate as a JPA provider.
+ * Illustrates basic use of Hibernate as a Jakarta Persistence provider.
  *
  * @author Steve Ebersole
  */

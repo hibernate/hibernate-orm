@@ -12,7 +12,7 @@ NOTE: This tutorial is located within the download bundle under `envers/`.
 [[hibernate-gsg-tutorial-envers-config]]
 === persistence.xml
 
-This file was discussed in the JPA tutorial in <<hibernate-gsg-tutorial-jpa-config>>, and is essentially the same here.
+This file was discussed in the Jakarta Persistence tutorial in <<hibernate-gsg-tutorial-jpa-config>>, and is essentially the same here.
 
 
 [[hibernate-gsg-tutorial-envers-entity]]

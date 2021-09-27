@@ -4,20 +4,10 @@
 
 Criteria queries offer a type-safe alternative to HQL, JPQL and native SQL queries.
 
-[IMPORTANT]
-====
-Hibernate offers an older, legacy `org.hibernate.Criteria` API which should be considered deprecated.
-
-No feature development will target those APIs. Eventually, Hibernate-specific Criteria features will be ported as extensions to the JPA `jakarta.persistence.criteria.CriteriaQuery`.
-For details on the `org.hibernate.Criteria` API, see <<appendices/Legacy_Criteria.adoc#appendix-legacy-criteria, Legacy Hibernate Criteria Queries>>.
-
-This chapter will focus on the JPA APIs for declaring type-safe criteria queries.
-====
-
 Criteria queries are a programmatic, type-safe way to express a query.
 They are type-safe in terms of using interfaces and classes to represent various structural parts of a query such as the query itself, the select clause, or an order-by, etc.
 They can also be type-safe in terms of referencing attributes as we will see in a bit.
-Users of the older Hibernate `org.hibernate.Criteria` query API will recognize the general approach, though we believe the JPA API to be superior as it represents a clean look at the lessons learned from that API.
+Users of the older Hibernate `org.hibernate.Criteria` query API will recognize the general approach, though we believe the Jakarta Persistence API to be superior as it represents a clean look at the lessons learned from that API.
 
 Criteria queries are essentially an object graph, where each part of the graph represents an increasing (as we navigate down this graph) more atomic part of the query.
 The first step in performing a criteria query is building this graph.
@@ -36,7 +26,7 @@ Each serves a different purpose depending on the expected type of the query resu
 
 [NOTE]
 ====
-The chapter 6 (i.e., Criteria API) of the JPA Specification already contains a decent amount of reference material pertaining to the various parts of a criteria query.
+The chapter 6 (i.e., Criteria API) of the Jakarta Persistence Specification already contains a decent amount of reference material pertaining to the various parts of a criteria query.
 So rather than duplicate all that content here, let's instead look at some of the more widely anticipated usages of the API.
 ====
 
@@ -68,9 +58,9 @@ The example uses `createQuery()` passing in the `Person` class reference as the 
 The call to the `CriteriaQuery#select` method in this example is unnecessary because _root_ will be the implied selection since we have only a single query root.
 It was done here only for completeness of an example.
 
-The `Person_.name` reference is an example of the static form of JPA Metamodel reference.
+The `Person_.name` reference is an example of the static form of Jakarta Persistence Metamodel reference.
 We will use that form exclusively in this chapter.
-See the documentation for the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html_single/metamodelgen/MetamodelGenerator.html[Hibernate JPA Metamodel Generator] for additional details on the JPA static Metamodel.
+See the documentation for the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/topical/html_single/metamodelgen/MetamodelGenerator.html[Hibernate Jakarta Persistence Metamodel Generator] for additional details on the Jakarta Persistence static Metamodel.
 ====
 
 [[criteria-typedquery-expression]]
@@ -195,7 +185,7 @@ aliased::
 A `CriteriaQuery` object defines a query over one or more entity, embeddable, or basic abstract schema types.
 The root objects of the query are entities, from which the other types are reached by navigation.
 
-— JPA Specification, section 6.5.2 Query Roots, pg 262
+— Java Persistence Specification, section 6.5.2 Query Roots, pg 262
 ====
 
 [NOTE]

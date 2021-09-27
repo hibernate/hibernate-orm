@@ -22,7 +22,7 @@ You can create, modify and delete the entities as always.
 
 [IMPORTANT]
 ====
-The use of JPA's `CriteriaUpdate` and `CriteriaDelete` bulk operations are not currently supported by Envers
+The use of Jakarta Persistence's `CriteriaUpdate` and `CriteriaDelete` bulk operations are not currently supported by Envers
 due to how an entity's lifecycle events are dispatched. Such operations should be avoided as they're not
 captured by Envers and lead to incomplete audit history.
 ====
@@ -1443,7 +1443,7 @@ There are at least two ways out if you need bag semantics:
 When a collection is mapped using these two annotations, Hibernate doesn't generate a join table.
 Envers, however, has to do this so that when you read the revisions in which the related entity has changed, you don't get false results.
 
-To be able to name the additional join table, there is a special annotation: `@AuditJoinTable`, which has similar semantics to JPA `@JoinTable`.
+To be able to name the additional join table, there is a special annotation: `@AuditJoinTable`, which has similar semantics to Jakarta Persistence `@JoinTable`.
 
 One special case is to have relations mapped with `@OneToMany` with `@JoinColumn` on the one side, and `@ManyToOne` and `@JoinColumn( insertable = false, updatable = false`) on the many side.
 Such relations are, in fact, bidirectional, but the owning side is the collection.

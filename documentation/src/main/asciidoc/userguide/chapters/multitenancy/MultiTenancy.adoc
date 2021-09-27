@@ -177,8 +177,6 @@ The key used to cache data encodes the tenant identifier.
 [NOTE]
 ====
 Currently, schema export will not really work with multitenancy.
-
-The JPA expert group is in the process of defining multitenancy support for an upcoming version of the specification.
 ====
 
 [[multitenacy-hibernate-session-configuration]]

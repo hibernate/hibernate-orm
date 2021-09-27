@@ -393,7 +393,7 @@ Because this mapping is formed out of two bidirectional associations, the helper
 
 [NOTE]
 ====
-The aforementioned example uses a Hibernate-specific mapping for the link entity since JPA doesn't allow building a composite identifier out of multiple `@ManyToOne` associations.
+The aforementioned example uses a Hibernate-specific mapping for the link entity since Jakarta Persistence doesn't allow building a composite identifier out of multiple `@ManyToOne` associations.
 
 For more details, see the <<chapters/domain/identifiers.adoc#identifiers-composite-associations,composite identifiers with associations>> section.
 ====

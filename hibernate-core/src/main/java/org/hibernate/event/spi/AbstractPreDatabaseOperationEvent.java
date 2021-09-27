@@ -47,8 +47,11 @@ public abstract class AbstractPreDatabaseOperationEvent
 	 * Retrieves the entity involved in the database operation.
 	 *
 	 * @return The entity.
+	 *
+	 * @deprecated Support for JACC will be removed in 6.0
 	 */
 	@Override
+	@Deprecated
 	public Object getEntity() {
 		return entity;
 	}
@@ -88,12 +91,20 @@ public abstract class AbstractPreDatabaseOperationEvent
 		return getSession();
 	}
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
 	@Override
+	@Deprecated
 	public String getEntityName() {
 		return persister.getEntityName();
 	}
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
 	@Override
+	@Deprecated
 	public Serializable getIdentifier() {
 		return id;
 	}

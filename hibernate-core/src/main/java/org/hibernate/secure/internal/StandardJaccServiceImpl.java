@@ -34,7 +34,10 @@ import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public class StandardJaccServiceImpl implements JaccService, Configurable {
 	private static final Logger log = Logger.getLogger( StandardJaccServiceImpl.class );
 

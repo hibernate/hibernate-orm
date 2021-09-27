@@ -12,7 +12,10 @@ import java.util.List;
 
 /**
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public class JaccPermissionDeclarations {
 	private final String contextId;
 	private List<GrantedPermission> permissionDeclarations;

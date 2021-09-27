@@ -32,9 +32,9 @@ public class AliasToEntityMapResultTransformer extends AliasedTupleSubsetResultT
 	@Override
 	public Object transformTuple(Object[] tuple, String[] aliases) {
 		Map result = CollectionHelper.mapOfSize( tuple.length );
-		for ( int i=0; i<tuple.length; i++ ) {
+		for ( int i = 0; i < tuple.length; i++ ) {
 			String alias = aliases[i];
-			if ( alias!=null ) {
+			if ( alias != null ) {
 				result.put( alias, tuple[i] );
 			}
 		}

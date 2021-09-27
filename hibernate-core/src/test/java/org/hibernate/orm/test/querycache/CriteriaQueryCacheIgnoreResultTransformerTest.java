@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /**
  * @author Gail Badner
  */
-public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCacheResultTransformerTest {
+public class CriteriaQueryCacheIgnoreResultTransformerTest extends AbstractQueryCacheResultTransformerTest {
 	@Override
 	protected CacheMode getQueryCacheMode() {
 		return CacheMode.IGNORE;
@@ -30,29 +30,33 @@ public class HqlQueryCacheIgnoreResultTransformerTest extends AbstractQueryCache
 			SessionFactoryScope scope)
 			throws Exception {
 		createData( scope );
-		if ( hqlExecutor != null ) {
-			runTest( hqlExecutor, checker, isSingleResult, scope );
+		try {
+			if ( criteriaExecutor != null ) {
+				runTest( criteriaExecutor, checker, isSingleResult, scope );
+			}
 		}
-		deleteData( scope );
+		finally {
+			deleteData( scope );
+		}
 	}
 
 	@Test
 	@Override
-	@FailureExpected(jiraKey = "N/A", reason = "HQL query using Transformers.ALIAS_TO_ENTITY_MAP with no projection")
+	@FailureExpected(jiraKey = "N/A", reason = "Using Transformers.ALIAS_TO_ENTITY_MAP with no projection")
 	public void testAliasToEntityMapNoProjectionList(SessionFactoryScope scope) throws Exception {
 		super.testAliasToEntityMapNoProjectionList( scope );
 	}
 
 	@Test
 	@Override
-	@FailureExpected(jiraKey = "N/A", reason = "HQL query using Transformers.ALIAS_TO_ENTITY_MAP with no projection")
+	@FailureExpected(jiraKey = "N/A", reason = "Using Transformers.ALIAS_TO_ENTITY_MAP with no projection")
 	public void testAliasToEntityMapNoProjectionMultiAndNullList(SessionFactoryScope scope) throws Exception {
 		super.testAliasToEntityMapNoProjectionMultiAndNullList( scope );
 	}
 
 	@Test
 	@Override
-	@FailureExpected(jiraKey = "N/A", reason = "HQL query using Transformers.ALIAS_TO_ENTITY_MAP with no projection")
+	@FailureExpected(jiraKey = "N/A", reason = "Using Transformers.ALIAS_TO_ENTITY_MAP with no projection")
 	public void testAliasToEntityMapNoProjectionNullAndNonNullAliasList(SessionFactoryScope scope) throws Exception {
 		super.testAliasToEntityMapNoProjectionNullAndNonNullAliasList( scope );
 	}

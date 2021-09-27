@@ -6,6 +6,8 @@
  */
 package org.hibernate.procedure.internal;
 
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -14,6 +16,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
@@ -27,7 +30,6 @@ import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -62,7 +64,10 @@ import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
+import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.results.NoMoreOutputsException;
+
+import org.jboss.logging.Logger;
 
 /**
  * Standard implementation of {@link ProcedureCall}
@@ -72,6 +77,7 @@ import org.hibernate.sql.results.NoMoreOutputsException;
 public class ProcedureCallImpl<R>
 		extends AbstractQuery<R>
 		implements ProcedureCallImplementor<R>, ResultContext {
+	private static final Logger LOG = Logger.getLogger( ProcedureCallImpl.class );
 
 	private final String procedureName;
 
@@ -432,51 +438,51 @@ public class ProcedureCallImpl<R>
 		//		both: (1) add the `? = ` part and also (2) register a REFCURSOR parameter for DBs (Oracle, PGSQL) that
 		//		need it.
 
-//		final String call = getSession().getJdbcServices().getJdbcEnvironment().getDialect().getCallableStatementSupport().renderCallableStatement(
-//				procedureName,
-//				getParameterMetadata(),
-//				paramBindings,
-//				getSession()
-//		);
-//
-//		LOG.debugf( "Preparing procedure call : %s", call );
-//		final CallableStatement statement = (CallableStatement) getSession()
-//				.getJdbcCoordinator()
-//				.getStatementPreparer()
-//				.prepareStatement( call, true );
-//
-//
-//		// prepare parameters
-//
-//		getParameterMetadata().visitRegistrations(
-//				new Consumer<QueryParameter<?>>() {
-//					int i = 1;
-//
-//					@Override
-//					public void accept(QueryParameter queryParameter) {
-//						try {
-//							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
-//							registration.prepare( statement, i, ProcedureCallImpl.this );
+		final JdbcCall call = getSession().getJdbcServices().getJdbcEnvironment().getDialect().getCallableStatementSupport().interpretCall(
+				procedureName,
+				functionReturn,
+				getParameterMetadata(),
+				paramBindings,
+				getSession()
+		);
+
+		LOG.debugf( "Preparing procedure call : %s", call );
+		final CallableStatement statement = (CallableStatement) getSession()
+				.getJdbcCoordinator()
+				.getStatementPreparer()
+				.prepareStatement( call.getSql(), true );
+
+
+		// prepare parameters
+
+		getParameterMetadata().visitRegistrations(
+				new Consumer<QueryParameter<?>>() {
+					int i = 1;
+
+					@Override
+					public void accept(QueryParameter queryParameter) {
+						try {
+							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
+							registration.prepare( statement, i, ProcedureCallImpl.this );
 //							if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
-//								i++;
+								i++;
 //							}
 //							else {
 //								i += registration.getSqlTypes().length;
 //							}
-//						}
-//						catch (SQLException e) {
-//							throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
-//									e,
-//									"Error preparing registered callable parameter",
-//									getProcedureName()
-//							);
-//						}
-//					}
-//				}
-//		);
-//
-//		return new ProcedureOutputsImpl( this, statement );
-		throw new NotYetImplementedFor6Exception( getClass() );
+						}
+						catch (SQLException e) {
+							throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
+									e,
+									"Error preparing registered callable parameter",
+									getProcedureName()
+							);
+						}
+					}
+				}
+		);
+
+		return new ProcedureOutputsImpl( this, statement );
 	}
 
 	@Override

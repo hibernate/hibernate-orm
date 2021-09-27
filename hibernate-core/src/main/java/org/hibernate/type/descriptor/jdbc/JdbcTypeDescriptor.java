@@ -65,7 +65,10 @@ public interface JdbcTypeDescriptor extends Serializable {
 	 */
 	boolean canBeRemapped();
 
-	default <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+	default <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+			Integer precision,
+			Integer scale,
+			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getJdbcTypeCode() )

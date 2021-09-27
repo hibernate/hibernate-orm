@@ -38,6 +38,11 @@ public class ImplicitModelPartResultBuilderEmbeddable
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return modelPart.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public EmbeddableResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

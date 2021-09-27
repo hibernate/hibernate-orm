@@ -17,7 +17,7 @@ import org.hibernate.metamodel.RepresentationMode;
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J> {
+public interface ManagedDomainType<J> extends AllowableParameterType<J>, ManagedType<J> {
 	/**
 	 * Get the type name.
 	 *

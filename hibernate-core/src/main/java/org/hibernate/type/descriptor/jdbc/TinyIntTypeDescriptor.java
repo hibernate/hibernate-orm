@@ -55,7 +55,10 @@ public class TinyIntTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+			Integer length,
+			Integer scale,
+			TypeConfiguration typeConfiguration) {
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Byte.class );
 	}
 

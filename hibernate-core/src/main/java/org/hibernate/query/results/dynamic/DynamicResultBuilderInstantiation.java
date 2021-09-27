@@ -45,6 +45,11 @@ public class DynamicResultBuilderInstantiation<J>
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return javaTypeDescriptor.getJavaTypeClass();
+	}
+
+	@Override
 	public NativeQuery.InstantiationResultNode<J> addBasicArgument(String columnAlias, String argumentAlias) {
 		argumentResultBuilders.add(
 				new InstantiationArgument( Builders.scalar( columnAlias ), argumentAlias )

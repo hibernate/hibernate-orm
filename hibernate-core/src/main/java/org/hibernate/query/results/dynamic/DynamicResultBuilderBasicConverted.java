@@ -93,6 +93,11 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return domainJtd.getJavaTypeClass();
+	}
+
+	@Override
 	public BasicResult<?> buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

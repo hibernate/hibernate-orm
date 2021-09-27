@@ -9,8 +9,10 @@ package org.hibernate.query.internal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import org.hibernate.LockMode;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.NavigablePath;
@@ -21,6 +23,7 @@ import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.FetchBuilder;
 import org.hibernate.query.results.ResultBuilderEntityValued;
 import org.hibernate.query.results.complete.CompleteResultBuilderEntityJpa;
+import org.hibernate.query.results.complete.DelayedFetchBuilderBasicPart;
 import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
 
 /**
@@ -71,12 +74,32 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 
 		final HashMap<String, FetchBuilder> explicitFetchBuilderMap = new HashMap<>();
 
-		explicitFetchMementoMap.forEach(
-				(relativePath, fetchMemento) -> explicitFetchBuilderMap.put(
-						relativePath,
-						fetchMemento.resolve(this, querySpaceConsumer, context )
-				)
-		);
+		// If there are no explicit fetches, we don't register DELAYED builders to get implicit fetching of all basic fetchables
+		if ( !explicitFetchMementoMap.isEmpty() ) {
+			explicitFetchMementoMap.forEach(
+					(relativePath, fetchMemento) -> explicitFetchBuilderMap.put(
+							relativePath,
+							fetchMemento.resolve( this, querySpaceConsumer, context )
+					)
+			);
+
+			// Implicit basic fetches are DELAYED by default, so register fetch builders for the remaining basic fetchables
+			entityDescriptor.visitAttributeMappings(
+					attributeMapping -> {
+						final Function<String, FetchBuilder> fetchBuilderCreator;
+						if ( attributeMapping instanceof BasicValuedModelPart ) {
+							fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
+									navigablePath.append( k ),
+									(BasicValuedModelPart) attributeMapping
+							);
+							explicitFetchBuilderMap.computeIfAbsent(
+									attributeMapping.getFetchableName(),
+									fetchBuilderCreator
+							);
+						}
+					}
+			);
+		}
 
 		return new CompleteResultBuilderEntityJpa(
 				navigablePath,

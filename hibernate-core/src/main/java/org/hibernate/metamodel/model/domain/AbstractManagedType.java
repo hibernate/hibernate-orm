@@ -692,7 +692,7 @@ public abstract class AbstractManagedType<J>
 		@SuppressWarnings("unchecked")
 		public void addAttribute(PersistentAttribute<J,?> attribute) {
 			if ( attribute instanceof SingularPersistentAttribute ) {
-				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute) attribute );
+				declaredSingularAttributes.put( attribute.getName(), (SingularPersistentAttribute<J, ?>) attribute );
 			}
 			else if ( attribute instanceof PluralPersistentAttribute ) {
 				if ( AbstractManagedType.this.declaredPluralAttributes == null ) {

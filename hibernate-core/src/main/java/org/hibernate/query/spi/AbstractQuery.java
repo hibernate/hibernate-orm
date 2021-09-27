@@ -48,7 +48,6 @@ import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
@@ -66,7 +65,6 @@ import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.LockMode.UPGRADE;
@@ -82,7 +80,6 @@ import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-import static org.hibernate.internal.util.NullnessHelper.nullif;
 import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
@@ -420,8 +417,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
 			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.interpretCacheRetrieveMode( getCacheMode() ) );
 			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.interpretCacheStoreMode( getCacheMode() ) );
-			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.interpretCacheRetrieveMode( getCacheMode() ) );
-			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.interpretCacheStoreMode( getCacheMode() ) );
+			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 		}
 
 		if ( isCacheable() ) {
@@ -575,25 +572,13 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@SuppressWarnings("WeakerAccess")
 	protected boolean applyJpaCacheRetrieveMode(CacheRetrieveMode retrieveMode) {
-		final CacheMode currentCacheMode = nullif( getCacheMode(), getSession().getCacheMode() );
-		setCacheMode(
-				CacheModeHelper.interpretCacheMode(
-						CacheModeHelper.interpretCacheStoreMode( currentCacheMode ),
-						retrieveMode
-				)
-		);
+		getQueryOptions().setCacheRetrieveMode( retrieveMode );
 		return true;
 	}
 
 	@SuppressWarnings("WeakerAccess")
 	protected boolean applyJpaCacheStoreMode(CacheStoreMode storeMode) {
-		final CacheMode currentCacheMode = nullif( getCacheMode(), getSession().getCacheMode() );
-		setCacheMode(
-				CacheModeHelper.interpretCacheMode(
-						storeMode,
-						CacheModeHelper.interpretCacheRetrieveMode( currentCacheMode )
-				)
-		);
+		getQueryOptions().setCacheStoreMode( storeMode );
 		return true;
 	}
 

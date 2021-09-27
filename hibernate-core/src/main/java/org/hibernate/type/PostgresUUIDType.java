@@ -76,7 +76,10 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		}
 
 		@Override
-		public <J> BasicJavaDescriptor<J> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+		public <J> BasicJavaDescriptor<J> getJdbcRecommendedJavaTypeMapping(
+				Integer length,
+				Integer scale,
+				TypeConfiguration typeConfiguration) {
 			return (BasicJavaDescriptor<J>) typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( UUID.class );
 		}
 

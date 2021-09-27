@@ -37,7 +37,6 @@ public class NativeQueryInterpreterStandardImpl implements NativeQueryInterprete
 				queryDefinition.getAffectedTableNames(),
 				queryDefinition.getQueryParameterList(),
 				queryDefinition.getResultSetMapping(),
-				queryDefinition.getRowTransformer(),
 				sessionFactory
 		);
 	}

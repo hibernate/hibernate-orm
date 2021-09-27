@@ -33,10 +33,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
-import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -49,23 +47,18 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 	private final List<QueryParameterImplementor<?>> parameterList;
 
 	private final JdbcValuesMappingProducer resultSetMapping;
-	private final RowTransformer<R> rowTransformer;
 
 	public NativeSelectQueryPlanImpl(
 			String sql,
 			Set<String> affectedTableNames,
 			List<QueryParameterImplementor<?>> parameterList,
 			ResultSetMapping resultSetMapping,
-			RowTransformer<R> rowTransformer,
 			SessionFactoryImplementor sessionFactory) {
 		final ResultSetMappingProcessor processor = new ResultSetMappingProcessor( resultSetMapping, sessionFactory );
 		final SQLQueryParser parser = new SQLQueryParser( sql, processor.process(), sessionFactory );
 		this.sql = parser.process();
 		this.parameterList = parameterList;
 		this.resultSetMapping = processor.generateResultMapping( parser.queryHasAliases() );
-		this.rowTransformer = rowTransformer != null
-				? rowTransformer
-				: RowTransformerPassThruImpl.instance();
 		if ( affectedTableNames == null ) {
 			affectedTableNames = new HashSet<>();
 		}
@@ -126,16 +119,16 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
 
-		// TODO: use configurable executor instead?
+		// todo (6.0): use configurable executor instead?
 //		final SharedSessionContractImplementor session = executionContext.getSession();
 //		final SessionFactoryImplementor factory = session.getFactory();
 //		final JdbcServices jdbcServices = factory.getJdbcServices();
-//		return jdbcServices.getJdbcMutationExecutor().execute(
+//		return jdbcServices.getJdbcSelectExecutor().execute(
 		return executor.list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				executionContext,
-				rowTransformer,
+				null,
 				ListResultsConsumer.UniqueSemantic.NONE
 		);
 	}
@@ -149,7 +142,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 		final JdbcParameterBindings jdbcParameterBindings;
 
 		final QueryParameterBindings queryParameterBindings = executionContext.getQueryParameterBindings();
-		if ( parameterList.isEmpty() ) {
+		if ( parameterList == null || parameterList.isEmpty() ) {
 			jdbcParameterBinders = Collections.emptyList();
 			jdbcParameterBindings = JdbcParameterBindings.NO_BINDINGS;
 		}
@@ -190,12 +183,17 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 
 		final JdbcSelectExecutor executor = JdbcSelectExecutorStandardImpl.INSTANCE;
 
+		// todo (6.0): use configurable executor instead?
+//		final SharedSessionContractImplementor session = executionContext.getSession();
+//		final SessionFactoryImplementor factory = session.getFactory();
+//		final JdbcServices jdbcServices = factory.getJdbcServices();
+//		return jdbcServices.getJdbcSelectExecutor().scroll(
 		return executor.scroll(
 				jdbcSelect,
 				scrollMode,
 				jdbcParameterBindings,
 				executionContext,
-				rowTransformer
+				null
 		);
 	}
 }

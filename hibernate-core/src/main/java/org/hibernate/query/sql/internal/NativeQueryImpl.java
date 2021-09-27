@@ -29,6 +29,7 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
@@ -48,6 +49,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.AbstractSharedSessionContract;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.persister.entity.Loadable;
@@ -187,7 +189,11 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				session.getFactory(),
+				session.isQueryParametersValidationEnabled()
+		);
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = resultSetMappingCreator.get();
@@ -218,21 +224,71 @@ public class NativeQueryImpl<R>
 					return new ResultSetMappingImpl( mappingIdentifier );
 				},
 				(resultSetMapping, querySpaceConsumer, context) -> {
-					if ( resultJavaType != null ) {
+					if ( memento.getResultMappingName() != null ) {
+						final NamedResultSetMappingMemento resultSetMappingMemento = session.getFactory()
+								.getQueryEngine()
+								.getNamedObjectRepository()
+								.getResultSetMappingMemento( memento.getResultMappingName() );
+						if ( resultSetMappingMemento != null ) {
+							resultSetMappingMemento.resolve( resultSetMapping, querySpaceConsumer, context );
+							return true;
+						}
+					}
 
-						// todo (6.0) : really `resultJavaType` could be any type nature - basic, embedded, entity
-
+					if ( memento.getResultMappingClass() != null ) {
 						resultSetMapping.addResultBuilder(
-								Builders.implicitEntityResultBuilder( resultJavaType, context )
+								Builders.implicitEntityResultBuilder(
+										memento.getResultMappingClass(),
+										context
+								)
 						);
-
 						return true;
+					}
+					if ( resultJavaType != null && resultJavaType != Tuple.class ) {
+						// todo (6.0): in 5.x we didn't add implicit result builders and by doing so,
+						//  the result type check at the end of the constructor will fail like in 5.x
+//						final JpaMetamodel jpaMetamodel = context.getSessionFactory().getJpaMetamodel();
+//						if ( jpaMetamodel.findEntityType( resultJavaType ) != null ) {
+//							resultSetMapping.addResultBuilder(
+//									Builders.implicitEntityResultBuilder( resultJavaType, context )
+//							);
+//						}
+//						else {
+//							resultSetMapping.addResultBuilder(
+//									Builders.scalar(
+//											1,
+//											context.getSessionFactory()
+//													.getTypeConfiguration()
+//													.getBasicTypeForJavaType( resultJavaType )
+//									)
+//							);
+//						}
+//
+//						return true;
 					}
 
 					return false;
 				},
 				session
 		);
+
+		if ( resultJavaType == Tuple.class ) {
+			setTupleTransformer( new NativeQueryTupleTransformer() );
+		}
+		else if ( resultJavaType != null ) {
+			switch ( resultSetMapping.getNumberOfResultBuilders() ) {
+				case 0:
+					throw new IllegalArgumentException( "Named query exists but its result type is not compatible" );
+				case 1:
+					final Class<?> actualResultJavaType = resultSetMapping.getResultBuilders().get( 0 ).getJavaType();
+					if ( !resultJavaType.isAssignableFrom( actualResultJavaType ) ) {
+						throw buildIncompatibleException( resultJavaType, actualResultJavaType );
+					}
+					break;
+				default:
+					throw new IllegalArgumentException( "Cannot create TypedQuery for query with more than one return" );
+			}
+		}
 	}
 
 	/**
@@ -270,7 +326,11 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				session.getFactory(),
+				session.isQueryParametersValidationEnabled()
+		);
 		this.querySpaces = new HashSet<>();
 
 		this.resultSetMapping = new ResultSetMappingImpl( resultSetMappingMemento.getName() );
@@ -325,10 +385,34 @@ public class NativeQueryImpl<R>
 		this.sqlString = parameterInterpretation.getAdjustedSqlString();
 		this.parameterMetadata = parameterInterpretation.toParameterMetadata( session );
 		this.occurrenceOrderedParamList = parameterInterpretation.getOccurrenceOrderedParameters();
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, session.getFactory() );
+		this.parameterBindings = QueryParameterBindingsImpl.from(
+				parameterMetadata,
+				session.getFactory(),
+				session.isQueryParametersValidationEnabled()
+		);
 
 		this.resultSetMapping = new ResultSetMappingImpl( sqlString );
 		this.resultMappingSuppliedToCtor = false;
+	}
+
+	private IllegalArgumentException buildIncompatibleException(Class<?> resultClass, Class<?> actualResultClass) {
+		final String resultClassName = resultClass.getName();
+		final String actualResultClassName = actualResultClass.getName();
+		if ( resultClassName.equals( actualResultClassName ) ) {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with the query return type of the same name." +
+							" Both classes have the same name but are different as they have been loaded respectively by Classloaders " +
+							resultClass.getClassLoader().toString() + ", " + actualResultClass.getClassLoader().toString() +
+							". This suggests a classloader bug in the Runtime executing Hibernate ORM, or in the integration code."
+			);
+		}
+		else {
+			return new IllegalArgumentException(
+					"Type specified for TypedQuery [" + resultClassName +
+							"] is incompatible with query return type [" + actualResultClass + "]"
+			);
+		}
 	}
 
 	@Override
@@ -516,8 +600,6 @@ public class NativeQueryImpl<R>
 	}
 
 	private NativeSelectQueryPlan<R> createQueryPlan(ResultSetMapping resultSetMapping) {
-		final RowTransformer<?> rowTransformer = null;
-
 		final NativeSelectQueryDefinition queryDefinition = new NativeSelectQueryDefinition() {
 			@Override
 			public String getSqlString() {
@@ -537,11 +619,6 @@ public class NativeQueryImpl<R>
 			@Override
 			public ResultSetMapping getResultSetMapping() {
 				return resultSetMapping;
-			}
-
-			@Override
-			public RowTransformer getRowTransformer() {
-				return rowTransformer;
 			}
 
 			@Override
@@ -587,26 +664,6 @@ public class NativeQueryImpl<R>
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
-	}
-
-	@Override
-	protected void beforeQuery(boolean txnRequired) {
-		super.beforeQuery( txnRequired );
-
-		if ( getSynchronizedQuerySpaces() != null && !getSynchronizedQuerySpaces().isEmpty() ) {
-			// The application defined query spaces on the Hibernate native SQLQuery which means the query will already
-			// perform a partial flush according to the defined query spaces, no need to do a full flush.
-			return;
-		}
-
-		// otherwise we need to flush.  the query itself is not required to execute in a transaction; if there is
-		// no transaction, the flush would throw a TransactionRequiredException which would potentially break existing
-		// apps, so we only do the flush if a transaction is in progress.
-		//
-		// NOTE : this was added for JPA initially.  Perhaps we want to only do this from JPA usage?
-		if ( shouldFlush() ) {
-			getSession().flush();
-		}
 	}
 
 	protected int doExecuteUpdate() {

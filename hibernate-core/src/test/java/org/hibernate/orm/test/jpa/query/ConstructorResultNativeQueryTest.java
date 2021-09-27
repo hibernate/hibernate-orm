@@ -26,7 +26,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
 
@@ -35,7 +35,7 @@ import org.junit.Test;
 /**
  * @author Steve Ebersole
  */
-@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10323")
+@SkipForDialect(value = OracleDialect.class, jiraKey = "HHH-10323")
 public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity( name = "Person" )
 	@SqlResultSetMappings(

@@ -144,20 +144,26 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 
 	@SuppressWarnings( "rawtypes" )
 	public Object normalizeIncomingValue(Object naturalIdToLoad) {
+		final Object normalizedValue;
 		if ( naturalIdToLoad instanceof Map ) {
 			final Map valueMap = (Map) naturalIdToLoad;
 			assert valueMap.size() == 1;
 			assert valueMap.containsKey( getAttribute().getAttributeName() );
-			return getJavaTypeDescriptor().coerce( valueMap.get( getAttribute().getAttributeName() ), this );
+			normalizedValue = valueMap.get( getAttribute().getAttributeName() );
 		}
-
-		if ( naturalIdToLoad instanceof Object[] ) {
+		else if ( naturalIdToLoad instanceof Object[] ) {
 			final Object[] values = (Object[]) naturalIdToLoad;
 			assert values.length == 1;
-			return getJavaTypeDescriptor().coerce( values[0], this );
+			normalizedValue = values[0];
+		}
+		else {
+			normalizedValue = naturalIdToLoad;
 		}
 
-		return getJavaTypeDescriptor().coerce( naturalIdToLoad, this );
+		if ( getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			return normalizedValue;
+		}
+		return getJavaTypeDescriptor().coerce( normalizedValue, this );
 	}
 
 	public SingularAttributeMapping getAttribute() {

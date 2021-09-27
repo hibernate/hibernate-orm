@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Map;
 import java.util.Objects;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -22,6 +23,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Type;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.usertype.UserType;
@@ -37,6 +39,11 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {TestEntity.class};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.JPA_LOAD_BY_ID_COMPLIANCE, "true" );
 	}
 
 	@TestForIssue(jiraKey = "HHH-11397")

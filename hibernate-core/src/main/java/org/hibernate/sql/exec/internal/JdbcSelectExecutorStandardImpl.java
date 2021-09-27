@@ -23,6 +23,7 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.SqlExecLogger;
@@ -30,8 +31,11 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
@@ -180,6 +184,21 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				executionContext,
 				deferredResultSetAccess
 		);
+
+		if ( rowTransformer == null ) {
+			final TupleTransformer<R> tupleTransformer = executionContext.getQueryOptions().getTupleTransformer();
+			if ( tupleTransformer == null ) {
+				rowTransformer = RowTransformerPassThruImpl.instance();
+			}
+			else {
+				final List<DomainResult<?>> domainResults = jdbcValues.getValuesMapping().getDomainResults();
+				final String[] aliases = new String[domainResults.size()];
+				for ( int i = 0; i < domainResults.size(); i++ ) {
+					aliases[i] = domainResults.get( i ).getResultVariable();
+				}
+				rowTransformer = new RowTransformerTupleTransformerAdapter<>( aliases, tupleTransformer );
+			}
+		}
 
 		final boolean stats;
 		long startTime = 0;

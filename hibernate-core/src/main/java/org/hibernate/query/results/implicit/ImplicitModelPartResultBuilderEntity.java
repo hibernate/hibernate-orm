@@ -41,6 +41,11 @@ public class ImplicitModelPartResultBuilderEntity
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return modelPart.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

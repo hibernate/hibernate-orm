@@ -646,6 +646,7 @@ public class QuerySplitter {
 			return new SqmNamedParameter(
 					expression.getName(),
 					expression.allowMultiValuedBinding(),
+					expression.getNodeType(),
 					expression.nodeBuilder()
 			);
 		}

@@ -52,7 +52,13 @@ public class VarcharTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+			Integer length,
+			Integer scale,
+			TypeConfiguration typeConfiguration) {
+		if ( length != null && length == 1 ) {
+			return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Character.class );
+		}
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 	}
 

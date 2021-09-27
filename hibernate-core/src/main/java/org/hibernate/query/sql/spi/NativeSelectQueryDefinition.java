@@ -32,9 +32,6 @@ public interface NativeSelectQueryDefinition<R> {
 
 	Set<String> getAffectedTableNames();
 
-	RowTransformer<R> getRowTransformer();
-
-
 	// todo (6.0) : drop support for executing callables via NativeQuery
 	boolean isCallable();
 

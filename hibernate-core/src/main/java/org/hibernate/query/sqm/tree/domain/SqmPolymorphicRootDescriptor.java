@@ -409,7 +409,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public SqmPathSource getIdentifierDescriptor() {
+	public SqmPathSource<?> getIdentifierDescriptor() {
 		return null;
 	}
 

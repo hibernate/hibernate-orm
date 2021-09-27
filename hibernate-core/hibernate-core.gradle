@@ -39,10 +39,10 @@ dependencies {
 
     compileOnly libraries.jacc
     compileOnly libraries.validation
-    compileOnly libraries.ant
     compileOnly libraries.cdi
 
     testImplementation project(':hibernate-testing')
+    testImplementation project(':hibernate-ant')
     testImplementation libraries.shrinkwrap_api
     testImplementation libraries.shrinkwrap
     testImplementation libraries.shrinkwrap_descriptors_api_javaee

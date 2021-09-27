@@ -8,7 +8,6 @@ package org.hibernate.orm.test.schemavalidation;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 

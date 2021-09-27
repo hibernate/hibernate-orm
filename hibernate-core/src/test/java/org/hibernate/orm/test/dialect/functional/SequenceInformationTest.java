@@ -27,7 +27,6 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;

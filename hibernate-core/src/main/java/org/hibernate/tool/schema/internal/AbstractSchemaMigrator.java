@@ -36,7 +36,7 @@ import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.resource.transaction.spi.DdlTransactionIsolator;
-import org.hibernate.tool.hbm2ddl.UniqueConstraintSchemaUpdateStrategy;
+import org.hibernate.tool.schema.UniqueConstraintSchemaUpdateStrategy;
 import org.hibernate.tool.schema.extract.spi.DatabaseInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation;
 import org.hibernate.tool.schema.extract.spi.ForeignKeyInformation.ColumnReferenceMapping;

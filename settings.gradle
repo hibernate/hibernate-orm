@@ -167,6 +167,9 @@ project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir
 include 'hibernate-enhance-maven-plugin'
 project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
 
+include 'hibernate-ant'
+project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
+
 include 'hibernate-community-dialects'
 
 rootProject.children.each { project ->
@@ -175,3 +178,4 @@ rootProject.children.each { project ->
     assert project.buildFile.exists()
     assert project.buildFile.isFile()
 }
+

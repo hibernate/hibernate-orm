@@ -13,7 +13,6 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.procedure.ProcedureParameterBinding;
-import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -45,17 +44,16 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public <P> QueryParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
-//		return getBinding( parameterMetadata.resolve( parameter ) );
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public <P> ProcedureParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
+		return getQueryParamerBinding( (ProcedureParameterImplementor) parameter );
 	}
 
-	public ProcedureParameterBindingImplementor<?> getBinding(ProcedureParameterImplementor<?> parameter) {
+	public <P> ProcedureParameterBinding<P> getQueryParamerBinding(ProcedureParameterImplementor<P> parameter) {
 		final ProcedureParameterImplementor procParam = parameterMetadata.resolve( parameter );
 		ProcedureParameterBindingImplementor binding = bindingMap.get( procParam );
 
 		if ( binding == null ) {
-			if ( ! parameterMetadata.containsReference( parameter ) ) {
+			if ( !parameterMetadata.containsReference( parameter ) ) {
 				throw new IllegalArgumentException( "Passed parameter is not registered with this query" );
 			}
 
@@ -68,15 +66,23 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	}
 
 	@Override
-	public ProcedureParameterBinding<?> getBinding(String name) {
-//		return (ProcedureParameterBinding<?>) getBinding( parameterMetadata.getQueryParameter( name ) );
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public <P> ProcedureParameterBinding<P> getBinding(String name) {
+		final ProcedureParameterImplementor<P> parameter = (ProcedureParameterImplementor<P>) parameterMetadata
+				.getQueryParameter( name );
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "Parameter does not exist: " + name );
+		}
+		return getQueryParamerBinding( parameter );
 	}
 
 	@Override
-	public ProcedureParameterBinding getBinding(int position) {
-//		return getBinding( parameterMetadata.getQueryParameter( position ) );
-		throw new NotYetImplementedFor6Exception( getClass() );
+	public <P> ProcedureParameterBinding<P> getBinding(int position) {
+		final ProcedureParameterImplementor<P> parameter = (ProcedureParameterImplementor<P>) parameterMetadata
+				.getQueryParameter( position );
+		if ( parameter == null ) {
+			throw new IllegalArgumentException( "Parameter at position " + position + "does not exist" );
+		}
+		return getQueryParamerBinding( parameter );
 	}
 
 	@Override
@@ -100,6 +106,5 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 	public boolean hasAnyMultiValuedBindings() {
 		return false;
 	}
-
 
 }

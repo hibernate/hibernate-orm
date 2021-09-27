@@ -53,6 +53,7 @@ dependencies {
     testImplementation libraries.shrinkwrap_descriptors_impl_javaee
     testImplementation libraries.jakarta_jacc
     testImplementation libraries.jakarta_validation
+    testImplementation libraries.jakarta_el
     testImplementation( libraries.jakarta_validator ) {
         // for test runtime
         transitive = true

@@ -266,4 +266,11 @@ public interface DeprecationLogger extends BasicLogger {
 					"`%s`, `%s` or `%s` settings is discouraged"
 	)
 	void deprecatedJaccUsage(String jaccEnabled, String jaccContextId, String jaccPrefix);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000027,
+			value = "JACC settings encountered in hibernate `cfg.xml` file.  JACC integration is deprecated and will be removed in version 6.0"
+	)
+	void deprecatedJaccCfgXmlSettings();
 }

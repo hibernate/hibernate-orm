@@ -24,6 +24,7 @@ import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgEventListenerType;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgHibernateConfiguration;
 import org.hibernate.boot.jaxb.cfg.spi.JaxbCfgMappingReferenceType;
 import org.hibernate.event.spi.EventType;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.secure.spi.GrantedPermission;
 import org.hibernate.secure.spi.JaccPermissionDeclarations;
 
@@ -59,10 +60,18 @@ public class LoadedConfig {
 		return configurationValues;
 	}
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
+	@Deprecated
 	public Map<String, JaccPermissionDeclarations> getJaccPermissionsByContextId() {
 		return jaccPermissionsByContextId;
 	}
 
+	/**
+	 * @deprecated Support for JACC will be removed in 6.0
+	 */
+	@Deprecated
 	public JaccPermissionDeclarations getJaccPermissions(String jaccContextId) {
 		return jaccPermissionsByContextId.get( jaccContextId );
 	}
@@ -102,11 +111,11 @@ public class LoadedConfig {
 			cfg.addCacheRegionDefinition( parseCacheRegionDefinition( cacheDeclaration ) );
 		}
 
-		if ( jaxbCfg.getSecurity() != null ) {
+		if ( jaxbCfg.getSecurity() != null && ! jaxbCfg.getSecurity().getGrant().isEmpty() ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedJaccCfgXmlSettings();
 			for ( JaxbCfgHibernateConfiguration.JaxbCfgSecurity.JaxbCfgGrant grant : jaxbCfg.getSecurity().getGrant() ) {
 				final JaccPermissionDeclarations jaccPermissions = cfg.getOrCreateJaccPermissions(
-						jaxbCfg.getSecurity()
-								.getContext()
+						jaxbCfg.getSecurity().getContext()
 				);
 				jaccPermissions.addPermissionDeclaration(
 						new GrantedPermission(

@@ -16,7 +16,10 @@ import org.hibernate.secure.spi.PermissionCheckEntityInformation;
  * Base class for JACC-securable event listeners
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public abstract class AbstractJaccSecurableEventListener implements JaccSecurityListener {
 	private JaccService jaccService;
 

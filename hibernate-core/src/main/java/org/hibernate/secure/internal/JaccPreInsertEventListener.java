@@ -15,7 +15,10 @@ import org.hibernate.secure.spi.PermissibleAction;
  *
  * @author <a href="mailto:kabir.khan@jboss.org">Kabir Khan</a>
  * @author Steve Ebersole
+ *
+ * @deprecated Support for JACC will be removed in 6.0
  */
+@Deprecated
 public class JaccPreInsertEventListener extends AbstractJaccSecurableEventListener implements PreInsertEventListener {
 	public JaccPreInsertEventListener() {
 	}

@@ -258,4 +258,19 @@ public interface DeprecationLogger extends BasicLogger {
 			"This is deprecated and will be removed in a future version. Every property mapping combination should have its own java class"
 	)
 	void deprecatedComponentMapping(String name);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000026,
+			value = "JACC integration was enabled.  Support for JACC integration will be removed in version 6.0.  Use of" +
+					"`%s`, `%s` or `%s` settings is discouraged"
+	)
+	void deprecatedJaccUsage(String jaccEnabled, String jaccContextId, String jaccPrefix);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000027,
+			value = "JACC settings encountered in hibernate `cfg.xml` file.  JACC integration is deprecated and will be removed in version 6.0"
+	)
+	void deprecatedJaccCfgXmlSettings();
 }

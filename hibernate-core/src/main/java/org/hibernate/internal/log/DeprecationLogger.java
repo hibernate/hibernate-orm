@@ -273,4 +273,28 @@ public interface DeprecationLogger extends BasicLogger {
 			value = "JACC settings encountered in hibernate `cfg.xml` file.  JACC integration is deprecated and will be removed in version 6.0"
 	)
 	void deprecatedJaccCfgXmlSettings();
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000028,
+			value = "Manageable service was registered with JMX support (`%s`).  JMX support is scheduled for removal in 6.0"
+	)
+	void deprecatedJmxManageableServiceRegistration(String jmxEnabledSetting);
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000029,
+
+			value = "JMX support has been enabled via `%s`.  This feature is scheduled for removal in 6.0"
+	)
+	void deprecatedJmxSupport(String jmxEnabledSetting);
+
+
+	@LogMessage(level = WARN)
+	@Message(
+			id = 90000030,
+			value = "MBean was registered with JMX support (`%s`).  JMX support is scheduled for removal in 6.0"
+	)
+	void deprecatedJmxBeanRegistration(String name);
+
 }

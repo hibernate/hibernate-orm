@@ -17,14 +17,13 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.Configurable;
-import org.hibernate.service.spi.Manageable;
 
 /**
  * A builder for {@link Batch} instances.
  *
  * @author Steve Ebersole
  */
-public class BatchBuilderImpl implements BatchBuilder, Configurable, Manageable, BatchBuilderMXBean {
+public class BatchBuilderImpl implements BatchBuilder, Configurable, BatchBuilderMXBean {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( BatchBuilderImpl.class );
 
 	private int jdbcBatchSize;

@@ -32,8 +32,6 @@ plugins {
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
 	id 'eclipse'
-
-	id 'biz.aQute.bnd' version '5.1.1' apply false
 }
 
 allprojects {

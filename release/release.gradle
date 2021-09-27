@@ -1,4 +1,5 @@
 import java.nio.charset.StandardCharsets
+import java.util.function.Function
 
 import groovy.json.JsonSlurper
 
@@ -9,20 +10,18 @@ import groovy.json.JsonSlurper
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 apply from: rootProject.file( 'gradle/base-information.gradle' )
+apply from: rootProject.file( 'gradle/libraries.gradle' )
 
 apply plugin: 'idea'
 apply plugin: 'distribution'
-//apply plugin: 'java-library-distribution'
-
 
 idea.module {
 }
 
-//def documentationDir = project.layout.buildDirectory.dir('documentation')
-
 configurations {
     core
-//    testing
+
+    testing
 
     envers
     spatial
@@ -36,21 +35,218 @@ configurations {
     jcache
 
     jpamodelgen
+
+    javadocClasspath {
+        description = 'Class files for the javadoc to be built'
+        resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:5.7.1') { details ->
+            details.select( details.candidates.first() ).because( 'first' )
+        }
+
+        extendsFrom core
+        extendsFrom testing
+        extendsFrom envers
+        extendsFrom spatial
+        extendsFrom agroal
+        extendsFrom c3p0
+        extendsFrom hikaricp
+        extendsFrom proxool
+        extendsFrom vibur
+        extendsFrom jcache
+        extendsFrom jpamodelgen
+    }
+
+    javadocSources {
+        description = 'Source files to be built by the javadoc tool'
+    }
 }
 
 dependencies {
+    attributesSchema { schema ->
+        schema.attribute(Bundling.BUNDLING_ATTRIBUTE) { matchStrategy ->
+             final def nameComparator = Comparator.comparing(
+                    new Function<Bundling,String>() {
+                        @Override
+                        String apply(Bundling o) {
+                            return o.name
+                        }
+                    }
+            )
+            matchStrategy.ordered(new Comparator<Bundling>() {
+                @Override
+                int compare(Bundling o1, Bundling o2) {
+                    if ( Objects.equals( o1, o2 ) ) {
+                        return 0;
+                    }
+
+                    if ( o1 == null ) {
+                        return 1;
+                    }
+
+                    if ( o2 == null ) {
+                        return -1;
+                    }
+
+                    if ( o1.name == Bundling.EMBEDDED ) {
+                        return -1;
+                    }
+
+                    if ( o2.name == Bundling.EMBEDDED ) {
+                        return 1;
+                    }
+
+                    return nameComparator.compare(o1,o2)
+                }
+            } )
+        }
+    }
+
     core project( ':hibernate-core' )
-//    testing project( ':hibernate-testing' )
+    javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
+
+    testing project( ':hibernate-testing' )
+    javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
+
     envers project( ':hibernate-envers' )
+    javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
+
     spatial project( ':hibernate-spatial' )
+    javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
+
     agroal project( ':hibernate-agroal' )
+    javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
+
     c3p0 project( ':hibernate-c3p0' )
+    javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
+
     hikaricp project( ':hibernate-hikaricp' )
+    javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
+
     proxool project( ':hibernate-proxool' )
+    javadocSources project( path: ':hibernate-proxool', configuration: 'javadocSources' )
+
     vibur project( ':hibernate-vibur' )
+    javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
+
 //    jcache project( ':hibernate-jcache' )
+//    javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
 
     jpamodelgen project( ':hibernate-jpamodelgen' )
+    javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
+
+    javadocClasspath libraries.logging_annotations
+    javadocClasspath libraries.jakarta_validation
+    javadocClasspath libraries.jakarta_cdi
+    javadocClasspath libraries.jakarta_jacc
+    javadocClasspath libraries.ant
+    javadocClasspath gradleApi()
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// aggregated JavaDoc
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+final File javadocDir = mkdir( new File( (File) project.buildDir, 'documentation/javadocs' ) );
+
+/**
+ * Builds the JavaDocs aggregated (unified) across all the sub-projects
+ */
+task aggregateJavadocs(type: Javadoc) {
+    description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
+
+    final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
+
+    source configurations.javadocSources
+    classpath += configurations.javadocClasspath
+
+    // exclude any generated sources and internal packages
+    exclude '**/generated-src/**'
+    exclude '**/internal/**'
+    include '**/*.java'
+
+    // apply standard config
+    maxMemory = '512m'
+    destinationDir = javadocDir
+    configure( options ) {
+        overview = 'src/release/javadoc/overview.html'
+        windowTitle = 'Hibernate JavaDocs'
+        docTitle = "Hibernate JavaDoc ($project.version)"
+        bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+        use = true
+        options.encoding = 'UTF-8'
+
+        links = [
+                'https://docs.oracle.com/javase/8/docs/api/',
+                'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+                'https://docs.jboss.org/cdi/api/2.0/',
+                'https://javaee.github.io/javaee-spec/javadocs/'
+        ]
+
+        if ( gradle.ext.javaVersions.main.compiler.asInt() >= 11 ) {
+            //The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
+            // but after excluding the first two builds; see also specific comments on
+            // https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
+            // For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
+            // complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
+            logger.lifecycle "Forcing Javadoc in Java 8 compatible mode"
+            options.source = gradle.ext.baselineJavaVersion
+        }
+
+        options.addStringOption( 'Xdoclint:none', '-quiet' )
+
+        if ( gradle.ext.javaToolchainEnabled ) {
+            options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+                    split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
+        }
+    }
+
+    if ( gradle.ext.javaToolchainEnabled ) {
+        // Display version of Java tools
+        doFirst {
+            logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+        }
+    }
+}
+
+
+task stageIntegrationGuide(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:buildDocsForPublishing'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/integrationguide"
+    into "${buildDir}/documentation/integrationguide"
+}
+
+
+task stageQuickstart(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:buildDocsForPublishing'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/quickstart"
+    into "${buildDir}/documentation/quickstart"
+}
+
+
+task stageTopicalGuide(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:buildDocsForPublishing'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/topical"
+    into "${buildDir}/documentation/topical"
+}
+
+
+task stageUserGuide(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:buildDocsForPublishing'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/userguide"
+    into "${buildDir}/documentation/userguide"
 }
 
 /**
@@ -58,35 +254,16 @@ dependencies {
  *
  * Depends on building the docs
  */
-task assembleDocumentation(type: Copy) {
+task assembleDocumentation {
     group 'Release'
     description 'Assembles all documentation into the {buildDir}/documentation directory'
 
     dependsOn ':documentation:buildDocsForPublishing'
-
-    // copy documentation outputs into target/documentation.
-    // 		* this is used in building the dist bundles
-    //		* it is also used as a base to build a staged directory for documentation upload
-
-    // Integrations Guide
-    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/integrationguide"
-    into "${buildDir}/documentation/integrationguide"
-
-    // Getting-started Guide
-    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/quickstart"
-    into "${buildDir}/documentation/quickstart"
-
-    // Topical Guide
-    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/topical"
-    into "${buildDir}/documentation/topical"
-
-    // User Guide
-    from "${rootProject.project( 'documentation' ).buildDir}/asciidoc/userguide"
-    into "${buildDir}/documentation/userguide"
-
-    // Aggregated JavaDoc
-    from "${rootProject.project( 'documentation' ).buildDir}/javadocs"
-    into "${buildDir}/documentation/javadocs"
+    dependsOn tasks.aggregateJavadocs
+    dependsOn tasks.stageIntegrationGuide
+    dependsOn tasks.stageTopicalGuide
+    dependsOn tasks.stageQuickstart
+    dependsOn tasks.stageUserGuide
 }
 
 //task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {

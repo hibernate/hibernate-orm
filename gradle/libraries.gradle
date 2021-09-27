@@ -89,6 +89,7 @@ ext {
             jboss_tx_spi_jakarta:   "org.jboss:jboss-transaction-spi-jakarta:7.6.1.Final",
             jakarta_validator:      "org.hibernate.validator:hibernate-validator:${hibernateValidatorJakartaVersion}",
             jakarta_el:             'org.glassfish:jakarta.el:4.0.1',
+            jakarta_inject:         'jakarta.inject:jakarta.inject-api:2.0.0',
 
             // javax
             jpa:            "javax.persistence:javax.persistence-api:${project.jpaVersion}",

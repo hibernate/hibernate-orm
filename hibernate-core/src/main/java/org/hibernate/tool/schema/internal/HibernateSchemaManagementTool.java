@@ -57,7 +57,7 @@ import static org.hibernate.cfg.AvailableSettings.HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DB_MINOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DELIMITER;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_DIALECT_DB_VERSION;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_CONNECTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
@@ -245,11 +245,11 @@ public class HibernateSchemaManagementTool implements SchemaManagementTool, Serv
 		);
 		if ( dbName != null ) {
 			final String dbVersion = (String) coalesceSuppliedValues(
-					() -> configurationValues.get( JAKARTA_DIALECT_DB_VERSION ),
+					() -> configurationValues.get( JAKARTA_HBM2DDL_DB_VERSION ),
 					() -> {
 						final String name = (String) configurationValues.get( DIALECT_DB_VERSION );
 						if ( StringHelper.isNotEmpty( name ) ) {
-							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_VERSION, JAKARTA_DIALECT_DB_VERSION );
+							DEPRECATION_LOGGER.deprecatedSetting( DIALECT_DB_VERSION, JAKARTA_HBM2DDL_DB_VERSION );
 						}
 						return name;
 					}

@@ -1831,7 +1831,7 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 *
 	 * @see #DIALECT_DB_NAME
 	 */
-	String JAKARTA_DIALECT_DB_VERSION = "javax.persistence.database-product-version";
+	String JAKARTA_HBM2DDL_DB_VERSION = "jakarta.persistence.database-product-version";
 
 	/**
 	 * Specifies the major version of the underlying database, as would be returned by

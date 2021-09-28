@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.query;
+package org.hibernate.orm.test.jpa.query;
 
 import java.io.Serializable;
 import java.sql.PreparedStatement;
@@ -114,7 +114,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
-		@Type(type = "org.hibernate.jpa.test.query.QueryParametersValidationTest$BooleanUserType")
+		@Type(type = "org.hibernate.orm.test.jpa.query.QueryParametersValidationTest$BooleanUserType")
 		private boolean active;
 	}
 

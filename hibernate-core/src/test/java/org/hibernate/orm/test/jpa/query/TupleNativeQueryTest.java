@@ -1,4 +1,4 @@
-package org.hibernate.jpa.test.query;
+package org.hibernate.orm.test.jpa.query;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;

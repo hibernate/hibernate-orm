@@ -14,7 +14,6 @@ import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
@@ -26,7 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
 public class ResultMappingTest extends BaseSessionFactoryFunctionalTest {
 
 	@Override

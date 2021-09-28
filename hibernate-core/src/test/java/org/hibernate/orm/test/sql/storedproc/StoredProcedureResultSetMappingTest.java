@@ -26,7 +26,6 @@ import org.hibernate.result.ResultSetOutput;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 
 import org.junit.jupiter.api.Test;
 
@@ -37,7 +36,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
 public class StoredProcedureResultSetMappingTest extends BaseSessionFactoryFunctionalTest {
 	@Entity( name = "Employee" )
 	@Table( name = "EMP" )

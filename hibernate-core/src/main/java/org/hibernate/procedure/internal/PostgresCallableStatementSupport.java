@@ -6,19 +6,22 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.sql.CallableStatement;
+import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
-import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.procedure.spi.ProcedureParameterImplementor;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
+import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCall;
+
+import jakarta.persistence.ParameterMode;
 
 /**
  * @author Steve Ebersole
  */
-public class PostgresCallableStatementSupport implements CallableStatementSupport {
+public class PostgresCallableStatementSupport extends AbstractStandardCallableStatementSupport {
 	/**
 	 * Singleton access
 	 */
@@ -28,83 +31,60 @@ public class PostgresCallableStatementSupport implements CallableStatementSuppor
 	public JdbcCall interpretCall(
 			String procedureName,
 			FunctionReturnImpl functionReturn,
-			ParameterMetadataImplementor parameterMetadata,
+			ProcedureParameterMetadataImplementor parameterMetadata,
 			ProcedureParamBindings paramBindings,
 			SharedSessionContractImplementor session) {
-
-		// if there are any parameters, see if the first is REF_CURSOR
 		final boolean firstParamIsRefCursor = parameterMetadata.getParameterCount() != 0
-				&& paramBindings..getMode() == ParameterMode.REF_CURSOR;
+				&& isFirstParameterModeRefCursor( parameterMetadata );
 
 		if ( firstParamIsRefCursor ) {
 			// validate that the parameter strategy is positional (cannot mix, and REF_CURSOR is inherently positional)
-			if ( parameterStrategy == ParameterStrategy.NAMED ) {
+			if ( parameterMetadata.hasNamedParameters() ) {
 				throw new HibernateException( "Cannot mix named parameters and REF_CURSOR parameter on PostgreSQL" );
 			}
 		}
 
+		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
+
 		final StringBuilder buffer;
 		if ( firstParamIsRefCursor ) {
-			buffer = new StringBuilder().append( "{? = call " );
+			buffer = new StringBuilder(11 + procedureName.length() + registrations.size() * 2).append( "{?=call " );
 		}
 		else {
-			buffer = new StringBuilder().append( "{call " );
+			buffer = new StringBuilder(9 + procedureName.length() + registrations.size() * 2).append( "{call " );
 		}
 
 		buffer.append( procedureName ).append( "(" );
 
-		String sep = "";
-
 		// skip the first registration if it was a REF_CURSOR
-		final int startIndex = firstParamIsRefCursor ? 1 : 0;
-		for ( int i = startIndex; i < parameterRegistrations.size(); i++ ) {
-			final ParameterRegistrationImplementor parameter = parameterRegistrations.get( i );
-
-			// any additional REF_CURSOR parameter registrations are an error
-			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-				throw new HibernateException( "PostgreSQL supports only one REF_CURSOR parameter, but multiple were registered" );
+		final int startIndex;
+		if ( firstParamIsRefCursor ) {
+			startIndex = 1;
+		}
+		else {
+			startIndex = 0;
+		}
+		String sep = "";
+		for ( int i = startIndex; i < registrations.size(); i++ ) {
+			if ( registrations.get( i ).getMode() == ParameterMode.REF_CURSOR ) {
+				throw new HibernateException(
+						"PostgreSQL supports only one REF_CURSOR parameter, but multiple were registered" );
 			}
-
-			for ( int ignored : parameter.getSqlTypes() ) {
-				buffer.append( sep ).append( "?" );
-				sep = ",";
-			}
+			buffer.append( sep ).append( "?" );
+			sep = ",";
 		}
 
-		return buffer.append( ")}" ).toString();
+		buffer.append( ")}" );
+		return new JdbcCallImpl.Builder(
+				buffer.toString(),
+				parameterMetadata.hasNamedParameters() ?
+						ParameterStrategy.NAMED :
+						ParameterStrategy.POSITIONAL
+		).buildJdbcCall();
 	}
 
-	@Override
-	public void registerParameters(
-			String procedureName,
-			CallableStatement statement,
-			ParameterStrategy parameterStrategy,
-			ParameterMetadataImplementor parameterMetadata,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		// prepare parameters
-//		int i = 1;
-//
-//		try {
-//			for ( ParameterRegistrationImplementor parameter : parameterRegistrations ) {
-//				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-//					statement.registerOutParameter( i, Types.OTHER );
-//					i++;
-//
-//				}
-//				else {
-//					parameter.prepare( statement, i );
-//					i += parameter.getSqlTypes().length;
-//				}
-//			}
-//		}
-//		catch (SQLException e) {
-//			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-//					e,
-//					"Error registering CallableStatement parameters",
-//					procedureName
-//			);
-//		}
+	private static boolean isFirstParameterModeRefCursor(ProcedureParameterMetadataImplementor parameterMetadata) {
+		return parameterMetadata.getRegistrationsAsList().get( 0 ).getMode() == ParameterMode.REF_CURSOR;
 	}
+
 }

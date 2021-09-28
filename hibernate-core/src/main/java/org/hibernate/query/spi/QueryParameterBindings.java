@@ -9,7 +9,6 @@ package org.hibernate.query.spi;
 import java.util.function.BiConsumer;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.QueryParameter;
@@ -83,13 +82,9 @@ public interface QueryParameterBindings {
 	 * in creating a {@link QueryKey}
 	 * @param persistenceContext
 	 */
-	default QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
+	QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext);
 
-	default void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action);
 
 	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
 	};

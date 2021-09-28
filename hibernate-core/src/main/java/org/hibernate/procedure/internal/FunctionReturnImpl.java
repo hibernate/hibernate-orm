@@ -7,14 +7,23 @@
 
 package org.hibernate.procedure.internal;
 
+import java.sql.Types;
 import jakarta.persistence.ParameterMode;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
+import org.hibernate.sql.exec.internal.JdbcCallFunctionReturnImpl;
+import org.hibernate.sql.exec.internal.JdbcCallParameterExtractorImpl;
+import org.hibernate.sql.exec.internal.JdbcCallRefCursorExtractorImpl;
+import org.hibernate.sql.exec.spi.JdbcCallFunctionReturn;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -38,30 +47,30 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 	}
 
 
-//	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
-//		final AllowableParameterType ormType;
-//		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
-//		final JdbcCallParameterExtractorImpl parameterExtractor;
-//
-//		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
-//			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 0 );
-//			ormType = null;
-//			parameterExtractor = null;
-//		}
-//		else {
-//
-//			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
-//			final SqlTypeDescriptor sqlTypeDescriptor = typeConfiguration.getSqlTypeDescriptorRegistry()
-//					.getDescriptor( getJdbcTypeCode() );
-//			final JavaTypeDescriptor javaTypeMapping = sqlTypeDescriptor
-//					.getJdbcRecommendedJavaTypeMapping( typeConfiguration );
-//			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaType() );
-//			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
-//			refCursorExtractor = null;
-//		}
-//
-//		return new JdbcCallFunctionReturnImpl( getJdbcTypeCode(), ormType, parameterExtractor, refCursorExtractor );
-//	}
+	public JdbcCallFunctionReturn toJdbcFunctionReturn(SharedSessionContractImplementor persistenceContext) {
+		final AllowableParameterType ormType;
+		final JdbcCallRefCursorExtractorImpl refCursorExtractor;
+		final JdbcCallParameterExtractorImpl parameterExtractor;
+
+		if ( getJdbcTypeCode() == Types.REF_CURSOR ) {
+			refCursorExtractor = new JdbcCallRefCursorExtractorImpl( null, 0 );
+			ormType = null;
+			parameterExtractor = null;
+		}
+		else {
+
+			final TypeConfiguration typeConfiguration = persistenceContext.getFactory().getMetamodel().getTypeConfiguration();
+			final JdbcTypeDescriptor sqlTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry()
+					.getDescriptor( getJdbcTypeCode() );
+			final BasicJavaDescriptor javaTypeMapping = sqlTypeDescriptor
+					.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+			ormType = typeConfiguration.standardBasicTypeForJavaType( javaTypeMapping.getJavaType().getClass() );
+			parameterExtractor = new JdbcCallParameterExtractorImpl( procedureCall.getProcedureName(), null, 0, ormType );
+			refCursorExtractor = null;
+		}
+
+		return new JdbcCallFunctionReturnImpl( getJdbcTypeCode(), ormType, parameterExtractor, refCursorExtractor );
+	}
 
 	@Override
 	public int getJdbcTypeCode() {

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import jakarta.persistence.Parameter;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -21,7 +22,7 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.ParameterMetadataImplementor;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
 /**
@@ -30,7 +31,7 @@ import org.hibernate.query.spi.QueryParameterImplementor;
  *
  * @author Steve Ebersole
  */
-public class ProcedureParameterMetadataImpl implements ParameterMetadataImplementor {
+public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadataImplementor {
 	private ParameterStrategy parameterStrategy = ParameterStrategy.UNKNOWN;
 	private List<ProcedureParameterImplementor<?>> parameters;
 
@@ -103,12 +104,18 @@ public class ProcedureParameterMetadataImpl implements ParameterMetadataImplemen
 
 	@Override
 	public int getParameterCount() {
+		if ( parameters == null ) {
+			return 0;
+		}
 		return parameters.size();
 	}
 
 	@Override
 	@SuppressWarnings("SuspiciousMethodCalls")
 	public boolean containsReference(QueryParameter parameter) {
+		if ( parameters == null ) {
+			return false;
+		}
 		return parameters.contains( parameter );
 	}
 
@@ -157,7 +164,11 @@ public class ProcedureParameterMetadataImpl implements ParameterMetadataImplemen
 	@Override
 	public ProcedureParameterImplementor<?> resolve(Parameter param) {
 		if ( param instanceof ProcedureParameterImplementor ) {
-			return (ProcedureParameterImplementor) param;
+			for ( ProcedureParameterImplementor p : parameters ) {
+				if ( p == param ) {
+					return p;
+				}
+			}
 		}
 
 		return null;
@@ -166,13 +177,24 @@ public class ProcedureParameterMetadataImpl implements ParameterMetadataImplemen
 	@Override
 	public Set<? extends QueryParameter<?>> getRegistrations() {
 		//noinspection unchecked
-		return (Set) parameters;
+		return parameters.stream().collect( Collectors.toSet());
+	}
+
+	@Override
+	public List<? extends ProcedureParameterImplementor<?>> getRegistrationsAsList() {
+		//noinspection unchecked
+		if ( parameters == null ) {
+			return Collections.EMPTY_LIST;
+		}
+		return parameters;
 	}
 
 	@Override
 	public void visitRegistrations(Consumer<? extends QueryParameter<?>> action) {
 		//noinspection unchecked
-		parameters.forEach( (Consumer) action );
+		if ( parameters != null ) {
+			parameters.forEach( (Consumer) action );
+		}
 	}
 
 	@Override

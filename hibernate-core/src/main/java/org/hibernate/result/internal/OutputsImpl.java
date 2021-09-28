@@ -6,19 +6,47 @@
  */
 package org.hibernate.result.internal;
 
+import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 
+
+import jakarta.persistence.ParameterMode;
+
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;
-import org.hibernate.result.NoMoreReturnsException;
+import org.hibernate.procedure.internal.ProcedureCallImpl;
+import org.hibernate.procedure.internal.ScalarDomainResultBuilder;
+import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.query.results.ResultSetMapping;
+import org.hibernate.query.results.ResultSetMappingImpl;
+import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.spi.QueryOptionsAdapter;
+import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.result.Output;
 import org.hibernate.result.Outputs;
 import org.hibernate.result.spi.ResultContext;
+import org.hibernate.sql.exec.spi.Callback;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.results.NoMoreOutputsException;
+import org.hibernate.sql.results.internal.ResultsHelper;
+import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.jdbc.internal.DirectResultSetAccess;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
+import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
+import org.hibernate.sql.results.jdbc.spi.JdbcValues;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.RowReader;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -65,12 +93,11 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected JDBCException convert(SQLException e, String message) {
-//		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-//				e,
-//				message,
-//				context.getSql()
-//		);
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return context.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+				e,
+				message,
+				jdbcStatement.toString()
+		);
 	}
 
 	@Override
@@ -122,13 +149,142 @@ public class OutputsImpl implements Outputs {
 	}
 
 	protected List extractResults(ResultSet resultSet) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		try {
-//			return loader.processResultSet( resultSet );
-//		}
+
+		final DirectResultSetAccess resultSetAccess = new DirectResultSetAccess(
+				context.getSession(),
+				jdbcStatement,
+				resultSet
+		);
+		ResultSetMapping resultSetMapping = new ResultSetMappingImpl( null );
+
+		final ProcedureCallImpl procedureCall = (ProcedureCallImpl) context;
+		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = context.getSession()
+				.getTypeConfiguration()
+				.getJavaTypeDescriptorRegistry();
+		procedureCall.getParameterBindings().visitBindings(
+				(parameterImplementor, queryParameterBinding) -> {
+					ProcedureParameter parameter = (ProcedureParameter) parameterImplementor;
+					if ( parameter.getMode() == ParameterMode.IN || parameter.getMode() == ParameterMode.INOUT ) {
+						final JavaTypeDescriptor<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
+								parameterImplementor.getParameterType() );
+						if ( basicType != null ) {
+							resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
+						}
+						else {
+							throw new NotYetImplementedFor6Exception( getClass() );
+						}
+					}
+				}
+		);
+
+		final ExecutionContext executionContext = new ExecutionContext() {
+			@Override
+			public SharedSessionContractImplementor getSession() {
+				return OutputsImpl.this.context.getSession();
+			}
+
+			@Override
+			public QueryOptions getQueryOptions() {
+				return new QueryOptionsAdapter() {
+					@Override
+					public Boolean isReadOnly() {
+						return false;
+					}
+				};
+			}
+
+			@Override
+			public String getQueryIdentifier(String sql) {
+				return sql;
+			}
+
+			@Override
+			public QueryParameterBindings getQueryParameterBindings() {
+				return QueryParameterBindings.NO_PARAM_BINDINGS;
+			}
+
+			@Override
+			public Callback getCallback() {
+				throw new UnsupportedOperationException( "Follow-on locking not supported yet" );
+			}
+
+		};
+
+		final JdbcValues jdbcValues = new JdbcValuesResultSetImpl(
+				resultSetAccess,
+				null,
+				null,
+				this.context.getQueryOptions(),
+				resultSetMapping.resolve( resultSetAccess, getSessionFactory() ),
+				executionContext
+		);
+
+		final RowReader<Object[]> rowReader = (RowReader<Object[]>) ResultsHelper.createRowReader(
+				executionContext,
+				null,
+				RowTransformerPassThruImpl.INSTANCE,
+				jdbcValues
+		);
+
+		/*
+		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
+		 */
+		final JdbcValuesSourceProcessingOptions processingOptions = new JdbcValuesSourceProcessingOptions() {
+			@Override
+			public Object getEffectiveOptionalObject() {
+				return null;
+			}
+
+			@Override
+			public String getEffectiveOptionalEntityName() {
+				return null;
+			}
+
+			@Override
+			public Serializable getEffectiveOptionalId() {
+				return null;
+			}
+
+			@Override
+			public boolean shouldReturnProxies() {
+				return true;
+			}
+		};
+
+		final JdbcValuesSourceProcessingStateStandardImpl jdbcValuesSourceProcessingState =
+				new JdbcValuesSourceProcessingStateStandardImpl(
+						executionContext,
+						processingOptions,
+						executionContext::registerLoadingEntityEntry
+				);
+		try {
+			final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
+					jdbcValuesSourceProcessingState,
+					executionContext,
+					rowReader,
+					jdbcValues
+			);
+
+
+			final List results = new ArrayList<>();
+			while ( rowProcessingState.next() ) {
+				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
+				rowProcessingState.finishRowProcessing();
+			}
+			return results;
+		}
 //		catch (SQLException e) {
-//			throw convert( e, "Error extracting results from CallableStatement" );
+//			throw context.getSession().getExceptionConverter().convert( e, "Error processing return rows" );
 //		}
+		finally {
+			rowReader.finishUp( jdbcValuesSourceProcessingState );
+			jdbcValuesSourceProcessingState.finishUp();
+			jdbcValues.finishUp( this.context.getSession() );
+		}
+	}
+
+	private SessionFactoryImplementor getSessionFactory() {
+		return context.getSession().getFactory();
 	}
 
 	/**
@@ -184,7 +340,7 @@ public class OutputsImpl implements Outputs {
 				return buildExtendedReturn();
 			}
 
-			throw new NoMoreReturnsException();
+			throw new NoMoreOutputsException();
 		}
 
 		// hooks for stored procedure (out param) processing ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

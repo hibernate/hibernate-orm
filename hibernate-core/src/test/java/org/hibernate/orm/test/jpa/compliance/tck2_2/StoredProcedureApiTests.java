@@ -7,35 +7,37 @@
 package org.hibernate.orm.test.jpa.compliance.tck2_2;
 
 import java.util.Date;
+
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.procedure.ProcedureCall;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.Table;
 
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.procedure.ProcedureCall;
-
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
  */
 @RequiresDialect( H2Dialect.class )
-@FailureExpected( message = "Procedure/function support not yet implemented", jiraKey = "n/a" )
-public class StoredProcedureApiTests extends BaseNonConfigCoreFunctionalTestCase {
-
+@DomainModel(
+		annotatedClasses =  StoredProcedureApiTests.Person.class
+)
+@SessionFactory
+public class StoredProcedureApiTests {
 
 	@Test
-	public void parameterValueAccess() {
-		inTransaction(
+	public void parameterValueAccess(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final ProcedureCall call = session.createStoredProcedureCall( "test" );
 
@@ -48,8 +50,8 @@ public class StoredProcedureApiTests extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 	@Test
-	public void parameterValueAccessByName() {
-		inTransaction(
+	public void parameterValueAccessByName(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final ProcedureCall call = session.createStoredProcedureCall( "test" );
 
@@ -62,8 +64,8 @@ public class StoredProcedureApiTests extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testInvalidParameterReference() {
-		inTransaction(
+	public void testInvalidParameterReference(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					final ProcedureCall call1 = session.createStoredProcedureCall( "test" );
 					call1.registerStoredProcedureParameter(1, Integer.class, ParameterMode.IN);
@@ -86,8 +88,8 @@ public class StoredProcedureApiTests extends BaseNonConfigCoreFunctionalTestCase
 	}
 
 	@Test
-	public void testParameterBindTypeMismatch() {
-		inTransaction(
+	public void testParameterBindTypeMismatch(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					try {
 						final ProcedureCall call1 = session.createStoredProcedureCall( "test" );
@@ -100,47 +102,6 @@ public class StoredProcedureApiTests extends BaseNonConfigCoreFunctionalTestCase
 					}
 				}
 		);
-	}
-
-	@Override
-	protected void applyMetadataSources(MetadataSources sources) {
-		super.applyMetadataSources( sources );
-
-		sources.addAnnotatedClass( Person.class );
-	}
-
-	@Override
-	protected void afterMetadataBuilt(Metadata metadata) {
-		super.afterMetadataBuilt( metadata );
-
-//		metadata.getDatabase().addAuxiliaryDatabaseObject(
-//				new StoredProcedureResultSetMappingTest.ProcedureDefinition() {
-//					@Override
-//					public boolean appliesToDialect(Dialect dialect) {
-//						return H2Dialect.class.isInstance( dialect );
-//					}
-//
-//					@Override
-//					public boolean beforeTablesOnCreation() {
-//						return false;
-//					}
-//
-//					@Override
-//					public String getExportIdentifier() {
-//						return "StoredProcedure#test"
-//					}
-//
-//					@Override
-//					public String[] sqlCreateStrings(Dialect dialect) {
-//						return super.sqlCreateStrings( dialect );
-//					}
-//
-//					@Override
-//					public String[] sqlDropStrings(Dialect dialect) {
-//						return super.sqlDropStrings( dialect );
-//					}
-//				}
-//		);
 	}
 
 	@Entity( name = "Person" )

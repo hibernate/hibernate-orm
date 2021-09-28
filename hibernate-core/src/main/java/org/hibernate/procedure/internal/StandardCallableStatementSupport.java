@@ -6,27 +6,25 @@
  */
 package org.hibernate.procedure.internal;
 
-import java.sql.CallableStatement;
-import java.util.function.Consumer;
-import jakarta.persistence.ParameterMode;
+import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
-import org.hibernate.query.spi.ParameterMetadataImplementor;
-import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
+import org.hibernate.sql.exec.internal.JdbcCallImpl;
 import org.hibernate.sql.exec.spi.JdbcCall;
+
+import jakarta.persistence.ParameterMode;
 
 /**
  * Standard implementation of CallableStatementSupport
  *
  * @author Steve Ebersole
  */
-public class StandardCallableStatementSupport implements CallableStatementSupport {
+public class StandardCallableStatementSupport extends AbstractStandardCallableStatementSupport {
 	/**
 	 * Singleton access - without REF_CURSOR support
 	 */
@@ -47,86 +45,41 @@ public class StandardCallableStatementSupport implements CallableStatementSuppor
 	public JdbcCall interpretCall(
 			String procedureName,
 			FunctionReturnImpl functionReturn,
-			ParameterMetadataImplementor parameterMetadata,
+			ProcedureParameterMetadataImplementor parameterMetadata,
 			ProcedureParamBindings paramBindings,
 			SharedSessionContractImplementor session) {
-		final StringBuilder buffer = new StringBuilder().append( "{call " )
+		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
+		final StringBuilder buffer = new StringBuilder(9 + procedureName.length() + registrations.size() * 2).append( "{call " )
 				.append( procedureName )
 				.append( "(" );
 
-		parameterMetadata.visitParameters(
-				new Consumer<QueryParameterImplementor<?>>() {
-					String sep = "";
+		String sep = "";
+		for ( int i = 0; i < registrations.size(); i++ ) {
+			if ( registrations.get( i ).getMode() == ParameterMode.REF_CURSOR ) {
+				verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
+				buffer.append( sep ).append( "?" );
+				sep = ",";
+			}
+			else {
+				buffer.append( sep ).append( "?" );
+				sep = ",";
+			}
+		}
 
-					@Override
-					public void accept(QueryParameterImplementor<?> param) {
-						if ( param == null ) {
-							throw new QueryException( "Parameter registrations had gaps" );
-						}
+		buffer.append( ")}" );
 
-						final ProcedureParameterImplementor parameter = (ProcedureParameterImplementor) param;
+		return new JdbcCallImpl.Builder(
+				buffer.toString(),
+				parameterMetadata.hasNamedParameters() ?
+						ParameterStrategy.NAMED :
+						ParameterStrategy.POSITIONAL
+		).buildJdbcCall();
 
-						if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-							verifyRefCursorSupport( session.getJdbcServices().getJdbcEnvironment().getDialect() );
-							buffer.append( sep ).append( "?" );
-							sep = ",";
-						}
-						else {
-							throw new NotYetImplementedFor6Exception( getClass() );
-//							parameter.getHibernateType().visitJdbcTypes(
-//									sqlExpressableType -> {
-//										buffer.append( sep ).append( "?" );
-//										sep = ",";
-//									},
-//									Clause.IRRELEVANT,
-//									session.getFactory().getTypeConfiguration()
-//							);
-						}
-					}
-				}
-		);
-
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		return buffer.append( ")}" ).toString();
 	}
 
 	private void verifyRefCursorSupport(Dialect dialect) {
 		if ( ! supportsRefCursors ) {
 			throw new QueryException( "Dialect [" + dialect.getClass().getName() + "] not known to support REF_CURSOR parameters" );
 		}
-	}
-
-	@Override
-	public void registerParameters(
-			String procedureName,
-			CallableStatement statement,
-			ParameterStrategy parameterStrategy,
-			ParameterMetadataImplementor parameterMetadata,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-
-//		final AtomicInteger count = new AtomicInteger( 1 );
-//
-//		try {
-//			parameterMetadata.visitParameters(
-//					param -> {
-//						final ProcedureParameterImplementor parameter = (ProcedureParameterImplementor) param;
-//						parameter.prepare( statement, count.get() );
-//						if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-//							i++;
-//						}
-//						else {
-//							i += parameter.getSqlTypes().length;
-//						}
-//					}
-//			);
-//		}
-//		catch (SQLException e) {
-//			throw session.getJdbcServices().getSqlExceptionHelper().convert(
-//					e,
-//					"Error registering CallableStatement parameters",
-//					procedureName
-//			);
-//		}
 	}
 }

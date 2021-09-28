@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.procedure;
+package org.hibernate.orm.test.procedure;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -412,17 +412,11 @@ public class StoredProcedureParameterTypeTest {
 	public void testStringTypeInParameterIsNullWithoutEnablePassingNulls(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					try {
 						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
 						procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
 						procedureCall.setParameter( 1, null );
-
-						fail("Should have thrown exception");
-					}
-					catch (IllegalArgumentException e) {
-						assertTrue( e.getMessage().endsWith( "You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters." ) );
-					}
 				}
 		);
 	}
+
 }

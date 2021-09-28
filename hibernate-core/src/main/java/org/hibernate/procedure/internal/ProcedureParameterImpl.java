@@ -11,19 +11,31 @@ import java.sql.SQLException;
 import java.util.Objects;
 import jakarta.persistence.ParameterMode;
 
-import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
+import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.AbstractQueryParameter;
+import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.type.ProcedureParameterNamedBinder;
+import org.hibernate.type.descriptor.ValueBinder;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.spi.TypeConfiguration;
+
+import org.jboss.logging.Logger;
 
 /**
  * @author Steve Ebersole
  */
 public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> implements ProcedureParameterImplementor<T> {
+	private static final Logger log = Logger.getLogger( ProcedureParameterImpl.class );
+
 	private final String name;
-	private final Integer position;
+	private Integer position;
 
 	private final ParameterMode mode;
 
@@ -122,23 +134,28 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			CallableStatement statement,
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) throws SQLException {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		final QueryParameterBinding<?> binding = procedureCall.getParameterBindings().getBinding( this );
-//
-//		// initially set up the Type we will use for binding as the explicit type.
-//		AllowableParameterType typeToUse = getHibernateType();
-//
-//		// however, for Calendar binding with an explicit TemporalType we may need to adjust this...
-//		if ( binding != null && binding.getExplicitTemporalPrecision() != null ) {
-//			typeToUse = ( (AllowableTemporalParameterType) typeToUse ).resolveTemporalPrecision(
-//					binding.getExplicitTemporalPrecision(),
-//					procedureCall.getSession().getFactory().getTypeConfiguration()
-//			);
-//		}
-//
-//		this.startIndex = startIndex;
-//		if ( mode == ParameterMode.IN || mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
-//			if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
+		final QueryParameterBinding<?> binding = procedureCall.getParameterBindings().getBinding( this );
+		final AllowableParameterType typeToUse;
+
+		// for Calendar binding with an explicit TemporalType we may need to adjust this...
+		final TypeConfiguration typeConfiguration = procedureCall.getSession().getFactory().getTypeConfiguration();
+		if ( binding != null && binding.getExplicitTemporalPrecision() != null ) {
+			typeToUse = ( (AllowableTemporalParameterType) getHibernateType() ).resolveTemporalPrecision(
+					binding.getExplicitTemporalPrecision(),
+					typeConfiguration
+			);
+		}
+		else {
+			//set up the Type we will use for binding as the explicit type.
+			typeToUse = getHibernateType();
+		}
+
+		final JdbcTypeDescriptor recommendedJdbcType = typeToUse.getExpressableJavaTypeDescriptor()
+				.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+
+		final ValueBinder binder = recommendedJdbcType.getBinder( typeToUse.getExpressableJavaTypeDescriptor() );
+
+		if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
 //				if ( sqlTypesToUse.length > 1 ) {
 //					// there is more than one column involved; see if the Hibernate Type can handle
 //					// multi-param extraction...
@@ -152,88 +169,100 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 //						);
 //					}
 //				}
-//				// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
-//				// The idea is that an embeddable/custom type can have more than one column values
-//				// that correspond with embeddable/custom attribute value. This does not seem to
-//				// be working yet. For now, if sqlTypesToUse.length > 1, then register
-//				// the out parameters by position (since we only have one name).
-//				// This will cause a failure if there are other parameters bound by
-//				// name and the dialect does not support "mixed" named/positional parameters;
-//				// e.g., Oracle.
-//				if ( sqlTypesToUse.length == 1 &&
-//						procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
-//						canDoNameParameterBinding( typeToUse ) ) {
-//					statement.registerOutParameter( getName(), sqlTypesToUse[0] );
-//				}
-//				else {
+			// TODO: sqlTypesToUse.length > 1 does not seem to have a working use case (HHH-10769).
+			// The idea is that an embeddable/custom type can have more than one column values
+			// that correspond with embeddable/custom attribute value. This does not seem to
+			// be working yet. For now, if sqlTypesToUse.length > 1, then register
+			// the out parameters by position (since we only have one name).
+			// This will cause a failure if there are other parameters bound by
+			// name and the dialect does not support "mixed" named/positional parameters;
+			// e.g., Oracle.
+			if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
+					canDoNameParameterBinding( typeToUse, procedureCall ) ) {
+				statement.registerOutParameter( getName(), recommendedJdbcType.getJdbcTypeCode() );
+			}
+			else {
 //					for ( int i = 0; i < sqlTypesToUse.length; i++ ) {
-//						statement.registerOutParameter( startIndex + i, sqlTypesToUse[i] );
+				if ( position == null ) {
+					position = startIndex;
+				}
+				statement.registerOutParameter( startIndex, recommendedJdbcType.getJdbcTypeCode() );
 //					}
-//				}
-//			}
-//
-//			if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
-//				if ( binding == null || binding.getBindValue() == null ) {
-//					// the user did not binding a value to the parameter being processed.  This is the condition
-//					// defined by `passNulls` and that value controls what happens here.  If `passNulls` is
-//					// {@code true} we will binding the NULL value into the statement; if `passNulls` is
-//					// {@code false} we will not.
-//					//
-//					// Unfortunately there is not a way to reliably know through JDBC metadata whether a procedure
-//					// parameter defines a default value.  Deferring to that information would be the best option
-//					if ( isPassNullsEnabled() ) {
-//						log.debugf(
-//								"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to true; binding NULL",
-//								procedureCall.getProcedureName(),
-//								this
-//						);
-//						if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding( typeToUse ) ) {
-//							((ProcedureParameterNamedBinder) typeToUse).nullSafeSet(
-//									statement,
-//									null,
-//									this.getName(),
-//									procedureCall.getSession()
-//							);
-//						}
-//						else {
-//							typeToUse.nullSafeSet( statement, null, startIndex, procedureCall.getSession() );
-//						}
-//					}
-//					else {
-//						log.debugf(
-//								"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to false; assuming procedure defines default value",
-//								procedureCall.getProcedureName(),
-//								this
-//						);
-//					}
-//				}
-//				else {
-//					if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED && canDoNameParameterBinding( typeToUse ) ) {
-//						((ProcedureParameterNamedBinder) typeToUse).nullSafeSet(
-//								statement,
-//								binding.getBindValue(),
-//								this.getName(),
-//								procedureCall.getSession()
-//						);
-//					}
-//					else {
-//						typeToUse.nullSafeSet( statement, binding.getBindValue(), startIndex, procedureCall.getSession() );
-//					}
-//				}
-//			}
-//		}
-//		else {
-//			// we have a REF_CURSOR type param
-//			if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED ) {
-//				procedureCall.getSession().getFactory().getServiceRegistry()
-//						.getService( RefCursorSupport.class )
-//						.registerRefCursorParameter( statement, getName() );
-//			}
-//			else {
-//				procedureCall.getSession().getFactory().getServiceRegistry()
-//						.getService( RefCursorSupport.class )
-//						.registerRefCursorParameter( statement, startIndex );
-//			}
-//		}
+			}
+		}
+
+		if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
+			if ( binding == null || binding.getBindValue() == null ) {
+				// the user did not binding a value to the parameter being processed.  This is the condition
+				// defined by `passNulls` and that value controls what happens here.  If `passNulls` is
+				// {@code true} we will binding the NULL value into the statement; if `passNulls` is
+				// {@code false} we will not.
+				//
+				// Unfortunately there is not a way to reliably know through JDBC metadata whether a procedure
+				// parameter defines a default value.  Deferring to that information would be the best option
+				if ( ( binding != null && binding.isBound() ) || isPassNullsEnabled() ) {
+					log.debugf(
+							"Stored procedure [%s] IN/INOUT parameter [%s] not bound and `passNulls` was set to true; binding NULL",
+							procedureCall.getProcedureName(),
+							this
+					);
+					if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
+							&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
+						( (ProcedureParameterNamedBinder) typeToUse ).nullSafeSet(
+								statement,
+								null,
+								this.getName(),
+								procedureCall.getSession()
+						);
+					}
+					else {
+						if ( position == null ) {
+							position = startIndex;
+						}
+						binder.bind( statement, null, position, procedureCall.getSession() );
+					}
+				}
+				else {
+					throw new IllegalArgumentException(
+							"The parameter " +
+									( name != null
+											? "named [" + name + "]"
+											: "at position [" + position + "]" )
+									+ " was not set! You need to call the setParameter method." );
+				}
+			}
+			else {
+				if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
+						&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
+					( (ProcedureParameterNamedBinder) typeToUse ).nullSafeSet(
+							statement,
+							binding.getBindValue(),
+							this.getName(),
+							procedureCall.getSession()
+					);
+				}
+				else {
+					if ( position == null ) {
+						position = startIndex;
+					}
+					binder.bind( statement, binding.getBindValue(), position, procedureCall.getSession() );
+				}
+			}
+		}
+	}
+
+	private boolean canDoNameParameterBinding(
+			AllowableParameterType hibernateType,
+			ProcedureCallImplementor<?> procedureCall) {
+		final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getSession()
+				.getJdbcCoordinator()
+				.getJdbcSessionOwner()
+				.getJdbcSessionContext()
+				.getServiceRegistry().getService( JdbcEnvironment.class )
+				.getExtractedDatabaseMetaData();
+		return
+				databaseMetaData.supportsNamedParameters()
+						&& ProcedureParameterNamedBinder.class.isInstance( hibernateType )
+						&& ( (ProcedureParameterNamedBinder) hibernateType ).canDoSetting();
 	}
 }

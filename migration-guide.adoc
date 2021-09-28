@@ -51,6 +51,9 @@ Discuss `@JavaType`, `@JavaTypeRegistration`
 
 Multiple component mappings for the same java class with different property mappings is not supported anymore. Every property mapping combination should have its own java class"
 
+=== Procedure Parameters, enable passing nulls
+
+Passing null or not is now triggered by whether setting the parameter was called at all.  In other ords a distinction is made between calling `setParameter` passing null versus not calling `setParameter` at all.  In the first case, we pass along the null value; in the second we do not.
 
 === SQM
 

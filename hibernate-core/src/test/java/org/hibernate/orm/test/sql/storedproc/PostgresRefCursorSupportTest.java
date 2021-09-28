@@ -26,7 +26,7 @@ import org.hibernate.procedure.ProcedureOutputs;
 import org.hibernate.result.ResultSetOutput;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 
@@ -36,8 +36,7 @@ import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
  * @author Steve Ebersole
  */
 @RequiresDialect( value = PostgreSQLDialect.class )
-//@FailureExpected( jiraKey = "HHH-8445", reason = "Waiting on EG clarification" )
-@NotImplementedYet(reason = "org.hibernate.procedure.internal.ProcedureCallImpl.buildOutputs not yet implemented")
+@FailureExpected( jiraKey = "HHH-8445", reason = "Waiting on EG clarification" )
 public class PostgresRefCursorSupportTest extends BaseSessionFactoryFunctionalTest {
 
 	public static class ProcedureDefinitions implements AuxiliaryDatabaseObject, AuxiliaryDatabaseObject.Expandable {

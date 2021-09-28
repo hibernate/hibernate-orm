@@ -15,11 +15,14 @@ import org.hibernate.metamodel.model.domain.AllowableOutputParameterType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.ParameterMisuseException;
 import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.internal.OutputsImpl;
 import org.hibernate.sql.exec.ExecutionException;
+
+import jakarta.persistence.ParameterMode;
 
 /**
  * Implementation of ProcedureResult.  Defines centralized access to all of the results of a procedure call.
@@ -44,21 +47,48 @@ public class ProcedureOutputsImpl extends OutputsImpl implements ProcedureOutput
 	@Override
 	public <T> T getOutputParameterValue(ProcedureParameter<T> parameter) {
 		final AllowableParameterType<T> hibernateType = parameter.getHibernateType();
-		if ( hibernateType instanceof AllowableOutputParameterType<?> ) {
-			try {
-				//noinspection unchecked
-				return (T) ( (AllowableOutputParameterType<?>) hibernateType ).extract(
-						callableStatement,
-						parameter.getPosition(),
-						procedureCall.getSession()
-				);
+		if ( parameter.getMode() == ParameterMode.IN ) {
+			throw new ParameterMisuseException( "IN parameter not valid for output extraction" );
+		}
+		try {
+			if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
+				if ( parameter.getPosition() != null ) {
+					return (T) callableStatement.getObject( parameter.getPosition() );
+				}
+				else {
+					return (T) callableStatement.getObject( parameter.getName() );
+				}
 			}
-			catch (SQLException e) {
-				throw new ExecutionException( "Error extracting procedure output parameter value [" + parameter + "]", e );
+			else if ( hibernateType instanceof AllowableOutputParameterType<?> ) {
+
+				//noinspection unchecked
+				if ( parameter.getPosition() != null ) {
+					return (T) ( (AllowableOutputParameterType<?>) hibernateType ).extract(
+							callableStatement,
+							parameter.getPosition(),
+							procedureCall.getSession()
+					);
+				}
+				else {
+					return (T) ( (AllowableOutputParameterType<?>) hibernateType ).extract(
+							callableStatement,
+							parameter.getName(),
+							procedureCall.getSession()
+					);
+				}
+			}
+			else {
+				throw new ParameterMisuseException( "Parameter type cannot extract procedure output parameters" );
 			}
 		}
-		else {
-			throw new ParameterMisuseException( "Parameter type cannot extract procedure output parameters" );
+		catch (SQLException e) {
+			throw new ExecutionException(
+					"Error extracting procedure output parameter value ["
+							+ parameter.getPosition() != null ?
+							String.valueOf( parameter.getPosition() ) :
+							parameter.getName() + "]",
+					e
+			);
 		}
 	}
 

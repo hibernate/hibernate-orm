@@ -4,53 +4,53 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.procedure;
+package org.hibernate.orm.test.procedure;
 
 import java.sql.CallableStatement;
 import java.sql.Types;
 import java.util.Collections;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.ParameterMode;
-import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
+import org.hibernate.test.procedure.Person;
+import org.hibernate.test.procedure.Phone;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(SQLServer2012Dialect.class)
+@RequiresDialect(value = SQLServerDialect.class, version = 11)
 @TestForIssue( jiraKey = "HHH-12704" )
-public class SQLServerStoredProcedureCrossDatabaseTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				Person.class,
+				Phone.class,
+		}
+)
+public class SQLServerStoredProcedureCrossDatabaseTest {
 
 	private final String DATABASE_NAME_TOKEN = "databaseName=";
 
 	private final String DATABASE_NAME = "hibernate_orm_test_sp";
 
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-				Person.class,
-				Phone.class,
-		};
-	}
-
-	@Before
-	public void init() {
+	@BeforeEach
+	public void init(EntityManagerFactoryScope scope) {
 		doInAutoCommit(
 			"DROP DATABASE " + DATABASE_NAME,
 			"CREATE DATABASE " + DATABASE_NAME
@@ -75,11 +75,10 @@ public class SQLServerStoredProcedureCrossDatabaseTest extends BaseEntityManager
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-12704", message = "SQL Server JDBC Driver does not support registering name parameters properly")
-	public void testStoredProcedureViaJPANamedParameters() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	@FailureExpected( jiraKey = "HHH-12704", reason = "SQL Server JDBC Driver does not support registering name parameters properly")
+	public void testStoredProcedureViaJPANamedParameters(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( DATABASE_NAME + ".dbo.sp_square_number" );
-			query.registerStoredProcedureParameter( "inputNumber", Integer.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( "outputNumber", Integer.class, ParameterMode.OUT );
 
 			query.setParameter( "inputNumber", 7 );
@@ -91,8 +90,8 @@ public class SQLServerStoredProcedureCrossDatabaseTest extends BaseEntityManager
 	}
 
 	@Test
-	public void testStoredProcedureViaJPA() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
+	public void testStoredProcedureViaJPA(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( DATABASE_NAME + ".dbo.sp_square_number" );
 			query.registerStoredProcedureParameter( 1, Integer.class, ParameterMode.IN );
 			query.registerStoredProcedureParameter( 2, Integer.class, ParameterMode.OUT );
@@ -106,9 +105,8 @@ public class SQLServerStoredProcedureCrossDatabaseTest extends BaseEntityManager
 	}
 
 	@Test
-	public void testStoredProcedureViaJDBC() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-
+	public void testStoredProcedureViaJDBC(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
 			entityManager.unwrap( Session.class ).doWork( connection -> {
 				try (CallableStatement storedProcedure = connection.prepareCall(
 						"{ call " + DATABASE_NAME + ".dbo.sp_square_number(?, ?) }" )) {

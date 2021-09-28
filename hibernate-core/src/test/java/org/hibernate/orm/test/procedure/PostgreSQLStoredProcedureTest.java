@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.procedure;
+package org.hibernate.orm.test.procedure;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -22,9 +22,10 @@ import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.type.StringType;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.StringType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,6 +34,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import org.hibernate.test.procedure.Person;
+import org.hibernate.test.procedure.Phone;
 
 /**
  * @author Vlad Mihalcea
@@ -389,19 +393,35 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	public void testStoredProcedureNullParameterHibernateWithoutEnablePassingNulls() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
+			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
+					.createStoredProcedureCall( "sp_is_null" );
+			procedureCall.registerParameter( "param", StringType.class, ParameterMode.IN );
+			procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
+			procedureCall.setParameter( "param", null );
+
+			procedureCall.getOutputParameterValue( "result" );
+		} );
+	}
+
+	@Test
+	public void testStoredProcedureNullParameterHibernateWithoutSettingTheParameter() {
+
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			try {
 				ProcedureCall procedureCall = entityManager.unwrap( Session.class )
-				.createStoredProcedureCall( "sp_is_null" );
+						.createStoredProcedureCall( "sp_is_null" );
 				procedureCall.registerParameter( "param", StringType.class, ParameterMode.IN );
 				procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
-				procedureCall.setParameter( "param", null );
 
 				procedureCall.getOutputParameterValue( "result" );
 
-				fail("Should have thrown exception");
+				fail( "Should have thrown exception" );
 			}
 			catch (IllegalArgumentException e) {
-				assertEquals( "The parameter named [param] was null. You need to call ParameterRegistration#enablePassingNulls(true) in order to pass null parameters.", e.getMessage() );
+				assertEquals(
+						"The parameter named [param] was not set! You need to call the setParameter method.",
+						e.getMessage()
+				);
 			}
 		} );
 	}

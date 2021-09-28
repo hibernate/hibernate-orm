@@ -8,11 +8,15 @@ package org.hibernate.procedure.internal;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.cache.spi.QueryKey;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterBindingImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.procedure.ProcedureParameterBinding;
+import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -107,4 +111,13 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 		return false;
 	}
 
+	@Override
+	public void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action) {
+		bindingMap.forEach( action );
+	}
+
+	@Override
+	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
+		return NO_PARAMETER_BINDING_MEMENTO;
+	}
 }

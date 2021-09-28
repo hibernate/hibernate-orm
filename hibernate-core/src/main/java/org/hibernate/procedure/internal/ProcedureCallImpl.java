@@ -7,7 +7,6 @@
 package org.hibernate.procedure.internal;
 
 import java.sql.CallableStatement;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -16,7 +15,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
@@ -44,6 +42,7 @@ import org.hibernate.procedure.NoSuchParameterException;
 import org.hibernate.procedure.ParameterStrategyException;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.ProcedureOutputs;
+import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
@@ -112,6 +111,7 @@ public class ProcedureCallImpl<R>
 
 		this.synchronizedQuerySpaces = null;
 	}
+
 	/**
 	 * The result Class(es) return form
 	 *
@@ -337,7 +337,10 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode) {
+	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
+			String parameterName,
+			Class type,
+			ParameterMode mode) {
 		getSession().checkOpen( true );
 		try {
 			registerParameter( parameterName, type, mode );
@@ -352,6 +355,7 @@ public class ProcedureCallImpl<R>
 
 		return this;
 	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
@@ -411,7 +415,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	@SuppressWarnings("unchecked")
 	public List getRegisteredParameters() {
-		return new ArrayList( getParameterMetadata().getRegistrations() );
+		return getParameterMetadata().getRegistrationsAsList() ;
 	}
 
 	@Override
@@ -438,13 +442,19 @@ public class ProcedureCallImpl<R>
 		//		both: (1) add the `? = ` part and also (2) register a REFCURSOR parameter for DBs (Oracle, PGSQL) that
 		//		need it.
 
-		final JdbcCall call = getSession().getJdbcServices().getJdbcEnvironment().getDialect().getCallableStatementSupport().interpretCall(
+		final CallableStatementSupport callableStatementSupport = getSession().getJdbcServices()
+				.getJdbcEnvironment()
+				.getDialect()
+				.getCallableStatementSupport();
+		final ProcedureParameterMetadataImpl parameterMetadata = getParameterMetadata();
+		final JdbcCall call = callableStatementSupport.interpretCall(
 				procedureName,
 				functionReturn,
-				getParameterMetadata(),
+				parameterMetadata,
 				paramBindings,
 				getSession()
 		);
+
 
 		LOG.debugf( "Preparing procedure call : %s", call );
 		final CallableStatement statement = (CallableStatement) getSession()
@@ -452,35 +462,33 @@ public class ProcedureCallImpl<R>
 				.getStatementPreparer()
 				.prepareStatement( call.getSql(), true );
 
-
-		// prepare parameters
-
-		getParameterMetadata().visitRegistrations(
-				new Consumer<QueryParameter<?>>() {
-					int i = 1;
-
-					@Override
-					public void accept(QueryParameter queryParameter) {
-						try {
-							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
-							registration.prepare( statement, i, ProcedureCallImpl.this );
-//							if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
-								i++;
-//							}
-//							else {
-//								i += registration.getSqlTypes().length;
-//							}
-						}
-						catch (SQLException e) {
-							throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
-									e,
-									"Error preparing registered callable parameter",
-									getProcedureName()
-							);
-						}
-					}
-				}
-		);
+		callableStatementSupport.registerParameters( procedureName, this,statement, parameterMetadata.getParameterStrategy(), parameterMetadata, getSession() );
+//		getParameterMetadata().visitRegistrations(
+//				new Consumer<QueryParameter<?>>() {
+//					int i = 1;
+//
+//					@Override
+//					public void accept(QueryParameter queryParameter) {
+//						try {
+//							final ProcedureParameterImplementor registration = (ProcedureParameterImplementor) queryParameter;
+//							registration.prepare( statement, i, ProcedureCallImpl.this );
+////							if ( registration.getMode() == ParameterMode.REF_CURSOR ) {
+//							i++;
+////							}
+////							else {
+////								i += registration.getHibernateType().getSqlTypes().length;
+////							}
+//						}
+//						catch (SQLException e) {
+//							throw getSession().getJdbcServices().getSqlExceptionHelper().convert(
+//									e,
+//									"Error preparing registered callable parameter",
+//									getProcedureName()
+//							);
+//						}
+//					}
+//				}
+//		);
 
 		return new ProcedureOutputsImpl( this, statement );
 	}
@@ -650,7 +658,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	protected int doExecuteUpdate() {
-		if ( ! getSession().isTransactionInProgress() ) {
+		if ( !getSession().isTransactionInProgress() ) {
 			throw new TransactionRequiredException( "jakarta.persistence.Query.executeUpdate requires active transaction" );
 		}
 
@@ -731,7 +739,7 @@ public class ProcedureCallImpl<R>
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
-			if ( ! ResultSetOutput.class.isInstance( rtn ) ) {
+			if ( !ResultSetOutput.class.isInstance( rtn ) ) {
 				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
 			}
 
@@ -765,7 +773,7 @@ public class ProcedureCallImpl<R>
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
-			if ( !(rtn instanceof ResultSetOutput) ) {
+			if ( !( rtn instanceof ResultSetOutput ) ) {
 				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
 			}
 
@@ -841,7 +849,7 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
-		throw new IllegalStateException( "jakarta.persistence.Query.setLockMode not valid on jakarta.persistence.StoredProcedureQuery" );
+		throw new IllegalStateException("jakarta.persistence.Query.setLockMode not valid on jakarta.persistence.StoredProcedureQuery" );
 	}
 
 	@Override
@@ -886,7 +894,10 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
+	public <P> ProcedureCallImplementor<R> setParameter(
+			QueryParameter<P> parameter,
+			P value,
+			AllowableParameterType type) {
 		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
 	}
 
@@ -917,7 +928,10 @@ public class ProcedureCallImpl<R>
 //	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, TemporalType temporalPrecision) {
+	public <P> ProcedureCallImplementor<R> setParameter(
+			QueryParameter<P> parameter,
+			P value,
+			TemporalType temporalPrecision) {
 		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
 	}
 
@@ -932,7 +946,10 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Calendar value, TemporalType temporalPrecision) {
+	public ProcedureCallImplementor<R> setParameter(
+			Parameter parameter,
+			Calendar value,
+			TemporalType temporalPrecision) {
 		//noinspection unchecked
 		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
 	}

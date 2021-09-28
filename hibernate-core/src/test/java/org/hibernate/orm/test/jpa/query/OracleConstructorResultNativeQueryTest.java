@@ -4,14 +4,10 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.jpa.test.query;
-
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+package org.hibernate.orm.test.jpa.query;
 
 import java.util.Date;
 import java.util.List;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -22,21 +18,32 @@ import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
-import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.SkipForDialect;
-
 import org.junit.Test;
 
+import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.testing.RequiresDialect;
+
+import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
+import static org.junit.Assert.assertEquals;
+
 /**
+ * Oracle needs to have the column result type specified for the Integer ID because the
+ * ID is mapped as an Oracle NUMBER(10,0) which is returned from the native query as a BigDecimal.
+ * If the type is not specified, no appropriate constructor will be found because there is no
+ * constructor that takes a BigDecimal id argument.
+ *
+ * This test can be run using all dialects. It is only run using Oracle, because only the Oracle
+ * lacks a specific integer data type. Except for explicitly mapping the return values for ID as
+ * an Integer, this test duplicates ConstructorResultNativeQueryTest.
+ *
  * @author Steve Ebersole
  */
-@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10323")
-public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10323")
+public class OracleConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@Entity( name = "Person" )
 	@SqlResultSetMappings(
 			value = {
@@ -46,7 +53,7 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 									@ConstructorResult(
 											targetClass = Person.class,
 											columns = {
-													@ColumnResult( name = "id" ),
+													@ColumnResult( name = "id", type = Integer.class),
 													@ColumnResult( name = "p_name" )
 											}
 									)
@@ -58,14 +65,14 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 									@ConstructorResult(
 											targetClass = Person.class,
 											columns = {
-													@ColumnResult( name = "id" ),
+													@ColumnResult( name = "id", type=Integer.class ),
 													@ColumnResult( name = "p_name" )
 											}
 									),
 									@ConstructorResult(
 											targetClass = Person.class,
 											columns = {
-													@ColumnResult( name = "id2" ),
+													@ColumnResult( name = "id2", type=Integer.class ),
 													@ColumnResult( name = "p_name2" )
 											}
 									)
@@ -77,7 +84,7 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 									@ConstructorResult(
 											targetClass = Person.class,
 											columns = {
-													@ColumnResult( name = "id" ),
+													@ColumnResult( name = "id", type=Integer.class ),
 													@ColumnResult( name = "p_name" ),
 													@ColumnResult( name = "p_weight", type=String.class )
 											}
@@ -105,10 +112,8 @@ public class ConstructorResultNativeQueryTest extends BaseEntityManagerFunctiona
 				)
 			}
 	)
-	@Table(name = "person")
 	public static class Person {
 		@Id
-		@Column(name = "id")
 		private Integer id;
 		@Column( name = "p_name" )
 		private String name;

@@ -33,7 +33,7 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] {org.hibernate.jpa.test.query.NamedQueryTest.Game.class};
+		return new Class[] { org.hibernate.orm.test.jpa.query.NamedQueryTest.Game.class};
 	}
 
 	@Before
@@ -41,7 +41,7 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 			throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( String title : GAME_TITLES ) {
-				org.hibernate.jpa.test.query.NamedQueryTest.Game game = new org.hibernate.jpa.test.query.NamedQueryTest.Game(
+				org.hibernate.orm.test.jpa.query.NamedQueryTest.Game game = new org.hibernate.orm.test.jpa.query.NamedQueryTest.Game(
 						title );
 				session.save( game );
 			}

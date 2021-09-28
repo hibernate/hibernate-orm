@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.notNullValue;
@@ -80,6 +81,7 @@ public class EntityResultTests extends AbstractUsageTest {
 					final SimpleEntityWithNamedMappings entity = results.get( 0 );
 					assertThat( entity.getId(), is( 1 ) );
 					assertThat( entity.getName(), is( "test" ) );
+					assertThat( entity.getNotes(), is( "notes" ) );
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "entity" );
@@ -109,6 +111,7 @@ public class EntityResultTests extends AbstractUsageTest {
 					final SimpleEntityWithNamedMappings entity = results.get( 0 );
 					assertThat( entity.getId(), is( 1 ) );
 					assertThat( entity.getName(), is( "test" ) );
+					assertThat( entity.getNotes(), is( "notes" ) );
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "entity-none" );
@@ -137,7 +140,8 @@ public class EntityResultTests extends AbstractUsageTest {
 
 					final SimpleEntityWithNamedMappings entity = results.get( 0 );
 					assertThat( entity.getId(), is( 1 ) );
-					assertThat( entity.getName(), is( "test" ) );
+					assertThat( entity.getName(), is( nullValue() ) );
+					assertThat( entity.getNotes(), is( "notes" ) );
 
 					// todo (6.0) : should also try executing the ProcedureCall once that functionality is implemented
 					session.createStoredProcedureCall( "abc", "entity-id-notes" );

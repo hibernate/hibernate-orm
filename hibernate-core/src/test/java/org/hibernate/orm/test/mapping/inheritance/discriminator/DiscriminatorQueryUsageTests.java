@@ -8,6 +8,8 @@ package org.hibernate.orm.test.mapping.inheritance.discriminator;
 
 import jakarta.persistence.Tuple;
 
+import org.hibernate.query.spi.QueryImplementor;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -16,6 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import org.assertj.core.api.Assertions;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -68,10 +72,17 @@ public class DiscriminatorQueryUsageTests {
 	@Test
 	public void testUsageAsPredicateWithParamOfUnderlyingType(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			final Long id = session.createQuery( "select p.id from Person p where type(p) = :type", Long.class )
-					.setParameter( "type", "E" )
-					.uniqueResult();
-			Assertions.assertThat( id ).isEqualTo( steveId );
+			QueryImplementor<Long> query = session.createQuery(
+					"select p.id from Person p where type(p) = :type",
+					Long.class
+			);
+			try {
+				query.setParameter( "type", "E" );
+				fail( "Expected that setting the underlying type for a parameter of type Class<?> to fail!" );
+			}
+			catch (IllegalArgumentException ex) {
+				// We expect this to fail
+			}
 		} );
 	}
 

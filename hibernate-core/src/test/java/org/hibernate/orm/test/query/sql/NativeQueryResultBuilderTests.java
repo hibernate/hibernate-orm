@@ -194,9 +194,9 @@ public class NativeQueryResultBuilderTests {
 					assertThat( results.size(), is( 1 ) );
 
 					final Object result = results.get( 0 );
-					assertThat( result, instanceOf( String.class ) );
+					assertThat( result, instanceOf( Character.class ) );
 
-					assertThat( result, is( "O" ) );
+					assertThat( result, is( 'O' ) );
 				}
 		);
 

@@ -92,8 +92,8 @@ public class ParameterTests extends BaseSqmUnitTest {
 		try (Session session = sessionFactory().openSession()) {
 			final Query query = session.createQuery( "select p.id from Person p where p.anniversary between :start and :end" );
 
-			query.setParameter( "start", Instant.now().minus( 7, ChronoUnit.DAYS ), TemporalType.TIMESTAMP );
-			query.setParameter( "end", Instant.now().plus( 7, ChronoUnit.DAYS ), TemporalType.TIMESTAMP );
+			query.setParameter( "start", Date.from( Instant.now().minus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
+			query.setParameter( "end", Date.from( Instant.now().plus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
 
 			final QueryParameterBindings bindings = ( (ExecutionContext) query ).getQueryParameterBindings();
 

@@ -279,7 +279,8 @@ public enum Database {
 		}
 		private boolean isASE(String databaseName) {
 			return "Sybase SQL Server".equals( databaseName )
-				|| "Adaptive Server Enterprise".equals( databaseName );
+				|| "Adaptive Server Enterprise".equals( databaseName )
+					|| "ASE".equals( databaseName );
 		}
 		@Override
 		public boolean productNameMatches(String productName) {

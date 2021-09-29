@@ -37,10 +37,12 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -85,6 +87,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -100,9 +103,16 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 					return jdbcTypeDescriptorRegistry.getDescriptor( Types.SMALLINT );
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
+	@Override
 	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
 		if ( jtdsDriver && TinyIntTypeDescriptor.INSTANCE == jdbcTypeDescriptor ) {
 			return SmallIntTypeDescriptor.INSTANCE;
@@ -174,6 +184,19 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 			);
 			typeContributions.contributeJdbcTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING );
 		}
+
+		// Sybase requires a custom binder for binding untyped nulls with the NULL type
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override

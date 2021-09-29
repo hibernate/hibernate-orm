@@ -18,7 +18,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
-import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -119,8 +118,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
-			//noinspection unchecked
-			bindType = (AllowableParameterType<T>) NullType.INSTANCE;
+			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
 		}
 		bindValue( value );
 	}
@@ -297,19 +295,24 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setType(MappingModelExpressable type) {
+	public boolean setType(MappingModelExpressable type) {
 		this.type = type;
-		if ( bindType == null ) {
+		if ( bindType == null || bindType.getJavaType() == Object.class ) {
 			if ( type instanceof AllowableParameterType<?> ) {
+				final boolean changed = bindType != null && type != bindType;
 				this.bindType = (AllowableParameterType<T>) type;
+				return changed;
 			}
 			else if ( type instanceof BasicValuedMapping ) {
 				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
 				if ( jdbcMapping instanceof AllowableParameterType<?> ) {
+					final boolean changed = bindType != null && jdbcMapping != bindType;
 					this.bindType = (AllowableParameterType<T>) jdbcMapping;
+					return changed;
 				}
 			}
 		}
+		return false;
 	}
 
 	private void validate(T value) {

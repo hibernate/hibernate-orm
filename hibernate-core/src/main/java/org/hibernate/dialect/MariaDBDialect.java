@@ -17,6 +17,7 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.CastType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -92,6 +93,26 @@ public class MariaDBDialect extends MySQLDialect {
 		};
 	}
 
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( to == CastType.INTEGER_BOOLEAN ) {
+			switch ( from ) {
+				case STRING:
+				case INTEGER:
+				case LONG:
+				case YN_BOOLEAN:
+				case TF_BOOLEAN:
+				case BOOLEAN:
+					break;
+				default:
+					// MariaDB doesn't support casting to bit
+					return "abs(sign(?1))";
+			}
+		}
+		return super.castPattern( from, to );
+	}
+
+	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}

@@ -24,4 +24,13 @@ public class NullType extends JavaObjectType {
 	public NullType() {
 		super( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE, JavaObjectTypeDescriptor.INSTANCE );
 	}
+
+	public NullType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Object> javaTypeDescriptor) {
+		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	}
+
+	@Override
+	public String getName() {
+		return "null";
+	}
 }

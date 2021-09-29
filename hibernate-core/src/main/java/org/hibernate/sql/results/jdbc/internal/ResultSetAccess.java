@@ -9,10 +9,10 @@ package org.hibernate.sql.results.jdbc.internal;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 
-import javax.persistence.EnumType;
+import jakarta.persistence.EnumType;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
@@ -77,18 +77,22 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {
 			final ResultSetMetaData metaData = getResultSet().getMetaData();
+			final String columnTypeName = metaData.getColumnTypeName( position );
 			final int columnType = metaData.getColumnType( position );
 			final int scale = metaData.getScale( position );
 			final int precision = metaData.getPrecision( position );
-			final int length;
-			if ( columnType == Types.CHAR && precision == 0 ) {
-				length = metaData.getColumnDisplaySize( position );
-			}
-			else {
-				length = precision;
-			}
-			final JdbcTypeDescriptor resolvedJdbcTypeDescriptor = jdbcServices.getDialect()
+			final int displaySize = metaData.getColumnDisplaySize( position );
+			final Dialect dialect = jdbcServices.getDialect();
+			final int length = dialect.resolveSqlTypeLength(
+					columnTypeName,
+					columnType,
+					precision,
+					scale,
+					displaySize
+			);
+			final JdbcTypeDescriptor resolvedJdbcTypeDescriptor = dialect
 					.resolveSqlTypeDescriptor(
+							columnTypeName,
 							columnType,
 							length,
 							scale,

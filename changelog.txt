@@ -3,6 +3,21 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.23.Final (September 29, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31973
+
+** Bug
+    * [HHH-14840] - IBM Db2 11.1 fails on TransientOverride test cases
+    * [HHH-14796] - Cannot replace an existing JPQL NamedQuery with a native NamedQuery
+    * [HHH-14790] - Fix Gradle build failure with JDK 11
+
+** Deprecation
+    * [HHH-14847] - Deprecate JMX integration
+    * [HHH-14845] - Deprecate JACC integration
+
+
 Changes in 5.3.22.Final (August 20, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

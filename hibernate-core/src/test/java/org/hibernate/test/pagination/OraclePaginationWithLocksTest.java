@@ -97,30 +97,6 @@ public class OraclePaginationWithLocksTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testNativeQueryWithSpaces() {
-		inTransaction( session -> {
-			final List<Person> people = session.createNativeQuery(
-					"select  p.name from Person p where p.id = 1 for update" )
-					.setMaxResults( 10 )
-					.list();
-		} );
-
-		inTransaction( session -> {
-			Person p = new Person();
-			p.setName( " this is a  string with spaces  " );
-			session.persist( p );
-		} );
-
-		inTransaction( session -> {
-			final List<Person> people = session.createNativeQuery(
-					"select p.name from Person p where p.name =  ' this is a  string with spaces  ' for update" )
-					.setMaxResults( 10 )
-					.list();
-			assertEquals( 1, people.size() );
-		} );
-	}
-
-	@Test
 	public void testCriteriaQuery() {
 		inTransaction(
 				session -> {

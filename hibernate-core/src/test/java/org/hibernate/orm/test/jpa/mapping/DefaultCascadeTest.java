@@ -82,7 +82,7 @@ public class DefaultCascadeTest {
 	public static class EJB3DDMappingProvider extends NonStringValueSettingProvider {
 		@Override
 		public String getKey() {
-			return AvailableSettings.XML_FILE_NAMES;
+			return AvailableSettings.ORM_XML_FILES;
 		}
 
 		@Override

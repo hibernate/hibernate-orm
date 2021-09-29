@@ -19,7 +19,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
@@ -279,7 +279,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		addPackageToClasspath( testPackage );
 
 		HashMap properties = new HashMap();
-		properties.put( AvailableSettings.JTA_DATASOURCE, null );
+		properties.put( AvailableSettings.JPA_JTA_DATASOURCE, null );
 		Properties p = new Properties();
 		p.load( ConfigHelper.getResourceAsStream( "/overridenpar.properties" ) );
 		properties.putAll( p );

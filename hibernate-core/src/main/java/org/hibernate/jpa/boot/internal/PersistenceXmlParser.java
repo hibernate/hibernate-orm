@@ -267,51 +267,50 @@ public class PersistenceXmlParser {
 
 					// per JPA spec, any settings passed in to PersistenceProvider bootstrap methods should override
 					// values found in persistence.xml
-
-					if ( integration.containsKey( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) ) {
+					if ( integration.containsKey( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) ) {
+						persistenceUnit.setProviderClassName( (String) integration.get( AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ) );
+					}
+					else if ( integration.containsKey( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) ) {
 						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 								AvailableSettings.JPA_PERSISTENCE_PROVIDER,
-								AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER
+								AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER
 						);
 						persistenceUnit.setProviderClassName( (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER ) );
-					}
-					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER ) ) {
-						persistenceUnit.setProviderClassName( (String) integration.get( AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER ) );
 					}
 
 					if ( integration.containsKey( AvailableSettings.JPA_TRANSACTION_TYPE ) ) {
 						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 								AvailableSettings.JPA_TRANSACTION_TYPE,
-								AvailableSettings.JAKARTA_JPA_TRANSACTION_TYPE
+								AvailableSettings.JAKARTA_TRANSACTION_TYPE
 						);
 						String transactionType = (String) integration.get( AvailableSettings.JPA_TRANSACTION_TYPE );
 						persistenceUnit.setTransactionType( parseTransactionType( transactionType ) );
 					}
-					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_TRANSACTION_TYPE ) ) {
-						String transactionType = (String) integration.get( AvailableSettings.JAKARTA_JPA_TRANSACTION_TYPE );
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_TRANSACTION_TYPE ) ) {
+						String transactionType = (String) integration.get( AvailableSettings.JAKARTA_TRANSACTION_TYPE );
 						persistenceUnit.setTransactionType( parseTransactionType( transactionType ) );
 					}
 
 					if ( integration.containsKey( AvailableSettings.JPA_JTA_DATASOURCE ) ) {
 						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 								AvailableSettings.JPA_JTA_DATASOURCE,
-								AvailableSettings.JAKARTA_JPA_JTA_DATASOURCE
+								AvailableSettings.JAKARTA_JTA_DATASOURCE
 						);
 						persistenceUnit.setJtaDataSource( integration.get( AvailableSettings.JPA_JTA_DATASOURCE ) );
 					}
-					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_JTA_DATASOURCE ) ) {
-						persistenceUnit.setJtaDataSource( integration.get( AvailableSettings.JAKARTA_JPA_JTA_DATASOURCE ) );
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_JTA_DATASOURCE ) ) {
+						persistenceUnit.setJtaDataSource( integration.get( AvailableSettings.JAKARTA_JTA_DATASOURCE ) );
 					}
 
 					if ( integration.containsKey( AvailableSettings.JPA_NON_JTA_DATASOURCE ) ) {
 						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 								AvailableSettings.JPA_NON_JTA_DATASOURCE,
-								AvailableSettings.JAKARTA_JPA_NON_JTA_DATASOURCE
+								AvailableSettings.JAKARTA_NON_JTA_DATASOURCE
 						);
 						persistenceUnit.setNonJtaDataSource( integration.get( AvailableSettings.JPA_NON_JTA_DATASOURCE ) );
 					}
-					else if ( integration.containsKey( AvailableSettings.JAKARTA_JPA_NON_JTA_DATASOURCE ) ) {
-						persistenceUnit.setNonJtaDataSource( integration.get( AvailableSettings.JAKARTA_JPA_NON_JTA_DATASOURCE ) );
+					else if ( integration.containsKey( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE ) ) {
+						persistenceUnit.setNonJtaDataSource( integration.get( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE ) );
 					}
 
 					decodeTransactionType( persistenceUnit );

@@ -123,7 +123,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 }

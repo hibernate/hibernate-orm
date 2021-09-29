@@ -13,8 +13,8 @@ import jakarta.persistence.PessimisticLockScope;
 
 import org.hibernate.LockOptions;
 
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 
@@ -36,7 +36,7 @@ public final class LockOptionsHelper {
 		String lockScopeHint = JPA_LOCK_SCOPE;
 		Object lockScope = props.get( lockScopeHint );
 		if ( lockScope == null ) {
-			lockScopeHint = JAKARTA_JPA_LOCK_SCOPE;
+			lockScopeHint = JAKARTA_LOCK_SCOPE;
 			lockScope = props.get( lockScopeHint );
 		}
 		if ( lockScope instanceof String && PessimisticLockScope.valueOf( (String) lockScope ) == PessimisticLockScope.EXTENDED ) {
@@ -53,7 +53,7 @@ public final class LockOptionsHelper {
 		String timeoutHint = JPA_LOCK_TIMEOUT;
 		Object lockTimeout = props.get( timeoutHint );
 		if (lockTimeout == null) {
-			timeoutHint = JAKARTA_JPA_LOCK_TIMEOUT;
+			timeoutHint = JAKARTA_LOCK_TIMEOUT;
 			lockTimeout = props.get( timeoutHint );
 		}
 		int timeout = 0;

@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 
 import org.jboss.logging.Logger;
@@ -103,16 +104,21 @@ public final class ProviderChecker {
 		if ( integration == null ) {
 			return null;
 		}
-		String setting = (String) integration.get(AvailableSettings.JPA_PERSISTENCE_PROVIDER);
-		if ( setting == null ) {
-			setting = (String) integration.get(AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER);
-		}
-		else {
-			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-					AvailableSettings.JPA_PERSISTENCE_PROVIDER,
-					AvailableSettings.JAKARTA_JPA_PERSISTENCE_PROVIDER
-			);
-		}
+
+		final String setting = NullnessHelper.coalesceSuppliedValues(
+				() -> (String) integration.get(AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER ),
+				() -> {
+					final String value = (String) integration.get( AvailableSettings.JPA_PERSISTENCE_PROVIDER );
+					if ( value != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								AvailableSettings.JPA_PERSISTENCE_PROVIDER,
+								AvailableSettings.JAKARTA_PERSISTENCE_PROVIDER
+						);
+					}
+					return value;
+				}
+		);
+
 		return setting == null ? null : setting.trim();
 	}
 

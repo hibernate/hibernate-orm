@@ -4,9 +4,6 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-
-//$Id$
-
 package org.hibernate.jpa.test;
 
 import java.io.ByteArrayInputStream;
@@ -27,8 +24,8 @@ import jakarta.persistence.Query;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.stat.Statistics;
@@ -334,7 +331,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 			// success
 		}
 
-		assertTrue( properties.containsKey( AvailableSettings.FLUSH_MODE ) );
+		assertTrue( properties.containsKey( org.hibernate.cfg.AvailableSettings.FLUSH_MODE ) );
 	}
 
 	@Test
@@ -347,7 +344,7 @@ public class EntityManagerTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 
 		em.clear();
-		assertEquals( em.getProperties().get( AvailableSettings.FLUSH_MODE ), "AUTO" );
+		assertEquals( em.getProperties().get( org.hibernate.cfg.AvailableSettings.FLUSH_MODE ), "AUTO" );
 		assertNotNull(
 				"With default settings the entity should be persisted on commit.",
 				em.find( Wallet.class, wallet.getSerial() )

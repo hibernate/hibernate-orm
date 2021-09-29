@@ -18,7 +18,7 @@
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <!-- custom scanner test -->
-            <property name="hibernate.ejb.resource_scanner" value="org.hibernate.orm.test.bootstrap.scanning.CustomScanner"/>
+            <property name="hibernate.archive.scanner" value="org.hibernate.orm.test.bootstrap.scanning.CustomScanner"/>
 
             <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>
@@ -35,20 +35,14 @@
             <property name="hibernate.generate_statistics" value="true"/>
 			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
             <property name="hibernate.physical_naming_strategy" value="org.hibernate.jpa.test.MyNamingStrategy"/>
-            <!-- test naming strategy and fall back to element content -->
-            <!-- property name="hibernate.ejb.naming_strategy">MyNamingStrategy</property -->
 
             <!-- cache configuration -->
-            <property name="hibernate.ejb.classcache.org.hibernate.jpa.test.Item" value="read-write"/>
-            <property name="hibernate.ejb.collectioncache.org.hibernate.jpa.test.Item.distributors"
+            <property name="hibernate.classcache.org.hibernate.jpa.test.Item" value="read-write"/>
+            <property name="hibernate.collectioncache.org.hibernate.jpa.test.Item.distributors"
                       value="read-write, RegionName"/>
 
             <!-- event overriding -->
-            <property name="hibernate.ejb.event.pre-insert" value="org.hibernate.jpa.test.NoOpListener"/>
-            <!-- remove JACC and validator -->
-
-            <!-- alternatively to <class> and <property> declarations, you can use a regular hibernate.cfg.xml file -->
-            <!-- property name="hibernate.ejb.cfgfile" value="/resource-path/to/hibernate.cfg.xml"/ -->
+            <property name="hibernate.event.listener.pre-insert" value="org.hibernate.jpa.test.NoOpListener"/>
         </properties>
     </persistence-unit>
 </persistence>

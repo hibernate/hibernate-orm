@@ -6,19 +6,19 @@
  */
 package org.hibernate.orm.test.jpa.ejb3configuration.id;
 
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
+import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
@@ -32,7 +32,8 @@ public class IdentifierGeneratorStrategyProviderTest {
 				AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
 				FunkyIdentifierGeneratorProvider.class.getName()
 		);
-		settings.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( Cable.class ) );
+
+		settings.put( org.hibernate.cfg.AvailableSettings.LOADED_CLASSES, Collections.singletonList( Cable.class ) );
 
 		final EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 				new PersistenceUnitInfoAdapter(),

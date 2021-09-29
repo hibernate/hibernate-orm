@@ -77,9 +77,7 @@ public class GeneratedValueTests extends BaseUnitTestCase {
 
 	@Test
 	public void testImplicitSequenceGenerator() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.applySetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, "false" )
-				.build()) {
+		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
 			final Metadata bootModel = new MetadataSources( ssr )
 					.addAnnotatedClass( ImplicitSequenceGeneratorEntity.class )
 					.buildMetadata();

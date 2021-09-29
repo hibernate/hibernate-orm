@@ -22,16 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.StoredProcedureQuery;
-import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
@@ -59,6 +49,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
@@ -112,7 +103,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -140,10 +130,21 @@ import org.hibernate.stat.SessionStatistics;
 import org.hibernate.stat.internal.SessionStatisticsImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_SCOPE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_SHARED_CACHE_STORE_MODE;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.TransactionRequiredException;
+
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
@@ -281,10 +282,10 @@ public class SessionImpl
 		final Object lockTimeout;
 		final Object jpaLockTimeout = getSessionProperty( JPA_LOCK_TIMEOUT );
 		if ( jpaLockTimeout == null ) {
-			lockTimeout = getSessionProperty( JAKARTA_JPA_LOCK_TIMEOUT );
+			lockTimeout = getSessionProperty( JAKARTA_LOCK_TIMEOUT );
 		}
 		else if ( Integer.valueOf( LockOptions.WAIT_FOREVER ).equals( jpaLockTimeout ) ) {
-			final Object jakartaLockTimeout = getSessionProperty( JAKARTA_JPA_LOCK_TIMEOUT );
+			final Object jakartaLockTimeout = getSessionProperty( JAKARTA_LOCK_TIMEOUT );
 			if ( jakartaLockTimeout == null ) {
 				lockTimeout = jpaLockTimeout;
 			}
@@ -2361,7 +2362,7 @@ public class SessionImpl
 	private static CacheRetrieveMode determineCacheRetrieveMode(Map<String, Object> settings) {
 		final CacheRetrieveMode cacheRetrieveMode = (CacheRetrieveMode) settings.get( JPA_SHARED_CACHE_RETRIEVE_MODE );
 		if ( cacheRetrieveMode == null ) {
-			return (CacheRetrieveMode) settings.get( JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE );
+			return (CacheRetrieveMode) settings.get( JAKARTA_SHARED_CACHE_RETRIEVE_MODE );
 		}
 		return cacheRetrieveMode;
 	}
@@ -2369,7 +2370,7 @@ public class SessionImpl
 	private static CacheStoreMode determineCacheStoreMode(Map<String, Object> settings) {
 		final CacheStoreMode cacheStoreMode = (CacheStoreMode) settings.get( JPA_SHARED_CACHE_STORE_MODE );
 		if ( cacheStoreMode == null ) {
-			return ( CacheStoreMode ) settings.get( JAKARTA_JPA_SHARED_CACHE_STORE_MODE );
+			return ( CacheStoreMode ) settings.get( JAKARTA_SHARED_CACHE_STORE_MODE );
 		}
 		return cacheStoreMode;
 	}
@@ -2530,13 +2531,13 @@ public class SessionImpl
 			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 		}
 		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals( propertyName )
-				|| JAKARTA_JPA_LOCK_SCOPE.equals( propertyName ) || JAKARTA_JPA_LOCK_TIMEOUT.equals( propertyName ) ) {
+				|| JAKARTA_LOCK_SCOPE.equals( propertyName ) || JAKARTA_LOCK_TIMEOUT.equals( propertyName ) ) {
 			LockOptionsHelper.applyPropertiesToLockOptions( properties, this::getLockOptionsForWrite );
 		}
 		else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
 				|| JPA_SHARED_CACHE_STORE_MODE.equals( propertyName )
-				|| JAKARTA_JPA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
-				|| JAKARTA_JPA_SHARED_CACHE_STORE_MODE.equals( propertyName ) ) {
+				|| JAKARTA_SHARED_CACHE_RETRIEVE_MODE.equals( propertyName )
+				|| JAKARTA_SHARED_CACHE_STORE_MODE.equals( propertyName ) ) {
 			setCacheMode(
 					CacheModeHelper.interpretCacheMode(
 							determineCacheStoreMode( properties ),

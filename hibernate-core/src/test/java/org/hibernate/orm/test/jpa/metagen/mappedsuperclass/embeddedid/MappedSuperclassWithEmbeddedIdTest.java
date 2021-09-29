@@ -9,8 +9,8 @@ package org.hibernate.orm.test.jpa.metagen.mappedsuperclass.embeddedid;
 import jakarta.persistence.EntityManagerFactory;
 import java.util.Arrays;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
-import org.hibernate.jpa.AvailableSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;

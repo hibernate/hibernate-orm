@@ -25,7 +25,6 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -199,7 +198,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 	protected void addMappings(Map settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
-			settings.put( AvailableSettings.HBXML_FILES, String.join( ",", mappings ) );
+			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
 		}
 	}
 
@@ -226,7 +225,7 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<String>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( AvailableSettings.XML_FILE_NAMES, dds );
+			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
 		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );

@@ -37,7 +37,7 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 		Thread thread = new Thread( () -> {
 			try {
 				final Properties props = new Properties();
-				props.setProperty( AvailableSettings.CFG_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
+				props.setProperty( AvailableSettings.CFG_XML_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
 
 				Persistence.createEntityManagerFactory( "ExcludeUnlistedClassesTest1", props );
 			}

@@ -46,6 +46,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -72,12 +73,17 @@ import static org.hibernate.LockMode.UPGRADE;
 import static org.hibernate.LockOptions.NONE;
 import static org.hibernate.LockOptions.READ;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_RETRIEVE_MODE;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_SHARED_CACHE_STORE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_RETRIEVE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_STORE_MODE;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.nullif;
-import static org.hibernate.jpa.AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE;
+import static org.hibernate.annotations.QueryHints.NATIVE_LOCKMODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.QueryHints.HINT_CACHE_REGION;
@@ -90,6 +96,8 @@ import static org.hibernate.jpa.QueryHints.HINT_LOADGRAPH;
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_SPACES;
 import static org.hibernate.jpa.QueryHints.HINT_READONLY;
 import static org.hibernate.jpa.QueryHints.HINT_TIMEOUT;
+import static org.hibernate.jpa.QueryHints.JAKARTA_HINT_FETCH_GRAPH;
+import static org.hibernate.jpa.QueryHints.JAKARTA_HINT_LOAD_GRAPH;
 import static org.hibernate.jpa.QueryHints.SPEC_HINT_TIMEOUT;
 
 /**
@@ -387,16 +395,18 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		if ( getLockOptions().getTimeOut() != WAIT_FOREVER ) {
 			hints.put( JPA_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
+			hints.put( JAKARTA_LOCK_TIMEOUT, getLockOptions().getTimeOut() );
 		}
 
 		if ( getLockOptions().getScope() ) {
 			hints.put( JPA_LOCK_SCOPE, getLockOptions().getScope() );
+			hints.put( JAKARTA_LOCK_SCOPE, getLockOptions().getScope() );
 		}
 
 		if ( getLockOptions().hasAliasSpecificLockModes() ) {
 			for ( Map.Entry<String, LockMode> entry : getLockOptions().getAliasSpecificLocks() ) {
 				hints.put(
-						ALIAS_SPECIFIC_LOCK_MODE + '.' + entry.getKey(),
+						NATIVE_LOCKMODE + '.' + entry.getKey(),
 						entry.getValue().name()
 				);
 			}
@@ -408,6 +418,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
+			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.interpretCacheRetrieveMode( getCacheMode() ) );
+			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.interpretCacheStoreMode( getCacheMode() ) );
 			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.interpretCacheRetrieveMode( getCacheMode() ) );
 			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, CacheModeHelper.interpretCacheStoreMode( getCacheMode() ) );
 		}
@@ -475,6 +487,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			else if ( HINT_CACHE_MODE.equals( hintName ) ) {
 				applied = applyCacheModeHint( ConfigurationHelper.getCacheMode( value ) );
 			}
+			else if ( JAKARTA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
+				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
+				applied = applyJpaCacheRetrieveMode( retrieveMode );
+			}
+			else if ( JAKARTA_SHARED_CACHE_STORE_MODE.equals( hintName ) ) {
+				final CacheStoreMode storeMode = value != null ? CacheStoreMode.valueOf( value.toString() ) : null;
+				applied = applyJpaCacheStoreMode( storeMode );
+			}
 			else if ( JPA_SHARED_CACHE_RETRIEVE_MODE.equals( hintName ) ) {
 				final CacheRetrieveMode retrieveMode = value != null ? CacheRetrieveMode.valueOf( value.toString() ) : null;
 				applied = applyJpaCacheRetrieveMode( retrieveMode );
@@ -486,9 +506,9 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			else if ( QueryHints.HINT_NATIVE_LOCKMODE.equals( hintName ) ) {
 				applied = applyNativeQueryLockMode( value );
 			}
-			else if ( hintName.startsWith( ALIAS_SPECIFIC_LOCK_MODE ) ) {
+			else if ( hintName.startsWith( NATIVE_LOCKMODE ) ) {
 				// extract the alias
-				final String alias = hintName.substring( ALIAS_SPECIFIC_LOCK_MODE.length() + 1 );
+				final String alias = hintName.substring( NATIVE_LOCKMODE.length() + 1 );
 				// determine the LockMode
 				try {
 					final LockMode lockMode = LockModeTypeHelper.interpretLockMode( value );
@@ -500,15 +520,38 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					applied = false;
 				}
 			}
-			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
-				if (value instanceof RootGraphImplementor ) {
+			else if ( JAKARTA_HINT_FETCH_GRAPH.equals( hintName ) || JAKARTA_HINT_LOAD_GRAPH.equals( hintName ) ) {
+				if ( value instanceof RootGraphImplementor ) {
 					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
 				}
 				else {
+					// https://hibernate.atlassian.net/browse/HHH-14855 - accepting a String parseable
+					// via the Graph Language parser here would be a nice feature
 					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
 				}
 				applied = true;
 			}
+			else if ( HINT_FETCHGRAPH.equals( hintName ) || HINT_LOADGRAPH.equals( hintName ) ) {
+				if ( HINT_FETCHGRAPH.equals( hintName ) ) {
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
+				}
+				else {
+					assert HINT_LOADGRAPH.equals( hintName );
+					DEPRECATION_LOGGER.deprecatedSetting( HINT_FETCHGRAPH, JAKARTA_HINT_FETCH_GRAPH );
+				}
+
+				if ( value instanceof RootGraphImplementor ) {
+					applyEntityGraphQueryHint( hintName, (RootGraphImplementor<?>) value );
+				}
+				else {
+					// https://hibernate.atlassian.net/browse/HHH-14855 - accepting a String parseable
+					// via the Graph Language parser here would be a nice feature
+					log.warnf( "The %s hint was set, but the value was not an EntityGraph!", hintName );
+				}
+				applied = true;
+			}
+
+
 			else if ( HINT_FOLLOW_ON_LOCKING.equals( hintName ) ) {
 				applied = applyFollowOnLockingHint( ConfigurationHelper.getBoolean( value ) );
 			}

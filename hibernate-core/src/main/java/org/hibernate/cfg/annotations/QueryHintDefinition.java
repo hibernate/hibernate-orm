@@ -135,7 +135,7 @@ public class QueryHintDefinition {
 		LockModeType lockModeType = namedQueryAnnotation.lockMode();
 		Integer lockTimeoutHint = getInteger( AvailableSettings.JPA_LOCK_TIMEOUT );
 		if ( lockTimeoutHint == null ) {
-			lockTimeoutHint = getInteger( AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT );
+			lockTimeoutHint = getInteger( AvailableSettings.JAKARTA_LOCK_TIMEOUT );
 		}
 		Boolean followOnLocking = getBoolean( QueryHints.FOLLOW_ON_LOCKING );
 

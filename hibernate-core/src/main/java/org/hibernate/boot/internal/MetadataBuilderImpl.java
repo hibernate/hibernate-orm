@@ -592,7 +592,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sharedCacheMode = configService.getSetting(
-					AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE,
+					AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
 					value -> {
 						if ( value == null ) {
 							return null;
@@ -613,7 +613,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 								DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
 										AvailableSettings.JPA_SHARED_CACHE_MODE,
-										AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE
+										AvailableSettings.JAKARTA_SHARED_CACHE_MODE
 								);
 
 								if ( value instanceof SharedCacheMode ) {

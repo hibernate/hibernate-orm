@@ -15,16 +15,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.SharedCacheMode;
-import jakarta.persistence.ValidationMode;
-import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -35,6 +29,12 @@ import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.AfterEach;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.SharedCacheMode;
+import jakarta.persistence.ValidationMode;
+import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -122,23 +122,23 @@ public class EntityManagerFactoryBasedFunctionalTest
 		ArrayList<Class<?>> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
 			config.put(
-					org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
+					AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(),
 					entry.getValue()
 			);
 		}
 		for ( Map.Entry<String, String> entry : getCachedCollections().entrySet() ) {
 			config.put(
-					org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
+					AvailableSettings.COLLECTION_CACHE_PREFIX + "." + entry.getKey(),
 					entry.getValue()
 			);
 		}
 		if ( getEjb3DD().length > 0 ) {
 			ArrayList<String> dds = new ArrayList<>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
-			config.put( org.hibernate.jpa.AvailableSettings.XML_FILE_NAMES, dds );
+			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}
 
 		config.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
@@ -156,7 +156,7 @@ public class EntityManagerFactoryBasedFunctionalTest
 	protected void applySettings(Map<Object, Object> settings) {
 		String[] mappings = getMappings();
 		if ( mappings != null ) {
-			settings.put( org.hibernate.jpa.AvailableSettings.HBXML_FILES, String.join( ",", mappings ) );
+			settings.put( AvailableSettings.HBM_XML_FILES, String.join( ",", mappings ) );
 		}
 	}
 

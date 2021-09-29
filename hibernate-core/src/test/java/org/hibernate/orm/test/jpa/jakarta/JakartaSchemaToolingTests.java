@@ -28,10 +28,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.hibernate.cfg.AvailableSettings.HBM2DDL_DATABASE_ACTION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_DRIVER;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_URL;
-import static org.hibernate.cfg.AvailableSettings.JAKARTA_JPA_JDBC_USER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_DRIVER;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_PASSWORD;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_URL;
+import static org.hibernate.cfg.AvailableSettings.JAKARTA_JDBC_USER;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_PASSWORD;
 import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_URL;
@@ -50,7 +50,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_JDBC_USER;
 public class JakartaSchemaToolingTests {
 	@Test
 	public void testSchemaCreation() {
-		verifySchemaCreation( JAKARTA_HBM2DDL_DATABASE_ACTION, JAKARTA_JPA_JDBC_DRIVER, JAKARTA_JPA_JDBC_URL, JAKARTA_JPA_JDBC_USER, JAKARTA_JPA_JDBC_PASSWORD );
+		verifySchemaCreation( JAKARTA_HBM2DDL_DATABASE_ACTION, JAKARTA_JDBC_DRIVER, JAKARTA_JDBC_URL, JAKARTA_JDBC_USER, JAKARTA_JDBC_PASSWORD );
 		verifySchemaCreation( HBM2DDL_DATABASE_ACTION, JPA_JDBC_DRIVER, JPA_JDBC_URL, JPA_JDBC_USER, JPA_JDBC_PASSWORD );
 	}
 
@@ -89,13 +89,13 @@ public class JakartaSchemaToolingTests {
 		try ( SessionFactoryImplementor sessionFactory = buildSessionFactory(
 				JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP,
 				HBM2DDL_DATABASE_ACTION, Action.NONE,
-				JAKARTA_JPA_JDBC_DRIVER, Environment.getProperties().get( AvailableSettings.DRIVER ),
+				JAKARTA_JDBC_DRIVER, Environment.getProperties().get( AvailableSettings.DRIVER ),
 				JPA_JDBC_DRIVER, "does.not.exist",
-				JAKARTA_JPA_JDBC_URL, Environment.getProperties().get( AvailableSettings.URL ),
+				JAKARTA_JDBC_URL, Environment.getProperties().get( AvailableSettings.URL ),
 				JPA_JDBC_URL, "jdbc:na:nowhere",
-				JAKARTA_JPA_JDBC_USER, Environment.getProperties().get( AvailableSettings.USER ),
+				JAKARTA_JDBC_USER, Environment.getProperties().get( AvailableSettings.USER ),
 				JPA_JDBC_USER, "goofy",
-				JAKARTA_JPA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS ),
+				JAKARTA_JDBC_PASSWORD, Environment.getProperties().get( AvailableSettings.PASS ),
 				JPA_JDBC_PASSWORD, "goober"
 		) ) {
 			tryQuery( sessionFactory );

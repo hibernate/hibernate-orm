@@ -259,8 +259,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isPreferUserTransaction();
 
-	boolean isProcedureParameterNullPassingEnabled();
-
 	boolean isAllowOutOfTransactionUpdateOperations();
 
 	boolean isReleaseResourcesOnCloseEnabled();

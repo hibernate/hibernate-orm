@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class ConfigurationObjectSettingTest {
 	@Test
 	public void testSharedCacheMode() {
-		verifyCacheMode( AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE );
+		verifyCacheMode( AvailableSettings.JAKARTA_SHARED_CACHE_MODE );
 		verifyCacheMode( AvailableSettings.JPA_SHARED_CACHE_MODE );
 	}
 
@@ -104,7 +104,7 @@ public class ConfigurationObjectSettingTest {
 
 	@Test
 	public void testValidationMode() {
-		verifyValidationMode( AvailableSettings.JAKARTA_JPA_VALIDATION_MODE );
+		verifyValidationMode( AvailableSettings.JAKARTA_VALIDATION_MODE );
 		verifyValidationMode( AvailableSettings.JPA_VALIDATION_MODE );
 	}
 
@@ -161,7 +161,7 @@ public class ConfigurationObjectSettingTest {
 
 	@Test
 	public void testValidationFactory() {
-		verifyValidatorFactory( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY );
+		verifyValidatorFactory( AvailableSettings.JAKARTA_VALIDATION_FACTORY );
 		verifyValidatorFactory( AvailableSettings.JPA_VALIDATION_FACTORY );
 	}
 
@@ -189,10 +189,10 @@ public class ConfigurationObjectSettingTest {
 //	)
 	public void testJdbcSettings() {
 		verifyJdbcSettings(
-				AvailableSettings.JAKARTA_JPA_JDBC_URL,
-				AvailableSettings.JAKARTA_JPA_JDBC_DRIVER,
-				AvailableSettings.JAKARTA_JPA_JDBC_USER,
-				AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD
+				AvailableSettings.JAKARTA_JDBC_URL,
+				AvailableSettings.JAKARTA_JDBC_DRIVER,
+				AvailableSettings.JAKARTA_JDBC_USER,
+				AvailableSettings.JAKARTA_JDBC_PASSWORD
 		);
 		verifyJdbcSettings(
 				AvailableSettings.JPA_JDBC_URL,

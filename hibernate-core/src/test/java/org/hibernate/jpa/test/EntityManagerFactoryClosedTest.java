@@ -13,7 +13,7 @@ import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.jta.TestingJtaBootstrap;
 import org.hibernate.testing.jta.TestingJtaPlatformImpl;
@@ -35,7 +35,7 @@ public class EntityManagerFactoryClosedTest extends BaseEntityManagerFunctionalT
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare(options);
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
 	}
 
 	/**

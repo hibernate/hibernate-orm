@@ -138,6 +138,7 @@ dependencies {
     javadocClasspath libraries.jakarta_cdi
     javadocClasspath libraries.jakarta_jacc
     javadocClasspath libraries.ant
+    javadocClasspath libraries.postgresql
     javadocClasspath gradleApi()
 }
 

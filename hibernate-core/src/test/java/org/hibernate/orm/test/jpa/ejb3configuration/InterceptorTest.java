@@ -19,7 +19,7 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
@@ -87,7 +87,7 @@ public class InterceptorTest {
 	@Test
 	public void testDeprecatedConfiguredSessionInterceptor() {
 		Map settings = basicSettings();
-		settings.put( AvailableSettings.SESSION_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
+		settings.put( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
 
 		Item i = new Item();

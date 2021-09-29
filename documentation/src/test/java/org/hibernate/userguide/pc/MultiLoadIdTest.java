@@ -44,8 +44,6 @@ public class MultiLoadIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected void addMappings(Map settings) {
-//		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-//		settings.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
 		settings.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
 		sqlStatementInterceptor = new SQLStatementInterceptor( settings );
 	}

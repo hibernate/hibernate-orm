@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.ejb3configuration;
 import java.sql.SQLException;
 import java.util.Map;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.Wallet;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -42,7 +42,7 @@ public class DisableDiscardPersistenceContextOnCloseTest {
 	@BeforeAll
 	public void init(EntityManagerFactoryScope scope) {
 		Map props = scope.getEntityManagerFactory().getProperties();
-		connectionProvider = (PreparedStatementSpyConnectionProvider) props.get( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER );
+		connectionProvider = (PreparedStatementSpyConnectionProvider) props.get( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@AfterAll

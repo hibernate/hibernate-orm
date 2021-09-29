@@ -24,6 +24,8 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
@@ -62,13 +64,32 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				true
 		);
 
-		if ( configurationValues.containsKey( AvailableSettings.DIALECT_DB_NAME ) ) {
+		final Object dbName = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationValues.get( AvailableSettings.JAKARTA_HBM2DDL_DB_NAME ),
+				() -> {
+					final Object value = configurationValues.get( AvailableSettings.DIALECT_DB_NAME );
+					if ( value != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								AvailableSettings.DIALECT_DB_NAME,
+								AvailableSettings.JAKARTA_HBM2DDL_DB_NAME
+						);
+					}
+					return value;
+				}
+		);
+
+		NullnessHelper.coalesceSuppliedValues(
+				() -> AvailableSettings.JAKARTA_HBM2DDL_DB_VERSION,
+				() -> AvailableSettings.DIALECT_DB_VERSION
+		);
+
+		if ( dbName != null ) {
 			return new JdbcEnvironmentImpl( registry, dialectFactory.buildDialect(
 					configurationValues,
 					() -> new DialectResolutionInfo() {
 						@Override
 						public String getDatabaseName() {
-							return (String) configurationValues.get( AvailableSettings.DIALECT_DB_NAME );
+							return (String) dbName;
 						}
 
 						@Override

@@ -8,13 +8,14 @@ package org.hibernate.jpa;
 
 import java.io.Serializable;
 import java.util.List;
-import jakarta.persistence.EntityGraph;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.Metamodel;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.metamodel.EntityType;
 
 /**
  * Contract giving access to the underlying {@link org.hibernate.SessionFactory} from an {@link jakarta.persistence.EntityManagerFactory}
@@ -25,18 +26,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
  */
 @Deprecated
 public interface HibernateEntityManagerFactory extends EntityManagerFactory, Serializable {
-	/**
-	 * Obtain the underlying Hibernate SessionFactory.
-	 *
-	 * @return The underlying Hibernate SessionFactory
-	 *
-	 * @deprecated The expectation is that SessionFactory implementors also implement EntityManagerFactory; so this call
-	 * really should just return {@code this}
-	 */
-	@Deprecated
-	default SessionFactoryImplementor getSessionFactory() {
-		return (SessionFactoryImplementor) this;
-	}
 
 	/**
 	 * Find all  {@code EntityGraph}s associated with a given entity type.
@@ -52,6 +41,21 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	Metamodel getMetamodel();
 
 	/**
+	 * Obtain the underlying Hibernate SessionFactory.
+	 *
+	 * @return The underlying Hibernate SessionFactory
+	 *
+	 * @deprecated The expectation is that SessionFactory implementors also implement
+	 * EntityManagerFactory; so this call really should just return {@code this}.  As an
+	 * alternative, call {@link EntityManagerFactory#unwrap} passing {@code SessionFactoryImplementor.class}
+	 *
+	 */
+	@Deprecated
+	default SessionFactoryImplementor getSessionFactory() {
+		return (SessionFactoryImplementor) this;
+	}
+
+	/**
 	 * Returns the name of the factory. The name is either can be specified via the property <i>hibernate.ejb.entitymanager_factory_name</i>.
 	 * If the property is not set the persistence unit name is used. If persistence unit name is not available, a unique
 	 * name will be generated.
@@ -64,7 +68,7 @@ public interface HibernateEntityManagerFactory extends EntityManagerFactory, Ser
 	 */
 	@Deprecated
 	default String getEntityManagerFactoryName() {
-		return (String) getProperties().get( AvailableSettings.ENTITY_MANAGER_FACTORY_NAME );
+		return getSessionFactory().getName();
 	}
 
 	/**

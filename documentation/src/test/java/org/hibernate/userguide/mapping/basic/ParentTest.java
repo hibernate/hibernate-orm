@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Parent;
 import org.hibernate.annotations.Target;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

@@ -13,7 +13,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.ReplicationMode;
 import org.hibernate.Session;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.FailureExpected;

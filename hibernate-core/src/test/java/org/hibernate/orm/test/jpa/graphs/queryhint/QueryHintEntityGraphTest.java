@@ -18,7 +18,7 @@ import jakarta.persistence.Subgraph;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.graphs.Company;
 import org.hibernate.orm.test.jpa.graphs.CompanyFetchProfile;
 import org.hibernate.orm.test.jpa.graphs.Course;

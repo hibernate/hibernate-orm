@@ -35,8 +35,8 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanResult;
 import org.hibernate.boot.archive.spi.ArchiveDescriptor;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.pack.defaultpar.Version;
-import org.hibernate.jpa.test.pack.explodedpar.Carpet;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
+import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -121,7 +121,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		addPackageToClasspath( defaultPar );
 
 		ScanResult result = standardScan( defaultPar.toURL() );
-		validateResults( result, org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class, Version.class );
+		validateResults( result, org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class, Version.class );
 	}
 
 	private void validateResults(ScanResult scanResult, Class... expectedClasses) throws IOException {
@@ -172,7 +172,7 @@ public class JarVisitorTest extends PackagingTestCase {
 
 		validateResults(
 				collector.toScanResult(),
-				org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class,
+				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
 				Version.class
 		);
 
@@ -196,7 +196,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		);
 		validateResults(
 				collector.toScanResult(),
-				org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class,
+				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
 				Version.class
 		);
 	}
@@ -228,8 +228,8 @@ public class JarVisitorTest extends PackagingTestCase {
 
 		validateResults(
 				collector.toScanResult(),
-				org.hibernate.jpa.test.pack.war.ApplicationServer.class,
-				org.hibernate.jpa.test.pack.war.Version.class
+				org.hibernate.orm.test.jpa.pack.war.ApplicationServer.class,
+				org.hibernate.orm.test.jpa.pack.war.Version.class
 		);
 	}
 
@@ -241,7 +241,7 @@ public class JarVisitorTest extends PackagingTestCase {
 		ScanResult result = standardScan( defaultPar.toURL() );
 		validateResults(
 				result,
-				org.hibernate.jpa.test.pack.defaultpar.ApplicationServer.class,
+				org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer.class,
 				Version.class
 		);
 	}

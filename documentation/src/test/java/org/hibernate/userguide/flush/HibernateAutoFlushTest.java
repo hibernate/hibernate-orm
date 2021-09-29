@@ -13,9 +13,6 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 

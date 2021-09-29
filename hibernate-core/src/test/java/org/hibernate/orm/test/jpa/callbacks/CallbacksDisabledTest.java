@@ -9,8 +9,8 @@ package org.hibernate.orm.test.jpa.callbacks;
 import java.util.Date;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.Cat;
-import org.hibernate.jpa.test.Kitten;
+import org.hibernate.orm.test.jpa.Cat;
+import org.hibernate.orm.test.jpa.Kitten;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;

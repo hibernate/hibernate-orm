@@ -24,7 +24,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;

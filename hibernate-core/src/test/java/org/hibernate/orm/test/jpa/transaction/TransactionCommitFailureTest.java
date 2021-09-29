@@ -21,7 +21,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
-import org.hibernate.jpa.test.SettingsGenerator;
+import org.hibernate.orm.test.jpa.SettingsGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;

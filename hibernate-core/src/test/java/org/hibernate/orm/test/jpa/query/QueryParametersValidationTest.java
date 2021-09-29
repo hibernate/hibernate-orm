@@ -25,7 +25,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Type;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.TestForIssue;

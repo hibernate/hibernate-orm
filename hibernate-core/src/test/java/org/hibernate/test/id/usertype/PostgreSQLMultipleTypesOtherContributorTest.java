@@ -15,20 +15,17 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
-import org.hibernate.HibernateException;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.hibernate.test.id.usertype.inet.Event;
 import org.hibernate.test.id.usertype.inet.Inet;
 import org.hibernate.test.id.usertype.inet.InetType;
-import org.hibernate.test.id.usertype.inet.PostgreSQLInetTypesOtherTest;
 import org.hibernate.test.id.usertype.json.Json;
 import org.hibernate.test.id.usertype.json.JsonType;
 import org.junit.Test;

@@ -15,7 +15,7 @@ import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.TestForIssue;

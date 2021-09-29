@@ -18,7 +18,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.envers.AuditReaderFactory;
 import org.hibernate.envers.Audited;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

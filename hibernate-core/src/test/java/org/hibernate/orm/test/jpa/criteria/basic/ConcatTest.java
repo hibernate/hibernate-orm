@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.Root;
 import java.io.Serializable;
 import java.util.List;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Before;
 import org.junit.Test;

@@ -20,7 +20,7 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

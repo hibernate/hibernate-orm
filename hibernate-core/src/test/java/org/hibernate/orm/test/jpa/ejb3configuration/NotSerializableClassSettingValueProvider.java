@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
-import org.hibernate.jpa.test.NotSerializableClass;
+import org.hibernate.orm.test.jpa.NotSerializableClass;
 
 import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 

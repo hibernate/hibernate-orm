@@ -23,7 +23,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.orm.test.jpa.callbacks.RemoteControl;
 import org.hibernate.orm.test.jpa.callbacks.Television;
 import org.hibernate.orm.test.jpa.callbacks.VideoSystem;

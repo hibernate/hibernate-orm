@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.annotations;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
 

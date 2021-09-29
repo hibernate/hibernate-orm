@@ -16,7 +16,7 @@ import jakarta.persistence.Table;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.TestForIssue;

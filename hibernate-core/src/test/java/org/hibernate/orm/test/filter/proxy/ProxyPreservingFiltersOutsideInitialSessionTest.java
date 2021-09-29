@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.FailureExpected;
 import org.junit.Test;

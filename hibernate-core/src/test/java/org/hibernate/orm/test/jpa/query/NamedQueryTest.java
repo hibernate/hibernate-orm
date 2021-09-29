@@ -17,7 +17,7 @@ import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 
 import org.hibernate.Session;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.TestForIssue;

@@ -21,7 +21,7 @@ import jakarta.persistence.NamedEntityGraph;
 import jakarta.persistence.Table;
 
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Before;

@@ -12,7 +12,7 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd"
              version="1.0">
     <persistence-unit name="defaultpar_1_0">
-        <class>org.hibernate.jpa.test.pack.defaultpar.Lighter</class>
+        <class>org.hibernate.orm.test.jpa.pack.defaultpar.Lighter</class>
         <properties>
             <property name="hibernate.dialect" value="@db.dialect@"/>
             <property name="hibernate.connection.driver_class" value="@jdbc.driver@"/>

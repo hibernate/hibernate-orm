@@ -9,8 +9,6 @@ package org.hibernate.orm.test.jpa.query;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 
-import org.hibernate.jpa.test.query.Employee;
-
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */

@@ -11,10 +11,10 @@
              version="2.0">
     <persistence-unit name="manager1" transaction-type="RESOURCE_LOCAL">
         <jar-file>@buildDirName@/packages/externaljar.jar</jar-file>
-        <class>org.hibernate.jpa.test.Cat</class>
-		<class>org.hibernate.jpa.test.Kitten</class>
-        <class>org.hibernate.jpa.test.Distributor</class>
-        <class>org.hibernate.jpa.test.Item</class>
+        <class>org.hibernate.orm.test.jpa.Cat</class>
+		<class>org.hibernate.orm.test.jpa.Kitten</class>
+        <class>org.hibernate.orm.test.jpa.Distributor</class>
+        <class>org.hibernate.orm.test.jpa.Item</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <!-- custom scanner test -->
@@ -34,15 +34,15 @@
             <property name="hibernate.hbm2ddl.auto" value="create-drop"/>
             <property name="hibernate.generate_statistics" value="true"/>
 			<property name="hibernate.cache.region.factory_class" value="org.hibernate.testing.cache.CachingRegionFactory" />
-            <property name="hibernate.physical_naming_strategy" value="org.hibernate.jpa.test.MyNamingStrategy"/>
+            <property name="hibernate.physical_naming_strategy" value="org.hibernate.orm.test.jpa.MyNamingStrategy"/>
 
             <!-- cache configuration -->
-            <property name="hibernate.classcache.org.hibernate.jpa.test.Item" value="read-write"/>
-            <property name="hibernate.collectioncache.org.hibernate.jpa.test.Item.distributors"
+            <property name="hibernate.classcache.org.hibernate.orm.test.jpa.Item" value="read-write"/>
+            <property name="hibernate.collectioncache.org.hibernate.orm.test.jpa.Item.distributors"
                       value="read-write, RegionName"/>
 
             <!-- event overriding -->
-            <property name="hibernate.event.listener.pre-insert" value="org.hibernate.jpa.test.NoOpListener"/>
+            <property name="hibernate.event.listener.pre-insert" value="org.hibernate.orm.test.jpa.NoOpListener"/>
         </properties>
     </persistence-unit>
 </persistence>

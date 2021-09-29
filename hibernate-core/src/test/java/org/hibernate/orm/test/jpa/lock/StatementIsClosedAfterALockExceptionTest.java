@@ -13,7 +13,7 @@ import java.util.Map;
 import jakarta.persistence.LockModeType;
 import org.hibernate.Session;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;

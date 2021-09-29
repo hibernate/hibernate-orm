@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.jpa.test.Cat;
-import org.hibernate.jpa.test.Kitten;
+import org.hibernate.orm.test.jpa.Cat;
+import org.hibernate.orm.test.jpa.Kitten;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.FailureExpected;

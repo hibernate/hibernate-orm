@@ -31,7 +31,7 @@ import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;

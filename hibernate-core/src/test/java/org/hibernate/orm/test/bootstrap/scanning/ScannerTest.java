@@ -25,8 +25,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
 import org.hibernate.jpa.boot.internal.StandardJpaScanEnvironmentImpl;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
-import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
-import org.hibernate.jpa.test.pack.defaultpar.Version;
+import org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
 
 import org.junit.jupiter.api.Test;
 

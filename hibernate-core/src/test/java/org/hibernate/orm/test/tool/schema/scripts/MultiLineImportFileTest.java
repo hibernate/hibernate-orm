@@ -9,7 +9,7 @@ package org.hibernate.orm.test.tool.schema.scripts;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.RequiresDialect;
@@ -18,7 +18,6 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -37,7 +36,7 @@ public class MultiLineImportFileTest extends BaseCoreFunctionalTestCase {
 		);
 		cfg.setProperty(
 				Environment.HBM2DDL_IMPORT_FILES_SQL_EXTRACTOR,
-				MultipleLinesSqlCommandExtractor.class.getName()
+				MultiLineSqlScriptExtractor.class.getName()
 		);
 	}
 

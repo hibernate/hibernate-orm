@@ -50,7 +50,15 @@ public interface QueryParameterBinding<T> {
 	/**
 	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed
 	 */
-	void setBindValue(T value);
+	default void setBindValue(T value) {
+		setBindValue( value, false );
+	}
+
+	/**
+	 * Sets the parameter binding value.  The inherent parameter type (if known) is assumed.
+	 * The flag controls whether the parameter type should be resolved if necessary.
+	 */
+	void setBindValue(T value, boolean resolveJdbcTypeIfNecessary);
 
 	/**
 	 * Sets the parameter binding value using the explicit Type.

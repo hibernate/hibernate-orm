@@ -53,7 +53,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -477,7 +476,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		final SqmExpressable<?>[] components = new SqmExpressable<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
 			final SqmExpressable<?> sqmExpressable = typedNodes.get( i ).getNodeType();
-			components[i] = sqmExpressable == null ? JavaObjectType.INSTANCE : sqmExpressable;
+			components[i] = sqmExpressable != null
+					? sqmExpressable
+					: getBasicTypeForJavaType( Object.class );
 		}
 		return arrayTuples.computeIfAbsent(
 				new ArrayCacheKey( components ),

@@ -19,7 +19,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Descriptor for
+ * Descriptor for binding objects
+ *
  * @author Steve Ebersole
  */
 public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
@@ -72,25 +73,25 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ValueExtractor getExtractor(JavaTypeDescriptor javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 		}
 
-		return new BasicExtractor( javaTypeDescriptor, this ) {
+		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
-			protected Object doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return rs.getObject( paramIndex );
+			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
+				return (X) rs.getObject( paramIndex );
 			}
 
 			@Override
-			protected Object doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return statement.getObject( index );
+			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
+				return (X) statement.getObject( index );
 			}
 
 			@Override
-			protected Object doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return statement.getObject( name );
+			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
+				return (X) statement.getObject( name );
 			}
 		};
 	}

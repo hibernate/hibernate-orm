@@ -83,8 +83,9 @@ public abstract class AbstractJdbcParameter
 			jdbcMapping = this.jdbcMapping;
 		}
 
-		if ( jdbcMapping == null ) {
-			jdbcMapping = guessBindType( executionContext, binding );
+		// If the parameter type is not known from the context i.e. null or Object, infer it from the bind value
+		if ( jdbcMapping == null || jdbcMapping.getMappedJavaTypeDescriptor().getJavaTypeClass() == Object.class ) {
+			jdbcMapping = guessBindType( executionContext, binding, jdbcMapping );
 		}
 
 		final Object bindValue = binding.getBindValue();
@@ -98,12 +99,22 @@ public abstract class AbstractJdbcParameter
 		);
 	}
 
-	private JdbcMapping guessBindType(ExecutionContext executionContext, JdbcParameterBinding binding) {
+	private JdbcMapping guessBindType(ExecutionContext executionContext, JdbcParameterBinding binding, JdbcMapping jdbcMapping) {
+		final Class<?> valueClass;
+		if ( binding.getBindValue() == null ) {
+			if ( jdbcMapping != null ) {
+				return jdbcMapping;
+			}
+			valueClass = Object.class;
+		}
+		else {
+			valueClass = binding.getBindValue().getClass();
+		}
 		final BasicType<?> basicType = executionContext.getSession()
 				.getFactory()
 				.getTypeConfiguration()
 				.getBasicTypeRegistry()
-				.getRegisteredType( binding.getBindValue().getClass() );
+				.getRegisteredType( valueClass );
 
 		return basicType.getJdbcMapping();
 	}

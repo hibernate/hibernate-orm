@@ -26,8 +26,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
@@ -37,11 +36,14 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 	private final String rowIdName;
 	private final EntityMappingType declaringType;
 	private final String tableExpression;
+	private final BasicType<Object> rowIdType;
 
 	public EntityRowIdMappingImpl(String rowIdName, String tableExpression, EntityMappingType declaringType) {
 		this.rowIdName = rowIdName;
 		this.tableExpression = tableExpression;
 		this.declaringType = declaringType;
+		this.rowIdType = declaringType.getEntityPersister().getFactory().getTypeConfiguration()
+				.getBasicTypeForJavaType( Object.class );
 	}
 
 	@Override
@@ -51,12 +53,12 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public MappingType getPartMappingType() {
-		return this::getJavaTypeDescriptor;
+		return rowIdType;
 	}
 
 	@Override
 	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
-		return JavaObjectType.INSTANCE.getJavaTypeDescriptor();
+		return rowIdType.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -98,18 +100,18 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 								//			having to write a Dialect
 								null,
 								null,
-								JavaObjectType.INSTANCE,
+								rowIdType,
 								sqlAstCreationState.getCreationContext().getSessionFactory()
 						)
 				),
-				JavaObjectType.INSTANCE.getJdbcMapping().getJavaTypeDescriptor(),
+				rowIdType.getJavaTypeDescriptor(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 
 		return new BasicResult(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				getJavaTypeDescriptor(),
+				rowIdType.getJavaTypeDescriptor(),
 				navigablePath
 		);
 	}
@@ -121,7 +123,7 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		action.accept( offset, JavaObjectType.INSTANCE );
+		action.accept( offset, getJdbcMapping() );
 		return getJdbcTypeCount();
 	}
 
@@ -170,6 +172,6 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping, SelectableMap
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return StandardBasicTypes.INTEGER;
+		return rowIdType.getJdbcMapping();
 	}
 }

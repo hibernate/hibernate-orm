@@ -11,7 +11,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * Base support for {@link JpaTupleElement} impls
@@ -30,18 +29,6 @@ public abstract class AbstractJpaTupleElement<T>
 		super( criteriaBuilder );
 
 		setExpressableType( expressableType );
-	}
-
-	@SuppressWarnings("unused")
-	protected AbstractJpaTupleElement(Class<T> javaType, NodeBuilder criteriaBuilder) {
-		super( criteriaBuilder );
-
-		if ( javaType != null ) {
-			setJavaType( javaType );
-		}
-		else {
-			setExpressableType( StandardBasicTypes.OBJECT_TYPE );
-		}
 	}
 
 	@Override
@@ -63,22 +50,6 @@ public abstract class AbstractJpaTupleElement<T>
 	protected final void setExpressableType(SqmExpressable<?> expressableType) {
 		//noinspection unchecked
 		this.expressableType = (SqmExpressable<T>) expressableType;
-	}
-
-	/**
-	 * Protected access to set the JavaTypeDescriptor via Java Class
-	 */
-	protected void setJavaType(Class<T> targetType) {
-		if ( targetType != null ) {
-			setExpressableType(
-					nodeBuilder().getDomainModel()
-							.getTypeConfiguration()
-							.standardBasicTypeForJavaType( targetType )
-			);
-		}
-		else {
-			setExpressableType( StandardBasicTypes.OBJECT_TYPE );
-		}
 	}
 
 }

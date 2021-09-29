@@ -25,7 +25,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Before;
 import org.junit.Test;

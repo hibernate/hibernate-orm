@@ -12,7 +12,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.userguide.model.PhoneType;
 
 import org.junit.Test;

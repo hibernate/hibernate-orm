@@ -13,7 +13,7 @@ import jakarta.persistence.Version;
 
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

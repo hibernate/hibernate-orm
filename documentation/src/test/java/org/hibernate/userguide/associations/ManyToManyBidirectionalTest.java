@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

@@ -14,31 +14,31 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.hibernate.jpa.test.Cat;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
-import org.hibernate.jpa.test.Kitten;
-import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
-import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
-import org.hibernate.jpa.test.pack.defaultpar.IncrementListener;
-import org.hibernate.jpa.test.pack.defaultpar.Lighter;
-import org.hibernate.jpa.test.pack.defaultpar.Money;
-import org.hibernate.jpa.test.pack.defaultpar.Mouse;
-import org.hibernate.jpa.test.pack.defaultpar.OtherIncrementListener;
-import org.hibernate.jpa.test.pack.defaultpar.Version;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.ApplicationServer1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.IncrementListener1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Lighter1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Money1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Mouse1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Version1;
-import org.hibernate.jpa.test.pack.excludehbmpar.Caipirinha;
-import org.hibernate.jpa.test.pack.explodedpar.Carpet;
-import org.hibernate.jpa.test.pack.explodedpar.Elephant;
-import org.hibernate.jpa.test.pack.externaljar.Scooter;
-import org.hibernate.jpa.test.pack.spacepar.Bug;
-import org.hibernate.jpa.test.pack.various.Airplane;
-import org.hibernate.jpa.test.pack.various.Seat;
+import org.hibernate.orm.test.jpa.Cat;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
+import org.hibernate.orm.test.jpa.Kitten;
+import org.hibernate.orm.test.jpa.pack.cfgxmlpar.Morito;
+import org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer;
+import org.hibernate.orm.test.jpa.pack.defaultpar.IncrementListener;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Lighter;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Money;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Mouse;
+import org.hibernate.orm.test.jpa.pack.defaultpar.OtherIncrementListener;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.ApplicationServer1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.IncrementListener1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Lighter1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Money1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Mouse1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Version1;
+import org.hibernate.orm.test.jpa.pack.excludehbmpar.Caipirinha;
+import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
+import org.hibernate.orm.test.jpa.pack.explodedpar.Elephant;
+import org.hibernate.orm.test.jpa.pack.externaljar.Scooter;
+import org.hibernate.orm.test.jpa.pack.spacepar.Bug;
+import org.hibernate.orm.test.jpa.pack.various.Airplane;
+import org.hibernate.orm.test.jpa.pack.various.Seat;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 
@@ -161,11 +161,11 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "defaultpar/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/defaultpar/Mouse.hbm.xml" );
-		archive.addAsResource( "defaultpar/org/hibernate/jpa/test/pack/defaultpar/Mouse.hbm.xml", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/defaultpar/Mouse.hbm.xml" );
+		archive.addAsResource( "defaultpar/org/hibernate/orm/test/jpa/pack/defaultpar/Mouse.hbm.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/defaultpar/package-info.class" );
-		archive.addAsResource( "org/hibernate/jpa/test/pack/defaultpar/package-info.class", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/defaultpar/package-info.class" );
+		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/defaultpar/package-info.class", path );
 
 
 		File testPackage = new File( packageTargetDir, fileName );
@@ -190,11 +190,11 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "defaultpar_1_0/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/defaultpar_1_0/Mouse.hbm.xml" );
-		archive.addAsResource( "defaultpar_1_0/org/hibernate/jpa/test/pack/defaultpar_1_0/Mouse1.hbm.xml", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/defaultpar_1_0/Mouse.hbm.xml" );
+		archive.addAsResource( "defaultpar_1_0/org/hibernate/orm/test/jpa/pack/defaultpar_1_0/Mouse1.hbm.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/defaultpar_1_0/package-info.class" );
-		archive.addAsResource( "org/hibernate/jpa/test/pack/defaultpar_1_0/package-info.class", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/defaultpar_1_0/package-info.class" );
+		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/defaultpar_1_0/package-info.class", path );
 
 
 		File testPackage = new File( packageTargetDir, fileName );
@@ -265,11 +265,11 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "explodedpar/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/explodedpar/Elephant.hbm.xml" );
-		archive.addAsResource( "explodedpar/org/hibernate/jpa/test/pack/explodedpar/Elephant.hbm.xml", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/explodedpar/Elephant.hbm.xml" );
+		archive.addAsResource( "explodedpar/org/hibernate/orm/test/jpa/pack/explodedpar/Elephant.hbm.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/explodedpar/package-info.class" );
-		archive.addAsResource( "org/hibernate/jpa/test/pack/explodedpar/package-info.class", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class" );
+		archive.addAsResource( "org/hibernate/orm/test/jpa/pack/explodedpar/package-info.class", path );
 
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ExplodedExporter.class ).exportExploded( packageTargetDir );
@@ -289,8 +289,8 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "excludehbmpar/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/excludehbmpar/Mouse.hbm.xml" );
-		archive.addAsResource( "excludehbmpar/org/hibernate/jpa/test/pack/excludehbmpar/Mouse.hbm.xml", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/excludehbmpar/Mouse.hbm.xml" );
+		archive.addAsResource( "excludehbmpar/org/hibernate/orm/test/jpa/pack/excludehbmpar/Mouse.hbm.xml", path );
 
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
@@ -308,8 +308,8 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
 		archive.addAsResource( "cfgxmlpar/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "org/hibernate/jpa/test/pack/cfgxmlpar/hibernate.cfg.xml" );
-		archive.addAsResource( "cfgxmlpar/org/hibernate/jpa/test/pack/cfgxmlpar/hibernate.cfg.xml", path );
+		path = ArchivePaths.create( "org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml" );
+		archive.addAsResource( "cfgxmlpar/org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml", path );
 
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );
@@ -335,7 +335,7 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		String fileName = "overridenpar.jar";
 		JavaArchive archive = ShrinkWrap.create( JavaArchive.class, fileName );
 		archive.addClasses(
-				org.hibernate.jpa.test.pack.overridenpar.Bug.class
+				org.hibernate.orm.test.jpa.pack.overridenpar.Bug.class
 		);
 
 		ArchivePath path = ArchivePaths.create( "META-INF/persistence.xml" );
@@ -400,13 +400,13 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		String fileName = "war.war";
 		WebArchive archive = ShrinkWrap.create( WebArchive.class, fileName );
 		archive.addClasses(
-				org.hibernate.jpa.test.pack.war.ApplicationServer.class,
-				org.hibernate.jpa.test.pack.war.IncrementListener.class,
-				org.hibernate.jpa.test.pack.war.Lighter.class,
-				org.hibernate.jpa.test.pack.war.Money.class,
-				org.hibernate.jpa.test.pack.war.Mouse.class,
-				org.hibernate.jpa.test.pack.war.OtherIncrementListener.class,
-				org.hibernate.jpa.test.pack.war.Version.class
+				org.hibernate.orm.test.jpa.pack.war.ApplicationServer.class,
+				org.hibernate.orm.test.jpa.pack.war.IncrementListener.class,
+				org.hibernate.orm.test.jpa.pack.war.Lighter.class,
+				org.hibernate.orm.test.jpa.pack.war.Money.class,
+				org.hibernate.orm.test.jpa.pack.war.Mouse.class,
+				org.hibernate.orm.test.jpa.pack.war.OtherIncrementListener.class,
+				org.hibernate.orm.test.jpa.pack.war.Version.class
 		);
 
 		ArchivePath path = ArchivePaths.create( "WEB-INF/classes/META-INF/orm.xml" );
@@ -415,8 +415,8 @@ public abstract class PackagingTestCase extends BaseSessionFactoryFunctionalTest
 		path = ArchivePaths.create( "WEB-INF/classes/META-INF/persistence.xml" );
 		archive.addAsResource( "war/WEB-INF/classes/META-INF/persistence.xml", path );
 
-		path = ArchivePaths.create( "WEB-INF/classes/org/hibernate/jpa/test/pack/war/Mouse.hbm.xml" );
-		archive.addAsResource( "war/WEB-INF/classes/org/hibernate/jpa/test/pack/war/Mouse.hbm.xml", path );
+		path = ArchivePaths.create( "WEB-INF/classes/org/hibernate/orm/test/jpa/pack/war/Mouse.hbm.xml" );
+		archive.addAsResource( "war/WEB-INF/classes/org/hibernate/orm/test/jpa/pack/war/Mouse.hbm.xml", path );
 
 		File testPackage = new File( packageTargetDir, fileName );
 		archive.as( ZipExporter.class ).exportTo( testPackage, true );

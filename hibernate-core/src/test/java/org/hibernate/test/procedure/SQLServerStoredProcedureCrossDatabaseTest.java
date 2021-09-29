@@ -7,26 +7,17 @@
 package org.hibernate.test.procedure;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Timestamp;
 import java.sql.Types;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Collections;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
-import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;

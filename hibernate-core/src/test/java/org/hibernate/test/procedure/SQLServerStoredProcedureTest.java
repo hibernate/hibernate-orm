@@ -7,9 +7,6 @@
 package org.hibernate.test.procedure;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.LocalDateTime;
@@ -22,8 +19,7 @@ import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.jdbc.Work;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Before;

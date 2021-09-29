@@ -15,7 +15,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;

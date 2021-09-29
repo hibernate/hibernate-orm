@@ -12,7 +12,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Version;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 

@@ -16,7 +16,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;

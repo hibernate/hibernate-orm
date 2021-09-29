@@ -17,8 +17,6 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.Query;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 

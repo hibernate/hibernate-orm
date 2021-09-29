@@ -17,7 +17,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Before;
 import org.junit.Test;

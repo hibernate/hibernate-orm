@@ -9,9 +9,7 @@ package org.hibernate.userguide.mapping.access;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.Session;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

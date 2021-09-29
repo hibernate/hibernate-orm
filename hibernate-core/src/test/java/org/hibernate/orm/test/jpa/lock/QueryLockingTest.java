@@ -14,7 +14,7 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.SessionImpl;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.DialectChecks;

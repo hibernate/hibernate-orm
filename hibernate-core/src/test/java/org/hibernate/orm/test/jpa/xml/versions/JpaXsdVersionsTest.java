@@ -23,8 +23,8 @@ import javax.sql.DataSource;
 import org.hibernate.AnnotationException;
 import org.hibernate.InvalidMappingException;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.test.pack.defaultpar.Lighter;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Lighter1;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Lighter;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Lighter1;
 
 import org.junit.Assert;
 import org.junit.Test;

@@ -14,13 +14,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;

@@ -22,8 +22,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MariaDB103Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

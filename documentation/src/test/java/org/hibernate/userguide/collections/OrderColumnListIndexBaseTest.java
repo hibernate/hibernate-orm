@@ -19,7 +19,7 @@ import jakarta.persistence.OrderColumn;
 
 import org.hibernate.annotations.ListIndexBase;
 import org.hibernate.annotations.NaturalId;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

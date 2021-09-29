@@ -19,7 +19,7 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;

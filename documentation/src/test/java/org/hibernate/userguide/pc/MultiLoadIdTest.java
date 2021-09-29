@@ -17,9 +17,8 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;

@@ -16,19 +16,13 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.MappingException;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.dialect.PostgreSQL9Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.DateType;
@@ -103,11 +97,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
-	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
-	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to BIGINT")
 	public void testQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -188,11 +177,6 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-10161")
-	@SkipForDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10161", comment = "Cannot convert untyped null (assumed to be BINARY type) to NUMBER")
-	@SkipForDialect(value = PostgreSQL9Dialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = PostgresPlusDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = CockroachDialect.class, jiraKey = "HHH-10312", comment = "Cannot convert untyped null (assumed to be bytea type) to bigint")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to BIGINT")
 	public void testNativeQueryWithNullParameter(){
 		Chaos c0 = new Chaos();
 		c0.setId( 0L );
@@ -521,7 +505,7 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = { PostgreSQL81Dialect.class, PostgreSQLDialect.class },
+	@SkipForDialect(value = { PostgreSQLDialect.class },
 			comment = "postgresql jdbc driver does not implement the setQueryTimeout method")
 	public void testCache() throws Exception {
 		Session s;

@@ -19,7 +19,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Before;
 
 public abstract class AbstractSubqueryInSelectClauseTest extends BaseEntityManagerFunctionalTestCase {

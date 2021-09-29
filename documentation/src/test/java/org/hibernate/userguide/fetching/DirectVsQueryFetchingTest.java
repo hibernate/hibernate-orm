@@ -13,12 +13,10 @@ import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
-
-import org.jboss.logging.Logger;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 

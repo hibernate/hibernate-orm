@@ -10,7 +10,7 @@ import java.util.Arrays;
 import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.TestingEntityManagerFactoryGenerator;
+import org.hibernate.orm.test.jpa.TestingEntityManagerFactoryGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;

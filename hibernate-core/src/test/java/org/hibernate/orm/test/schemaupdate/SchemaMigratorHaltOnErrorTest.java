@@ -17,7 +17,7 @@ import jakarta.persistence.Id;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
 import org.junit.Test;

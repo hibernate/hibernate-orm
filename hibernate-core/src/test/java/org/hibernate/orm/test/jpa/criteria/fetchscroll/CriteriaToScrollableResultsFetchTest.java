@@ -20,7 +20,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.query.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.Test;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;

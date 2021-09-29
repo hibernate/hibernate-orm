@@ -14,7 +14,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.JpaComplianceStub;
+import org.hibernate.orm.test.jpa.JpaComplianceStub;
 import org.hibernate.metamodel.internal.JpaStaticMetaModelPopulationSetting;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.JpaMetamodelImpl;

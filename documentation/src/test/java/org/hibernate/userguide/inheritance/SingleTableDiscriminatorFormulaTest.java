@@ -16,7 +16,7 @@ import jakarta.persistence.InheritanceType;
 
 import org.hibernate.annotations.DiscriminatorFormula;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Assert;

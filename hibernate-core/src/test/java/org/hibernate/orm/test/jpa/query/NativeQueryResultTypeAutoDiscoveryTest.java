@@ -31,11 +31,17 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+import org.hibernate.dialect.AbstractTransactSQLDialect;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -91,56 +97,75 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Test
 	public void commonNumericTypes() {
 		createEntityManagerFactory(
-				BooleanEntity.class,
 				BigintEntity.class,
 				IntegerEntity.class,
 				SmallintEntity.class,
-				DoubleEntity.class,
-				NumericEntity.class
+				DoubleEntity.class
 		);
 
-		doTest( BooleanEntity.class, true );
 		doTest( BigintEntity.class, 9223372036854775807L );
 		doTest( IntegerEntity.class, 2147483647 );
 		doTest( SmallintEntity.class, (short)32767 );
 		doTest( DoubleEntity.class, 445146115151.45845 );
-		doTest( NumericEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" ) );
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "No support for the bit datatype so we use tinyint")
+	public void booleanType() {
+		createEntityManagerFactory( BooleanEntity.class );
+		doTest( BooleanEntity.class, true );
+	}
+
+	@Test
+	@SkipForDialect(value = SybaseDialect.class, comment = "No support for the bit datatype so we use tinyint")
 	public void bitType() {
 		createEntityManagerFactory( BitEntity.class );
 		doTest( BitEntity.class, false );
 	}
 
 	@Test
-	// Postgresql turns tinyints into shorts in resultsets, and advertises the type as short in the metadata.
-	// Not much we can do about that.
-	@SkipForDialect(PostgreSQLDialect.class)
+	@SkipForDialect(value = PostgreSQLDialect.class, comment = "Turns tinyints into shorts in result sets and advertises the type as short in the metadata")
+	@SkipForDialect(value = DerbyDialect.class, comment = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(value = DB2Dialect.class, comment = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );
 	}
 
 	@Test
-	// H2 turns floats into doubles in resultsets, and advertises the type as double in the metadata.
-	// Not much we can do about that.
-	@SkipForDialect(H2Dialect.class)
+	@SkipForDialect(value = H2Dialect.class, comment = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(value = HSQLDialect.class, comment = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	public void floatType() {
 		createEntityManagerFactory( FloatEntity.class );
 		doTest( FloatEntity.class, 15516.125f );
 	}
 
 	@Test
-	// MariaDB/MySQL turn reals into doubles in resultsets, and advertise the type as double in the metadata.
-	// Not much we can do about that.
-	@SkipForDialect(MySQLDialect.class)
+	@SkipForDialect(value = MySQLDialect.class, comment = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(value = HSQLDialect.class, comment = "Turns reals into doubles in result sets and advertises the type as double in the metadata")
 	public void realType() {
 		createEntityManagerFactory( RealEntity.class );
 		doTest( RealEntity.class, 15516.125f );
 	}
 
 	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Value is too big for the maximum allowed precision of Derby")
+	@SkipForDialect(value = DB2Dialect.class, comment = "Value is too big for the maximum allowed precision of DB2")
+	@SkipForDialect(value = OracleDialect.class, comment = "Value is too big for the maximum allowed precision of Oracle")
+	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
+	public void numericType() {
+		createEntityManagerFactory(
+				NumericEntity.class
+		);
+		doTest( NumericEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" ) );
+	}
+
+	@Test
+	@SkipForDialect(value = DerbyDialect.class, comment = "Value is too big for the maximum allowed precision of Derby")
+	@SkipForDialect(value = DB2Dialect.class, comment = "Value is too big for the maximum allowed precision of DB2")
+	@SkipForDialect(value = OracleDialect.class, comment = "Value is too big for the maximum allowed precision of Oracle")
+	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
 	public void decimalType() {
 		createEntityManagerFactory( DecimalEntity.class );
 		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
@@ -150,20 +175,26 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	public void commonTextTypes() {
 		createEntityManagerFactory(
 				VarcharEntity.class,
-				NvarcharEntity.class,
-				CharEntity.class,
-				LongvarcharEntity.class
+				NvarcharEntity.class
 		);
 
 		doTest( VarcharEntity.class, "some text" );
 		doTest( NvarcharEntity.class, "some text" );
+	}
+
+	@Test
+	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps LONGVARCHAR to CLOB")
+	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 maps LONGVARCHAR to CLOB")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase maps LONGVARCHAR to CLOB")
+	public void longCharType() {
+		createEntityManagerFactory(
+				LongvarcharEntity.class
+		);
+
 		doTest( LongvarcharEntity.class, "some text" );
 	}
 
 	@Test
-	// MariaDB/MySQL give a precision of 3 for the column corresponding to the CHAR(1) (go figure),
-	// leading to Hibernate interpreting the type as String.
-	@SkipForDialect(MySQLDialect.class)
 	public void charType() {
 		createEntityManagerFactory( CharEntity.class );
 		doTest( CharEntity.class, 'c' );
@@ -181,12 +212,22 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	public void binaryTypes() {
 		createEntityManagerFactory(
 				BinaryEntity.class,
-				VarbinaryEntity.class,
-				LongvarbinaryEntity.class
+				VarbinaryEntity.class
 		);
 
 		doTest( BinaryEntity.class, "some text".getBytes() );
 		doTest( VarbinaryEntity.class, "some text".getBytes() );
+	}
+
+	@Test
+	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps LONGVARBINARY to BLOB")
+	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 maps LONGVARBINARY to BLOB")
+	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase maps LONGVARBINARY to BLOB")
+	public void longBinaryType() {
+		createEntityManagerFactory(
+				LongvarbinaryEntity.class
+		);
+
 		doTest( LongvarbinaryEntity.class, "some text".getBytes() );
 	}
 
@@ -212,11 +253,11 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Test
+	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps DATE and TIME to TIMESTAMP")
 	public void dateTimeTypes() {
 		createEntityManagerFactory(
 				DateEntity.class,
-				TimeEntity.class,
-				TimestampEntity.class
+				TimeEntity.class
 		);
 
 		ZonedDateTime zonedDateTime = ZonedDateTime.of(
@@ -227,6 +268,20 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 
 		doTest( DateEntity.class, new java.sql.Date( zonedDateTime.toInstant().toEpochMilli() ) );
 		doTest( TimeEntity.class, new Time( zonedDateTime.toLocalTime().toNanoOfDay() / 1000 ) );
+	}
+
+	@Test
+	public void timestampType() {
+		createEntityManagerFactory(
+				TimestampEntity.class
+		);
+
+		ZonedDateTime zonedDateTime = ZonedDateTime.of(
+				2014, Month.NOVEMBER.getValue(), 15,
+				18, 0, 0, 0,
+				ZoneId.of( "UTC" )
+		);
+
 		doTest( TimestampEntity.class, new Timestamp( zonedDateTime.toInstant().toEpochMilli() ) );
 	}
 

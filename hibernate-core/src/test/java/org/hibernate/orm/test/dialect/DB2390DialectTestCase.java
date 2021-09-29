@@ -8,15 +8,13 @@ package org.hibernate.orm.test.dialect;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.DB2zDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

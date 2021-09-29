@@ -16,7 +16,7 @@ import jakarta.persistence.Subgraph;
 
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
 

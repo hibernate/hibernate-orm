@@ -14,7 +14,7 @@ import org.hibernate.annotations.Check;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;

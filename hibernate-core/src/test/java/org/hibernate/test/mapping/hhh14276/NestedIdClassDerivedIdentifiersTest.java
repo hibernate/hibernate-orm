@@ -11,7 +11,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 
 import org.hibernate.test.mapping.hhh14276.entity.PlayerStat;

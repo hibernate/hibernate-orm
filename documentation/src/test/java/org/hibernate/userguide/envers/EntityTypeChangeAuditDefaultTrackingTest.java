@@ -24,7 +24,7 @@ import org.hibernate.envers.Audited;
 import org.hibernate.envers.DefaultTrackingModifiedEntitiesRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

@@ -7,7 +7,6 @@
 package org.hibernate.userguide.mapping.identifier;
 
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -16,7 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Before;
 import org.junit.Test;

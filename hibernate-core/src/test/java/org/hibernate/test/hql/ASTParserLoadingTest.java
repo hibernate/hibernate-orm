@@ -742,7 +742,6 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-2851")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Cannot convert untyped null (assumed to be VARBINARY type) to VARCHAR")
 	public void testMultipleRefsToSameParam() {
 		Session s = openSession();
 		s.beginTransaction();

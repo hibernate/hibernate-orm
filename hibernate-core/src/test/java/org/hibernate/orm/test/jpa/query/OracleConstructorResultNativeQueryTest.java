@@ -24,7 +24,7 @@ import jakarta.persistence.TemporalType;
 import org.junit.Test;
 
 import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.RequiresDialect;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;

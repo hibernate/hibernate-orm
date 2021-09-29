@@ -21,10 +21,10 @@ import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
-import org.hibernate.jpa.test.SettingsGenerator;
+import org.hibernate.orm.test.jpa.SettingsGenerator;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.jupiter.api.Test;

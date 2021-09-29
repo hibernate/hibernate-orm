@@ -6,12 +6,11 @@
  */
 package org.hibernate.test.procedure;
 
-import java.sql.SQLException;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Before;

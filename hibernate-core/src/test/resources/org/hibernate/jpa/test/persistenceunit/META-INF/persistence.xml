@@ -13,24 +13,24 @@
 
     <persistence-unit name="ExcludeUnlistedClassesTest1" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>org.hibernate.jpa.test.persistenceunit.DataPoint</class>
+        <class>org.hibernate.orm.test.jpa.persistenceunit.DataPoint</class>
     </persistence-unit>
 
     <persistence-unit name="ExcludeUnlistedClassesTest2" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>org.hibernate.jpa.test.persistenceunit.DataPoint</class>
+        <class>org.hibernate.orm.test.jpa.persistenceunit.DataPoint</class>
         <exclude-unlisted-classes/>
     </persistence-unit>
 
     <persistence-unit name="ExcludeUnlistedClassesTest3" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>org.hibernate.jpa.test.persistenceunit.DataPoint</class>
+        <class>org.hibernate.orm.test.jpa.persistenceunit.DataPoint</class>
         <exclude-unlisted-classes>false</exclude-unlisted-classes>
     </persistence-unit>
 
     <persistence-unit name="ExcludeUnlistedClassesTest4" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
-        <class>org.hibernate.jpa.test.persistenceunit.DataPoint</class>
+        <class>org.hibernate.orm.test.jpa.persistenceunit.DataPoint</class>
         <exclude-unlisted-classes>true</exclude-unlisted-classes>
     </persistence-unit>
 

@@ -18,9 +18,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.hibernate.Session;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.RequiresDialect;

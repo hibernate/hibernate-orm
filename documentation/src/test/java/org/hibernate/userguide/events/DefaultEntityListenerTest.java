@@ -12,7 +12,7 @@ import jakarta.persistence.ExcludeSuperclassListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

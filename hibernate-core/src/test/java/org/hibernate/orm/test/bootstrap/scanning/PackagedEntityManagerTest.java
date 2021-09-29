@@ -21,29 +21,28 @@ import org.hibernate.event.spi.EventType;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernateEntityManagerFactory;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
-import org.hibernate.jpa.test.pack.cfgxmlpar.Morito;
-import org.hibernate.jpa.test.pack.defaultpar.ApplicationServer;
-import org.hibernate.jpa.test.pack.defaultpar.IncrementListener;
-import org.hibernate.jpa.test.pack.defaultpar.Lighter;
-import org.hibernate.jpa.test.pack.defaultpar.Money;
-import org.hibernate.jpa.test.pack.defaultpar.Mouse;
-import org.hibernate.jpa.test.pack.defaultpar.OtherIncrementListener;
-import org.hibernate.jpa.test.pack.defaultpar.Version;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.ApplicationServer1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Lighter1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Mouse1;
-import org.hibernate.jpa.test.pack.defaultpar_1_0.Version1;
-import org.hibernate.jpa.test.pack.excludehbmpar.Caipirinha;
-import org.hibernate.jpa.test.pack.explodedpar.Carpet;
-import org.hibernate.jpa.test.pack.explodedpar.Elephant;
-import org.hibernate.jpa.test.pack.externaljar.Scooter;
-import org.hibernate.jpa.test.pack.various.Airplane;
-import org.hibernate.jpa.test.pack.various.Seat;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
+import org.hibernate.orm.test.jpa.pack.cfgxmlpar.Morito;
+import org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer;
+import org.hibernate.orm.test.jpa.pack.defaultpar.IncrementListener;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Lighter;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Money;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Mouse;
+import org.hibernate.orm.test.jpa.pack.defaultpar.OtherIncrementListener;
+import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.ApplicationServer1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Lighter1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Mouse1;
+import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Version1;
+import org.hibernate.orm.test.jpa.pack.excludehbmpar.Caipirinha;
+import org.hibernate.orm.test.jpa.pack.explodedpar.Carpet;
+import org.hibernate.orm.test.jpa.pack.explodedpar.Elephant;
+import org.hibernate.orm.test.jpa.pack.externaljar.Scooter;
+import org.hibernate.orm.test.jpa.pack.various.Airplane;
+import org.hibernate.orm.test.jpa.pack.various.Seat;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -263,7 +262,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 
 		emf = Persistence.createEntityManagerFactory( "space par", new HashMap() );
 		TransactionUtil.doInJPA( () -> emf, em -> {
-			org.hibernate.jpa.test.pack.spacepar.Bug bug = new org.hibernate.jpa.test.pack.spacepar.Bug();
+			org.hibernate.orm.test.jpa.pack.spacepar.Bug bug = new org.hibernate.orm.test.jpa.pack.spacepar.Bug();
 			bug.setSubject( "Spaces in directory name don't play well on Windows" );
 			em.persist( bug );
 			em.flush();
@@ -285,7 +284,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		properties.putAll( p );
 		emf = Persistence.createEntityManagerFactory( "overridenpar", properties );
 		TransactionUtil.doInJPA( () -> emf, em -> {
-			org.hibernate.jpa.test.pack.overridenpar.Bug bug = new org.hibernate.jpa.test.pack.overridenpar.Bug();
+			org.hibernate.orm.test.jpa.pack.overridenpar.Bug bug = new org.hibernate.orm.test.jpa.pack.overridenpar.Bug();
 			bug.setSubject( "Allow DS overriding" );
 			em.persist( bug );
 			em.flush();

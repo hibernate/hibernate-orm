@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.Wallet;
+import org.hibernate.orm.test.jpa.Wallet;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;

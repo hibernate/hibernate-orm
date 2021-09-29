@@ -10,7 +10,7 @@ import jakarta.persistence.EntityManager;
 
 import org.junit.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.testing.TestForIssue;
 

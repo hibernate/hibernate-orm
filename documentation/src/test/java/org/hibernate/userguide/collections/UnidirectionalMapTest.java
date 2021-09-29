@@ -23,7 +23,7 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
 import org.junit.Test;

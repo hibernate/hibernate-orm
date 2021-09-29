@@ -17,15 +17,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.LazyInitializationException;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.cfg.AnnotationBinder;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;

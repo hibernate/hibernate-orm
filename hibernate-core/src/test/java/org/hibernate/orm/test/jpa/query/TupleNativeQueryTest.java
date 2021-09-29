@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.jpa.query;
 
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sql.internal.NativeQueryImpl;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 

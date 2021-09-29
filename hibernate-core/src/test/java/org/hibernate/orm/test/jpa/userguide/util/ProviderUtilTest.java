@@ -10,7 +10,7 @@ import jakarta.persistence.Persistence;
 import jakarta.persistence.spi.LoadState;
 
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 

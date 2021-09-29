@@ -126,7 +126,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
-			int jdbcTypeCode,
+			String columnTypeName, int jdbcTypeCode,
 			int precision,
 			int scale,
 			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
@@ -139,7 +139,13 @@ public class TeradataDialect extends Dialect {
 					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override

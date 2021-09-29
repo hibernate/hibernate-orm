@@ -121,6 +121,7 @@ public interface QueryParameterBinding<T> {
 	 * Sets the mapping model expressable for this parameter.
 	 *
 	 * @param type The mapping model expressable
+	 * @return Whether the bind type was changed
 	 */
-	void setType(MappingModelExpressable<T> type);
+	boolean setType(MappingModelExpressable<T> type);
 }

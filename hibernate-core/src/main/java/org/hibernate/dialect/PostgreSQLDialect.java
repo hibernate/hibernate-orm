@@ -57,11 +57,13 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcTypeDescriptor;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -903,5 +905,18 @@ public class PostgreSQLDialect extends Dialect {
 			// HHH-9562
 			typeContributions.contributeType( PostgresUUIDType.INSTANCE );
 		}
+
+		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsBinaryTypeJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullAsBinaryTypeJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 }

@@ -11,7 +11,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 

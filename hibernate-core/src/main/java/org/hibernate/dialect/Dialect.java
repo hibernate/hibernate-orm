@@ -247,11 +247,28 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
 			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
 		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
+	}
+
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// It seems MariaDB/MySQL return the precision in bytes depending on the charset,
+		// so to detect whether we have a single character here, we check the display size
+		if ( jdbcTypeCode == Types.CHAR && precision <= 4 ) {
+			return displaySize;
+		}
+		else {
+			return precision;
+		}
 	}
 
 	/**

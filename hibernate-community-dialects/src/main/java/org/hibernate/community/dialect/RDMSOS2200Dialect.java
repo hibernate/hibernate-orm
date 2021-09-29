@@ -114,6 +114,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -121,7 +122,13 @@ public class RDMSOS2200Dialect extends Dialect {
 		if ( jdbcTypeCode == Types.BIT ) {
 			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override

@@ -9,6 +9,7 @@ package org.hibernate.dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DerbyConcatFunction;
@@ -41,6 +42,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -52,9 +54,11 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 
@@ -108,14 +112,16 @@ public class DerbyDialect extends Dialect {
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 		registerColumnType( Types.CHAR, 254, "char($l)" );
 
-		//HHH-12827: map them both to the same type to
-		//           avoid problems with schema update
+		//HHH-12827: map them both to the same type to avoid problems with schema update
+		//Note that 31 is the maximum precision Derby supports
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
-		registerColumnType( Types.BINARY, "varchar($l) for bit data" );
 		registerColumnType( Types.BINARY, 254, "char($l) for bit data" );
-		registerColumnType( Types.VARBINARY, "varchar($l) for bit data" );
+		registerColumnType( Types.BINARY, 32672, "varchar($l) for bit data" );
+		registerColumnType( Types.BINARY, "long varchar for bit data" );
+		registerColumnType( Types.VARBINARY, 32672, "varchar($l) for bit data" );
+		registerColumnType( Types.VARBINARY, "long varchar for bit data" );
 
 		registerColumnType( Types.BLOB, "blob($l)" );
 		registerColumnType( Types.CLOB, "clob($l)" );
@@ -537,6 +543,24 @@ public class DerbyDialect extends Dialect {
 			default:
 				return super.getSqlTypeDescriptorOverride(sqlCode);
 		}
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		// Derby requires a custom binder for binding untyped nulls that resolves the type through the statement
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullResolvingJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override

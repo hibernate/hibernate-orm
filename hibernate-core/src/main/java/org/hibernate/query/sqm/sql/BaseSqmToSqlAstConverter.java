@@ -60,11 +60,13 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.metamodel.mapping.ValueMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
@@ -2935,7 +2937,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
-		binding.setType( valueMapping );
+		if ( binding.setType( valueMapping ) ) {
+			replaceJdbcParametersType(
+					sqmParameter,
+					domainParameterXref.getSqmParameters( queryParameter ),
+					valueMapping
+			);
+		}
 		return new SqmParameterInterpretation(
 				sqmParameter,
 				queryParameter,
@@ -2943,6 +2951,32 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				valueMapping,
 				qp -> binding
 		);
+	}
+
+	private void replaceJdbcParametersType(
+			SqmParameter sourceSqmParameter,
+			List<SqmParameter> sqmParameters,
+			MappingModelExpressable<?> valueMapping) {
+		final JdbcMapping jdbcMapping = valueMapping.getJdbcMappings().get( 0 );
+		for ( SqmParameter<?> sqmParameter : sqmParameters ) {
+			if ( sqmParameter == sourceSqmParameter ) {
+				continue;
+			}
+			sqmParameterMappingModelTypes.put( sqmParameter, valueMapping );
+			final List<List<JdbcParameter>> jdbcParamsForSqmParameter = jdbcParamsBySqmParam.get( sqmParameter );
+			if ( jdbcParamsForSqmParameter != null ) {
+				for ( List<JdbcParameter> parameters : jdbcParamsForSqmParameter ) {
+					assert parameters.size() == 1;
+					final JdbcParameter jdbcParameter = parameters.get( 0 );
+					if ( ( (SqlExpressable) jdbcParameter ).getJdbcMapping() != valueMapping ) {
+						final JdbcParameter newJdbcParameter = new JdbcParameterImpl( jdbcMapping );
+						parameters.set( 0, newJdbcParameter );
+						jdbcParameters.getJdbcParameters().remove( jdbcParameter );
+						jdbcParameters.getJdbcParameters().add( newJdbcParameter );
+					}
+				}
+			}
+		}
 	}
 
 	protected Expression consumeSqmParameter(SqmParameter sqmParameter) {
@@ -2996,7 +3030,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final QueryParameterImplementor<?> queryParameter = domainParameterXref.getQueryParameter( sqmParameter );
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
-		binding.setType( valueMapping );
+		if ( binding.setType( valueMapping ) ) {
+			replaceJdbcParametersType(
+					sqmParameter,
+					domainParameterXref.getSqmParameters( queryParameter ),
+					valueMapping
+			);
+		}
 		return new SqmParameterInterpretation(
 				sqmParameter,
 				queryParameter,

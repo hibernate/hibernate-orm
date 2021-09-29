@@ -173,7 +173,13 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
 			return null;
 		}
-		return sqmParameters.get( 0 ).getNodeType();
+		for ( SqmParameter sqmParameter : sqmParameters ) {
+			final AllowableParameterType nodeType = sqmParameter.getNodeType();
+			if ( nodeType != null ) {
+				return nodeType;
+			}
+		}
+		return null;
 	}
 
 	@Override

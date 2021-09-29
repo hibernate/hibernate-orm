@@ -31,7 +31,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -46,7 +45,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
@@ -415,8 +413,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 		if ( getCacheMode() != null ) {
 			putIfNotNull( hints, HINT_CACHE_MODE, getCacheMode() );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, CacheModeHelper.interpretCacheRetrieveMode( getCacheMode() ) );
-			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, CacheModeHelper.interpretCacheStoreMode( getCacheMode() ) );
+			putIfNotNull( hints, JAKARTA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
+			putIfNotNull( hints, JAKARTA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 			putIfNotNull( hints, JPA_SHARED_CACHE_RETRIEVE_MODE, getQueryOptions().getCacheRetrieveMode() );
 			putIfNotNull( hints, JPA_SHARED_CACHE_STORE_MODE, getQueryOptions().getCacheStoreMode() );
 		}

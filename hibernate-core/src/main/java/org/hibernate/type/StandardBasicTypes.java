@@ -949,6 +949,13 @@ public final class StandardBasicTypes {
 				"object", Object.class.getName()
 		);
 
+		handle(
+				NullType.INSTANCE,
+				null,
+				basicTypeRegistry,
+				"null"
+		);
+
 		// todo (6.0) - ? how to handle DbTimestampType?
 		//		DbTimestampType was really just a variant of TimestampType with overridden
 		//		version (opt lock) support

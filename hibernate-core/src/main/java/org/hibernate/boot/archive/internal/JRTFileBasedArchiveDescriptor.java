@@ -6,17 +6,18 @@
  */
 package org.hibernate.boot.archive.internal;
 
-import org.hibernate.boot.archive.spi.*;
+import org.hibernate.boot.archive.spi.AbstractArchiveDescriptor;
+import org.hibernate.boot.archive.spi.ArchiveContext;
+import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.archive.spi.ArchiveEntry;
+import org.hibernate.boot.archive.spi.ArchiveEntryHandler;
+import org.hibernate.boot.archive.spi.InputStreamAccess;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.jar.JarFile;
-import java.util.jar.JarInputStream;
-import java.util.zip.ZipEntry;
-
-import static org.hibernate.internal.log.UrlMessageBundle.*;
+import org.jboss.logging.Logger;
 
 /**
  * An ArchiveDescriptor implementation leveraging the {@link java.util.jar.JarFile} API for processing - specifically meant to support the new URL format for JRT and modules
@@ -24,116 +25,126 @@ import static org.hibernate.internal.log.UrlMessageBundle.*;
  * @author Steve Ebersole
  * @author Marc Magon
  */
-public class JRTFileBasedArchiveDescriptor extends AbstractArchiveDescriptor {
+public class JRTFileBasedArchiveDescriptor extends AbstractArchiveDescriptor
+{
+	private static final Logger log = Logger.getLogger( JRTFileBasedArchiveDescriptor.class );
+	
+	private ArchiveContext context;
+	
 	/**
 	 * Constructs a JarFileBasedArchiveDescriptor
 	 *
 	 * @param archiveDescriptorFactory The factory creating this
-	 * @param archiveUrl The url to the JRT Module VFS file
-	 * @param entry The prefix for entries within the JRT VFS url
+	 * @param archiveUrl               The url to the JRT Module VFS file
+	 * @param entry                    The prefix for entries within the JRT VFS url
 	 */
 	public JRTFileBasedArchiveDescriptor(
 			ArchiveDescriptorFactory archiveDescriptorFactory,
 			URL archiveUrl,
-			String entry) {
-		super( archiveDescriptorFactory, archiveUrl, entry );
+			String entry)
+	{
+		super(archiveDescriptorFactory, archiveUrl, entry);
 	}
-
+	
+	/**
+	 * Visits a JRT virtual file system using the JDK 8 nio file mechanisms,
+	 *
+	 * @param context
+	 */
 	@Override
-	public void visitArchive(ArchiveContext context) {
-		final String jrtPart = getArchiveUrl().getPath();
+	public void visitArchive(ArchiveContext context)
+	{
+		this.context = context;
+		java.nio.file.Path path = null;
 		try
 		{
-			Path path = Paths.get(getArchiveUrl().toURI());
-			String basePrefix = getEntryBasePrefix();
-			String name = path.toString();
-			name = name.startsWith("/modules/") ? name.substring(9) : name;
-			Files.walkFileTree(path, new SimpleFileVisitor<>(){
-				@Override
-				public FileVisitResult visitFile(Path a, BasicFileAttributes attrs) throws IOException
-				{
-					String name = a.toString();
-					if(name.startsWith("/modules/"))
-					{
-						name = name.substring(9);
-						name = name.substring(name.indexOf('/') + 1);
-					}
-					
-					final String entryName = name;
-					final String relativeName = basePrefix != null && name.contains(basePrefix)
-							? name.substring(basePrefix.length())
-							: name;
-					final InputStreamAccess inputStreamAccess;
-					try (InputStream is = Files.newInputStream(a))
-					{
-						inputStreamAccess = buildByteBasedInputStreamAccess(name, is);
-					}
-					catch (Exception e)
-					{
-						System.out.println("exception in walk - ");
-						e.printStackTrace();
-						throw new ArchiveException(
-								String.format(
-										"Unable to access stream from jrt ref [%s] for entry [%s]",
-										path,
-										a.toString()
-								)
-						);
-					}
-					final ArchiveEntry entry = new ArchiveEntry()
-					{
-						@Override
-						public String getName()
-						{
-							return entryName;
-						}
-						
-						@Override
-						public String getNameWithinArchive()
-						{
-							return relativeName;
-						}
-						
-						@Override
-						public InputStreamAccess getStreamAccess()
-						{
-							return inputStreamAccess;
-						}
-					};
-					
-					final ArchiveEntryHandler entryHandler = context.obtainArchiveEntryHandler(entry);
-					entryHandler.handleEntry(entry, context);
-					return super.visitFile(a, attrs);
-				}
-			});
+			path = java.nio.file.Paths.get(getArchiveUrl().toURI());
+			java.nio.file.Files.walkFileTree(path, new JRTFileBasedArchiveDescriptor.JRTModuleWalker());
 		}
 		catch (URISyntaxException | IOException e)
 		{
-			throw new ArchiveException(
-					String.format(
-							"Unable to access stream from jrt location [%s]",
-							jrtPart)
+			throw new IllegalArgumentException(
+					"Unable to visit JRT / Path " + path + ". Cause: " + e.getMessage(), e
 			);
 		}
 	}
-
-	private JarFile resolveJarFileReference() {
-		try {
-			final String filePart = getArchiveUrl().getFile();
-			if ( filePart != null && filePart.indexOf( ' ' ) != -1 ) {
-				// unescaped (from the container), keep as is
-				return new JarFile( getArchiveUrl().getFile() );
+	
+	/**
+	 * Peruses through the modular file system utilizing the <code>.nio</code> file walkers
+	 * Finds anything applicable in modules that have opened access to the module <code>org.hibernate.orm.core</code>
+	 *
+	 * Ignores modules that have not exposed and/or opened to our module
+	 */
+	protected class JRTModuleWalker extends java.nio.file.SimpleFileVisitor<java.nio.file.Path>
+	{
+		@Override
+		public java.nio.file.FileVisitResult visitFile(java.nio.file.Path path, java.nio.file.attribute.BasicFileAttributes attrs) throws java.io.IOException
+		{
+			String name = path.toString();
+			if (name.startsWith("/modules/"))
+			{
+				name = name.substring(9);
+				name = name.substring(name.indexOf('/') + 1);
 			}
-			else {
-				return new JarFile( getArchiveUrl().toURI().getSchemeSpecificPart() );
+			java.nio.file.Path lateralPath = null;
+			try
+			{
+				lateralPath = java.nio.file.Paths.get(getArchiveUrl().toURI());
 			}
+			catch (java.net.URISyntaxException e)
+			{
+				visitFileFailed(path, new java.io.IOException("Unable to walk file", e));
+			}
+			String basePrefix = getEntryBasePrefix();
+			final String entryName = name;
+			final String relativeName = basePrefix != null && name.contains(basePrefix)
+					? name.substring(basePrefix.length())
+					: name;
+			final InputStreamAccess inputStreamAccess;
+			try (InputStream is = java.nio.file.Files.newInputStream(lateralPath))
+			{
+				inputStreamAccess = buildByteBasedInputStreamAccess(name, is);
+			}
+			catch (Exception e)
+			{
+				throw new IOException(
+						String.format(
+								"Unable to access stream from jrt ref [%s] for entry [%s]",
+								lateralPath,
+								lateralPath.toString()
+						)
+				);
+			}
+			final ArchiveEntry entry = new ArchiveEntry()
+			{
+				@Override
+				public String getName()
+				{
+					return entryName;
+				}
+				
+				@Override
+				public String getNameWithinArchive()
+				{
+					return relativeName;
+				}
+				
+				@Override
+				public InputStreamAccess getStreamAccess()
+				{
+					return inputStreamAccess;
+				}
+			};
+			
+			final ArchiveEntryHandler entryHandler = context.obtainArchiveEntryHandler(entry);
+			entryHandler.handleEntry(entry, context);
+			return super.visitFile(lateralPath, attrs);
 		}
-		catch (IOException e) {
-			URL_LOGGER.logUnableToFindFileByUrl( getArchiveUrl(), e );
+		
+		@Override
+		public java.nio.file.FileVisitResult visitFileFailed(java.nio.file.Path file, java.io.IOException exc) throws java.io.IOException
+		{
+			return super.visitFileFailed(file, exc);
 		}
-		catch (URISyntaxException e) {
-			URL_LOGGER.logMalformedUrl( getArchiveUrl(), e );
-		}
-		return null;
 	}
 }

@@ -49,6 +49,7 @@ import org.hibernate.hql.spi.id.MultiTableBulkIdStrategy;
 import org.hibernate.id.uuid.LocalObjectUuidHelper;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
@@ -93,6 +94,7 @@ import static org.hibernate.cfg.AvailableSettings.INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.IN_CLAUSE_PARAMETER_PADDING;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TIME_ZONE;
 import static org.hibernate.cfg.AvailableSettings.JDBC_TYLE_PARAMS_ZERO_BASE;
+import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
 import static org.hibernate.cfg.AvailableSettings.LOG_SESSION_METRICS;
 import static org.hibernate.cfg.AvailableSettings.MAX_FETCH_DEPTH;
@@ -100,12 +102,12 @@ import static org.hibernate.cfg.AvailableSettings.MULTI_TENANT_IDENTIFIER_RESOLV
 import static org.hibernate.cfg.AvailableSettings.NATIVE_EXCEPTION_HANDLING_51_COMPLIANCE;
 import static org.hibernate.cfg.AvailableSettings.OMIT_JOIN_OF_SUPERCLASS_TABLES;
 import static org.hibernate.cfg.AvailableSettings.ORDER_INSERTS;
-import static org.hibernate.cfg.AvailableSettings.JPA_CALLBACKS_ENABLED;
 import static org.hibernate.cfg.AvailableSettings.ORDER_UPDATES;
 import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
 import static org.hibernate.cfg.AvailableSettings.PROCEDURE_NULL_PARAM_PASSING;
 import static org.hibernate.cfg.AvailableSettings.QUERY_CACHE_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.QUERY_STARTUP_CHECKING;
+import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.QUERY_SUBSTITUTIONS;
 import static org.hibernate.cfg.AvailableSettings.RELEASE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
@@ -114,7 +116,6 @@ import static org.hibernate.cfg.AvailableSettings.SESSION_SCOPED_INTERCEPTOR;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_FETCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_INSPECTOR;
-import static org.hibernate.cfg.AvailableSettings.QUERY_STATISTICS_MAX_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_DIRECT_REFERENCE_CACHE_ENTRIES;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.cfg.AvailableSettings.USE_IDENTIFIER_ROLLBACK;
@@ -126,9 +127,9 @@ import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
+import static org.hibernate.cfg.AvailableSettings.DISCARD_PC_ON_CLOSE;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
-import static org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE;
 
 /**
  * In-flight state of {@link org.hibernate.boot.spi.SessionFactoryOptions}
@@ -465,11 +466,25 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				false
 		);
 
-		this.releaseResourcesOnCloseEnabled = ConfigurationHelper.getBoolean(
-				DISCARD_PC_ON_CLOSE,
-				configurationSettings,
-				false
+		this.releaseResourcesOnCloseEnabled = NullnessHelper.coalesceSuppliedValues(
+				() -> ConfigurationHelper.getBooleanWrapper( DISCARD_PC_ON_CLOSE, configurationSettings, null ),
+				() -> {
+					final Boolean oldSetting = ConfigurationHelper.getBooleanWrapper(
+							org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE,
+							configurationSettings,
+							null
+					);
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.DISCARD_PC_ON_CLOSE,
+								DISCARD_PC_ON_CLOSE
+						);
+					}
+					return oldSetting;
+				},
+				() -> false
 		);
+
 		Object jdbcTimeZoneValue = configurationSettings.get(
 				JDBC_TIME_ZONE
 		);
@@ -542,39 +557,40 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	@SuppressWarnings("deprecation")
 	private static Interceptor determineInterceptor(Map configurationSettings, StrategySelector strategySelector) {
-		Object setting = configurationSettings.get( INTERCEPTOR );
-		if ( setting == null ) {
-			// try the legacy (deprecated) JPA name
-			setting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.INTERCEPTOR );
-			if ( setting != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-						org.hibernate.jpa.AvailableSettings.INTERCEPTOR,
-						INTERCEPTOR
-				);
-			}
-		}
-
-		return strategySelector.resolveStrategy(
-				Interceptor.class,
-				setting
+		final Object setting = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationSettings.get( INTERCEPTOR ),
+				() -> {
+					final Object oldSetting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.INTERCEPTOR );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.INTERCEPTOR,
+								INTERCEPTOR
+						);
+					}
+					return oldSetting;
+				}
 		);
+
+		return strategySelector.resolveStrategy( Interceptor.class, setting );
 	}
 
 	@SuppressWarnings({"unchecked", "deprecation"})
 	private static Supplier<? extends Interceptor> determineStatelessInterceptor(
 			Map configurationSettings,
 			StrategySelector strategySelector) {
-		Object setting = configurationSettings.get( SESSION_SCOPED_INTERCEPTOR );
-		if ( setting == null ) {
-			// try the legacy (deprecated) JPA name
-			setting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR );
-			if ( setting != null ) {
-				DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
-						org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR,
-						SESSION_SCOPED_INTERCEPTOR
-				);
-			}
-		}
+		Object setting = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationSettings.get( SESSION_SCOPED_INTERCEPTOR ),
+				() -> {
+					final Object oldSetting = configurationSettings.get( org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.SESSION_INTERCEPTOR,
+								SESSION_SCOPED_INTERCEPTOR
+						);
+					}
+					return oldSetting;
+				}
+		);
 
 		if ( setting == null ) {
 			return null;

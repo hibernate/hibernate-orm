@@ -26,13 +26,13 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -273,7 +273,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	private Properties buildProperties() {
 		Properties properties = Environment.getProperties();
 
-		properties.put( org.hibernate.cfg.AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
+		properties.put( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
 			properties.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
@@ -284,10 +284,10 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		configure( properties );
 
 		if ( createSchema() ) {
-			properties.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+			properties.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
-		properties.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-		properties.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );
+		properties.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		properties.put( AvailableSettings.DIALECT, getDialect().getClass().getName() );
 
 		return properties;
 	}

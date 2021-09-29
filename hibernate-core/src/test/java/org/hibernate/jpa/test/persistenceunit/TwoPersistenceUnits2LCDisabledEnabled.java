@@ -36,7 +36,7 @@ public class TwoPersistenceUnits2LCDisabledEnabled {
 	@TestForIssue( jiraKey = "HHH-11516" )
 	public void testDisabledEnabled() {
 		final Map<Object, Object> config = Environment.getProperties();
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, Collections.singletonList( AnEntity.class ) );
+		config.put( AvailableSettings.LOADED_CLASSES, Collections.singletonList( AnEntity.class ) );
 		config.put( "javax.persistence.sharedCache.mode", SharedCacheMode.ENABLE_SELECTIVE );
 		config.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
 

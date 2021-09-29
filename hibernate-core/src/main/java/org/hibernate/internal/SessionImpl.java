@@ -71,8 +71,8 @@ import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
-import org.hibernate.bytecode.enhance.spi.interceptor.LazyAttributeLoadingInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.criterion.NaturalIdentifier;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -91,8 +91,6 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NamedQueryDefinition;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.QueryParameters;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -140,7 +138,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.hql.spi.QueryTranslator;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.internal.log.DeprecationLogger;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.internal.util.CacheModeHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -271,6 +269,19 @@ public class SessionImpl
 				initialMode = fastSessionServices.initialSessionFlushMode;
 			}
 			else {
+				final Object setting = NullnessHelper.coalesceSuppliedValues(
+						() -> getSessionProperty( AvailableSettings.FLUSH_MODE ),
+						() -> {
+							final Object oldSetting = getSessionProperty( org.hibernate.jpa.AvailableSettings.FLUSH_MODE );
+							if ( oldSetting != null ) {
+								DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+										org.hibernate.jpa.AvailableSettings.FLUSH_MODE,
+										AvailableSettings.FLUSH_MODE
+								);
+							}
+							return oldSetting;
+						}
+				);
 				initialMode = ConfigurationHelper.getFlushMode( getSessionProperty( AvailableSettings.FLUSH_MODE ), FlushMode.AUTO );
 			}
 			getSession().setHibernateFlushMode( initialMode );
@@ -3603,7 +3614,8 @@ public class SessionImpl
 
 		//now actually update settings, if it's any of these which have a direct impact on this Session state:
 
-		if ( AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
+		if ( AvailableSettings.FLUSH_MODE.equals( propertyName )
+				|| org.hibernate.jpa.AvailableSettings.FLUSH_MODE.equals( propertyName ) ) {
 			setHibernateFlushMode( ConfigurationHelper.getFlushMode( value, FlushMode.AUTO ) );
 		}
 		else if ( JPA_LOCK_SCOPE.equals( propertyName ) || JPA_LOCK_TIMEOUT.equals( propertyName )

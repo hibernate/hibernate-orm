@@ -13,8 +13,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.junit.Assert;

@@ -16,13 +16,10 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.Distributor;
 import org.hibernate.jpa.test.Item;
@@ -89,7 +86,7 @@ public class InterceptorTest {
 	@Test
 	public void testDeprecatedConfiguredSessionInterceptor() {
 		Map settings = basicSettings();
-		settings.put( AvailableSettings.SESSION_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
+		settings.put( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
 
 		Item i = new Item();
@@ -275,9 +272,9 @@ public class InterceptorTest {
 
     protected Map basicSettings() {
 		return SettingsGenerator.generateSettings(
-				Environment.HBM2DDL_AUTO, "create-drop",
-				Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true",
-				Environment.DIALECT, Dialect.getDialect().getClass().getName(),
+				AvailableSettings.HBM2DDL_AUTO, "create-drop",
+				AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true",
+				AvailableSettings.DIALECT, Dialect.getDialect().getClass().getName(),
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() )
 		);
     }

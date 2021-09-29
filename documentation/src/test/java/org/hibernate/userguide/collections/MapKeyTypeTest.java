@@ -69,7 +69,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 		try {
 			Map settings = buildSettings();
 			settings.put(
-				org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
+				org.hibernate.cfg.AvailableSettings.LOADED_CLASSES,
 				Collections.singletonList(
 					Person.class
 				)

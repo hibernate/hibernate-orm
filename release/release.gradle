@@ -205,7 +205,9 @@ task aggregateJavadocs(type: Javadoc) {
     if ( gradle.ext.javaToolchainEnabled ) {
         // Display version of Java tools
         doFirst {
-            logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+            if ( javadocTool.present ) {
+                logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+            }
         }
     }
 }

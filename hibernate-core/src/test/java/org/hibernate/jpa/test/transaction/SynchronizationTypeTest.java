@@ -14,9 +14,9 @@ import javax.persistence.TransactionRequiredException;
 import javax.persistence.criteria.CriteriaDelete;
 import javax.persistence.criteria.CriteriaUpdate;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorImpl;
 
@@ -43,7 +43,7 @@ public class SynchronizationTypeTest extends BaseEntityManagerFunctionalTestCase
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare( options );
-		options.put( AvailableSettings.TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
 	}
 
 	@Override

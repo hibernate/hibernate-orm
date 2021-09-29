@@ -33,7 +33,6 @@ import org.hibernate.boot.archive.scan.internal.StandardScanOptions;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
-import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.model.process.spi.MetadataBuildingProcess;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -53,6 +52,7 @@ import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.cfg.AttributeConverterDefinition;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -60,10 +60,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.factory.spi.MutableIdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.internal.EntityManagerMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.IntegratorProvider;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -87,6 +87,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 
 import org.jboss.jandex.Index;
 
+import static org.hibernate.cfg.AvailableSettings.CFG_XML_FILE;
 import static org.hibernate.cfg.AvailableSettings.DATASOURCE;
 import static org.hibernate.cfg.AvailableSettings.DRIVER;
 import static org.hibernate.cfg.AvailableSettings.JACC_CONTEXT_ID;
@@ -111,6 +112,7 @@ import static org.hibernate.cfg.AvailableSettings.JPA_SHARED_CACHE_MODE;
 import static org.hibernate.cfg.AvailableSettings.JPA_TRANSACTION_TYPE;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_MODE;
 import static org.hibernate.cfg.AvailableSettings.PASS;
+import static org.hibernate.cfg.AvailableSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
@@ -119,7 +121,6 @@ import static org.hibernate.internal.HEMLogging.messageLogger;
 import static org.hibernate.jpa.AvailableSettings.CFG_FILE;
 import static org.hibernate.jpa.AvailableSettings.CLASS_CACHE_PREFIX;
 import static org.hibernate.jpa.AvailableSettings.COLLECTION_CACHE_PREFIX;
-import static org.hibernate.jpa.AvailableSettings.PERSISTENCE_UNIT_NAME;
 
 /**
  * @author Steve Ebersole
@@ -505,11 +506,25 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		mergedSettings.processPersistenceUnitDescriptorProperties( persistenceUnit );
 
 		// see if the persistence.xml settings named a Hibernate config file....
-		String cfgXmlResourceName = (String) mergedSettings.configurationValues.remove( CFG_FILE );
-		if ( StringHelper.isEmpty( cfgXmlResourceName ) ) {
-			// see if integration settings named a Hibernate config file....
-			cfgXmlResourceName = (String) integrationSettings.get( CFG_FILE );
-		}
+		final String cfgXmlResourceName = NullnessHelper.coalesceSuppliedValues(
+				// first see if we can find it in the configurationValues
+				() -> (String) mergedSettings.configurationValues.remove( CFG_XML_FILE ),
+				() -> {
+					final String oldSetting = (String) mergedSettings.configurationValues.remove( CFG_FILE );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting( CFG_FILE, CFG_XML_FILE);
+					}
+					return oldSetting;
+				},
+				() -> (String) integrationSettings.get( CFG_XML_FILE ),
+				() -> {
+					final String oldSetting = (String) integrationSettings.get( CFG_FILE );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting( CFG_FILE, CFG_XML_FILE);
+					}
+					return oldSetting;
+				}
+		);
 
 		if ( StringHelper.isNotEmpty( cfgXmlResourceName ) ) {
 			processHibernateConfigXmlResources( ssrBuilder, mergedSettings, cfgXmlResourceName );
@@ -524,16 +539,16 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		2) additional cache region declarations
 		//
 		// we will also clean up any references with null entries
-		Iterator itr = mergedSettings.configurationValues.entrySet().iterator();
+		Iterator<Map.Entry> itr = mergedSettings.configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
+			final Map.Entry entry = itr.next();
 			if ( entry.getValue() == null ) {
 				// remove entries with null values
 				itr.remove();
 				break;
 			}
 
-			if ( String.class.isInstance( entry.getKey() ) && String.class.isInstance( entry.getValue() ) ) {
+			if ( entry.getKey() instanceof String && entry.getValue() instanceof String ) {
 				final String keyString = (String) entry.getKey();
 				final String valueString = (String) entry.getValue();
 
@@ -552,7 +567,20 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 						}
 					}
 				}
+				else if ( keyString.startsWith( AvailableSettings.CLASS_CACHE_PREFIX ) ) {
+					mergedSettings.addCacheRegionDefinition(
+							parseCacheRegionDefinitionEntry(
+									keyString.substring( AvailableSettings.CLASS_CACHE_PREFIX.length() + 1 ),
+									valueString,
+									CacheRegionDefinition.CacheRegionType.ENTITY
+							)
+					);
+				}
 				else if ( keyString.startsWith( CLASS_CACHE_PREFIX ) ) {
+					DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+							CLASS_CACHE_PREFIX,
+							AvailableSettings.CLASS_CACHE_PREFIX
+					);
 					mergedSettings.addCacheRegionDefinition(
 							parseCacheRegionDefinitionEntry(
 									keyString.substring( CLASS_CACHE_PREFIX.length() + 1 ),
@@ -561,7 +589,20 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 							)
 					);
 				}
+				else if ( keyString.startsWith( AvailableSettings.COLLECTION_CACHE_PREFIX ) ) {
+					mergedSettings.addCacheRegionDefinition(
+							parseCacheRegionDefinitionEntry(
+									keyString.substring( AvailableSettings.COLLECTION_CACHE_PREFIX.length() + 1 ),
+									(String) entry.getValue(),
+									CacheRegionDefinition.CacheRegionType.COLLECTION
+							)
+					);
+				}
 				else if ( keyString.startsWith( COLLECTION_CACHE_PREFIX ) ) {
+					DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+							COLLECTION_CACHE_PREFIX,
+							AvailableSettings.COLLECTION_CACHE_PREFIX
+					);
 					mergedSettings.addCacheRegionDefinition(
 							parseCacheRegionDefinitionEntry(
 									keyString.substring( COLLECTION_CACHE_PREFIX.length() + 1 ),
@@ -1152,14 +1193,14 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		if ( !params.hasMoreTokens() ) {
 			StringBuilder error = new StringBuilder( "Illegal usage of " );
 			if ( cacheType == CacheRegionDefinition.CacheRegionType.ENTITY ) {
-				error.append( CLASS_CACHE_PREFIX )
+				error.append( AvailableSettings.CLASS_CACHE_PREFIX )
 						.append( ": " )
-						.append( CLASS_CACHE_PREFIX );
+						.append( AvailableSettings.CLASS_CACHE_PREFIX );
 			}
 			else {
-				error.append( COLLECTION_CACHE_PREFIX )
+				error.append( AvailableSettings.COLLECTION_CACHE_PREFIX )
 						.append( ": " )
-						.append( COLLECTION_CACHE_PREFIX );
+						.append( AvailableSettings.COLLECTION_CACHE_PREFIX );
 			}
 			error.append( '.' )
 					.append( role )
@@ -1191,10 +1232,24 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		final StrategySelector strategySelector = ssr.getService( StrategySelector.class );
 
 		// apply id generators
-		final Object idGeneratorStrategyProviderSetting = configurationValues.remove( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
+		final Object idGeneratorStrategyProviderSetting = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationValues.remove( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER ),
+				() -> {
+					final Object oldSetting = configurationValues.remove( org.hibernate.jpa.AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
+								AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER
+						);
+					}
+					return oldSetting;
+				}
+		);
 		if ( idGeneratorStrategyProviderSetting != null ) {
-			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
-					strategySelector.resolveStrategy( IdentifierGeneratorStrategyProvider.class, idGeneratorStrategyProviderSetting );
+			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider = strategySelector.resolveStrategy(
+					IdentifierGeneratorStrategyProvider.class,
+					idGeneratorStrategyProviderSetting
+			);
 			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( MutableIdentifierGeneratorFactory.class );
 			if ( identifierGeneratorFactory == null ) {
 				throw persistenceException(
@@ -1256,9 +1311,17 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		List<AttributeConverterDefinition> attributeConverterDefinitions = null;
 
 		// add any explicit Class references passed in
-		final List<Class> loadedAnnotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
-		if ( loadedAnnotatedClasses != null ) {
-			for ( Class cls : loadedAnnotatedClasses ) {
+		final List<Class> annotatedClasses = (List<Class>) configurationValues.remove( AvailableSettings.LOADED_CLASSES );
+		final List<Class> oldAnnotatedClasses = (List<Class>) configurationValues.remove( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES );
+		if ( oldAnnotatedClasses != null && ! oldAnnotatedClasses.isEmpty() ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
+					AvailableSettings.LOADED_CLASSES
+			);
+		}
+		final List<Class> explicitAnnotatedClasses = NullnessHelper.coalesce( annotatedClasses, oldAnnotatedClasses );
+		if ( explicitAnnotatedClasses != null ) {
+			for ( Class cls : explicitAnnotatedClasses ) {
 				if ( AttributeConverter.class.isAssignableFrom( cls ) ) {
 					if ( attributeConverterDefinitions == null ) {
 						attributeConverterDefinitions = new ArrayList<>();
@@ -1272,15 +1335,31 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// add any explicit hbm.xml references passed in
-		final String explicitHbmXmls = (String) configurationValues.remove( AvailableSettings.HBXML_FILES );
-		if ( explicitHbmXmls != null ) {
-			for ( String hbmXml : StringHelper.split( ", ", explicitHbmXmls ) ) {
+		final String hbmXmlFiles = (String) configurationValues.remove( AvailableSettings.HBM_XML_FILES );
+		final String oldHbmXmlFiles = (String) configurationValues.remove( AvailableSettings.HBXML_FILES );
+		if ( oldHbmXmlFiles != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.HBXML_FILES,
+					AvailableSettings.HBM_XML_FILES
+			);
+		}
+		final String explicitHbmXmlFiles = NullnessHelper.coalesce( hbmXmlFiles, oldHbmXmlFiles );
+		if ( explicitHbmXmlFiles != null ) {
+			for ( String hbmXml : StringHelper.split( ", ", explicitHbmXmlFiles ) ) {
 				metadataSources.addResource( hbmXml );
 			}
 		}
 
 		// add any explicit orm.xml references passed in
-		final List<String> explicitOrmXmlList = (List<String>) configurationValues.remove( AvailableSettings.XML_FILE_NAMES );
+		final List<String> ormXmlFiles = (List<String>) configurationValues.remove( AvailableSettings.ORM_XML_FILES );
+		final List<String> oldOrmXmlFiles = (List<String>) configurationValues.remove( AvailableSettings.XML_FILE_NAMES );
+		if ( oldOrmXmlFiles != null ) {
+			DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+					AvailableSettings.XML_FILE_NAMES,
+					AvailableSettings.ORM_XML_FILES
+			);
+		}
+		final List<String> explicitOrmXmlList = NullnessHelper.coalesce( ormXmlFiles, oldOrmXmlFiles );
 		if ( explicitOrmXmlList != null ) {
 			explicitOrmXmlList.forEach( metadataSources::addResource );
 		}
@@ -1455,10 +1534,24 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		}
 
 		// Locate and apply any requested SessionFactoryObserver
-		final Object sessionFactoryObserverSetting = configurationValues.remove( AvailableSettings.SESSION_FACTORY_OBSERVER );
+		final Object sessionFactoryObserverSetting = NullnessHelper.coalesceSuppliedValues(
+				() -> configurationValues.remove( AvailableSettings.SESSION_FACTORY_OBSERVER ),
+				() -> {
+					final Object oldSetting = configurationValues.remove( org.hibernate.jpa.AvailableSettings.SESSION_FACTORY_OBSERVER );
+					if ( oldSetting != null ) {
+						DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+								org.hibernate.jpa.AvailableSettings.SESSION_FACTORY_OBSERVER,
+								AvailableSettings.SESSION_FACTORY_OBSERVER
+						);
+					}
+					return oldSetting;
+				}
+		);
 		if ( sessionFactoryObserverSetting != null ) {
-			final SessionFactoryObserver suppliedSessionFactoryObserver =
-					strategySelector.resolveStrategy( SessionFactoryObserver.class, sessionFactoryObserverSetting );
+			final SessionFactoryObserver suppliedSessionFactoryObserver = strategySelector.resolveStrategy(
+					SessionFactoryObserver.class,
+					sessionFactoryObserverSetting
+			);
 			sfBuilder.addSessionFactoryObservers( suppliedSessionFactoryObserver );
 		}
 
@@ -1529,6 +1622,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 
 			configurationValues.put( PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
+			configurationValues.put( org.hibernate.jpa.AvailableSettings.PERSISTENCE_UNIT_NAME, persistenceUnit.getName() );
 
 		}
 

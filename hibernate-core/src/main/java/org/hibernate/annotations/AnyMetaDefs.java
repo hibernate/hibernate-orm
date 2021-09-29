@@ -17,9 +17,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole
+ *
+ * @deprecated To be removed in 6.0
  */
 @java.lang.annotation.Target( { PACKAGE, TYPE } )
 @Retention( RUNTIME )
+@Deprecated
 public @interface AnyMetaDefs {
 	/**
 	 * The collective set of any meta-defs.

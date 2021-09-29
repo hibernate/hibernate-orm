@@ -260,6 +260,11 @@ public interface SessionFactoryOptions {
 
 	boolean isPreferUserTransaction();
 
+	/**
+	 * @deprecated with no replacement.  See {@link org.hibernate.cfg.AvailableSettings#PROCEDURE_NULL_PARAM_PASSING}
+	 * for details
+	 */
+	@Deprecated
 	boolean isProcedureParameterNullPassingEnabled();
 
 	boolean isCollectionJoinSubqueryRewriteEnabled();

@@ -14,8 +14,7 @@ import javax.persistence.SharedCacheMode;
 
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cache.spi.access.AccessType;
-import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
@@ -114,11 +113,11 @@ public class ConfigurationTest extends BaseUnitTestCase {
 		assertTrue( pc.isCached() );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private MetadataImplementor buildMetadata(SharedCacheMode mode) {
-		Map settings = new HashMap();
-		settings.put( AvailableSettings.SHARED_CACHE_MODE, mode );
-		settings.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
+		final Map settings = new HashMap<>();
+		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, mode );
+		settings.put( AvailableSettings.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
 		settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(

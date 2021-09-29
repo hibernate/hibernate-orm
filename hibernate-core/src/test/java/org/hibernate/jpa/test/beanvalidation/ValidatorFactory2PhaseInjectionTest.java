@@ -13,7 +13,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;

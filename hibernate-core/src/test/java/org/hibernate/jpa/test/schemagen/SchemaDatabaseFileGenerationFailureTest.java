@@ -27,8 +27,8 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 import org.hibernate.tool.schema.spi.SchemaManagementException;
-import org.hibernate.testing.TestForIssue;
 
+import org.hibernate.testing.TestForIssue;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -123,7 +123,7 @@ public class SchemaDatabaseFileGenerationFailureTest {
 		ArrayList<Class> classes = new ArrayList<>();
 
 		classes.addAll( Arrays.asList( new Class[] { TestEntity.class } ) );
-		config.put( org.hibernate.jpa.AvailableSettings.LOADED_CLASSES, classes );
+		config.put( AvailableSettings.LOADED_CLASSES, classes );
 		return config;
 	}
 }

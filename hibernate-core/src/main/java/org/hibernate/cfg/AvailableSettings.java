@@ -882,6 +882,31 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
+	 * Event configuration should follow the following pattern
+	 * hibernate.event.listener.[eventType] f.q.c.n.EventListener1, f.q.c.n.EventListener12 ...
+	 */
+	String EVENT_LISTENER_PREFIX = "hibernate.event.listener";
+
+	/**
+	 * Used to pass along the name of the persistence unit.
+	 */
+	String PERSISTENCE_UNIT_NAME = "hibernate.persistenceUnitName";
+
+	/**
+	 * SessionFactoryObserver class name, the class must have a no-arg constructor
+	 */
+	String SESSION_FACTORY_OBSERVER = "hibernate.session_factory_observer";
+
+	/**
+	 * IdentifierGeneratorStrategyProvider class name, the class must have a no-arg constructor
+	 *
+	 * @deprecated with no replacement.  Hooking in to Hibernate's id-generator determination
+	 * will be done very differently in Hibernate 6
+	 */
+	@Deprecated
+	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
+
+	/**
 	 * Setting used to name the Hibernate {@link org.hibernate.SessionFactory}.
 	 *
 	 * Naming the SessionFactory allows for it to be properly serialized across JVMs as
@@ -897,6 +922,13 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	String SESSION_FACTORY_NAME = "hibernate.session_factory_name";
 
 	/**
+	 * EntityManagerFactory name.  Same purpose as {@value #SESSION_FACTORY_NAME}
+	 *
+	 * @see #SESSION_FACTORY_NAME
+	 */
+	String EMF_NAME = "hibernate.entitymanager_factory_name";
+
+	/**
 	 * Does the value defined by {@link #SESSION_FACTORY_NAME} represent a JNDI namespace into which
 	 * the {@link org.hibernate.SessionFactory} should be bound and made accessible?
 	 *
@@ -909,6 +941,36 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @see #SESSION_FACTORY_NAME
 	 */
 	String SESSION_FACTORY_NAME_IS_JNDI = "hibernate.session_factory_name_is_jndi";
+
+	/**
+	 * Whether to discard persistent context on {@link org.hibernate.Session#close} /
+	 * {@link javax.persistence.EntityManager#close}.
+	 *
+	 * The default (and spec compliant behavior) is false
+	 */
+	String DISCARD_PC_ON_CLOSE = "hibernate.discard_pc_on_close";
+
+	/**
+	 * Used to specify a Hibernate {@code cfg.xml} config file
+	 */
+	String CFG_XML_FILE = "hibernate.cfg_xml_file";
+	String HBM_XML_FILES = "hibernate.hbm_xml_files";
+	String ORM_XML_FILES = "hibernate.orm_xml_files";
+	String LOADED_CLASSES = "hibernate.loaded_classes";
+
+	/**
+	 * Caching configuration should follow the following pattern
+	 * {@code hibernate.ejb.classcache.<fully.qualified.Classname> usage[, region]}
+	 * where usage is the cache strategy used and region the cache region name
+	 */
+	String CLASS_CACHE_PREFIX = "hibernate.classcache";
+
+	/**
+	 * Caching configuration should follow the following pattern
+	 * {@code hibernate.ejb.collectioncache.<fully.qualified.Classname>.<role> usage[, region]}
+	 * where usage is the cache strategy used and region the cache region name
+	 */
+	String COLLECTION_CACHE_PREFIX = "hibernate.collectioncache";
 
 	/**
 	 * Enable logging of generated SQL to the console

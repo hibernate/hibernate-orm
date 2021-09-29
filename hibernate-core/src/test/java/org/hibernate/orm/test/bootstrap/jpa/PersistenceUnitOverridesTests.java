@@ -396,7 +396,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override
@@ -437,7 +437,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override

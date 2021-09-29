@@ -10,7 +10,7 @@ import java.util.Collections;
 
 import javax.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.test.PersistenceUnitInfoAdapter;
 

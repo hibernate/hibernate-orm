@@ -19,14 +19,16 @@ import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
+
 import org.hibernate.LockMode;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDB192Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;

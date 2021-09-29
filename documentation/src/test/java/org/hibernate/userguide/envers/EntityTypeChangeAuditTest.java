@@ -83,7 +83,7 @@ public class EntityTypeChangeAuditTest extends BaseEntityManagerFunctionalTestCa
         try {
             Map settings = buildSettings();
             settings.put(
-                org.hibernate.jpa.AvailableSettings.LOADED_CLASSES,
+                AvailableSettings.LOADED_CLASSES,
                 Arrays.asList(
                     ApplicationCustomer.class,
                     CustomTrackingRevisionEntity.class

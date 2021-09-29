@@ -3,6 +3,22 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.0.CR1 (September 29, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31986
+
+** Bug
+    * [HHH-14852] - Upgrade GraalVM to version 21.2.0
+
+** Deprecation
+    * [HHH-14847] - Deprecate JMX integration
+    * [HHH-14845] - Deprecate JACC integration
+
+** Task
+    * [HHH-14835] - More changes to support SchemaMigrator/SchemaValidator using Hibernate Reactive
+
+
 Changes in 5.6.0.Beta2 (September 20, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

@@ -20,6 +20,7 @@ dependencies {
     compileOnly libraries.postgresql
 
     testCompile project(':hibernate-testing')
+    testCompile project(':hibernate-ant')
     testCompile project( path: ':hibernate-core', configuration: 'tests' )
 
     testCompile libraries.jakarta_validation

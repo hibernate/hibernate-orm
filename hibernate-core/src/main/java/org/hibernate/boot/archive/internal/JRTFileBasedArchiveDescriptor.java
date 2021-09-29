@@ -93,7 +93,7 @@ public class JRTFileBasedArchiveDescriptor extends AbstractArchiveDescriptor
 			}
 			catch (java.net.URISyntaxException e)
 			{
-				visitFileFailed(path, new java.io.IOException("Unable to walk file", e));
+				return visitFileFailed(path, new java.io.IOException("Unable to walk file", e));
 			}
 			String basePrefix = getEntryBasePrefix();
 			final String entryName = name;

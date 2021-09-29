@@ -752,6 +752,10 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryParameter handling
 
+	protected boolean resolveJdbcParameterTypeIfNecessary() {
+		return true;
+	}
+
 	@Override
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public Set<Parameter<?>> getParameters() {
@@ -943,7 +947,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		locateBinding( parameter ).setBindValue( value );
+		locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 
@@ -953,7 +957,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameter( parameter, ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
 		}
 		else {
-			locateBinding( parameter ).setBindValue( value );
+			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
 
 		return this;
@@ -986,7 +990,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( name, (Collection) value );
 		}
 		else {
-			locateBinding( name ).setBindValue( value );
+			locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
 
 		return this;
@@ -1003,7 +1007,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( position, (Collection<?>) value );
 		}
 		else {
-			locateBinding( position ).setBindValue( value );
+			locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		}
 		return this;
 	}

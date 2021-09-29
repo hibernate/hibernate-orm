@@ -792,52 +792,57 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	protected <T> QueryImplementor<T> buildNamedQuery(String queryName, Class<T> resultType) {
 		checkOpen();
-		pulseTransactionCoordinator();
-		delayedAfterCompletion();
+		try {
+			pulseTransactionCoordinator();
+			delayedAfterCompletion();
 
-		// this method can be called for either a named HQL query or a named native query
+			// this method can be called for either a named HQL query or a named native query
 
-		// first see if it is a named HQL query
-		final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
-				.getNamedObjectRepository()
-				.getHqlQueryMemento( queryName );
+			// first see if it is a named HQL query
+			final NamedHqlQueryMemento namedHqlDescriptor = getFactory().getQueryEngine()
+					.getNamedObjectRepository()
+					.getHqlQueryMemento( queryName );
 
-		if ( namedHqlDescriptor != null ) {
-			HqlQueryImplementor<T> query = namedHqlDescriptor.toQuery( this, resultType );
-			if ( StringHelper.isEmpty( query.getComment() ) ) {
-				query.setComment( "dynamic HQL query" );
+			if ( namedHqlDescriptor != null ) {
+				HqlQueryImplementor<T> query = namedHqlDescriptor.toQuery( this, resultType );
+				if ( StringHelper.isEmpty( query.getComment() ) ) {
+					query.setComment( "dynamic HQL query" );
+				}
+				applyQuerySettingsAndHints( query );
+				if ( namedHqlDescriptor.getLockOptions() != null ) {
+					query.setLockOptions( namedHqlDescriptor.getLockOptions() );
+				}
+				return query;
 			}
-			applyQuerySettingsAndHints( query );
-			if ( namedHqlDescriptor.getLockOptions() != null ) {
-				query.setLockOptions( namedHqlDescriptor.getLockOptions() );
+
+			// otherwise, see if it is a named native query
+			final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
+					.getNamedObjectRepository()
+					.getNativeQueryMemento( queryName );
+
+			if ( namedNativeDescriptor != null ) {
+				final NativeQueryImplementor<T> query;
+				if ( resultType == null) {
+					query = namedNativeDescriptor.toQuery( this );
+				}
+				else {
+					query = namedNativeDescriptor.toQuery( this, resultType );
+				}
+				if ( StringHelper.isEmpty( query.getComment() ) ) {
+					query.setComment( "dynamic native SQL query" );
+				}
+				applyQuerySettingsAndHints( query );
+				return query;
 			}
-			return query;
+
+			// todo (6.0) : allow this for named stored procedures as well?
+			//		ultimately they are treated as a Query
+
+			throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 		}
-
-		// otherwise, see if it is a named native query
-		final NamedNativeQueryMemento namedNativeDescriptor = getFactory().getQueryEngine()
-				.getNamedObjectRepository()
-				.getNativeQueryMemento( queryName );
-
-		if ( namedNativeDescriptor != null ) {
-			final NativeQueryImplementor<T> query;
-			if ( resultType == null) {
-				query = namedNativeDescriptor.toQuery( this );
-			}
-			else {
-				query = namedNativeDescriptor.toQuery( this, resultType );
-			}
-			if ( StringHelper.isEmpty( query.getComment() ) ) {
-				query.setComment( "dynamic native SQL query" );
-			}
-			applyQuerySettingsAndHints( query );
-			return query;
+		catch (RuntimeException e) {
+			throw !( e instanceof IllegalArgumentException ) ? new IllegalArgumentException( e ) : e;
 		}
-
-		// todo (6.0) : allow this for named stored procedures as well?
-		//		ultimately they are treated as a Query
-
-		throw getExceptionConverter().convert( new IllegalArgumentException( "No query defined for that name [" + queryName + "]" ) );
 	}
 
 	protected void applyQuerySettingsAndHints(Query query) {

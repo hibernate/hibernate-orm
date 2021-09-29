@@ -506,6 +506,12 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	protected boolean resolveJdbcParameterTypeIfNecessary() {
+		// No need to resolve JDBC parameter types as we know them from the SQM model
+		return false;
+	}
+
+	@Override
 	public LockModeType getLockMode() {
 		if ( ! isSelectQuery() ) {
 			throw new IllegalStateException( "Illegal attempt to access lock-mode for non-select query" );

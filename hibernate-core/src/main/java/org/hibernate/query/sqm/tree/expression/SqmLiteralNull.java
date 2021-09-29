@@ -14,15 +14,16 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
  * @author Steve Ebersole
  */
 public class SqmLiteralNull<T> extends SqmLiteral<T> {
+
+	private static final SqmExpressable<Object> NULL_TYPE = () -> null;
+
 	public SqmLiteralNull(NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		this( NULL_TYPE, nodeBuilder );
+		this( (SqmExpressable<T>) NULL_TYPE, nodeBuilder );
 	}
 
-	public SqmLiteralNull(
-			SqmExpressable<T> expressableType,
-			NodeBuilder nodeBuilder) {
-		super( null, expressableType, nodeBuilder );
+	public SqmLiteralNull(SqmExpressable<T> expressableType, NodeBuilder nodeBuilder) {
+		super( expressableType, nodeBuilder );
 	}
 
 	@Override
@@ -34,8 +35,6 @@ public class SqmLiteralNull<T> extends SqmLiteral<T> {
 	public String asLoggableText() {
 		return "<literal-null>";
 	}
-
-	private static SqmExpressable NULL_TYPE = () -> null;
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {

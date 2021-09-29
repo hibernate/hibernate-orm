@@ -35,7 +35,6 @@ import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.type.StandardBasicTypes;
 
 /**
  * @author Steve Ebersole
@@ -92,7 +91,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 					type = param.getHibernateType();
 				}
 				if ( type == null ) {
-					type = StandardBasicTypes.OBJECT_TYPE;
+					type = executionContext.getSession().getTypeConfiguration().getBasicTypeForJavaType( Object.class );
 				}
 
 				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
@@ -157,7 +156,7 @@ public class NativeSelectQueryPlanImpl<R> implements NativeSelectQueryPlan<R> {
 							type = param.getHibernateType();
 						}
 						if ( type == null ) {
-							type = StandardBasicTypes.OBJECT_TYPE;
+							type = executionContext.getSession().getTypeConfiguration().getBasicTypeForJavaType( Object.class );
 						}
 
 						final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();

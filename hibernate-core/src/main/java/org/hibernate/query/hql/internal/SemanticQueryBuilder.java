@@ -180,6 +180,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -3037,7 +3038,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	private <J> BasicDomainType<J> resolveExpressableTypeBasic(Class<J> javaType) {
+	private <J> BasicType<J> resolveExpressableTypeBasic(Class<J> javaType) {
 		return creationContext.getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 	}
 
@@ -3093,7 +3094,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					functionName,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE )
+					StandardFunctionReturnTypeResolvers.invariant(
+							resolveExpressableTypeBasic( Object.class )
+					)
 			);
 		}
 		return functionTemplate.generateSqmExpression(
@@ -3137,7 +3140,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					functionName,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE ),
+					StandardFunctionReturnTypeResolvers.invariant(
+							resolveExpressableTypeBasic( Object.class )
+					),
 					functionName,
 					filterExpression != null ? FunctionKind.AGGREGATE : FunctionKind.NORMAL,
 					null,

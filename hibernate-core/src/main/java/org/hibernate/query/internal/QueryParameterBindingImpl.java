@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import jakarta.persistence.TemporalType;
@@ -19,7 +18,7 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
-import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.NullType;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -101,7 +100,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValue(T value) {
+	public void setBindValue(T value, boolean resolveJdbcTypeIfNecessary) {
 		if ( handleAsMultiValue( value ) ) {
 			return;
 		}
@@ -119,6 +118,10 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			validate( value );
 		}
 
+		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
+			//noinspection unchecked
+			bindType = (AllowableParameterType<T>) NullType.INSTANCE;
+		}
 		bindValue( value );
 	}
 
@@ -148,9 +151,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.isBound = true;
 		this.bindValue = value;
 
-		if ( bindType == null && value != null ) {
-			//noinspection unchecked
-			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( value );
+		if ( bindType == null ) {
+			if ( value != null ) {
+				//noinspection unchecked
+				this.bindType = (AllowableParameterType<T>) typeResolver.resolveParameterBindType( value );
+			}
 		}
 	}
 

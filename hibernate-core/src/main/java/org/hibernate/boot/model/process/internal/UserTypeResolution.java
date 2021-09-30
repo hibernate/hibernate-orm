@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.model.process.internal;
 
+import java.util.Properties;
+
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
@@ -22,10 +24,14 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	private final CustomType userTypeAdapter;
 	private final MutabilityPlan mutabilityPlan;
 
+	private final Properties combinedTypeParameters;
+
 	public UserTypeResolution(
 			CustomType userTypeAdapter,
-			MutabilityPlan explicitMutabilityPlan) {
+			MutabilityPlan explicitMutabilityPlan,
+			Properties combinedTypeParameters) {
 		this.userTypeAdapter = userTypeAdapter;
+		this.combinedTypeParameters = combinedTypeParameters;
 		this.mutabilityPlan = explicitMutabilityPlan != null
 				? explicitMutabilityPlan
 				: new UserTypeMutabilityPlanAdapter( userTypeAdapter.getUserType() );
@@ -59,6 +65,11 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	@Override
 	public BasicType getLegacyResolvedBasicType() {
 		return userTypeAdapter;
+	}
+
+	@Override
+	public Properties getCombinedTypeParameters() {
+		return combinedTypeParameters;
 	}
 
 	@Override

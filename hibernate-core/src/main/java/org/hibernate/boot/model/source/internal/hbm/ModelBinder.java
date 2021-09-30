@@ -159,6 +159,7 @@ import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.NClobType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -2400,7 +2401,8 @@ public class ModelBinder {
 			discriminatorTypeName = discriminatorTypeResolution.typeName;
 			discriminatorType = resolveExplicitlyNamedAnyDiscriminatorType(
 					discriminatorTypeResolution.typeName,
-					discriminatorTypeResolution.parameters
+					discriminatorTypeResolution.parameters,
+					anyBinding.getMetaMapping()
 			);
 		}
 		else {
@@ -2456,7 +2458,10 @@ public class ModelBinder {
 		);
 	}
 
-	private DiscriminatorType<?> resolveExplicitlyNamedAnyDiscriminatorType(String typeName, Properties parameters) {
+	private DiscriminatorType<?> resolveExplicitlyNamedAnyDiscriminatorType(
+			String typeName,
+			Properties parameters,
+			Any.MetaValue discriminatorMapping) {
 		final BootstrapContext bootstrapContext = metadataBuildingContext.getBootstrapContext();
 
 		if ( isEmpty( parameters ) ) {
@@ -2480,6 +2485,10 @@ public class ModelBinder {
 					bootstrapContext.getTypeConfiguration().getCurrentBaseSqlTypeIndicators()
 			);
 
+			if ( resolution.getCombinedTypeParameters() != null ) {
+				discriminatorMapping.setTypeParameters( resolution.getCombinedTypeParameters() );
+			}
+
 			return (DiscriminatorType<?>) resolution.getLegacyResolvedBasicType();
 		}
 
@@ -2496,7 +2505,12 @@ public class ModelBinder {
 					.getService( ManagedBeanRegistry.class );
 			final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
 			final Object typeInstance = bean.getBeanInstance();
-			TypeDefinition.injectParameters( typeInstance, () -> parameters );
+
+			if ( typeInstance instanceof ParameterizedType ) {
+				if ( parameters != null ) {
+					( (ParameterizedType) typeInstance ).setParameterValues( parameters );
+				}
+			}
 
 			if ( typeInstance instanceof UserType ) {
 				return new CustomType(

@@ -8,10 +8,8 @@ package org.hibernate.mapping;
 
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.TypeDefinition;
@@ -42,14 +40,16 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Steve Ebersole
@@ -295,6 +295,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					explicitMutabilityPlanAccess,
 					getAttributeConverterDescriptor(),
 					typeParameters,
+					this::setTypeParameters,
 					this,
 					typeConfiguration,
 					getBuildingContext()
@@ -434,6 +435,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,
 			Map localTypeParams,
+			Consumer<Properties> combinedParameterConsumer,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration,
 			MetadataBuildingContext context) {
@@ -502,7 +504,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		// see if it is a named TypeDefinition
 		final TypeDefinition typeDefinition = context.getTypeDefinitionRegistry().resolve( name );
 		if ( typeDefinition != null ) {
-			return typeDefinition.resolve(
+			final Resolution<?> resolution = typeDefinition.resolve(
 					localTypeParams,
 					explicitMutabilityPlanAccess != null
 							? explicitMutabilityPlanAccess.apply( typeConfiguration )
@@ -510,6 +512,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					context,
 					stdIndicators
 			);
+			combinedParameterConsumer.accept( resolution.getCombinedTypeParameters() );
+			return resolution;
 		}
 
 
@@ -635,6 +639,14 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		 * needed because of the split in extracting / binding
 		 */
 		BasicType<J> getLegacyResolvedBasicType();
+
+		/**
+		 * Get the collection of type-parameters collected both locally as well
+		 * as from the applied type-def, if one
+		 */
+		default Properties getCombinedTypeParameters() {
+			return null;
+		}
 
 		JdbcMapping getJdbcMapping();
 

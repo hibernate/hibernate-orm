@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
@@ -162,25 +163,27 @@ public class TypeDefinition implements Serializable {
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
 			}
 
-			injectParameters(
-					typeInstance,
-					() -> {
-						if ( CollectionHelper.isNotEmpty( usageSiteProperties ) ) {
-							final Properties properties = new Properties( parameters );
-							properties.putAll( usageSiteProperties );
-							return properties;
-						}
-						else {
-							return parameters;
-						}
-					}
-			);
+			final Properties combinedTypeParameters;
+
+			if ( CollectionHelper.isNotEmpty( usageSiteProperties ) ) {
+				combinedTypeParameters = new Properties( parameters );
+				combinedTypeParameters.putAll( usageSiteProperties );
+			}
+			else {
+				combinedTypeParameters = parameters;
+			}
+
+			if ( typeInstance instanceof ParameterizedType ) {
+				if ( combinedTypeParameters != null ) {
+					( (ParameterizedType) typeInstance ).setParameterValues( combinedTypeParameters );
+				}
+			}
 
 			if ( typeInstance instanceof UserType ) {
 				final UserType userType = (UserType) typeInstance;
 				final CustomType customType = new CustomType( userType, typeConfiguration );
 
-				return new UserTypeResolution( customType, null );
+				return new UserTypeResolution( customType, null, combinedTypeParameters );
 			}
 
 			if ( typeInstance instanceof BasicType ) {
@@ -194,6 +197,11 @@ public class TypeDefinition implements Serializable {
 					@Override
 					public BasicType getLegacyResolvedBasicType() {
 						return resolvedBasicType;
+					}
+
+					@Override
+					public Properties getCombinedTypeParameters() {
+						return combinedTypeParameters;
 					}
 
 					@Override
@@ -281,15 +289,6 @@ public class TypeDefinition implements Serializable {
 		throw new IllegalArgumentException(
 				"Named type [" + typeImplementorClass + "] did not implement BasicType nor UserType"
 		);
-	}
-
-	public static void injectParameters(Object customType, Supplier<Properties> parameterSupplier) {
-		if ( customType instanceof ParameterizedType ) {
-			final Properties parameterValues = parameterSupplier.get();
-			if ( parameterValues != null ) {
-				( (ParameterizedType) customType ).setParameterValues( parameterValues );
-			}
-		}
 	}
 
 	public static BasicValue.Resolution<?> createLocalResolution(

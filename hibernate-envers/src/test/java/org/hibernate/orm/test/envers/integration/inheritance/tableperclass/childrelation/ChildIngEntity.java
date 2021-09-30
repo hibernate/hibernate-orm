@@ -7,9 +7,9 @@
 
 package org.hibernate.orm.test.envers.integration.inheritance.tableperclass.childrelation;
 
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.envers.Audited;
 

@@ -6,14 +6,12 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called before updating the datastore
  * 
  * @author Gavin King
  */
-public interface PreUpdateEventListener extends Serializable {
+public interface PreUpdateEventListener {
 	/**
 	 * Return true if the operation should be vetoed
 	 */

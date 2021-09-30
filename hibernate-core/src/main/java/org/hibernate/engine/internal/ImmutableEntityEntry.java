@@ -103,7 +103,7 @@ public final class ImmutableEntityEntry extends AbstractEntityEntry {
 	 *
 	 * @return The deserialized EntityEntry
 	 *
-	 * @throws java.io.IOException If a stream error occurs
+	 * @throws IOException If a stream error occurs
 	 * @throws ClassNotFoundException If any of the classes declared in the stream
 	 * cannot be found
 	 */

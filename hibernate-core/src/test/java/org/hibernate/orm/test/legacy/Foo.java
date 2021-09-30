@@ -21,7 +21,7 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 
 	private static int count=0;
 
-	public static class Struct implements java.io.Serializable {
+	public static class Struct implements Serializable {
 		String name;
 		int count;
 		public boolean equals(Object other) {
@@ -60,8 +60,8 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 	float _zero;
 	byte[] _bytes;
 	boolean yesno;
-	java.io.Serializable blob;
-	java.io.Serializable nullBlob;
+	Serializable blob;
+	Serializable nullBlob;
 	byte[] binary;
 	FooComponent component;
 	char _char;
@@ -153,17 +153,17 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		//if (_foo!=null) _foo.setString(string);
 	}
 
-	public java.util.Date getDate() {
+	public Date getDate() {
 		return _date;
 	}
-	public void setDate(java.util.Date date) {
+	public void setDate(Date date) {
 		_date = date;
 	}
 
-	public java.util.Date getTimestamp() {
+	public Date getTimestamp() {
 		return _timestamp;
 	}
-	public void setTimestamp(java.util.Date timestamp) {
+	public void setTimestamp(Date timestamp) {
 		_timestamp = timestamp;
 	}
 
@@ -295,19 +295,19 @@ public class Foo implements Lifecycle, FooProxy, Serializable {
 		this.yesno = yesno;
 	}
 
-	public java.io.Serializable getBlob() {
+	public Serializable getBlob() {
 		return blob;
 	}
 
-	public void setBlob(java.io.Serializable blob) {
+	public void setBlob(Serializable blob) {
 		this.blob = blob;
 	}
 
-	public java.io.Serializable getNullBlob() {
+	public Serializable getNullBlob() {
 		return nullBlob;
 	}
 
-	public void setNullBlob(java.io.Serializable nullBlob) {
+	public void setNullBlob(Serializable nullBlob) {
 		this.nullBlob = nullBlob;
 	}
 

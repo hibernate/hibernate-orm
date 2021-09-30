@@ -35,7 +35,7 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.TemporalUnit.DAY;
 import static org.hibernate.query.TemporalUnit.NATIVE;
@@ -87,6 +87,9 @@ public class CockroachDialect extends Dialect {
 		registerColumnType( Types.NCLOB, "string" );
 
 		registerColumnType( Types.JAVA_OBJECT, "json" );
+
+		//register geometry type
+		registerColumnType( 5432, "geometry" );
 	}
 
 	@Override
@@ -210,6 +213,11 @@ public class CockroachDialect extends Dialect {
 	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
+	}
+
+	@Override
+	public boolean supportsTupleCounts() {
+		return true;
 	}
 
 	@Override

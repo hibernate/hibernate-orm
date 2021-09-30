@@ -97,7 +97,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return SQL fragment  {@code SpatialRelateExpression}
 	 */
-	@Override
+
 	public String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		String sql = getOGCSpatialRelateSQL( columnName, "?", spatialRelation ) + " = 1";
 		sql += " and " + columnName + " is not null";
@@ -226,7 +226,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return Rhe SQL fragment for the {@code SpatialFilterExpression}
 	 */
-	@Override
+
 	public String getSpatialFilterExpression(String columnName) {
 		final StringBuilder buffer = new StringBuilder( "SDO_FILTER(" );
 		buffer.append( columnName );
@@ -242,10 +242,10 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return The SQL fragment for the projection
 	 */
-	@Override
+
 	public String getSpatialAggregateSQL(String columnName, int aggregation) {
 		final StringBuilder aggregateFunction = new StringBuilder();
-		final SpatialAggregate sa = new SpatialAggregate( aggregation );
+		final SpatialAggregateImpl sa = new SpatialAggregateImpl( aggregation );
 
 		if ( sa.getAggregateSyntax() == null ) {
 			throw new IllegalArgumentException(
@@ -277,7 +277,6 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return The SQL fragment when parsing a <code>DWithinExpression</code>.
 	 */
-	@Override
 	public String getDWithinSQL(String columnName) {
 		return "SDO_WITHIN_DISTANCE (" + columnName + ",?, ?) = 'TRUE' ";
 	}
@@ -289,7 +288,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return The SQL fragment for a <code>HavingSridExpression</code>.
 	 */
-	@Override
+
 	public String getHavingSridSQL(String columnName) {
 		return String.format( Locale.ENGLISH, " (MDSYS.ST_GEOMETRY(%s).ST_SRID() = ?)", columnName );
 	}
@@ -303,7 +302,6 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return The SQL fragment for the isempty function
 	 */
-	@Override
 	public String getIsEmptySQL(String columnName, boolean isEmpty) {
 		return String.format(
 				Locale.ENGLISH,
@@ -319,7 +317,6 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return True if filtering is supported
 	 */
-	@Override
 	public boolean supportsFiltering() {
 		return true;
 	}
@@ -331,7 +328,6 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	 *
 	 * @return True if this <code>SpatialDialect</code> supports the spatial function specified by the function parameter.
 	 */
-	@Override
 	public boolean supports(SpatialFunction function) {
 		return false;
 	}

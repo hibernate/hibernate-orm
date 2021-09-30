@@ -10,8 +10,8 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 
 /**
  * Common contract for composite identifiers.  Specific sub-types include aggregated
- * (think {@link javax.persistence.EmbeddedId}) and non-aggregated (think
- * {@link javax.persistence.IdClass}).
+ * (think {@link jakarta.persistence.EmbeddedId}) and non-aggregated (think
+ * {@link jakarta.persistence.IdClass}).
  *
  * @author Steve Ebersole
  */

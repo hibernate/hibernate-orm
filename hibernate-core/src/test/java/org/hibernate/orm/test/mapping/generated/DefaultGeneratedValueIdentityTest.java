@@ -22,11 +22,11 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
@@ -36,40 +36,27 @@ import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.GeneratorType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.annotations.ValueGenerationType;
-import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tuple.AnnotationValueGeneration;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 @SkipForDialect(value = SybaseDialect.class, comment = "CURRENT_TIMESTAMP not supported as default value in Sybase")
 @SkipForDialect(value = MySQLDialect.class, comment = "See HHH-10196")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
-@FailureExpected(
-		jiraKey = "",
-		message = "Support for `java.sql.Date` and `java.sql.Time` is currently fubar"
-)
-//@NotImplementedYet(
-//		strict = false,
-//		reason = "Support for `java.sql.Date` and `java.sql.Time` is currently fubar"
-//)
 public class DefaultGeneratedValueIdentityTest extends BaseCoreFunctionalTestCase {
 
 	@Override

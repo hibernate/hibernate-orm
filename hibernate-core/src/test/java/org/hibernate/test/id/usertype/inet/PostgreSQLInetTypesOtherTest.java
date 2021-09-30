@@ -9,10 +9,9 @@ package org.hibernate.test.id.usertype.inet;
 import java.util.List;
 
 import org.hibernate.dialect.PostgreSQLDialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
 

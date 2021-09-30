@@ -8,8 +8,8 @@
 //$Id$
 
 package org.hibernate.orm.test.bootstrap.binding.annotations.access.jpa;
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 /**
  * @author Emmanuel Bernard

@@ -1,7 +1,3 @@
-plugins {
-	id 'org.hibernate.build.xjc'
-}
-
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
@@ -9,6 +5,10 @@ plugins {
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 import org.apache.tools.ant.filters.ReplaceTokens
+
+plugins {
+    id 'org.hibernate.build.xjc-jakarta'
+}
 
 description = 'Hibernate\'s core ORM functionality'
 
@@ -21,118 +21,65 @@ configurations {
     tests {
         description = 'Configuration for the produced test jar'
     }
+    implementation {
+        extendsFrom antlr
+    }
 }
 
 
 dependencies {
-    api libraries.jpa
-    api libraries.jta
+    api libraries.jakarta_jpa
+    api libraries.jakarta_jta
     api libraries.jandex
     api libraries.classmate
     api libraries.commons_annotations
-    api libraries.jaxb_api
 
     implementation libraries.byteBuddy
-    implementation libraries.activation
-    implementation libraries.jaxb_runtime
-    implementation libraries.antlr
+    implementation libraries.jakarta_activation
+    implementation libraries.jakarta_jaxb_api
+    implementation libraries.jakarta_jaxb_runtime
+    implementation libraries.jakarta_inject
 
-    compileOnly libraries.jacc
-    compileOnly libraries.validation
-    compileOnly libraries.ant
-    compileOnly libraries.cdi
+    compileOnly libraries.jakarta_jacc
+    compileOnly libraries.jakarta_validation
+    compileOnly libraries.jakarta_cdi
 
     testImplementation project(':hibernate-testing')
+    testImplementation project(':hibernate-ant')
     testImplementation libraries.shrinkwrap_api
     testImplementation libraries.shrinkwrap
     testImplementation libraries.shrinkwrap_descriptors_api_javaee
     testImplementation libraries.shrinkwrap_descriptors_impl_javaee
-    testImplementation libraries.jacc
-    testImplementation libraries.validation
-    testImplementation( libraries.validator ) {
+    testImplementation libraries.jakarta_jacc
+    testImplementation libraries.jakarta_validation
+    testImplementation libraries.jakarta_el
+    testImplementation( libraries.jakarta_validator ) {
         // for test runtime
         transitive = true
     }
-    testImplementation libraries.jandex
-    testImplementation libraries.classmate
+    testImplementation libraries.jakarta_cdi
     testImplementation libraries.mockito
     testImplementation libraries.mockito_inline
     testImplementation libraries.jodaTime
     testImplementation libraries.assertj
-    testImplementation libraries.cdi
-    testImplementation libraries.jboss_ejb_spec_jar
-    testImplementation libraries.jboss_annotation_spec_jar
 
-    testRuntimeOnly "org.jboss.spec.javax.ejb:jboss-ejb-api_3.2_spec:1.0.0.Final"
-    testRuntimeOnly libraries.expression_language
-    testRuntimeOnly 'jaxen:jaxen:1.1'
     testRuntimeOnly libraries.byteBuddy
-    testRuntimeOnly libraries.weld
-    testRuntimeOnly libraries.atomikos
-    testRuntimeOnly libraries.atomikos_jta
+    testRuntimeOnly libraries.jakarta_weld
     testRuntimeOnly libraries.wildfly_transaction_client
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
 
     antlr libraries.antlr
 
-    xjc libraries.jaxb_runtime
-    xjc libraries.jaxb_xjc
-    xjc libraries.jaxb2_basics
-    xjc libraries.jaxb2_basics_ant
-    xjc libraries.activation
+    xjc libraries.jakarta_jaxb_xjc
+    xjc libraries.jakarta_jaxb_runtime
+    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 
 jar {
     manifest {
         attributes(
-                'Main-Class': 'org.hibernate.Version',
-
-                // BND Plugin instructions (for OSGi):
-                'Import-Package': [
-                         'javax.security.auth;resolution:=optional',
-                         // Make javax.security.jacc optional and do not reference a version range (because that's what we used to do)
-                        'javax.security.jacc;resolution:=optional;version=!',
-                        // Make javax.validation optional and do not reference a version range (because that's what we used to do)
-                        'javax.validation;resolution:=optional;version=!',
-                        'javax.validation.constraints;resolution:=optional;version=!',
-                        'javax.validation.groups;resolution:=optional;version=!',
-                        'javax.validation.metadata;resolution:=optional;version=!',
-                        // Make javax.enterprise optional and do not reference a version range (because that's what we used to do)
-                        '!javax.enterprise*',
-                        'javax.enterprise.context.spi;resolution:=optional;version=!',
-                        'javax.enterprise.inject.spi;resolution:=optional;version=!',
-                        // For JPA, we don't want to target the automatically generated range, but a specific version
-                         "javax.persistence;version=\"${project.jpaVersion.osgiName}\"",
-                         // optionals
-                         'jakarta.persistence.spi;resolution:=optional',
-                         'javax.management;resolution:=optional',
-                         'javax.naming.event;resolution:=optional',
-                         'javax.naming.spi;resolution:=optional',
-                         'org.apache.tools.ant;resolution:=optional',
-                         'org.apache.tools.ant.taskdefs;resolution:=optional',
-                         'org.apache.tools.ant.types;resolution:=optional',
-                         'javax.inject;resolution:=optional',
-                         'net.bytebuddy.*;resolution:=optional',
-                         'org.objectweb.jonas_tm;resolution:=optional',
-                         'com.ibm.websphere.jtaextensions;resolution:=optional',
-                         // We must specify the version explicitly to allow Karaf
-                         // to use an older version of JAXB (the only one we can use in Karaf)
-                         "javax.xml.bind.*;version=\"${project.jaxbApiVersionOsgiRange}\"",
-                        // Temporarily support JTA 1.1 -- Karaf and other frameworks still
-                        // use it.  Without this, the plugin generates [1.2,2).
-                        'javax.transaction;version="[1.1,2)"',
-                        // Also import every package referenced in the code
-                        '*'
-                ].join( ',' ),
-                '-exportcontents': [
-                        // Legacy resource packages containing XSDs that were traditionally not exported
-                        "!org.hibernate.xsd.cfg",
-                        "!org.hibernate.xsd.mapping",
-                        // TODO: Uncomment once EntityManagerFactoryBuilderImpl no longer uses ClassLoaderServiceImpl.
-                        //'org.hibernate.boot.registry.classloading.internal',
-                        "*;version=${project.version}"
-                ].join( ',' ),
+                'Main-Class': 'org.hibernate.Version'
         )
     }
 }
@@ -182,6 +129,7 @@ xjc {
 
 
 task copyBundleResources (type: Copy) {
+    inputs.property( "db", db )
     ext {
         bundlesTargetDir = file( "${buildDir}/bundles" )
         bundleTokens = dbBundle[db]

@@ -6,14 +6,14 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal.synchronization;
 
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.CoreLogging.logger;
 
 /**
- * The JTA {@link javax.transaction.Synchronization} Hibernate registers when needed for JTA callbacks.
+ * The JTA {@link jakarta.transaction.Synchronization} Hibernate registers when needed for JTA callbacks.
  * <p/>
  * Note that we split the notion of the registered Synchronization and the processing of the Synchronization callbacks
  * mainly to account for "separation of concerns", but also so that the transaction engine does not have to hold

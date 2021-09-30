@@ -13,14 +13,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.StreamSupport;
 
-import javax.persistence.CascadeType;
-import javax.persistence.ConstraintMode;
-import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -61,7 +61,7 @@ public class OneToManyBidirectionalForeignKeyTest {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = TABLE_NAME_PLAIN)
+	@jakarta.persistence.Table(name = TABLE_NAME_PLAIN)
 	public static class PlainTreeEntity {
 
 		@Id
@@ -78,7 +78,7 @@ public class OneToManyBidirectionalForeignKeyTest {
 	}
 
 	@Entity
-	@javax.persistence.Table(name = TABLE_NAME_WITH_ON_DELETE)
+	@jakarta.persistence.Table(name = TABLE_NAME_WITH_ON_DELETE)
 	public static class TreeEntityWithOnDelete {
 
 		@Id

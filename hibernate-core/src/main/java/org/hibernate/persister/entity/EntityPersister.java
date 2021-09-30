@@ -64,10 +64,10 @@ import org.hibernate.type.VersionType;
  *         to be handled by the persister
  *     </li>
  *     <li>
- *         {@link org.hibernate.cache.spi.access.EntityDataAccess} - the second level caching strategy for this entity
+ *         {@link EntityDataAccess} - the second level caching strategy for this entity
  *     </li>
  *     <li>
- *         {@link org.hibernate.cache.spi.access.NaturalIdDataAccess} - the second level caching strategy for the natural-id
+ *         {@link NaturalIdDataAccess} - the second level caching strategy for the natural-id
  *         defined for this entity, if one
  *     </li>
  *     <li>
@@ -107,7 +107,7 @@ public interface EntityPersister
 	 * Called only once per {@link org.hibernate.SessionFactory} lifecycle,
 	 * after all entity persisters have been instantiated.
 	 *
-	 * @throws org.hibernate.MappingException Indicates an issue in the metadata.
+	 * @throws MappingException Indicates an issue in the metadata.
 	 */
 	void postInstantiate() throws MappingException;
 
@@ -300,7 +300,7 @@ public interface EntityPersister
 	 * @param propertyName The name of the property for which to retrieve
 	 * the type.
 	 * @return The type.
-	 * @throws org.hibernate.MappingException Typically indicates an unknown
+	 * @throws MappingException Typically indicates an unknown
 	 * property name.
 	 */
 	Type getPropertyType(String propertyName) throws MappingException;

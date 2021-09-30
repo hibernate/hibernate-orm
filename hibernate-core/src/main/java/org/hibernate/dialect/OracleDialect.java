@@ -56,9 +56,13 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.JavaObjectType;
+import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
@@ -69,7 +73,7 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -233,8 +237,8 @@ public class OracleDialect extends Dialect {
 
 
 	/**
-	 * Oracle doesn't have any sort of {@link java.sql.Types#BOOLEAN}
-	 * type or {@link java.sql.Types#TIME} type, and its default behavior
+	 * Oracle doesn't have any sort of {@link Types#BOOLEAN}
+	 * type or {@link Types#TIME} type, and its default behavior
 	 * for casting dates and timestamps to and from strings is just awful.
 	 */
 	@Override
@@ -536,6 +540,10 @@ public class OracleDialect extends Dialect {
 		registerColumnType( Types.TINYINT, "number(3,0)" );
 		registerColumnType( Types.INTEGER, "number(10,0)" );
 
+		// Oracle has DOUBLE semantics for the REAL type, so we map it to float(24)
+		registerColumnType( Types.REAL, "float(24)" );
+
+//		// Note that 38 is the maximum precision Oracle supports
 		registerColumnType( Types.NUMERIC, "number($p,$s)" );
 		registerColumnType( Types.DECIMAL, "number($p,$s)" );
 	}
@@ -593,6 +601,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -600,6 +609,13 @@ public class OracleDialect extends Dialect {
 		// This is the reverse of what registerNumericTypeMappings registers
 		switch ( jdbcTypeCode ) {
 			case Types.NUMERIC:
+				// For some reason, the Oracle JDBC driver reports floats as numerics with scale -127
+				if ( scale == -127 ) {
+					if ( precision <= getFloatPrecision() ) {
+						return jdbcTypeDescriptorRegistry.getDescriptor( Types.FLOAT );
+					}
+					return jdbcTypeDescriptorRegistry.getDescriptor( Types.DOUBLE );
+				}
 			case Types.DECIMAL:
 				if ( scale == 0 ) {
 					switch ( precision ) {
@@ -616,7 +632,13 @@ public class OracleDialect extends Dialect {
 					}
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	/**
@@ -648,6 +670,28 @@ public class OracleDialect extends Dialect {
 
 			typeContributions.contributeJdbcTypeDescriptor( descriptor );
 		}
+
+		// Oracle requires a custom binder for binding untyped nulls with the NULL type
+		typeContributions.contributeJdbcTypeDescriptor( NullJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new NullType(
+						NullJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+						)
+		);
 	}
 
 	@Override

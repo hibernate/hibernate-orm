@@ -9,9 +9,36 @@ earlier versions, see any other pertinent migration guides as well.
 
 == Known changes
 
+=== Jakarta Persistence
+
+6.0 moves from Java Persistence as defined by the Java EE specs to
+Jakarta Persistence as defined by the Jakarta EE spec.  The most immediate
+impact of this change is that applications would need to be updated to use
+the Jakarata Persistence classes (`jakarta.persistence.*`) instead of the Java
+Persistence ones (`javax.persistence.*`).
+
+The Jakarta spec also renames the JPA settings (again, from `javax.persistence.*` to
+'jakarta.persistence.*') and defines a new set of XSD namespaces for `orm.xml` and
+`persistence.xml` files.
+
+Jakarta provides a https://github.com/eclipse/transformer[transformer]
+tool which, along with appropriate "rules", will transform a project from Java Persistence to
+Jakarta Persistence.  This can update package names in source, settings, xsd references and more.
+
+// todo (6.0) : reference to `${root}/rules ?
+
+NOTE: As far as the XSD and setting changes, Hibernate does support both sets as a temporary aid
+in migration.  It logs a deprecation warning when the Java EE variants are used.
+
+
+=== Reading from JDBC
+
+Read-by-position rather than read-by-name
+
+
 === Type system / custom types
 
-==== Influencing SqlTypeDescriptor to use
+==== Influencing JdbcTypeDescriptor to use
 
 Discuss `JdbcTypeCode`, `JdbcType`, `JdbcTypeRegistration`
 
@@ -30,3 +57,8 @@ Multiple component mappings for the same java class with different property mapp
 * Functions
 * Multi-table bulk manipulation HQL/Criteria query handling
 
+
+=== Removal
+
+* JMX integration
+* JACC integration

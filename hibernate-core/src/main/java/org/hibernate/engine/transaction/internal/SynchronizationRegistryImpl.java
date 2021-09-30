@@ -7,7 +7,7 @@
 package org.hibernate.engine.transaction.internal;
 
 import java.util.LinkedHashSet;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 import org.hibernate.engine.transaction.spi.SynchronizationRegistry;
 import org.hibernate.internal.CoreMessageLogger;

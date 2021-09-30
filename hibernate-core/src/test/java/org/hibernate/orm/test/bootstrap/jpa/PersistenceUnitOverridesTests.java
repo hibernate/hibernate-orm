@@ -10,24 +10,14 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.spi.PersistenceProvider;
-import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
 
-import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
-import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.persister.entity.EntityPersister;
@@ -39,6 +29,13 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.jpa.DelegatingPersistenceUnitInfo;
 import org.hibernate.testing.util.jpa.PersistenceUnitInfoAdapter;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.spi.PersistenceProvider;
+import jakarta.persistence.spi.PersistenceUnitInfo;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -394,11 +391,50 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-13640" )
+	public void testIntegrationOverridesOfPersistenceXmlDataSourceWithDriverManagerInfoUsingJakarta() {
+
+		// mimics a DataSource defined in the persistence.xml
+		final DataSourceStub dataSource = new DataSourceStub( "puDataSource" );
+		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
+
+			@Override
+			public DataSource getNonJtaDataSource() {
+				return dataSource;
+			}
+		};
+
+		final Map<String,Object> integrationSettings = new HashMap<>();
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_DRIVER, ConnectionProviderBuilder.DRIVER );
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_URL, ConnectionProviderBuilder.URL );
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_USER, ConnectionProviderBuilder.USER );
+		integrationSettings.put( AvailableSettings.JAKARTA_JDBC_PASSWORD, ConnectionProviderBuilder.PASS );
+		integrationSettings.put( "hibernate.connection.init_sql", "" );
+
+		final PersistenceProvider provider = new HibernatePersistenceProvider();
+
+		final EntityManagerFactory emf = provider.createContainerEntityManagerFactory(
+				info,
+				integrationSettings
+		);
+
+		try {
+			final SessionFactoryImplementor sessionFactory = emf.unwrap( SessionFactoryImplementor.class );
+			final ConnectionProvider connectionProvider = sessionFactory.getServiceRegistry().getService(
+					ConnectionProvider.class );
+			assertThat( connectionProvider, instanceOf( DriverManagerConnectionProviderImpl.class ) );
+		}
+		finally {
+			emf.close();
+		}
+	}
+
+	@Test
 	public void testCfgXmlBaseline() {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override
@@ -439,7 +475,7 @@ public class PersistenceUnitOverridesTests extends BaseUnitTestCase {
 		final PersistenceUnitInfoAdapter info = new PersistenceUnitInfoAdapter() {
 			private final Properties props = new Properties();
 			{
-				props.put( org.hibernate.jpa.AvailableSettings.CFG_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
+				props.put( AvailableSettings.CFG_XML_FILE, "org/hibernate/orm/test/bootstrap/jpa/hibernate.cfg.xml" );
 			}
 
 			@Override

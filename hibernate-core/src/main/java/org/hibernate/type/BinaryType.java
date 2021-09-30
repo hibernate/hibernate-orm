@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
+ * A type that maps between a {@link Types#VARBINARY VARBINARY} and {@code byte[]}
  *
  * Implementation of the {@link VersionType} interface should be considered deprecated.
  * For binary entity versions/timestamps, {@link RowVersionType} should be used instead.

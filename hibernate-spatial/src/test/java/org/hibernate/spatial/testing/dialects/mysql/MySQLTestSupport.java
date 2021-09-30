@@ -9,13 +9,9 @@ package org.hibernate.spatial.testing.dialects.mysql;
 
 
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -24,23 +20,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 public class MySQLTestSupport extends TestSupport {
 
 	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "mysql/test-mysql-functions-data-set.xml" );
-
 	}
 
-	@Override
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new MySQLExpectationsFactory( dataSourceUtils );
-	}
-
-	@Override
-	public JTSGeometryEquality createGeometryEquality() {
-		return new MySQLGeometryEquality();
-	}
-
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new MySQLExpressionTemplate();
-	}
 }

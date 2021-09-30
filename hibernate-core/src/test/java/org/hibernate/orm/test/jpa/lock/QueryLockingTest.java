@@ -8,25 +8,15 @@ package org.hibernate.orm.test.jpa.lock;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.Id;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
-import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Root;
+
 import org.hibernate.LockMode;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.internal.SessionImpl;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
+
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -34,6 +24,18 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -72,7 +74,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
-		query.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.PESSIMISTIC_WRITE );
+		query.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.PESSIMISTIC_WRITE );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getEffectiveLockMode( "l" ) );
@@ -135,7 +137,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		assertNull( query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getEffectiveLockMode( "l" ) );
 
-		query.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.PESSIMISTIC_WRITE );
+		query.setHint( QueryHints.HINT_NATIVE_LOCKMODE +".l", LockModeType.PESSIMISTIC_WRITE );
 		assertEquals( LockMode.OPTIMISTIC, query.getLockOptions().getLockMode() );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getAliasSpecificLockMode( "l" ) );
 		assertEquals( LockMode.PESSIMISTIC_WRITE, query.getLockOptions().getEffectiveLockMode( "l" ) );
@@ -185,7 +187,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.PESSIMISTIC_FORCE_INCREMENT )
+				.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.PESSIMISTIC_FORCE_INCREMENT )
 				.getSingleResult();
 		assertFalse( reread.getVersion().equals( initial ) );
 		em.getTransaction().commit();
@@ -238,7 +240,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.OPTIMISTIC_FORCE_INCREMENT )
+				.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.OPTIMISTIC_FORCE_INCREMENT )
 				.getSingleResult();
 		assertEquals( initial, reread.getVersion() );
 		em.getTransaction().commit();
@@ -320,7 +322,7 @@ public class QueryLockingTest extends BaseEntityManagerFunctionalTestCase {
 		em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		Lockable reread = em.createQuery( "from Lockable l", Lockable.class )
-				.setHint( AvailableSettings.ALIAS_SPECIFIC_LOCK_MODE+".l", LockModeType.OPTIMISTIC )
+				.setHint( QueryHints.HINT_NATIVE_LOCKMODE + ".l", LockModeType.OPTIMISTIC )
 				.getSingleResult();
 		assertEquals( initial, reread.getVersion() );
 		assertTrue( em.unwrap( SessionImpl.class ).getActionQueue().hasBeforeTransactionActions() );

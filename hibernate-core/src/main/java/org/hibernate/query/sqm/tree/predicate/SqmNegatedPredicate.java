@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.predicate;
 
 import java.util.Collections;
 import java.util.List;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;

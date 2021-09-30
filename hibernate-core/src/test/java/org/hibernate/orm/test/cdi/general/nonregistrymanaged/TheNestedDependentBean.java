@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.Dependent;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * A dependent bean required by other beans, but never requested directly

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.jpa.cdi;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.testing.orm.junit.ClassLoadingIsolaterExtension;
 import org.junit.jupiter.api.Test;
@@ -24,8 +24,8 @@ import static org.junit.jupiter.api.Assertions.fail;
 @ExtendWith(ClassLoadingIsolaterExtension.class)
 public class NoCdiAvailableTest implements ClassLoadingIsolaterExtension.IsolatedClassLoaderProvider {
 	public static final String[] EXCLUDED_PACKAGES = new String[] {
-			"javax.enterprise.inject.",
-			"javax.enterprise.context."
+			"jakarta.enterprise.inject.",
+			"jakarta.enterprise.context."
 	};
 
 	@Override

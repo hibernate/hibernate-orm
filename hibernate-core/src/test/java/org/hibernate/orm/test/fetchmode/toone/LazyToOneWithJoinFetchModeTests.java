@@ -7,26 +7,23 @@
 package org.hibernate.orm.test.fetchmode.toone;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
-import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.sql.ast.SqlAstJoinType;
 
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
@@ -47,22 +44,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 				LazyToOneWithJoinFetchModeTests.SimpleEntity.class
 		}
 )
-@SessionFactory
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
 @ServiceRegistry(
 		settings = {
 				@Setting(name = AvailableSettings.HBM2DDL_DATABASE_ACTION, value = "create-drop")
 		}
 )
-public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
-
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
-		final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-		sqlStatementInterceptor = new SQLStatementInterceptor( sessionFactoryBuilder );
-		return (SessionFactoryImplementor) sessionFactoryBuilder.build();
-	}
+public class LazyToOneWithJoinFetchModeTests {
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
@@ -81,6 +69,7 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 
 	@Test
 	public void testFind(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -94,22 +83,16 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 
 					String executedStatement = sqls.get( 0 );
 					assertThat( executedStatement, containsString( " root_entity " ) );
-					assertThat( executedStatement, containsString( " left outer join simple_entity " ) );
-					assertThat(
-							executedStatement.replaceFirst( "left outer join", "" ),
-							containsString( " left outer join " )
-					);
-					assertThat(
-							executedStatement.replaceFirst( " left outer join", "" )
-									.replaceFirst( "left outer join", "" ),
-							not( containsString( " join " ) )
-					);
+					assertThat( executedStatement, containsString( " left join simple_entity " ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 2 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.LEFT, 2 );
 				}
 		);
 	}
 
 	@Test
 	public void testHql(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -125,22 +108,23 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, not( containsString( " join " ) ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 0 );
 
 					String secondStatement = sqls.get( 1 );
 					assertThat( secondStatement, containsString( " simple_entity " ) );
-					assertThat( secondStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 
 					String thirthStatement = sqls.get( 2 );
 					assertThat( thirthStatement, containsString( " simple_entity " ) );
-					assertThat( thirthStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 2, 0 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlJoinManyToOne(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -156,26 +140,25 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, containsString( " inner join " ) );
+					assertThat( firstStatement, containsString( " join " ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
-					assertThat(
-							firstStatement.replaceFirst( "inner join", "" ),
-							not( containsString( " join " ) )
-					);
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 1 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 
 					String secondStatement = sqls.get( 1 );
 					assertThat( secondStatement, containsString( " simple_entity " ) );
-					assertThat( secondStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 
 					String thirthStatement = sqls.get( 2 );
 					assertThat( thirthStatement, containsString( " simple_entity " ) );
-					assertThat( thirthStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 2, 0 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlJoinOneToOne(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -191,26 +174,25 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, containsString( " inner join " ) );
+					assertThat( firstStatement, containsString( " join " ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
-					assertThat(
-							firstStatement.replaceFirst( "inner join", "" ),
-							not( containsString( " join " ) )
-					);
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 1 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 
 					String secondStatement = sqls.get( 1 );
 					assertThat( secondStatement, containsString( " simple_entity " ) );
-					assertThat( secondStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 
 					String thirthStatement = sqls.get( 2 );
 					assertThat( thirthStatement, containsString( " simple_entity " ) );
-					assertThat( thirthStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 2, 0 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlJoinFetchManyToOne(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -226,23 +208,23 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, containsString( " inner join " ) );
+					assertThat( firstStatement, containsString( " join " ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
 					assertThat( firstStatement, containsString( " join simple_entity " ) );
-					assertThat(
-							firstStatement.replaceFirst( " join ", "" ),
-							not( containsString( " join " ) )
-					);
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 1 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 
 					String secondStatement = sqls.get( 1 );
 					assertThat( secondStatement, containsString( " simple_entity " ) );
 					assertThat( secondStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlJoinManyToOneAndOneToOne(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -258,31 +240,23 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, containsString( " inner join " ) );
+					assertThat( firstStatement, containsString( " join " ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
-					assertThat(
-							firstStatement.replaceFirst( "inner join", "" ),
-							containsString( " inner join " )
-					);
-					assertThat(
-							firstStatement
-									.replaceFirst( "inner join", "" )
-									.replaceFirst( "inner join", "" )
-							,
-							not( containsString( " join " ) )
-					);
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 2 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 
 					assertThat( sqls.get( 1 ), containsString( " simple_entity " ) );
-					assertThat( sqls.get( 1 ), not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 
 					assertThat( sqls.get( 2 ), containsString( " simple_entity " ) );
-					assertThat( sqls.get( 2 ), not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 2, 0 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlJoinFetchOneToOne(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
@@ -298,29 +272,28 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, containsString( " inner join " ) );
+					assertThat( firstStatement, containsString( " join " ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
 					assertThat( firstStatement, containsString( " join simple_entity " ) );
-					assertThat(
-							firstStatement.replaceFirst( " join ", "" ),
-							not( containsString( " join " ) )
-					);
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 1 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 
 					String secondStatement = sqls.get( 1 );
 					assertThat( secondStatement, containsString( " simple_entity " ) );
-					assertThat( secondStatement, not( containsString( " join " ) ) );
+					sqlStatementInterceptor.assertNumberOfJoins( 1, 0 );
 				}
 		);
 	}
 
 	@Test
 	public void testHqlJoinFetchManyToOneAndOneToOne(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
 		scope.inTransaction(
 				session -> {
 					sqlStatementInterceptor.clear();
 
 					RootEntity rootEntity = session.createQuery(
-							"from RootEntity r join fetch r.manyToOneSimpleEntity join fetch  r.oneToOneSimpleEntity where r.id = :id",
+							"from RootEntity r join fetch r.manyToOneSimpleEntity join fetch r.oneToOneSimpleEntity where r.id = :id",
 							RootEntity.class
 					).setParameter( "id", 1 ).getSingleResult();
 
@@ -330,19 +303,10 @@ public class LazyToOneWithJoinFetchModeTests implements SessionFactoryProducer {
 					assertThat( Hibernate.isInitialized( rootEntity.oneToOneSimpleEntity ), is( true ) );
 
 					String firstStatement = sqls.get( 0 );
-					assertThat( firstStatement, containsString( " inner join " ) );
+					assertThat( firstStatement, containsString( " join " ) );
 					assertThat( firstStatement, containsString( " root_entity " ) );
-					assertThat(
-							firstStatement.replaceFirst( "inner join", "" ),
-							containsString( " inner join " )
-					);
-
-					assertThat(
-							firstStatement
-									.replaceFirst( " inner join ", "" )
-									.replaceFirst( " inner join ", "" ),
-							not( containsString( " join " ) )
-					);
+					sqlStatementInterceptor.assertNumberOfJoins( 0, 2 );
+					sqlStatementInterceptor.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 2 );
 				}
 		);
 	}

@@ -8,44 +8,69 @@
 package org.hibernate.spatial.testing.dialects.postgis;
 
 
-import org.hibernate.spatial.integration.TestGeolatteSpatialPredicates;
-import org.hibernate.spatial.integration.TestSpatialFunctions;
-import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
-import org.hibernate.spatial.integration.TestSpatialRestrictions;
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.spatial.CommonSpatialFunction;
+import org.hibernate.spatial.GeomCodec;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
+import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
+
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 
 /**
  * @author Karel Maesen, Geovise BVBA
  * creation-date: Sep 30, 2010
  */
+@Deprecated
 public class PostgisTestSupport extends TestSupport {
 
 
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
-		if ( testcaseClass == TestSpatialFunctions.class ||
-				testcaseClass == TestSpatialRestrictions.class ||
-				testcaseClass == TestJTSSpatialPredicates.class ||
-				testcaseClass == TestGeolatteSpatialPredicates.class ) {
-			return TestData.fromFile( "postgis-functions-test.xml" );
-		}
-		return TestData.fromFile( "test-data-set.xml" );
-	}
-
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new PostgisExpectationsFactory( dataSourceUtils );
+	@Override
+	public NativeSQLTemplates templates() {
+		return new PostgisNativeSQLTemplates();
 	}
 
 	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new PostgisExpressionTemplate();
+	public PredicateRegexes predicateRegexes(){ return new PostgisPredicateRegexes();}
+
+	//TODO  put this in its own class (analogous to NativeSQLTemplates)
+	@Override
+	public Map<CommonSpatialFunction, String> hqlOverrides() {
+		Map<CommonSpatialFunction, String> overrides = new HashMap<>();
+		return overrides;
+	}
+
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
+		switch ( purpose ) {
+			case SpatialFunctionsData:
+				return TestData.fromFile( "postgis-functions-test.xml" );
+			default:
+				return TestData.fromFile( "test-data-set.xml" );
+		}
 	}
 
 
+	public GeomCodec codec() {
+		return new GeomCodec() {
+			@Override
+			public Geometry<?> toGeometry(Object in) {
+				return PGGeometryTypeDescriptor.INSTANCE_WKB_2.toGeometry( in );
+			}
+
+			@Override
+			public Object fromGeometry(Geometry<?> in) {
+				return Wkt.toWkt( in, Wkt.Dialect.POSTGIS_EWKT_1 );
+			}
+		};
+	}
+
 }
+
+class PostgisPredicateRegexes extends PredicateRegexes { }

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.query.named.simple;
 
-import javax.persistence.FlushModeType;
+import jakarta.persistence.FlushModeType;
 
 import org.hibernate.CacheMode;
 import org.hibernate.query.Query;

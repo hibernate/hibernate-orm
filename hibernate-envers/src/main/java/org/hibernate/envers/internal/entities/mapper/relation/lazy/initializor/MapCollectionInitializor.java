@@ -75,7 +75,7 @@ public class MapCollectionInitializor<T extends Map> extends AbstractCollectionI
 		// otherwise it will be a List
 		Object elementData = collectionRow;
 		Object indexData = collectionRow;
-		if ( collectionRow instanceof java.util.List ) {
+		if ( collectionRow instanceof List ) {
 			elementData = ( (List) collectionRow ).get( elementComponentData.getComponentIndex() );
 			indexData = ( (List) collectionRow ).get( indexComponentData.getComponentIndex() );
 		}

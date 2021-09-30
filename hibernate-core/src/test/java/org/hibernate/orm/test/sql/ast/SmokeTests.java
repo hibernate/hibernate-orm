@@ -193,7 +193,7 @@ public class SmokeTests {
 					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
 
 					final NavigablePath expectedSelectedPath = new NavigablePath(
-							org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity.class.getName(),
+							SimpleEntity.class.getName(),
 							"e"
 					).append( "gender" );
 					assertThat( domainResult.getNavigablePath(), equalTo( expectedSelectedPath ) );

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.discriminatedcollections;
 
-import javax.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.JoinType;
 
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 

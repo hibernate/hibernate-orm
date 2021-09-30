@@ -12,7 +12,7 @@ package org.hibernate.orm.test.cdi.general.mixed;
 public class HostedBean {
 	private final InjectedHostedBean injectedHostedBean;
 
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	public HostedBean(InjectedHostedBean injectedHostedBean) {
 		this.injectedHostedBean = injectedHostedBean;
 	}

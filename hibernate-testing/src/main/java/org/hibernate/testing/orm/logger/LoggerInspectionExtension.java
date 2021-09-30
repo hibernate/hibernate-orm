@@ -19,14 +19,14 @@ import org.jboss.logging.BasicLogger;
 
 public class LoggerInspectionExtension implements AfterEachCallback {
 
-	public static LoggerInspectionExtension.LoggerInspectionRuleBuilder builder() {
-		return new LoggerInspectionExtension.LoggerInspectionRuleBuilder();
+	public static LoggerInspectionRuleBuilder builder() {
+		return new LoggerInspectionRuleBuilder();
 	}
 
 	public static class LoggerInspectionRuleBuilder {
 		BasicLogger log;
 
-		public LoggerInspectionExtension.LoggerInspectionRuleBuilder setLogger(BasicLogger log) {
+		public LoggerInspectionRuleBuilder setLogger(BasicLogger log) {
 			this.log = log;
 			return this;
 		}

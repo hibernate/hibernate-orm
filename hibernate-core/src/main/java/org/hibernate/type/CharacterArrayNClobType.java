@@ -17,9 +17,9 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link Character Character[]}
+ * A type that maps between {@link Types#NCLOB NCLOB} and {@link Character Character[]}
  * <p/>
- * Essentially a {@link org.hibernate.type.MaterializedNClobType} but represented as a Character[] in Java rather than String.
+ * Essentially a {@link MaterializedNClobType} but represented as a Character[] in Java rather than String.
  *
  * @author Emmanuel Bernard
  * @author Steve Ebersole

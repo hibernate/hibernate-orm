@@ -9,7 +9,7 @@ package org.hibernate.query.spi;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.metamodel.mapping.ConvertibleModelPart;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;

@@ -9,7 +9,7 @@ package org.hibernate.orm.test.jpa.ejb3configuration;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Supplier;
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
@@ -19,12 +19,12 @@ import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.Environment;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
-import org.hibernate.jpa.test.SettingsGenerator;
+import org.hibernate.orm.test.jpa.SettingsGenerator;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.jupiter.api.Test;
@@ -87,7 +87,7 @@ public class InterceptorTest {
 	@Test
 	public void testDeprecatedConfiguredSessionInterceptor() {
 		Map settings = basicSettings();
-		settings.put( AvailableSettings.SESSION_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
+		settings.put( AvailableSettings.SESSION_SCOPED_INTERCEPTOR, LocalExceptionInterceptor.class.getName() );
 		buildEntityManagerFactory( settings );
 
 		Item i = new Item();

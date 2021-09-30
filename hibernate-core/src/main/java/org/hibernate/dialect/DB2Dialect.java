@@ -7,6 +7,7 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -32,6 +33,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.cte.CteStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -40,6 +42,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDB2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.*;
 
@@ -48,7 +51,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * An SQL dialect for DB2.
@@ -85,8 +88,8 @@ public class DB2Dialect extends Dialect {
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 
-		//HHH-12827: map them both to the same type to
-		//           avoid problems with schema update
+		//HHH-12827: map them both to the same type to avoid problems with schema update
+		//Note that 31 is the maximum precision DB2 supports
 //		registerColumnType( Types.DECIMAL, "decimal($p,$s)" );
 		registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 
@@ -106,7 +109,8 @@ public class DB2Dialect extends Dialect {
 		registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "timestamp($p)" );
 		registerColumnType( Types.TIME_WITH_TIMEZONE, "time" );
 
-		registerColumnType( Types.LONGVARCHAR, "long varchar" );
+		// The long varchar data type was deprecated in DB2 and shouldn't be used anymore
+		registerColumnType( Types.LONGVARCHAR, "clob($l)" );
 
 		//not keywords, at least not in DB2 11,
 		//but perhaps they were in older versions?
@@ -568,6 +572,24 @@ public class DB2Dialect extends Dialect {
 					return super.getSqlTypeDescriptorOverride(sqlCode);
 			}
 		}
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullResolvingJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 
 	@Override

@@ -32,7 +32,6 @@ import java.util.function.Function;
 /**
  * ConnectionProvider based on Agroal connection pool
  * To use this ConnectionProvider set: <pre> hibernate.connection.provider_class AgroalConnectionProvider </pre>
- * ( @see AvailableSettings#CONNECTION_PROVIDER )
  *
  * Usual hibernate properties are supported:
  * <pre>
@@ -45,6 +44,8 @@ import java.util.function.Function;
  * </pre>
  *
  * Other configuration options are available, using the <pre>hibernate.agroal</pre> prefix ( @see AgroalPropertiesReader )
+ *
+ * @see AvailableSettings#CONNECTION_PROVIDER
  *
  * @author Luis Barreiro
  */

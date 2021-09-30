@@ -6,8 +6,8 @@
  */
 package org.hibernate.type;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 /**
  * Handles conversion to/from Boolean as `Y` or `N`

@@ -176,7 +176,8 @@ public abstract class AbstractCompositeIdentifierMapping
 		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
 				navigablePath,
 				this,
-				lhs
+				lhs,
+				fetched
 		);
 
 		final TableGroupJoin join = new TableGroupJoin( navigablePath, SqlAstJoinType.LEFT, compositeTableGroup, null );

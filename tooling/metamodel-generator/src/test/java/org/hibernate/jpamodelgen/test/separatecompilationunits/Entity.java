@@ -11,7 +11,7 @@ import org.hibernate.jpamodelgen.test.separatecompilationunits.superclass.Mapped
 /**
  * @author Hardy Ferentschik
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class Entity extends MappedSuperclass {
 	private String name;
 }

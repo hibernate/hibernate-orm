@@ -13,8 +13,8 @@ import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import javax.persistence.AttributeConverter;
-import javax.persistence.Converter;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -30,7 +30,7 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
  *
  * @deprecated (since 5.3) forces the converter instance to be built too early,
  * which precludes the ability to resolve them from CDI, etc.  See
- * {@link org.hibernate.boot.model.convert.spi.ConverterDescriptor} instead
+ * {@link ConverterDescriptor} instead
  */
 @Deprecated
 public class AttributeConverterDefinition implements AttributeConverterInfo {

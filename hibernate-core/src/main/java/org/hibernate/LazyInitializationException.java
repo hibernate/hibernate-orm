@@ -15,8 +15,8 @@ import org.jboss.logging.Logger;
  *
  * For example, when an uninitialized proxy or collection is accessed after the session was closed.
  *
- * @see Hibernate#initialize(java.lang.Object)
- * @see Hibernate#isInitialized(java.lang.Object)
+ * @see Hibernate#initialize(Object)
+ * @see Hibernate#isInitialized(Object)
  * @author Gavin King
  */
 public class LazyInitializationException extends HibernateException {

@@ -1,7 +1,7 @@
 package org.hibernate.orm.test.procedure.internal;
 
 import java.util.stream.Stream;
-import javax.persistence.Query;
+import jakarta.persistence.Query;
 
 import org.hibernate.dialect.H2Dialect;
 

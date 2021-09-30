@@ -6,8 +6,8 @@
  */
 package org.hibernate.engine.transaction.jta.platform.internal;
 
-import javax.transaction.Synchronization;
-import javax.transaction.TransactionSynchronizationRegistry;
+import jakarta.transaction.Synchronization;
+import jakarta.transaction.TransactionSynchronizationRegistry;
 
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 

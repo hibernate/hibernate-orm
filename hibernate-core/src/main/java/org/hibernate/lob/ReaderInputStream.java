@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.io.Reader;
 
 /**
- * Exposes a {@link java.io.Reader} as an {@link java.io.InputStream}.
+ * Exposes a {@link Reader} as an {@link java.io.InputStream}.
  *
  * @deprecated Should not be used anymore. 
  */

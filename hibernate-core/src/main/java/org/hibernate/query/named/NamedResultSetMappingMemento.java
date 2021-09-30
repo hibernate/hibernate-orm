@@ -18,7 +18,7 @@ import org.hibernate.query.results.ResultSetMapping;
  * queries.
  *
  * These can be defined in a number of ways:<ul>
- *     <li>{@link javax.persistence.SqlResultSetMapping}</li>
+ *     <li>{@link jakarta.persistence.SqlResultSetMapping}</li>
  *     <li>JPA Class-based mapping</li>
  *     <li>Hibernate's legacy XML-defined mapping</li>
  * </ul>

@@ -9,13 +9,13 @@ package org.hibernate.orm.test.query.hql;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
-import javax.persistence.Embeddable;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.Session;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
@@ -92,8 +92,8 @@ public class ParameterTests extends BaseSqmUnitTest {
 		try (Session session = sessionFactory().openSession()) {
 			final Query query = session.createQuery( "select p.id from Person p where p.anniversary between :start and :end" );
 
-			query.setParameter( "start", Instant.now().minus( 7, ChronoUnit.DAYS ), TemporalType.TIMESTAMP );
-			query.setParameter( "end", Instant.now().plus( 7, ChronoUnit.DAYS ), TemporalType.TIMESTAMP );
+			query.setParameter( "start", Date.from( Instant.now().minus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
+			query.setParameter( "end", Date.from( Instant.now().plus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
 
 			final QueryParameterBindings bindings = ( (ExecutionContext) query ).getQueryParameterBindings();
 

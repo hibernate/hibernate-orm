@@ -8,9 +8,9 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
 import java.util.BitSet;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
 /**
- * Tests for {@link org.hibernate.annotations.JdbcTypeCode}
+ * Tests for {@link JdbcTypeCode}
  *
  * @author Steve Ebersole
  */

@@ -47,7 +47,7 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 	@Override
 	protected void applySettings(StandardServiceRegistryBuilder builer) {
 		builer.applySetting(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
+				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
 		builer.applySetting(

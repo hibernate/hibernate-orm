@@ -8,15 +8,15 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 import java.util.Set;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.FetchClauseType;
 
 /**
  * Models a {@code SELECT} query.  Used as a delegate in
- * implementing {@link javax.persistence.criteria.CriteriaQuery}
- * and {@link javax.persistence.criteria.Subquery}.
+ * implementing {@link jakarta.persistence.criteria.CriteriaQuery}
+ * and {@link jakarta.persistence.criteria.Subquery}.
  *
  * @apiNote Internally (HQL and SQM) Hibernate supports ordering and limiting
  * for both root- and sub- criteria even though JPA only defines support for

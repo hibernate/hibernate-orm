@@ -24,6 +24,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 
 	private final boolean canUseInnerJoins;
 	private final NavigablePath navigablePath;
+	private final boolean fetched;
 	private final TableGroupProducer producer;
 	private final String sourceAlias;
 	private final SqlAliasBase sqlAliasBase;
@@ -37,6 +38,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	public LazyTableGroup(
 			boolean canUseInnerJoins,
 			NavigablePath navigablePath,
+			boolean fetched,
 			Supplier<TableGroup> tableGroupSupplier,
 			BiPredicate<NavigablePath, String> navigablePathChecker,
 			TableGroupProducer tableGroupProducer,
@@ -46,6 +48,7 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 			TableGroup parentTableGroup) {
 		this.canUseInnerJoins = canUseInnerJoins;
 		this.navigablePath = navigablePath;
+		this.fetched = fetched;
 		this.producer = tableGroupProducer;
 		this.sourceAlias = sourceAlias;
 		this.sqlAliasBase = sqlAliasBase;
@@ -153,6 +156,11 @@ public class LazyTableGroup extends AbstractColumnReferenceQualifier implements 
 	@Override
 	public boolean isRealTableGroup() {
 		return false;
+	}
+
+	@Override
+	public boolean isFetched() {
+		return fetched;
 	}
 
 	@Override

@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 
 /**
@@ -15,7 +13,7 @@ import org.hibernate.HibernateException;
  *
  * @author Steve Ebersole
  */
-public interface EvictEventListener extends Serializable {
+public interface EvictEventListener {
 
     /** 
      * Handle the given evict event.

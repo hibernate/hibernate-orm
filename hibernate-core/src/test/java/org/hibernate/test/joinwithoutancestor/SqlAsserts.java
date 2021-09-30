@@ -96,7 +96,7 @@ public class SqlAsserts {
 
 	private static List<Table> findOtherTables(String otherTablesPart) {
 		Pattern pattern = Pattern.compile(
-				"(?<jointype>join|inner join|left join|cross join|left outer join)\\s+(?<table>\\S+)\\s+(?<alias>\\S+)" );
+				"(?<jointype>join|inner join|left join|right join|full join|cross join)\\s+(?<table>\\S+)\\s+(?<alias>\\S+)" );
 		Matcher matcher = pattern.matcher( otherTablesPart );
 		List<Table> joins = new ArrayList<>();
 		while ( matcher.find() ) {

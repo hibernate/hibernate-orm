@@ -12,7 +12,7 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 import java.util.Arrays;
 
 /**

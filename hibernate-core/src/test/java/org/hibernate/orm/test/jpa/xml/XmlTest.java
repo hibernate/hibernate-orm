@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.xml;
 
-import javax.persistence.EntityManager;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

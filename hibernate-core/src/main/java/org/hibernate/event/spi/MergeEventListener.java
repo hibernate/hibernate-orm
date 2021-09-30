@@ -6,7 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -16,7 +15,7 @@ import org.hibernate.HibernateException;
  *
  * @author Gavin King
  */
-public interface MergeEventListener extends Serializable {
+public interface MergeEventListener {
 
     /** 
      * Handle the given merge event.

@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
 /**
  * A container for {@link AttributeNode} references.
  *
- * Acts as a "bridge" between JPA's {@link javax.persistence.EntityGraph} and {@link javax.persistence.Subgraph}
+ * Acts as a "bridge" between JPA's {@link jakarta.persistence.EntityGraph} and {@link jakarta.persistence.Subgraph}
  *
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
  * @author Steve Ebersole
@@ -49,8 +49,8 @@ public interface Graph<J> extends GraphNode<J> {
 	// AttributeNode handling
 
 	/**
-	 * Ultimately only needed for implementing {@link javax.persistence.EntityGraph#getAttributeNodes()}
-	 * and {@link javax.persistence.Subgraph#getAttributeNodes()}
+	 * Ultimately only needed for implementing {@link jakarta.persistence.EntityGraph#getAttributeNodes()}
+	 * and {@link jakarta.persistence.Subgraph#getAttributeNodes()}
 	 */
 	List<AttributeNode<?>> getGraphAttributeNodes();
 

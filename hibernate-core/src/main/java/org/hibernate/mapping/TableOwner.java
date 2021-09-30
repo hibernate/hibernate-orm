@@ -7,7 +7,7 @@
 package org.hibernate.mapping;
 
 /**
- * Additional, optional contract as part pf the {@link org.hibernate.mapping.PersistentClass}
+ * Additional, optional contract as part pf the {@link PersistentClass}
  * hierarchy used to differentiate entity bindings for entities that map to their own table
  * (root, union-subclass, joined-subclass) versus those that do not (discriminator-subclass).
  * 

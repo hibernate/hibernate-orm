@@ -13,12 +13,11 @@ import java.util.List;
 import java.util.Arrays;
 import java.util.function.Supplier;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 
-import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -1483,7 +1482,19 @@ public class CommonFunctionFactory {
 				.register();
 	}
 
-	public static void aggregates(QueryEngine queryEngine, SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
+	public static void aggregates(
+			Dialect dialect,
+			QueryEngine queryEngine,
+			SqlAstNodeRenderingMode inferenceArgumentRenderingMode) {
+		aggregates( dialect, queryEngine, inferenceArgumentRenderingMode, "||", null );
+	}
+
+	public static void aggregates(
+			Dialect dialect,
+			QueryEngine queryEngine,
+			SqlAstNodeRenderingMode inferenceArgumentRenderingMode,
+			String concatOperator,
+			String concatArgumentCastType) {
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "max" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
 				.setExactArgumentCount( 1 )
@@ -1603,11 +1614,10 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 1 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "count" )
-				.setInvariantType( StandardBasicTypes.LONG )
-				.setExactArgumentCount( 1 )
-				.setArgumentListSignature( "([distinct ]{arg|*})" )
-				.register();
+		queryEngine.getSqmFunctionRegistry().register(
+				CountFunction.FUNCTION_NAME,
+				new CountFunction( dialect, concatOperator, concatArgumentCastType )
+		);
 	}
 
 	public static void math(QueryEngine queryEngine) {

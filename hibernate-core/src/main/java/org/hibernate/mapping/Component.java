@@ -54,7 +54,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	private boolean isKey;
 	private String roleName;
 
-	private java.util.Map<EntityMode,String> tuplizerImpls;
+	private Map<EntityMode,String> tuplizerImpls;
 
 	// cache the status of the type
 	private volatile Type type;
@@ -226,7 +226,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	@Override
-	public java.util.Map getMetaAttributes() {
+	public Map getMetaAttributes() {
 		return metaAttributes;
 	}
 
@@ -236,7 +236,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 	}
 
 	@Override
-	public void setMetaAttributes(java.util.Map metas) {
+	public void setMetaAttributes(Map metas) {
 		this.metaAttributes = metas;
 	}
 
@@ -370,7 +370,7 @@ public class Component extends SimpleValue implements MetaAttributable {
 				return prop;
 			}
 		}
-		throw new MappingException("component property not found: " + propertyName);
+		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
 	public String getRoleName() {

@@ -31,7 +31,6 @@ required to be available on your classpath no matter which features of Hibernate
 * The `lib/envers` directory contains the `hibernate-envers` jar and all of its dependencies (beyond those in
 `lib/required/` and `lib/jpa/`).
 * The `lib/spatial/` directory contains the `hibernate-spatial` jar and all of its dependencies (beyond those in `lib/required/`)
-* The `lib/osgi/` directory contains the `hibernate-osgi` jar and all of its dependencies (beyond those in `lib/required/` and `lib/jpa/`)
 * The `lib/jpa-metamodel-generator/` directory contains the jar needed for generating the Criteria API type-safe Metamodel.
 * The `lib/optional/` directory contains the jars needed for the various connection pooling and second-level cache integrations
 provided by Hibernate, along with their dependencies.

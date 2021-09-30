@@ -1,6 +1,6 @@
 package org.hibernate.jpamodelgen.test.collectionbasictype;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity(name = "ConcreteLike")
 public class ConcreteLike extends Like<ConcreteLike.Target> {

@@ -94,7 +94,7 @@ public interface JdbcCoordinator extends Serializable, TransactionCoordinatorOwn
 	 *
 	 * @return The {@link Connection} associated with the managed {@link #getLogicalConnection() logical connection}
 	 *
-	 * @see org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor#close
+	 * @see LogicalConnectionImplementor#close
 	 */
 	Connection close();
 

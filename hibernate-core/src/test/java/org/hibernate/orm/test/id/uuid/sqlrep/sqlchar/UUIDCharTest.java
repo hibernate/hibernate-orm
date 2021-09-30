@@ -8,10 +8,10 @@ package org.hibernate.orm.test.id.uuid.sqlrep.sqlchar;
 
 import java.util.List;
 import java.util.UUID;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.annotations.Type;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -51,7 +51,7 @@ public class UUIDCharTest {
 	@Test
 	public void testUsage(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
-		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( UUIDCharTest.Node.class );
+		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
 		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
 		assertThat( identifierJdbcMappings, hasSize( 1 ) );
 		final JdbcMapping jdbcMapping = identifierJdbcMappings.get( 0 );

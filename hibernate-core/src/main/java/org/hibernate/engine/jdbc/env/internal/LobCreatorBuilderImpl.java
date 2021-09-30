@@ -26,7 +26,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.jboss.logging.Logger;
 
 /**
- * Builds {@link org.hibernate.engine.jdbc.LobCreator} instances based on the capabilities of the environment.
+ * Builds {@link LobCreator} instances based on the capabilities of the environment.
  *
  * @author Steve Ebersole
  */
@@ -46,11 +46,11 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 
 	/**
 	 * The public factory method for obtaining the appropriate LOB creator (according to given
-	 * JDBC {@link java.sql.Connection}).
+	 * JDBC {@link Connection}).
 	 *
 	 * @param dialect The {@link Dialect} in use
 	 * @param configValues The map of settings
-	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
+	 * @param jdbcConnection A JDBC {@link Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
 	public static LobCreatorBuilderImpl makeLobCreatorBuilder(Dialect dialect, Map configValues, Connection jdbcConnection) {
@@ -71,9 +71,9 @@ public class LobCreatorBuilderImpl implements LobCreatorBuilder {
 	private static final Object[] NO_ARGS = ArrayHelper.EMPTY_OBJECT_ARRAY;
 
 	/**
-	 * Basically here we are simply checking whether we can call the {@link java.sql.Connection} methods for
-	 * LOB creation added in JDBC 4.  We not only check whether the {@link java.sql.Connection} declares these methods,
-	 * but also whether the actual {@link java.sql.Connection} instance implements them (i.e. can be called without simply
+	 * Basically here we are simply checking whether we can call the {@link Connection} methods for
+	 * LOB creation added in JDBC 4.  We not only check whether the {@link Connection} declares these methods,
+	 * but also whether the actual {@link Connection} instance implements them (i.e. can be called without simply
 	 * throwing an exception).
 	 *
 	 * @param dialect The {@link Dialect} in use

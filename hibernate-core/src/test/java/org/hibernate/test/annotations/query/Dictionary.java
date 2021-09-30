@@ -7,15 +7,15 @@
 
 //$Id$
 package org.hibernate.test.annotations.query;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorValue;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.SqlResultSetMapping;
+import jakarta.persistence.DiscriminatorColumn;
+import jakarta.persistence.DiscriminatorValue;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.SqlResultSetMapping;
 
 /**
  * @author Emmanuel Bernard
@@ -26,7 +26,7 @@ import javax.persistence.SqlResultSetMapping;
 @SqlResultSetMapping(
 		name = "dictionary", entities = {
 @EntityResult(
-		entityClass = org.hibernate.test.annotations.query.Dictionary.class,
+		entityClass = Dictionary.class,
 		fields = {
 		@FieldResult(name = "id", column = "id"),
 		@FieldResult(name = "name", column = "name"),

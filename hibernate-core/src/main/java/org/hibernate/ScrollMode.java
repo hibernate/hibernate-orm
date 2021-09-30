@@ -17,14 +17,14 @@ public enum ScrollMode {
 	/**
 	 * Requests a scrollable result that is only scrollable forwards.
 	 *
-	 * @see java.sql.ResultSet#TYPE_FORWARD_ONLY
+	 * @see ResultSet#TYPE_FORWARD_ONLY
 	 */
 	FORWARD_ONLY( ResultSet.TYPE_FORWARD_ONLY ),
 
 	/**
 	 * Requests a scrollable result which is sensitive to changes in the underlying data.
 	 *
-	 * @see java.sql.ResultSet#TYPE_SCROLL_SENSITIVE
+	 * @see ResultSet#TYPE_SCROLL_SENSITIVE
 	 */
 	SCROLL_SENSITIVE( ResultSet.TYPE_SCROLL_SENSITIVE ),
 
@@ -35,7 +35,7 @@ public enum ScrollMode {
 	 * might need to explicitly evict objects, if you need to see
 	 * changes made by other transactions.
 	 *
-	 * @see java.sql.ResultSet#TYPE_SCROLL_INSENSITIVE
+	 * @see ResultSet#TYPE_SCROLL_INSENSITIVE
 	 */
 	SCROLL_INSENSITIVE( ResultSet.TYPE_SCROLL_INSENSITIVE );
 

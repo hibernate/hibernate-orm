@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.internal.util;
 
-import javax.persistence.LockModeType;
+import jakarta.persistence.LockModeType;
 
 import org.hibernate.LockMode;
 import org.hibernate.internal.util.LockModeConverter;

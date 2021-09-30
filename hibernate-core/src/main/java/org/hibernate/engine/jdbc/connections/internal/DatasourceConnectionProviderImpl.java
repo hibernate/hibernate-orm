@@ -21,7 +21,7 @@ import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
 /**
- * A {@link org.hibernate.engine.jdbc.connections.spi.ConnectionProvider} that manages connections from an underlying {@link DataSource}.
+ * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
  * <p/>
  * The {@link DataSource} to use may be specified by either:<ul>
  * <li>injection via {@link #setDataSource}</li>

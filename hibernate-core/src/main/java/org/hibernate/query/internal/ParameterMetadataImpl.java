@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import javax.persistence.Parameter;
+import jakarta.persistence.Parameter;
 
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
@@ -173,7 +173,13 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 		if ( sqmParameters == null || sqmParameters.isEmpty() ) {
 			return null;
 		}
-		return sqmParameters.get( 0 ).getNodeType();
+		for ( SqmParameter sqmParameter : sqmParameters ) {
+			final AllowableParameterType nodeType = sqmParameter.getNodeType();
+			if ( nodeType != null ) {
+				return nodeType;
+			}
+		}
+		return null;
 	}
 
 	@Override
@@ -209,7 +215,7 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			return (QueryParameterImplementor) param;
 		}
 
-		throw new IllegalArgumentException( "Could not resolve javax.persistence.Parameter to org.hibernate.query.QueryParameter" );
+		throw new IllegalArgumentException( "Could not resolve jakarta.persistence.Parameter to org.hibernate.query.QueryParameter" );
 	}
 
 
@@ -266,6 +272,13 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 			}
 		}
 
-		return null;
+		throw new IllegalArgumentException(
+				String.format(
+						Locale.ROOT,
+						"Could not locate ordinal parameter [%s], expecting one of [%s]",
+						positionLabel,
+						StringHelper.join( ", ", labels)
+				)
+		);
 	}
 }

@@ -8,7 +8,7 @@ package org.hibernate.dialect;
 
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullOrdering;
@@ -46,7 +46,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
@@ -157,7 +156,7 @@ public class H2Dialect extends Dialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// H2 needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
-		CommonFunctionFactory.aggregates( queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
 
 		CommonFunctionFactory.pi( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
@@ -414,6 +413,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsLobValueChangePropagation() {
 		return false;
+	}
+
+	@Override
+	public boolean supportsTupleCounts() {
+		return true;
 	}
 
 	@Override

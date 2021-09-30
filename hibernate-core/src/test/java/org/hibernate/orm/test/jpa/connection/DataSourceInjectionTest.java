@@ -17,7 +17,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -25,8 +25,8 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
 import org.hibernate.orm.test.jpa.xml.Light;
 import org.hibernate.orm.test.jpa.xml.Lighter;
 

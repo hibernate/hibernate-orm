@@ -135,15 +135,6 @@ public class EntityCollectionPart
 	}
 
 	@Override
-	public Fetch resolveCircularFetch(
-			NavigablePath fetchablePath,
-			FetchParent fetchParent,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		return null;
-	}
-
-	@Override
 	public EntityFetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

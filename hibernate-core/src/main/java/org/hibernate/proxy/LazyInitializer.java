@@ -114,7 +114,7 @@ public interface LazyInitializer {
 	 * @throws org.hibernate.TransientObjectException if the proxy is detached (getSession() == null)
 	 * @throws org.hibernate.SessionException if the proxy is associated with a session that is closed
 	 *
-	 * @see org.hibernate.proxy.LazyInitializer#isReadOnlySettingAvailable()
+	 * @see LazyInitializer#isReadOnlySettingAvailable()
 	 * @see org.hibernate.Session#isReadOnly(Object entityOrProxy)
 	 */
 	boolean isReadOnly();

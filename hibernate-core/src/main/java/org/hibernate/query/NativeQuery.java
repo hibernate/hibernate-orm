@@ -14,12 +14,12 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
-import javax.persistence.AttributeConverter;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Parameter;
-import javax.persistence.TemporalType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -70,7 +70,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * detect the underlying type.
 	 * <p/>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
-	 * {@link javax.persistence.ColumnResult} in annotations
+	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
 	 * @param columnAlias The column alias in the result-set to be processed
 	 * 		as a scalar result
@@ -83,7 +83,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * Declare a scalar query result.
 	 * <p/>
 	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
-	 * {@link javax.persistence.ColumnResult} in annotations
+	 * {@link jakarta.persistence.ColumnResult} in annotations
 	 *
 	 * @param columnAlias The column alias in the result-set to be processed
 	 * 		as a scalar result
@@ -214,7 +214,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	RootReturn addRoot(String tableAlias, String entityName);
 
 	/**
-	 * Add a new root return mapping, returning a {@link org.hibernate.query.NativeQuery.RootReturn} to allow further definition.
+	 * Add a new root return mapping, returning a {@link RootReturn} to allow further definition.
 	 *
 	 * @param tableAlias The SQL table alias to map to this entity
 	 * @param entityType The java type of the entity.

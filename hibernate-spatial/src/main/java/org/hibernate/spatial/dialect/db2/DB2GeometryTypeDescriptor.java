@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.db2.Db2ClobDecoder;
@@ -30,7 +30,7 @@ import org.geolatte.geom.codec.db.db2.Db2ClobEncoder;
  * <p>
  * Created by Karel Maesen, Geovise BVBA, and David Adler, Adtech Geospatial
  */
-public class DB2GeometryTypeDescriptor implements SqlTypeDescriptor {
+public class DB2GeometryTypeDescriptor implements JdbcTypeDescriptor {
 
 
 	private final Integer srid;
@@ -40,7 +40,7 @@ public class DB2GeometryTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.CLOB;
 	}
 
@@ -67,7 +67,7 @@ public class DB2GeometryTypeDescriptor implements SqlTypeDescriptor {
 			}
 
 			private String toText(X value, WrapperOptions options) {
-				final Geometry<?> geometry = getJavaDescriptor().unwrap( value, Geometry.class, options );
+				final Geometry<?> geometry = getJavaTypeDescriptor().unwrap( value, Geometry.class, options );
 				final Db2ClobEncoder encoder = new Db2ClobEncoder();
 				String encoded = encoder.encode( geometry );
 				return encoded;
@@ -81,18 +81,18 @@ public class DB2GeometryTypeDescriptor implements SqlTypeDescriptor {
 
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( rs.getObject( paramIndex ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( index ) ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options)
 					throws SQLException {
-				return getJavaDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
+				return getJavaTypeDescriptor().wrap( toGeometry( statement.getObject( name ) ), options );
 			}
 		};
 	}

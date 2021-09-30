@@ -23,13 +23,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.PersistenceContextType;
-import javax.persistence.PersistenceException;
-import javax.persistence.PersistenceUnitUtil;
-import javax.persistence.Query;
-import javax.persistence.SynchronizationType;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceContextType;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.Query;
+import jakarta.persistence.SynchronizationType;
 
 import org.hibernate.ConnectionAcquisitionMode;
 import org.hibernate.ConnectionReleaseMode;
@@ -47,7 +47,6 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
-import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -80,16 +79,12 @@ import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionOwner;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
-import org.hibernate.event.service.spi.EventListenerGroup;
-import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.EventEngine;
-import org.hibernate.event.spi.EventType;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.internal.util.config.ConfigurationException;
 import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.jpa.internal.AfterCompletionActionLegacyJpaImpl;
 import org.hibernate.jpa.internal.ExceptionMapperLegacyJpaImpl;
@@ -124,9 +119,6 @@ import org.hibernate.resource.transaction.backend.jta.internal.synchronization.A
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ManagedFlushChecker;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
-import org.hibernate.secure.spi.GrantedPermission;
-import org.hibernate.secure.spi.JaccPermissionDeclarations;
-import org.hibernate.secure.spi.JaccService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
@@ -226,7 +218,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			if ( sfName == null ) {
 				sfName = cfgXmlAccessService.getAggregatedConfig().getSessionFactoryName();
 			}
-			applyCfgXmlValues( cfgXmlAccessService.getAggregatedConfig(), serviceRegistry );
 		}
 
 		this.name = sfName;
@@ -237,14 +228,14 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		this.properties = new HashMap<>();
 		this.properties.putAll( serviceRegistry.getService( ConfigurationService.class ).getSettings() );
 		if ( !properties.containsKey( AvailableSettings.JPA_VALIDATION_FACTORY )
-				&& !properties.containsKey( AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY ) ) {
+				&& !properties.containsKey( AvailableSettings.JAKARTA_VALIDATION_FACTORY ) ) {
 			if ( getSessionFactoryOptions().getValidatorFactoryReference() != null ) {
 				properties.put(
 						AvailableSettings.JPA_VALIDATION_FACTORY,
 						getSessionFactoryOptions().getValidatorFactoryReference()
 				);
 				properties.put(
-						AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
+						AvailableSettings.JAKARTA_VALIDATION_FACTORY,
 						getSessionFactoryOptions().getValidatorFactoryReference()
 				);
 			}
@@ -491,34 +482,6 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 		catch (Exception e) {
 			throw new HibernateException( "Could not instantiate requested listener [" + listenerImpl + "]", e );
-		}
-	}
-
-	private void applyCfgXmlValues(LoadedConfig aggregatedConfig, SessionFactoryServiceRegistry serviceRegistry) {
-		final JaccService jaccService = serviceRegistry.getService( JaccService.class );
-		if ( jaccService.getContextId() != null ) {
-			final JaccPermissionDeclarations permissions = aggregatedConfig.getJaccPermissions( jaccService.getContextId() );
-			if ( permissions != null ) {
-				for ( GrantedPermission grantedPermission : permissions.getPermissionDeclarations() ) {
-					jaccService.addPermission( grantedPermission );
-				}
-			}
-		}
-
-		if ( aggregatedConfig.getEventListenerMap() != null ) {
-			final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-			final EventListenerRegistry eventListenerRegistry = serviceRegistry.getService( EventListenerRegistry.class );
-			for ( Map.Entry<EventType, Set<String>> entry : aggregatedConfig.getEventListenerMap().entrySet() ) {
-				final EventListenerGroup group = eventListenerRegistry.getEventListenerGroup( entry.getKey() );
-				for ( String listenerClassName : entry.getValue() ) {
-					try {
-						group.appendListener( cls.classForName( listenerClassName ).newInstance() );
-					}
-					catch (Exception e) {
-						throw new ConfigurationException( "Unable to instantiate event listener class : " + listenerClassName, e );
-					}
-				}
-			}
 		}
 	}
 
@@ -1644,8 +1607,8 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private void maskOutSensitiveInformation(Map<String, Object> props) {
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_USER );
 		maskOutIfSet( props, AvailableSettings.JPA_JDBC_PASSWORD );
-		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_USER );
-		maskOutIfSet( props, AvailableSettings.JAKARTA_JPA_JDBC_PASSWORD );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_USER );
+		maskOutIfSet( props, AvailableSettings.JAKARTA_JDBC_PASSWORD );
 		maskOutIfSet( props, AvailableSettings.USER );
 		maskOutIfSet( props, AvailableSettings.PASS );
 	}

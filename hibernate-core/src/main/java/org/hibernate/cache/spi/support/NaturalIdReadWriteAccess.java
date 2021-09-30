@@ -18,8 +18,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Standard support for {@link org.hibernate.cache.spi.access.NaturalIdDataAccess}
- * using the {@link org.hibernate.cache.spi.access.AccessType#READ_WRITE} access type.
+ * Standard support for {@link NaturalIdDataAccess}
+ * using the {@link AccessType#READ_WRITE} access type.
  *
  * @author Steve Ebersole
  */

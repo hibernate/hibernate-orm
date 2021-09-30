@@ -276,7 +276,7 @@ public final class DataHelper {
 	 *
 	 * @param value The Clob value
 	 *
-	 * @return The appropriate buffer size ({@link java.sql.Clob#length()} by default.
+	 * @return The appropriate buffer size ({@link Clob#length()} by default.
 	 *
 	 * @throws SQLException
 	 */

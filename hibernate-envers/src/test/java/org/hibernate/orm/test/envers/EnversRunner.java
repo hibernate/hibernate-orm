@@ -22,7 +22,7 @@ import org.junit.runners.model.InitializationError;
 import org.junit.runners.model.TestClass;
 
 /**
- * Copied & modified from {@link org.junit.runners.Parameterized}.
+ * Copied & modified from {@link Parameterized}.
  * <p/>
  * The modification is that the generated runners extend {@link CustomRunner} instead of the default
  * {@code TestClassRunnerForParameters}.

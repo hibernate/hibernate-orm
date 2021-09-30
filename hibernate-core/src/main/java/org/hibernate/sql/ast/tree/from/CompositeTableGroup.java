@@ -22,16 +22,19 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	private final EmbeddableValuedModelPart compositionMapping;
 
 	private final TableGroup underlyingTableGroup;
+	private final boolean fetched;
 
 	private List<TableGroupJoin> tableGroupJoins;
 
 	public CompositeTableGroup(
 			NavigablePath navigablePath,
 			EmbeddableValuedModelPart compositionMapping,
-			TableGroup underlyingTableGroup) {
+			TableGroup underlyingTableGroup,
+			boolean fetched) {
 		this.navigablePath = navigablePath;
 		this.compositionMapping = compositionMapping;
 		this.underlyingTableGroup = underlyingTableGroup;
+		this.fetched = fetched;
 	}
 
 	@Override
@@ -48,6 +51,11 @@ public class CompositeTableGroup implements VirtualTableGroup {
 	public String getGroupAlias() {
 		// none, although we could also delegate to the underlyingTableGroup's group-alias
 		return null;
+	}
+
+	@Override
+	public boolean isFetched() {
+		return fetched;
 	}
 
 	@Override

@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.cdi.converters;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Steve Ebersole
@@ -14,7 +14,7 @@ import javax.persistence.AttributeConverter;
 public class ConverterBean implements AttributeConverter<Integer,String> {
 	private final MonitorBean monitor;
 
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	public ConverterBean(MonitorBean monitor) {
 		this.monitor = monitor;
 	}

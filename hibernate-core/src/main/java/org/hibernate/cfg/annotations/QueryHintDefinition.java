@@ -9,9 +9,9 @@ package org.hibernate.cfg.annotations;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.LockModeType;
-import javax.persistence.NamedQuery;
-import javax.persistence.QueryHint;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.QueryHint;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.CacheMode;
@@ -135,7 +135,7 @@ public class QueryHintDefinition {
 		LockModeType lockModeType = namedQueryAnnotation.lockMode();
 		Integer lockTimeoutHint = getInteger( AvailableSettings.JPA_LOCK_TIMEOUT );
 		if ( lockTimeoutHint == null ) {
-			lockTimeoutHint = getInteger( AvailableSettings.JAKARTA_JPA_LOCK_TIMEOUT );
+			lockTimeoutHint = getInteger( AvailableSettings.JAKARTA_LOCK_TIMEOUT );
 		}
 		Boolean followOnLocking = getBoolean( QueryHints.FOLLOW_ON_LOCKING );
 

@@ -11,8 +11,9 @@ import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.CalendarDateType;
@@ -23,6 +24,7 @@ import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.OffsetTimeType;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.ZonedDateTimeType;
+import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -89,6 +91,29 @@ public class BindingTypeHelper {
 			}
 			case TIME: {
 				return resolveTimeTemporalTypeVariant( javaType, baseType );
+			}
+			default: {
+				throw new IllegalArgumentException( "Unexpected TemporalType [" + temporalType + "]; expecting TIMESTAMP, DATE or TIME" );
+			}
+		}
+	}
+
+	public JdbcMapping resolveBindType(Object value, JdbcMapping baseType) {
+		if ( value == null || !( baseType.getJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor<?> ) ) {
+			return baseType;
+		}
+
+		final Class<?> javaType = value.getClass();
+		final TemporalType temporalType = ( (TemporalJavaTypeDescriptor<?>) baseType.getJavaTypeDescriptor() ).getPrecision();
+		switch ( temporalType ) {
+			case TIMESTAMP: {
+				return (JdbcMapping) resolveTimestampTemporalTypeVariant( javaType, (AllowableParameterType<?>) baseType );
+			}
+			case DATE: {
+				return (JdbcMapping) resolveDateTemporalTypeVariant( javaType, (AllowableParameterType<?>) baseType );
+			}
+			case TIME: {
+				return (JdbcMapping) resolveTimeTemporalTypeVariant( javaType, (AllowableParameterType<?>) baseType );
 			}
 			default: {
 				throw new IllegalArgumentException( "Unexpected TemporalType [" + temporalType + "]; expecting TIMESTAMP, DATE or TIME" );

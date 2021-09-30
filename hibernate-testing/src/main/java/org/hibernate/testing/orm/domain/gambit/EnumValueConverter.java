@@ -6,7 +6,7 @@
  */
 package org.hibernate.testing.orm.domain.gambit;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 /**
  * @author Steve Ebersole

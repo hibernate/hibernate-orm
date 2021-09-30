@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -22,7 +21,6 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.ContributableDatabaseObject;
-import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.InitCommand;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -30,8 +28,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.env.spi.QualifiedObjectNameFormatter;
 import org.hibernate.engine.spi.Mapping;
-import org.hibernate.tool.hbm2ddl.ColumnMetadata;
-import org.hibernate.tool.hbm2ddl.TableMetadata;
 import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.tool.schema.extract.spi.TableInformation;
 
@@ -126,7 +122,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	/**
 	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 * obtained from {@link JdbcEnvironment}
 	 */
 	@Deprecated
 	public String getQualifiedName(Dialect dialect, String defaultCatalog, String defaultSchema) {
@@ -145,7 +141,7 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 
 	/**
 	 * @deprecated Should use {@link QualifiedObjectNameFormatter#format} on QualifiedObjectNameFormatter
-	 * obtained from {@link org.hibernate.engine.jdbc.env.spi.JdbcEnvironment}
+	 * obtained from {@link JdbcEnvironment}
 	 */
 	@Deprecated
 	public static String qualify(String catalog, String schema, String table) {
@@ -424,35 +420,6 @@ public class Table implements RelationalModel, Serializable, ContributableDataba
 		return Identifier.areEqual( name, table.name )
 				&& Identifier.areEqual( schema, table.schema )
 				&& Identifier.areEqual( catalog, table.catalog );
-	}
-
-	public void validateColumns(Dialect dialect, Mapping mapping, TableMetadata tableInfo) {
-		Iterator<Column> iter = getColumnIterator();
-		while ( iter.hasNext() ) {
-			Column col = (Column) iter.next();
-
-			ColumnMetadata columnInfo = tableInfo.getColumnMetadata( col.getName() );
-
-			if ( columnInfo == null ) {
-				throw new HibernateException( "Missing column: " + col.getName() + " in " + Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()));
-			}
-			else {
-				final boolean typesMatch =
-						dialect.equivalentTypes( columnInfo.getTypeCode(), col.getSqlTypeCode( mapping ) )
-						|| col.getSqlType( dialect, mapping ).toLowerCase(Locale.ROOT)
-								.startsWith( columnInfo.getTypeName().toLowerCase(Locale.ROOT) );
-				if ( !typesMatch ) {
-					throw new HibernateException(
-							"Wrong column type in " +
-							Table.qualify( tableInfo.getCatalog(), tableInfo.getSchema(), tableInfo.getName()) +
-							" for column " + col.getName() +
-							". Found: " + columnInfo.getTypeName().toLowerCase(Locale.ROOT) +
-							", expected: " + col.getSqlType( dialect, mapping )
-					);
-				}
-			}
-		}
-
 	}
 
 	public Iterator<String> sqlAlterStrings(

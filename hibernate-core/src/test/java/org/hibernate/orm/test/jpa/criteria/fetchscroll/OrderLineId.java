@@ -1,7 +1,7 @@
 
 package org.hibernate.orm.test.jpa.criteria.fetchscroll;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 @Embeddable
 public class OrderLineId extends OrderId {

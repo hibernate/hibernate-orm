@@ -6,11 +6,11 @@
  */
 package org.hibernate.orm.test.annotations.join;
 
-import javax.persistence.PersistenceException;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
@@ -132,7 +132,7 @@ public class JoinTest extends BaseNonConfigCoreFunctionalTestCase {
 		CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 		CriteriaQuery<Life> criteria = criteriaBuilder.createQuery( Life.class );
 		Root<Life> root = criteria.from( Life.class );
-		javax.persistence.criteria.Join<Object, Object> owner = root.join( "owner", JoinType.INNER );
+		jakarta.persistence.criteria.Join<Object, Object> owner = root.join( "owner", JoinType.INNER );
 		criteria.where( criteriaBuilder.equal( owner.get( "name" ), "kitty" ) );
 		life = s.createQuery( criteria ).uniqueResult();
 

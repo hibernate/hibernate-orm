@@ -12,7 +12,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.persistence.Persistence;
+import jakarta.persistence.Persistence;
 
 import org.hibernate.cfg.AvailableSettings;
 
@@ -37,7 +37,7 @@ public class CfgFilePropertyTest extends BaseUnitTestCase {
 		Thread thread = new Thread( () -> {
 			try {
 				final Properties props = new Properties();
-				props.setProperty( AvailableSettings.CFG_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
+				props.setProperty( AvailableSettings.CFG_XML_FILE, "/org/hibernate/orm/test/boot/cfgXml/hibernate.cfg.xml" );
 
 				Persistence.createEntityManagerFactory( "ExcludeUnlistedClassesTest1", props );
 			}

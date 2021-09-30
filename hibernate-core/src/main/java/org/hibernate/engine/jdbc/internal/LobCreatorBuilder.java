@@ -37,10 +37,10 @@ public class LobCreatorBuilder {
 	private boolean useContextualLobCreation;
 
 	/**
-	 * The public factory method for obtaining the appropriate (according to given JDBC {@link java.sql.Connection}.
+	 * The public factory method for obtaining the appropriate (according to given JDBC {@link Connection}.
 	 *
 	 * @param configValues The map of settings
-	 * @param jdbcConnection A JDBC {@link java.sql.Connection} which can be used to gauge the drivers level of support,
+	 * @param jdbcConnection A JDBC {@link Connection} which can be used to gauge the drivers level of support,
 	 * specifically for creating LOB references.
 	 */
 	public LobCreatorBuilder(Map configValues, Connection jdbcConnection) {

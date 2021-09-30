@@ -20,8 +20,6 @@ checkstyleMain.exclude '**/module-info.java'
 dependencies {
 	api project( ':hibernate-core' )
 	api project( ':hibernate-envers' )
-	api libraries.jpa
-	implementation libraries.jpa
 }
 
 test {

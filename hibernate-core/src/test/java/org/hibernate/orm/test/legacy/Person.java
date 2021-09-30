@@ -10,43 +10,43 @@ package org.hibernate.orm.test.legacy;
 /**
  * @author hbm2java
  */
-public class Person extends org.hibernate.orm.test.legacy.Party {
+public class Person extends Party {
 
-   java.lang.String id;
-   java.lang.String givenName;
-   java.lang.String lastName;
-   java.lang.String nationalID;
+   String id;
+   String givenName;
+   String lastName;
+   String nationalID;
 
 
-  java.lang.String getId() {
+  String getId() {
     return id;
   }
 
-  void  setId(java.lang.String newValue) {
+  void  setId(String newValue) {
     id = newValue;
   }
 
-  java.lang.String getGivenName() {
+  String getGivenName() {
     return givenName;
   }
 
-  void  setGivenName(java.lang.String newValue) {
+  void  setGivenName(String newValue) {
     givenName = newValue;
   }
 
-  java.lang.String getLastName() {
+  String getLastName() {
     return lastName;
   }
 
-  void  setLastName(java.lang.String newValue) {
+  void  setLastName(String newValue) {
     lastName = newValue;
   }
 
-  java.lang.String getNationalID() {
+  String getNationalID() {
     return nationalID;
   }
 
-  void  setNationalID(java.lang.String newValue) {
+  void  setNationalID(String newValue) {
     nationalID = newValue;
   }
 

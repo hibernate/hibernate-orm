@@ -15,16 +15,16 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import javax.validation.Validation;
-import javax.validation.ValidatorFactory;
-import javax.validation.constraints.Digits;
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.validation.metadata.BeanDescriptor;
-import javax.validation.metadata.ConstraintDescriptor;
-import javax.validation.metadata.PropertyDescriptor;
+import jakarta.validation.Validation;
+import jakarta.validation.ValidatorFactory;
+import jakarta.validation.constraints.Digits;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.metadata.BeanDescriptor;
+import jakarta.validation.metadata.ConstraintDescriptor;
+import jakarta.validation.metadata.PropertyDescriptor;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -501,6 +501,11 @@ class TypeSafeActivator {
 			return Validation.buildDefaultValidatorFactory();
 		}
 		catch ( Exception e ) {
+			LOG.infof(
+					e,
+					"Error calling `%s`",
+					"jakarta.validation.Validation#buildDefaultValidatorFactory"
+			);
 			throw new IntegrationException( "Unable to build the default ValidatorFactory", e );
 		}
 	}
@@ -552,7 +557,7 @@ class TypeSafeActivator {
 					}
 				},
 				cfgService.getSetting(
-						AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
+						AvailableSettings.JAKARTA_VALIDATION_FACTORY,
 						new ConfigurationService.Converter<ValidatorFactory>() {
 							@Override
 							public ValidatorFactory convert(Object value) {
@@ -564,7 +569,7 @@ class TypeSafeActivator {
 											String.format(
 													Locale.ENGLISH,
 													"ValidatorFactory reference (provided via `%s` setting) was not castable to %s : %s",
-													AvailableSettings.JAKARTA_JPA_VALIDATION_FACTORY,
+													AvailableSettings.JAKARTA_VALIDATION_FACTORY,
 													ValidatorFactory.class.getName(),
 													value.getClass().getName()
 											)

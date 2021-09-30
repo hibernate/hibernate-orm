@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterBoolean;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Descriptor for {@link java.sql.Types#BOOLEAN BOOLEAN} handling.
+ * Descriptor for {@link Types#BOOLEAN BOOLEAN} handling.
  *
  * @author Steve Ebersole
  */
@@ -51,7 +51,10 @@ public class BooleanTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(TypeConfiguration typeConfiguration) {
+	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+			Integer length,
+			Integer scale,
+			TypeConfiguration typeConfiguration) {
 		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Boolean.class );
 	}
 

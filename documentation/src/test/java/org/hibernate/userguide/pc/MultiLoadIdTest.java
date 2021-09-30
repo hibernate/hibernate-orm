@@ -8,18 +8,17 @@ package org.hibernate.userguide.pc;
 
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Cacheable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Cacheable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -44,8 +43,6 @@ public class MultiLoadIdTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.USE_SECOND_LEVEL_CACHE, true );
-		settings.put( AvailableSettings.CACHE_REGION_FACTORY, "jcache" );
 		settings.put( AvailableSettings.GENERATE_STATISTICS, Boolean.TRUE.toString() );
 		sqlStatementInterceptor = new SQLStatementInterceptor( settings );
 	}

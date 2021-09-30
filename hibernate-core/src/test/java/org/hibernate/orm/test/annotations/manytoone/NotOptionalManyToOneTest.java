@@ -6,12 +6,13 @@
  */
 package org.hibernate.orm.test.annotations.manytoone;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 
 import org.hibernate.orm.test.annotations.manytoone.NotOptionalManyToOneTest.Child;
 import org.hibernate.orm.test.annotations.manytoone.NotOptionalManyToOneTest.Parent;
+import org.hibernate.sql.ast.SqlAstJoinType;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -63,7 +64,7 @@ public class NotOptionalManyToOneTest {
 		scope.inTransaction(
 				session -> {
 					session.get( Parent.class, 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "inner", 1 );
+					statementInspector.assertNumberOfJoins( 0, SqlAstJoinType.INNER, 1 );
 				}
 		);
 	}

@@ -6,11 +6,11 @@
 
 You may also express queries in the native SQL dialect of your database.
 This is useful if you want to utilize database-specific features such as window functions, Common Table Expressions (CTE) or the `CONNECT BY` option in Oracle.
-It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate/JPA.
+It also provides a clean migration path from a direct SQL/JDBC based application to Hibernate/Jakarta Persistence.
 Hibernate also allows you to specify handwritten SQL (including stored procedures) for all create, update, delete, and retrieve operations.
 
 [[sql-jpa-query]]
-=== Creating a native query using JPA
+=== Creating a native query using Jakarta Persistence
 
 Execution of native SQL queries is controlled via the `NativeQuery` interface, which is obtained by calling `Session.createNativeQuery()`.
 The following sections describe how to use this API for querying.
@@ -21,7 +21,7 @@ The following sections describe how to use this API for querying.
 The most basic SQL query is to get a list of scalars (column) values.
 
 [[sql-jpa-all-columns-scalar-query-example]]
-.JPA native query selecting all columns
+.Jakarta Persistence native query selecting all columns
 ====
 [source, JAVA, indent=0]
 ----
@@ -30,7 +30,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-jpa-all-columns-scalar-query-example]
 ====
 
 [[sql-jpa-custom-column-selection-scalar-query-example]]
-.JPA native query with a custom column selection
+.Jakarta Persistence native query with a custom column selection
 ====
 [source, JAVA, indent=0]
 ----
@@ -95,7 +95,7 @@ If a specific type is not mapped, or does not result in the expected type, it is
 The above queries were all about returning scalar values, basically returning the _raw_ values from the `ResultSet`.
 
 [[sql-jpa-entity-query-example]]
-.JPA native query selecting entities
+.Jakarta Persistence native query selecting entities
 ====
 [source, JAVA, indent=0]
 ----
@@ -116,7 +116,7 @@ Assuming that `Person` is mapped as a class with the columns `id`, `name`, `nick
 the following query will also return a `List` where each element is a `Person` entity.
 
 [[sql-jpa-entity-query-explicit-result-set-example]]
-.JPA native query selecting entities with explicit result set
+.Jakarta Persistence native query selecting entities with explicit result set
 ====
 [source, JAVA, indent=0]
 ----
@@ -141,7 +141,7 @@ it is required to also return this when performing the native query,
 otherwise, a database-specific _column not found_ error will occur.
 
 [[sql-jpa-entity-associations-query-many-to-one-example]]
-.JPA native query selecting entities with many-to-one association
+.Jakarta Persistence native query selecting entities with many-to-one association
 ====
 [source, JAVA, indent=0]
 ----
@@ -198,7 +198,7 @@ Notice that you added an alias name _pr_ to be able to specify the target proper
 It is possible to do the same eager joining for collections (e.g. the `Phone#calls` `one-to-many` association).
 
 [[sql-jpa-entity-associations-query-one-to-many-join-example]]
-.JPA native query selecting entities with joined one-to-many association
+.Jakarta Persistence native query selecting entities with joined one-to-many association
 ====
 [source, JAVA, indent=0]
 ----
@@ -237,7 +237,7 @@ This can be problematic for SQL queries that join multiple tables since the same
 Column alias injection is needed in the following query which otherwise throws `NonUniqueDiscoveredSqlAliasException`.
 
 [[sql-jpa-multi-entity-query-example]]
-.JPA native query selecting entities with the same column names
+.Jakarta Persistence native query selecting entities with the same column names
 ====
 [source, JAVA, indent=0]
 ----
@@ -272,7 +272,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-multi-entity-query-alias-ex
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define an `addEntity` method equivalent.
+There's no such equivalent in Jakarta Persistence because the `jakarta.persistence.Query` interface does not define an `addEntity` method equivalent.
 ====
 
 The `{pr.*}` and `{pt.*}` notation used above is shorthand for "all properties".
@@ -337,7 +337,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-dto-query-example, indent=0
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define a `setResultTransformer` method equivalent.
+There's no such equivalent in Jakarta Persistence because the `jakarta.persistence.Query` interface does not define a `setResultTransformer` method equivalent.
 ====
 
 The above query will return a list of `PersonSummaryDTO` which has been instantiated and injected the values of `id` and `name` into its corresponding properties or fields.
@@ -358,7 +358,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-inheritance-query-example]
 
 [NOTE]
 ====
-There's no such equivalent in JPA because the `javax.persistence.Query` interface does not define an `addEntity` method equivalent.
+There's no such equivalent in Jakarta Persistence because the `jakarta.persistence.Query` interface does not define an `addEntity` method equivalent.
 ====
 
 [[sql-query-parameters]]
@@ -367,7 +367,7 @@ There's no such equivalent in JPA because the `javax.persistence.Query` interfac
 Native SQL queries support positional as well as named parameters:
 
 [[sql-jpa-query-parameters-example]]
-.JPA native query with parameters
+.Jakarta Persistence native query with parameters
 ====
 [source, JAVA, indent=0]
 ----
@@ -390,7 +390,7 @@ include::{sourcedir}/SQLTest.java[tags=sql-hibernate-query-parameters-example]
 Named SQL queries can also be defined during mapping and called in exactly the same way as a named HQL query.
 In this case, you do _not_ need to call `addEntity()` anymore.
 
-JPA defines the `javax.persistence.NamedNativeQuery` annotation for this purpose,
+Jakarta Persistence defines the `jakarta.persistence.NamedNativeQuery` annotation for this purpose,
 and the Hibernate `org.hibernate.annotations.NamedNativeQuery` annotation extends it and adds the following attributes:
 
 `flushMode()`::
@@ -428,7 +428,7 @@ include::{modeldir}/Person.java[tags=sql-scalar-NamedNativeQuery-example]
 ====
 
 [[sql-jpa-scalar-named-query-example]]
-.JPA named native query selecting a scalar value
+.Jakarta Persistence named native query selecting a scalar value
 ====
 [source, JAVA, indent=0]
 ----
@@ -459,7 +459,7 @@ include::{modeldir}/Person.java[tags=sql-multiple-scalar-values-NamedNativeQuery
 Without specifying an explicit result type, Hibernate will assume an `Object` array:
 
 [[sql-jpa-multiple-scalar-values-named-query-example]]
-.JPA named native query selecting multiple scalar values
+.Jakarta Persistence named native query selecting multiple scalar values
 ====
 [source, JAVA, indent=0]
 ----
@@ -497,7 +497,7 @@ include::{modeldir}/Person.java[tags=sql-multiple-scalar-values-dto-NamedNativeQ
 ====
 
 [[sql-jpa-multiple-scalar-values-dto-named-query-example]]
-.JPA named native query selecting multiple scalar values into a DTO
+.Jakarta Persistence named native query selecting multiple scalar values into a DTO
 ====
 [source, JAVA, indent=0]
 ----
@@ -557,7 +557,7 @@ Field definitions are optional provided that they map to the same column name as
 Executing this named native query can be done as follows:
 
 [[sql-jpa-entity-named-query-example]]
-.JPA named native entity query
+.Jakarta Persistence named native entity query
 ====
 [source, JAVA, indent=0]
 ----
@@ -586,7 +586,7 @@ include::{modeldir}/Person.java[tags=sql-entity-associations-NamedNativeQuery-ex
 ====
 
 [[sql-jpa-entity-associations_named-query-example]]
-.JPA named native entity query with joined associations
+.Jakarta Persistence named native entity query with joined associations
 ====
 [source, JAVA, indent=0]
 ----
@@ -623,7 +623,7 @@ include::{sourcedir}/SpaceShip.java[tags=sql-composite-key-entity-associations_n
 ====
 
 [[sql-jpa-composite-key-entity-associations_named-query-example]]
-.JPA named native entity query with joined associations and composite keys
+.Jakarta Persistence named native entity query with joined associations and composite keys
 ====
 [source, JAVA, indent=0]
 ----
@@ -706,10 +706,10 @@ include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-sp-out-mysql-example
 ----
 ====
 
-To use this stored procedure, you can execute the following JPA 2.1 query:
+To use this stored procedure, you can execute the following Jakarta Persistence query:
 
 [[sql-jpa-call-sp-out-mysql-example]]
-.Calling a MySQL stored procedure with `OUT` parameter type using JPA
+.Calling a MySQL stored procedure with `OUT` parameter type using Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -740,7 +740,7 @@ include::{sourcedir}/MySQLStoredProcedureTest.java[tags=sql-sp-no-out-mysql-exam
 You can retrieve the results of the aforementioned MySQL stored procedure as follows:
 
 [[sql-jpa-call-sp-no-out-mysql-example]]
-.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using JPA
+.Calling a MySQL stored procedure and fetching the result set without an `OUT` parameter type using Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -776,7 +776,7 @@ include::{sourcedir}/OracleStoredProcedureTest.java[tags=sql-sp-ref-cursor-oracl
 This function can be called using the standard Java Persistence API:
 
 [[sql-jpa-call-sp-ref-cursor-oracle-example]]
-.Calling an Oracle `REF_CURSOR` stored procedure using JPA
+.Calling an Oracle `REF_CURSOR` stored procedure using Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -835,7 +835,7 @@ For SQL Server, if you can enable `SET NOCOUNT ON` in your procedure it will pro
 === Using named queries to call stored procedures
 
 Just like with SQL statements, you can also use named queries to call stored procedures.
-For this purpose, JPA defines the {jpaJavadocUrlPrefix}NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
+For this purpose, Jakarta Persistence defines the {jpaJavadocUrlPrefix}NamedStoredProcedureQuery.html[`@NamedStoredProcedureQuery`] annotation.
 
 [[sql-sp-ref-cursor-oracle-named-query-example]]
 .Oracle `REF_CURSOR` named query stored procedure
@@ -849,7 +849,7 @@ include::{modeldir}/Person.java[tags=sql-sp-ref-cursor-oracle-named-query-exampl
 Calling this stored procedure is straightforward, as illustrated by the following example.
 
 [[sql-jpa-call-sp-ref-cursor-oracle-named-query-example]]
-.Calling an Oracle `REF_CURSOR` stored procedure using a JPA named query
+.Calling an Oracle `REF_CURSOR` stored procedure using a Jakarta Persistence named query
 ====
 [source, JAVA, indent=0]
 ----

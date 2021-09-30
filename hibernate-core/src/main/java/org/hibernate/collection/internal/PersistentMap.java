@@ -28,7 +28,7 @@ import org.hibernate.type.Type;
  * A persistent wrapper for a <tt>java.util.Map</tt>. Underlying collection
  * is a <tt>HashMap</tt>.
  *
- * @see java.util.HashMap
+ * @see HashMap
  * @author Gavin King
  */
 public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implements Map<K,E> {
@@ -306,7 +306,7 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		final Iterator<Entry<K,E>> itr = map.entrySet().iterator();
 		int i=0;
 		while ( itr.hasNext() ) {
-			final Map.Entry<K,E> e = itr.next();
+			final Entry<K,E> e = itr.next();
 			result[i++] = persister.getIndexType().disassemble( e.getKey(), getSession(), null );
 			result[i++] = persister.getElementType().disassemble( e.getValue(), getSession(), null );
 		}
@@ -421,9 +421,9 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 		}
 	}
 
-	final class MapEntryProxy implements Map.Entry<K,E> {
-		private final Map.Entry<K,E> me;
-		MapEntryProxy(Map.Entry<K,E> me) {
+	final class MapEntryProxy implements Entry<K,E> {
+		private final Entry<K,E> me;
+		MapEntryProxy(Entry<K,E> me) {
 			this.me = me;
 		}
 
@@ -471,14 +471,14 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 	@Override
 	public boolean needsInserting(Object entry, int i, Type elemType) throws HibernateException {
 		final Map<?,?> sn = (Map<?,?>) getSnapshot();
-		final Map.Entry<?,?> e = (Map.Entry<?,?>) entry;
+		final Entry<?,?> e = (Entry<?,?>) entry;
 		return e.getValue() != null && sn.get( e.getKey() ) == null;
 	}
 
 	@Override
 	public boolean needsUpdating(Object entry, int i, Type elemType) throws HibernateException {
 		final Map<?,?> sn = (Map<?,?>) getSnapshot();
-		final Map.Entry<?,?> e = (Map.Entry<?,?>) entry;
+		final Entry<?,?> e = (Entry<?,?>) entry;
 		final Object snValue = sn.get( e.getKey() );
 		return e.getValue() != null
 				&& snValue != null
@@ -487,18 +487,18 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public Object getIndex(Object entry, int i, CollectionPersister persister) {
-		return ( (Map.Entry<?,?>) entry ).getKey();
+		return ( (Entry<?,?>) entry ).getKey();
 	}
 
 	@Override
 	public Object getElement(Object entry) {
-		return ( (Map.Entry<?,?>) entry ).getValue();
+		return ( (Entry<?,?>) entry ).getValue();
 	}
 
 	@Override
 	public Object getSnapshotElement(Object entry, int i) {
 		final Map<?,?> sn = (Map<?,?>) getSnapshot();
-		return sn.get( ( (Map.Entry<?,?>) entry ).getKey() );
+		return sn.get( ( (Entry<?,?>) entry ).getKey() );
 	}
 
 	@Override
@@ -516,7 +516,7 @@ public class PersistentMap<K,E> extends AbstractPersistentCollection<E> implemen
 
 	@Override
 	public boolean entryExists(Object entry, int i) {
-		return ( (Map.Entry<?,?>) entry ).getValue() != null;
+		return ( (Entry<?,?>) entry ).getValue() != null;
 	}
 
 	final class Clear implements DelayedOperation<E> {

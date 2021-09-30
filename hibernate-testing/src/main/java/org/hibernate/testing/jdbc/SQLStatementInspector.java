@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.sql.ast.SqlAstJoinType;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
@@ -57,6 +58,36 @@ public class SQLStatementInspector implements StatementInspector {
 
 	public void assertExecutedCount(int expected) {
 		assertEquals( "Number of executed statements ",expected, sqlQueries.size() );
+	}
+
+	public void assertNumberOfJoins(int queryNumber, SqlAstJoinType joinType, int expectedNumberOfOccurrences) {
+		String query = sqlQueries.get( queryNumber );
+		String[] parts = query.split( " join " );
+		int actual = getCount( parts, joinType );
+		assertThat( "number of " + joinType.getText() + "join", actual, is( expectedNumberOfOccurrences ) );
+	}
+
+	private int getCount(String[] parts, SqlAstJoinType joinType) {
+		final int end = parts.length - 1;
+		int count = 0;
+		for ( int i = 0; i < end; i++ ) {
+			if ( parts[i].endsWith( " left" ) ) {
+				count += joinType == SqlAstJoinType.LEFT ? 1 : 0;
+			}
+			else if ( parts[i].endsWith( " right" ) ) {
+				count += joinType == SqlAstJoinType.RIGHT ? 1 : 0;
+			}
+			else if ( parts[i].endsWith( " full" ) ) {
+				count += joinType == SqlAstJoinType.FULL ? 1 : 0;
+			}
+			else if ( parts[i].endsWith( " cross" ) ) {
+				count += joinType == SqlAstJoinType.CROSS ? 1 : 0;
+			}
+			else {
+				count += joinType == SqlAstJoinType.INNER ? 1 : 0;
+			}
+		}
+		return count;
 	}
 
 	public void assertNumberOfOccurrenceInQuery(int queryNumber, String toCheck, int expectedNumberOfOccurrences) {

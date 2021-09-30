@@ -9,6 +9,6 @@ package org.hibernate.orm.test.jpa.metamodel.attributeInSuper;
 /**
  * @author Hardy Ferentschik
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class Entity extends AbstractEntity {
 }

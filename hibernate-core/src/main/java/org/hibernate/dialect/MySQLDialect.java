@@ -57,13 +57,12 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
-import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
@@ -295,6 +294,7 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -302,7 +302,13 @@ public class MySQLDialect extends Dialect {
 		if ( jdbcTypeCode == Types.BIT ) {
 			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override
@@ -785,11 +791,6 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public boolean supportsEmptyInList() {
 		return false;
-	}
-
-	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
 	}
 
 	@Override

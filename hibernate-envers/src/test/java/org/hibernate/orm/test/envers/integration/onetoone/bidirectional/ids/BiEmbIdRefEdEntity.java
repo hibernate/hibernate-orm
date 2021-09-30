@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.ids;
 
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.OneToOne;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.OneToOne;
 
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.entities.ids.EmbId;

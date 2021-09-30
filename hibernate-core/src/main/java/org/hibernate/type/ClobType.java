@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * A type that maps between {@link java.sql.Types#CLOB CLOB} and {@link Clob}
+ * A type that maps between {@link Types#CLOB CLOB} and {@link Clob}
  *
  * @author Gavin King
  * @author Steve Ebersole

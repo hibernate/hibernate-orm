@@ -8,9 +8,9 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import javax.transaction.SystemException;
-import javax.transaction.Transaction;
-import javax.transaction.TransactionManager;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.Transaction;
+import jakarta.transaction.TransactionManager;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;

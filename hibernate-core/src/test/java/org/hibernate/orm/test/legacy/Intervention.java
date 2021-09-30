@@ -12,16 +12,16 @@ package org.hibernate.orm.test.legacy;
  */
 public class Intervention {
 
-   java.lang.String id;
+   String id;
    long version;
 
    String description;
 
-  java.lang.String getId() {
+  String getId() {
     return id;
   }
 
-  void  setId(java.lang.String newValue) {
+  void  setId(String newValue) {
     id = newValue;
   }
 

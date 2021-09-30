@@ -12,7 +12,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
@@ -103,7 +103,7 @@ public class DateTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
 
 	@Override
 	public int extractHashCode(Date value) {
-		Calendar calendar = java.util.Calendar.getInstance();
+		Calendar calendar = Calendar.getInstance();
 		calendar.setTime( value );
 		return CalendarTypeDescriptor.INSTANCE.extractHashCode( calendar );
 	}

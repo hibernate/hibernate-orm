@@ -12,7 +12,7 @@ import java.math.BigInteger;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
-import javax.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;

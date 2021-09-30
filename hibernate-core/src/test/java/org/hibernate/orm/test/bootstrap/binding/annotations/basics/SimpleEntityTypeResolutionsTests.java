@@ -10,7 +10,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Iterator;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.mapping.BasicValue;

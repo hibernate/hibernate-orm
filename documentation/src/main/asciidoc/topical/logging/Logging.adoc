@@ -1,3 +1,4 @@
+[[logging-guide]]]]
 = Logging Guide
 :toc:
 

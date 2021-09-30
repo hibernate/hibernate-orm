@@ -7,14 +7,14 @@
 package org.hibernate.orm.test.stat.internal;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.LockModeType;
-import javax.persistence.NamedQuery;
-import javax.persistence.Table;
-import javax.persistence.Tuple;
-import javax.persistence.TypedQuery;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Table;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.stat.QueryStatistics;

@@ -9,7 +9,7 @@ package org.hibernate.bytecode.enhance.internal.bytebuddy;
 import static net.bytebuddy.matcher.ElementMatchers.hasDescriptor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 import net.bytebuddy.description.NamedElement;
 import net.bytebuddy.description.type.TypeDefinition;
@@ -76,15 +76,13 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 						&& !field.hasAnnotation( Id.class )
 						&& !field.getName().equals( "this$0" ) ) {
 
-					if ( log.isDebugEnabled() ) {
-						log.debugf(
-								"Extended enhancement: Transforming access to field [%s.%s] from method [%s#%s]",
-								field.getType().asErasure(),
-								field.getName(),
-								field.getName(),
-								name
-						);
-					}
+					log.debugf(
+							"Extended enhancement: Transforming access to field [%s#%s] from method [%s#%s()]",
+							declaredOwnerType.getName(),
+							field.getName(),
+							instrumentedType.getName(),
+							instrumentedMethod.getName()
+					);
 
 					switch ( opcode ) {
 						case Opcodes.GETFIELD:
@@ -97,6 +95,11 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							);
 							return;
 						case Opcodes.PUTFIELD:
+							if ( field.getFieldDescription().isFinal() ) {
+								// Final fields will only be written to from the constructor,
+								// so there's no point trying to replace final field writes with a method call.
+								break;
+							}
 							methodVisitor.visitMethodInsn(
 									Opcodes.INVOKEVIRTUAL,
 									owner,
@@ -109,9 +112,7 @@ final class FieldAccessEnhancer implements AsmVisitorWrapper.ForDeclaredMethods.
 							throw new EnhancementException( "Unexpected opcode: " + opcode );
 					}
 				}
-				else {
-					super.visitFieldInsn( opcode, owner, name, desc );
-				}
+				super.visitFieldInsn( opcode, owner, name, desc );
 			}
 		};
 	}

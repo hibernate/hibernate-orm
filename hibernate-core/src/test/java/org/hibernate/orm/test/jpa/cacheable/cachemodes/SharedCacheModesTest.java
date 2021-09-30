@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.cacheable.cachemodes;
 
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
@@ -73,11 +73,11 @@ public class SharedCacheModesTest {
 
 					query.setHint( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE, CacheStoreMode.USE );
 					assertEquals( CacheStoreMode.USE, query.getHints().get( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE ) );
-					assertEquals( CacheMode.NORMAL, query.getCacheMode() );
+					assertEquals( CacheMode.PUT, query.getCacheMode() );
 
 					query.setHint( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE, CacheStoreMode.BYPASS );
 					assertEquals( CacheStoreMode.BYPASS, query.getHints().get( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE ) );
-					assertEquals( CacheMode.GET, query.getCacheMode() );
+					assertEquals( CacheMode.IGNORE, query.getCacheMode() );
 
 					query.setHint( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE, CacheStoreMode.REFRESH );
 					assertEquals( CacheStoreMode.REFRESH, query.getHints().get( AvailableSettings.JPA_SHARED_CACHE_STORE_MODE ) );

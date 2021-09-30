@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.query.hql;
 
 import java.time.LocalDate;
-import javax.persistence.Tuple;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;

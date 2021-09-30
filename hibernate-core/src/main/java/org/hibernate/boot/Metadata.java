@@ -40,14 +40,14 @@ import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
  */
 public interface Metadata extends Mapping {
 	/**
-	 * Get the builder for {@link org.hibernate.SessionFactory} instances based on this metamodel.
+	 * Get the builder for {@link SessionFactory} instances based on this metamodel.
 	 *
-	 * @return The builder for {@link org.hibernate.SessionFactory} instances.
+	 * @return The builder for {@link SessionFactory} instances.
 	 */
 	SessionFactoryBuilder getSessionFactoryBuilder();
 
 	/**
-	 * Short-hand form of building a {@link org.hibernate.SessionFactory} through the builder without any additional
+	 * Short-hand form of building a {@link SessionFactory} through the builder without any additional
 	 * option overrides.
 	 *
 	 * @return THe built SessionFactory.
@@ -55,7 +55,7 @@ public interface Metadata extends Mapping {
 	SessionFactory buildSessionFactory();
 
 	/**
-	 * Gets the {@link java.util.UUID} for this metamodel.
+	 * Gets the {@link UUID} for this metamodel.
 	 *
 	 * @return the UUID.
 	 */

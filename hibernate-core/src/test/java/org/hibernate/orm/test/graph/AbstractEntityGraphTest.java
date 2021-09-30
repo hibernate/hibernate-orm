@@ -9,14 +9,14 @@ package org.hibernate.orm.test.graph;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.AttributeNode;
-import javax.persistence.EntityGraph;
-import javax.persistence.EntityManager;
-import javax.persistence.Subgraph;
+import jakarta.persistence.AttributeNode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Subgraph;
 
 import org.hibernate.graph.GraphParser;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Assert;
 

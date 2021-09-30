@@ -7,9 +7,9 @@
 package org.hibernate.query.results;
 
 import java.util.Locale;
-import javax.persistence.AttributeConverter;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -124,12 +124,12 @@ public class Builders {
 
 	public static ResultBuilderBasicValued scalar(int position) {
 		// will be needed for interpreting legacy HBM <resultset/> mappings
-		throw new NotYetImplementedFor6Exception();
+		return new DynamicResultBuilderBasicStandard( position );
 	}
 
 	public static ResultBuilderBasicValued scalar(int position, BasicType<?> type) {
 		// will be needed for interpreting legacy HBM <resultset/> mappings
-		throw new NotYetImplementedFor6Exception();
+		return new DynamicResultBuilderBasicStandard( position, type );
 	}
 
 	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {

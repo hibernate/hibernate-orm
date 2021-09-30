@@ -10,7 +10,9 @@ package org.hibernate.spatial;
  * Enumeration of types of Spatial Aggregation
  *
  * @author Karel Maesen
+ * @deprecated Will be removed in 6.0
  */
+@Deprecated
 public interface SpatialAggregate {
 
 	/**

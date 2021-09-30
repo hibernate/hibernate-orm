@@ -7,7 +7,7 @@
 package org.hibernate.test.mapping.hhh14343;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 
 import org.hibernate.test.mapping.hhh14343.entity.NestedPlayerStat;

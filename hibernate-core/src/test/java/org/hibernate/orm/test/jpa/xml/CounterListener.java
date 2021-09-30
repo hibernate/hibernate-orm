@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.jpa.xml;
 
-import javax.persistence.PrePersist;
-import javax.persistence.PreRemove;
-import javax.persistence.PreUpdate;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreRemove;
+import jakarta.persistence.PreUpdate;
 
 /**
  * @author Emmanuel Bernard

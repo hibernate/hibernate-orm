@@ -30,7 +30,13 @@ public class SqmLiteral<T>
 
 	public SqmLiteral(T value, SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
+		assert value != null;
 		this.value = value;
+	}
+
+	protected SqmLiteral(SqmExpressable<T> inherentType, NodeBuilder nodeBuilder) {
+		super( inherentType, nodeBuilder );
+		this.value = null;
 	}
 
 	public T getLiteralValue() {

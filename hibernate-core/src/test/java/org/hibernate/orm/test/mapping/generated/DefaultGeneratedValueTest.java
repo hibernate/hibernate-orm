@@ -20,10 +20,10 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.ColumnDefault;
@@ -39,7 +39,6 @@ import org.hibernate.tuple.ValueGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -61,10 +60,6 @@ import static org.junit.Assert.assertTrue;
  */
 @SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "CURRENT_TIMESTAMP not supported as default value in Sybase" )
 @SkipForDialect( dialectClass = MySQLDialect.class, reason = "See HHH-10196" )
-@NotImplementedYet(
-		strict = false,
-		reason = "Support for `java.sql.Date` and `java.sql.Time` is currently fubar"
-)
 @DomainModel( annotatedClasses = DefaultGeneratedValueTest.TheEntity.class )
 @SessionFactory
 public class DefaultGeneratedValueTest {
@@ -163,7 +158,7 @@ public class DefaultGeneratedValueTest {
 		scope.inTransaction( (s) -> {
 			final TheEntity theEntity = s.get( TheEntity.class, 1 );
 
-			assertEquals( "Creation timestamp should not change on update", created, theEntity.vmCreatedSqlTimestamp );
+			assertEquals( "Creation timestamp should not change on update", created.vmCreatedSqlTimestamp, theEntity.vmCreatedSqlTimestamp );
 			assertTrue( "Update timestamp should have changed due to update", theEntity.updated.after( created.updated ) );
 		} );
 	}

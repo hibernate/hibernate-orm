@@ -7,14 +7,14 @@
 package org.hibernate.test.annotations.query;
 
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
-import javax.persistence.Query;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.NamedQueries;
+import jakarta.persistence.NamedQuery;
+import jakarta.persistence.Query;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.After;
@@ -33,7 +33,7 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public Class[] getAnnotatedClasses() {
-		return new Class[] {org.hibernate.jpa.test.query.NamedQueryTest.Game.class};
+		return new Class[] { org.hibernate.orm.test.jpa.query.NamedQueryTest.Game.class};
 	}
 
 	@Before
@@ -41,7 +41,7 @@ public class NamedQueryTest extends BaseCoreFunctionalTestCase {
 			throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			for ( String title : GAME_TITLES ) {
-				org.hibernate.jpa.test.query.NamedQueryTest.Game game = new org.hibernate.jpa.test.query.NamedQueryTest.Game(
+				org.hibernate.orm.test.jpa.query.NamedQueryTest.Game game = new org.hibernate.orm.test.jpa.query.NamedQueryTest.Game(
 						title );
 				session.save( game );
 			}

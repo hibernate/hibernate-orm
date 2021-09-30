@@ -15,13 +15,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import javax.persistence.ElementCollection;
-import javax.persistence.JoinColumn;
-import javax.persistence.Lob;
-import javax.persistence.MapKey;
-import javax.persistence.MapKeyEnumerated;
-import javax.persistence.OneToMany;
-import javax.persistence.Version;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Version;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;

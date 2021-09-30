@@ -33,11 +33,11 @@ public class SerializableNClobProxy extends SerializableClobProxy {
 	}
 
 	/**
-	 * Builds a serializable {@link java.sql.Clob} wrapper around the given {@link java.sql.Clob}.
+	 * Builds a serializable {@link Clob} wrapper around the given {@link Clob}.
 	 *
-	 * @param clob The {@link java.sql.Clob} to be wrapped.
+	 * @param clob The {@link Clob} to be wrapped.
 	 *
-	 * @see #generateProxy(java.sql.Clob)
+	 * @see #generateProxy(Clob)
 	 */
 	protected SerializableNClobProxy(Clob clob) {
 		super( clob );

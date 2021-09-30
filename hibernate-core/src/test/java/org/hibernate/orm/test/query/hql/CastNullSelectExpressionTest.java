@@ -6,14 +6,13 @@
  */
 package org.hibernate.orm.test.query.hql;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -28,10 +27,6 @@ import static org.junit.Assert.assertNull;
  */
 @DomainModel( annotatedClasses = CastNullSelectExpressionTest.Person.class )
 @SessionFactory
-@NotImplementedYet(
-		reason = "Combination of https://github.com/hibernate/hibernate-orm/discussions/3921 and https://github.com/hibernate/hibernate-orm/discussions/3889",
-		strict = false
-)
 public class CastNullSelectExpressionTest {
 
 	@Test
@@ -57,7 +52,7 @@ public class CastNullSelectExpressionTest {
 		scope.inTransaction(
 				(session) -> {
 					Person result = (Person) session.createQuery(
-							"select Person( id, firstName, cast( null as string ), lastName ) from Person where lastName='Munster'"
+							"select new Person( id, firstName, cast( null as string ), lastName ) from Person where lastName='Munster'"
 					).uniqueResult();
 					assertEquals( "Herman", result.firstName );
 					assertNull( result.middleName );

@@ -6,13 +6,14 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.Tuple;
-import javax.persistence.TupleElement;
-import javax.persistence.criteria.CompoundSelection;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.TupleElement;
+import jakarta.persistence.criteria.CompoundSelection;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -20,7 +21,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.EmptyScrollableResults;
-import org.hibernate.internal.util.streams.StingArrayCollector;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.criteria.JpaSelection;
@@ -34,7 +35,6 @@ import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -56,7 +56,7 @@ import org.hibernate.sql.results.spi.RowTransformer;
 /**
  * Standard Hibernate implementation of SelectQueryPlan for SQM-backed
  * {@link org.hibernate.query.Query} implementations, which means
- * HQL/JPQL or {@link javax.persistence.criteria.CriteriaQuery}
+ * HQL/JPQL or {@link jakarta.persistence.criteria.CriteriaQuery}
  *
  * @author Steve Ebersole
  */
@@ -188,12 +188,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private RowTransformer<R> makeRowTransformerTupleTransformerAdapter(
 			SqmSelectStatement sqm,
 			QueryOptions queryOptions) {
+		final List<String> aliases = new ArrayList<>();
+		sqm.getQuerySpec().getSelectClause().getSelections().forEach(
+				sqmSelection ->
+					sqmSelection.getSelectableNode().visitSubSelectableNodes(
+							subSelection -> aliases.add( subSelection.getAlias() )
+					)
+		);
+
 		return new RowTransformerTupleTransformerAdapter<>(
-				sqm.getQuerySpec().getSelectClause().getSelections()
-						.stream()
-						.map( SqmSelection::getAlias )
-						.collect( StingArrayCollector.INSTANCE ),
-				queryOptions.getTupleTransformer()
+				ArrayHelper.toStringArray( aliases ), queryOptions.getTupleTransformer()
 		);
 	}
 

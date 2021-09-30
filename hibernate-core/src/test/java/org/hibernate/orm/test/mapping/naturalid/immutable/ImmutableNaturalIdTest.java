@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.naturalid.immutable;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Session;
 import org.hibernate.cfg.AvailableSettings;

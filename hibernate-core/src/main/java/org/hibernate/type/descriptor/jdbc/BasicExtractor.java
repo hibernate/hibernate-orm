@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * Convenience base implementation of {@link org.hibernate.type.descriptor.ValueExtractor}
+ * Convenience base implementation of {@link ValueExtractor}
  *
  * @author Steve Ebersole
  */

@@ -71,7 +71,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			// Note that limit and lock aren't set for SQM as that is applied during SQL rendering
 			// But for native queries, we have to adapt the SQL string
 			final Dialect dialect = executionContext.getSession().getJdbcServices().getDialect();
-			String sql = jdbcSelect.getSql();
+			String sql;
 			limit = queryOptions.getLimit();
 			if ( limit == null || limit.isEmpty() || jdbcSelect.usesLimitParameters() ) {
 				sql = jdbcSelect.getSql();

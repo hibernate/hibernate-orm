@@ -7,18 +7,10 @@
 
 package org.hibernate.spatial.testing.dialects.h2geodb;
 
-import java.io.IOException;
-import java.sql.SQLException;
-
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.JTSGeometryEquality;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -26,20 +18,8 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class GeoDBTestSupport extends TestSupport {
 
-	public DataSourceUtils createDataSourceUtil(ServiceRegistry serviceRegistry) {
-		super.createDataSourceUtil( serviceRegistry );
-		try {
-			return new GeoDBDataSourceUtils( driver(), url(), user(), passwd(), getSQLExpressionTemplate() );
-		}
-		catch (SQLException e) {
-			throw new RuntimeException( e );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( e );
-		}
-	}
-
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "h2geodb/test-geodb-data-set.xml" );
 	}
 
@@ -47,17 +27,8 @@ public class GeoDBTestSupport extends TestSupport {
 		return new GeoDBGeometryEquality();
 	}
 
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		if ( dataSourceUtils instanceof GeoDBDataSourceUtils ) {
-			return new GeoDBExpectationsFactory( (GeoDBDataSourceUtils) dataSourceUtils );
-		}
-		else {
-			throw new IllegalArgumentException( "Requires a GeoDBDataSourceUtils instance" );
-		}
-	}
-
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new GeoDBExpressionTemplate();
+	public AbstractExpectationsFactory createExpectationsFactory() {
+		return new GeoDBExpectationsFactory();
 	}
 
 }

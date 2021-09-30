@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
 
 /**
- * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link java.sql.NClob}
+ * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link NClob}
  *
  * @author Gavin King
  * @author Steve Ebersole

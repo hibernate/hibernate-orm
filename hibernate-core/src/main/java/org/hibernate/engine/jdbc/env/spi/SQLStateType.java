@@ -9,7 +9,7 @@ package org.hibernate.engine.jdbc.env.spi;
 import java.sql.DatabaseMetaData;
 
 /**
- * Enum interpretation of the valid values from {@link java.sql.DatabaseMetaData#getSQLStateType()}
+ * Enum interpretation of the valid values from {@link DatabaseMetaData#getSQLStateType()}
  *
  * @author Steve Ebersole
  */

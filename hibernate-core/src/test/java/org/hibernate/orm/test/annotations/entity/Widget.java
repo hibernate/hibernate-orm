@@ -6,7 +6,7 @@
  */
 
 package org.hibernate.orm.test.annotations.entity;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;

@@ -52,13 +52,15 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 
 	@Override
 	public void finishUp(SharedSessionContractImplementor session) {
-		final boolean put = queryCache.put(
-				queryKey,
-				dataToCache,
-				session
-		);
-		if ( put && statistics.isStatisticsEnabled() ) {
-			statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
+		if ( queryKey != null ) {
+			final boolean put = queryCache.put(
+					queryKey,
+					dataToCache,
+					session
+			);
+			if ( put && statistics.isStatisticsEnabled() ) {
+				statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
+			}
 		}
 	}
 }

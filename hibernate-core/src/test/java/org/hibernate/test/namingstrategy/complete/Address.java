@@ -6,10 +6,10 @@
  */
 package org.hibernate.test.namingstrategy.complete;
 
-import javax.persistence.Basic;
-import javax.persistence.Embeddable;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 /**
  * @author Steve Ebersole

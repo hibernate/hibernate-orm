@@ -7,7 +7,7 @@
 package org.hibernate.query.results.dynamic;
 
 import java.util.function.BiFunction;
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
@@ -90,6 +90,11 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 				domainJtd,
 				jdbcJtd
 		);
+	}
+
+	@Override
+	public Class<?> getJavaType() {
+		return domainJtd.getJavaTypeClass();
 	}
 
 	@Override

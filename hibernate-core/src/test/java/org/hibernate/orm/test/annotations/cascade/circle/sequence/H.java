@@ -9,23 +9,23 @@ package org.hibernate.orm.test.annotations.cascade.circle.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class H extends AbstractEntity {
     private static final long serialVersionUID = 1226955562L;
 
     /**
      * No documentation
      */
-    @javax.persistence.OneToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.OneToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     )
-    private org.hibernate.orm.test.annotations.cascade.circle.sequence.G g;
+    private G g;
 
-    public org.hibernate.orm.test.annotations.cascade.circle.sequence.G getG() {
+    public G getG() {
         return g;
     }
 
-    public void setG(org.hibernate.orm.test.annotations.cascade.circle.sequence.G parameter) {
+    public void setG(G parameter) {
         this.g = parameter;
     }
 }

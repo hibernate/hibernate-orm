@@ -142,7 +142,7 @@ public class LobCreatorTest extends org.hibernate.testing.junit4.BaseUnitTestCas
 			this.connection = connection;
 		}
 
-		public <T> T execute(LobCreationContext.Callback<T> callback) {
+		public <T> T execute(Callback<T> callback) {
 			try {
 				return callback.executeOnConnection( connection );
 			}

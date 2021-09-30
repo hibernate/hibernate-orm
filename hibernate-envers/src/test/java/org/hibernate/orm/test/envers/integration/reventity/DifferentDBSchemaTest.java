@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.reventity;
 
 import java.util.Arrays;
 import java.util.Map;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;

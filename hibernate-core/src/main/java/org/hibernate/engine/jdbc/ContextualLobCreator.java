@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import org.hibernate.JDBCException;
 
 /**
- * {@link LobCreator} implementation using contextual creation against the JDBC {@link java.sql.Connection} class's LOB creation
+ * {@link LobCreator} implementation using contextual creation against the JDBC {@link Connection} class's LOB creation
  * methods.
  *
  * @author Steve Ebersole

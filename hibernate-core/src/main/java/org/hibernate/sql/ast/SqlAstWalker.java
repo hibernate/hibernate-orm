@@ -26,7 +26,6 @@ import org.hibernate.sql.ast.tree.expression.ExtractUnit;
 import org.hibernate.sql.ast.tree.expression.Format;
 import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
-import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -143,8 +142,6 @@ public interface SqlAstWalker {
 	void visitJdbcLiteral(JdbcLiteral jdbcLiteral);
 
 	void visitQueryLiteral(QueryLiteral queryLiteral);
-
-	void visitNullnessLiteral(NullnessLiteral nullnessLiteral);
 
 	void visitUnaryOperationExpression(UnaryOperation unaryOperationExpression);
 

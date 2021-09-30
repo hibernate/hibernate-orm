@@ -9,39 +9,39 @@ package org.hibernate.orm.test.annotations.cascade.circle.sequence;
 /**
  * No Documentation
  */
-@javax.persistence.Entity
+@jakarta.persistence.Entity
 public class C extends AbstractEntity {
     private static final long serialVersionUID = 1226955752L;
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , optional = false)
-    private org.hibernate.orm.test.annotations.cascade.circle.sequence.A a;
+    private A a;
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     )
     private G g;
 
     /**
      * No documentation
      */
-    @javax.persistence.ManyToOne(cascade =  {
-        javax.persistence.CascadeType.MERGE, javax.persistence.CascadeType.PERSIST, javax.persistence.CascadeType.REFRESH}
+    @jakarta.persistence.ManyToOne(cascade =  {
+        jakarta.persistence.CascadeType.MERGE, jakarta.persistence.CascadeType.PERSIST, jakarta.persistence.CascadeType.REFRESH}
     , optional = false)
-    private org.hibernate.orm.test.annotations.cascade.circle.sequence.B b;
+    private B b;
 
-    public org.hibernate.orm.test.annotations.cascade.circle.sequence.A getA() {
+    public A getA() {
         return a;
     }
 
-    public void setA(org.hibernate.orm.test.annotations.cascade.circle.sequence.A parameter) {
+    public void setA(A parameter) {
         this.a = parameter;
     }
 
@@ -53,11 +53,11 @@ public class C extends AbstractEntity {
         this.g = parameter;
     }
 
-    public org.hibernate.orm.test.annotations.cascade.circle.sequence.B getB() {
+    public B getB() {
         return b;
     }
 
-    public void setB(org.hibernate.orm.test.annotations.cascade.circle.sequence.B parameter) {
+    public void setB(B parameter) {
         this.b = parameter;
     }
 }

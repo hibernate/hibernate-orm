@@ -23,9 +23,7 @@ import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
-import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -222,12 +220,10 @@ public class SybaseASESqlAstTranslator<T extends JdbcOperation> extends Abstract
 			// The ansinull setting only matters if using a parameter or literal and the eq operator according to the docs
 			// http://infocenter.sybase.com/help/index.jsp?topic=/com.sybase.infocenter.dc32300.1570/html/sqlug/sqlug89.htm
 			boolean rhsNotNullPredicate =
-					lhs instanceof NullnessLiteral
-					|| lhs instanceof Literal
+					lhs instanceof Literal
 					|| isParameter( lhs );
 			boolean lhsNotNullPredicate =
-					rhs instanceof NullnessLiteral
-					|| rhs instanceof Literal
+					rhs instanceof Literal
 					|| isParameter( rhs );
 			if ( rhsNotNullPredicate || lhsNotNullPredicate ) {
 				lhs.accept( this );

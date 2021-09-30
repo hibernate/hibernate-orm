@@ -9,24 +9,23 @@ package org.hibernate.orm.test.jpa.criteria.nulliteral;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.CascadeType;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.OrderColumn;
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.ListJoin;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.ListJoin;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.query.SemanticException;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jdbc.SQLStatementInterceptor;
@@ -188,7 +187,7 @@ public class CriteriaLiteralsTest extends BaseEntityManagerFunctionalTestCase {
 					1,
 					sqlStatementInterceptor.getSqlQueries().size()
 			);
-			sqlStatementInterceptor.assertExecuted( "select a1_0.name from Book b1_0 inner join Author a1_0 on a1_0.book_id=b1_0.id where b1_0.name=? and a1_0.index_id=?" );
+			sqlStatementInterceptor.assertExecuted( "select a1_0.name from Book b1_0 join Author a1_0 on a1_0.book_id=b1_0.id where b1_0.name=? and a1_0.index_id=?" );
 		} );
 	}
 

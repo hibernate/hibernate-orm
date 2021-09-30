@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.onetoone.hhh9798;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.Transaction;
 import org.hibernate.exception.ConstraintViolationException;

@@ -71,7 +71,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private java.util.List<Join> joins = new ArrayList<>();
 	private final java.util.List<Join> subclassJoins = new ArrayList<>();
 	private final java.util.List<FilterConfiguration> filters = new ArrayList<>();
-	protected final java.util.Set<String> synchronizedTables = new HashSet<>();
+	protected final Set<String> synchronizedTables = new HashSet<>();
 	private String loaderName;
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
@@ -879,7 +879,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		this.loaderName = loaderName == null ? null : loaderName.intern();
 	}
 
-	public abstract java.util.Set<String> getSynchronizedTables();
+	public abstract Set<String> getSynchronizedTables();
 
 	public void addSynchronizedTable(String table) {
 		synchronizedTables.add( table );
@@ -1014,7 +1014,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		if ( tuplizerImpls == null ) {
 			return null;
 		}
-		return java.util.Collections.unmodifiableMap( tuplizerImpls );
+		return Collections.unmodifiableMap( tuplizerImpls );
 	}
 
 	private Boolean hasNaturalId;

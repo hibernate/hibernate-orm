@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
-import javax.persistence.AttributeConverter;
-import javax.persistence.ConstraintMode;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
@@ -62,6 +62,7 @@ import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
@@ -591,36 +592,35 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			);
 
 			this.sharedCacheMode = configService.getSetting(
-					AvailableSettings.JPA_SHARED_CACHE_MODE,
-					new ConfigurationService.Converter<SharedCacheMode>() {
-						@Override
-						public SharedCacheMode convert(Object value) {
-							if ( value == null ) {
-								return null;
-							}
-
-							if ( SharedCacheMode.class.isInstance( value ) ) {
-								return (SharedCacheMode) value;
-							}
-
-							return SharedCacheMode.valueOf( value.toString() );
+					AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
+					value -> {
+						if ( value == null ) {
+							return null;
 						}
+
+						if ( value instanceof SharedCacheMode ) {
+							return (SharedCacheMode) value;
+						}
+
+						return SharedCacheMode.valueOf( value.toString() );
 					},
 					configService.getSetting(
-							AvailableSettings.JAKARTA_JPA_SHARED_CACHE_MODE,
-							new ConfigurationService.Converter<SharedCacheMode>() {
-								@Override
-								public SharedCacheMode convert(Object value) {
-									if ( value == null ) {
-										return null;
-									}
-
-									if ( SharedCacheMode.class.isInstance( value ) ) {
-										return (SharedCacheMode) value;
-									}
-
-									return SharedCacheMode.valueOf( value.toString() );
+							AvailableSettings.JPA_SHARED_CACHE_MODE,
+							value -> {
+								if ( value == null ) {
+									return null;
 								}
+
+								DeprecationLogger.DEPRECATION_LOGGER.deprecatedSetting(
+										AvailableSettings.JPA_SHARED_CACHE_MODE,
+										AvailableSettings.JAKARTA_SHARED_CACHE_MODE
+								);
+
+								if ( value instanceof SharedCacheMode ) {
+									return (SharedCacheMode) value;
+								}
+
+								return SharedCacheMode.valueOf( value.toString() );
 							},
 							SharedCacheMode.UNSPECIFIED
 					)

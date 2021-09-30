@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.annotations.id;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Formula;
 import org.hibernate.boot.MetadataSources;

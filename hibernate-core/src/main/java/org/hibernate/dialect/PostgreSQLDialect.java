@@ -14,11 +14,12 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -56,11 +57,13 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcTypeDescriptor;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -109,6 +112,8 @@ public class PostgreSQLDialect extends Dialect {
 		//we can just use 'text' for the "long" types
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGNVARCHAR, "text" );
+
+		registerColumnType( 5432, "geometry" );
 
 		if ( getVersion() >= 820 ) {
 			registerColumnType( PostgresUUIDType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode(), "uuid" );
@@ -529,6 +534,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
 	public boolean requiresParensForTupleDistinctCounts() {
 		return true;
 	}
@@ -611,6 +621,8 @@ public class PostgreSQLDialect extends Dialect {
 				case "55P03":
 					// LOCK NOT AVAILABLE
 					return new PessimisticLockException(message, sqlException, sql);
+				case "57014":
+					return new QueryTimeoutException( message, sqlException, sql );
 				default:
 					// returning null allows other delegates to operate
 					return null;
@@ -893,5 +905,18 @@ public class PostgreSQLDialect extends Dialect {
 			// HHH-9562
 			typeContributions.contributeType( PostgresUUIDType.INSTANCE );
 		}
+
+		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsBinaryTypeJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new JavaObjectType(
+						ObjectNullAsBinaryTypeJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
 	}
 }

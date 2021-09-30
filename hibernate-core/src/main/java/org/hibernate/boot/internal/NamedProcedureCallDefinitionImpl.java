@@ -11,15 +11,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.NamedStoredProcedureQuery;
-import javax.persistence.ParameterMode;
-import javax.persistence.StoredProcedureParameter;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.MappingException;
 import org.hibernate.boot.query.NamedProcedureCallDefinition;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.annotations.QueryHintDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.StringHelper;
@@ -30,6 +26,10 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultSetMappingImpl;
 
+import jakarta.persistence.NamedStoredProcedureQuery;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureParameter;
+
 import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMemento;
 
 /**
@@ -38,7 +38,7 @@ import static org.hibernate.procedure.spi.NamedCallableQueryMemento.ParameterMem
  *
  * @author Steve Ebersole
  *
- * @see javax.persistence.NamedStoredProcedureQuery
+ * @see jakarta.persistence.NamedStoredProcedureQuery
  */
 public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefinition {
 	private final String registeredName;
@@ -206,27 +206,13 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 		private final String name;
 		private final ParameterMode parameterMode;
 		private final Class type;
-		private final Boolean explicitPassNullSetting;
 
 		static ParameterDefinition from(
 				ParameterStrategy parameterStrategy,
 				StoredProcedureParameter parameterAnnotation,
 				int adjustedPosition,
 				Map<String, Object> queryHintMap) {
-			// see if there was an explicit hint for this parameter in regards to NULL passing
-			final Object explicitNullPassingHint;
-			if ( parameterStrategy == ParameterStrategy.NAMED ) {
-				explicitNullPassingHint = queryHintMap.get( AvailableSettings.PROCEDURE_NULL_PARAM_PASSING + '.' + parameterAnnotation.name() );
-			}
-			else {
-				explicitNullPassingHint = queryHintMap.get( AvailableSettings.PROCEDURE_NULL_PARAM_PASSING + '.' + adjustedPosition );
-			}
-
-			return new ParameterDefinition(
-					adjustedPosition,
-					parameterAnnotation,
-					interpretBoolean( explicitNullPassingHint )
-			);
+			return new ParameterDefinition( adjustedPosition, parameterAnnotation );
 		}
 
 		private static Boolean interpretBoolean(Object value) {
@@ -241,12 +227,11 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 			return Boolean.valueOf( value.toString() );
 		}
 
-		ParameterDefinition(int position, StoredProcedureParameter annotation, Boolean explicitPassNullSetting) {
+		ParameterDefinition(int position, StoredProcedureParameter annotation) {
 			this.position = position;
 			this.name = normalize( annotation.name() );
 			this.parameterMode = annotation.mode();
 			this.type = annotation.type();
-			this.explicitPassNullSetting = explicitPassNullSetting;
 		}
 
 		@SuppressWarnings("UnnecessaryUnboxing")

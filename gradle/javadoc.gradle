@@ -10,6 +10,20 @@ apply plugin : 'java'
 
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 
+configurations {
+    javadocSources {
+        canBeConsumed = true
+        canBeResolved = false
+        description = 'Configuration for accessing the sources that should be included in the javadoc for the project'
+    }
+}
+
+artifacts {
+    sourceSets.main.allJava.srcDirs.each { srcDir ->
+        javadocSources srcDir
+    }
+}
+
 javadoc {
     exclude( "**/internal/*" )
     exclude( "**/generated-src/**" )
@@ -32,9 +46,7 @@ javadoc {
         encoding = 'UTF-8'
         links += [
                 'https://docs.oracle.com/javase/8/docs/api/',
-                'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-                'https://docs.jboss.org/cdi/api/2.0/',
-                'https://javaee.github.io/javaee-spec/javadocs/'
+                'https://jakarta.ee/specifications/platform/9/apidocs/'
         ]
         tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
 
@@ -75,7 +87,7 @@ task javadocJar(type: Jar) {
 
                 // Hibernate-specific JAR manifest attributes
                 'Hibernate-VersionFamily': project.ormVersion.family,
-                'Hibernate-JpaVersion': project.jpaVersion.name
+                'Hibernate-JpaVersion': project.jakartaJpaVersion.name
         )
     }
     archiveClassifier.set( 'javadoc' )

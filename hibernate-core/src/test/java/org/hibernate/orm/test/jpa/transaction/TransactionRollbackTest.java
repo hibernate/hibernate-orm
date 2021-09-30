@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.jpa.transaction;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Version;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Version;
 
 import org.hibernate.Session;
 import org.hibernate.engine.transaction.spi.TransactionObserver;

@@ -44,7 +44,7 @@ public interface RegionFactory extends Service, Stoppable {
 	 * @param settings The settings in effect.
 	 * @param configValues The available config values
 	 *
-	 * @throws org.hibernate.cache.CacheException Indicates problems starting the L2 cache impl;
+	 * @throws CacheException Indicates problems starting the L2 cache impl;
 	 * considered as a sign to stop {@link org.hibernate.SessionFactory}
 	 * building.
 	 */

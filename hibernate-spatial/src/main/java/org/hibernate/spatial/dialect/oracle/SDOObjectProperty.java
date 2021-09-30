@@ -9,17 +9,24 @@ package org.hibernate.spatial.dialect.oracle;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
+import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.Type;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Special function for accessing a member variable of an Oracle Object
  *
  * @author Karel Maesen
  */
-class SDOObjectProperty implements SQLFunction {
+class SDOObjectProperty implements SqmFunctionDescriptor {
 
 	private final Type type;
 
@@ -78,4 +85,60 @@ class SDOObjectProperty implements SQLFunction {
 		return buf.toString();
 	}
 
+	@Override
+	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		throw new NotYetImplementedException();
+	}
+
+	@Override
+	public <T> SelfRenderingSqmFunction<T> generateAggregateSqmExpression(
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return SqmFunctionDescriptor.super.generateAggregateSqmExpression(
+				arguments,
+				filter,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
+	@Override
+	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
+			SqmTypedNode<?> argument,
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return SqmFunctionDescriptor.super.generateSqmExpression(
+				argument,
+				impliedResultType,
+				queryEngine,
+				typeConfiguration
+		);
+	}
+
+	@Override
+	public <T> SelfRenderingSqmFunction<T> generateSqmExpression(
+			AllowableFunctionReturnType<T> impliedResultType,
+			QueryEngine queryEngine,
+			TypeConfiguration typeConfiguration) {
+		return SqmFunctionDescriptor.super.generateSqmExpression( impliedResultType, queryEngine, typeConfiguration );
+	}
+
+	@Override
+	public boolean alwaysIncludesParentheses() {
+		return SqmFunctionDescriptor.super.alwaysIncludesParentheses();
+	}
+
+	@Override
+	public String getSignature(String name) {
+		return SqmFunctionDescriptor.super.getSignature( name );
+	}
 }

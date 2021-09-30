@@ -382,15 +382,10 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 
 		String fallbackTableName = DEF_TABLE;
 
-		final Boolean preferGeneratorNameAsDefaultName = serviceRegistry.getService( ConfigurationService.class )
-				.getSetting( AvailableSettings.PREFER_GENERATOR_NAME_AS_DEFAULT_SEQUENCE_NAME, StandardConverters.BOOLEAN, true );
-		if ( preferGeneratorNameAsDefaultName ) {
-			final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
-			if ( StringHelper.isNotEmpty( generatorName ) ) {
-				fallbackTableName = generatorName;
-			}
+		final String generatorName = params.getProperty( IdentifierGenerator.GENERATOR_NAME );
+		if ( StringHelper.isNotEmpty( generatorName ) ) {
+			fallbackTableName = generatorName;
 		}
-
 
 		String tableName = ConfigurationHelper.getString( TABLE_PARAM, params, fallbackTableName );
 

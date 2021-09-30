@@ -178,7 +178,7 @@ public class MetadataSources implements Serializable {
 	 */
 	private MetadataBuilder getCustomBuilderOrDefault(MetadataBuilderImpl defaultBuilder) {
 		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
-		final java.util.Collection<MetadataBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( MetadataBuilderFactory.class );
+		final Collection<MetadataBuilderFactory> discoveredBuilderFactories = cls.loadJavaServices( MetadataBuilderFactory.class );
 
 		MetadataBuilder builder = null;
 		List<String> activeFactoryNames = null;
@@ -206,7 +206,7 @@ public class MetadataSources implements Serializable {
 
 	/**
 	 * Short-hand form of calling {@link #getMetadataBuilder()} and using its
-	 * {@link org.hibernate.boot.MetadataBuilder#build()} method in cases where the application wants
+	 * {@link MetadataBuilder#build()} method in cases where the application wants
 	 * to accept the defaults.
 	 *
 	 * @return The built metadata.
@@ -363,11 +363,11 @@ public class MetadataSources implements Serializable {
 	/**
 	 * Read mappings from a particular XML file
 	 *
-	 * @param path The path to a file.  Expected to be resolvable by {@link java.io.File#File(String)}
+	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
 	 *
 	 * @return this (for method chaining purposes)
 	 *
-	 * @see #addFile(java.io.File)
+	 * @see #addFile(File)
 	 */
 	public MetadataSources addFile(String path) {
 		addFile( new File( path ) );
@@ -401,13 +401,13 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * See {@link #addCacheableFile(java.io.File)} for description
+	 * See {@link #addCacheableFile(File)} for description
 	 *
-	 * @param path The path to a file.  Expected to be resolvable by {@link java.io.File#File(String)}
+	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
 	 *
 	 * @return this (for method chaining purposes)
 	 *
-	 * @see #addCacheableFile(java.io.File)
+	 * @see #addCacheableFile(File)
 	 */
 	public MetadataSources addCacheableFile(String path) {
 		addCacheableFile( new File( path ) );
@@ -415,13 +415,13 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * See {@link #addCacheableFile(java.io.File)} for description
+	 * See {@link #addCacheableFile(File)} for description
 	 *
-	 * @param path The path to a file.  Expected to be resolvable by {@link java.io.File#File(String)}
+	 * @param path The path to a file.  Expected to be resolvable by {@link File#File(String)}
 	 *
 	 * @return this (for method chaining purposes)
 	 *
-	 * @see #addCacheableFile(java.io.File)
+	 * @see #addCacheableFile(File)
 	 */
 	public MetadataSources addCacheableFile(String path, File cacheDirectory) {
 		addCacheableFile( new File( path ), cacheDirectory );
@@ -468,15 +468,15 @@ public class MetadataSources implements Serializable {
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
 	 * <p/>
-	 * Much like {@link #addCacheableFile(java.io.File)} except that here we will fail immediately if
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
 	 * the cache version cannot be found or used for whatever reason
 	 *
 	 * @param file The xml file, not the bin!
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
-	 * @throws org.hibernate.type.SerializationException Indicates a problem deserializing the cached dom tree
-	 * @throws java.io.FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, true );
@@ -488,15 +488,15 @@ public class MetadataSources implements Serializable {
 	/**
 	 * <b>INTENDED FOR TESTSUITE USE ONLY!</b>
 	 * <p/>
-	 * Much like {@link #addCacheableFile(java.io.File)} except that here we will fail immediately if
+	 * Much like {@link #addCacheableFile(File)} except that here we will fail immediately if
 	 * the cache version cannot be found or used for whatever reason
 	 *
 	 * @param file The xml file, not the bin!
 	 *
 	 * @return The dom "deserialized" from the cached file.
 	 *
-	 * @throws org.hibernate.type.SerializationException Indicates a problem deserializing the cached dom tree
-	 * @throws java.io.FileNotFoundException Indicates that the cached file was not found or was not usable.
+	 * @throws SerializationException Indicates a problem deserializing the cached dom tree
+	 * @throws FileNotFoundException Indicates that the cached file was not found or was not usable.
 	 */
 	public MetadataSources addCacheableFileStrictly(File file, File cacheDir) throws SerializationException {
 		final XmlSource xmlSource = XmlSources.fromCacheableFile( file, cacheDir, true );
@@ -506,7 +506,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read metadata from an {@link java.io.InputStream} access
+	 * Read metadata from an {@link InputStream} access
 	 *
 	 * @param xmlInputStreamAccess Access to an input stream containing a DOM.
 	 *
@@ -520,7 +520,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read metadata from an {@link java.io.InputStream}.
+	 * Read metadata from an {@link InputStream}.
 	 *
 	 * @param xmlInputStream The input stream containing a DOM.
 	 *
@@ -534,7 +534,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read mappings from a {@link java.net.URL}
+	 * Read mappings from a {@link URL}
 	 *
 	 * @param url The url for the mapping document to be read.
 	 *
@@ -548,7 +548,7 @@ public class MetadataSources implements Serializable {
 	}
 
 	/**
-	 * Read mappings from a DOM {@link org.w3c.dom.Document}
+	 * Read mappings from a DOM {@link Document}
 	 *
 	 * @param document The DOM document
 	 *

@@ -48,7 +48,7 @@ Version and id properties are assumed to be inherited from the root class.
 
 [NOTE]
 ====
-When omitting an explicit inheritance strategy (e.g. `@Inheritance`), JPA will choose the `SINGLE_TABLE` strategy by default.
+When omitting an explicit inheritance strategy (e.g. `@Inheritance`), Jakarta Persistence will choose the `SINGLE_TABLE` strategy by default.
 ====
 
 [[entity-inheritance-single-table-example]]
@@ -114,12 +114,12 @@ Use the `@DiscriminatorColumn` to define the discriminator column as well as the
 
 [NOTE]
 ====
-The enum `DiscriminatorType` used in `javax.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
+The enum `DiscriminatorType` used in `jakarta.persistence.DiscriminatorColumn` only contains the values `STRING`, `CHAR` and `INTEGER` which means that not all Hibernate supported types are available via the `@DiscriminatorColumn` annotation.
 You can also use `@DiscriminatorFormula` to express in SQL a virtual discriminator column.
 This is particularly useful when the discriminator value can be extracted from one or more columns of the table.
 Both `@DiscriminatorColumn` and `@DiscriminatorFormula` are to be set on the root entity (once per persisted hierarchy).
 
-`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate-specific discriminator options which are not standardized in JPA.
+`@org.hibernate.annotations.DiscriminatorOptions` allows to optionally specify Hibernate-specific discriminator options which are not standardized in Jakarta Persistence.
 The available options are `force` and `insert`.
 
 The `force` attribute is useful if the table contains rows with _extra_ discriminator values that are not mapped to a persistent class.
@@ -336,7 +336,7 @@ By default, when you query a base class entity,
 the polymorphic query will fetch all subclasses belonging to the base type.
 
 However, you can even query
-*interfaces or base classes that don't belong to the JPA entity inheritance model*.
+*interfaces or base classes that don't belong to the Jakarta Persistence entity inheritance model*.
 
 For instance, considering the following `DomainModelEntity` interface:
 

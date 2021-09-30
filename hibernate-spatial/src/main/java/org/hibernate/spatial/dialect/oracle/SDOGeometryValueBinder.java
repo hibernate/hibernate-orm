@@ -17,7 +17,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.db.oracle.Encoders;
@@ -37,7 +37,7 @@ class SDOGeometryValueBinder<J> implements ValueBinder<J> {
 
 	public SDOGeometryValueBinder(
 			JavaTypeDescriptor<J> javaTypeDescriptor,
-			SqlTypeDescriptor sqlTypeDescriptor,
+			JdbcTypeDescriptor sqlTypeDescriptor,
 			OracleJDBCTypeFactory typeFactory) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.typeFactory = typeFactory;

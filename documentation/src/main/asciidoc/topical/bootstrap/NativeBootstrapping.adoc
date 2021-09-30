@@ -1,3 +1,4 @@
+[[native-bootstrap]]
 = Native Bootstrapping
 :toc:
 
@@ -136,10 +137,10 @@ the purpose of `org.hibernate.boot.MetadataSources`.
     // BootstrapServiceRegistry to use
     // MetadataSources sources = new MetadataSources();
 
-	// add a class using JPA/Hibernate annotations for mapping
+	// add a class using annotations for mapping
     sources.addAnnotatedClass( MyEntity.class );
 
-	// add the name of a class using JPA/Hibernate annotations for mapping.
+	// add the name of a class using annotations for mapping.
 	// differs from above in that accessing the Class is deferred which is
 	// important if using runtime bytecode-enhancement
     sources.addAnnotatedClassName( "org.hibernate.example.Customer" );
@@ -148,7 +149,7 @@ the purpose of `org.hibernate.boot.MetadataSources`.
     // classpath lookup and parses the XML
     sources.addResource( "org/hibernate/example/Order.hbm.xml" );
 
-    // Adds the named JPA orm.xml resource as a source: which performs the
+    // Adds the named orm.xml resource as a source: which performs the
     // classpath lookup and parses the XML
     sources.addResource( "org/hibernate/example/Product.orm.xml" );
 ----
@@ -190,7 +191,7 @@ over the `Metadata` building process.  See its javadocs for full details.
 ----
     MetadataBuilder metadataBuilder = sources.getMetadataBuilder();
 
-    // Use the JPA-compliant implicit naming strategy
+    // Use the Jakarta Persistence-compliant implicit naming strategy
     metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
 
     // specify the schema name to use for tables, etc when none is explicitly specified
@@ -221,7 +222,7 @@ over the `SessionFactory` building process.
     // Add a custom observer
     sessionFactoryBuilder.addSessionFactoryObservers( new MySessionFactoryObserver() );
 
-    // Apply a CDI BeanManager (for JPA event listeners)
+    // Apply a CDI BeanManager (for Jakarta Persistence event listeners)
     sessionFactoryBuilder.applyBeanManager( getBeanManagerFromSomewhere() );
 
     SessionFactory sessionFactory = sessionFactoryBuilder.build();

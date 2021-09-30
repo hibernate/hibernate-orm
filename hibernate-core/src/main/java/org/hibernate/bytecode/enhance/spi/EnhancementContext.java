@@ -24,7 +24,7 @@ public interface EnhancementContext {
 	/**
 	 * Obtain access to the ClassLoader that can be used to load Class references.  In JPA SPI terms, this
 	 * should be a "temporary class loader" as defined by
-	 * {@link javax.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}
+	 * {@link jakarta.persistence.spi.PersistenceUnitInfo#getNewTempClassLoader()}
 	 *
 	 * @return The class loader that the enhancer can use.
 	 */

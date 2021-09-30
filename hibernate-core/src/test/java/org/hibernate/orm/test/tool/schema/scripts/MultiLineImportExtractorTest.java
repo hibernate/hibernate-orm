@@ -12,8 +12,7 @@ import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.util.List;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.junit.Test;
@@ -31,7 +30,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 public class MultiLineImportExtractorTest {
 	public static final String IMPORT_FILE = "org/hibernate/orm/test/tool/schema/scripts/multi-line-statements2.sql";
 
-	private final MultipleLinesSqlCommandExtractor extractor = new MultipleLinesSqlCommandExtractor();
+	private final MultiLineSqlScriptExtractor extractor = new MultiLineSqlScriptExtractor();
 
 	@Test
 	public void testExtraction() throws IOException {

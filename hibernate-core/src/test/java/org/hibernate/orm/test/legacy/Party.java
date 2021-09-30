@@ -12,32 +12,32 @@ package org.hibernate.orm.test.legacy;
  */
 public class Party {
 
-   java.lang.String id;
-   java.lang.String name;
-   java.lang.String address;
+   String id;
+   String name;
+   String address;
 
 
-  java.lang.String getId() {
+  String getId() {
     return id;
   }
 
-  void  setId(java.lang.String newValue) {
+  void  setId(String newValue) {
     id = newValue;
   }
 
-  java.lang.String getName() {
+  String getName() {
     return name;
   }
 
-  void  setName(java.lang.String newValue) {
+  void  setName(String newValue) {
     name = newValue;
   }
 
-  java.lang.String getAddress() {
+  String getAddress() {
     return address;
   }
 
-  void  setAddress(java.lang.String newValue) {
+  void  setAddress(String newValue) {
     address = newValue;
   }
 

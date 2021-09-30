@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpa.spi;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * Represents the value currently bound to a particular (bindable) parameter.

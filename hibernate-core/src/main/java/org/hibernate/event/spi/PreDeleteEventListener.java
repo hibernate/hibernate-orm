@@ -6,14 +6,12 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called before deleting an item from the datastore
  * 
  * @author Gavin King
  */
-public interface PreDeleteEventListener extends Serializable {
+public interface PreDeleteEventListener {
 	/**
 	 * Return true if the operation should be vetoed
 	 */

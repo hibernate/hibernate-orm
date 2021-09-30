@@ -11,7 +11,7 @@ import java.sql.PreparedStatement;
  * Conceptually models a batch.
  * <p/>
  * Unlike directly in JDBC, here we add the ability to batch together multiple statements at a time.  In the underlying
- * JDBC this correlates to multiple {@link java.sql.PreparedStatement} objects (one for each DML string) maintained within the
+ * JDBC this correlates to multiple {@link PreparedStatement} objects (one for each DML string) maintained within the
  * batch.
  *
  * @author Steve Ebersole

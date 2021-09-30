@@ -27,8 +27,8 @@
  * This is the physical underlying transaction that ultimately controls the database transaction.  This
  * can be:<ul>
  *     <li>
- *       a JTA transaction, as expressed by {@link javax.transaction.UserTransaction} or
- *       {@link javax.transaction.Transaction})
+ *       a JTA transaction, as expressed by {@link jakarta.transaction.UserTransaction} or
+ *       {@link jakarta.transaction.Transaction})
  *     </li>
  *     <li>
  *         a "JDBC transaction", as expressed through the JDBC {@link java.sql.Connection} object

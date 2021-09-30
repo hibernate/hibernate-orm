@@ -35,7 +35,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.jboss.logging.Logger;
 
 import java.sql.Types;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * This is the Hibernate dialect for the Unisys 2200 Relational Database (RDMS).
@@ -114,6 +114,7 @@ public class RDMSOS2200Dialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -121,7 +122,13 @@ public class RDMSOS2200Dialect extends Dialect {
 		if ( jdbcTypeCode == Types.BIT ) {
 			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override

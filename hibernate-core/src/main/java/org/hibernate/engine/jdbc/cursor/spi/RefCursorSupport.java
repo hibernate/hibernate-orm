@@ -20,7 +20,7 @@ import org.hibernate.service.Service;
  */
 public interface RefCursorSupport extends Service {
 	/**
-	 * Register a parameter capable of returning a {@link java.sql.ResultSet} *by position*.
+	 * Register a parameter capable of returning a {@link ResultSet} *by position*.
 	 *
 	 * @param statement The callable statement.
 	 * @param position The bind position at which to register the output param.
@@ -28,7 +28,7 @@ public interface RefCursorSupport extends Service {
 	public void registerRefCursorParameter(CallableStatement statement, int position);
 
 	/**
-	 * Register a parameter capable of returning a {@link java.sql.ResultSet} *by name*.
+	 * Register a parameter capable of returning a {@link ResultSet} *by name*.
 	 *
 	 * @param statement The callable statement.
 	 * @param name The parameter name (for drivers which support named parameters).
@@ -36,8 +36,8 @@ public interface RefCursorSupport extends Service {
 	public void registerRefCursorParameter(CallableStatement statement, String name);
 
 	/**
-	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(java.sql.CallableStatement, int)},
-	 * extract the {@link java.sql.ResultSet}.
+	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(CallableStatement, int)},
+	 * extract the {@link ResultSet}.
 	 *
 	 *
 	 * @param statement The callable statement.
@@ -48,8 +48,8 @@ public interface RefCursorSupport extends Service {
 	public ResultSet getResultSet(CallableStatement statement, int position);
 
 	/**
-	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(java.sql.CallableStatement, String)},
-	 * extract the {@link java.sql.ResultSet}.
+	 * Given a callable statement previously processed by {@link #registerRefCursorParameter(CallableStatement, String)},
+	 * extract the {@link ResultSet}.
 	 *
 	 * @param statement The callable statement.
 	 * @param name The parameter name (for drivers which support named parameters).

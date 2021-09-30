@@ -6,18 +6,18 @@
  */
 package org.hibernate.orm.test.query;
 
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.Query;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Query;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
-import org.hibernate.jpa.test.Wallet;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
+import org.hibernate.orm.test.jpa.Wallet;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -28,7 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * Tests for {@link javax.persistence.EntityManagerFactory#addNamedQuery} handling.
+ * Tests for {@link jakarta.persistence.EntityManagerFactory#addNamedQuery} handling.
  *
  * @author Steve Ebersole
  */

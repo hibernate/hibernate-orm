@@ -11,11 +11,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import javax.persistence.ColumnResult;
-import javax.persistence.ConstructorResult;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.SqlResultSetMapping;
+import jakarta.persistence.ColumnResult;
+import jakarta.persistence.ConstructorResult;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.SqlResultSetMapping;
 
 import org.hibernate.LockMode;
 import org.hibernate.MappingException;
@@ -135,7 +135,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 
 	/**
-	 * @see javax.persistence.ColumnResult
+	 * @see jakarta.persistence.ColumnResult
 	 */
 	private static class JpaColumnResultDescriptor implements ResultDescriptor {
 		private final ColumnResult columnResult;
@@ -161,7 +161,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see javax.persistence.ConstructorResult
+	 * @see jakarta.persistence.ConstructorResult
 	 */
 	private static class ConstructorResultDescriptor implements ResultDescriptor {
 		private static class ArgumentDescriptor {
@@ -228,7 +228,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 	}
 
 	/**
-	 * @see javax.persistence.EntityResult
+	 * @see jakarta.persistence.EntityResult
 	 */
 	public static class EntityResultDescriptor implements ResultDescriptor {
 		@SuppressWarnings( { "FieldCanBeLocal", "FieldMayBeFinal", "unused" } )

@@ -39,6 +39,7 @@ import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.results.complete.CompleteResultBuilderCollectionStandard;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
+import org.hibernate.type.CollectionType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
@@ -319,15 +320,26 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 		}
 
 		for ( String propertyName : loadable.getPropertyNames() ) {
-			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases(
-					propertyName,
-					suffix
-			);
-			if ( columnAliases.length != 0 ) {
-				resultBuilderEntity.addProperty(
-						propertyName,
-						columnAliases
-				);
+			final String[] columnAliases = loadable.getSubclassPropertyColumnAliases( propertyName, suffix );
+			if ( columnAliases.length == 0 ) {
+				final Type propertyType = loadable.getPropertyType( propertyName );
+				if ( propertyType instanceof CollectionType ) {
+					final CollectionType collectionType = (CollectionType) propertyType;
+					final String[] keyColumnAliases;
+					if ( collectionType.useLHSPrimaryKey() ) {
+						keyColumnAliases = identifierAliases;
+					}
+					else {
+						keyColumnAliases = loadable.getSubclassPropertyColumnAliases(
+								collectionType.getLHSPropertyName(),
+								suffix
+						);
+					}
+					resultBuilderEntity.addProperty( propertyName, keyColumnAliases );
+				}
+			}
+			else {
+				resultBuilderEntity.addProperty( propertyName, columnAliases );
 			}
 		}
 		return resultBuilderEntity;

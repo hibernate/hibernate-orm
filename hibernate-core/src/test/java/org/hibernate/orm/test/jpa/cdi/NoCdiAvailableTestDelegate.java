@@ -8,9 +8,9 @@ package org.hibernate.orm.test.jpa.cdi;
 
 import java.util.Collections;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 
@@ -28,7 +28,7 @@ public class NoCdiAvailableTestDelegate {
 	public static void passingBeanManager() {
 		new HibernatePersistenceProvider().createContainerEntityManagerFactory(
 				new PersistenceUnitInfoAdapter(),
-				Collections.singletonMap( AvailableSettings.CDI_BEAN_MANAGER, new Object() )
+				Collections.singletonMap( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, new Object() )
 		).close();
 	}
 }

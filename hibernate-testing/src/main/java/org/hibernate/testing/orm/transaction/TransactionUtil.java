@@ -8,7 +8,7 @@ package org.hibernate.testing.orm.transaction;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.StatelessSession;
@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.jboss.logging.Logger;
 
 public abstract class TransactionUtil {
-	private static final org.jboss.logging.Logger log = Logger.getLogger( TransactionUtil.class );
+	private static final Logger log = Logger.getLogger( TransactionUtil.class );
 
 	public static void inTransaction(SessionImplementor session, Consumer<SessionImplementor> action) {
 		wrapInTransaction( session, session, action );

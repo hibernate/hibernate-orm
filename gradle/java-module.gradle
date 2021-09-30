@@ -26,7 +26,6 @@ apply from: rootProject.file( 'gradle/databases.gradle' )
 
 apply plugin: 'java-library'
 apply plugin: 'org.hibernate.orm.database-service'
-apply plugin: 'biz.aQute.bnd.builder'
 
 apply plugin: 'checkstyle'
 apply plugin: 'build-dashboard'
@@ -54,8 +53,29 @@ if ( !project.description ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
-configurations.all*.exclude group: 'xml-apis', module: 'xml-apis'
 
+configurations.all {
+	resolutionStrategy {
+		dependencySubstitution {
+			// will handle dependencies pulled in transitively
+			substitute module( 'javax.persistence:javax.persistence-api' ) with module( libraries.jakarta_jpa )
+			substitute module( 'javax.transaction:jta' ) with module( libraries.jakarta_jta )
+			substitute module( 'org.jboss.spec.javax.transaction:jboss-transaction-api_1.2_spec' ) with module( libraries.jakarta_jta )
+			substitute module( 'javax.validation:validation-api' ) with module( libraries.jakarta_validation )
+			substitute module( 'javax.interceptor:javax.interceptor-api' ) with module( libraries.jakarta_interceptor )
+			substitute module( 'javax.activation:javax.activation-api' ) with module( libraries.jakarta_activation )
+			substitute module( 'javax.enterprise:cdi-api' ) with module( libraries.jakarta_cdi )
+			substitute module( 'org.jboss.weld.se:weld-se-shaded' ) with module( libraries.jakarta_weld )
+			substitute module( 'javax.xml.bind:jaxb-api' ) with module( libraries.jakarta_jaxb_api )
+			substitute module( 'org.glassfish.jaxb:jaxb-runtime' ) with module( libraries.jakarta_jaxb_runtime )
+			substitute module( 'org.jboss.narayana.jta:narayana-jta' ) with module( libraries.jboss_jta_jakarta )
+			substitute module( 'org.jboss:jboss-transaction-spi' ) with module( libraries.jboss_tx_spi_jakarta )
+			substitute module( 'org.hibernate.validator:hibernate-validator' ) with module( libraries.jakarta_validator )
+			substitute module( 'org.glassfish:javax.el' ) with module( libraries.jakarta_el )
+		}
+	}
+	exclude group: 'xml-apis', module: 'xml-apis'
+}
 
 dependencies {
 	implementation libraries.logging
@@ -100,12 +120,6 @@ dependencies {
 	}
 	else if ( db.startsWith( 'hana' ) ) {
 		testRuntimeOnly libraries.hana
-	}
-
-	// Mac-specific
-	project.ext.toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
-	if ( project.toolsJar.exists() ) {
-		testCompileOnly files( project.toolsJar )
 	}
 
 	annotationProcessor libraries.logging_processor
@@ -208,6 +222,16 @@ convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet 
 	]
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Attach tools JAR to the classpath for byteman tests
+
+final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
+if ( toolsJar.exists() ) {
+	dependencies{
+		testCompile files( toolsJar )
+	}
+}
+
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -231,10 +255,10 @@ if ( gradle.ext.javaToolchainEnabled ) {
 }
 class HeapDumpPathProvider implements CommandLineArgumentProvider {
 //	@InputFile
-	@OutputFile
+	@OutputDirectory
 	@PathSensitive(PathSensitivity.RELATIVE)
 //	@Optional
-	Provider<RegularFile> path
+	Provider<Directory> path
 //	File path
 
 	@Override
@@ -255,7 +279,7 @@ tasks.withType( Test.class ).each { test ->
 	}
 
 	test.jvmArgumentProviders.add(
-			new HeapDumpPathProvider( path: project.layout.buildDirectory.file("OOM-dump.hprof") )
+			new HeapDumpPathProvider( path: project.layout.buildDirectory.dir("OOM-dump") )
 //			new HeapDumpPathProvider( path: project.file( "${buildDir}/OOM-dump.hprof" ) )
 	)
 
@@ -304,7 +328,25 @@ sourceSets {
 
 processTestResources {
 	inputs.property( "db", db )
-	filter( ReplaceTokens, tokens: dbBundle[db] )
+	doLast {
+		copy {
+			from( sourceSets.test.java.srcDirs ) {
+				include '**/*.properties'
+				include '**/*.xml'
+			}
+			into sourceSets.test.java.outputDir
+		}
+		copy {
+			from file( 'src/test/resources' )
+			into file( "${buildDir}/resources/test" )
+			exclude 'src/test/resources/hibernate.properties'
+		}
+		copy {
+			from file( 'src/test/resources/hibernate.properties' )
+			into file( "${buildDir}/resources/test" )
+			filter( ReplaceTokens, tokens: dbBundle[db] )
+		}
+	}
 }
 
 // Keep system properties in sync with gradle.properties!

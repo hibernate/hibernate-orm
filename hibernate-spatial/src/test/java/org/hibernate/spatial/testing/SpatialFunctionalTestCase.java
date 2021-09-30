@@ -7,22 +7,22 @@
 
 package org.hibernate.spatial.testing;
 
-import java.sql.BatchUpdateException;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import jakarta.persistence.Query;
 
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.HSMessageLogger;
-import org.hibernate.spatial.SpatialDialect;
 import org.hibernate.spatial.SpatialFunction;
-import org.hibernate.spatial.integration.jts.JtsGeomEntity;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.domain.GeomEntity;
+import org.hibernate.spatial.testing.domain.JtsGeomEntity;
 
-import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.locationtech.jts.geom.Geometry;
@@ -34,31 +34,23 @@ import static org.junit.Assert.fail;
 
 /**
  * @author Karel Maesen, Geovise BVBA
- * creation-date: Sep 30, 2010
+ * @deprecated This class will be removed for H6. Currently it no longer works as intended
+ * TODO Remove me!
  */
+@Deprecated
 public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCase {
 
 	protected final static String JTS = "jts";
 	protected final static String GEOLATTE = "geolatte";
 
 	protected TestData testData;
-	protected DataSourceUtils dataSourceUtils;
-	protected JTSGeometryEquality geometryEquality;
+
 	protected AbstractExpectationsFactory expectationsFactory;
 
 	/**
 	 * Inserts the test data via a direct route (JDBC).
 	 */
 	public void prepareTest() {
-		try {
-			dataSourceUtils.insertTestData( testData );
-		}
-		catch (BatchUpdateException e) {
-			throw new RuntimeException( e.getNextException() );
-		}
-		catch (SQLException e) {
-			throw new RuntimeException( e );
-		}
 	}
 
 	/**
@@ -106,33 +98,12 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	private void initializeSpatialTestSupport(ServiceRegistry serviceRegistry) {
 		try {
 			TestSupport support = TestSupportFactories.instance().getTestSupportFactory( getDialect() );
-			dataSourceUtils = support.createDataSourceUtil( serviceRegistry );
-			expectationsFactory = support.createExpectationsFactory( dataSourceUtils );
-			testData = support.createTestData( this );
-			geometryEquality = support.createGeometryEquality();
+			expectationsFactory = null;
+			testData = support.createTestData( TestSupport.TestDataPurpose.StoreRetrieveData );
 		}
 		catch (Exception e) {
 			throw new RuntimeException( e );
 		}
-	}
-
-	/**
-	 * Overwrites the afterSessionFactoryBuilt() method in BaseCoreFunctionalTestCase.
-	 * <p/>
-	 * Mostly used to register spatial metadata in databases such as Oracle Spatial.
-	 */
-	public void afterSessionFactoryBuilt() {
-		dataSourceUtils.afterCreateSchema();
-	}
-
-	/**
-	 * Cleans up the dataSourceUtils
-	 *
-	 * @throws SQLException
-	 */
-	@AfterClassOnce
-	public void closeDataSourceUtils() throws SQLException {
-		dataSourceUtils.close();
 	}
 
 	public String getBaseForMappings() {
@@ -146,7 +117,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class<?>[] {
-				org.hibernate.spatial.integration.geolatte.GeomEntity.class,
+				GeomEntity.class,
 				JtsGeomEntity.class
 		};
 	}
@@ -159,19 +130,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * @return
 	 */
 	public boolean isSupportedByDialect(SpatialFunction spatialFunction) {
-		SpatialDialect dialect = (SpatialDialect) getDialect();
-		return dialect.supports( spatialFunction );
+		Dialect dialect = getDialect();
+		return true;
 	}
 
-	/**
-	 * Supports true if the spatial dialect supports filtering (e.g. ST_overlap, MBROverlap, SDO_FILTER)
-	 *
-	 * @return
-	 */
-	public boolean dialectSupportsFiltering() {
-		SpatialDialect dialect = (SpatialDialect) getDialect();
-		return dialect.supportsFiltering();
-	}
 
 	abstract protected HSMessageLogger getLogger();
 
@@ -187,7 +149,7 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 	 * @param <T> type of the second column in the query results
 	 */
 	protected <T> void addQueryResults(Map<Integer, T> result, Query query) {
-		List<Object[]> rows = (List<Object[]>) query.list();
+		List<Object[]> rows = query.getResultList();
 		if ( rows.size() == 0 ) {
 			getLogger().warn( "No results returned for query!!" );
 		}
@@ -222,9 +184,9 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 									.getCanonicalName()
 					);
 				}
-				assertTrue(
+				assertEquals(
 						"Failure on testsuite-suite for case " + id,
-						geometryEquality.test( (Geometry) expected, (Geometry) received )
+						expected, received
 				);
 			}
 			else {
@@ -234,12 +196,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 									.getCanonicalName()
 					);
 				}
-				assertTrue(
+				assertEquals(
 						"Failure on testsuite-suite for case " + id,
-						geometryEquality.test(
-								(Geometry) expected,
+								expected,
 								org.geolatte.geom.jts.JTS.to( (org.geolatte.geom.Geometry) received )
-						)
 				);
 			}
 
@@ -256,10 +216,10 @@ public abstract class SpatialFunctionalTestCase extends BaseCoreFunctionalTestCa
 
 	protected String entityName(String pckg) {
 		if ( JTS.equalsIgnoreCase( pckg ) ) {
-			return "org.hibernate.spatial.integration.jts.JtsGeomEntity";
+			return "org.hibernate.spatial.testing.domain.JtsGeomEntity";
 		}
 		else {
-			return "org.hibernate.spatial.integration.geolatte.GeomEntity";
+			return "org.hibernate.spatial.testing.domain.GeomEntity";
 		}
 	}
 

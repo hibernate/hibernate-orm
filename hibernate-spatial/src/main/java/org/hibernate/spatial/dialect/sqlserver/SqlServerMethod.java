@@ -22,7 +22,7 @@ class SqlServerMethod extends StandardSQLFunction {
 		super( name );
 	}
 
-	@Override
+
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
 		final StringBuilder buf = new StringBuilder();
 		if ( arguments.size() < 1 ) {

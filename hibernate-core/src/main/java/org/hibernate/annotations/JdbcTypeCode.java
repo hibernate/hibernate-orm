@@ -42,9 +42,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * ````
  *
  * Other forms of influencing the JDBC type used include:<ul>
- *     <li>{@link javax.persistence.Enumerated} / {@link javax.persistence.EnumType}</li>
- *     <li>{@link javax.persistence.TemporalType}</li>
- *     <li>{@link javax.persistence.Lob}</li>
+ *     <li>{@link jakarta.persistence.Enumerated} / {@link jakarta.persistence.EnumType}</li>
+ *     <li>{@link jakarta.persistence.TemporalType}</li>
+ *     <li>{@link jakarta.persistence.Lob}</li>
  *     <li>{@link Nationalized}</li>
  *     <li>{@link JdbcType}</li>
  * </ul>

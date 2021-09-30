@@ -39,10 +39,10 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DiscriminatorType<T> extends AbstractType implements org.hibernate.type.DiscriminatorType<T>, BasicType<T>, ValueExtractor<T>, ValueBinder<T> {
-	private final org.hibernate.type.BasicType<Object> underlyingType;
+	private final BasicType<Object> underlyingType;
 	private final Loadable persister;
 
-	public DiscriminatorType(org.hibernate.type.BasicType<?> underlyingType, Loadable persister) {
+	public DiscriminatorType(BasicType<?> underlyingType, Loadable persister) {
 		this.underlyingType = (BasicType<Object>) underlyingType;
 		this.persister = persister;
 	}

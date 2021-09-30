@@ -7,9 +7,9 @@
 package org.hibernate.testing.orm.domain.gambit;
 
 import java.io.Serializable;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
 
 /**
  * @author Andrea Boriero

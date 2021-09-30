@@ -6,16 +6,15 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter;
 
-import javax.persistence.AttributeConverter;
-import javax.persistence.Convert;
-import javax.persistence.Converter;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Tuple;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Tuple;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -34,7 +33,6 @@ public class PackagePrivateAttributeConverterEntityManagerFactoryTest {
 	public final String sql = "select code from Tester where id = :id";
 
 	@Test
-	@NotImplementedYet( strict = false, reason = "Support for passing `resultType` to `#createNativeQuery` not yet implemented" )
 	public void test(SessionFactoryScope scope) {
 		scope.inTransaction(
 				(session) -> {

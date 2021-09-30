@@ -1,0 +1,10 @@
+
+description = 'Annotation Processor to generate JPA 2 static metamodel classes'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+apply plugin: 'version-injection'
+
+dependencies {
+    compileOnly libraries.ant
+    implementation project( ':hibernate-core' )
+}

@@ -8,8 +8,8 @@ package org.hibernate.query.spi;
 
 import java.sql.Statement;
 import java.util.List;
-import javax.persistence.CacheRetrieveMode;
-import javax.persistence.CacheStoreMode;
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -46,7 +46,7 @@ public interface QueryOptions {
 	Boolean isReadOnly();
 
 	/**
-	 * JPA {@link javax.persistence.EntityGraph} explicitly applied to the
+	 * JPA {@link jakarta.persistence.EntityGraph} explicitly applied to the
 	 * query.
 	 */
 	AppliedGraph getAppliedGraph();

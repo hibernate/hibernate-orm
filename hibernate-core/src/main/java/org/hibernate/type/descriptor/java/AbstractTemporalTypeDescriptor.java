@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -52,19 +52,19 @@ public abstract class AbstractTemporalTypeDescriptor<T> extends AbstractClassTyp
 
 	protected <X> TemporalJavaTypeDescriptor<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				toString() + " as `javax.persistence.TemporalType.TIMESTAMP` not supported"
+				toString() + " as `jakarta.persistence.TemporalType.TIMESTAMP` not supported"
 		);
 	}
 
 	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				toString() + " as `javax.persistence.TemporalType.DATE` not supported"
+				toString() + " as `jakarta.persistence.TemporalType.DATE` not supported"
 		);
 	}
 
 	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
 		throw new UnsupportedOperationException(
-				toString() + " as `javax.persistence.TemporalType.TIME` not supported"
+				toString() + " as `jakarta.persistence.TemporalType.TIME` not supported"
 		);
 	}
 

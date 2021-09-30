@@ -6,28 +6,18 @@
  */
 package org.hibernate.test.stats;
 
-import java.lang.reflect.Field;
-import java.util.HashSet;
 import java.util.Map;
 
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Id;
 
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.stat.SessionStatistics;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.stat.Statistics;
-import org.hibernate.stat.internal.StatisticsImpl;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;

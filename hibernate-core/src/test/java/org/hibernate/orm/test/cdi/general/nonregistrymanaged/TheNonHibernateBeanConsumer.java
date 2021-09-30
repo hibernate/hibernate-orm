@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
 
-import javax.annotation.PostConstruct;
-import javax.inject.Singleton;
+import jakarta.annotation.PostConstruct;
+import jakarta.inject.Singleton;
 
 /**
  * Simulates CDI bean consumers outside of Hibernate ORM
@@ -22,7 +22,7 @@ import javax.inject.Singleton;
 public class TheNonHibernateBeanConsumer {
 	public static final String NAME = "TheAlternativeNamedApplicationScopedBeanImpl_name";
 
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	private TheSharedApplicationScopedBean sharedApplicationScopedBean;
 
 	@PostConstruct

@@ -18,6 +18,8 @@ import org.hibernate.query.sqm.tree.SqmExpressableAccessor;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
+import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmNamedParameter;
@@ -137,6 +139,97 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		finally {
 			this.inferenceBasis = original;
 		}
+	}
+
+	@Override
+	public Object visitSimpleCaseExpression(SqmCaseSimple<?, ?> expression) {
+		final SqmExpressableAccessor<?> inferenceSupplier = this.inferenceBasis;
+		withTypeInference(
+				() -> {
+					for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+						final SqmExpressable<?> resolved = whenFragment.getCheckValue().getExpressable();
+						if ( resolved instanceof AllowableParameterType<?> ) {
+							return (SqmExpressable<Object>) resolved;
+						}
+					}
+					return null;
+				},
+				() -> expression.getFixture().accept( this )
+		);
+		SqmExpressableAccessor<?> resolved = determineCurrentExpressable( expression );
+		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
+			withTypeInference(
+					expression.getFixture(),
+					() -> whenFragment.getCheckValue().accept( this )
+			);
+			withTypeInference(
+					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					() -> whenFragment.getResult().accept( this )
+			);
+			resolved = highestPrecedence( resolved, whenFragment.getResult() );
+		}
+
+		if ( expression.getOtherwise() != null ) {
+			withTypeInference(
+					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					() -> expression.getOtherwise().accept( this )
+			);
+		}
+
+		return expression;
+	}
+
+	@Override
+	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
+		final SqmExpressableAccessor<?> inferenceSupplier = this.inferenceBasis;
+		SqmExpressableAccessor<?> resolved = determineCurrentExpressable( expression );
+
+		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
+			withTypeInference(
+					null,
+					() -> whenFragment.getPredicate().accept( this )
+			);
+			withTypeInference(
+					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					() -> whenFragment.getResult().accept( this )
+			);
+			resolved = highestPrecedence( resolved, whenFragment.getResult() );
+		}
+
+		if ( expression.getOtherwise() != null ) {
+			withTypeInference(
+					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					() -> expression.getOtherwise().accept( this )
+			);
+		}
+
+		return expression;
+	}
+
+	private SqmExpressableAccessor<?> highestPrecedence(SqmExpressableAccessor<?> type1, SqmExpressableAccessor<?> type2) {
+		if ( type1 == null ) {
+			return type2;
+		}
+		if ( type2 == null ) {
+			return type1;
+		}
+
+		if ( type1.getExpressable() instanceof AllowableParameterType<?> ) {
+			return type1;
+		}
+
+		if ( type2.getExpressable() instanceof AllowableParameterType<?> ) {
+			return type2;
+		}
+
+		return type1;
+	}
+
+	private SqmExpressableAccessor<?> determineCurrentExpressable(SqmExpression<?> expression) {
+		if ( expression.getExpressable() instanceof AllowableParameterType<?> ) {
+			return () -> (SqmExpressable<Object>) expression.getExpressable();
+		}
+		return null;
 	}
 
 	@Override

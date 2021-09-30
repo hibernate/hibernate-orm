@@ -9,13 +9,13 @@ package org.hibernate.orm.test.query.hql;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MapKeyColumn;
-import javax.persistence.OneToMany;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
@@ -72,7 +72,6 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9182")
-	@SkipForDialect(value = DerbyDialect.class, comment = "Derby can't cast from integer to varchar i.e. it requires an intermediary step")
 	public void testCountDistinctExpression() {
 		doInHibernate( this::sessionFactory, session -> {
 			List results = session.createQuery(
@@ -84,6 +83,26 @@ public class CountExpressionTest extends BaseCoreFunctionalTestCase {
 				"LEFT JOIN c.localized l " +
 				"GROUP BY d.id")
 			.getResultList();
+
+			assertEquals(1, results.size());
+			Object[] tuple = (Object[]) results.get( 0 );
+			assertEquals(1, tuple[0]);
+		} );
+	}
+
+	@Test
+	@TestForIssue(jiraKey = "HHH-11042")
+	public void testCountDistinctTuple() {
+		doInHibernate( this::sessionFactory, session -> {
+			List results = session.createQuery(
+							"SELECT " +
+									"	d.id, " +
+									"	COUNT(DISTINCT (KEY(l), l)) " +
+									"FROM Document d " +
+									"LEFT JOIN d.contacts c " +
+									"LEFT JOIN c.localized l " +
+									"GROUP BY d.id")
+					.getResultList();
 
 			assertEquals(1, results.size());
 			Object[] tuple = (Object[]) results.get( 0 );

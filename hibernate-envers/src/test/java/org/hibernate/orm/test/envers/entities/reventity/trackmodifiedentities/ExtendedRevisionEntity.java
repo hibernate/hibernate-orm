@@ -6,8 +6,8 @@
  */
 package org.hibernate.orm.test.envers.entities.reventity.trackmodifiedentities;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
 
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.enhanced.SequenceIdTrackingModifiedEntitiesRevisionEntity;

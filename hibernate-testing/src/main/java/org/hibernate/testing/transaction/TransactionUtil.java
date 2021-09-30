@@ -16,9 +16,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.EntityTransaction;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityTransaction;
 
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
@@ -634,13 +634,13 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the supplied settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the supplied settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * A new JDBC {@link Statement} is created and passed to the supplied callback.
 	 *
 	 * @param consumer {@link Statement} callback to execute statements in auto-commit mode
-	 * @param settings Settings to build a new {@link org.hibernate.service.ServiceRegistry}
+	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 */
 	public static void doInAutoCommit(Consumer<Statement> consumer, Map settings) {
 		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
@@ -667,7 +667,7 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the default settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the default settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * A new JDBC {@link Statement} is created and passed to the supplied callback.
@@ -679,12 +679,12 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the supplied settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the supplied settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * The supplied statements will be executed using the previously created connection
 	 *
-	 * @param settings Settings to build a new {@link org.hibernate.service.ServiceRegistry}
+	 * @param settings Settings to build a new {@link ServiceRegistry}
 	 * @param statements statements to be executed in auto-commit mode
 	 */
 	public static void doInAutoCommit(Map settings, String... statements) {
@@ -701,7 +701,7 @@ public class TransactionUtil {
 	}
 
 	/**
-	 * Use the default settings for building a new {@link org.hibernate.service.ServiceRegistry} and
+	 * Use the default settings for building a new {@link ServiceRegistry} and
 	 * create a new JDBC {@link Connection} in auto-commit mode.
 	 *
 	 * The supplied statements will be executed using the previously created connection

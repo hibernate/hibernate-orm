@@ -222,7 +222,7 @@ include::{sourcedir}/BatchTest.java[tags=batch-bulk-hql-update-version-example]
 ====
 If you use the `VERSIONED` statement, you cannot use custom version types that implement the `org.hibernate.usertype.UserVersionType`.
 
-This feature is only available in HQL since it's not standardized by JPA.
+This feature is only available in HQL since it's not standardized by Jakarta Persistence.
 ====
 
 [[batch-bulk-jpql-delete-example]]

@@ -19,7 +19,7 @@ import java.io.Serializable;
  * @author Steve Ebersole
  */
 @SuppressWarnings( {"UnusedDeclaration"})
-public interface Cache extends javax.persistence.Cache {
+public interface Cache extends jakarta.persistence.Cache {
 	/**
 	 * Access to the SessionFactory this Cache is bound to.
 	 *

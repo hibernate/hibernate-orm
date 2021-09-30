@@ -6,19 +6,19 @@
  */
 package org.hibernate.orm.test.jpa.ejb3configuration;
 
-import javax.persistence.EntityManagerFactory;
-
 import java.util.Collections;
-
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
-import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
+
+import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.EntityManagerFactory;
 
 /**
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>

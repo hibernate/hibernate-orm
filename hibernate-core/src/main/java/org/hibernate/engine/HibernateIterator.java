@@ -15,7 +15,7 @@ import org.hibernate.JDBCException;
  * Hibernate-specific iterator that may be closed
  *
  * @see org.hibernate.Query#iterate()
- * @see org.hibernate.Hibernate#close(java.util.Iterator)
+ * @see org.hibernate.Hibernate#close(Iterator)
  *
  * @author Gavin King
  */

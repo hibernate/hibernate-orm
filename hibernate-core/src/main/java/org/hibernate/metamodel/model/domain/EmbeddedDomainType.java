@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 /**
- * Hibernate extension to the JPA {@link javax.persistence.metamodel.EntityType} contract.
+ * Hibernate extension to the JPA {@link jakarta.persistence.metamodel.EntityType} contract.
  *
  * @deprecated (since 6.0) Use {@link EmbeddableDomainType} instead.  Originally intended
  * to describe the actual usage of an embeddable (the embedded) because it was intended

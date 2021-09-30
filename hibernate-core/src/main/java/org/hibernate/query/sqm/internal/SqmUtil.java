@@ -70,7 +70,7 @@ public class SqmUtil {
 	private SqmUtil() {
 	}
 
-	public static void verifyIsSelectStatement(SqmStatement sqm) {
+	public static void verifyIsSelectStatement(SqmStatement sqm, String hqlString) {
 		if ( !(sqm instanceof SqmSelectStatement) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
@@ -78,12 +78,14 @@ public class SqmUtil {
 							"Expecting a SELECT Query [%s], but found %s",
 							SqmSelectStatement.class.getName(),
 							sqm.getClass().getName()
-					)
+					),
+					hqlString,
+					null
 			);
 		}
 	}
 
-	public static void verifyIsNonSelectStatement(SqmStatement sqm) {
+	public static void verifyIsNonSelectStatement(SqmStatement sqm, String hqlString) {
 		if ( !(sqm instanceof SqmDmlStatement) ) {
 			throw new IllegalQueryOperationException(
 					String.format(
@@ -91,7 +93,9 @@ public class SqmUtil {
 							"Expecting a non-SELECT Query [%s], but found %s",
 							SqmDmlStatement.class.getName(),
 							sqm.getClass().getName()
-					)
+					),
+					hqlString,
+					null
 			);
 		}
 	}

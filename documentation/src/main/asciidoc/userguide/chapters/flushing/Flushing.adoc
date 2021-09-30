@@ -17,7 +17,7 @@ See the <<chapters/batch/Batching.adoc#batch,Batching chapter>> for more informa
 ====
 
 The flushing strategy is given by the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/Session.html#getFlushMode--[`flushMode`] of the current running Hibernate `Session`.
-Although JPA defines only two flushing strategies ({jpaJavadocUrlPrefix}FlushModeType.html#AUTO[`AUTO`] and {jpaJavadocUrlPrefix}FlushModeType.html#COMMIT[`COMMIT`]),
+Although Jakarta Persistence defines only two flushing strategies ({jpaJavadocUrlPrefix}FlushModeType.html#AUTO[`AUTO`] and {jpaJavadocUrlPrefix}FlushModeType.html#COMMIT[`COMMIT`]),
 Hibernate has a much broader spectrum of flush types:
 
 ALWAYS:: Flushes the `Session` before every query.
@@ -121,7 +121,7 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-example]
 ----
 ====
 
-If you bootstrap Hibernate natively, and not through JPA, by default,
+If you bootstrap Hibernate natively, and not through Jakarta Persistence, by default,
 the `Session` API will trigger a flush automatically when executing a native query.
 
 [[flushing-auto-flush-sql-native-example]]
@@ -147,9 +147,9 @@ include::{sourcedir}/AutoFlushTest.java[tags=flushing-auto-flush-sql-synchroniza
 [[flushing-commit]]
 === `COMMIT` flush
 
-JPA also defines a COMMIT flush mode, which is described as follows:
+Jakarta Persistence also defines a COMMIT flush mode, which is described as follows:
 
-[quote, Section 3.10.8 of the JPA 2.1 Specification]
+[quote, Section 3.10.8 of the Java Persistence 2.1 Specification]
 ____
 If `FlushModeType.COMMIT` is set, the effect of updates made to entities in the persistence context upon queries is unspecified.
 ____
@@ -170,7 +170,7 @@ include::{extrasdir}/flushing-commit-flush-jpql-example.sql[]
 ----
 ====
 
-Because the JPA doesn't impose a strict rule on delaying flushing, when executing a native SQL query, the persistence context is going to be flushed.
+Because the Jakarta Persistence doesn't impose a strict rule on delaying flushing, when executing a native SQL query, the persistence context is going to be flushed.
 
 [[flushing-commit-flush-sql-example]]
 .`COMMIT` flushing on native SQL

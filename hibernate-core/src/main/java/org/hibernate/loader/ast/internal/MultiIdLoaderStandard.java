@@ -124,8 +124,15 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 		final List<Object> idsInBatch = new ArrayList<>();
 		final List<Integer> elementPositionsLoadedByBatch = new ArrayList<>();
 
+		final boolean coerce = !sessionFactory.getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
 		for ( int i = 0; i < ids.length; i++ ) {
-			final Object id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[i], session );
+			final Object id;
+			if ( coerce ) {
+				id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[i], session );
+			}
+			else {
+				id = ids[i];
+			}
 			final EntityKey entityKey = new EntityKey( id, entityDescriptor );
 
 			if ( loadOptions.isSessionCheckingEnabled() || loadOptions.isSecondLevelCacheCheckingEnabled() ) {
@@ -357,8 +364,15 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			boolean foundAnyManagedEntities = false;
 			final List<Object> nonManagedIds = new ArrayList<>();
 
+			final boolean coerce = !sessionFactory.getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled();
 			for ( int i = 0; i < ids.length; i++ ) {
-				final Object id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[ i ], session );
+				final Object id;
+				if ( coerce ) {
+					id = entityDescriptor.getIdentifierMapping().getJavaTypeDescriptor().coerce( ids[i], session );
+				}
+				else {
+					id = ids[i];
+				}
 				final EntityKey entityKey = new EntityKey( id, entityDescriptor );
 
 				LoadEvent loadEvent = new LoadEvent(

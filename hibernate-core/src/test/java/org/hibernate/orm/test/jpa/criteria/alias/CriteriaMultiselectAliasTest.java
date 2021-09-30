@@ -11,15 +11,14 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.transform.Transformers;
 import org.junit.Before;
@@ -49,7 +48,6 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-13140")
 	@TestForIssue(jiraKey = "HHH-13140")
 	public void testAlias() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -76,7 +74,6 @@ public class CriteriaMultiselectAliasTest extends BaseEntityManagerFunctionalTes
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-13140")
 	@TestForIssue(jiraKey = "HHH-13192")
 	public void testNoAliasInWhereClause() {
 		doInJPA( this::entityManagerFactory, entityManager -> {

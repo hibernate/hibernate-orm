@@ -9,8 +9,8 @@ package org.hibernate.test.hikaricp;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
@@ -40,7 +40,7 @@ public class HikariCPSkipAutoCommitTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		configuration.getProperties().put(
-				org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER,
+				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
 		configuration.getProperties().put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );

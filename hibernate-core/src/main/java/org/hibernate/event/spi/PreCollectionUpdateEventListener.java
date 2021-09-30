@@ -6,13 +6,11 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 /**
  * Called before updating a collection
  *
  * @author Gail Badner
  */
-public interface PreCollectionUpdateEventListener extends Serializable {
+public interface PreCollectionUpdateEventListener {
 	public void onPreUpdateCollection(PreCollectionUpdateEvent event);
 }

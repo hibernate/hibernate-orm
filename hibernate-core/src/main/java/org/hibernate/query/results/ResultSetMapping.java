@@ -16,12 +16,12 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 
 /**
  * Acts as the {@link JdbcValuesMappingProducer} for {@link org.hibernate.query.NativeQuery}
- * or {@link org.hibernate.procedure.ProcedureCall} / {@link javax.persistence.StoredProcedureQuery}
+ * or {@link org.hibernate.procedure.ProcedureCall} / {@link jakarta.persistence.StoredProcedureQuery}
  * instances.
  *
  * Can be defined<ul>
  *     <li>
- *         statically via {@link javax.persistence.SqlResultSetMapping} or `hbm.xml` mapping
+ *         statically via {@link jakarta.persistence.SqlResultSetMapping} or `hbm.xml` mapping
  *     </li>
  *     <li>
  *         dynamically via Hibernate-specific APIs:<ul>

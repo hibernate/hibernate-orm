@@ -6,8 +6,8 @@
  */
 package org.hibernate.resource.transaction.backend.jta.internal;
 
-import javax.transaction.SystemException;
-import javax.transaction.UserTransaction;
+import jakarta.transaction.SystemException;
+import jakarta.transaction.UserTransaction;
 
 import org.jboss.logging.Logger;
 

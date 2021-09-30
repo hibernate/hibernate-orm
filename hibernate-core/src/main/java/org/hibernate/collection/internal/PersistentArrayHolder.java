@@ -186,7 +186,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 	@SuppressWarnings("unchecked")
 	public Iterator elements() {
 		final int length = Array.getLength( array );
-		final java.util.List list = new ArrayList( length );
+		final List list = new ArrayList( length );
 		for ( int i=0; i<length; i++ ) {
 			list.add( Array.get( array, i ) );
 		}
@@ -243,7 +243,7 @@ public class PersistentArrayHolder<E> extends AbstractPersistentCollection<E> {
 
 	@Override
 	public Iterator getDeletes(CollectionPersister persister, boolean indexIsFormula) throws HibernateException {
-		final java.util.List<Integer> deletes = new ArrayList<>();
+		final List<Integer> deletes = new ArrayList<>();
 		final Serializable sn = getSnapshot();
 		final int snSize = Array.getLength( sn );
 		final int arraySize = Array.getLength( array );

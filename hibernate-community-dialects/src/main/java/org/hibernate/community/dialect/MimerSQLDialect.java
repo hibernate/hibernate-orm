@@ -32,7 +32,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 /**
  * A dialect for Mimer SQL 11.

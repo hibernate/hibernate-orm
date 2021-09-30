@@ -15,14 +15,14 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.jpa.AvailableSettings;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistryInitiator;
 import org.hibernate.service.ServiceRegistry;
 
 /**
  * Helper class for helping deal with the reflection calls relating to CDI
- * in terms of building CDI-based {@link org.hibernate.resource.beans.container.spi.BeanContainer}
+ * in terms of building CDI-based {@link BeanContainer}
  * instance
  *
  * We need to to avoid statically linking CDI classed into the ClassLoader which

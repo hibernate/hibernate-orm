@@ -12,7 +12,7 @@ import org.hibernate.id.PostInsertIdentityPersister;
 
 /**
  * A set of operations providing support for identity columns
- * in a certain {@link org.hibernate.dialect.Dialect SQL dialect}.
+ * in a certain {@link Dialect SQL dialect}.
  *
  * @author Andrea Boriero
  *

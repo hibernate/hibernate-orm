@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.collectionbasictype;
 
-import javax.persistence.AttributeConverter;
+import jakarta.persistence.AttributeConverter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;

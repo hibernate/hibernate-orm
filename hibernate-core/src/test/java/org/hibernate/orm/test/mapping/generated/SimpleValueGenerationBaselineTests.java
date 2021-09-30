@@ -8,12 +8,11 @@ package org.hibernate.orm.test.mapping.generated;
 
 import java.sql.Time;
 import java.sql.Timestamp;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -26,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @DomainModel( annotatedClasses = SimpleValueGenerationBaselineTests.NonAuditedEntity.class )
 @SessionFactory
-@NotImplementedYet( strict = false, reason = "Support for `java.sql.Date` and `java.sql.Time` is currently fubar" )
 public class SimpleValueGenerationBaselineTests {
 	@Test
 	public void testLoading(SessionFactoryScope scope) {

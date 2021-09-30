@@ -7,15 +7,15 @@
 package org.hibernate.test.annotations.dataTypes;
 
 import java.util.Date;
-import javax.persistence.Access;
-import javax.persistence.AccessType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import javax.persistence.Temporal;
-import javax.persistence.TemporalType;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.Table;
+import jakarta.persistence.Temporal;
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Steve Ebersole
@@ -27,7 +27,7 @@ public class SomeEntity {
 	@Id
 	@Temporal(TemporalType.DATE)
 	@Column(name = "ID")
-	private java.util.Date id;
+	private Date id;
 	@Column(name = "TIMEDATA")
 	private java.sql.Time timeData;
 	@Column(name = "TSDATA")
@@ -43,11 +43,11 @@ public class SomeEntity {
 		this.id = id;
 	}
 
-	public java.util.Date getId() {
+	public Date getId() {
 		return id;
 	}
 
-	public void setId(java.util.Date id) {
+	public void setId(Date id) {
 		this.id = id;
 	}
 

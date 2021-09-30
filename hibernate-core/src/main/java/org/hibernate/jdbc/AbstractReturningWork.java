@@ -25,7 +25,7 @@ public abstract class AbstractReturningWork<T> implements ReturningWork<T>, Work
 	 * @param executor The visitor that executes the work
 	 * @param connection The connection on which to perform the work.
 	 *
-	 * @return the valued returned by {@link #execute(java.sql.Connection)}.
+	 * @return the valued returned by {@link #execute(Connection)}.
 	 *
 	 * @throws SQLException Thrown during execution of the underlying JDBC interaction.
 	 * @throws org.hibernate.HibernateException Generally indicates a wrapped SQLException.

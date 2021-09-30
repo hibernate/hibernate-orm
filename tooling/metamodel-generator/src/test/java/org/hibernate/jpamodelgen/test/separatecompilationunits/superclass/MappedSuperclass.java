@@ -6,12 +6,12 @@
  */
 package org.hibernate.jpamodelgen.test.separatecompilationunits.superclass;
 
-import javax.persistence.Id;
+import jakarta.persistence.Id;
 
 /**
  * @author Hardy Ferentschik
  */
-@javax.persistence.MappedSuperclass
+@jakarta.persistence.MappedSuperclass
 public class MappedSuperclass {
 	@Id
 	private long id;

@@ -13,7 +13,6 @@ import org.hibernate.cache.internal.CollectionCacheInvalidator;
 import org.hibernate.cfg.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.integrator.spi.IntegratorService;
-import org.hibernate.secure.spi.JaccIntegrator;
 
 import org.jboss.logging.Logger;
 
@@ -29,7 +28,6 @@ public class IntegratorServiceImpl implements IntegratorService {
 		// register standard integrators.  Envers and JPA, for example, need to be handled by discovery because in
 		// separate project/jars.
 		addIntegrator( new BeanValidationIntegrator() );
-		addIntegrator( new JaccIntegrator() );
 		addIntegrator( new CollectionCacheInvalidator() );
 
 		// register provided integrators

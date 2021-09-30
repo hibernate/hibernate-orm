@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.manytomany.ternary;
 
 import java.util.Arrays;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;

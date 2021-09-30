@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.bootstrap.binding.annotations.override;
 
 import java.util.List;
-import javax.persistence.CascadeType;
-import javax.persistence.Embeddable;
-import javax.persistence.ManyToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.ManyToMany;
 
 @Embeddable
 public class SocialTouchPoints {

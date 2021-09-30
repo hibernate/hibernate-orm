@@ -66,7 +66,7 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestampWithMillis;
 
@@ -165,6 +165,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -172,7 +173,13 @@ public class FirebirdDialect extends Dialect {
 		if ( jdbcTypeCode == Types.BIT ) {
 			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override
@@ -325,7 +332,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	/**
-	 * Firebird 2.5 doesn't have a real {@link java.sql.Types#BOOLEAN}
+	 * Firebird 2.5 doesn't have a real {@link Types#BOOLEAN}
 	 * type, so...
 	 */
 	@Override

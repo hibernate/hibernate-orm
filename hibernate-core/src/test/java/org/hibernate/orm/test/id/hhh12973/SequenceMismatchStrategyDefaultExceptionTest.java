@@ -8,12 +8,12 @@ package org.hibernate.orm.test.id.hhh12973;
 
 import java.util.EnumSet;
 import java.util.Map;
-import javax.persistence.Entity;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
@@ -90,7 +90,7 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 	public static class ApplicationConfigurationHBM2DDL {
 
 		@Id
-		@javax.persistence.SequenceGenerator(
+		@jakarta.persistence.SequenceGenerator(
 				name = "app_config_sequence",
 				sequenceName = "app_config_sequence",
 				allocationSize = 1
@@ -112,7 +112,7 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 	public static class ApplicationConfiguration {
 
 		@Id
-		@javax.persistence.SequenceGenerator(
+		@jakarta.persistence.SequenceGenerator(
 				name = "app_config_sequence",
 				sequenceName = "app_config_sequence"
 		)

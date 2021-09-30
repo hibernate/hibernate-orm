@@ -29,6 +29,8 @@ public interface ResultBuilder {
 			BiFunction<String, String, DynamicFetchBuilderLegacy> legacyFetchResolver,
 			DomainResultCreationState domainResultCreationState);
 
+	Class<?> getJavaType();
+
 	default void visitFetchBuilders(BiConsumer<String, FetchBuilder> consumer) {
 	}
 }

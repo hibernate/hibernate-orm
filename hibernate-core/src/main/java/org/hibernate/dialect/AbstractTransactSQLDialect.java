@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.CastStrEmulation;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -72,6 +71,7 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
 			int scale,
@@ -79,7 +79,13 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 		if ( jdbcTypeCode == Types.BIT ) {
 			return jdbcTypeDescriptorRegistry.getDescriptor( Types.BOOLEAN );
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override

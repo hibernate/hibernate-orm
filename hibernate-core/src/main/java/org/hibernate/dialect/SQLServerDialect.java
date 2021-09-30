@@ -7,6 +7,9 @@
 package org.hibernate.dialect;
 
 import org.hibernate.*;
+import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.relational.QualifiedSequenceName;
+import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.SQLServerFormatEmulation;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -15,14 +18,15 @@ import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2005LimitHandler;
 import org.hibernate.dialect.pagination.SQLServer2012LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
-import org.hibernate.dialect.sequence.ANSISequenceSupport;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SQLServer16SequenceSupport;
 import org.hibernate.dialect.sequence.SQLServerSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
+import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
@@ -32,11 +36,14 @@ import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.internal.StandardSequenceExporter;
+import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -46,7 +53,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.regex.Pattern;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static java.util.regex.Pattern.compile;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
@@ -60,6 +67,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	private static final int PARAM_LIST_SIZE_LIMIT = 2100;
 
 	private final int version;
+
+	private StandardSequenceExporter exporter;
 
 	public SQLServerDialect(DialectResolutionInfo info) {
 		this( info.getDatabaseMajorVersion() );
@@ -82,6 +91,10 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
+		}
+
+		if ( getVersion() >= 11 ) {
+			exporter = new SqlServerSequenceExporter( this );
 		}
 
 		registerColumnType( Types.VARCHAR, 8000, "varchar($l)" );
@@ -145,6 +158,9 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
+
+		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
+		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
 
 		CommonFunctionFactory.truncate_round( queryEngine );
 		CommonFunctionFactory.everyAny_sumIif( queryEngine );
@@ -229,6 +245,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			IdentifierHelperBuilder builder, DatabaseMetaData dbMetaData) throws SQLException {
 
 		if ( dbMetaData == null ) {
+			// TODO: if DatabaseMetaData != null, unquoted case strategy is set to IdentifierCaseStrategy.UPPER
+			//       Check to see if this setting is correct.
 			builder.setUnquotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 			builder.setQuotedCaseStrategy( IdentifierCaseStrategy.MIXED );
 		}
@@ -284,6 +302,22 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public String getCurrentSchemaCommand() {
 		return "select schema_name()";
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		if ( getVersion() >= 16 ) {
+			return true;
+		}
+		return super.supportsIfExistsBeforeTableName();
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeConstraintName() {
+		if ( getVersion() >= 16 ) {
+			return true;
+		}
+		return super.supportsIfExistsBeforeConstraintName();
 	}
 
 	@Override
@@ -354,11 +388,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsResultSetPositionQueryMethodsOnForwardOnlyCursor() {
 		return false;
 	}
@@ -426,9 +455,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		return getVersion() < 11
-				? NoSequenceSupport.INSTANCE
-				: SQLServerSequenceSupport.INSTANCE;
+		if ( getVersion() < 11 ) {
+			return NoSequenceSupport.INSTANCE;
+		}
+		else if ( getVersion() >= 16 ) {
+			return SQLServer16SequenceSupport.INSTANCE;
+		}
+		else {
+			return SQLServerSequenceSupport.INSTANCE;
+		}
 	}
 
 	@Override
@@ -727,6 +762,53 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
 		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
+	}
+
+	@Override
+	protected String getDropSequenceString(String sequenceName) throws MappingException {
+		if ( getVersion() >= 16 ) {
+			return "drop sequence if exists " + sequenceName;
+		}
+		return super.getDropSequenceString( sequenceName );
+	}
+
+	@Override
+	public String[] getDropSchemaCommand(String schemaName) {
+		if ( getVersion() >= 16 ) {
+			return new String[] { "drop schema if exists " + schemaName };
+		}
+		return super.getDropSchemaCommand( schemaName );
+	}
+
+
+	@Override
+	public NameQualifierSupport getNameQualifierSupport() {
+		return NameQualifierSupport.BOTH;
+	}
+
+	public Exporter<Sequence> getSequenceExporter() {
+		if ( exporter == null ) {
+			return super.getSequenceExporter();
+		}
+		return exporter;
+	}
+
+	private class SqlServerSequenceExporter extends StandardSequenceExporter {
+
+		public SqlServerSequenceExporter(Dialect dialect) {
+			super( dialect );
+		}
+
+		@Override
+		protected String getFormattedSequenceName(QualifiedSequenceName name, Metadata metadata) {
+			if ( name.getCatalogName() != null ) {
+				// SQL Server does not allow the catalog in the sequence name.
+				// See https://docs.microsoft.com/en-us/sql/t-sql/statements/create-sequence-transact-sql?view=sql-server-ver15&viewFallbackFrom=sql-server-ver12
+				// Keeping the catalog in the name does not break on ORM, but it fails using Vert.X for Reactive.
+				name = new QualifiedSequenceName( null, name.getSchemaName(), name.getObjectName() );
+			}
+			return super.getFormattedSequenceName( name, metadata );
+		}
 	}
 
 }

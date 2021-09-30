@@ -6,9 +6,9 @@
  */
 package org.hibernate.orm.test.query.criteria;
 
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;

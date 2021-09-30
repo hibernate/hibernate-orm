@@ -14,7 +14,7 @@ import org.hibernate.envers.internal.entities.mapper.relation.component.MiddleCo
 import org.hibernate.envers.internal.tools.query.Parameters;
 
 /**
- * A {@link MiddleComponentMapper} specifically for {@link javax.persistence.MapKeyEnumerated}.
+ * A {@link MiddleComponentMapper} specifically for {@link jakarta.persistence.MapKeyEnumerated}.
  *
  * @author Chris Cranford
  */

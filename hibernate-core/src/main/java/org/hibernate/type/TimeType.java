@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import java.sql.Time;
 import java.util.Date;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
@@ -39,7 +39,7 @@ public class TimeType
 	public String[] getRegistrationKeys() {
 		return new String[] {
 				getName(),
-				java.sql.Time.class.getName()
+				Time.class.getName()
 		};
 	}
 

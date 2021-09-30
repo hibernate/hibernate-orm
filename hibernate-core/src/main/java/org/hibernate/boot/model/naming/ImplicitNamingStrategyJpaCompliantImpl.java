@@ -18,7 +18,7 @@ import org.hibernate.internal.util.StringHelper;
  * to JPA standards.
  * <p/>
  * For the legacy JPA-based naming standards initially implemented by Hibernate,
- * see/use {@link org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl}
+ * see/use {@link ImplicitNamingStrategyLegacyJpaImpl}
  *
  * @author Steve Ebersole
  */

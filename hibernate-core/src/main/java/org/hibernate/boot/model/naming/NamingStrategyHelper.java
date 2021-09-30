@@ -16,12 +16,12 @@ public interface NamingStrategyHelper {
 	 * Called when the user supplied no explicit name/identifier for the given database object.
 	 * <p/>
 	 * Typically implementations will access the {@link ImplicitNamingStrategy} via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
+	 * {@link MetadataBuildingContext#getBuildingOptions()} ->
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
 	 * <p/>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
+	 * {@link MetadataBuildingContext#getMetadataCollector()} ->
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
 	 *
 	 * @param buildingContext The building context in which this is called.
@@ -34,12 +34,12 @@ public interface NamingStrategyHelper {
 	 * Called when the user has supplied an explicit name for the database object.
 	 * <p/>
 	 * Typically implementations will access the {@link ImplicitNamingStrategy} via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
+	 * {@link MetadataBuildingContext#getBuildingOptions()} ->
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getImplicitNamingStrategy()}
 	 * <p/>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
+	 * {@link MetadataBuildingContext#getMetadataCollector()} ->
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
 	 *
 	 * @param explicitName The explicit object name.
@@ -53,12 +53,12 @@ public interface NamingStrategyHelper {
 	 * Handle converting a logical name to a physical name
 	 * <p/>
 	 * Typically implementations will access the {@link PhysicalNamingStrategy} via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getBuildingOptions()} ->
+	 * {@link MetadataBuildingContext#getBuildingOptions()} ->
 	 * {@link org.hibernate.boot.spi.MetadataBuildingOptions#getPhysicalNamingStrategy()}
 	 * <p/>
 	 * For proper quoting, {@link org.hibernate.boot.model.relational.Database#toIdentifier(String)}
 	 * should be used via
-	 * {@link org.hibernate.boot.spi.MetadataBuildingContext#getMetadataCollector()} ->
+	 * {@link MetadataBuildingContext#getMetadataCollector()} ->
 	 * {@link org.hibernate.boot.spi.InFlightMetadataCollector#getDatabase()}
 	 *
 	 * @param logicalName The logical name to convert to a physical name

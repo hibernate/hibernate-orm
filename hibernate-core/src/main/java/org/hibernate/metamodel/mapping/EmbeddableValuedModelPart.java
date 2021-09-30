@@ -23,9 +23,9 @@ import org.hibernate.sql.results.graph.FetchableContainer;
 /**
  * An embedded (embeddable-valued) model part.
  *
- * @see javax.persistence.Embedded
- * @see javax.persistence.EmbeddedId
- * @see javax.persistence.Embeddable
+ * @see jakarta.persistence.Embedded
+ * @see jakarta.persistence.EmbeddedId
+ * @see jakarta.persistence.Embeddable
  *
  * @author Steve Ebersole
  */

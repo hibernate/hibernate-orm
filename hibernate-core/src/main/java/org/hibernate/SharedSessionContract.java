@@ -8,10 +8,10 @@ package org.hibernate;
 
 import java.io.Serializable;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -88,7 +88,7 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 *
 	 * @return The ProcedureCall
 	 *
-	 * @see javax.persistence.NamedStoredProcedureQuery
+	 * @see jakarta.persistence.NamedStoredProcedureQuery
 	 */
 	ProcedureCall getNamedProcedureCall(String name);
 

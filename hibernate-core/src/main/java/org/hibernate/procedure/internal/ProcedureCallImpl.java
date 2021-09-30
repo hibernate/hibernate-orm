@@ -15,15 +15,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.persistence.FlushModeType;
-import javax.persistence.LockModeType;
-import javax.persistence.NoResultException;
-import javax.persistence.NonUniqueResultException;
-import javax.persistence.Parameter;
-import javax.persistence.ParameterMode;
-import javax.persistence.PersistenceException;
-import javax.persistence.TemporalType;
-import javax.persistence.TransactionRequiredException;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
+import jakarta.persistence.NonUniqueResultException;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.ParameterMode;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.TransactionRequiredException;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -65,7 +65,7 @@ import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.results.NoMoreOutputsException;
 
 /**
- * Standard implementation of {@link org.hibernate.procedure.ProcedureCall}
+ * Standard implementation of {@link ProcedureCall}
  *
  * @author Steve Ebersole
  */
@@ -645,7 +645,7 @@ public class ProcedureCallImpl<R>
 	@Override
 	protected int doExecuteUpdate() {
 		if ( ! getSession().isTransactionInProgress() ) {
-			throw new TransactionRequiredException( "javax.persistence.Query.executeUpdate requires active transaction" );
+			throw new TransactionRequiredException( "jakarta.persistence.Query.executeUpdate requires active transaction" );
 		}
 
 		// the expectation is that there is just one Output, of type UpdateCountOutput
@@ -835,12 +835,12 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setLockMode(LockModeType lockMode) {
-		throw new IllegalStateException( "javax.persistence.Query.setLockMode not valid on javax.persistence.StoredProcedureQuery" );
+		throw new IllegalStateException( "jakarta.persistence.Query.setLockMode not valid on jakarta.persistence.StoredProcedureQuery" );
 	}
 
 	@Override
 	public LockModeType getLockMode() {
-		throw new IllegalStateException( "javax.persistence.Query.getHibernateFlushMode not valid on javax.persistence.StoredProcedureQuery" );
+		throw new IllegalStateException( "jakarta.persistence.Query.getHibernateFlushMode not valid on jakarta.persistence.StoredProcedureQuery" );
 	}
 
 	@Override

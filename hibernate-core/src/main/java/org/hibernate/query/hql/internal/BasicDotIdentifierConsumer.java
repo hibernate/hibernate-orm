@@ -144,7 +144,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 					// identifier is an "unqualified attribute reference"
 					validateAsRoot( pathRootByExposedNavigable );
 
-					SqmPath<?> sqmPath = (SqmPath<?>) pathRootByExposedNavigable.get( identifier );
+					final SqmPath<?> sqmPath = pathRootByExposedNavigable.get( identifier );
 					if ( isTerminal ) {
 						return sqmPath;
 					}

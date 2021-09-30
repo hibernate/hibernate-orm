@@ -79,7 +79,7 @@ public class CascadingActions {
 	};
 
 	/**
-	 * @see org.hibernate.Session#lock(Object, org.hibernate.LockMode)
+	 * @see org.hibernate.Session#lock(Object, LockMode)
 	 */
 	public static final CascadingAction LOCK = new BaseCascadingAction() {
 		@Override

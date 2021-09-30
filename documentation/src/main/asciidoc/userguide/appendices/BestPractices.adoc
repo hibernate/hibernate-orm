@@ -105,7 +105,7 @@ The *pooled* and the *pooled-lo* optimizers are very useful to reduce the number
 [[best-practices-mapping-associations]]
 ==== Associations
 
-JPA offers four entity association types:
+Jakarta Persistence offers four entity association types:
 
 - `@ManyToOne`
 - `@OneToOne`
@@ -160,7 +160,7 @@ Sometimes, a `@ManyToOne` association is sufficient, and the collection can be s
 [[best-practices-inheritance]]
 === Inheritance
 
-JPA offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to deal with inheritance mapping, and each of these strategies has advantages and disadvantages.
+Jakarta Persistence offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to deal with inheritance mapping, and each of these strategies has advantages and disadvantages.
 
 - `SINGLE_TABLE` performs the best in terms of executed SQL statements. However, you cannot use `NOT NULL` constraints on the column-level. You can still use triggers and rules to enforce such constraints, but it's not as straightforward.
 - `JOINED` addresses the data integrity concerns because every subclass is associated with a different table.
@@ -173,7 +173,7 @@ JPA offers `SINGLE_TABLE`, `JOINED`, and `TABLE_PER_CLASS` to deal with inherita
 
 [TIP]
 ====
-Fetching too much data is the number one performance issue for the vast majority of JPA applications.
+Fetching too much data is the number one performance issue for the vast majority of Jakarta Persistence applications.
 ====
 
 Hibernate supports both entity queries (JPQL/HQL and Criteria API) and native SQL statements.
@@ -194,8 +194,8 @@ Related to associations, there are two major fetch strategies:
 
 [TIP]
 ====
-Prior to JPA, Hibernate used to have all associations as `LAZY` by default.
-However, when JPA 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
+Prior to Jakarta Persistence, Hibernate used to have all associations as `LAZY` by default.
+However, when Java Persistence 1.0 specification emerged, it was thought that not all providers would use Proxies. Hence, the `@ManyToOne` and the `@OneToOne` associations are now `EAGER` by default.
 
 The `EAGER` fetching strategy cannot be overwritten on a per query basis, so the association is always going to be retrieved even if you don't need it.
 Moreover, if you forget to `JOIN FETCH` an `EAGER` association in a JPQL query, Hibernate will initialize it with a secondary statement, which in turn can lead to N+1 query issues.

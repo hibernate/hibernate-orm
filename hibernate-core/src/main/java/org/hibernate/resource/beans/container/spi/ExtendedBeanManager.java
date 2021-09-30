@@ -6,7 +6,7 @@
  */
 package org.hibernate.resource.beans.container.spi;
 
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 /**
  * This contract and the nested LifecycleListener contract represent the changes

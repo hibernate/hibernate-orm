@@ -30,7 +30,7 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @deprecated Use {@link org.hibernate.boot.spi.SessionFactoryOptions} instead.
+ * @deprecated Use {@link SessionFactoryOptions} instead.
  */
 @SuppressWarnings("unused")
 @Deprecated

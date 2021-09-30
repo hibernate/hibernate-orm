@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import java.time.OffsetTime;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;

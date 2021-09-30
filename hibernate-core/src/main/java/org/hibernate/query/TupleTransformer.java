@@ -13,16 +13,16 @@ import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
  *
  * Ultimately, gets wrapped in a
  * {@link RowTransformerTupleTransformerAdapter}
- * to adapt the TupleTransformer to the {@link org.hibernate.sql.exec.spi.RowTransformer}
+ * to adapt the TupleTransformer to the {@link org.hibernate.sql.results.spi.RowTransformer}
  * contract, which is the thing actually used to process the results internally.
  *
  * Note that {@link JpaTupleTransformer} is a special sub-type applications may use
- * to transform the row into a JPA {@link javax.persistence.Tuple}.  JpaTupleTransformer is
+ * to transform the row into a JPA {@link jakarta.persistence.Tuple}.  JpaTupleTransformer is
  * deprecated as it is much more appropriate (and simpler) to simply specify the Query
  * return type as Tuple
  *
  * @see org.hibernate.transform.ResultTransformer
- * @see org.hibernate.sql.exec.spi.RowTransformer
+ * @see org.hibernate.sql.results.spi.RowTransformer
  *
  * @author Steve Ebersole
  * @author Gavin King

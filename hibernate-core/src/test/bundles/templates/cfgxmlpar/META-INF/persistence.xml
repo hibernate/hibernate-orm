@@ -14,7 +14,7 @@
     <persistence-unit name="cfgxmlpar" transaction-type="RESOURCE_LOCAL">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
         <properties>
-            <property name="hibernate.ejb.cfgfile" value="/org/hibernate/jpa/test/pack/cfgxmlpar/hibernate.cfg.xml"/>
+            <property name="hibernate.cfg_xml_file" value="/org/hibernate/orm/test/jpa/pack/cfgxmlpar/hibernate.cfg.xml"/>
         </properties>
     </persistence-unit>
 </persistence>

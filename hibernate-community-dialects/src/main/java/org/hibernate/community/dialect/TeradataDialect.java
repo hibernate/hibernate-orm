@@ -55,7 +55,7 @@ import java.sql.Types;
 import java.util.Iterator;
 import java.util.Map;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
@@ -126,7 +126,7 @@ public class TeradataDialect extends Dialect {
 
 	@Override
 	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
-			int jdbcTypeCode,
+			String columnTypeName, int jdbcTypeCode,
 			int precision,
 			int scale,
 			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
@@ -139,7 +139,13 @@ public class TeradataDialect extends Dialect {
 					return jdbcTypeDescriptorRegistry.getDescriptor( Types.BIGINT );
 				}
 		}
-		return super.resolveSqlTypeDescriptor( jdbcTypeCode, precision, scale, jdbcTypeDescriptorRegistry );
+		return super.resolveSqlTypeDescriptor(
+				columnTypeName,
+				jdbcTypeCode,
+				precision,
+				scale,
+				jdbcTypeDescriptorRegistry
+		);
 	}
 
 	@Override
@@ -339,11 +345,6 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
-	}
-
-	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return getVersion() < 14;
 	}
 
 	@Override

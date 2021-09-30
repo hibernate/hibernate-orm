@@ -8,7 +8,7 @@ package org.hibernate.boot.model.source.internal.hbm;
 
 import java.util.Collections;
 import java.util.List;
-import javax.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBElement;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmAnyAssociationType;

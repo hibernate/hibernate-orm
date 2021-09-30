@@ -7,12 +7,20 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
+import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 
 /**
  * An SqmPath for plural attribute paths
@@ -65,6 +73,61 @@ public class SqmPluralValuedSimplePath<E> extends AbstractSqmSimplePath<E> {
 		return creationState.getProcessingStateStack().getCurrent().getPathRegistry().resolvePath(
 				navigablePath,
 				np -> get( np.getUnaliasedLocalName() )
+		);
+	}
+
+	@Override
+	public SqmPath<?> resolveIndexedAccess(
+			SqmExpression<?> selector,
+			boolean isTerminal,
+			SqmCreationState creationState) {
+		final SqmPathRegistry pathRegistry = creationState.getCurrentProcessingState().getPathRegistry();
+		final String alias = selector.toHqlString();
+		final NavigablePath navigablePath = getNavigablePath().getParent().append(
+				getNavigablePath().getUnaliasedLocalName(),
+				alias
+		);
+		SqmFrom<?, ?> path = pathRegistry.findFromByPath( navigablePath );
+		if ( path == null ) {
+			final PluralPersistentAttribute<?, ?, E> referencedPathSource = getReferencedPathSource();
+			final SqmFrom<?, Object> parent = pathRegistry.resolveFrom( getLhs() );
+			final SqmQualifiedJoin<Object, ?> join;
+			final SqmExpression<?> index;
+			if ( referencedPathSource instanceof ListPersistentAttribute<?, ?> ) {
+				//noinspection unchecked
+				join = new SqmListJoin<>(
+						parent,
+						(ListPersistentAttribute<Object, ?>) referencedPathSource,
+						alias,
+						SqmJoinType.INNER,
+						false,
+						parent.nodeBuilder()
+				);
+				index = ( (SqmListJoin<?, ?>) join ).index();
+			}
+			else if ( referencedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
+				//noinspection unchecked
+				join = new SqmMapJoin<>(
+						parent,
+						(MapPersistentAttribute<Object, ?, ?>) referencedPathSource,
+						alias,
+						SqmJoinType.INNER,
+						false,
+						parent.nodeBuilder()
+				);
+				index = ( (SqmMapJoin<?, ?, ?>) join ).key();
+			}
+			else {
+				throw new SemanticException( "Index access is only supported on list or map attributes: " + getNavigablePath() );
+			}
+			join.setJoinPredicate( creationState.getCreationContext().getNodeBuilder().equal( index, selector ) );
+			parent.addSqmJoin( join );
+			pathRegistry.register( path = join );
+		}
+		return new SqmIndexedCollectionAccessPath<>(
+				path.getNavigablePath(),
+				path,
+				selector
 		);
 	}
 

@@ -49,7 +49,7 @@ public class DefaultSchemaNameResolver implements SchemaNameResolver {
 					connection.getSchema();
 					return new SchemaNameResolverJava17Delegate();
 				}
-				catch (java.lang.AbstractMethodError e) {
+				catch (AbstractMethodError e) {
 					log.debugf( "Unable to use Java 1.7 Connection#getSchema" );
 					return SchemaNameResolverFallbackDelegate.INSTANCE;
 				}

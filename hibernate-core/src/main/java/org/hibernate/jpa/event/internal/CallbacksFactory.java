@@ -16,7 +16,7 @@ import org.hibernate.service.ServiceRegistry;
 /**
  * The intent of this class is to use a lighter implementation
  * when JPA callbacks are disabled via
- * {@link org.hibernate.boot.spi.SessionFactoryOptions#areJPACallbacksEnabled()}
+ * {@link SessionFactoryOptions#areJPACallbacksEnabled()}
  */
 public final class CallbacksFactory {
 	public static CallbackRegistryImplementor buildCallbackRegistry(SessionFactoryOptions options) {

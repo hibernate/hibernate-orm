@@ -34,7 +34,7 @@ public interface MariaDBSpatialDialectTrait extends SpatialDialect {
 
 	SpatialFunctionsRegistry spatialFunctions();
 
-	@Override
+
 	default String getSpatialRelateSQL(String columnName, int spatialRelation) {
 		switch ( spatialRelation ) {
 			case SpatialRelation.WITHIN:
@@ -61,39 +61,37 @@ public interface MariaDBSpatialDialectTrait extends SpatialDialect {
 		}
 	}
 
-	@Override
+
 	default String getSpatialFilterExpression(String columnName) {
 		return String.format( Locale.ENGLISH, "MBRIntersects(%s,?)", columnName
 		);
 	}
 
-	@Override
+
 	default String getSpatialAggregateSQL(String columnName, int aggregation) {
 		throw new UnsupportedOperationException( "MariaDB has no spatial aggregate functions." );
 	}
 
-	@Override
+
 	default String getDWithinSQL(String columnName) {
 		throw new UnsupportedOperationException( "MariaDB doesn't support the DWithin function." );
 	}
 
-	@Override
+
 	default String getHavingSridSQL(String columnName) {
 		return " (ST_SRID(" + columnName + ") = ?) ";
 	}
 
-	@Override
+
 	default String getIsEmptySQL(String columnName, boolean isEmpty) {
 		final String emptyExpr = " ST_IsEmpty(" + columnName + ") ";
 		return isEmpty ? emptyExpr : "( NOT " + emptyExpr + ")";
 	}
 
-	@Override
 	default boolean supportsFiltering() {
 		return true;
 	}
 
-	@Override
 	default boolean supports(SpatialFunction function) {
 		return spatialFunctions().get( function.toString() ) != null;
 	}

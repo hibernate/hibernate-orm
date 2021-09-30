@@ -7,12 +7,12 @@
 package org.hibernate.jpamodelgen.test.elementcollection;
 
 import java.util.Map;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.MapKeyClass;
-import javax.persistence.OneToMany;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.OneToMany;
 
 
 /**

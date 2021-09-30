@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
-import javax.persistence.EnumType;
+import jakarta.persistence.EnumType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;

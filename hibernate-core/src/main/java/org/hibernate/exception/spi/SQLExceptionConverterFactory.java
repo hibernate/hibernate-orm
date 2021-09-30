@@ -74,7 +74,7 @@ public class SQLExceptionConverterFactory {
 
 	/**
 	 * Builds a minimal converter.  The instance returned here just always converts to
-	 * {@link org.hibernate.exception.GenericJDBCException}.
+	 * {@link GenericJDBCException}.
 	 *
 	 * @return The minimal converter.
 	 */

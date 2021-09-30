@@ -6,7 +6,7 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import javax.persistence.DiscriminatorType;
+import jakarta.persistence.DiscriminatorType;
 
 /**
  * Marshalling support for dealing with JPA DiscriminatorType enums.  Plugged into JAXB for binding

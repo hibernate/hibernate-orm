@@ -80,6 +80,7 @@ public class IdBagBinder extends BagBinder {
 		final Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
 				collectionIdAnn.columns(),
 				null,
+				null,
 				Nullability.FORCED_NOT_NULL,
 				propertyHolder,
 				propertyData,

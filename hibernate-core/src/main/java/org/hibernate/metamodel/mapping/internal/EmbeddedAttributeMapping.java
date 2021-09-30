@@ -197,16 +197,6 @@ public class EmbeddedAttributeMapping
 	}
 
 	@Override
-	public Fetch resolveCircularFetch(
-			NavigablePath fetchablePath,
-			FetchParent fetchParent,
-			FetchTiming fetchTiming,
-			DomainResultCreationState creationState) {
-		// an embeddable can never be circular
-		return null;
-	}
-
-	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,
@@ -285,7 +275,8 @@ public class EmbeddedAttributeMapping
 		final CompositeTableGroup compositeTableGroup = new CompositeTableGroup(
 				navigablePath,
 				this,
-				lhs
+				lhs,
+				fetched
 		);
 
 		TableGroupJoin tableGroupJoin = new TableGroupJoin(

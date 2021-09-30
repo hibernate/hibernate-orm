@@ -6,13 +6,11 @@
  */
 package org.hibernate.event.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 
 /**
  * @author Gavin King
  */
-public interface FlushEntityEventListener extends Serializable {
+public interface FlushEntityEventListener {
 	public void onFlushEntity(FlushEntityEvent event) throws HibernateException;
 }

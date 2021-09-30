@@ -12,7 +12,7 @@ import java.sql.Types;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SqlTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
 
@@ -21,7 +21,7 @@ import org.geolatte.geom.codec.db.oracle.OracleJDBCTypeFactory;
  *
  * @author Karel Maesen, Geovise BVBA
  */
-public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
+public class SDOGeometryTypeDescriptor implements JdbcTypeDescriptor {
 
 	private final OracleJDBCTypeFactory typeFactory;
 
@@ -35,7 +35,7 @@ public class SDOGeometryTypeDescriptor implements SqlTypeDescriptor {
 	}
 
 	@Override
-	public int getSqlType() {
+	public int getJdbcTypeCode() {
 		return Types.STRUCT;
 	}
 

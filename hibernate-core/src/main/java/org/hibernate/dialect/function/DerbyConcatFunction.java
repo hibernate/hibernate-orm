@@ -6,34 +6,56 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.StandardBasicTypes;
 
 public class DerbyConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
-	public DerbyConcatFunction() {
+
+	private final Dialect dialect;
+
+	public DerbyConcatFunction(Dialect dialect) {
 		super(
 				"concat",
 				StandardArgumentsValidators.min( 1 ),
 				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
 		);
+		this.dialect = dialect;
 	}
 
 	@Override
 	public void render(SqlAppender sqlAppender, List<SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( '(' );
-		walker.render( sqlAstArguments.get( 0 ), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( 0 ) );
 		for ( int i = 1; i < sqlAstArguments.size(); i++ ) {
 			sqlAppender.appendSql( "||" );
-			walker.render( sqlAstArguments.get( i ), SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+			renderAsString( sqlAppender, walker, (Expression) sqlAstArguments.get( i ) );
 		}
 		sqlAppender.appendSql( ')' );
+	}
+
+	private void renderAsString(SqlAppender sqlAppender, SqlAstTranslator<?> translator, Expression expression) {
+		final JdbcMapping sourceMapping = expression.getExpressionType().getJdbcMappings().get( 0 );
+		// No need to cast if we already have a string
+		if ( sourceMapping.getCastType() == CastType.STRING ) {
+			translator.render( expression, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+		}
+		else {
+			final String cast = dialect.castPattern( sourceMapping.getCastType(), CastType.STRING );
+			new PatternRenderer( cast ).render( sqlAppender, Collections.singletonList( expression ), translator );
+		}
 	}
 }

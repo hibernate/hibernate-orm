@@ -1123,7 +1123,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	public void forEachCollectionEntry(BiConsumer<PersistentCollection, CollectionEntry> action, boolean concurrent) {
 		if ( collectionEntries != null ) {
 			if ( concurrent ) {
-				for ( Map.Entry<PersistentCollection,CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
+				for ( Entry<PersistentCollection,CollectionEntry> entry : IdentityMap.concurrentEntries( collectionEntries ) ) {
 					action.accept( entry.getKey(), entry.getValue() );
 				}
 			}
@@ -1563,7 +1563,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		oos.writeBoolean( defaultReadOnly );
 		oos.writeBoolean( hasNonReadOnlyEntities );
 
-		final Serializer<Map.Entry<EntityKey, Object>> entityKeySerializer = (entry, stream) -> {
+		final Serializer<Entry<EntityKey, Object>> entityKeySerializer = (entry, stream) -> {
 			entry.getKey().serialize( stream );
 			stream.writeObject( entry.getValue() );
 		};

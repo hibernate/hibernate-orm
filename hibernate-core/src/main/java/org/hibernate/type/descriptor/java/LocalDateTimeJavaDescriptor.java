@@ -15,7 +15,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -77,7 +77,7 @@ public class LocalDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<
 			return (X) value;
 		}
 
-		if ( java.sql.Timestamp.class.isAssignableFrom( type ) ) {
+		if ( Timestamp.class.isAssignableFrom( type ) ) {
 			/*
 			 * Workaround for HHH-13266 (JDK-8061577).
 			 * We used to do Timestamp.from( value.atZone( ZoneId.systemDefault() ).toInstant() ),
@@ -98,9 +98,9 @@ public class LocalDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<
 			return (X) java.sql.Time.from( instant );
 		}
 
-		if ( java.util.Date.class.isAssignableFrom( type ) ) {
+		if ( Date.class.isAssignableFrom( type ) ) {
 			Instant instant = value.atZone( ZoneId.systemDefault() ).toInstant();
-			return (X) java.util.Date.from( instant );
+			return (X) Date.from( instant );
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {

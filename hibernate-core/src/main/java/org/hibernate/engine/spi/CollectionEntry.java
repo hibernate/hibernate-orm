@@ -404,7 +404,7 @@ public final class CollectionEntry implements Serializable {
 	 * Session/PersistenceContext for increased performance.
 	 *
 	 * @param oos The stream to which we should write the serial data.
-	 * @throws java.io.IOException
+	 * @throws IOException
 	 */
 	public void serialize(ObjectOutputStream oos) throws IOException {
 		oos.writeObject( role );

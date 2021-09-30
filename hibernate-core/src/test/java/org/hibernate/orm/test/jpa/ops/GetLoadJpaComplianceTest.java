@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.ops;
 
-import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;

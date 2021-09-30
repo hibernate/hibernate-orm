@@ -84,6 +84,4 @@ public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implemen
 				nodeBuilder()
 		);
 	}
-
-
 }

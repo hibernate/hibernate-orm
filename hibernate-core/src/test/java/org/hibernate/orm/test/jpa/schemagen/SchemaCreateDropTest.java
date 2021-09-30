@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.schemagen;
 
-import javax.persistence.TypedQuery;
+import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 import org.hibernate.testing.TestForIssue;

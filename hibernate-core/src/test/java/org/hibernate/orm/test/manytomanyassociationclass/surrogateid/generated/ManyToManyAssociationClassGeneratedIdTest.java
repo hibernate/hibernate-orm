@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.manytomanyassociationclass.surrogateid.generated;
 
 import java.util.HashSet;
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.hibernate.exception.ConstraintViolationException;
 

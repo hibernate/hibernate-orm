@@ -9,7 +9,7 @@ package org.hibernate.jpa.test.mapping;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 /**
  * @author Emmanuel Bernard

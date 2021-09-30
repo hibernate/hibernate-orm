@@ -56,6 +56,11 @@ public class DynamicResultBuilderAttribute implements DynamicResultBuilder, Nati
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return attributeMapping.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public NativeQuery.ReturnProperty addColumnAlias(String columnAlias) {
 		throw new UnsupportedOperationException();
 	}

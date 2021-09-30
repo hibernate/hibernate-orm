@@ -16,7 +16,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -64,7 +64,7 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor
 				return DateTypeDescriptor.INSTANCE;
 			}
 			default: {
-				throw new IllegalArgumentException( "Unexpected javax.persistence.TemporalType : " + temporalPrecision );
+				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );
 			}
 		}
 	}

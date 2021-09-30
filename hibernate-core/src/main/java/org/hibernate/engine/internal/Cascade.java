@@ -38,10 +38,10 @@ import org.hibernate.type.Type;
 
 /**
  * Delegate responsible for, in conjunction with the various
- * {@link org.hibernate.engine.spi.CascadingAction actions}, implementing cascade processing.
+ * {@link CascadingAction actions}, implementing cascade processing.
  *
  * @author Gavin King
- * @see org.hibernate.engine.spi.CascadingAction
+ * @see CascadingAction
  */
 public final class Cascade {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( Cascade.class );

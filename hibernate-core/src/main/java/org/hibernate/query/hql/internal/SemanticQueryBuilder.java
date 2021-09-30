@@ -55,7 +55,6 @@ import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.BinaryArithmeticOperator;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.NavigablePath;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
@@ -97,8 +96,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
-import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
-import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMaxElementPath;
@@ -183,6 +180,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -3040,7 +3038,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 	}
 
-	private <J> BasicDomainType<J> resolveExpressableTypeBasic(Class<J> javaType) {
+	private <J> BasicType<J> resolveExpressableTypeBasic(Class<J> javaType) {
 		return creationContext.getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 	}
 
@@ -3096,7 +3094,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					functionName,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE )
+					StandardFunctionReturnTypeResolvers.invariant(
+							resolveExpressableTypeBasic( Object.class )
+					)
 			);
 		}
 		return functionTemplate.generateSqmExpression(
@@ -3140,7 +3140,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					functionName,
 					true,
 					null,
-					StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.OBJECT_TYPE ),
+					StandardFunctionReturnTypeResolvers.invariant(
+							resolveExpressableTypeBasic( Object.class )
+					),
 					functionName,
 					filterExpression != null ? FunctionKind.AGGREGATE : FunctionKind.NORMAL,
 					null,
@@ -3962,7 +3964,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SemanticPathPart visitGeneralPathFragment(HqlParser.GeneralPathFragmentContext ctx) {
-		return visitDotIdentifierSequence( (HqlParser.DotIdentifierSequenceContext) ctx.getChild( 0 ) );
+		return visitIndexedPathAccessFragment(
+				(HqlParser.DotIdentifierSequenceContext) ctx.getChild( 0 ),
+				ctx.getChildCount() == 1 ? null : (HqlParser.IndexedPathAccessFragmentContext) ctx.getChild( 1 )
+		);
 	}
 
 	@Override
@@ -3981,84 +3986,37 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			return visitMapKeyNavigablePath( (HqlParser.MapKeyNavigablePathContext) firstChild );
 		}
 		else if ( firstChild instanceof HqlParser.DotIdentifierSequenceContext && ctx.getChildCount() == 2 ) {
-			dotIdentifierConsumerStack.push(
-					new QualifiedJoinPathConsumer(
-							(SqmRoot<?>) dotIdentifierConsumerStack.getCurrent().getConsumedPart(),
-							SqmJoinType.INNER,
-							false,
-							null,
-							this
-					)
+			return visitIndexedPathAccessFragment(
+					(HqlParser.DotIdentifierSequenceContext) firstChild,
+					(HqlParser.IndexedPathAccessFragmentContext) ctx.getChild( 1 )
 			);
-
-			final SqmAttributeJoin<?, ?> indexedJoinPath;
-			try {
-				indexedJoinPath = (SqmAttributeJoin<?, ?>) firstChild.accept( this );
-			}
-			finally {
-				dotIdentifierConsumerStack.pop();
-			}
-			dotIdentifierConsumerStack.push(
-					new BasicDotIdentifierConsumer( indexedJoinPath, this ) {
-						@Override
-						protected void reset() {
-						}
-					}
-			);
-			try {
-				return (SemanticPathPart) ctx.getChild( 1 ).accept( this );
-			}
-			finally {
-				dotIdentifierConsumerStack.pop();
-			}
 		}
 
 		throw new ParsingException( "Unsure how to process `syntacticDomainPath` over : " + ctx.getText() );
 	}
 
-	@Override
-	public SemanticPathPart visitIndexedPathAccessFragment(HqlParser.IndexedPathAccessFragmentContext ctx) {
-		final DotIdentifierConsumer consumer = dotIdentifierConsumerStack.pop();
-		final SqmExpression<?> indexExpression = (SqmExpression<?>) ctx.getChild( 1 ).accept( this );
-		final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) consumer.getConsumedPart();
-		final NavigablePath navigablePath = attributeJoin.getNavigablePath().getParent().append(
-				attributeJoin.getNavigablePath().getLocalName(),
-				indexExpression.toHqlString()
-		);
-		// Reuse an existing indexed path join if possible
-		for ( SqmJoin<?, ?> sqmJoin : attributeJoin.getSqmJoins() ) {
-			if ( sqmJoin.getNavigablePath().getLocalName().equals( navigablePath.getLocalName() ) ) {
-				return sqmJoin;
-			}
+	private SemanticPathPart visitIndexedPathAccessFragment(
+			HqlParser.DotIdentifierSequenceContext ctx,
+			HqlParser.IndexedPathAccessFragmentContext idxCtx) {
+		final SemanticPathPart pathPart = visitDotIdentifierSequence( ctx );
+
+		if ( idxCtx == null ) {
+			return pathPart;
 		}
 
-		final SqmExpression<?> index;
-		if ( attributeJoin instanceof SqmListJoin<?, ?> ) {
-			index = ( (SqmListJoin<?, ?>) attributeJoin ).index();
+		final SqmExpression<?> indexExpression = (SqmExpression<?>) idxCtx.getChild( 1 ).accept(this );
+		final boolean hasIndexContinuation = idxCtx.getChildCount() == 5;
+		final SqmPath<?> indexedPath = pathPart.resolveIndexedAccess( indexExpression, !hasIndexContinuation, this );
+
+		if ( hasIndexContinuation ) {
+			return (SemanticPathPart) idxCtx.getChild( 4 ).accept( this );
 		}
-		else if ( attributeJoin instanceof SqmMapJoin<?, ?, ?> ) {
-			index = ( (SqmMapJoin<?, ?, ?>) attributeJoin ).key();
-		}
-		else {
-			throw new SemanticException( "Index access is only supported on list or map attributes: " + attributeJoin.getNavigablePath() );
-		}
-		attributeJoin.setJoinPredicate( creationContext.getNodeBuilder().equal( index, indexExpression ) );
-		final SqmIndexedCollectionAccessPath<?> path = new SqmIndexedCollectionAccessPath<>(
-				navigablePath,
-				attributeJoin,
-				indexExpression
-		);
-		dotIdentifierConsumerStack.push(
-				new BasicDotIdentifierConsumer( path, this ) {
-					@Override
-					protected void reset() {
-					}
-				}
-		);
-		if ( ctx.getChildCount() == 5 ) {
-			return (SemanticPathPart) ctx.getChild( 4 ).accept( this );
-		}
-		return path;
+		return indexedPath;
+	}
+
+	@Override
+	public SemanticPathPart visitIndexedPathAccessFragment(HqlParser.IndexedPathAccessFragmentContext idxCtx) {
+		throw new UnsupportedOperationException( "Should be handled by #visitIndexedPathAccessFragment" );
 	}
 
 	@Override

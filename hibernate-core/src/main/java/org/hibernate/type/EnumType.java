@@ -14,8 +14,8 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Locale;
 import java.util.Properties;
-import javax.persistence.Enumerated;
-import javax.persistence.MapKeyEnumerated;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.MapKeyEnumerated;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -123,14 +123,14 @@ public class EnumType<T extends Enum<T>>
 			final Long columnLength = reader.getColumnLengths()[0];
 
 			final boolean isOrdinal;
-			final javax.persistence.EnumType enumType = getEnumType( reader );
+			final jakarta.persistence.EnumType enumType = getEnumType( reader );
 			if ( enumType == null ) {
 				isOrdinal = true;
 			}
-			else if ( javax.persistence.EnumType.ORDINAL.equals( enumType ) ) {
+			else if ( jakarta.persistence.EnumType.ORDINAL.equals( enumType ) ) {
 				isOrdinal = true;
 			}
-			else if ( javax.persistence.EnumType.STRING.equals( enumType ) ) {
+			else if ( jakarta.persistence.EnumType.STRING.equals( enumType ) ) {
 				isOrdinal = false;
 			}
 			else {
@@ -197,10 +197,14 @@ public class EnumType<T extends Enum<T>>
 	private BasicJavaDescriptor<?> resolveRelationalJavaTypeDescriptor(
 			LocalJdbcTypeDescriptorIndicators indicators,
 			EnumJavaTypeDescriptor<?> enumJavaDescriptor) {
-		return enumJavaDescriptor.getRecommendedJdbcType( indicators ).getJdbcRecommendedJavaTypeMapping( typeConfiguration );
+		return enumJavaDescriptor.getRecommendedJdbcType( indicators ).getJdbcRecommendedJavaTypeMapping(
+				null,
+				null,
+				typeConfiguration
+		);
 	}
 
-	private javax.persistence.EnumType getEnumType(ParameterType reader) {
+	private jakarta.persistence.EnumType getEnumType(ParameterType reader) {
 		if ( reader == null ) {
 			return null;
 		}
@@ -240,7 +244,7 @@ public class EnumType<T extends Enum<T>>
 
 		final LocalJdbcTypeDescriptorIndicators localIndicators = new LocalJdbcTypeDescriptorIndicators(
 				// use ORDINAL as default for hbm.xml mappings
-				javax.persistence.EnumType.ORDINAL,
+				jakarta.persistence.EnumType.ORDINAL,
 				// Is there a reasonable value here?  Limits the
 				// number of enums that can be stored:
 				// 	1 = 10
@@ -445,11 +449,11 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	private class LocalJdbcTypeDescriptorIndicators implements JdbcTypeDescriptorIndicators {
-		private final javax.persistence.EnumType enumType;
+		private final jakarta.persistence.EnumType enumType;
 		private final Long columnLength;
 		private final ParameterType reader;
 
-		public LocalJdbcTypeDescriptorIndicators(javax.persistence.EnumType enumType, Long columnLength, ParameterType reader) {
+		public LocalJdbcTypeDescriptorIndicators(jakarta.persistence.EnumType enumType, Long columnLength, ParameterType reader) {
 			this.enumType = enumType;
 			this.columnLength = columnLength;
 			this.reader = reader;
@@ -461,7 +465,7 @@ public class EnumType<T extends Enum<T>>
 		}
 
 		@Override
-		public javax.persistence.EnumType getEnumeratedType() {
+		public jakarta.persistence.EnumType getEnumeratedType() {
 			if ( enumType != null ) {
 				return enumType;
 			}

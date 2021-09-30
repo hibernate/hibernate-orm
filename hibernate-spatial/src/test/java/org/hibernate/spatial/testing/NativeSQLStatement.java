@@ -18,6 +18,7 @@ import java.sql.SQLException;
  *
  * @author Karel Maesen, Geovise BVBA
  */
+@Deprecated
 public interface NativeSQLStatement {
 
 	/**

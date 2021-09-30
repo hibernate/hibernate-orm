@@ -219,13 +219,13 @@ public class JpaDescriptorParser {
 		final File file = getSerializationTmpFile();
 		if ( file.exists() ) {
 			try {
-				try ( java.io.FileInputStream fileInputStream = new java.io.FileInputStream( file ) ) {
-					try ( java.io.ObjectInputStream in = new java.io.ObjectInputStream( fileInputStream ) ) {
-						return (org.hibernate.jpamodelgen.util.FileTimeStampChecker) in.readObject();
+				try ( FileInputStream fileInputStream = new FileInputStream( file ) ) {
+					try ( ObjectInputStream in = new ObjectInputStream( fileInputStream ) ) {
+						return (FileTimeStampChecker) in.readObject();
 					}
 				}
 			}
-			catch (java.io.IOException e) {
+			catch (IOException e) {
 				//handled in the outer scope
 			}
 			catch (ClassNotFoundException e) {

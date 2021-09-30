@@ -6,16 +6,15 @@
  */
 package org.hibernate.orm.test.annotations.loader;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.Loader;
-import org.hibernate.annotations.NamedNativeQueries;
 import org.hibernate.annotations.NamedQuery;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;

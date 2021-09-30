@@ -7,7 +7,7 @@
 package org.hibernate.jpamodelgen.test.inheritance.basic;
 
 import java.sql.Date;
-import javax.persistence.MappedSuperclass;
+import jakarta.persistence.MappedSuperclass;
 
 
 /**

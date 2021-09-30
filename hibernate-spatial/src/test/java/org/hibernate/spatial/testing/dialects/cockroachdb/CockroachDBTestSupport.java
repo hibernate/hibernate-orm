@@ -7,39 +7,54 @@
 
 package org.hibernate.spatial.testing.dialects.cockroachdb;
 
-import org.hibernate.spatial.integration.TestGeolatteSpatialPredicates;
-import org.hibernate.spatial.integration.TestJTSSpatialPredicates;
-import org.hibernate.spatial.integration.TestSpatialFunctions;
-import org.hibernate.spatial.integration.TestSpatialRestrictions;
+import org.hibernate.spatial.GeomCodec;
+import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
-import org.hibernate.spatial.testing.dialects.postgis.PostgisExpressionTemplate;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
+import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
+import org.hibernate.spatial.testing.dialects.PredicateRegexes;
+import org.hibernate.spatial.testing.dialects.postgis.PostgisNativeSQLTemplates;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.geolatte.geom.Geometry;
+import org.geolatte.geom.codec.Wkt;
 
 public class CockroachDBTestSupport extends TestSupport {
+
 	@Override
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
-		Class<? extends BaseCoreFunctionalTestCase> testcaseClass = testcase.getClass();
-		if ( ( testcaseClass == TestSpatialFunctions.class ) ||
-				( testcaseClass == TestSpatialRestrictions.class ) ||
-				( testcaseClass == TestJTSSpatialPredicates.class ) ||
-				( testcaseClass == TestGeolatteSpatialPredicates.class ) ) {
-			return TestData.fromFile( "cockroachdb/functions-test.xml" );
+	public NativeSQLTemplates templates() {
+		return new PostgisNativeSQLTemplates();
+	}
+
+	@Override
+	public PredicateRegexes predicateRegexes() {
+		return new CrPredicateRegexes();
+	}
+
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
+		switch ( purpose ) {
+			case SpatialFunctionsData:
+				return TestData.fromFile( "cockroachdb/functions-test.xml" );
+			default:
+				return TestData.fromFile( "cockroachdb/test-data-set.xml" );
 		}
-		return TestData.fromFile( "cockroachdb/test-data-set.xml" );
 	}
 
-	@Override
-	public AbstractExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new CockroachDBExpectationsFactory( dataSourceUtils );
+	public GeomCodec codec() {
+		return new GeomCodec() {
+			@Override
+			public Geometry<?> toGeometry(Object in) {
+				return PGGeometryTypeDescriptor.INSTANCE_WKB_2.toGeometry( in );
+			}
+
+			@Override
+			public Object fromGeometry(Geometry<?> in) {
+				return Wkt.toWkt( in, Wkt.Dialect.POSTGIS_EWKT_1 );
+			}
+		};
 	}
 
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new PostgisExpressionTemplate();
-	}
 }
+
+class CrPredicateRegexes extends PredicateRegexes{ }

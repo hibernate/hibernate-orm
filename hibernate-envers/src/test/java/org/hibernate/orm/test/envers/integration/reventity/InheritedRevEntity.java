@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.envers.integration.reventity;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 import org.hibernate.envers.RevisionEntity;
 import org.hibernate.envers.enhanced.SequenceIdRevisionEntity;

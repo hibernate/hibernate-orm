@@ -65,6 +65,11 @@ public class CompleteResultBuilderCollectionStandard implements CompleteResultBu
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return pluralAttributeDescriptor.getExpressableJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public String getTableAlias() {
 		return tableAlias;
 	}

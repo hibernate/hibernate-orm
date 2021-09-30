@@ -15,7 +15,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
 /**
- * A helper to centralize conversion of {@link java.sql.SQLException}s to {@link org.hibernate.JDBCException}s.
+ * A helper to centralize conversion of {@link SQLException}s to {@link JDBCException}s.
  * <p/>
  * Used while querying JDBC metadata during bootstrapping
  *

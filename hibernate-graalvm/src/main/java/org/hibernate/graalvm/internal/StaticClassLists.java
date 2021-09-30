@@ -6,7 +6,7 @@
  */
 package org.hibernate.graalvm.internal;
 
-import org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor;
+import org.hibernate.tool.schema.internal.script.MultiLineSqlScriptExtractor;
 import org.hibernate.type.EnumType;
 
 /**
@@ -42,7 +42,7 @@ final class StaticClassLists {
 				org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl.class,
 				org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl.class,
 				EnumType.class,
-				MultipleLinesSqlCommandExtractor.class,
+				MultiLineSqlScriptExtractor.class,
 
 		};
 	}

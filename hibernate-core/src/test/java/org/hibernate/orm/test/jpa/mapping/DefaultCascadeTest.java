@@ -7,11 +7,11 @@
 package org.hibernate.orm.test.jpa.mapping;
 
 import java.util.Arrays;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 
@@ -82,7 +82,7 @@ public class DefaultCascadeTest {
 	public static class EJB3DDMappingProvider extends NonStringValueSettingProvider {
 		@Override
 		public String getKey() {
-			return AvailableSettings.XML_FILE_NAMES;
+			return AvailableSettings.ORM_XML_FILES;
 		}
 
 		@Override

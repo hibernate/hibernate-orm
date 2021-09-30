@@ -72,7 +72,7 @@ public class BasicCollectionInitializor<T extends Collection> extends AbstractCo
 		// collectionRow will be the actual object if retrieved from audit relation or middle table
 		// otherwise it will be a List
 		Object elementData = collectionRow;
-		if ( collectionRow instanceof java.util.List ) {
+		if ( collectionRow instanceof List ) {
 			elementData = ( (List) collectionRow ).get( elementComponentData.getComponentIndex() );
 		}
 

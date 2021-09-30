@@ -16,10 +16,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.SingularAttribute;
-import javax.persistence.metamodel.Type;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
@@ -410,17 +410,21 @@ public class MetadataContext {
 				}
 			}
 
-			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes );
-
 			// see if it also has an IdClass (identifier-mapper)
 			final Component idClass = persistentClass.getIdentifierMapper();
+			final EmbeddableTypeImpl<?> idClassType;
 			if ( idClass != null ) {
-				applyIdClassMetadata( (Component) persistentClass.getIdentifier(), idClass );
+				idClassType = applyIdClassMetadata( (Component) persistentClass.getIdentifier(), idClass );
 			}
+			else {
+				idClassType = null;
+			}
+
+			( ( AttributeContainer) identifiableType ).getInFlightAccess().applyNonAggregatedIdAttributes( idAttributes, idClassType );
 		}
 	}
 
-	private void applyIdClassMetadata(Component identifier, Component idClass) {
+	private EmbeddableTypeImpl<?> applyIdClassMetadata(Component identifier, Component idClass) {
 		final JavaTypeDescriptorRegistry registry = getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 		final Class<?> componentClass = identifier.getComponentClass();
@@ -439,6 +443,7 @@ public class MetadataContext {
 				getJpaMetamodel()
 		);
 		registerEmbeddableType( embeddableType, idClass );
+		return embeddableType;
 	}
 
 	@SuppressWarnings({"unchecked", "rawtypes"})

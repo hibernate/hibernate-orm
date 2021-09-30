@@ -18,7 +18,7 @@ public interface SqlSelectionProducer {
 	 * Create a SqlSelection for the given JDBC ResultSet position
 	 *
 	 * @param jdbcPosition The index position used to read values from JDBC
-	 * @param valuesArrayPosition The position in our {@linkplain RowProcessingState#getJdbcValue(org.hibernate.sql.ast.spi.SqlSelection) "current JDBC values array"}
+	 * @param valuesArrayPosition The position in our {@linkplain RowProcessingState#getJdbcValue(SqlSelection) "current JDBC values array"}
 	 * @param javaTypeDescriptor The descriptor for the Java type to read the value as
 	 * @param typeConfiguration The associated TypeConfiguration
 	 */

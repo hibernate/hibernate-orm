@@ -11,11 +11,11 @@ import java.util.List;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
-import org.hibernate.spatial.dialect.oracle.criterion.OracleSpatialAggregate;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -317,7 +317,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 		private final int analysis;
 		private final boolean isOGCStrict;
 
-		private SpatialAnalysisFunction(String name, Type returnType, int analysis, boolean isOGCStrict) {
+		private SpatialAnalysisFunction(String name, AllowableFunctionReturnType returnType, int analysis, boolean isOGCStrict) {
 			super( name, returnType );
 			this.analysis = analysis;
 			this.isOGCStrict = isOGCStrict;

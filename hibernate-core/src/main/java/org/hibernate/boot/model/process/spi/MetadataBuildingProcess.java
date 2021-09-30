@@ -52,7 +52,7 @@ import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
 
 /**
- * Represents the process of of transforming a {@link org.hibernate.boot.MetadataSources}
+ * Represents the process of of transforming a {@link MetadataSources}
  * reference into a {@link org.hibernate.boot.Metadata} reference.  Allows for 2 different process paradigms:<ul>
  *     <li>
  *         Single step : as defined by the {@link #build} method; internally leverages the 2-step paradigm
@@ -356,7 +356,7 @@ public class MetadataBuildingProcess {
 
 		final TypeContributions typeContributions = new TypeContributions() {
 			@Override
-			public void contributeType(org.hibernate.type.BasicType type) {
+			public void contributeType(BasicType type) {
 				getBasicTypeRegistry().register( type );
 
 				final JavaTypeDescriptor<?> jtd;

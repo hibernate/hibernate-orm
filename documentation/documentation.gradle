@@ -11,26 +11,6 @@ plugins {
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-def projectsToIncludeInAggregatedJavadoc = [
-		':hibernate-core',
-		':hibernate-testing',
-		':hibernate-envers',
-		':hibernate-agroal',
-		':hibernate-c3p0',
-		':hibernate-graalvm',
-		':hibernate-hikaricp',
-		':hibernate-jcache',
-		':hibernate-micrometer',
-		':hibernate-proxool',
-		':hibernate-vibur',
-		':hibernate-gradle-plugin',
-		':hibernate-enhance-maven-plugin',
-		':hibernate-jpamodelgen',
-]
-
-projectsToIncludeInAggregatedJavadoc.each {projectPath ->
-	evaluationDependsOn projectPath
-}
 
 apply from: rootProject.file( 'gradle/java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
@@ -48,10 +28,8 @@ dependencies {
 
 	testImplementation project(':hibernate-testing')
 	testImplementation project(':hibernate-envers')
-	// todo (6.0) - add back hibernate-spatial dependency
-	//testImplementation project(':hibernate-spatial')
-	testImplementation project( ':hibernate-jcache' )
-	testImplementation libraries.jcache
+	testImplementation project(':hibernate-spatial')
+//	testImplementation project( ':hibernate-jcache' )
 	testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 
 	testImplementation 'org.apache.commons:commons-lang3:3.4'
@@ -90,82 +68,6 @@ task buildDocsForPublishing {
 }
 
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// aggregated JavaDoc
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-final File javadocDir = mkdir( new File( (File) project.buildDir, 'javadocs' ) );
-
-/**
- * Builds the JavaDocs aggregated (unified) across all the sub-projects
- */
-task aggregateJavadocs(type: Javadoc) {
-    description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
-
-    final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
-
-    // exclude any generated sources and internal packages
-    exclude( '**/generated-src/**' )
-    exclude( '**/internal/**' )
-
-
-	// apply standard config
-	maxMemory = '512m'
-	destinationDir = javadocDir
-	configure( options ) {
-		overview = project.file( 'src/main/javadoc/overview.html' )
-		windowTitle = 'Hibernate JavaDocs'
-		docTitle = "Hibernate JavaDoc ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-		use = true
-		options.encoding = 'UTF-8'
-
-		links = [
-				'https://docs.oracle.com/javase/8/docs/api/',
-				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'https://docs.jboss.org/cdi/api/2.0/',
-				'https://javaee.github.io/javaee-spec/javadocs/'
-		]
-		
-		if ( gradle.ext.javaVersions.main.compiler.asInt() >= 11 ) {
-			//The need to set `--source 1.8` applies to all JVMs after 11, and also to 11
-			// but after excluding the first two builds; see also specific comments on
-			// https://bugs.openjdk.java.net/browse/JDK-8212233?focusedCommentId=14245762
-			// For now, let's be compatible with JDK 11.0.3+. We can improve on it if people
-			// complain they cannot build with JDK 11.0.0, 11.0.1 and 11.0.2.
-			logger.lifecycle "Forcing Javadoc in Java 8 compatible mode"
-			options.source = gradle.ext.baselineJavaVersion
-		}
-
-		options.addStringOption( 'Xdoclint:none', '-quiet' )
-
-		if ( gradle.ext.javaToolchainEnabled ) {
-			options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
-							split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
-		}
-	}
-
-	if ( gradle.ext.javaToolchainEnabled ) {
-		// Display version of Java tools
-		doFirst {
-			logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
-		}
-	}
-
-    // process each project, building up:
-    //      1) appropriate sources
-    //      2) classpath
-	projectsToIncludeInAggregatedJavadoc.each {projectPath ->
-		def includeProject = parent.project(projectPath)
-
-		// we only care about the main SourceSet...
-		source includeProject.sourceSets.main.java
-		classpath += ( includeProject.sourceSets.main.output + includeProject.sourceSets.main.compileClasspath )
-
-	}
-}
-
-
 asciidoctorj {
 	attributes  icons: 'font',
 			experimental: true,
@@ -179,8 +81,10 @@ asciidoctorj {
 
 // Topical Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
+task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {task->
     description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
 
     sourceDir = file( 'src/main/asciidoc/topical' )
 	outputDir = new File("$buildDir/asciidoc/topical/html_single")
@@ -195,8 +99,10 @@ task renderTopicalGuides(type: AsciidoctorTask, group: 'Documentation') {
 
 // Getting Started Guides (quick starts) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
+task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {task->
     description = 'Renders the Getting Started Guides (quick starts) in HTML format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
 
     sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
     sources {
@@ -206,7 +112,7 @@ task renderGettingStartedGuides(type: AsciidoctorTask, group: 'Documentation') {
 }
 
 
-task buildTutorialZip(type: Zip) {
+task buildTutorialZip(type: Zip) {task->
 	from 'src/main/asciidoc/quickstart/tutorials'
 	destinationDirectory = tasks.renderGettingStartedGuides.outputDir
 	archiveBaseName = 'hibernate-tutorials.zip'
@@ -216,14 +122,16 @@ task buildTutorialZip(type: Zip) {
 			junit: project.junitVersion,
 			h2: project.h2Version
 	)
+	tasks.renderGettingStartedGuides.dependsOn task
 }
 
-renderGettingStartedGuides.dependsOn buildTutorialZip
 
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
+task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {task->
     description = 'Renders the User Guides in HTML format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
 
     sourceDir = file( 'src/main/asciidoc/userguide' )
     sources {
@@ -254,8 +162,10 @@ task renderUserGuide(type: AsciidoctorTask, group: 'Documentation') {
 
 // Integration Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {
+task renderIntegrationGuide(type: AsciidoctorTask, group: 'Documentation') {task->
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
+	tasks.buildDocs.dependsOn task
+	tasks.buildDocsForPublishing.dependsOn task
 
 	sourceDir = file( 'src/main/asciidoc/integrationguide' )
 	sources {
@@ -304,13 +214,11 @@ sourceSets.test.resources {
 // grouping tasks
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-buildDocs.dependsOn aggregateJavadocs
 buildDocs.dependsOn renderTopicalGuides
 buildDocs.dependsOn renderGettingStartedGuides
 buildDocs.dependsOn renderUserGuide
 buildDocs.dependsOn renderIntegrationGuide
 
-buildDocsForPublishing.dependsOn aggregateJavadocs
 buildDocsForPublishing.dependsOn renderTopicalGuides
 buildDocsForPublishing.dependsOn renderGettingStartedGuides
 buildDocsForPublishing.dependsOn renderUserGuide

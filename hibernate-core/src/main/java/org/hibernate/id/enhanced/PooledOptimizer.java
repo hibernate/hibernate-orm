@@ -21,7 +21,7 @@ import org.jboss.logging.Logger;
  * range in the database.
  * <p/>
  * Note that this optimizer works essentially the same as the
- * {@link org.hibernate.id.enhanced.HiLoOptimizer} except that here the bucket ranges are actually
+ * {@link HiLoOptimizer} except that here the bucket ranges are actually
  * encoded into the database structures.
  * <p/>
  * Note if you prefer that the database value be interpreted as the bottom end of our current range,

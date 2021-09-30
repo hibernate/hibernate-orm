@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import java.util.Calendar;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
@@ -19,8 +19,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * A type mapping {@link java.sql.Types#TIME TIME} and {@link Calendar}.
  * <p/>
- * For example, a Calendar attribute annotated with {@link javax.persistence.Temporal} and specifying
- * {@link javax.persistence.TemporalType#TIME}
+ * For example, a Calendar attribute annotated with {@link jakarta.persistence.Temporal} and specifying
+ * {@link jakarta.persistence.TemporalType#TIME}
  *
  * @author Steve Ebersole
  */

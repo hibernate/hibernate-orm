@@ -6,14 +6,14 @@
 
 Identifiers model the primary key of an entity. They are used to uniquely identify each specific entity.
 
-Hibernate and JPA both make the following assumptions about the corresponding database column(s):
+Hibernate and Jakarta Persistence both make the following assumptions about the corresponding database column(s):
 
 `UNIQUE`:: The values must uniquely identify each row.
 `NOT NULL`:: The values cannot be null. For composite ids, no part can
 be null.
 `IMMUTABLE`:: The values, once inserted, can never be changed.
 This is more a general guide, than a hard-fast rule as opinions vary.
-JPA defines the behavior of changing the value of the identifier attribute to be undefined; Hibernate simply does not support that.
+Jakarta Persistence defines the behavior of changing the value of the identifier attribute to be undefined; Hibernate simply does not support that.
 In cases where the values for the PK you have chosen will be updated, Hibernate recommends mapping the mutable value as a natural id, and use a surrogate id for the PK.
 See <<chapters/domain/natural_id.adoc#naturalid,Natural Ids>>.
 
@@ -31,9 +31,9 @@ An identifier might be simple (single value) or composite (multiple values).
 [[identifiers-simple]]
 ==== Simple identifiers
 
-Simple identifiers map to a single basic attribute, and are denoted using the `javax.persistence.Id` annotation.
+Simple identifiers map to a single basic attribute, and are denoted using the `jakarta.persistence.Id` annotation.
 
-According to JPA only the following types should be used as identifier attribute types:
+According to Jakarta Persistence only the following types should be used as identifier attribute types:
 
 * any Java primitive type
 * any primitive wrapper type
@@ -63,7 +63,7 @@ include::{sourcedir}/AssignedIdentifierTest.java[tag=identifiers-simple-assigned
 [[identifiers-simple-generated]]
 ===== Generated identifiers
 
-Values for simple identifiers can be generated. To denote that an identifier attribute is generated, it is annotated with `javax.persistence.GeneratedValue`
+Values for simple identifiers can be generated. To denote that an identifier attribute is generated, it is annotated with `jakarta.persistence.GeneratedValue`
 
 [[identifiers-simple-generated-mapping-example]]
 .Simple generated identifier
@@ -74,7 +74,7 @@ include::{sourcedir}/GeneratedIdentifierTest.java[tag=identifiers-simple-generat
 ----
 ====
 
-Additionally, to the type restriction list above, JPA says that if using generated identifier values (see below) only integer types (short, int, long) will be portably supported.
+Additionally, to the type restriction list above, Jakarta Persistence says that if using generated identifier values (see below) only integer types (short, int, long) will be portably supported.
 
 The expectation for generated identifier values is that Hibernate will generate the value when the save/persist occurs.
 
@@ -84,18 +84,18 @@ Identifier value generations strategies are discussed in detail in the <<identif
 ==== Composite identifiers
 
 Composite identifiers correspond to one or more persistent attributes.
-Here are the rules governing composite identifiers, as defined by the JPA specification:
+Here are the rules governing composite identifiers, as defined by the Jakarta Persistence specification:
 
 * The composite identifier must be represented by a "primary key class".
-The primary key class may be defined using the `javax.persistence.EmbeddedId` annotation (see <<identifiers-composite-aggregated>>),
-or defined using the `javax.persistence.IdClass` annotation (see <<identifiers-composite-nonaggregated>>).
+The primary key class may be defined using the `jakarta.persistence.EmbeddedId` annotation (see <<identifiers-composite-aggregated>>),
+or defined using the `jakarta.persistence.IdClass` annotation (see <<identifiers-composite-nonaggregated>>).
 * The primary key class must be public and must have a public no-arg constructor.
 * The primary key class must be serializable.
 * The primary key class must define equals and hashCode methods, consistent with equality for the underlying database types to which the primary key is mapped.
 
 [NOTE]
 ====
-The restriction that a composite identifier has to be represented by a "primary key class" (e.g. `@EmbeddedId` or `@IdClass`) is only JPA-specific.
+The restriction that a composite identifier has to be represented by a "primary key class" (e.g. `@EmbeddedId` or `@IdClass`) is only Jakarta Persistence-specific.
 
 Hibernate does allow composite identifiers to be defined without a "primary key class" via multiple `@Id` attributes.
 ====
@@ -133,8 +133,8 @@ include::{sourcedir}/EmbeddedIdManyToOneTest.java[tag=identifiers-basic-embedded
 ====
 Hibernate supports directly modeling `@ManyToOne` associations in the Primary Key class, whether `@EmbeddedId` or `@IdClass`.
 
-However, that is not portably supported by the JPA specification.
-In JPA terms, one would use "derived identifiers". For more details, see <<identifiers-derived>>.
+However, that is not portably supported by the Jakarta Persistence specification.
+In Jakarta Persistence terms, one would use "derived identifiers". For more details, see <<identifiers-derived>>.
 ====
 
 [[identifiers-composite-nonaggregated]]
@@ -176,10 +176,10 @@ include::{sourcedir}/IdClassGeneratedValueTest.java[tag=identifiers-basic-idclas
 
 [NOTE]
 ====
-This feature which allows auto-generated values in composite identifiers exists because of a highly questionable interpretation of the JPA specification made by the SpecJ committee.
+This feature which allows auto-generated values in composite identifiers exists because of a highly questionable interpretation of the Jakarta Persistence specification made by the SpecJ committee.
 
-Hibernate does not feel that JPA defines support for this, but added the feature simply to be usable in SpecJ benchmarks.
-Use of this feature may or may not be portable from a JPA perspective.
+Hibernate does not feel that Jakarta Persistence defines support for this, but added the feature simply to be usable in SpecJ benchmarks.
+Use of this feature may or may not be portable from a Jakarta Persistence perspective.
 ====
 
 [[identifiers-composite-associations]]
@@ -281,10 +281,10 @@ You can also auto-generate values for non-identifier attributes. For more detail
 ====
 
 Hibernate supports identifier value generation across a number of different types.
-Remember that JPA portably defines identifier value generation just for integer types.
+Remember that Jakarta Persistence portably defines identifier value generation just for integer types.
 
-Identifier value generation is indicated using the `javax.persistence.GeneratedValue` annotation.
-The most important piece of information here is the specified `javax.persistence.GenerationType` which indicates how values will be generated.
+Identifier value generation is indicated using the `jakarta.persistence.GeneratedValue` annotation.
+The most important piece of information here is the specified `jakarta.persistence.GenerationType` which indicates how values will be generated.
 
 [NOTE]
 ====
@@ -348,7 +348,7 @@ It is important to note that SequenceStyleGenerator is capable of working agains
 This gives Hibernate a huge degree of portability across databases while still maintaining consistent id generation behavior (versus say choosing between SEQUENCE and IDENTITY).
 This backing storage is completely transparent to the user.
 
-The preferred (and portable) way to configure this generator is using the JPA-defined `javax.persistence.SequenceGenerator` annotation.
+The preferred (and portable) way to configure this generator is using the Jakarta Persistence-defined `jakarta.persistence.SequenceGenerator` annotation.
 
 The simplest form is to simply request sequence generation; Hibernate will use a single, implicitly-named sequence (`hibernate_sequence`) for all such unnamed definitions.
 
@@ -361,7 +361,7 @@ include::{sourcedir}/SequenceGeneratorUnnamedTest.java[tag=identifiers-generator
 ----
 ====
 
-Using `javax.persistence.SequenceGenerator`, you can specify a specific database sequence name.
+Using `jakarta.persistence.SequenceGenerator`, you can specify a specific database sequence name.
 
 [[identifiers-generators-sequence-named]]
 .Named sequence
@@ -372,7 +372,7 @@ include::{sourcedir}/SequenceGeneratorNamedTest.java[tag=identifiers-generators-
 ----
 ====
 
-The `javax.persistence.SequenceGenerator` annotation allows you to specify additional configurations as well.
+The `jakarta.persistence.SequenceGenerator` annotation allows you to specify additional configurations as well.
 
 [[identifiers-generators-sequence-configured]]
 .Configured sequence
@@ -434,7 +434,7 @@ include::{extrasdir}/id/identifiers-generators-table-unnamed-mapping-example.sql
 
 If no table name is given Hibernate assumes an implicit name of `hibernate_sequences`.
 
-Additionally, because no `javax.persistence.TableGenerator#pkColumnValue` is specified,
+Additionally, because no `jakarta.persistence.TableGenerator#pkColumnValue` is specified,
 Hibernate will use the default segment (`sequence_name='default'`) from the hibernate_sequences table.
 
 However, you can configure the table identifier generator using the {jpaJavadocUrlPrefix}TableGenerator.html[`@TableGenerator`] annotation.
@@ -575,7 +575,7 @@ This way, the pooled and the pooled-lo optimizers allow you to reduce the number
 [[identifiers-derived]]
 ==== Derived Identifiers
 
-JPA 2.0 added support for derived identifiers which allow an entity to borrow the identifier from a many-to-one or one-to-one association.
+Java Persistence 2.0 added support for derived identifiers which allow an entity to borrow the identifier from a many-to-one or one-to-one association.
 
 [[identifiers-derived-mapsid]]
 .Derived identifier with `@MapsId`

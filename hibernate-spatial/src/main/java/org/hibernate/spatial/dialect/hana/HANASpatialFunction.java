@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.type.Type;
 
 public class HANASpatialFunction extends StandardSQLFunction {
@@ -32,13 +33,13 @@ public class HANASpatialFunction extends StandardSQLFunction {
 		this.staticFunction = staticFunction;
 	}
 
-	public HANASpatialFunction(String name, Type registeredType, boolean firstArgumentIsGeometryType) {
+	public HANASpatialFunction(String name, AllowableFunctionReturnType registeredType, boolean firstArgumentIsGeometryType) {
 		super( name, registeredType );
 		this.argumentIsGeometryTypeMask.set( 1, firstArgumentIsGeometryType );
 		this.staticFunction = false;
 	}
 
-	public HANASpatialFunction(String name, Type registeredType, boolean[] argumentIsGeometryTypeMask) {
+	public HANASpatialFunction(String name, AllowableFunctionReturnType registeredType, boolean[] argumentIsGeometryTypeMask) {
 		super( name, registeredType );
 		for ( int i = 0; i < argumentIsGeometryTypeMask.length; i++ ) {
 			this.argumentIsGeometryTypeMask.set( i + 1, argumentIsGeometryTypeMask[i] );
@@ -46,13 +47,13 @@ public class HANASpatialFunction extends StandardSQLFunction {
 		this.staticFunction = false;
 	}
 
-	public HANASpatialFunction(String name, Type registeredType, boolean firstArgumentIsGeometryType, boolean staticFunction) {
+	public HANASpatialFunction(String name, AllowableFunctionReturnType registeredType, boolean firstArgumentIsGeometryType, boolean staticFunction) {
 		super( name, registeredType );
 		this.argumentIsGeometryTypeMask.set( staticFunction ? 0 : 1, firstArgumentIsGeometryType );
 		this.staticFunction = staticFunction;
 	}
 
-	@Override
+
 	public String render(Type firstArgumentType, List arguments, SessionFactoryImplementor sessionFactory) {
 		if ( arguments.size() == 0 ) {
 			return getName() + "()";

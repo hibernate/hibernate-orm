@@ -37,7 +37,6 @@ import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.LockOptions;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
@@ -49,16 +48,10 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
-import org.hibernate.metamodel.mapping.CollectionPart;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
-import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ComparisonOperator;
@@ -102,7 +95,6 @@ import org.hibernate.sql.ast.tree.expression.JdbcLiteral;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.LiteralAsParameter;
-import org.hibernate.sql.ast.tree.expression.NullnessLiteral;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -251,7 +243,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	/**
 	 * A lazy session implementation that is needed for rendering literals.
-	 * Usually, only the {@link org.hibernate.type.descriptor.WrapperOptions} interface is needed,
+	 * Usually, only the {@link WrapperOptions} interface is needed,
 	 * but for creating LOBs, it might be to have a full blown session.
 	 */
 	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {
@@ -535,6 +527,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected Stack<QueryPart> getQueryPartStack() {
 		return queryPartStack;
+	}
+
+	@Override
+	public QueryPart getCurrentQueryPart() {
+		return queryPartStack.getCurrent();
 	}
 
 	@Override
@@ -3242,7 +3239,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				renderLiteral( literal, true );
 			}
 		}
-		else if ( expression instanceof NullnessLiteral || isParameter( expression ) ) {
+		else if ( isParameter( expression ) ) {
 			if ( parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_PARAMETERS || parameterRenderingMode == SqlAstNodeRenderingMode.INLINE_ALL_PARAMETERS ) {
 				renderExpressionAsLiteral( expression, getJdbcParameterBindings() );
 			}
@@ -3494,59 +3491,19 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderJoinType(SqlAstJoinType joinType) {
 		appendSql( joinType.getText() );
-		appendSql( " join " );
+		appendSql( "join " );
 	}
 
 	@Override
 	public void visitTableGroup(TableGroup tableGroup) {
 		// TableGroup and TableGroup handling should be performed as part of `#visitFromClause`...
-
-		// todo (6.0) : what is the correct behavior here?
-		appendSql( tableGroup.getPrimaryTableReference().getIdentificationVariable() );
-		appendSql( '.' );
-		//TODO: pretty sure the typecast to Loadable is quite wrong here
-
-		ModelPartContainer modelPart = tableGroup.getModelPart();
-		if ( modelPart instanceof Loadable ) {
-			appendSql( ( (Loadable) tableGroup.getModelPart() ).getIdentifierColumnNames()[0] );
-		}
-		else if ( modelPart instanceof PluralAttributeMapping ) {
-			final CollectionPart elementDescriptor = ( (PluralAttributeMapping) modelPart ).getElementDescriptor();
-			if ( elementDescriptor instanceof BasicValuedCollectionPart ) {
-				String mappedColumnExpression = ( (BasicValuedCollectionPart) elementDescriptor ).getSelectionExpression();
-				appendSql( mappedColumnExpression );
-			}
-			else if ( elementDescriptor instanceof EntityCollectionPart ) {
-				final ForeignKeyDescriptor foreignKeyDescriptor = ( (EntityCollectionPart) elementDescriptor ).getForeignKeyDescriptor();
-				if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-					foreignKeyDescriptor.visitTargetSelectables(
-							(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
-					);
-				}
-			}
-		}
-		else if ( modelPart instanceof ToOneAttributeMapping ) {
-			final ForeignKeyDescriptor foreignKeyDescriptor = ( (ToOneAttributeMapping) modelPart ).getForeignKeyDescriptor();
-			if ( foreignKeyDescriptor instanceof SimpleForeignKeyDescriptor ) {
-				foreignKeyDescriptor.visitTargetSelectables(
-						(selectionIndex, selectionMapping) -> appendSql( selectionMapping.getSelectionExpression() )
-				);
-			}
-		}
-		else {
-			throw new NotYetImplementedFor6Exception( getClass() );
-		}
+		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this!" );
 	}
 
 	@Override
 	public void visitTableGroupJoin(TableGroupJoin tableGroupJoin) {
 		// TableGroup and TableGroupJoin handling should be performed as part of `#visitFromClause`...
-
-		// todo (6.0) : what is the correct behavior here?
-		appendSql( tableGroupJoin.getJoinedGroup().getPrimaryTableReference().getIdentificationVariable() );
-		appendSql( '.' );
-		//TODO: pretty sure the typecast to Loadable is quite wrong here
-		appendSql( ( (Loadable) tableGroupJoin.getJoinedGroup().getModelPart() ).getIdentifierColumnNames()[0] );
+		throw new UnsupportedOperationException( "This should never be invoked as org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter.visitTableGroup should handle this!" );
 	}
 
 	@Override
@@ -4218,12 +4175,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitQueryLiteral(QueryLiteral queryLiteral) {
 		visitLiteral( queryLiteral );
-	}
-
-	@Override
-	public void visitNullnessLiteral(NullnessLiteral nullnessLiteral) {
-		// todo (6.0) : account for composite nulls?
-		appendSql( "null" );
 	}
 
 	private void visitLiteral(Literal literal) {

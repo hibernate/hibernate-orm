@@ -15,6 +15,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 
@@ -58,6 +59,17 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 		assertTrue(exception instanceof PessimisticLockException);
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-13661")
+	public void testQueryTimeoutException() {
+		final PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
+		final SQLExceptionConversionDelegate delegate = dialect.buildSQLExceptionConversionDelegate();
+		assertNotNull( delegate );
+
+		final JDBCException exception = delegate.convert( new SQLException("Client cancelled operation", "57014"), "", "" );
+		assertTrue( exception instanceof QueryTimeoutException );
+	}
+
 	/**
 	 * Tests that getForUpdateString(String aliases, LockOptions lockOptions) will return a String
 	 * that will effect the SELECT ... FOR UPDATE OF tableAlias1, ..., tableAliasN
@@ -79,7 +91,7 @@ public class PostgreSQL81DialectTestCase extends BaseUnitTestCase {
 	@Test
 	public void testExtractConstraintName() {
 		PostgreSQL81Dialect dialect = new PostgreSQL81Dialect();
-		SQLException psqlException = new java.sql.SQLException("ERROR: duplicate key value violates unique constraint \"uk_4bm1x2ultdmq63y3h5r3eg0ej\" Detail: Key (username, server_config)=(user, 1) already exists.", "23505");
+		SQLException psqlException = new SQLException("ERROR: duplicate key value violates unique constraint \"uk_4bm1x2ultdmq63y3h5r3eg0ej\" Detail: Key (username, server_config)=(user, 1) already exists.", "23505");
 		BatchUpdateException batchUpdateException = new BatchUpdateException("Concurrent Error", "23505", null);
 		batchUpdateException.setNextException(psqlException);
 		String constraintName = dialect.getViolatedConstraintNameExtractor().extractConstraintName(batchUpdateException);

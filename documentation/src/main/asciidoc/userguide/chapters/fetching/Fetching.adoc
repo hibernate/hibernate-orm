@@ -42,8 +42,8 @@ _static_::
 _dynamic_ (sometimes referred to as runtime)::
 	The dynamic definition is really use-case centric. There are multiple ways to define dynamic fetching:
     fetch profiles::: defined in mappings, but can be enabled/disabled on the `Session`.
-    HQL / JPQL::: both Hibernate and JPA Criteria queries have the ability to specify fetching, specific to said query.
-    entity graphs::: starting in Hibernate 4.2 (JPA 2.1), this is also an option.
+    HQL / JPQL::: both Hibernate and Jakarta Persistence Criteria queries have the ability to specify fetching, specific to said query.
+    entity graphs::: using Jakarta Persistence EntityGraphs
 
 [NOTE]
 ====
@@ -130,9 +130,9 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-domain-model-exa
 ====
 The Hibernate recommendation is to statically mark all associations lazy and to use dynamic fetching strategies for eagerness.
 
-This is unfortunately at odds with the JPA specification which defines that all one-to-one and many-to-one associations should be eagerly fetched by default.
+This is unfortunately at odds with the Jakarta Persistence specification which defines that all one-to-one and many-to-one associations should be eagerly fetched by default.
 
-Hibernate, as a JPA provider, honors that default.
+Hibernate, as a Jakarta Persistence provider, honors that default.
 ====
 
 [[fetching-strategies-no-fetching]]
@@ -151,7 +151,7 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-no-fetching-exam
 ====
 
 In this example, the application gets the `Employee` data.
-However, because all associations from `Employee` are declared as LAZY (JPA defines the default for collections as LAZY) no other data is fetched.
+However, because all associations from `Employee` are declared as LAZY (Jakarta Persistence defines the default for collections as LAZY) no other data is fetched.
 
 If the login process does not need access to the `Employee` information specifically, another fetching optimization here would be to limit the width of the query results.
 
@@ -188,13 +188,13 @@ include::{sourcedir}/FetchingTest.java[tags=fetching-strategies-dynamic-fetching
 ----
 ====
 
-In this example we have an `Employee` and their `Projects` loaded in a single query shown both as an HQL query and a JPA Criteria query.
+In this example we have an `Employee` and their `Projects` loaded in a single query shown both as an HQL query and a Jakarta Persistence Criteria query.
 In both cases, this resolves to exactly one database query to get all that information.
 
 [[fetching-strategies-dynamic-fetching-entity-graph]]
-=== Dynamic fetching via JPA entity graph
+=== Dynamic fetching via Jakarta Persistence entity graph
 
-JPA 2.1 introduced ``entity graph`` so the application developer has more control over fetch plans. It has two modes to choose from:
+Jakarta Persistence also supports a feature called EntityGraphs to provide the application developer has more control over fetch plans. It has two modes to choose from:
 
 fetch graph:::
 In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, and all attributes not specified will *ALWAYS* be treated as FetchType.LAZY.
@@ -202,7 +202,7 @@ In this case, all attributes specified in the entity graph will be treated as Fe
 load graph:::
 In this case, all attributes specified in the entity graph will be treated as FetchType.EAGER, but attributes not specified use their static mapping specification.
 
-Below is an `fetch graph` dynamic fetching example:
+Below is a `fetch graph` dynamic fetching example:
 [[fetching-strategies-dynamic-fetching-entity-graph-example]]
 .Fetch graph example
 ====
@@ -229,7 +229,7 @@ An EntityGraph is the root of a "load plan" and must correspond to an EntityType
 
 
 [[fetching-strategies-dynamic-fetching-entity-subgraph]]
-==== JPA (key) subgraphs
+==== Jakarta Persistence (key) subgraphs
 
 A sub-graph is used to control the fetching of sub-attributes of the AttributeNode it is applied to.
 It is generally defined via the {jpaJavadocUrlPrefix}NamedSubgraph.html[`@NamedSubgraph`] annotation.
@@ -275,7 +275,7 @@ attribute's key is defined as either:
 
 
 [[fetching-strategies-dynamic-fetching-entity-subgraph-subtype]]
-==== JPA SubGraph sub-typing
+==== Jakarta Persistence SubGraph sub-typing
 
 SubGraphs can also be sub-type specific.  Given an attribute whose value is an inheritance hierarchy,
 we can refer to attributes of a specific sub-type using the forms of sub-graph definition that accept
@@ -283,18 +283,18 @@ the sub-type Class.
 
 
 [[fetching-strategies-dynamic-fetching-entity-graph-parsing]]
-==== Creating and applying JPA graphs from text representations
+==== Creating and applying Jakarta Persistence graphs from text representations
 
-Hibernate allows the creation of JPA fetch/load graphs by parsing a textual representation
+Hibernate allows the creation of Jakarta Persistence fetch/load graphs by parsing a textual representation
 of the graph.  Generally speaking, the textual representation of a graph is a comma-separated
 list of attribute names, optionally including any sub-graph specifications.
 `org.hibernate.graph.EntityGraphParser` is the starting point for such parsing operations.
 
 [NOTE]
 ====
-Parsing a textual representation of a graph is not (yet) a part of the JPA specification. So the
+Parsing a textual representation of a graph is not (yet) a part of the Jakarta Persistence specification. So the
 syntax described here is specific to Hibernate. We do hope to eventually make this syntax part of
-the JPA specification proper.
+the Jakarta Persistence specification proper.
 ====
 
 
@@ -349,7 +349,7 @@ responsibleParty(taxIdNumber), responsibleParty(Corporation: ceo), responsiblePa
 ----
 ====
 
-The duplicated attribute names are handled according to the JPA specification which says that duplicate
+The duplicated attribute names are handled according to the Jakarta Persistence specification which says that duplicate
 specification of the attribute node results in the originally registered AttributeNode to be re-used
 effectively merging the 2 AttributeNode specifications together.  In other words, the above specification
 creates a single AttributeNode with 3 distinct SubGraphs.  It is functionally the same as calling:
@@ -358,7 +358,7 @@ creates a single AttributeNode with 3 distinct SubGraphs.  It is functionally th
 [source, JAVA, indent=0]
 ----
 Class<Invoice> invoiceClass = ...;
-javax.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
+jakarta.persistence.EntityGraph<Invoice> invoiceGraph = entityManager.createEntityGraph( invoiceClass );
 invoiceGraph.addAttributeNode( "responsibleParty" );
 invoiceGraph.addSubgraph( "responsibleParty" ).addAttributeNode( "taxIdNumber" );
 invoiceGraph.addSubgraph( "responsibleParty", Corporation.class ).addAttributeNode( "ceo" );
@@ -367,7 +367,7 @@ invoiceGraph.addSubgraph( "responsibleParty", NonProfit.class ).addAttributeNode
 ====
 
 [[fetching-strategies-dynamic-fetching-entity-graph-merging]]
-==== Combining multiple JPA entity graphs into one
+==== Combining multiple Jakarta Persistence entity graphs into one
 
 Multiple entity graphs can be combined into a single "super graph" that acts as a union. Graph from
 the previous example can also be built by combining separate aspect graphs into one, such as:
@@ -456,7 +456,7 @@ it allows you to fetch all the required data with a single query.
 [[fetching-fetch-annotation]]
 === The `@Fetch` annotation mapping
 
-Besides the `FetchType.LAZY` or `FetchType.EAGER` JPA annotations,
+Besides the `FetchType.LAZY` or `FetchType.EAGER` Jakarta Persistence annotations,
 you can also use the Hibernate-specific `@Fetch` annotation that accepts one of the following ``FetchMode``s:
 
 SELECT::
@@ -599,9 +599,9 @@ The possible values are given by the `https://docs.jboss.org/hibernate/orm/{majo
 `FALSE`:: Eagerly load it.
 `EXTRA`:: Prefer extra queries over full collection loading.
 
-The `TRUE` and `FALSE` values are deprecated since you should be using the JPA {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
+The `TRUE` and `FALSE` values are deprecated since you should be using the Jakarta Persistence {jpaJavadocUrlPrefix}FetchType.html[`FetchType`] attribute of the <<annotations-jpa-elementcollection>>, <<annotations-jpa-onetomany>>, or <<annotations-jpa-manytomany>> collection.
 
-The `EXTRA` value has no equivalent in the JPA specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
+The `EXTRA` value has no equivalent in the Jakarta Persistence specification, and it's used to avoid loading the entire collection even when the collection is accessed for the first time.
 Each element is fetched individually using a secondary query.
 
 [[fetching-LazyCollection-domain-model-example]]

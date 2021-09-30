@@ -8,7 +8,7 @@ package org.hibernate.orm.test.envers.integration.onetomany.relatedid;
 
 import java.util.List;
 
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.envers.query.AuditQuery;

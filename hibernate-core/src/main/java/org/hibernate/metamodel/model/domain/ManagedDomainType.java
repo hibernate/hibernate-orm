@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.domain;
 
 import java.util.function.Consumer;
-import javax.persistence.metamodel.ManagedType;
+import jakarta.persistence.metamodel.ManagedType;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
@@ -17,7 +17,7 @@ import org.hibernate.metamodel.RepresentationMode;
  *
  * @author Steve Ebersole
  */
-public interface ManagedDomainType<J> extends SimpleDomainType<J>, ManagedType<J> {
+public interface ManagedDomainType<J> extends AllowableParameterType<J>, ManagedType<J> {
 	/**
 	 * Get the type name.
 	 *

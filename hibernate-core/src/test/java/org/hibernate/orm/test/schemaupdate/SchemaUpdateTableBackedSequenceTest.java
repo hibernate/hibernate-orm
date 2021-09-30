@@ -36,7 +36,6 @@ import org.hibernate.tool.schema.spi.TargetDescriptor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

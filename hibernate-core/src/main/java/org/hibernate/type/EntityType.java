@@ -654,7 +654,7 @@ public abstract class EntityType extends AbstractType implements AssociationType
 	 *
 	 * @return The resolved identifier (i.e., loaded entity).
 	 *
-	 * @throws org.hibernate.HibernateException Indicates problems performing the load.
+	 * @throws HibernateException Indicates problems performing the load.
 	 */
 	protected final Object resolveIdentifier(Object id, SharedSessionContractImplementor session, Boolean overridingEager) throws HibernateException {
 

@@ -1,3 +1,4 @@
+[[custom-sf-session-guide]]
 = Custom SessionFactory and Session Implementations Guide
 :toc:
 

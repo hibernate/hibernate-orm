@@ -127,7 +127,7 @@ public class NonReflectiveBinderTest {
 		assertEquals( "wicked level", propertyAttribute.getValues().get(1) );*/
 		assertThat( propertyAttribute.getValue(), is( "monetaryamount level" ) );
 
-		org.hibernate.mapping.Component component = (Component) property.getValue();
+		Component component = (Component) property.getValue();
 		property = component.getProperty( "x" );
 		propertyAttribute = property.getMetaAttribute( "globalmutated" );
 

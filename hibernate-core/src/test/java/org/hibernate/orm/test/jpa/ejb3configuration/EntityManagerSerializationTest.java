@@ -8,19 +8,18 @@ package org.hibernate.orm.test.jpa.ejb3configuration;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.util.Date;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.Session;
-import org.hibernate.jpa.test.Cat;
-import org.hibernate.jpa.test.Distributor;
-import org.hibernate.jpa.test.Item;
-import org.hibernate.jpa.test.Kitten;
-import org.hibernate.jpa.test.Wallet;
+import org.hibernate.orm.test.jpa.Cat;
+import org.hibernate.orm.test.jpa.Distributor;
+import org.hibernate.orm.test.jpa.Item;
+import org.hibernate.orm.test.jpa.Kitten;
+import org.hibernate.orm.test.jpa.Wallet;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;

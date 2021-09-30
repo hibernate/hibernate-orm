@@ -6,10 +6,9 @@
  */
 package org.hibernate.query.internal;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -19,7 +18,6 @@ import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
-import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -101,22 +99,27 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValue(T value) {
+	public void setBindValue(T value, boolean resolveJdbcTypeIfNecessary) {
 		if ( handleAsMultiValue( value ) ) {
 			return;
 		}
 
-		if ( bindType != null ) {
-			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
-		}
-		else if ( queryParameter.getHibernateType() != null ) {
-			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			if ( bindType != null ) {
+				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
+			else if ( queryParameter.getHibernateType() != null ) {
+				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
 		}
 
 		if ( isBindingValidationRequired ) {
 			validate( value );
 		}
 
+		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
+			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
+		}
 		bindValue( value );
 	}
 
@@ -146,9 +149,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.isBound = true;
 		this.bindValue = value;
 
-		if ( bindType == null && value != null ) {
-			//noinspection unchecked
-			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( value );
+		if ( bindType == null ) {
+			if ( value != null ) {
+				//noinspection unchecked
+				this.bindType = (AllowableParameterType<T>) typeResolver.resolveParameterBindType( value );
+			}
 		}
 	}
 
@@ -162,11 +167,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			this.bindType = clarifiedType;
 		}
 
-		if ( bindType != null ) {
-			value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
-		}
-		else if ( queryParameter.getHibernateType() != null ) {
-			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			if ( bindType != null ) {
+				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
+			else if ( queryParameter.getHibernateType() != null ) {
+				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+			}
 		}
 
 		if ( isBindingValidationRequired ) {
@@ -186,24 +193,26 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			bindType = queryParameter.getHibernateType();
 		}
 
-		if ( bindType != null ) {
-			try {
-				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
+			if ( bindType != null ) {
+				try {
+					value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+				}
+				catch (CoercionException ex) {
+					throw new IllegalArgumentException(
+							String.format(
+									"Parameter value [%s] did not match expected type [%s (%s)]",
+									value,
+									bindType.getTypeName(),
+									temporalTypePrecision == null ? "n/a" : temporalTypePrecision.name()
+							),
+							ex
+					);
+				}
 			}
-			catch ( CoercionException ex ) {
-				throw new IllegalArgumentException(
-						String.format(
-								"Parameter value [%s] did not match expected type [%s (%s)]",
-								value,
-								bindType.getTypeName(),
-								temporalTypePrecision == null ? "n/a" : temporalTypePrecision.name()
-						),
-						ex
-				);
+			else if ( queryParameter.getHibernateType() != null ) {
+				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
 			}
-		}
-		else if ( queryParameter.getHibernateType() != null ) {
-			value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
 		}
 
 		if ( isBindingValidationRequired ) {
@@ -286,19 +295,24 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setType(MappingModelExpressable type) {
+	public boolean setType(MappingModelExpressable type) {
 		this.type = type;
-		if ( bindType == null ) {
+		if ( bindType == null || bindType.getJavaType() == Object.class ) {
 			if ( type instanceof AllowableParameterType<?> ) {
+				final boolean changed = bindType != null && type != bindType;
 				this.bindType = (AllowableParameterType<T>) type;
+				return changed;
 			}
 			else if ( type instanceof BasicValuedMapping ) {
 				final JdbcMapping jdbcMapping = ( (BasicValuedMapping) type ).getJdbcMapping();
 				if ( jdbcMapping instanceof AllowableParameterType<?> ) {
+					final boolean changed = bindType != null && jdbcMapping != bindType;
 					this.bindType = (AllowableParameterType<T>) jdbcMapping;
+					return changed;
 				}
 			}
 		}
+		return false;
 	}
 
 	private void validate(T value) {

@@ -1,11 +1,11 @@
 package org.hibernate.orm.test.mapping.array;
 
 import java.util.List;
-import javax.persistence.ElementCollection;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.OrderColumn;
-import javax.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.OrderColumn;
+import jakarta.persistence.Table;
 
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -113,7 +113,7 @@ public class ArrayTests {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					ArrayTests.Employee employee = new ArrayTests.Employee( 1, "Koen" );
+					Employee employee = new Employee( 1, "Koen" );
 					employee.setToDoList( new String[] { "metro", "boulot", "dodo" } );
 					session.save( employee );
 				}

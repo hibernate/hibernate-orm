@@ -4,13 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
+plugins {
+    id 'org.hibernate.build.xjc-jakarta'
+}
 
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
-apply plugin: 'org.hibernate.build.gradle.xjc'
-
 
 ext {
 	xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
@@ -19,17 +20,17 @@ ext {
 
 dependencies {
     implementation libraries.jaxb_api
-    implementation libraries.jaxb_runtime
+    implementation libraries.jakarta_jaxb_runtime
 
-    xjc libraries.jaxb_runtime
-    xjc libraries.jaxb_xjc
-    xjc libraries.jaxb2_basics
-    xjc libraries.jaxb2_basics_ant
-    xjc libraries.activation
+    xjc libraries.jakarta_jaxb_xjc
+    xjc libraries.jakarta_jaxb_runtime
+    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 
     testImplementation project( ':hibernate-core' )
     testImplementation libraries.junit
-    testImplementation libraries.validation
+//    testImplementation libraries.jakarta_jpa
+
+    testImplementation libraries.jakarta_validation
 }
 
 sourceSets.main {

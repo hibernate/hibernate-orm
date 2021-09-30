@@ -13,7 +13,7 @@ import org.hibernate.MappingException;
  *
  * @author Christian Beikov
  */
-public final class SQLServerSequenceSupport extends ANSISequenceSupport {
+public class SQLServerSequenceSupport extends ANSISequenceSupport {
 
 	public static final SequenceSupport INSTANCE = new SQLServerSequenceSupport();
 

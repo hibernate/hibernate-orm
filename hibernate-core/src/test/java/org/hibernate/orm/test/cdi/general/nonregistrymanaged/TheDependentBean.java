@@ -6,16 +6,16 @@
  */
 package org.hibernate.orm.test.cdi.general.nonregistrymanaged;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.Dependent;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.Dependent;
 
 /**
  * @author Yoann Rodiere
  */
 @Dependent
 public class TheDependentBean {
-	@javax.inject.Inject
+	@jakarta.inject.Inject
 	private TheNestedDependentBean dependentBean;
 
 	public TheDependentBean() {

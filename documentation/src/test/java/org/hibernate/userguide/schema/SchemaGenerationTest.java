@@ -11,20 +11,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import javax.persistence.Basic;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class SchemaGenerationTest extends BaseEntityManagerFunctionalTestCase {
 					AvailableSettings.HBM2DDL_IMPORT_FILES,
 					"schema-generation.sql"
 			);
-			settings.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "update" );
+			settings.put( AvailableSettings.HBM2DDL_AUTO, "update" );
 		}
 		return settings;
 	}

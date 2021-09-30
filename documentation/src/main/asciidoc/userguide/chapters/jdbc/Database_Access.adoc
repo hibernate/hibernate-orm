@@ -32,7 +32,8 @@ For cases where a JNDI name is given, be sure to read <<chapters/jndi/JNDI.adoc#
 
 [NOTE]
 ====
-For JPA applications, note that `hibernate.connection.datasource` corresponds to either `javax.persistence.jtaDataSource` or `javax.persistence.nonJtaDataSource`.
+For Jakarta Persistence applications, note that `hibernate.connection.datasource` corresponds to
+`jakarta.persistence.jtaDataSource` or `jakarta.persistence.nonJtaDataSource`.
 ====
 
 The `DataSource` `ConnectionProvider` also (optionally) accepts the `hibernate.connection.username` and `hibernate.connection.password`.
@@ -246,7 +247,7 @@ https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/
 https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/SessionBuilder.html#connection-java.sql.Connection-[`SessionBuilder#connection`] method, then the user-provided `Connection` is going to be used, and
 the connection handling mode will be `IMMEDIATE_ACQUISITION_AND_HOLD`.
 
-Therefore for user-provided connection, the connection is acquired right away and held until the current `Session` is closed, without being influenced by the JPA or Hibernate transaction context.
+Therefore for user-provided connection, the connection is acquired right away and held until the current `Session` is closed, without being influenced by the Jakarta Persistence or Hibernate transaction context.
 
 [[database-dialect]]
 === Database Dialect

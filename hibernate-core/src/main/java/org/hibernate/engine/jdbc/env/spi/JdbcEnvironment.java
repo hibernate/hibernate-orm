@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 
 /**
  * Initial look at this concept we keep talking about with merging information from {@link java.sql.DatabaseMetaData}
- * and {@link org.hibernate.dialect.Dialect}
+ * and {@link Dialect}
  *
  * @author Steve Ebersole
  */
@@ -47,7 +47,7 @@ public interface JdbcEnvironment extends Service {
 
 	/**
 	 * Get the current database catalog.  Typically will come from either
-	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, org.hibernate.dialect.Dialect)} or
+	 * {@link SchemaNameResolver#resolveSchemaName(java.sql.Connection, Dialect)} or
 	 * {@link org.hibernate.cfg.AvailableSettings#DEFAULT_CATALOG}.
 	 *
 	 * @return The current schema

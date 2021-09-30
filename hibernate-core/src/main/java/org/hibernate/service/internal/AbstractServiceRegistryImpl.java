@@ -22,12 +22,10 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
-import org.hibernate.jmx.spi.JmxService;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.UnknownServiceException;
 import org.hibernate.service.spi.InjectService;
-import org.hibernate.service.spi.Manageable;
 import org.hibernate.service.spi.ServiceBinding;
 import org.hibernate.service.spi.ServiceException;
 import org.hibernate.service.spi.ServiceInitiator;
@@ -342,13 +340,6 @@ public abstract class AbstractServiceRegistryImpl
 	public <R extends Service> void startService(ServiceBinding<R> serviceBinding) {
 		if ( Startable.class.isInstance( serviceBinding.getService() ) ) {
 			( (Startable) serviceBinding.getService() ).start();
-		}
-
-		if ( Manageable.class.isInstance( serviceBinding.getService() ) ) {
-			getService( JmxService.class ).registerService(
-					(Manageable) serviceBinding.getService(),
-					serviceBinding.getServiceRole()
-			);
 		}
 	}
 

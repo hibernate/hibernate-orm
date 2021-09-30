@@ -80,7 +80,7 @@ public interface QueryParameterBindings {
 
 	/**
 	 * Generate a "memento" for these parameter bindings that can be used
-	 * in creating a {@link org.hibernate.cache.spi.QueryKey}
+	 * in creating a {@link QueryKey}
 	 * @param persistenceContext
 	 */
 	default QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
@@ -90,6 +90,9 @@ public interface QueryParameterBindings {
 	default void visitBindings(BiConsumer<QueryParameterImplementor<?>, QueryParameterBinding<?>> action) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
+
+	QueryKey.ParameterBindingsMemento NO_PARAMETER_BINDING_MEMENTO = new QueryKey.ParameterBindingsMemento(){
+	};
 
 	QueryParameterBindings NO_PARAM_BINDINGS = new QueryParameterBindings() {
 		@Override
@@ -123,6 +126,11 @@ public interface QueryParameterBindings {
 		@Override
 		public boolean hasAnyMultiValuedBindings() {
 			return false;
+		}
+
+		@Override
+		public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor persistenceContext) {
+			return NO_PARAMETER_BINDING_MEMENTO;
 		}
 	};
 }

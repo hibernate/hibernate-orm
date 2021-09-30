@@ -12,5 +12,9 @@
 
     <bean id="serviceContributor" class="org.hibernate.spatial.integration.SpatialInitializer"/>
     <service ref="serviceContributor" interface="org.hibernate.service.spi.ServiceContributor"/>
+    <bean id="spatialTypeContributor" class="org.hibernate.spatial.contributor.SpatialTypeContributor"/>
+    <service ref="spatialTypeContributor" interface="org.hibernate.boot.model.TypeContributor"/>
 
+    <bean id="spatialFunctionContributor" class="org.hibernate.spatial.contributor.SpatialFunctionContributor"/>
+    <service ref="spatialFunctionContributor" interface="org.hibernate.boot.model.FunctionContributor"/>
 </blueprint>

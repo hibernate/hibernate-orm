@@ -7,35 +7,34 @@
 
 package org.hibernate.spatial.testing.dialects.hana;
 
+import java.sql.SQLException;
+import java.util.Map;
+
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.spatial.dialect.hana.HANASpatialUtils;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
-import org.hibernate.spatial.testing.DataSourceUtils;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
+import org.geolatte.geom.jts.JTS;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 
-import java.sql.SQLException;
-import java.util.Map;
-
-import org.geolatte.geom.jts.JTS;
-
 public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 
-	public HANAExpectationsFactory(DataSourceUtils utils) {
-		super( utils );
+	public HANAExpectationsFactory() {
+		super();
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDimensionSQL() {
+	public NativeSQLStatement createNativeDimensionSQL() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_Dimension() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBufferStatement(Double distance) {
+	public NativeSQLStatement createNativeBufferStatement(Double distance) {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.ST_Buffer(?) from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				new Object[] { distance }
@@ -43,7 +42,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
+	public NativeSQLStatement createNativeConvexHullStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, " + getTestSrid() + ")).ST_ConvexHull().ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
@@ -52,7 +51,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Intersection(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
@@ -61,7 +60,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Difference(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
@@ -70,7 +69,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeSymDifferenceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_SymDifference(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = "
 						+ getTestSrid(),
@@ -79,7 +78,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
+	public NativeSQLStatement createNativeGeomUnionStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Union(ST_GeomFromText(?, " + getTestSrid() + ")).ST_AsEWKB() from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText()
@@ -87,47 +86,47 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsTextStatement() {
+	public NativeSQLStatement createNativeAsTextStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_AsText() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeSridStatement() {
+	public NativeSQLStatement createNativeSridStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_SRID() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsSimpleStatement() {
+	public NativeSQLStatement createNativeIsSimpleStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_IsSimple() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsEmptyStatement() {
+	public NativeSQLStatement createNativeIsEmptyStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_IsEmpty() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIsNotEmptyStatement() {
+	public NativeSQLStatement createNativeIsNotEmptyStatement() {
 		return createNativeSQLStatement( "select t.id, map(t.geom.ST_IsEmpty(), 1, 0, 1) from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeBoundaryStatement() {
+	public NativeSQLStatement createNativeBoundaryStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_Boundary().ST_AsEWKB() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEnvelopeStatement() {
+	public NativeSQLStatement createNativeEnvelopeStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_Envelope().ST_AsEWKB() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeAsBinaryStatement() {
+	public NativeSQLStatement createNativeAsBinaryStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_AsBinary() from GeomTest t" );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeGeometryTypeStatement() {
+	public NativeSQLStatement createNativeGeometryTypeStatement() {
 		return createNativeSQLStatement( "select t.id, t.geom.ST_GeometryType() from GeomTest t" );
 	}
 
@@ -140,7 +139,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeWithinStatement(Geometry geom) {
+	public NativeSQLStatement createNativeWithinStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Within(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Within(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -149,7 +148,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeEqualsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Equals(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Equals(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -158,7 +157,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeCrossesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Crosses(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Crosses(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -167,7 +166,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeContainsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeContainsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Contains(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Contains(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -176,7 +175,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDisjointStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Disjoint(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Disjoint(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -185,18 +184,18 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTransformStatement(int epsg) {
+	public NativeSQLStatement createNativeTransformStatement(int epsg) {
 		return createNativeSQLStatement(
 				"select t.id, t.geom.ST_Transform(" + epsg + ") from GeomTest t where t.geom.ST_SRID() = " + getTestSrid() );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
+	public NativeSQLStatement createNativeHavingSRIDStatement(int srid) {
 		return createNativeSQLStatement( "select t.id, 1 from GeomTest t where t.geom.ST_SRID() =  " + srid );
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeIntersectsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Intersects(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Intersects(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -205,7 +204,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeFilterStatement(Geometry geom) {
+	public NativeSQLStatement createNativeFilterStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_IntersectsFilter(ST_GeomFromText(?, " + getTestSrid()
 						+ ")) from GeomTest t where t.geom.ST_IntersectsFilter(ST_GeomFromText(?, " + getTestSrid() + ")) = 1 and t.geom.ST_SRID() = "
@@ -215,7 +214,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
+	public NativeSQLStatement createNativeTouchesStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Touches(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Touches(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -224,7 +223,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
+	public NativeSQLStatement createNativeOverlapsStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Overlaps(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_Overlaps(ST_GeomFromText(?, "
 						+ getTestSrid() + ")) = 1 and t.geom.ST_SRID() = " + getTestSrid(),
@@ -233,7 +232,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
+	public NativeSQLStatement createNativeRelateStatement(Geometry geom, String matrix) {
 		String sql = "select t.id, t.geom.ST_Relate(ST_GeomFromText(?, " + getTestSrid() + "), '" + matrix
 				+ "' ) from GeomTest t where t.geom.ST_Relate(ST_GeomFromText(?, " + getTestSrid() + "), '" + matrix
 				+ "') = 1 and t.geom.ST_SRID() = " + getTestSrid();
@@ -241,7 +240,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
+	public NativeSQLStatement createNativeDwithinStatement(Point geom, double distance) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid() + "), "
 						+ distance + ") from GeomTest t where t.geom.ST_WithinDistance(ST_GeomFromText(?, " + getTestSrid() + "), " + distance
@@ -251,7 +250,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	}
 
 	@Override
-	protected NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
+	public NativeSQLStatement createNativeDistanceStatement(Geometry geom) {
 		return createNativeSQLStatementAllWKTParams(
 				"select t.id, t.geom.ST_Distance(ST_GeomFromText(?, " + getTestSrid() + ")) from GeomTest t where t.geom.ST_SRID() = " + getTestSrid(),
 				geom.toText()
@@ -284,7 +283,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getAlphaShape(double radius) throws SQLException {
-		return retrieveExpected( createNativeAlphaShapeStatement( radius ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAlphaShapeStatement(double radius) {
@@ -302,7 +301,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getArea() throws SQLException {
-		return retrieveExpected( createNativeAreaStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAreaStatement() {
@@ -318,7 +317,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsEWKB() throws SQLException {
-		return retrieveExpected( createNativeAsEWKBStatement(), OBJECT );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsEWKBStatement() {
@@ -333,7 +332,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsEWKT() throws SQLException {
-		return retrieveExpected( createNativeAsEWKTStatement(), STRING );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsEWKTStatement() {
@@ -348,7 +347,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsGeoJSON() throws SQLException {
-		return retrieveExpected( createNativeAsGeoJSONStatement(), STRING );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsGeoJSONStatement() {
@@ -363,7 +362,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsSVG() throws SQLException {
-		return retrieveExpected( createNativeAsSVGStatement(), STRING );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsSVGStatement() {
@@ -378,7 +377,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsSVGAggr() throws SQLException {
-		return retrieveExpected( createNativeAsSVGAggrStatement(), STRING );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsSVGAggrStatement() {
@@ -393,7 +392,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, byte[]> getAsWKB() throws SQLException {
-		return retrieveExpected( createNativeAsWKBStatement(), OBJECT );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsWKBStatement() {
@@ -408,7 +407,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, String> getAsWKT() throws SQLException {
-		return retrieveExpected( createNativeAsWKTStatement(), STRING );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeAsWKTStatement() {
@@ -423,7 +422,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getCentroid() throws SQLException {
-		return retrieveExpected( createNativeCentroidStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeCentroidStatement() {
@@ -439,7 +438,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getConvexHullAggr() throws SQLException {
-		return retrieveExpected( createNativeConvexHullAggrStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeConvexHullAggrStatement() {
@@ -454,7 +453,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getCoordDim() throws SQLException {
-		return retrieveExpected( createNativeCoordDimStatement(), INTEGER );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeCoordDimStatement() {
@@ -469,7 +468,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCoveredBy(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeCoveredByStatement( geom ), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeCoveredByStatement(Geometry geom) {
@@ -488,7 +487,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getCovers(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeCoversStatement( geom ), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeCoversStatement(Geometry geom) {
@@ -507,7 +506,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEndPoint() throws SQLException {
-		return retrieveExpected( createNativeEndPointStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeEndPointStatement() {
@@ -523,7 +522,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getEnvelopeAggr() throws SQLException {
-		return retrieveExpected( createNativeEnvelopeAggrStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeEnvelopeAggrStatement() {
@@ -538,7 +537,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getExteriorRing() throws SQLException {
-		return retrieveExpected( createNativeExteriorRingStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeExteriorRingStatement() {
@@ -554,7 +553,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromEWKB(byte[] ewkb) throws SQLException {
-		return retrieveExpected( createNativeGeomFromEWKBStatement( ewkb ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeGeomFromEWKBStatement(byte[] ewkb) {
@@ -569,7 +568,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromEWKT(String ewkt) throws SQLException {
-		return retrieveExpected( createNativeGeomFromEWKTStatement( ewkt ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeGeomFromEWKTStatement(String ewkt) {
@@ -584,7 +583,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromText(String text) throws SQLException {
-		return retrieveExpected( createNativeGeomFromTextStatement( text ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeGeomFromTextStatement(String text) {
@@ -599,7 +598,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromWKB(byte[] wkb) throws SQLException {
-		return retrieveExpected( createNativeGeomFromWKBStatement( wkb ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeGeomFromWKBStatement(byte[] wkb) {
@@ -614,7 +613,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeomFromWKT(String wkt) throws SQLException {
-		return retrieveExpected( createNativeGeomFromWKTStatement( wkt ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeGeomFromWKTStatement(String wkt) {
@@ -629,7 +628,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getGeometryN(int n) throws SQLException {
-		return retrieveExpected( createNativeGeometryNStatement( n ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeGeometryNStatement(int n) {
@@ -647,7 +646,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getInteriorRingN(int n) throws SQLException {
-		return retrieveExpected( createNativeInteriorRingNStatement( n ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeInteriorRingNStatement(int n) {
@@ -665,7 +665,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getIntersectionAggr() throws SQLException {
-		return retrieveExpected( createNativeIntersectionAggrStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIntersectionAggrStatement() {
@@ -680,7 +680,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIntersectsRect(Point pmin, Point pmax) throws SQLException {
-		return retrieveExpected( createNativeIntersectsRectStatement( pmin, pmax ), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIntersectsRectStatement(Point pmin, Point pmax) {
@@ -700,7 +700,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIs3D() throws SQLException {
-		return retrieveExpected( createNativeIs3DStatement(), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIs3DStatement() {
@@ -716,7 +716,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsClosed() throws SQLException {
-		return retrieveExpected( createNativeIsClosedStatement(), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIsClosedStatement() {
@@ -733,7 +733,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsMeasured() throws SQLException {
-		return retrieveExpected( createNativeIsMeasuredStatement(), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIsMeasuredStatement() {
@@ -750,7 +750,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsRing() throws SQLException {
-		return retrieveExpected( createNativeIsRingStatement(), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIsRingStatement() {
@@ -767,7 +767,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getIsValid() throws SQLException {
-		return retrieveExpected( createNativeIsValidStatement(), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeIsValidStatement() {
@@ -784,7 +784,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getLength() throws SQLException {
-		return retrieveExpected( createNativeLengthStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeLengthStatement() {
@@ -801,7 +801,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getM() throws SQLException {
-		return retrieveExpected( createNativeMStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeMStatement() {
@@ -818,7 +819,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getMMax() throws SQLException {
-		return retrieveExpected( createNativeMMaxStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeMMaxStatement() {
@@ -835,7 +837,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getMMin() throws SQLException {
-		return retrieveExpected( createNativeMMinStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeMMinStatement() {
@@ -852,7 +855,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumGeometries() throws SQLException {
-		return retrieveExpected( createNativeNumGeometriesStatement(), INTEGER );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeNumGeometriesStatement() {
@@ -869,7 +873,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumInteriorRing() throws SQLException {
-		return retrieveExpected( createNativeNumInteriorRingStatement(), INTEGER );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeNumInteriorRingStatement() {
@@ -886,7 +891,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumInteriorRings() throws SQLException {
-		return retrieveExpected( createNativeNumInteriorRingsStatement(), INTEGER );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeNumInteriorRingsStatement() {
@@ -903,7 +909,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Integer> getNumPoints() throws SQLException {
-		return retrieveExpected( createNativeNumPointsStatement(), INTEGER );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeNumPointsStatement() {
@@ -920,7 +927,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Boolean> getOrderingEquals(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeOrderingEqualsStatement( geom ), BOOLEAN );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeOrderingEqualsStatement(Geometry geom) {
@@ -939,7 +947,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getPerimeter() throws SQLException {
-		return retrieveExpected( createNativePerimeterStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativePerimeterStatement() {
@@ -956,7 +965,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getPointOnSurface() throws SQLException {
-		return retrieveExpected( createNativePointOnSurfaceStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativePointOnSurfaceStatement() {
@@ -973,7 +983,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getPointN(int n) throws SQLException {
-		return retrieveExpected( createNativePointNStatement( n ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativePointNStatement(int n) {
@@ -992,7 +1003,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getSnapToGrid() throws SQLException {
-		return retrieveExpected( createNativeSnapToGridStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeSnapToGridStatement() {
@@ -1009,7 +1021,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getStartPoint() throws SQLException {
-		return retrieveExpected( createNativeStartPointStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeStartPointStatement() {
@@ -1025,7 +1038,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getUnionAggr() throws SQLException {
-		return retrieveExpected( createNativeUnionAggrStatement(), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeUnionAggrStatement() {
@@ -1040,7 +1054,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getX() throws SQLException {
-		return retrieveExpected( createNativeXStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeXStatement() {
@@ -1057,7 +1072,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getXMax() throws SQLException {
-		return retrieveExpected( createNativeXMaxStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeXMaxStatement() {
@@ -1074,7 +1090,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getXMin() throws SQLException {
-		return retrieveExpected( createNativeXMinStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeXMinStatement() {
@@ -1091,7 +1108,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getY() throws SQLException {
-		return retrieveExpected( createNativeYStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeYStatement() {
@@ -1108,7 +1126,8 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getYMax() throws SQLException {
-		return retrieveExpected( createNativeYMaxStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
+
 	}
 
 	private NativeSQLStatement createNativeYMaxStatement() {
@@ -1125,7 +1144,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getYMin() throws SQLException {
-		return retrieveExpected( createNativeYMinStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeYMinStatement() {
@@ -1142,7 +1161,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZ() throws SQLException {
-		return retrieveExpected( createNativeZStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeZStatement() {
@@ -1159,7 +1178,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZMax() throws SQLException {
-		return retrieveExpected( createNativeZMaxStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeZMaxStatement() {
@@ -1176,7 +1195,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Double> getZMin() throws SQLException {
-		return retrieveExpected( createNativeZMinStatement(), DOUBLE );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeZMinStatement() {
@@ -1193,7 +1212,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getNestedFunctionInner(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeNestedFunctionInnerStatement( geom ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeNestedFunctionInnerStatement(Geometry geom) {
@@ -1212,7 +1231,7 @@ public class HANAExpectationsFactory extends AbstractExpectationsFactory {
 	 * @throws SQLException
 	 */
 	public Map<Integer, Geometry> getNestedFunctionOuter(Geometry geom) throws SQLException {
-		return retrieveExpected( createNativeNestedFunctionOuterStatement( geom ), GEOMETRY );
+		throw new NotYetImplementedFor6Exception();
 	}
 
 	private NativeSQLStatement createNativeNestedFunctionOuterStatement(Geometry geom) {

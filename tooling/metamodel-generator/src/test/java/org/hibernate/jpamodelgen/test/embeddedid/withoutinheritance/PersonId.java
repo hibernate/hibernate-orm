@@ -6,7 +6,7 @@
  */
 package org.hibernate.jpamodelgen.test.embeddedid.withoutinheritance;
 
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik

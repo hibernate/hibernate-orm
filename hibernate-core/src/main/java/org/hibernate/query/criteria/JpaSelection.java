@@ -7,7 +7,7 @@
 package org.hibernate.query.criteria;
 
 import java.util.List;
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Selection;
 
 /**
  * API extension to the JPA {@link Selection} contract

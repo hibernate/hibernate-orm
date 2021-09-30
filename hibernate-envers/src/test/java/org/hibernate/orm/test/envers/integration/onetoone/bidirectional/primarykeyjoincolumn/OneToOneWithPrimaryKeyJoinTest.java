@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.envers.integration.onetoone.bidirectional.primarykeyjoincolumn;
 
 import java.util.Arrays;
-import javax.persistence.EntityManager;
+import jakarta.persistence.EntityManager;
 
 import org.hibernate.envers.RevisionType;
 import org.hibernate.envers.query.AuditEntity;

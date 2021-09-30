@@ -10,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -22,16 +23,19 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.sql.exec.SqlExecLogger;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcLockStrategy;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.exec.spi.JdbcSelectExecutor;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.internal.ResultsHelper;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
+import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
+import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.jdbc.internal.DeferredResultSetAccess;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesResultSetImpl;
@@ -181,6 +185,35 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				deferredResultSetAccess
 		);
 
+		if ( rowTransformer == null ) {
+			final TupleTransformer<R> tupleTransformer = executionContext.getQueryOptions().getTupleTransformer();
+			if ( tupleTransformer == null ) {
+				rowTransformer = RowTransformerPassThruImpl.instance();
+			}
+			else {
+				final List<DomainResult<?>> domainResults = jdbcValues.getValuesMapping().getDomainResults();
+				final String[] aliases = new String[domainResults.size()];
+				for ( int i = 0; i < domainResults.size(); i++ ) {
+					aliases[i] = domainResults.get( i ).getResultVariable();
+				}
+				rowTransformer = new RowTransformerTupleTransformerAdapter<>( aliases, tupleTransformer );
+			}
+		}
+
+		final boolean stats;
+		long startTime = 0;
+		final StatisticsImplementor statistics = executionContext.getSession().getFactory().getStatistics();
+		if ( executionContext.hasQueryExecutionToBeAddedToStatistics()
+				&& jdbcValues instanceof JdbcValuesResultSetImpl ) {
+			stats = statistics.isStatisticsEnabled();
+			if ( stats ) {
+				startTime = System.nanoTime();
+			}
+		}
+		else {
+			stats = false;
+		}
+
 		/*
 		 * Processing options effectively are only used for entity loading.  Here we don't need these values.
 		 */
@@ -241,7 +274,24 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				rowReader
 		);
 
+		if ( stats ) {
+			final long endTime = System.nanoTime();
+			final long milliseconds = TimeUnit.MILLISECONDS.convert( endTime - startTime, TimeUnit.NANOSECONDS );
+			statistics.queryExecuted(
+					executionContext.getQueryIdentifier( jdbcSelect.getSql() ),
+					getResultSize( result ),
+					milliseconds
+			);
+		}
+
 		return result;
+	}
+
+	private <T> int getResultSize(T result) {
+		if ( result instanceof List ) {
+			return ( (List) result ).size();
+		}
+		return -1;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -265,7 +315,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 
 		final QueryKey queryResultsCacheKey;
 
-		if ( queryCacheEnabled && cacheMode.isGetEnabled() ) {
+		if ( queryCacheEnabled && cacheMode.isGetEnabled() && canBeCached ) {
 			SqlExecLogger.INSTANCE.debugf( "Reading Query result cache data per CacheMode#isGetEnabled [%s]", cacheMode.name() );
 
 			final QueryResultsCache queryCache = factory
@@ -317,13 +367,23 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 						cacheMode.name()
 			);
 			cachedResults = null;
-			queryResultsCacheKey = null;
+			if ( queryCacheEnabled && canBeCached ) {
+				queryResultsCacheKey = QueryKey.from(
+						jdbcSelect.getSql(),
+						executionContext.getQueryOptions().getLimit(),
+						executionContext.getQueryParameterBindings(),
+						session
+				);
+			}
+			else {
+				queryResultsCacheKey = null;
+			}
 		}
 
 		if ( cachedResults == null ) {
 			return new JdbcValuesResultSetImpl(
 					resultSetAccess,
-					canBeCached ? queryResultsCacheKey : null,
+					queryResultsCacheKey,
 					queryIdentifier,
 					executionContext.getQueryOptions(),
 					jdbcValuesMapping,

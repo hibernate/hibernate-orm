@@ -2,10 +2,10 @@ package org.hibernate.query.hhh14156;
 
 import java.io.Serializable;
 import java.util.Objects;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.SQLServerDialect;

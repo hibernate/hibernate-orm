@@ -8,7 +8,7 @@
 // $Id$
 
 package org.hibernate.orm.test.bootstrap.binding.annotations.access;
-import javax.persistence.Embeddable;
+import jakarta.persistence.Embeddable;
 
 /**
  * @author Hardy Ferentschik

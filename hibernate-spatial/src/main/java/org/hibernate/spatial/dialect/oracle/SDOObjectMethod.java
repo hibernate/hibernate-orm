@@ -9,7 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.function.SQLFunction;
+import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.Type;
@@ -19,13 +19,14 @@ import org.hibernate.type.Type;
  *
  * @author Karel Maesen
  */
-class SDOObjectMethod implements SQLFunction {
+class SDOObjectMethod extends StandardSQLFunction {
 
 	private final Type type;
 
 	private final String name;
 
 	public SDOObjectMethod(String name, Type type) {
+		super(name);
 		this.type = type;
 		this.name = name;
 	}

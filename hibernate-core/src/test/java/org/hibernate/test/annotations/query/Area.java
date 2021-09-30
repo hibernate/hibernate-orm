@@ -7,17 +7,17 @@
 
 //$Id$
 package org.hibernate.test.annotations.query;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityResult;
-import javax.persistence.FieldResult;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.NamedNativeQueries;
-import javax.persistence.NamedNativeQuery;
-import javax.persistence.SqlResultSetMapping;
-import javax.persistence.SqlResultSetMappings;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityResult;
+import jakarta.persistence.FieldResult;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.NamedNativeQueries;
+import jakarta.persistence.NamedNativeQuery;
+import jakarta.persistence.SqlResultSetMapping;
+import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.Table;
 
 /**
  * Example of a entity load incl a join fetching of an associated *ToOne entity
@@ -40,13 +40,13 @@ import javax.persistence.Table;
 		})
 @SqlResultSetMappings(
 		@SqlResultSetMapping(name = "joinMapping", entities = {
-		@EntityResult(entityClass = org.hibernate.test.annotations.query.Night.class, fields = {
+		@EntityResult(entityClass = Night.class, fields = {
 		@FieldResult(name = "id", column = "nid"),
 		@FieldResult(name = "duration", column = "night_duration"),
 		@FieldResult(name = "date", column = "night_date"),
 		@FieldResult(name = "area", column = "area_id")
 				}),
-		@EntityResult(entityClass = org.hibernate.test.annotations.query.Area.class, fields = {
+		@EntityResult(entityClass = Area.class, fields = {
 		@FieldResult(name = "id", column = "aid"),
 		@FieldResult(name = "name", column = "name")
 				})

@@ -24,7 +24,7 @@ import static org.hibernate.query.results.ResultsHelper.impl;
 
 /**
  * ResultBuilder for scalar results defined via:<ul>
- *     <li>JPA {@link javax.persistence.ColumnResult}</li>
+ *     <li>JPA {@link jakarta.persistence.ColumnResult}</li>
  *     <li>`<return-scalar/>` as part of a `<resultset/>` stanza in `hbm.xml`</li>
  * </ul>
  *
@@ -49,6 +49,11 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 		this.explicitColumnName = explicitColumnName;
 		this.explicitType = explicitType;
 		this.explicitJavaTypeDescriptor = explicitJavaTypeDescriptor;
+	}
+
+	@Override
+	public Class<?> getJavaType() {
+		return explicitJavaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override

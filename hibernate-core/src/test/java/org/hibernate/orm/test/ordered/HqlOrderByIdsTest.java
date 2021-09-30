@@ -8,8 +8,8 @@ package org.hibernate.orm.test.ordered;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.persistence.Entity;
-import javax.persistence.Id;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import org.hibernate.dialect.MySQLDialect;
 

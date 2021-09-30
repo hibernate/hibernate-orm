@@ -12,14 +12,14 @@ import org.hibernate.LockMode;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
- * Contract to build {@link org.hibernate.engine.spi.EntityEntry}
+ * Contract to build {@link EntityEntry}
  *
  * @author Emmanuel Bernard
  */
 public interface EntityEntryFactory extends Serializable {
 
 	/**
-	 * Creates {@link org.hibernate.engine.spi.EntityEntry}.
+	 * Creates {@link EntityEntry}.
 	 */
 	EntityEntry createEntityEntry(
 			final Status status,

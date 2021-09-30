@@ -12,20 +12,15 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 dependencies {
     implementation project( ':hibernate-core' )
     implementation libraries.c3p0
-
     testImplementation project( ':hibernate-testing' )
     testImplementation libraries.mockito
     testImplementation libraries.mockito_inline
 
-    testImplementation( libraries.validator ) {
-        // for test runtime
-        transitive = true
-    }
-    // EL libraries are provided scope in Validator
-    testRuntimeOnly( libraries.expression_language )
+    testImplementation libraries.jakarta_validator
+    testRuntimeOnly libraries.jakarta_el
 
     if ( db.equalsIgnoreCase( 'oracle' ) ) {
-        testRuntimeOnly( libraries.oracle )
+        testRuntimeOnly libraries.oracle
     }
 }
 

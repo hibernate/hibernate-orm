@@ -6,7 +6,7 @@
  */
 package org.hibernate.test.jpa.naturalid;
 
-import javax.persistence.PersistenceException;
+import jakarta.persistence.PersistenceException;
 
 import org.junit.Test;
 

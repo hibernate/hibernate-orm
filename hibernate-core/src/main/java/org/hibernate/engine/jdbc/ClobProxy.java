@@ -47,7 +47,7 @@ public class ClobProxy implements InvocationHandler {
 	 *
 	 * @param reader The character reader.
 	 * @param length The length of the reader stream.
-	 * @see #generateProxy(java.io.Reader, long)
+	 * @see #generateProxy(Reader, long)
 	 */
 	protected ClobProxy(Reader reader, long length) {
 		this.characterStream = new CharacterStreamImpl( reader, length );

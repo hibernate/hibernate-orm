@@ -15,7 +15,7 @@ import org.hibernate.type.Type;
  * and "uncompiled" mappings (ie. <tt>Configuration</tt>) that are used by
  * implementors of <tt>Type</tt>.
  *
- * @see org.hibernate.type.Type
+ * @see Type
  * @see org.hibernate.internal.SessionFactoryImpl
  * @see org.hibernate.cfg.Configuration
  * @author Gavin King

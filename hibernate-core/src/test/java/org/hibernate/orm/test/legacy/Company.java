@@ -10,25 +10,25 @@ package org.hibernate.orm.test.legacy;
 /**
  * @author hbm2java
  */
-public class Company extends org.hibernate.orm.test.legacy.Party {
+public class Company extends Party {
 
-   java.lang.String id;
-   java.lang.String president;
+   String id;
+   String president;
 
 
-  java.lang.String getId() {
+  String getId() {
     return id;
   }
 
-  void  setId(java.lang.String newValue) {
+  void  setId(String newValue) {
     id = newValue;
   }
 
-  java.lang.String getPresident() {
+  String getPresident() {
     return president;
   }
 
-  void  setPresident(java.lang.String newValue) {
+  void  setPresident(String newValue) {
     president = newValue;
   }
 

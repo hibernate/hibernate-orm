@@ -7,8 +7,9 @@
 package org.hibernate.query.sqm.tree.select;
 
 import java.util.List;
+import java.util.function.Consumer;
 
-import javax.persistence.criteria.Selection;
+import jakarta.persistence.criteria.Selection;
 
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
@@ -26,10 +27,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * JPA Criteria API.
  *
  * @see org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder#tuple(Selection[])
- * @see javax.persistence.criteria.CriteriaBuilder#tuple(javax.persistence.criteria.Selection[])
+ * @see jakarta.persistence.criteria.CriteriaBuilder#tuple(jakarta.persistence.criteria.Selection[])
  *
  * @see org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder#array(Selection[])
- * @see javax.persistence.criteria.CriteriaBuilder#array(javax.persistence.criteria.Selection[])
+ * @see jakarta.persistence.criteria.CriteriaBuilder#array(jakarta.persistence.criteria.Selection[])
  *
  * @see org.hibernate.query.sqm.tree.expression.SqmTuple
  *
@@ -116,7 +117,10 @@ public class SqmJpaCompoundSelection<T>
 			sb.append(", ");
 			selectableNodes.get( i ).appendHqlString( sb );
 		}
-
 	}
 
+	@Override
+	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
+		selectableNodes.forEach( jpaSelectionConsumer );
+	}
 }

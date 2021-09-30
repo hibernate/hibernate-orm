@@ -7,7 +7,7 @@
 package org.hibernate.engine.transaction.jta.platform.internal;
 
 import java.io.Serializable;
-import javax.transaction.Synchronization;
+import jakarta.transaction.Synchronization;
 
 /**
  * Contract used to centralize {@link Synchronization} handling logic.

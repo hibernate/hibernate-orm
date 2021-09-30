@@ -11,8 +11,8 @@ package org.hibernate.orm.test.jpa.ops;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import javax.persistence.PersistenceException;
-import javax.persistence.RollbackException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RollbackException;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.SessionFactoryImplementor;

@@ -112,16 +112,12 @@ logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
 logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
 
 include 'hibernate-core'
-include 'hibernate-core-jakarta'
-
 include 'hibernate-testing'
-include 'hibernate-testing-jakarta'
-include 'hibernate-transaction-client'
 
 include 'hibernate-envers'
-include 'hibernate-envers-jakarta'
+include 'hibernate-spatial'
 
-//include 'hibernate-spatial'
+include 'hibernate-community-dialects'
 
 include 'hibernate-c3p0'
 include 'hibernate-proxool'
@@ -129,7 +125,7 @@ include 'hibernate-hikaricp'
 include 'hibernate-vibur'
 include 'hibernate-agroal'
 
-include 'hibernate-jcache'
+//include 'hibernate-jcache'
 
 include 'hibernate-micrometer'
 include 'hibernate-graalvm'
@@ -153,10 +149,6 @@ include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-jpamodelgen'
 
-include 'metamodel-generator-jakarta'
-project(':metamodel-generator-jakarta').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator-jakarta")
-project(':metamodel-generator-jakarta').name = 'hibernate-jpamodelgen-jakarta'
-
 include 'hibernate-gradle-plugin'
 project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-gradle-plugin")
 
@@ -166,6 +158,9 @@ project(':hibernate-gradle-plugin').projectDir = new File(rootProject.projectDir
 include 'hibernate-enhance-maven-plugin'
 project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.projectDir, "tooling/hibernate-enhance-maven-plugin")
 
+include 'hibernate-ant'
+project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
+
 include 'hibernate-community-dialects'
 
 rootProject.children.each { project ->
@@ -174,3 +169,4 @@ rootProject.children.each { project ->
     assert project.buildFile.exists()
     assert project.buildFile.isFile()
 }
+

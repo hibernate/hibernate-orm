@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.hibernate.LockMode;
@@ -15,9 +16,12 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.OneToOne;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -172,7 +176,22 @@ public class ToOneAttributeMapping
 			else {
 				cardinality = Cardinality.MANY_TO_ONE;
 			}
-			this.bidirectionalAttributeName = manyToOne.getReferencedPropertyName();
+			if ( referencedPropertyName == null ) {
+				String bidirectionalAttributeName = null;
+				final PersistentClass entityBinding = manyToOne.getMetadata().getEntityBinding( manyToOne.getReferencedEntityName() );
+				final Iterator<Property> propertyClosureIterator = entityBinding.getPropertyClosureIterator();
+				while (propertyClosureIterator.hasNext()) {
+					final Property property = propertyClosureIterator.next();
+					if ( property.getValue() instanceof Collection && name.equals( ( (Collection) property.getValue() ).getMappedByProperty() ) ) {
+						bidirectionalAttributeName = property.getName();
+						break;
+					}
+				}
+				this.bidirectionalAttributeName = bidirectionalAttributeName;
+			}
+			else {
+				this.bidirectionalAttributeName = referencedPropertyName;
+			}
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -256,14 +275,29 @@ public class ToOneAttributeMapping
 			) );
 		}
 		if ( referencedPropertyName == null ) {
+			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
+			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
 			final IdentifierProperty identifierProperty = getEntityMappingType()
 					.getEntityPersister()
 					.getEntityMetamodel()
 					.getIdentifierProperty();
-			this.targetKeyPropertyName = identifierProperty.getName();
-			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
-			addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, identifierProperty.getType() );
+			final Type propertyType = identifierProperty.getType();
+			if ( identifierProperty.getName() == null ) {
+				final CompositeType compositeType;
+				if ( propertyType.isComponentType() && ( compositeType = (CompositeType) propertyType ).isEmbedded()
+						&& compositeType.getPropertyNames().length == 1 ) {
+					this.targetKeyPropertyName = compositeType.getPropertyNames()[0];
+					addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, compositeType.getSubtypes()[0] );
+				}
+				else {
+					this.targetKeyPropertyName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
+					addPrefixedPropertyNames( targetKeyPropertyNames, null, propertyType );
+				}
+			}
+			else {
+				this.targetKeyPropertyName = identifierProperty.getName();
+				addPrefixedPropertyNames( targetKeyPropertyNames, targetKeyPropertyName, propertyType );
+			}
 			this.targetKeyPropertyNames = targetKeyPropertyNames;
 		}
 		else if ( bootValue.isReferenceToPrimaryKey() ) {
@@ -315,21 +349,23 @@ public class ToOneAttributeMapping
 			Set<String> targetKeyPropertyNames,
 			String prefix,
 			Type type) {
-		if ( type.isComponentType() ) {
+		if ( prefix != null ) {
 			targetKeyPropertyNames.add( prefix );
+		}
+		if ( type.isComponentType() ) {
 			final ComponentType componentType = (ComponentType) type;
 			final String[] propertyNames = componentType.getPropertyNames();
 			final Type[] componentTypeSubtypes = componentType.getSubtypes();
 			for ( int i = 0, propertyNamesLength = propertyNames.length; i < propertyNamesLength; i++ ) {
-				addPrefixedPropertyNames(
-						targetKeyPropertyNames,
-						prefix + "." + propertyNames[i],
-						componentTypeSubtypes[i]
-				);
+				final String newPrefix;
+				if ( prefix == null ) {
+					newPrefix = propertyNames[i];
+				}
+				else {
+					newPrefix = prefix + "." + propertyNames[i];
+				}
+				addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, componentTypeSubtypes[i] );
 			}
-		}
-		else {
-			targetKeyPropertyNames.add( prefix );
 		}
 	}
 
@@ -454,34 +490,21 @@ public class ToOneAttributeMapping
 				return null;
 			}
 
-			ModelPart modelPart = creationState.resolveModelPart( parentNavigablePath );
-			if ( modelPart instanceof EmbeddedIdentifierMappingImpl ) {
+			ModelPart parentModelPart = creationState.resolveModelPart( parentNavigablePath );
+			if ( parentModelPart instanceof EmbeddedIdentifierMappingImpl ) {
 				while ( parentNavigablePath instanceof EntityIdentifierNavigablePath ) {
 					parentNavigablePath = parentNavigablePath.getParent();
+					assert parentNavigablePath != null;
+					parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 				}
 			}
-			while ( modelPart instanceof EmbeddableValuedFetchable ) {
+			while ( parentModelPart instanceof EmbeddableValuedFetchable ) {
 				parentNavigablePath = parentNavigablePath.getParent();
 				assert parentNavigablePath != null;
-				modelPart = creationState.resolveModelPart( parentNavigablePath );
+				parentModelPart = creationState.resolveModelPart( parentNavigablePath );
 			}
 
-			if ( isBidirectionalAttributeName( parentNavigablePath ) ) {
-				/*
-					class Child {
-						@OneToOne(mappedBy = "biologicalChild")
-						private Mother mother;
-					}
-
-					class Mother {
-						@OneToOne
-						private Child biologicalChild;
-					}
-
-					fetchablePath= Mother.biologicalChild.mother
-					this.mappedBy = "biologicalChild"
-					parent.getFullPath() = "Mother.biologicalChild"
-				 */
+			if ( isBidirectionalAttributeName( parentNavigablePath, parentModelPart, fetchablePath, creationState ) ) {
 				return createCircularBiDirectionalFetch(
 						fetchablePath,
 						fetchParent,
@@ -490,39 +513,6 @@ public class ToOneAttributeMapping
 				);
 			}
 
-			/*
-				check if mappedBy is on the other side of the association
-			 */
-			final boolean isBiDirectional = isBidirectional(
-					modelPart,
-					parentNavigablePath.getParent(),
-					fetchablePath,
-					creationState
-			);
-			if ( isBiDirectional ) {
-					/*
-						class Child {
-							@OneToOne(mappedBy = "biologicalChild")
-							private Mother mother;
-						}
-
-						class Mother {
-							@OneToOne
-							private Child biologicalChild;
-						}
-
-						fetchablePath = "Child.mother.biologicalChild"
-						otherSideAssociationModelPart = ToOneAttributeMapping("Child.mother")
-						otherSideMappedBy = "biologicalChild"
-
-					 */
-				return createCircularBiDirectionalFetch(
-						fetchablePath,
-						fetchParent,
-						parentNavigablePath,
-						LockMode.READ
-				);
-			}
 			/*
 						class Child {
 							@OneToOne
@@ -534,7 +524,7 @@ public class ToOneAttributeMapping
 							private Child stepMother;
 						}
 
-				We have a cirularity but it is not bidirectional
+				We have a circularity but it is not bidirectional
 			 */
 			if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 				final TableGroup parentTableGroup = creationState
@@ -561,6 +551,7 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						fetchParent,
 						this,
+						isSelectByUniqueKey( sideNature ),
 						fetchablePath,
 						foreignKeyDomainResult
 				);
@@ -569,35 +560,95 @@ public class ToOneAttributeMapping
 		return null;
 	}
 
-	private boolean isBidirectional(
-			ModelPart modelPart,
-			NavigablePath parentOfParent,
+	protected boolean isBidirectionalAttributeName(
+			NavigablePath parentNavigablePath,
+			ModelPart parentModelPart,
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState) {
-		if ( modelPart instanceof ToOneAttributeMapping ) {
-			return ( (ToOneAttributeMapping) modelPart ).isBidirectionalAttributeName( fetchablePath );
-		}
-
-		if ( modelPart instanceof PluralAttributeMapping ) {
-			return ( (PluralAttributeMapping) modelPart ).isBidirectionalAttributeName( fetchablePath );
-		}
-
-		if ( modelPart instanceof EntityCollectionPart ) {
-			if ( parentOfParent instanceof EntityIdentifierNavigablePath ) {
-				parentOfParent = parentOfParent.getParent();
-			}
-			return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) ).isBidirectionalAttributeName(
-					fetchablePath );
-		}
-
-		return false;
-	}
-
-	protected boolean isBidirectionalAttributeName(NavigablePath fetchablePath) {
 		if ( bidirectionalAttributeName == null ) {
+			/*
+				check if mappedBy is on the other side of the association
+			 */
+
+			/*
+				class Child {
+					@OneToOne(mappedBy = "biologicalChild")
+					private Mother mother;
+				}
+
+				class Mother {
+					@OneToOne
+					private Child biologicalChild;
+				}
+
+				fetchablePath = "Child.mother.biologicalChild"
+				otherSideAssociationModelPart = ToOneAttributeMapping("Child.mother")
+				otherSideMappedBy = "biologicalChild"
+
+			 */
+			if ( parentModelPart instanceof ToOneAttributeMapping ) {
+				final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) parentModelPart;
+				if ( toOneAttributeMapping.bidirectionalAttributeName != null ) {
+					return toOneAttributeMapping.isBidirectionalAttributeName(
+							fetchablePath,
+							this,
+							parentNavigablePath,
+							creationState
+					);
+				}
+			}
+			else if ( parentModelPart instanceof PluralAttributeMapping ) {
+				return ( (PluralAttributeMapping) parentModelPart ).isBidirectionalAttributeName( fetchablePath, this );
+			}
+			else if ( parentModelPart instanceof EntityCollectionPart ) {
+				NavigablePath parentOfParent = parentNavigablePath.getParent();
+				if ( parentOfParent instanceof EntityIdentifierNavigablePath ) {
+					parentOfParent = parentOfParent.getParent();
+				}
+				return ( (PluralAttributeMapping) creationState.resolveModelPart( parentOfParent ) )
+						.isBidirectionalAttributeName( fetchablePath, this );
+			}
 			return false;
 		}
-		return fetchablePath.getFullPath().endsWith( bidirectionalAttributeName );
+		if ( cardinality == Cardinality.MANY_TO_ONE ) {
+			/*
+				class Child {
+					@OneToOne(mappedBy = "biologicalChild")
+					private Mother mother;
+				}
+
+				class Mother {
+					@OneToOne
+					private Child biologicalChild;
+				}
+
+				fetchablePath= Mother.biologicalChild.mother
+				this.mappedBy = "biologicalChild"
+				parent.getFullPath() = "Mother.biologicalChild"
+			 */
+			final String fullPath = parentNavigablePath.getFullPath();
+			if ( fullPath.endsWith( bidirectionalAttributeName + "." + CollectionPart.Nature.ELEMENT.getName() ) ) {
+				final NavigablePath parentPath = parentNavigablePath.getParent().getParent();
+				// This can be null for a collection loader
+				if ( parentPath != null ) {
+					// If the parent is null, this is a simple collection fetch of a root, in which case the types must match
+					if ( parentPath.getParent() == null ) {
+						final String entityName = entityMappingType.getPartName();
+						return parentPath.getFullPath().startsWith( entityName ) && (
+								parentPath.getFullPath().length() == entityName.length()
+										// Ignore a possible alias
+										|| parentPath.getFullPath().charAt( entityName.length() ) == '('
+						);
+					}
+					// If we have a parent, we ensure that the parent is the same as the attribute name
+					else {
+						return parentPath.getUnaliasedLocalName().equals( navigableRole.getLocalName() );
+					}
+				}
+			}
+			return false;
+		}
+		return parentNavigablePath.getUnaliasedLocalName().equals( bidirectionalAttributeName );
 	}
 
 	public String getBidirectionalAttributeName(){
@@ -724,16 +775,7 @@ public class ToOneAttributeMapping
 				side,
 				creationState
 		);
-		boolean selectByUniqueKey;
-		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
-			// case 1.2
-			selectByUniqueKey = !getKeyTargetMatchPart().getNavigableRole()
-					.equals( entityMappingType.getIdentifierMapping().getNavigableRole() );
-		}
-		else {
-			// case 1.1
-			selectByUniqueKey = bidirectionalAttributeName != null;
-		}
+		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
 		if ( fetchTiming == FetchTiming.IMMEDIATE ) {
 			return new EntityFetchSelectImpl(
@@ -752,6 +794,18 @@ public class ToOneAttributeMapping
 				fetchablePath,
 				keyResult
 		);
+	}
+
+	private boolean isSelectByUniqueKey(ForeignKeyDescriptor.Nature side) {
+		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
+			// case 1.2
+			return !getKeyTargetMatchPart().getNavigableRole()
+					.equals( entityMappingType.getIdentifierMapping().getNavigableRole() );
+		}
+		else {
+			// case 1.1
+			return bidirectionalAttributeName != null;
+		}
 	}
 
 	@Override
@@ -812,6 +866,7 @@ public class ToOneAttributeMapping
 		);
 	}
 
+	@Override
 	public SqlAstJoinType getDefaultSqlAstJoinType(TableGroup parentTableGroup) {
 		if ( isNullable ) {
 			return SqlAstJoinType.LEFT;
@@ -866,6 +921,7 @@ public class ToOneAttributeMapping
 		final LazyTableGroup lazyTableGroup = new LazyTableGroup(
 				canUseInnerJoin,
 				navigablePath,
+				fetched,
 				() -> createTableGroupJoinInternal(
 						canUseInnerJoin,
 						navigablePath,

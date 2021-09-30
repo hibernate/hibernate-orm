@@ -80,12 +80,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class CaseSensitiveCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.areStringComparisonsCaseInsensitive();
-		}
-	}
-
 	public static class SupportsNoColumnInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNoColumnsInsert();

@@ -46,6 +46,11 @@ public class EntityDomainResultBuilder implements ResultBuilder {
 	}
 
 	@Override
+	public Class<?> getJavaType() {
+		return entityDescriptor.getJavaTypeDescriptor().getJavaTypeClass();
+	}
+
+	@Override
 	public EntityResult buildResult(
 			JdbcValuesMetadata jdbcResultsMetadata,
 			int resultPosition,

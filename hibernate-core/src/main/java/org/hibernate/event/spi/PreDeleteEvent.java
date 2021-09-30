@@ -7,7 +7,6 @@
 package org.hibernate.event.spi;
 
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.secure.spi.PermissionCheckEntityInformation;
 
 
 /**
@@ -17,9 +16,7 @@ import org.hibernate.secure.spi.PermissionCheckEntityInformation;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PreDeleteEvent
-		extends AbstractPreDatabaseOperationEvent
-		implements PermissionCheckEntityInformation {
+public class PreDeleteEvent extends AbstractPreDatabaseOperationEvent {
 
 	private Object[] deletedState;
 

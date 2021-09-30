@@ -14,26 +14,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.persistence.LockModeType;
-import javax.persistence.LockTimeoutException;
-import javax.persistence.OptimisticLockException;
-import javax.persistence.PersistenceException;
-import javax.persistence.PessimisticLockException;
-import javax.persistence.Query;
-import javax.persistence.QueryTimeoutException;
+
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.jpa.AvailableSettings;
 import org.hibernate.jpa.QueryHints;
-import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialectFeature;
@@ -41,8 +34,17 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.jboss.logging.Logger;
 import org.junit.Test;
+
+import org.jboss.logging.Logger;
+
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockTimeoutException;
+import jakarta.persistence.OptimisticLockException;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PessimisticLockException;
+import jakarta.persistence.Query;
+import jakarta.persistence.QueryTimeoutException;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -77,7 +79,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, em -> {
 			Map<String, Object> properties = new HashMap<String, Object>();
-			properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
+			properties.put( AvailableSettings.JAKARTA_LOCK_TIMEOUT, 0L );
 			em.find( Lock.class, 1, LockModeType.PESSIMISTIC_WRITE, properties );
 		} );
 
@@ -109,7 +111,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 				try {
 					TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
 					Map<String, Object> properties = new HashMap<String, Object>();
-					properties.put( AvailableSettings.LOCK_TIMEOUT, 0L );
+					properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0L );
 
 					entityManager.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_WRITE, properties );
 					fail( "Exception should be thrown" );
@@ -679,7 +681,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							log.info( "testContendedPessimisticReadLockTimeout: (BG) read write-locked entity" );
 							Map<String, Object> props = new HashMap<String, Object>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_READ, props );
 							}
@@ -762,7 +764,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							log.info( "testContendedPessimisticWriteLockTimeout: (BG) read write-locked entity" );
 							Map<String, Object> props = new HashMap<String, Object>();
 							// timeout is in milliseconds
-							props.put( AvailableSettings.LOCK_TIMEOUT, 1000 );
+							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
@@ -842,7 +844,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 							log.info( "testContendedPessimisticWriteLockNoWait: (BG) read write-locked entity" );
 							Map<String, Object> props = new HashMap<String, Object>();
 							// timeout of zero means no wait (for lock)
-							props.put( AvailableSettings.LOCK_TIMEOUT, 0 );
+							props.put( AvailableSettings.JPA_LOCK_TIMEOUT, 0 );
 							try {
 								_entityManager.lock( lock2, LockModeType.PESSIMISTIC_WRITE, props );
 							}
@@ -1080,7 +1082,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		final CountDownLatch latch = new CountDownLatch( 1 );
 
 		final Map<String, Object> timeoutProps = new HashMap<String, Object>();
-		timeoutProps.put( AvailableSettings.LOCK_TIMEOUT, 1000 ); // 1 second timeout
+		timeoutProps.put( AvailableSettings.JPA_LOCK_TIMEOUT, 1000 ); // 1 second timeout
 		final Lock lock = new Lock();
 
 		FutureTask<Boolean> bgTask = new FutureTask<>(

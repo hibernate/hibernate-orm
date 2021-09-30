@@ -8,9 +8,9 @@ package org.hibernate.engine.spi;
 
 import java.util.Map;
 import java.util.Set;
-import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
+import jakarta.persistence.criteria.CriteriaDelete;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaUpdate;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -23,7 +23,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 
 /**
  * Defines the "internal contract" for {@link Session} and other parts of Hibernate such as
- * {@link org.hibernate.type.Type}, {@link org.hibernate.persister.entity.EntityPersister}
+ * {@link org.hibernate.type.Type}, {@link EntityPersister}
  * and {@link org.hibernate.persister.collection.CollectionPersister} implementations.
  *
  * A Session, through this interface and SharedSessionContractImplementor, implements:<ul>

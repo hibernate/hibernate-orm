@@ -718,7 +718,7 @@ public class MappingModelCreationHelper {
 				);
 
 				collectionMappingType = new CollectionMappingTypeImpl(
-						jtdRegistry.getDescriptor( java.util.List.class ),
+						jtdRegistry.getDescriptor( List.class ),
 						StandardListSemantics.INSTANCE
 				);
 

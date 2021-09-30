@@ -39,11 +39,11 @@ public interface LobHelper {
 	public Blob createBlob(InputStream stream, long length);
 
 	/**
-	 * Create a new {@link java.sql.Clob} from content.
+	 * Create a new {@link Clob} from content.
 	 *
 	 * @param string The string data
 	 *
-	 * @return The created {@link java.sql.Clob}
+	 * @return The created {@link Clob}
 	 */
 	public Clob createClob(String string);
 

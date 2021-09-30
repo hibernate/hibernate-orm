@@ -4,12 +4,12 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.SortedSet;
 import java.util.TreeSet;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 
 import org.hamcrest.collection.IsIterableContainingInOrder;
 
@@ -31,7 +31,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
  *     <li>{@link org.hibernate.annotations.SortNatural @SortNatural}</li>
  *     <li>{@link org.hibernate.annotations.SortComparator @SortComparator}</li>
  *     <li>{@link org.hibernate.annotations.OrderBy @OrderBy(from hibernate)}</li>
- *     <li>{@link javax.persistence.OrderBy @OrderBy(from JPA)}</li>
+ *     <li>{@link jakarta.persistence.OrderBy @OrderBy(from JPA)}</li>
  * </ul>
  * 
  * @author Nathan Xu

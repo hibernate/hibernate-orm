@@ -16,8 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import javax.persistence.AttributeConverter;
-import javax.persistence.SharedCacheMode;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.HibernateException;
@@ -67,7 +67,7 @@ import org.hibernate.usertype.UserType;
  * <b>the</b> way to bootstrap Hibernate.
  * <p/>
  * The approach here is to define all configuration and mapping sources in one API
- * and to then build the {@link org.hibernate.SessionFactory} in one-shot.  The configuration
+ * and to then build the {@link SessionFactory} in one-shot.  The configuration
  * and mapping sources defined here are just held here until the SessionFactory is built.  This
  * is an important distinction from the legacy behavior of this class, where we would try to
  * incrementally build the mappings from sources as they were added.  The ramification of this
@@ -81,7 +81,7 @@ import org.hibernate.usertype.UserType;
  * @author Gavin King
  * @author Steve Ebersole
  *
- * @see org.hibernate.SessionFactory
+ * @see SessionFactory
  */
 @SuppressWarnings( {"UnusedDeclaration"})
 public class Configuration {
@@ -354,9 +354,9 @@ public class Configuration {
 	 *
 	 * @param xmlFile a path to a file
 	 * @return this (for method chaining purposes)
-	 * @throws org.hibernate.MappingException Indicates inability to locate or parse
+	 * @throws MappingException Indicates inability to locate or parse
 	 * the specified mapping file.
-	 * @see #addFile(java.io.File)
+	 * @see #addFile(File)
 	 */
 	public Configuration addFile(String xmlFile) throws MappingException {
 		metadataSources.addFile( xmlFile );
@@ -442,11 +442,11 @@ public class Configuration {
 	 * Add a cacheable mapping file.
 	 *
 	 * @param xmlFile The name of the file to be added.  This must be in a form
-	 * useable to simply construct a {@link java.io.File} instance.
+	 * useable to simply construct a {@link File} instance.
 	 * @return this (for method chaining purposes)
 	 * @throws MappingException Indicates problems reading the cached file or processing
 	 * the non-cached file.
-	 * @see #addCacheableFile(java.io.File)
+	 * @see #addCacheableFile(File)
 	 */
 	public Configuration addCacheableFile(String xmlFile) throws MappingException {
 		metadataSources.addCacheableFile( xmlFile );
@@ -492,7 +492,7 @@ public class Configuration {
 	}
 
 	/**
-	 * Read mappings from an {@link java.io.InputStream}.
+	 * Read mappings from an {@link InputStream}.
 	 *
 	 * @param xmlInputStream The input stream containing a DOM.
 	 * @return this (for method chaining purposes)
@@ -847,7 +847,7 @@ public class Configuration {
 	/**
 	 * Sets the SharedCacheMode to use.
 	 *
-	 * Note that at the moment, only {@link javax.persistence.SharedCacheMode#ALL} has
+	 * Note that at the moment, only {@link jakarta.persistence.SharedCacheMode#ALL} has
 	 * any effect in terms of {@code hbm.xml} binding.
 	 *
 	 * @param sharedCacheMode The SharedCacheMode to use

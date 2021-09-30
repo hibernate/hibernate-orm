@@ -190,7 +190,7 @@ public class SessionFactoryRegistry {
 	}
 
 	/**
-	 * Implementation of {@literal JNDI} {@link javax.naming.event.NamespaceChangeListener} contract to listener for context events
+	 * Implementation of {@literal JNDI} {@link NamespaceChangeListener} contract to listener for context events
 	 * and react accordingly if necessary
 	 */
 	private final NamespaceChangeListener listener = new NamespaceChangeListener() {

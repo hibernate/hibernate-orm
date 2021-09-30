@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.delete;
 
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.sqm.NodeBuilder;

@@ -19,7 +19,7 @@ import org.hibernate.JDBCException;
 @FunctionalInterface
 public interface SQLExceptionConversionDelegate {
 	/**
-	 * Convert the given SQLException into the Hibernate {@link org.hibernate.JDBCException} hierarchy.
+	 * Convert the given SQLException into the Hibernate {@link JDBCException} hierarchy.
 	 *
 	 * @param sqlException The SQLException to be converted.
 	 * @param message An (optional) error message.

@@ -91,20 +91,32 @@ public class QueryHints {
 	public static final String HINT_NATIVE_LOCKMODE = NATIVE_LOCKMODE;
 	
 	/**
+	 * @deprecated Use {@link #JAKARTA_HINT_FETCH_GRAPH} instead
+	 */
+	@Deprecated
+	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
+
+	/**
 	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).
-	 * 
+	 *
 	 * Note: Currently, attributes that are not specified are treated as FetchType.LAZY or FetchType.EAGER depending
 	 * on the attribute's definition in metadata, rather than forcing FetchType.LAZY.
 	 */
-	public static final String HINT_FETCHGRAPH = GraphSemantic.FETCH.getJpaHintName();
-	
+	public static final String JAKARTA_HINT_FETCH_GRAPH = GraphSemantic.FETCH.getJakartaJpaHintName();
+
+	/**
+	 * @deprecated Use {@link #JAKARTA_HINT_LOAD_GRAPH} instead
+	 */
+	@Deprecated
+	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
+
 	/**
 	 * Hint providing a "loadgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as
 	 * FetchType.EAGER (via join fetch or subsequent select).  Attributes that are not specified are treated as
 	 * FetchType.LAZY or FetchType.EAGER depending on the attribute's definition in metadata
 	 */
-	public static final String HINT_LOADGRAPH = GraphSemantic.LOAD.getJpaHintName();
+	public static final String JAKARTA_HINT_LOAD_GRAPH = GraphSemantic.LOAD.getJakartaJpaHintName();
 
 	/**
 	 * Hint providing a "fetchgraph" EntityGraph.  Attributes explicitly specified as AttributeNodes are treated as

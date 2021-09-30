@@ -9,8 +9,8 @@ package org.hibernate.spatial.testing.dialects.oracle;
 
 import java.util.List;
 
-import org.hibernate.spatial.testing.TestDataElement;
-import org.hibernate.spatial.testing.TestDataReader;
+import org.hibernate.spatial.testing.datareader.TestDataElement;
+import org.hibernate.spatial.testing.datareader.TestDataReader;
 
 import org.dom4j.Element;
 

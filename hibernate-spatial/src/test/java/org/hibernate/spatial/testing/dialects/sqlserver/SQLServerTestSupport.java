@@ -7,12 +7,8 @@
 
 package org.hibernate.spatial.testing.dialects.sqlserver;
 
-import org.hibernate.spatial.testing.DataSourceUtils;
-import org.hibernate.spatial.testing.SQLExpressionTemplate;
-import org.hibernate.spatial.testing.TestData;
-import org.hibernate.spatial.testing.TestSupport;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.spatial.testing.datareader.TestData;
+import org.hibernate.spatial.testing.datareader.TestSupport;
 
 /**
  * @author Karel Maesen, Geovise BVBA
@@ -20,17 +16,13 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
  */
 public class SQLServerTestSupport extends TestSupport {
 
-
-	public TestData createTestData(BaseCoreFunctionalTestCase testcase) {
+	@Override
+	public TestData createTestData(TestDataPurpose purpose) {
 		return TestData.fromFile( "test-data-set.xml" );
 	}
 
-	public SqlServerExpectationsFactory createExpectationsFactory(DataSourceUtils dataSourceUtils) {
-		return new SqlServerExpectationsFactory( dataSourceUtils );
+	public SqlServerExpectationsFactory createExpectationsFactory() {
+		return new SqlServerExpectationsFactory();
 	}
 
-	@Override
-	public SQLExpressionTemplate getSQLExpressionTemplate() {
-		return new SQLServerExpressionTemplate();
-	}
 }

@@ -1,3 +1,4 @@
+[[legacy-boostrap-guide]]
 = Legacy Bootstrapping
 :toc:
 

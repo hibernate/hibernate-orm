@@ -14,30 +14,26 @@ apply plugin: 'org.hibernate.matrix-test'
 
 
 dependencies {
-    compile( project(':hibernate-core') )
-    compile( libraries.geolatte )
+    compile project(':hibernate-core')
+    compile libraries.geolatte
 
-    compile( libraries.postgresql )
+    compileOnly libraries.postgresql
 
-    testCompile(libraries.junit)
-    testCompile(project(':hibernate-testing'))
-    testCompile( project( path: ':hibernate-core', configuration: 'tests' ) )
-    testCompile([group: 'org.apache.commons', name: 'commons-dbcp2', version: '2.8.0'])
-    testCompile(libraries.validation)
-    testCompile(libraries.jandex)
-    testCompile(libraries.classmate)
-    testCompile(libraries.validator) {
-        // for test runtime
-        transitive = true
-    }
-    testCompile(libraries.dom4j) {
-        transitive = false
-    }
+    testCompile project(':hibernate-testing')
+    testCompile project(':hibernate-ant')
+    testCompile project( path: ':hibernate-core', configuration: 'tests' )
 
-    testRuntime( libraries.expression_language )
+    testCompile libraries.jakarta_validation
+    testCompile libraries.jandex
+    testCompile libraries.classmate
+    testCompile libraries.jakarta_validator
+    testCompile libraries.dom4j
 
-    testRuntime('jaxen:jaxen:1.1')
-    testRuntime(libraries.byteBuddy)
+    testImplementation libraries.postgresql
+
+    testRuntime libraries.jakarta_el
+    testRuntime 'jaxen:jaxen:1.1'
+    testRuntime libraries.byteBuddy
 }
 
 sourceSets.test.resources {
@@ -45,5 +41,8 @@ sourceSets.test.resources {
 }
 
 tasks.test {
-    enabled = project.db == 'pgsql'
+    enabled =  ['pgsql', 'cockroachdb'].contains( project.db )
 }
+
+tasks.test.include '**/*'
+

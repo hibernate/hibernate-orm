@@ -9,7 +9,7 @@ package org.hibernate.dialect;
 import java.sql.DatabaseMetaData;
 import java.sql.Types;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
@@ -648,6 +648,11 @@ public class HSQLDialect extends Dialect {
 	@Override
 	public String toBooleanValueString(boolean bool) {
 		return String.valueOf( bool );
+	}
+
+	@Override
+	public boolean supportsTupleCounts() {
+		return true;
 	}
 
 	@Override

@@ -8,14 +8,14 @@
 package org.hibernate.engine.spi;
 
 /**
- * Navigation methods for extra state objects attached to {@link org.hibernate.engine.spi.EntityEntry}.
+ * Navigation methods for extra state objects attached to {@link EntityEntry}.
  *
  * @author <a href="mailto:emmanuel@hibernate.org">Emmanuel Bernard</a>
  */
 public interface EntityEntryExtraState {
 
 	/**
-	 * Attach additional state to the core state of {@link org.hibernate.engine.spi.EntityEntry}
+	 * Attach additional state to the core state of {@link EntityEntry}
 	 * <p>
 	 * Implementations must delegate to the next state or add it as next state if last in line.
 	 */

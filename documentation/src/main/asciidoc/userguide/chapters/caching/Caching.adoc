@@ -81,11 +81,11 @@ Besides provider specific configuration, there are a number of configurations op
 [[caching-mappings]]
 === Configuring second-level cache mappings
 
-The cache mappings can be configured via JPA annotations or XML descriptors or using the Hibernate-specific mapping files.
+The cache mappings can be configured via Jakarta Persistence annotations or XML descriptors or using the Hibernate-specific mapping files.
 
 By default, entities are not part of the second level cache and we recommend you to stick to this setting.
 However, you can override this by setting the `shared-cache-mode` element in your `persistence.xml` file
-or by using the `javax.persistence.sharedCache.mode` property in your configuration file.
+or by using the `jakarta.persistence.sharedCache.mode` property in your configuration file.
 The following values are possible:
 
 `ENABLE_SELECTIVE` (Default and recommended value)::
@@ -137,12 +137,12 @@ include::
 
 Traditionally, when using entity inheritance, Hibernate required an entity hierarchy to be either cached entirely or not cached at all.
 Therefore, if you wanted to cache a subclass belonging to a given entity hierarchy,
-the JPA `@Cacheable` and the Hibernate-specific `@Cache` annotations would have to be declared at the root-entity level only.
+the Jakarta Persistence `@Cacheable` and the Hibernate-specific `@Cache` annotations would have to be declared at the root-entity level only.
 
 Although we still believe that all entities belonging to a given entity hierarchy should share the same caching semantics,
-the JPA specification says that the `@Cacheable` annotation could be overwritten by a subclass:
+the Jakarta Persistence specification says that the `@Cacheable` annotation could be overwritten by a subclass:
 
-[quote, Section 11.1.7 of the JPA 2.1 Specification]
+[quote, Section 11.1.7 of the Jakarta Persistence]
 ____
 The value of the `Cacheable` annotation is inherited by subclasses; it can be overridden by specifying `Cacheable` on a subclass.
 ____
@@ -178,7 +178,7 @@ entity relationships are not stored in the cache,
 Once an entity is stored in the second-level cache, you can avoid a database hit and load the entity from the cache alone:
 
 [[caching-entity-jpa-example]]
-.Loading entity using JPA
+.Loading entity using Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -288,7 +288,7 @@ Each particular query that needs to be cached must be manually set as cacheable.
 This way, the query looks for existing cache results or adds the query results to the cache when being executed.
 
 [[caching-query-jpa-example]]
-.Caching query using JPA
+.Caching query using Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -341,7 +341,7 @@ If you require fine-grained control over query cache expiration policies,
 you can specify a named cache region for a particular query.
 
 [[caching-query-region-jpa-example]]
-.Caching query in custom region using JPA
+.Caching query in custom region using Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -362,7 +362,7 @@ If you want to force the query cache to refresh one of its regions (disregarding
 you can use custom cache modes.
 
 [[caching-query-region-store-mode-jpa-example]]
-.Using custom query cache mode with JPA
+.Using custom query cache mode with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -398,15 +398,15 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-query-region-native-
 
 Traditionally, Hibernate defined the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/CacheMode.html[`CacheMode`] enumeration to describe
 the ways of interactions with the cached data.
-JPA split cache modes by storage ({jpaJavadocUrlPrefix}CacheStoreMode.html[`CacheStoreMode`])
+Jakarta Persistence split cache modes by storage ({jpaJavadocUrlPrefix}CacheStoreMode.html[`CacheStoreMode`])
 and retrieval ({jpaJavadocUrlPrefix}CacheRetrieveMode.html[`CacheRetrieveMode`]).
 
-The relationship between Hibernate and JPA cache modes can be seen in the following table:
+The relationship between Hibernate and Jakarta Persistence cache modes can be seen in the following table:
 
 .Cache modes relationships
 [cols=",,",options="header",]
 |======================================
-|Hibernate 			 | JPA | Description
+|Hibernate 			 | Jakarta Persistence | Description
 |`CacheMode.NORMAL`  |`CacheStoreMode.USE` and `CacheRetrieveMode.USE` | Default. Reads/writes data from/into the cache
 |`CacheMode.REFRESH` |`CacheStoreMode.REFRESH` and `CacheRetrieveMode.BYPASS` | Doesn't read from cache, but writes to the cache upon loading from the database
 |`CacheMode.PUT`     |`CacheStoreMode.USE` and `CacheRetrieveMode.BYPASS` | Doesn't read from cache, but writes to the cache as it reads from the database
@@ -417,7 +417,7 @@ The relationship between Hibernate and JPA cache modes can be seen in the follow
 Setting the cache mode can be done either when loading entities directly or when executing a query.
 
 [[caching-management-cache-mode-entity-jpa-example]]
-.Using custom cache modes with JPA
+.Using custom cache modes with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -437,7 +437,7 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 The custom cache modes can be set for queries as well:
 
 [[caching-management-cache-mode-query-jpa-example]]
-.Using custom cache modes for queries with JPA
+.Using custom cache modes for queries with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----
@@ -460,10 +460,10 @@ include::{sourcedir}/SecondLevelCacheTest.java[tags=caching-management-cache-mod
 Because the second level cache is bound to the `EntityManagerFactory` or the `SessionFactory`,
 cache eviction must be done through these two interfaces.
 
-JPA only supports entity eviction through the {jpaJavadocUrlPrefix}Cache.html[`javax.persistence.Cache`] interface:
+Jakarta Persistence only supports entity eviction through the {jpaJavadocUrlPrefix}Cache.html[`jakarta.persistence.Cache`] interface:
 
 [[caching-management-evict-jpa-example]]
-.Evicting entities with JPA
+.Evicting entities with Jakarta Persistence
 ====
 [source, JAVA, indent=0]
 ----

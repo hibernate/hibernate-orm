@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 
-import javax.persistence.TemporalType;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.function.QuantifiedLeastGreatestEmulation;
@@ -149,6 +149,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
+	public int getFloatPrecision() {
+		return 15;
+	}
+
+	@Override
 	public int getDoublePrecision() {
 		return 48;
 	}
@@ -193,6 +198,22 @@ public class SybaseASEDialect extends SybaseDialect {
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
+	}
+
+	@Override
+	public int resolveSqlTypeLength(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			int displaySize) {
+		// Sybase ASE reports the "actual" precision in the display size
+		switch ( jdbcTypeCode ) {
+			case Types.REAL:
+			case Types.DOUBLE:
+				return displaySize;
+		}
+		return super.resolveSqlTypeLength( columnTypeName, jdbcTypeCode, precision, scale, displaySize );
 	}
 
 	@Override
@@ -480,19 +501,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public int getMaxAliasLength() {
 		return 30;
-	}
-
-	/**
-	 * By default, Sybase string comparisons are case-insensitive.
-	 * <p/>
-	 * If the DB is configured to be case-sensitive, then this return
-	 * value will be incorrect.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean areStringComparisonsCaseInsensitive() {
-		return true;
 	}
 
 	@Override

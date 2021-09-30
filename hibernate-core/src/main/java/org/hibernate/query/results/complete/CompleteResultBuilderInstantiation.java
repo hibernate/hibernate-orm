@@ -22,7 +22,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
- * ResultBuilder for dynamic instantiation results ({@link javax.persistence.ConstructorResult}
+ * ResultBuilder for dynamic instantiation results ({@link jakarta.persistence.ConstructorResult}
  *
  * @author Steve Ebersole
  */
@@ -37,6 +37,11 @@ public class CompleteResultBuilderInstantiation
 			List<ResultBuilder> argumentResultBuilders) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.argumentResultBuilders = argumentResultBuilders;
+	}
+
+	@Override
+	public Class<?> getJavaType() {
+		return javaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override

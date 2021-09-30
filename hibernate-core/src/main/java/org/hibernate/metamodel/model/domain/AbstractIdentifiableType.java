@@ -11,9 +11,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import javax.persistence.metamodel.Bindable;
-import javax.persistence.metamodel.IdentifiableType;
-import javax.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Bindable;
+import jakarta.persistence.metamodel.IdentifiableType;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
@@ -45,8 +45,9 @@ public abstract class AbstractIdentifiableType<J>
 
 	private SingularPersistentAttribute<J,?> id;
 	private Set<SingularPersistentAttribute<? super J,?>> nonAggregatedIdAttributes;
+	private EmbeddableDomainType<?> idClassType;
 
-	private SqmPathSource identifierDescriptor;
+	private SqmPathSource<?> identifierDescriptor;
 
 
 	private final boolean isVersioned;
@@ -67,19 +68,17 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected InFlightAccessImpl createInFlightAccess() {
 		return new InFlightAccessImpl( super.createInFlightAccess() );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public InFlightAccessImpl getInFlightAccess() {
 		return (InFlightAccessImpl) super.getInFlightAccess();
 	}
 
 	@Override
-	public SqmPathSource getIdentifierDescriptor() {
+	public SqmPathSource<?> getIdentifierDescriptor() {
 		return identifierDescriptor;
 	}
 
@@ -96,7 +95,7 @@ public abstract class AbstractIdentifiableType<J>
 	@SuppressWarnings("unchecked")
 	public IdentifiableDomainType<? super J> getSuperType() {
 		// overridden simply to perform the cast
-		return (IdentifiableDomainType) super.getSuperType();
+		return (IdentifiableDomainType<? super J>) super.getSuperType();
 	}
 
 	@Override
@@ -108,11 +107,11 @@ public abstract class AbstractIdentifiableType<J>
 	@SuppressWarnings({ "unchecked" })
 	public <Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
-		SingularPersistentAttribute id = findIdAttribute();
+		SingularPersistentAttribute<J, ?> id = findIdAttribute();
 		if ( id != null ) {
 			checkType( id, javaType );
 		}
-		return (SingularPersistentAttribute) id;
+		return (SingularPersistentAttribute<? super J, Y>) id;
 	}
 
 	private void ensureNoIdClass() {
@@ -125,16 +124,16 @@ public abstract class AbstractIdentifiableType<J>
 
 
 	@Override
-	@SuppressWarnings({"unchecked", "RedundantIfStatement"})
-	public SingularPersistentAttribute findIdAttribute() {
+	@SuppressWarnings("unchecked")
+	public SingularPersistentAttribute<J, ?> findIdAttribute() {
 		if ( id != null ) {
 			return id;
 		}
 		else {
 			if ( getSuperType() != null ) {
-				SingularPersistentAttribute id = getSuperType().findIdAttribute();
+				SingularPersistentAttribute<? super J, ?> id = getSuperType().findIdAttribute();
 				if ( id != null ) {
-					return id;
+					return (SingularPersistentAttribute<J, ?>) id;
 				}
 			}
 		}
@@ -142,8 +141,7 @@ public abstract class AbstractIdentifiableType<J>
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	private void checkType(SingularPersistentAttribute attribute, Class javaType) {
+	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
 		if ( ! javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
 			throw new IllegalArgumentException(
 					String.format(
@@ -170,9 +168,9 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	public SimpleDomainType<?> getIdType() {
-		final SingularPersistentAttribute id = findIdAttribute();
+		final SingularPersistentAttribute<J, ?> id = findIdAttribute();
 		if ( id != null ) {
-			return (SimpleDomainType<?>) id.getType();
+			return id.getType();
 		}
 
 		Set<SingularPersistentAttribute<? super J, ?>> idClassAttributes = getIdClassAttributesSafely();
@@ -205,20 +203,19 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public Set<SingularAttribute<? super J, ?>> getIdClassAttributes() {
 		if ( !hasIdClass() ) {
 			throw new IllegalArgumentException( "This class [" + getJavaType() + "] does not define an IdClass" );
 		}
 
-		final Set<SingularPersistentAttribute<? super J,?>> attributes = new HashSet<>();
+		final Set<SingularAttribute<? super J, ?>> attributes = new HashSet<>();
 		visitIdClassAttributes( attributes::add );
 
 		if ( attributes.isEmpty() ) {
 			throw new IllegalArgumentException( "Unable to locate IdClass attributes [" + getJavaType() + "]" );
 		}
 
-		return (Set) attributes;
+		return attributes;
 	}
 
 	@Override
@@ -228,6 +225,7 @@ public abstract class AbstractIdentifiableType<J>
 			nonAggregatedIdAttributes.forEach( attributeConsumer );
 		}
 		else if ( getSuperType() != null ) {
+			//noinspection rawtypes
 			getSuperType().visitIdClassAttributes( (Consumer) attributeConsumer );
 		}
 	}
@@ -242,28 +240,28 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
+	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<? super J, Y> getVersion(Class<Y> javaType) {
 		if ( ! hasVersionAttribute() ) {
 			return null;
 		}
 
-		SingularPersistentAttribute version = findVersionAttribute();
+		SingularPersistentAttribute<J, ?> version = findVersionAttribute();
 		if ( version != null ) {
 			checkType( version, javaType );
 		}
-		return (SingularPersistentAttribute) version;
+		return (SingularPersistentAttribute<? super J, Y>) version;
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public SingularPersistentAttribute findVersionAttribute() {
+	public SingularPersistentAttribute<J, ?> findVersionAttribute() {
 		if ( versionAttribute != null ) {
 			return versionAttribute;
 		}
 
 		if ( getSuperType() != null ) {
-			return getSuperType().findVersionAttribute();
+			return (SingularPersistentAttribute<J, ?>) getSuperType().findVersionAttribute();
 		}
 
 		return null;
@@ -308,22 +306,24 @@ public abstract class AbstractIdentifiableType<J>
 		return versionAttribute;
 	}
 
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	private class InFlightAccessImpl extends AbstractManagedType.InFlightAccessImpl {
-		private final AbstractManagedType.InFlightAccess managedTypeAccess;
+	private class InFlightAccessImpl extends AbstractManagedType<J>.InFlightAccessImpl {
+		private final InFlightAccess<J> managedTypeAccess;
 
-		private InFlightAccessImpl(AttributeContainer.InFlightAccess managedTypeAccess) {
+		private InFlightAccessImpl(InFlightAccess<J> managedTypeAccess) {
 			this.managedTypeAccess = managedTypeAccess;
 		}
 
 		@Override
-		public void applyIdAttribute(SingularPersistentAttribute idAttribute) {
+		public void applyIdAttribute(SingularPersistentAttribute<J, ?> idAttribute) {
 			AbstractIdentifiableType.this.id = idAttribute;
 			managedTypeAccess.addAttribute( idAttribute );
 		}
 
 		@Override
-		public void applyNonAggregatedIdAttributes(Set idAttributes) {
+		@SuppressWarnings("unchecked")
+		public void applyNonAggregatedIdAttributes(
+				Set<SingularPersistentAttribute<? super J, ?>> idAttributes,
+				EmbeddableDomainType<?> idClassType) {
 			if ( AbstractIdentifiableType.this.id != null ) {
 				throw new IllegalArgumentException( "`AbstractIdentifiableType#id` already set on call to `#applyNonAggregatedIdAttribute`" );
 			}
@@ -336,31 +336,30 @@ public abstract class AbstractIdentifiableType<J>
 				AbstractIdentifiableType.this.nonAggregatedIdAttributes = Collections.EMPTY_SET;
 			}
 			else {
-				for ( SingularPersistentAttribute idAttribute : (Set<SingularPersistentAttribute>) idAttributes ) {
+				for ( SingularPersistentAttribute<? super J, ?> idAttribute : idAttributes ) {
 					if ( AbstractIdentifiableType.this == idAttribute.getDeclaringType() ) {
-						addAttribute( idAttribute );
+						addAttribute( (PersistentAttribute<J, ?>) idAttribute );
 					}
 				}
 
-				AbstractIdentifiableType.this.nonAggregatedIdAttributes = (Set) idAttributes;
+				AbstractIdentifiableType.this.nonAggregatedIdAttributes = idAttributes;
 			}
+			AbstractIdentifiableType.this.idClassType = idClassType;
 		}
 
 		@Override
-		public void applyIdClassAttributes(Set idClassAttributes) {
-			applyNonAggregatedIdAttributes( idClassAttributes );
+		public void applyIdClassAttributes(Set<SingularPersistentAttribute<? super J, ?>> idClassAttributes) {
+			applyNonAggregatedIdAttributes( idClassAttributes, null );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public void applyVersionAttribute(SingularPersistentAttribute versionAttribute) {
+		public void applyVersionAttribute(SingularPersistentAttribute<J, ?> versionAttribute) {
 			AbstractIdentifiableType.this.versionAttribute = versionAttribute;
 			managedTypeAccess.addAttribute( versionAttribute );
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public void addAttribute(PersistentAttribute attribute) {
+		public void addAttribute(PersistentAttribute<J, ?> attribute) {
 			managedTypeAccess.addAttribute( attribute );
 		}
 
@@ -374,7 +373,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	private static final Logger log = Logger.getLogger( AbstractIdentifiableType.class );
 
-	private SqmPathSource interpretIdDescriptor() {
+	private SqmPathSource<?> interpretIdDescriptor() {
 		log.tracef( "Interpreting domain-model identifier descriptor" );
 
 		if ( getSuperType() != null ) {
@@ -384,18 +383,16 @@ public abstract class AbstractIdentifiableType<J>
 			// simple id or aggregate composite id
 			final SimpleDomainType<?> type = id.getType();
 			if ( type instanceof BasicDomainType ) {
-				//noinspection unchecked
-				return new BasicSqmPathSource(
+				return new BasicSqmPathSource<>(
 						EntityIdentifierMapping.ROLE_LOCAL_NAME,
-						(BasicDomainType) type,
+						(BasicDomainType<?>) type,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE
 				);
 			}
 			else {
 				assert type instanceof EmbeddableDomainType;
-				final EmbeddableDomainType compositeType = (EmbeddableDomainType) type;
-				//noinspection unchecked
-				return new EmbeddedSqmPathSource(
+				final EmbeddableDomainType<?> compositeType = (EmbeddableDomainType<?>) type;
+				return new EmbeddedSqmPathSource<>(
 						EntityIdentifierMapping.ROLE_LOCAL_NAME,
 						compositeType,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE
@@ -404,11 +401,20 @@ public abstract class AbstractIdentifiableType<J>
 		}
 		else if ( nonAggregatedIdAttributes != null && ! nonAggregatedIdAttributes.isEmpty() ) {
 			// non-aggregate composite id
-			return new NonAggregatedCompositeSqmPathSource(
-					EntityIdentifierMapping.ROLE_LOCAL_NAME,
-					Bindable.BindableType.SINGULAR_ATTRIBUTE,
-					this
-			);
+			if ( idClassType == null ) {
+				return new NonAggregatedCompositeSqmPathSource(
+						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						Bindable.BindableType.SINGULAR_ATTRIBUTE,
+						this
+				);
+			}
+			else {
+				return new EmbeddedSqmPathSource<>(
+						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						idClassType,
+						Bindable.BindableType.SINGULAR_ATTRIBUTE
+				);
+			}
 		}
 		else {
 			if ( isIdMappingRequired() ) {

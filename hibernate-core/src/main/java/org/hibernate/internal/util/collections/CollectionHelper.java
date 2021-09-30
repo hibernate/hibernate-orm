@@ -377,7 +377,7 @@ public final class CollectionHelper {
 	@SuppressWarnings( "unchecked" )
 	public static <K,V> void collectMapEntries(BiConsumer<K, V> mapEntryConsumer, Object[] mappings) {
 		// even numbered
-		assert mappings.length %2 == 0;
+		assert mappings.length % 2 == 0;
 
 		for ( int i = 0; i < mappings.length; i += 2 ) {
 			mapEntryConsumer.accept( (K) mappings[i], (V) mappings[i+1] );
@@ -396,5 +396,60 @@ public final class CollectionHelper {
 		}
 
 		return map;
+	}
+
+	public static Map<String,String> toMap(String... pairs) {
+		assert pairs.length % 2 == 0;
+		if ( pairs.length == 2 ) {
+			return Collections.singletonMap( pairs[0], pairs[1] );
+		}
+
+		final Map<String,String> result = new HashMap<>();
+		applyToMap( result, pairs );
+		return result;
+	}
+
+	private static void applyToMap(Map<String,String> map, String... pairs) {
+		assert pairs.length % 2 == 0;
+		for ( int i = 0; i < pairs.length; i+=2 ) {
+			map.put( pairs[i], pairs[i+1] );
+		}
+	}
+
+	public static Map<String,?> toMap(Object... pairs) {
+		assert pairs.length % 2 == 0;
+		if ( pairs.length == 2 ) {
+			return Collections.singletonMap( (String) pairs[0], pairs[1] );
+		}
+
+		final Map<String,String> result = new HashMap<>();
+		applyToMap( result, pairs );
+		return result;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private static void applyToMap(Map<String,?> map, Object... pairs) {
+		assert pairs.length % 2 == 0;
+		for ( int i = 0; i < pairs.length; i+=2 ) {
+			( (Map) map ).put( pairs[i], pairs[i+1] );
+		}
+	}
+
+	public static Properties toProperties(Object... pairs) {
+		final Properties properties = new Properties();
+		if ( pairs.length > 0 ) {
+			assert pairs.length % 2 == 0;
+			for ( int i = 0; i < pairs.length; i+=2 ) {
+				properties.put( pairs[i], pairs[i+1] );
+			}
+		}
+		return properties;
+	}
+
+	public static void applyToProperties(Properties properties, Object... pairs) {
+		assert pairs.length % 2 == 0;
+		for ( int i = 0; i < pairs.length; i+=2 ) {
+			properties.put( pairs[i], pairs[i+1] );
+		}
 	}
 }

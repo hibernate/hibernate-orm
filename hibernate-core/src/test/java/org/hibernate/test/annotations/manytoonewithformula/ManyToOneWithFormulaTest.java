@@ -200,8 +200,8 @@ public class ManyToOneWithFormulaTest extends BaseCoreFunctionalTestCase {
     }
 
 	@Override
-	protected java.lang.Class<?>[] getAnnotatedClasses() {
-		return new java.lang.Class[] {
+	protected Class<?>[] getAnnotatedClasses() {
+		return new Class[] {
 				Menu.class,
 				FoodItem.class,
 				Company.class,

@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal.util;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -66,20 +67,36 @@ public class NullnessHelper {
 	 */
 	@SafeVarargs
 	public static <T> T coalesceSuppliedValues(Supplier<T>... valueSuppliers) {
+		return coalesceSuppliedValues(
+				(value) -> ( value instanceof String && StringHelper.isNotEmpty( (String) value ) )
+						|| value != null,
+				valueSuppliers
+		);
+	}
+
+	/**
+	 * Operates like SQL coalesce expression, returning the first non-empty value
+	 *
+	 * @implNote This impl treats empty strings (`""`) as null.
+	 *
+	 * @param valueSuppliers List of value Suppliers
+	 * @param <T> Generic type of values to coalesce
+	 *
+	 * @return The first non-empty value, or null if all values were empty
+	 */
+	@SafeVarargs
+	public static <T> T coalesceSuppliedValues(Function<T,Boolean> checker, Supplier<T>... valueSuppliers) {
 		if ( valueSuppliers == null ) {
 			return null;
 		}
+
 		for ( Supplier<T> valueSupplier : valueSuppliers ) {
 			if ( valueSupplier != null ) {
 				final T value = valueSupplier.get();
-				if ( value instanceof String ) {
-					if ( StringHelper.isNotEmpty( (String) value ) ) {
-						return value;
-					}
-				}
-				else if ( value != null ) {
+				if ( checker.apply( value ) ) {
 					return value;
 				}
+
 			}
 		}
 

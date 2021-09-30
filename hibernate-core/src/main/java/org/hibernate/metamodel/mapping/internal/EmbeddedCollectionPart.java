@@ -206,7 +206,7 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 			SqlAstCreationContext creationContext) {
 		assert lhs.getModelPart() instanceof PluralAttributeMapping;
 
-		final TableGroup tableGroup = new CompositeTableGroup( navigablePath, this, lhs );
+		final TableGroup tableGroup = new CompositeTableGroup( navigablePath, this, lhs, fetched );
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,

@@ -7,9 +7,9 @@
 package org.hibernate.orm.test.columntransformer;
 
 import java.util.List;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 
 import org.hibernate.dialect.MySQLDialect;
 
@@ -146,7 +146,7 @@ public class ColumnTransformerTest {
 					final String sqlString =
 							// represents how each is mapped in the mappings - see their @ColumnTransformer#read
 							"select i.integer_val"
-							+ " from t_staff s inner join integers i on s.id = i.Staff_id"
+							+ " from t_staff s join integers i on s.id = i.Staff_id"
 							+ " where s.id = 12";
 
 					final List<?> results = session

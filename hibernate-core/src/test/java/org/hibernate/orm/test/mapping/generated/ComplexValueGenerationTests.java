@@ -20,10 +20,10 @@ import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.util.Calendar;
 import java.util.Date;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,7 +35,6 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -51,10 +50,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SkipForDialect(dialectClass = MySQLDialect.class, reason = "See HHH-10196")
 @DomainModel( annotatedClasses = ComplexValueGenerationTests.AuditedEntity.class )
 @SessionFactory
-@NotImplementedYet(
-		strict = false,
-		reason = "Support for `java.sql.Date` and `java.sql.Time` is currently fubar"
-)
 public class ComplexValueGenerationTests {
 	@Test
 	public void testGenerations(SessionFactoryScope scope) {

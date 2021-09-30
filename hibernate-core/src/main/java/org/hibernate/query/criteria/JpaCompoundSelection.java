@@ -6,7 +6,7 @@
  */
 package org.hibernate.query.criteria;
 
-import javax.persistence.criteria.CompoundSelection;
+import jakarta.persistence.criteria.CompoundSelection;
 
 /**
  * @author Steve Ebersole

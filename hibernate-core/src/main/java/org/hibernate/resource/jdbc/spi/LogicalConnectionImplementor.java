@@ -75,7 +75,7 @@ public interface LogicalConnectionImplementor extends LogicalConnection {
 	 *
 	 * @param oos The stream to write out state to
 	 *
-	 * @throws java.io.IOException Problem accessing stream
+	 * @throws IOException Problem accessing stream
 	 */
 	void serialize(ObjectOutputStream oos) throws IOException;
 }

@@ -102,7 +102,7 @@ public class TypeDefinition implements Serializable {
 		if ( CollectionHelper.isEmpty( localConfigParameters ) ) {
 			// we can use the re-usable resolution...
 			if ( reusableResolution == null ) {
-				reusableResolution = createResolution( null, Collections.emptyMap(), indicators, context );
+				reusableResolution = createResolution( name, Collections.emptyMap(), indicators, context );
 			}
 
 			return reusableResolution;

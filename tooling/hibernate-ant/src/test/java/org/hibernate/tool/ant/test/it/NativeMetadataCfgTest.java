@@ -27,7 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.apache.tools.ant.Project;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.tool.ant.test.util.ProjectUtil;
+import org.hibernate.tools.test.util.HibernateUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -56,7 +58,10 @@ public class NativeMetadataCfgTest {
 	}
 	
 	private File createPropertyFile() throws Exception {
-		String propertyString = "hibernate.dialect=H2";
+		String propertyString = AvailableSettings.DIALECT + " ";
+		propertyString += HibernateUtil.Dialect.class.getName() + "\n";
+		propertyString += AvailableSettings.CONNECTION_PROVIDER + " ";
+		propertyString += HibernateUtil.ConnectionProvider.class.getName() + "\n";
 		File result = new File(tempDir.toFile(), "hibernate.properties");
 		Files.write(result.toPath(), propertyString.getBytes());
 		return result;

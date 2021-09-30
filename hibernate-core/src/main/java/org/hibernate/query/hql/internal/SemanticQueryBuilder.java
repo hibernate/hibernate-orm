@@ -2702,7 +2702,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public ZoneId visitZoneId(HqlParser.ZoneIdContext ctx) {
-		final String timezoneText = ctx.getText();
+		final TerminalNode firstChild = (TerminalNode) ctx.getChild( 0 );
+		final String timezoneText;
+		if ( firstChild.getSymbol().getType() == HqlParser.STRING_LITERAL ) {
+			timezoneText = unescapeStringLiteral( ctx.getText() );
+		}
+		else {
+			timezoneText = ctx.getText();
+		}
 		final String timezoneFullName = ZoneId.SHORT_IDS.get( timezoneText );
 		if ( timezoneFullName == null ) {
 			return ZoneId.of( timezoneText );
@@ -2833,7 +2840,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 //	}
 
 	private SqmLiteral<?> sqlTimestampLiteralFrom(String literalText) {
-		final TemporalAccessor parsed = DATE_TIME.parse( literalText );
+		final TemporalAccessor parsed = DATE_TIME.parse( literalText.subSequence( 1, literalText.length() - 1 ) );
 		try {
 			final ZonedDateTime zonedDateTime = ZonedDateTime.from( parsed );
 			final Calendar literal = GregorianCalendar.from( zonedDateTime );
@@ -2855,7 +2862,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmLiteral<Date> sqlDateLiteralFrom(String literalText) {
-		final LocalDate localDate = LocalDate.from( ISO_LOCAL_DATE.parse( literalText ) );
+		final LocalDate localDate = LocalDate.from( ISO_LOCAL_DATE.parse( literalText.subSequence( 1, literalText.length() - 1 ) ) );
 		final Date literal = Date.valueOf( localDate );
 		return new SqmLiteral<>(
 				literal,
@@ -2865,7 +2872,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmLiteral<Time> sqlTimeLiteralFrom(String literalText) {
-		final LocalTime localTime = LocalTime.from( ISO_LOCAL_TIME.parse( literalText ) );
+		final LocalTime localTime = LocalTime.from( ISO_LOCAL_TIME.parse( literalText.subSequence( 1, literalText.length() - 1 ) ) );
 		final Time literal = Time.valueOf( localTime );
 		return new SqmLiteral<>(
 				literal,
@@ -2882,9 +2889,77 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
+	private String unescapeStringLiteral(String text) {
+		// Unescape the parsed literal and handle escape sequences
+		final StringBuilder sb = new StringBuilder( text.length() - 2 );
+		final int end = text.length() - 1;
+		final char delimiter = text.charAt( 0 );
+		for ( int i = 1; i < end; i++ ) {
+			char c = text.charAt( i );
+			switch ( c ) {
+				case '\'':
+					if ( delimiter == '\'' ) {
+						i++;
+					}
+					break;
+				case '"':
+					if ( delimiter == '"' ) {
+						i++;
+					}
+					break;
+				case '\\':
+					if ( ( i + 1 ) < end ) {
+						char nextChar = text.charAt( ++i );
+						switch ( nextChar ) {
+							case 'b':
+								c = '\b';
+								break;
+							case 't':
+								c = '\t';
+								break;
+							case 'n':
+								c = '\n';
+								break;
+							case 'f':
+								c = '\f';
+								break;
+							case 'r':
+								c = '\r';
+								break;
+							case '\\':
+								c = '\\';
+								break;
+							case '\'':
+								c = '\'';
+								break;
+							case '"':
+								c = '"';
+								break;
+							case '`':
+								c = '`';
+								break;
+							case 'u':
+								c = (char) Integer.parseInt( text.substring( i + 1, i + 5 ), 16 );
+								i += 4;
+								break;
+							default:
+								sb.append( '\\' );
+								c = nextChar;
+								break;
+						}
+					}
+					break;
+				default:
+					break;
+			}
+			sb.append( c );
+		}
+		return sb.toString();
+	}
+
 	private SqmLiteral<String> stringLiteral(String text) {
 		return new SqmLiteral<>(
-				text,
+				unescapeStringLiteral( text ),
 				resolveExpressableTypeBasic( String.class ),
 				creationContext.getNodeBuilder()
 		);
@@ -3078,7 +3153,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJpaNonStandardFunction(HqlParser.JpaNonStandardFunctionContext ctx) {
-		final String functionName = ctx.getChild( 2 ).getText().toLowerCase();
+		final String functionName = unescapeStringLiteral( ctx.getChild( 2 ).getText() ).toLowerCase();
 		final List<SqmTypedNode<?>> functionArguments;
 		if ( ctx.getChildCount() > 4 ) {
 			//noinspection unchecked
@@ -3413,7 +3488,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitFormat(HqlParser.FormatContext ctx) {
-		String format = ctx.getChild( 0 ).getText();
+		String format = unescapeStringLiteral( ctx.getChild( 0 ).getText() );
 		if (!FORMAT.matcher(format).matches()) {
 			throw new SemanticException("illegal format pattern: '" + format + "'");
 		}
@@ -3721,16 +3796,14 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmLiteral<Character> visitPadCharacter(HqlParser.PadCharacterContext ctx) {
-		// todo (6.0) : we should delay this until we are walking the SQM
-
 		final String padCharText = ctx.STRING_LITERAL().getText();
 
-		if ( padCharText.length() != 1 ) {
+		if ( padCharText.length() != 3 ) {
 			throw new SemanticException( "Pad character for pad() function must be single character, found: " + padCharText );
 		}
 
 		return new SqmLiteral<>(
-				padCharText.charAt( 0 ),
+				padCharText.charAt( 1 ),
 				resolveExpressableTypeBasic( Character.class ),
 				creationContext.getNodeBuilder()
 		);
@@ -3790,10 +3863,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
-		// todo (6.0) : we should delay this until we are walking the SQM
-
 		final String trimCharText = ctx != null
-				? ctx.getText()
+				? unescapeStringLiteral( ctx.getText() )
 				: " "; // JPA says space is the default
 
 		if ( trimCharText.length() != 1 ) {

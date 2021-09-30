@@ -7,7 +7,6 @@
 package org.hibernate.dialect.pagination;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 /**
@@ -65,22 +64,6 @@ public class LegacyLimitHandler extends AbstractLimitHandler {
 	@Override
 	public int convertToFirstRowValue(int zeroBasedFirstResult) {
 		return dialect.convertToFirstRowValue( zeroBasedFirstResult );
-	}
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		final boolean useLimitOffset
-				= supportsOffset()
-						&& hasFirstRow( selection )
-				|| supportsLimit()
-						&& supportsLimitOffset()
-						&& hasFirstRow( selection )
-						&& hasMaxRows( selection );
-		return dialect.getLimitString(
-				sql,
-				useLimitOffset ? getFirstRow( selection ) : 0,
-				getMaxOrLimit( selection )
-		);
 	}
 
 	@Override

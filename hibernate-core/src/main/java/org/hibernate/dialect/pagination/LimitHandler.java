@@ -9,8 +9,6 @@ package org.hibernate.dialect.pagination;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -43,139 +41,16 @@ public interface LimitHandler {
 	 */
 	boolean supportsLimitOffset();
 
-	default String processSql(String sql, Limit limit) {
-		return processSql(
-				sql,
-				limit == null ? null : new RowSelection(
-						limit.getFirstRow(),
-						limit.getMaxRows(),
-						null,
-						null
-				)
-		);
-	}
+	String processSql(String sql, Limit limit);
 
 	default String processSql(String sql, Limit limit, QueryOptions queryOptions) {
-		return processSql(
-				sql,
-				limit == null ? null : new RowSelection(
-						limit.getFirstRow(),
-						limit.getMaxRows(),
-						null,
-						null
-				)
-		);
+		return processSql( sql, limit );
 	}
 
-	default int bindLimitParametersAtStartOfQuery(Limit limit, PreparedStatement statement, int index)
-			throws SQLException {
-		return bindLimitParametersAtStartOfQuery(
-				limit == null ? null : new RowSelection(
-						limit.getFirstRow(),
-						limit.getMaxRows(),
-						null,
-						null
-				),
-				statement,
-				index
-		);
-	}
+	int bindLimitParametersAtStartOfQuery(Limit limit, PreparedStatement statement, int index) throws SQLException;
 
-	default int bindLimitParametersAtEndOfQuery(Limit limit, PreparedStatement statement, int index)
-			throws SQLException {
-		return bindLimitParametersAtEndOfQuery(
-				limit == null ? null : new RowSelection(
-						limit.getFirstRow(),
-						limit.getMaxRows(),
-						null,
-						null
-				),
-				statement,
-				index
-		);
-	}
+	int bindLimitParametersAtEndOfQuery(Limit limit, PreparedStatement statement, int index) throws SQLException;
 
-	default void setMaxRows(Limit limit, PreparedStatement statement) throws SQLException {
-		setMaxRows(
-				limit == null ? null : new RowSelection(
-						limit.getFirstRow(),
-						limit.getMaxRows(),
-						null,
-						null
-				),
-				statement
-		);
-	}
+	void setMaxRows(Limit limit, PreparedStatement statement) throws SQLException;
 
-	/**
-	 * Return processed SQL query.
-	 *
-     * @param sql the SQL query to process.
-     * @param selection the selection criteria for rows.
-     *
-	 * @return Query statement with LIMIT clause applied.
-	 * @deprecated todo (6.0): remove in favor of Limit version?
-	 */
-	@Deprecated
-	String processSql(String sql, RowSelection selection);
-
-	/**
-	 * Return processed SQL query.
-	 *
-	 * @param sql the SQL query to process.
-	 * @param queryParameters the queryParameters.
-	 *
-	 * @return Query statement with LIMIT clause applied.
-	 * @deprecated Use {@link #processSql(String, Limit, QueryOptions)}
-	 * todo (6.0): remove in favor of Limit version?
-	 */
-	@Deprecated
-	default String processSql(String sql, QueryParameters queryParameters ){
-		return processSql( sql, queryParameters.getRowSelection() );
-	}
-
-	/**
-	 * Bind parameter values needed by the limit and offset clauses
-	 * right at the start of the original query statement, before all
-	 * the other query parameters.
-	 *
-     * @param selection the selection criteria for rows.
-	 * @param statement Statement to which to bind limit parameter values.
-	 * @param index Index from which to start binding.
-	 * @return The number of parameter values bound.
-	 * @throws SQLException Indicates problems binding parameter values.
-	 * @deprecated todo (6.0): remove in favor of Limit version?
-	 */
-	@Deprecated
-	int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
-			throws SQLException;
-
-	/**
-	 * Bind parameter values needed by the limit and offset clauses
-	 * right at the end of the original query statement, after all
-	 * the other query parameters.
-	 *
-     * @param selection the selection criteria for rows.
-	 * @param statement Statement to which to bind limit parameter values.
-	 * @param index Index from which to start binding.
-	 * @return The number of parameter values bound.
-	 * @throws SQLException Indicates problems binding parameter values.
-	 * @deprecated todo (6.0): remove in favor of Limit version?
-	 */
-	@Deprecated
-	int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
-			throws SQLException;
-
-	/**
-	 * Use JDBC APIs to limit the number of rows returned by the SQL query.
-	 * Handlers that do not support a SQL limit clause should implement this
-	 * method.
-	 *
-     * @param selection the selection criteria for rows.
-	 * @param statement Statement which number of returned rows shall be limited.
-	 * @throws SQLException Indicates problems while limiting maximum rows returned.
-	 * @deprecated todo (6.0): remove in favor of Limit version?
-	 */
-	@Deprecated
-	void setMaxRows(RowSelection selection, PreparedStatement statement) throws SQLException;
 }

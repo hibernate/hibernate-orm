@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 /**
@@ -24,52 +23,6 @@ public class OffsetFetchLimitHandler extends AbstractLimitHandler {
 
 	public OffsetFetchLimitHandler(boolean variableLimit) {
 		this.variableLimit = variableLimit;
-	}
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-
-		boolean hasFirstRow = hasFirstRow(selection);
-		boolean hasMaxRows = hasMaxRows(selection);
-
-		if ( !hasFirstRow && !hasMaxRows ) {
-			return sql;
-		}
-
-		StringBuilder offsetFetch = new StringBuilder();
-
-		begin(sql, offsetFetch, hasFirstRow, hasMaxRows);
-
-		if ( hasFirstRow ) {
-			offsetFetch.append( " offset " );
-			if ( supportsVariableLimit() ) {
-				offsetFetch.append( "?" );
-			}
-			else {
-				offsetFetch.append( selection.getFirstRow() );
-			}
-			if ( renderOffsetRowsKeyword() ) {
-				offsetFetch.append( " rows" );
-			}
-
-		}
-		if ( hasMaxRows ) {
-			if ( hasFirstRow ) {
-				offsetFetch.append( " fetch next " );
-			}
-			else {
-				offsetFetch.append( " fetch first " );
-			}
-			if ( supportsVariableLimit() ) {
-				offsetFetch.append( "?" );
-			}
-			else {
-				offsetFetch.append( getMaxOrLimit( selection ) );
-			}
-			offsetFetch.append( " rows only" );
-		}
-
-		return insert( offsetFetch.toString(), sql );
 	}
 
 	@Override

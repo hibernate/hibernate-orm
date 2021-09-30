@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
@@ -121,7 +120,7 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 	 * specified in the offset clause?
 	 * <p/>
 	 * NOTE: what gets passed into
-	 * {@link AbstractLimitHandler#processSql(String, RowSelection)}
+	 * {@link AbstractLimitHandler#processSql(String, Limit)}
      * is the zero-based offset. Handlers which do not {@link #supportsVariableLimit}
 	 * should take care to perform any needed first-row-conversion calls prior
 	 * to injecting the limit values into the SQL string.
@@ -134,142 +133,6 @@ public abstract class AbstractLimitHandler implements LimitHandler {
 		return zeroBasedFirstResult;
 	}
 
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName() );
-	}
-
-	@Override
-	public int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index)
-			throws SQLException {
-		return bindLimitParametersFirst()
-				? bindLimitParameters( selection, statement, index )
-				: 0;
-	}
-
-	@Override
-	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index)
-			throws SQLException {
-		return !bindLimitParametersFirst()
-				? bindLimitParameters( selection, statement, index )
-				: 0;
-	}
-
-	@Override
-	public void setMaxRows(RowSelection selection, PreparedStatement statement) throws SQLException {
-	}
-
-	/**
-	 * Default implementation of binding parameter values needed by the LIMIT clause.
-	 *
-     * @param selection the selection criteria for rows.
-	 * @param statement Statement to which to bind limit parameter values.
-	 * @param index Index from which to start binding.
-	 * @return The number of parameter values bound.
-	 * @throws SQLException Indicates problems binding parameter values.
-	 */
-	protected final int bindLimitParameters(RowSelection selection, PreparedStatement statement, int index)
-			throws SQLException {
-
-		if ( !supportsVariableLimit() ) {
-			//never any parameters to bind
-			return 0;
-		}
-
-		final boolean hasMaxRows = hasMaxRows( selection );
-		final boolean hasFirstRow = hasFirstRow( selection );
-
-		final boolean bindLimit
-				= hasMaxRows && supportsLimit()
-				|| forceLimitUsage();
-		final boolean bindOffset
-				= hasFirstRow && supportsOffset()
-				|| hasFirstRow && hasMaxRows && supportsLimitOffset();
-
-		if ( !bindLimit && !bindOffset ) {
-			//no parameters to bind this time
-			return 0;
-		}
-
-		final boolean reverse = bindLimitParametersInReverseOrder();
-
-		if ( bindOffset ) {
-			statement.setInt(
-					index + ( reverse || !bindLimit ? 1 : 0 ),
-					getFirstRow( selection )
-			);
-		}
-		if ( bindLimit ) {
-			statement.setInt(
-					index + ( reverse || !bindOffset ? 0 : 1 ),
-					getMaxOrLimit( selection )
-			);
-		}
-
-		return bindOffset && bindLimit ? 2 : 1;
-	}
-
-	/**
-	 * Is a max row limit indicated?
-	 *
-	 * @param selection The row selection options
-	 *
-	 * @return Whether a max row limit was indicated
-	 */
-	public static boolean hasMaxRows(RowSelection selection) {
-		return selection != null
-				&& selection.getMaxRows() != null
-				&& selection.getMaxRows() > 0;
-	}
-
-	/**
-	 * Is a first row limit indicated?
-	 *
-	 * @param selection The row selection options
-	 *
-	 * @return Whether a first row limit was indicated
-	 */
-	public static boolean hasFirstRow(RowSelection selection) {
-		return selection != null
-				&& selection.getFirstRow() != null
-				&& selection.getFirstRow() > 0;
-	}
-
-	/**
-	 * Some dialect-specific LIMIT clauses require the maximum last row number
-	 * (aka, first_row_number + total_row_count), while others require the maximum
-	 * returned row count (the total maximum number of rows to return).
-	 *
-	 * @param selection the selection criteria for rows.
-	 *
-	 * @return The appropriate value to bind into the limit clause.
-	 */
-	protected final int getMaxOrLimit(RowSelection selection) {
-		if ( selection == null || selection.getMaxRows() == null ) {
-			return Integer.MAX_VALUE;
-		}
-		final int firstRow = getFirstRow( selection );
-		final int maxRows = selection.getMaxRows();
-		final int maxOrLimit = useMaxForLimit()
-				? maxRows + firstRow //TODO: maxRows + firstRow - 1, surely?
-				: maxRows;
-		// Use Integer.MAX_VALUE on overflow
-		return maxOrLimit < 0 ? Integer.MAX_VALUE : maxOrLimit;
-	}
-
-	/**
-	 * Retrieve the indicated first row for pagination
-	 *
-	 * @param selection The row selection options
-	 *
-	 * @return The first row
-	 */
-	protected final int getFirstRow(RowSelection selection) {
-		if ( selection == null || selection.getFirstRow() == null ) {
-			return 0;
-		}
-		return convertToFirstRowValue( selection.getFirstRow() );
-	}
 
 	@Override
 	public String processSql(String sql, Limit limit) {

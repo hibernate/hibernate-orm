@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 /**
@@ -18,14 +17,6 @@ import org.hibernate.query.Limit;
 public abstract class AbstractSimpleLimitHandler extends AbstractLimitHandler {
 
 	protected abstract String limitClause(boolean hasFirstRow);
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( !hasMaxRows( selection ) ) {
-			return sql;
-		}
-		return insert( limitClause( hasFirstRow( selection ) ), sql );
-	}
 
 	@Override
 	public String processSql(String sql, Limit limit) {

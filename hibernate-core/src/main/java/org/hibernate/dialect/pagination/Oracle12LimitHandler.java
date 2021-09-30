@@ -10,8 +10,6 @@ import java.util.Locale;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.engine.spi.QueryParameters;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 import org.hibernate.query.spi.QueryOptions;
 
@@ -34,18 +32,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 	}
 
 	@Override
-	public String processSql(String sql, RowSelection selection) {
-		final boolean hasFirstRow = hasFirstRow( selection );
-		final boolean hasMaxRows = hasMaxRows( selection );
-
-		if ( !hasMaxRows ) {
-			return sql;
-		}
-
-		return processSql( sql, getForUpdateIndex( sql ), hasFirstRow );
-	}
-
-	@Override
 	public String processSql(String sql, Limit limit, QueryOptions queryOptions) {
 		final boolean hasMaxRows = hasMaxRows( limit );
 		if ( !hasMaxRows ) {
@@ -55,24 +41,6 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 				sql,
 				hasFirstRow( limit ),
 				queryOptions.getLockOptions()
-		);
-	}
-
-	@Override
-	public String processSql(String sql, QueryParameters queryParameters) {
-		final RowSelection selection = queryParameters.getRowSelection();
-
-		final boolean hasMaxRows = hasMaxRows( selection );
-
-		if ( !hasMaxRows ) {
-			return sql;
-		}
-		sql = sql.trim();
-
-		return processSql(
-				sql,
-				hasFirstRow( selection ),
-				queryParameters.getLockOptions()
 		);
 	}
 

@@ -47,7 +47,6 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -545,7 +544,7 @@ public class OracleDialect extends Dialect {
 		// Oracle has DOUBLE semantics for the REAL type, so we map it to float(24)
 		registerColumnType( Types.REAL, "float(24)" );
 
-//		// Note that 38 is the maximum precision Oracle supports
+		// Note that 38 is the maximum precision Oracle supports
 		registerColumnType( Types.NUMERIC, "number($p,$s)" );
 		registerColumnType( Types.DECIMAL, "number($p,$s)" );
 	}
@@ -701,11 +700,6 @@ public class OracleDialect extends Dialect {
 		return "sequence";
 	}
 
-	@Override
-	public String getTableAliasSeparator() {
-		return " ";
-	}
-
 	// features which change between 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -713,32 +707,6 @@ public class OracleDialect extends Dialect {
 		return getVersion() < 1200
 				? super.getIdentityColumnSupport()
 				: new Oracle12cIdentityColumnSupport();
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public JoinFragment createOuterJoinFragment() {
-		return getVersion() < 1000 ? new OracleJoinFragment() : new ANSIJoinFragment();
-	}
-
-	@Override
-	public String getCrossJoinSeparator() {
-		return getVersion() < 1000 ? ", " : " cross join ";
-	}
-
-	/**
-	 * Map case support to the Oracle DECODE function.  Oracle did not
-	 * add support for CASE until 9i.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	@SuppressWarnings("deprecation")
-	public CaseFragment createCaseFragment() {
-		return getVersion() < 900
-				? new DecodeCaseFragment()
-				// Oracle did add support for ANSI CASE statements in 9i
-				: new ANSICaseFragment();
 	}
 
 	@Override
@@ -774,15 +742,6 @@ public class OracleDialect extends Dialect {
 				: "select systimestamp from dual";
 	}
 
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getCurrentTimestampSQLFunctionName() {
-		return getVersion() < 900
-				? "sysdate"
-				// the standard SQL function name is current_timestamp...
-				: "current_timestamp";
-	}
-
 
 	// features which remain constant across 8i, 9i, and 10g ~~~~~~~~~~~~~~~~~~
 
@@ -798,16 +757,6 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean dropConstraints() {
-		return false;
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from dual";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
 		return false;
 	}
 
@@ -926,23 +875,8 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
-	}
-
-	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.FUNCTION;
-	}
-
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
 	}
 
 	@Override
@@ -1007,11 +941,6 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String getNotExpression( String expression ) {
-		return "not (" + expression + ")";
-	}
-
-	@Override
 	public String getQueryHintString(String sql, String hints) {
 		String statementType = statementType(sql);
 
@@ -1070,22 +999,6 @@ public class OracleDialect extends Dialect {
 		throw new IllegalArgumentException( "Can't determine SQL statement type for statement: " + sql );
 	}
 
-	/**
-	 * HHH-4907, I don't know if oracle 8 supports this syntax, so I'd think it is better add this
-	 * method here. Reopen this issue if you found/know 8 supports it.
-	 * <p/>
-	 * {@inheritDoc}
-	 */
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInSubquery() {
-		return getVersion() >= 900;
-	}
-
 	@Override
 	public boolean supportsTupleDistinctCounts() {
 		return false;
@@ -1116,11 +1029,6 @@ public class OracleDialect extends Dialect {
 	@Override
 	public boolean supportsSkipLocked() {
 		return getVersion() >= 1000;
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
-		return true;
 	}
 
 	@Override

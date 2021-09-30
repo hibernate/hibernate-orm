@@ -44,7 +44,7 @@ import org.hibernate.sql.results.graph.FetchParent;
  */
 public class LoaderSqlAstCreationState
 		implements SqlAstProcessingState, SqlAstCreationState, DomainResultCreationState, QueryOptions {
-	interface FetchProcessor {
+	public interface FetchProcessor {
 		List<Fetch> visitFetches(FetchParent fetchParent, QuerySpec querySpec, LoaderSqlAstCreationState creationState);
 	}
 

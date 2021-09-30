@@ -6,8 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import org.hibernate.QueryException;
-
 /**
  * @author Gavin King
  */
@@ -35,15 +33,5 @@ public class BasicEntityPropertyMapping extends AbstractPropertyMapping {
 		return persister.getEntityName();
 	}
 
-	public String[] toColumns(final String alias, final String propertyName) throws QueryException {
-		return super.toColumns( 
-				AbstractEntityPersister.generateTableAlias(
-						alias,
-						persister.getSubclassPropertyTableNumber( propertyName )
-				),
-				propertyName 
-			);
-	}
-	
-	
+
 }

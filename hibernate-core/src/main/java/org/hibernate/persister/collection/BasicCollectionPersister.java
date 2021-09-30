@@ -11,7 +11,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
@@ -26,15 +25,12 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.mapping.Collection;
-import org.hibernate.persister.entity.Joinable;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.type.AssociationType;
 
 /**
  * Collection persister for collections of values and many-to-many associations.
@@ -323,68 +319,6 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			count++;
 		}
 		return count;
-	}
-
-	public String selectFragment(
-			Joinable rhs,
-			String rhsAlias,
-			String lhsAlias,
-			String entitySuffix,
-			String collectionSuffix,
-			boolean includeCollectionColumns) {
-		// we need to determine the best way to know that two joinables
-		// represent a single many-to-many...
-		if ( rhs != null && isManyToMany() && !rhs.isCollection() ) {
-			AssociationType elementType = ( (AssociationType) getElementType() );
-			if ( rhs.equals( elementType.getAssociatedJoinable( getFactory() ) ) ) {
-				return manyToManySelectFragment( rhs, rhsAlias, lhsAlias, collectionSuffix );
-			}
-		}
-		return includeCollectionColumns ? selectFragment( lhsAlias, collectionSuffix ) : "";
-	}
-
-	private String manyToManySelectFragment(
-			Joinable rhs,
-			String rhsAlias,
-			String lhsAlias,
-			String collectionSuffix) {
-		SelectFragment frag = generateSelectFragment( lhsAlias, collectionSuffix );
-
-		String[] elementColumnNames = rhs.getKeyColumnNames();
-		frag.addColumns( rhsAlias, elementColumnNames, elementColumnAliases );
-		appendIndexColumns( frag, lhsAlias );
-		appendIdentifierColumns( frag, lhsAlias );
-
-		return frag.toFragmentString()
-				.substring( 2 ); //strip leading ','
-	}
-
-	@Override
-	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		return "";
-	}
-
-	@Override
-	public String fromJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		return "";
-	}
-
-	@Override
-	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		return "";
-	}
-
-	@Override
-	public String whereJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		return "";
 	}
 
 	@Override

@@ -64,11 +64,6 @@ public interface PropertyMapping {
 	public Type toType(String propertyName) throws QueryException;
 
 	/**
-	 * Obtain aliased column/formula fragments for the specified property path.
-	 */
-	public String[] toColumns(String alias, String propertyName) throws QueryException;
-
-	/**
 	 * Given a property path, return the corresponding column name(s).
 	 */
 	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException;

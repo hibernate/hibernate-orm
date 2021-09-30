@@ -673,7 +673,7 @@ public class PluralAttributeMappingImpl
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
-				aliasBaseGenerator,
+				aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
 				sqlExpressionResolver,
 				creationContext
 		);
@@ -701,7 +701,7 @@ public class PluralAttributeMappingImpl
 			NavigablePath navigablePath,
 			boolean fetched,
 			String sourceAlias,
-			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
 		final EntityMappingType elementDescriptorEntityMappingType;
@@ -720,8 +720,6 @@ public class PluralAttributeMappingImpl
 		else {
 			indexDescriptorEntityMappingType = null;
 		}
-
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
 
 		if ( indexDescriptorEntityMappingType == null || elementDescriptorEntityMappingType == null ) {
 			final EntityMappingType entityMappingType;
@@ -842,7 +840,7 @@ public class PluralAttributeMappingImpl
 				navigablePath,
 				fetched,
 				explicitSourceAlias,
-				aliasBaseGenerator,
+				aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() ),
 				sqlExpressionResolver,
 				creationContext
 		);
@@ -870,11 +868,9 @@ public class PluralAttributeMappingImpl
 			NavigablePath navigablePath,
 			boolean fetched,
 			String sourceAlias,
-			SqlAliasBaseGenerator aliasBaseGenerator,
+			SqlAliasBase sqlAliasBase,
 			SqlExpressionResolver sqlExpressionResolver,
 			SqlAstCreationContext creationContext) {
-		final SqlAliasBase sqlAliasBase = aliasBaseGenerator.createSqlAliasBase( getSqlAliasStem() );
-
 		assert !getCollectionDescriptor().isOneToMany();
 
 		final String collectionTableName = ( (Joinable) collectionDescriptor ).getTableName();
@@ -1087,13 +1083,33 @@ public class PluralAttributeMappingImpl
 			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
 			SqlAstCreationState creationState,
 			SqlAstCreationContext creationContext) {
+		return createRootTableGroup(
+				canUseInnerJoins,
+				navigablePath,
+				explicitSourceAlias,
+				additionalPredicateCollectorAccess,
+				creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() ),
+				creationState,
+				creationContext
+		);
+	}
+
+	@Override
+	public TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
+			SqlAstCreationState creationState,
+			SqlAstCreationContext creationContext) {
 		if ( getCollectionDescriptor().isOneToMany() ) {
 			return createOneToManyTableGroup(
 					canUseInnerJoins,
 					navigablePath,
 					false,
 					explicitSourceAlias,
-					creationState.getSqlAliasBaseGenerator(),
+					sqlAliasBase,
 					creationState.getSqlExpressionResolver(),
 					creationContext
 			);
@@ -1104,7 +1120,7 @@ public class PluralAttributeMappingImpl
 					navigablePath,
 					false,
 					explicitSourceAlias,
-					creationState.getSqlAliasBaseGenerator(),
+					sqlAliasBase,
 					creationState.getSqlExpressionResolver(),
 					creationContext
 			);

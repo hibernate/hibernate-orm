@@ -28,7 +28,6 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -353,13 +352,6 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public JoinFragment createOuterJoinFragment() {
-		// Create an OuterJoinGenerator for this dialect.
-		return new CacheJoinFragment();
-	}
-
-	@Override
 	public String getNoColumnsInsertString() {
 		// The keyword used to insert a row without specifying
 		// any column values
@@ -399,11 +391,6 @@ public class CacheDialect extends Dialect {
 
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
 
 	@Override
 	public boolean supportsOrderByInSubquery() {

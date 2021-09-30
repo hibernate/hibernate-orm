@@ -116,6 +116,7 @@ import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.Expectations;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
+import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdLoaderStandard;
 import org.hibernate.loader.ast.internal.Preparable;
 import org.hibernate.loader.ast.internal.SingleIdArrayLoadPlan;
@@ -147,18 +148,23 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.RepresentationMode;
+import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
+import org.hibernate.metamodel.mapping.BasicValuedModelPart;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Queryable;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -187,33 +193,33 @@ import org.hibernate.persister.walking.internal.EntityIdentifierDefinitionHelper
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.pretty.MessageHelper;
-import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sql.internal.SQLQueryParser;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
-import org.hibernate.sql.JoinFragment;
-import org.hibernate.sql.JoinType;
-import org.hibernate.sql.Select;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
+import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAliasStemHelper;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -224,11 +230,15 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
@@ -367,7 +377,6 @@ public abstract class AbstractEntityPersister
 
 	// SQL strings
 	private String sqlVersionSelectString;
-	private String sqlSnapshotSelectString;
 	private Map<String, SingleIdArrayLoadPlan> sqlLazySelectStringsByFetchGroup;
 
 	private String sqlIdentityInsertString;
@@ -413,9 +422,6 @@ public abstract class AbstractEntityPersister
 	private final boolean useReferenceCacheEntries;
 
 	protected void addDiscriminatorToInsert(Insert insert) {
-	}
-
-	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
 	}
 
 	protected abstract int[] getSubclassColumnTableNumberClosure();
@@ -547,10 +553,6 @@ public abstract class AbstractEntityPersister
 		return result;
 	}
 
-	public String getSQLSnapshotSelectString() {
-		return sqlSnapshotSelectString;
-	}
-
 	public String getSQLLazySelectString(String fetchGroup) {
 		final SingleIdArrayLoadPlan singleIdLoadPlan = sqlLazySelectStringsByFetchGroup.get( fetchGroup );
 		return singleIdLoadPlan == null ? null : singleIdLoadPlan.getJdbcSelect().getSql();
@@ -613,15 +615,7 @@ public abstract class AbstractEntityPersister
 		return deleteCallable[j];
 	}
 
-	protected boolean isSubclassPropertyDeferred(String propertyName, String entityName) {
-		return false;
-	}
-
 	protected boolean isSubclassTableSequentialSelect(int j) {
-		return false;
-	}
-
-	public boolean hasSequentialSelect() {
 		return false;
 	}
 
@@ -1838,8 +1832,173 @@ public abstract class AbstractEntityPersister
 	}
 
 	public String selectFragment(String alias, String suffix) {
-		return identifierSelectFragment( alias, suffix ) +
-				propertySelectFragment( alias, suffix, false );
+		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final String rootTableName = getRootTableName();
+		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+				rootQuerySpec,
+				new SqlAliasBaseManager(),
+				new SimpleFromClauseAccessImpl(),
+				LockOptions.NONE,
+				(fetchParent, querySpec, creationState) -> {
+					final List<Fetch> fetches = new ArrayList<>();
+
+					fetchParent.getReferencedMappingContainer().visitFetchables(
+							fetchable -> {
+								// Ignore plural attributes
+								if ( fetchable instanceof PluralAttributeMapping ) {
+									return;
+								}
+								FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
+								final boolean selectable;
+								if ( fetchable instanceof StateArrayContributorMapping ) {
+									final int propertyNumber = ( (StateArrayContributorMapping) fetchable ).getStateArrayPosition();
+									final int tableNumber = getSubclassPropertyTableNumber( propertyNumber );
+									selectable = !isSubclassTableSequentialSelect( tableNumber )
+											&& propertySelectable[propertyNumber];
+								}
+								else {
+									selectable = true;
+								}
+								if ( fetchable instanceof BasicValuedModelPart ) {
+									// Ignore lazy basic columns
+									if ( fetchTiming == FetchTiming.DELAYED ) {
+										return;
+									}
+								}
+								else if ( fetchable instanceof Association ) {
+									final Association association = (Association) fetchable;
+									// Ignore the fetchable if the FK is on the other side
+									if ( association.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
+										return;
+									}
+									// Ensure the FK comes from the root table
+									if ( !rootTableName.equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
+										return;
+									}
+									fetchTiming = FetchTiming.DELAYED;
+								}
+
+								if ( selectable ) {
+									final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
+									final Fetch fetch = fetchParent.generateFetchableFetch(
+											fetchable,
+											navigablePath,
+											fetchTiming,
+											true,
+											null,
+											creationState
+									);
+									fetches.add( fetch );
+								}
+							},
+							null
+					);
+
+					return fetches;
+				},
+				true,
+				getFactory()
+		);
+
+		final NavigablePath entityPath = new NavigablePath( getRootPathName() );
+		final TableGroup rootTableGroup = createRootTableGroup(
+				true,
+				entityPath,
+				null,
+				() -> p -> {},
+				new SqlAliasBaseConstant( alias ),
+				sqlAstCreationState,
+				getFactory()
+		);
+
+		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
+		sqlAstCreationState.getFromClauseAccess().registerTableGroup( entityPath, rootTableGroup );
+
+		createDomainResult( entityPath, rootTableGroup, null, sqlAstCreationState );
+
+		// Wrap expressions with aliases
+		final SelectClause selectClause = rootQuerySpec.getSelectClause();
+		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		int i = 0;
+		for ( String identifierAlias : identifierAliases ) {
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							i,
+							i + 1,
+							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
+					)
+			);
+			i++;
+		}
+
+		if ( entityMetamodel.hasSubclasses() ) {
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							i,
+							i + 1,
+							new AliasedExpression( sqlSelections.get( i ).getExpression(), getDiscriminatorAlias() + suffix )
+					)
+			);
+			i++;
+		}
+
+		if ( hasRowId() ) {
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							i,
+							i + 1,
+							new AliasedExpression( sqlSelections.get( i ).getExpression(), ROWID_ALIAS + suffix )
+					)
+			);
+			i++;
+		}
+
+		final String[] columnAliases = getSubclassColumnAliasClosure();
+		final String[] formulaAliases = getSubclassFormulaAliasClosure();
+		int columnIndex = 0;
+		int formulaIndex = 0;
+		for ( ; i < sqlSelections.size(); i++ ) {
+			final SqlSelection sqlSelection = sqlSelections.get( i );
+			final ColumnReference columnReference = (ColumnReference) sqlSelection.getExpression();
+			final String selectAlias;
+			if ( !columnReference.isColumnExpressionFormula() ) {
+				// Skip over columns that are not selectable like in the fetch generation
+				while ( !subclassColumnSelectableClosure[columnIndex] ) {
+					columnIndex++;
+				}
+				selectAlias = columnAliases[columnIndex++] + suffix;
+			}
+			else {
+				selectAlias = formulaAliases[formulaIndex++] + suffix;
+			}
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							sqlSelection.getValuesArrayPosition(),
+							sqlSelection.getJdbcResultSetIndex(),
+							new AliasedExpression( sqlSelection.getExpression(), selectAlias )
+					)
+			);
+		}
+
+		final String sql = getFactory().getJdbcServices()
+				.getDialect()
+				.getSqlAstTranslatorFactory()
+				.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
+				.translate( null, QueryOptions.NONE )
+				.getSql();
+		final int fromIndex = sql.lastIndexOf( " from" );
+		final String expression;
+		if ( fromIndex != -1 ) {
+			expression = sql.substring( "select ".length(), fromIndex );
+		}
+		else {
+			expression = sql.substring( "select ".length() );
+		}
+		return expression;
 	}
 
 	public String[] getIdentifierAliases(String suffix) {
@@ -1861,63 +2020,6 @@ public abstract class AbstractEntityPersister
 		return entityMetamodel.hasSubclasses() ?
 				new Alias( suffix ).toAliasString( getDiscriminatorAlias() ) :
 				null;
-	}
-
-	public String identifierSelectFragment(String name, String suffix) {
-		return new SelectFragment()
-				.setSuffix( suffix )
-				.addColumns( name, getIdentifierColumnNames(), getIdentifierAliases() )
-				.toFragmentString()
-				.substring( 2 ); //strip leading ", "
-	}
-
-
-	public String propertySelectFragment(String tableAlias, String suffix, boolean allProperties) {
-		return propertySelectFragmentFragment( tableAlias, suffix, allProperties ).toFragmentString();
-	}
-
-	public SelectFragment propertySelectFragmentFragment(
-			String tableAlias,
-			String suffix,
-			boolean allProperties) {
-		SelectFragment select = new SelectFragment()
-				.setSuffix( suffix )
-				.setUsedAliases( getIdentifierAliases() );
-
-		int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
-		String[] columnAliases = getSubclassColumnAliasClosure();
-		String[] columnReaderTemplates = getSubclassColumnReaderTemplateClosure();
-		for ( int i = 0; i < getSubclassColumnClosure().length; i++ ) {
-			boolean selectable = ( allProperties || !subclassColumnLazyClosure[i] ) &&
-					!isSubclassTableSequentialSelect( columnTableNumbers[i] ) &&
-					subclassColumnSelectableClosure[i];
-			if ( selectable ) {
-				String subalias = generateTableAlias( tableAlias, columnTableNumbers[i] );
-				select.addColumnTemplate( subalias, columnReaderTemplates[i], columnAliases[i] );
-			}
-		}
-
-		int[] formulaTableNumbers = getSubclassFormulaTableNumberClosure();
-		String[] formulaTemplates = getSubclassFormulaTemplateClosure();
-		String[] formulaAliases = getSubclassFormulaAliasClosure();
-		for ( int i = 0; i < getSubclassFormulaTemplateClosure().length; i++ ) {
-			boolean selectable = ( allProperties || !subclassFormulaLazyClosure[i] )
-					&& !isSubclassTableSequentialSelect( formulaTableNumbers[i] );
-			if ( selectable ) {
-				String subalias = generateTableAlias( tableAlias, formulaTableNumbers[i] );
-				select.addFormula( subalias, formulaTemplates[i], formulaAliases[i] );
-			}
-		}
-
-		if ( entityMetamodel.hasSubclasses() ) {
-			addDiscriminatorToSelect( select, tableAlias, suffix );
-		}
-
-		if ( hasRowId() ) {
-			select.addColumn( tableAlias, rowIdName, ROWID_ALIAS );
-		}
-
-		return select;
 	}
 
 	public Object[] getDatabaseSnapshot(Object id, SharedSessionContractImplementor session) throws HibernateException {
@@ -1964,118 +2066,8 @@ public abstract class AbstractEntityPersister
 		return new GeneratedValuesProcessor( this, timing, getFactory() );
 	}
 
-	private String generateGeneratedValuesSelectString(final GenerationTiming generationTimingToMatch) {
-		Select select = new Select( getFactory().getJdbcServices().getDialect() );
-
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			select.setComment( "get generated state " + getEntityName() );
-		}
-
-		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
-
-		// Here we render the select column list based on the properties defined as being generated.
-		// For partial component generation, we currently just re-select the whole component
-		// rather than trying to handle the individual generated portions.
-		String selectClause = concretePropertySelectFragment(
-				getRootAlias(),
-				propertyNumber -> {
-					final InDatabaseValueGenerationStrategy generationStrategy
-							= entityMetamodel.getInDatabaseValueGenerationStrategies()[propertyNumber];
-					GenerationTiming timing = generationStrategy.getGenerationTiming();
-					return generationStrategy != null
-							&& (generationTimingToMatch == GenerationTiming.INSERT && timing.includesInsert()
-							|| generationTimingToMatch == GenerationTiming.ALWAYS && timing.includesUpdate());
-				}
-		);
-		selectClause = selectClause.substring( 2 );
-
-		String fromClause = fromTableFragment( getRootAlias() ) +
-				fromJoinFragment( getRootAlias(), true, false );
-
-		String whereClause = new StringBuilder()
-				.append( String.join( "=? and ", aliasedIdColumns ) )
-				.append( "=?" )
-				.append( whereJoinFragment( getRootAlias(), true, false ) )
-				.toString();
-
-		return select.setSelectClause( selectClause )
-				.setFromClause( fromClause )
-				.setOuterJoins( "", "" )
-				.setWhereClause( whereClause )
-				.toStatementString();
-	}
-
 	protected interface InclusionChecker {
 		boolean includeProperty(int propertyNumber);
-	}
-
-	protected String concretePropertySelectFragment(String alias, final boolean[] includeProperty) {
-		return concretePropertySelectFragment(
-				alias,
-				propertyNumber -> includeProperty[propertyNumber]
-		);
-	}
-
-	protected String concretePropertySelectFragment(String alias, InclusionChecker inclusionChecker) {
-		int propertyCount = getPropertyNames().length;
-		int[] propertyTableNumbers = getPropertyTableNumbersInSelect();
-		SelectFragment frag = new SelectFragment();
-		for ( int i = 0; i < propertyCount; i++ ) {
-			if ( inclusionChecker.includeProperty( i ) ) {
-				frag.addColumnTemplates(
-						generateTableAlias( alias, propertyTableNumbers[i] ),
-						propertyColumnReaderTemplates[i],
-						propertyColumnAliases[i]
-				);
-				frag.addFormulas(
-						generateTableAlias( alias, propertyTableNumbers[i] ),
-						propertyColumnFormulaTemplates[i],
-						propertyColumnAliases[i]
-				);
-			}
-		}
-		return frag.toFragmentString();
-	}
-
-	public String generateSnapshotSelectString() {
-
-		//TODO: should we use SELECT .. FOR UPDATE?
-
-		Select select = new Select( getFactory().getJdbcServices().getDialect() );
-
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			select.setComment( "get current state " + getEntityName() );
-		}
-
-		String[] aliasedIdColumns = StringHelper.qualify( getRootAlias(), getIdentifierColumnNames() );
-		String selectClause = String.join( ", ", aliasedIdColumns ) +
-				concretePropertySelectFragment( getRootAlias(), getPropertyUpdateability() );
-
-		String fromClause = fromTableFragment( getRootAlias() ) +
-				fromJoinFragment( getRootAlias(), true, false );
-
-		String whereClause = new StringBuilder()
-				.append(
-						String.join(
-								"=? and ",
-								aliasedIdColumns
-						)
-				)
-				.append( "=?" )
-				.append( whereJoinFragment( getRootAlias(), true, false ) )
-				.toString();
-
-		/*if ( isVersioned() ) {
-			where.append(" and ")
-				.append( getVersionColumnName() )
-				.append("=?");
-		}*/
-
-		return select.setSelectClause( selectClause )
-				.setFromClause( fromClause )
-				.setOuterJoins( "", "" )
-				.setWhereClause( whereClause )
-				.toStatementString();
 	}
 
 	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
@@ -2236,21 +2228,6 @@ public abstract class AbstractEntityPersister
 	 * concrete EntityPersister cannot have duplicated property names).
 	 */
 	@Override
-	public String[] toColumns(String alias, String propertyName) throws QueryException {
-		return propertyMapping.toColumns( alias, propertyName );
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * Warning:
-	 * When there are duplicated property names in the subclasses
-	 * then this method may return the wrong results.
-	 * To ensure correct results, this method should only be used when
-	 * {@literal this} is the concrete EntityPersister (since the
-	 * concrete EntityPersister cannot have duplicated property names).
-	 */
-	@Override
 	public String[] toColumns(String propertyName) throws QueryException {
 		return propertyMapping.getColumnNames( propertyName );
 	}
@@ -2346,10 +2323,8 @@ public abstract class AbstractEntityPersister
 
 	private DiscriminatorMetadata buildTypeDiscriminatorMetadata() {
 		return new DiscriminatorMetadata() {
-			public String getSqlFragment(String sqlQualificationAlias) {
-				return toColumns( sqlQualificationAlias, ENTITY_CLASS )[0];
-			}
 
+			@Override
 			public Type getResolutionType() {
 				return new DiscriminatorType( (BasicType) getDiscriminatorType(), AbstractEntityPersister.this );
 			}
@@ -3215,116 +3190,6 @@ public abstract class AbstractEntityPersister
 		return 0;
 	}
 
-	/**
-	 * Unmarshal the fields of a persistent instance from a result set,
-	 * without resolving associations or collections. Question: should
-	 * this really be here, or should it be sent back to Loader?
-	 */
-	@Override
-	public Object[] hydrate(
-			final ResultSet rs,
-			final Object id,
-			final Object object,
-			final Loadable rootLoadable,
-			final String[][] suffixedPropertyColumns,
-			final boolean forceEager,
-			final boolean[] propertiesForceEager,
-			final SharedSessionContractImplementor session) throws SQLException, HibernateException {
-
-		if ( LOG.isTraceEnabled() ) {
-			LOG.tracev( "Hydrating entity: {0}", MessageHelper.infoString( this, id, getFactory() ) );
-		}
-
-		final AbstractEntityPersister rootPersister = (AbstractEntityPersister) rootLoadable;
-
-		final boolean hasDeferred = rootPersister.hasSequentialSelect();
-		PreparedStatement sequentialSelect = null;
-		ResultSet sequentialResultSet = null;
-		boolean sequentialSelectEmpty = false;
-		try {
-
-			if ( hasDeferred ) {
-				final String sql = rootPersister.getSequentialSelect( getEntityName() );
-				if ( sql != null ) {
-					//TODO: I am not so sure about the exception handling in this bit!
-					sequentialSelect = session
-							.getJdbcCoordinator()
-							.getStatementPreparer()
-							.prepareStatement( sql );
-					rootPersister.getIdentifierType().nullSafeSet( sequentialSelect, id, 1, session );
-					sequentialResultSet = session.getJdbcCoordinator().getResultSetReturn().extract( sequentialSelect );
-					if ( !sequentialResultSet.next() ) {
-						// TODO: Deal with the "optional" attribute in the <join> mapping;
-						// this code assumes that optional defaults to "true" because it
-						// doesn't actually seem to work in the fetch="join" code
-						//
-						// Note that actual proper handling of optional-ality here is actually
-						// more involved than this patch assumes.  Remember that we might have
-						// multiple <join/> mappings associated with a single entity.  Really
-						// a couple of things need to happen to properly handle optional here:
-						//  1) First and foremost, when handling multiple <join/>s, we really
-						//      should be using the entity root table as the driving table;
-						//      another option here would be to choose some non-optional joined
-						//      table to use as the driving table.  In all likelihood, just using
-						//      the root table is much simpler
-						//  2) Need to add the FK columns corresponding to each joined table
-						//      to the generated select list; these would then be used when
-						//      iterating the result set to determine whether all non-optional
-						//      data is present
-						// My initial thoughts on the best way to deal with this would be
-						// to introduce a new SequentialSelect abstraction that actually gets
-						// generated in the persisters (ok, SingleTable...) and utilized here.
-						// It would encapsulated all this required optional-ality checking...
-						sequentialSelectEmpty = true;
-					}
-				}
-			}
-
-			final String[] propNames = getPropertyNames();
-			final Type[] types = getPropertyTypes();
-			final Object[] values = new Object[types.length];
-			final boolean[] laziness = getPropertyLaziness();
-			final String[] propSubclassNames = getSubclassPropertySubclassNameClosure();
-
-			for ( int i = 0; i < types.length; i++ ) {
-				if ( !propertySelectable[i] ) {
-					values[i] = PropertyAccessStrategyBackRefImpl.UNKNOWN;
-				}
-				else if ( forceEager || !laziness[i] || propertiesForceEager != null && propertiesForceEager[i] ) {
-					//decide which ResultSet to get the property value from:
-					final boolean propertyIsDeferred = hasDeferred &&
-							rootPersister.isSubclassPropertyDeferred( propNames[i], propSubclassNames[i] );
-					if ( propertyIsDeferred && sequentialSelectEmpty ) {
-						values[i] = null;
-					}
-					else {
-						final ResultSet propertyResultSet = propertyIsDeferred ? sequentialResultSet : rs;
-						final String[] cols = propertyIsDeferred ?
-								propertyColumnAliases[i] :
-								suffixedPropertyColumns[i];
-						values[i] = types[i].hydrate( propertyResultSet, cols, session, object );
-					}
-				}
-				else {
-					values[i] = LazyPropertyInitializer.UNFETCHED_PROPERTY;
-				}
-			}
-
-			if ( sequentialResultSet != null ) {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( sequentialResultSet, sequentialSelect );
-			}
-
-			return values;
-
-		}
-		finally {
-			if ( sequentialSelect != null ) {
-				session.getJdbcCoordinator().getLogicalConnection().getResourceRegistry().release( sequentialSelect );
-				session.getJdbcCoordinator().afterStatementExecution();
-			}
-		}
-	}
-
 	public boolean useInsertSelectIdentity() {
 		return !useGetGeneratedKeys()
 			&& getFactory().getJdbcServices().getDialect().getIdentityColumnSupport().supportsInsertSelectIdentity();
@@ -3332,10 +3197,6 @@ public abstract class AbstractEntityPersister
 
 	public boolean useGetGeneratedKeys() {
 		return getFactory().getSessionFactoryOptions().isGetGeneratedKeysEnabled();
-	}
-
-	protected String getSequentialSelect(String entityName) {
-		throw new UnsupportedOperationException( "no sequential selects" );
 	}
 
 	/**
@@ -4098,9 +3959,6 @@ public abstract class AbstractEntityPersister
 			if ( sqlVersionSelectString != null ) {
 				LOG.debugf( " Version select: %s", sqlVersionSelectString );
 			}
-			if ( sqlSnapshotSelectString != null ) {
-				LOG.debugf( " Snapshot select: %s", sqlSnapshotSelectString );
-			}
 			for ( int j = 0; j < getTableSpan(); j++ ) {
 				LOG.debugf( " Insert %s: %s", j, getSQLInsertStrings()[j] );
 				LOG.debugf( " Update %s: %s", j, getSQLUpdateStrings()[j] );
@@ -4167,113 +4025,8 @@ public abstract class AbstractEntityPersister
 		return oneToManyFilterFragment( alias );
 	}
 
-	@Override
-	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		// NOTE : Not calling createJoin here is just a performance optimization
-		return getSubclassTableSpan() == 1
-				? ""
-				: createJoin(
-				alias,
-				innerJoin,
-				includeSubclasses,
-				Collections.emptySet(),
-				null
-		).toFromFragmentString();
-	}
-
-	@Override
-	public String fromJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		// NOTE : Not calling createJoin here is just a performance optimization
-		return getSubclassTableSpan() == 1
-				? ""
-				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations, null ).toFromFragmentString();
-	}
-
-	@Override
-	public String fromJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations,
-			Set<String> referencedTables) {
-		return getSubclassTableSpan() == 1
-				? ""
-				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations, referencedTables ).toFromFragmentString();
-	}
-
-	@Override
-	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		// NOTE : Not calling createJoin here is just a performance optimization
-		return getSubclassTableSpan() == 1
-				? ""
-				: createJoin(
-				alias,
-				innerJoin,
-				includeSubclasses,
-				Collections.emptySet(),
-				null
-		).toWhereFragmentString();
-	}
-
-	@Override
-	public String whereJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		// NOTE : Not calling createJoin here is just a performance optimization
-		return getSubclassTableSpan() == 1
-				? ""
-				: createJoin( alias, innerJoin, includeSubclasses, treatAsDeclarations, null ).toWhereFragmentString();
-	}
-
 	protected boolean isSubclassTableLazy(int j) {
 		return false;
-	}
-
-	protected JoinFragment createJoin(
-			String name,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		return createJoin(name, innerJoin, includeSubclasses, treatAsDeclarations, null);
-	}
-
-	protected JoinFragment createJoin(
-			String name,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations,
-			Set<String> referencedTables) {
-		// IMPL NOTE : all joins join to the pk of the driving table
-		final String[] idCols = StringHelper.qualify( name, getIdentifierColumnNames() );
-		final JoinFragment join = getFactory().getJdbcServices().getDialect().createOuterJoinFragment();
-		final int tableSpan = getSubclassTableSpan();
-		// IMPL NOTE : notice that we skip the first table; it is the driving table!
-		for ( int j = 1; j < tableSpan; j++ ) {
-			final JoinType joinType = determineSubclassTableJoinType(
-					j,
-					innerJoin,
-					includeSubclasses,
-					treatAsDeclarations,
-					referencedTables
-			);
-
-			if ( joinType != null && joinType != JoinType.NONE ) {
-				join.addJoin(
-						getSubclassTableName( j ),
-						generateTableAlias( name, j ),
-						idCols,
-						getSubclassTableKeyColumns( j ),
-						joinType
-				);
-			}
-		}
-		return join;
 	}
 
 	protected SqlAstJoinType determineSubclassTableJoinType(
@@ -4300,153 +4053,10 @@ public abstract class AbstractEntityPersister
 		return SqlAstJoinType.LEFT;
 	}
 
-	protected JoinType determineSubclassTableJoinType(
-			int subclassTableNumber,
-			boolean canInnerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations,
-			Set<String> referencedTables) {
-
-		if ( isClassOrSuperclassJoin( subclassTableNumber ) ) {
-			String superclassTableName = getSubclassTableName( subclassTableNumber );
-			if ( referencedTables != null && canOmitSuperclassTableJoin() && !referencedTables.contains(
-					superclassTableName ) ) {
-				return JoinType.NONE;
-			}
-			final boolean shouldInnerJoin = canInnerJoin
-					&& !isInverseTable( subclassTableNumber )
-					&& !isNullableTable( subclassTableNumber );
-			// the table is either this persister's driving table or (one of) its super class persister's driving
-			// tables which can be inner joined as long as the `shouldInnerJoin` condition resolves to true
-			return shouldInnerJoin ? JoinType.INNER_JOIN : JoinType.LEFT_OUTER_JOIN;
-		}
-
-		// otherwise we have a subclass table and need to look a little deeper...
-
-		// IMPL NOTE : By default includeSubclasses indicates that all subclasses should be joined and that each
-		// subclass ought to be joined by outer-join.  However, TREAT-AS always requires that an inner-join be used
-		// so we give TREAT-AS higher precedence...
-
-		if ( isSubclassTableIndicatedByTreatAsDeclarations( subclassTableNumber, treatAsDeclarations ) ) {
-			return JoinType.INNER_JOIN;
-		}
-
-		if ( includeSubclasses
-				&& !isSubclassTableSequentialSelect( subclassTableNumber )
-				&& !isSubclassTableLazy( subclassTableNumber ) ) {
-			return JoinType.LEFT_OUTER_JOIN;
-		}
-
-		return JoinType.NONE;
-	}
-
 	protected boolean isSubclassTableIndicatedByTreatAsDeclarations(
 			int subclassTableNumber,
 			Set<String> treatAsDeclarations) {
 		return false;
-	}
-
-
-	protected JoinFragment createJoin(int[] tableNumbers, String drivingAlias) {
-		final String[] keyCols = StringHelper.qualify( drivingAlias, getSubclassTableKeyColumns( tableNumbers[0] ) );
-		final JoinFragment jf = getFactory().getJdbcServices().getDialect().createOuterJoinFragment();
-		// IMPL NOTE : notice that we skip the first table; it is the driving table!
-		for ( int i = 1; i < tableNumbers.length; i++ ) {
-			final int j = tableNumbers[i];
-			jf.addJoin(
-					getSubclassTableName( j ),
-					generateTableAlias( getRootAlias(), j ),
-					keyCols,
-					getSubclassTableKeyColumns( j ),
-					isInverseSubclassTable( j ) || isNullableSubclassTable( j )
-							? JoinType.LEFT_OUTER_JOIN
-							: JoinType.INNER_JOIN
-			);
-		}
-		return jf;
-	}
-
-	protected SelectFragment createSelect(
-			final int[] subclassColumnNumbers,
-			final int[] subclassFormulaNumbers) {
-
-		SelectFragment selectFragment = new SelectFragment();
-
-		int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
-		String[] columnAliases = getSubclassColumnAliasClosure();
-		String[] columnReaderTemplates = getSubclassColumnReaderTemplateClosure();
-		for ( int i = 0; i < subclassColumnNumbers.length; i++ ) {
-			int columnNumber = subclassColumnNumbers[i];
-			if ( subclassColumnSelectableClosure[columnNumber] ) {
-				final String subalias = generateTableAlias( getRootAlias(), columnTableNumbers[columnNumber] );
-				selectFragment.addColumnTemplate(
-						subalias,
-						columnReaderTemplates[columnNumber],
-						columnAliases[columnNumber]
-				);
-			}
-		}
-
-		int[] formulaTableNumbers = getSubclassFormulaTableNumberClosure();
-		String[] formulaTemplates = getSubclassFormulaTemplateClosure();
-		String[] formulaAliases = getSubclassFormulaAliasClosure();
-		for ( int i = 0; i < subclassFormulaNumbers.length; i++ ) {
-			int formulaNumber = subclassFormulaNumbers[i];
-			final String subalias = generateTableAlias( getRootAlias(), formulaTableNumbers[formulaNumber] );
-			selectFragment.addFormula( subalias, formulaTemplates[formulaNumber], formulaAliases[formulaNumber] );
-		}
-
-		return selectFragment;
-	}
-
-	protected String createFrom(int tableNumber, String alias) {
-		return getSubclassTableName( tableNumber ) + ' ' + alias;
-	}
-
-	protected String createWhereByKey(int tableNumber, String alias) {
-		//TODO: move to .sql package, and refactor with similar things!
-		return String.join(
-				"=? and ",
-				StringHelper.qualify( alias, getSubclassTableKeyColumns( tableNumber ) )
-		) + "=?";
-	}
-
-	protected String renderSelect(
-			final int[] tableNumbers,
-			final int[] columnNumbers,
-			final int[] formulaNumbers) {
-
-		Arrays.sort( tableNumbers ); //get 'em in the right order (not that it really matters)
-
-		//render the where and from parts
-		int drivingTable = tableNumbers[0];
-		final String drivingAlias = generateTableAlias(
-				getRootAlias(),
-				drivingTable
-		); //we *could* regenerate this inside each called method!
-		final String where = createWhereByKey( drivingTable, drivingAlias );
-		final String from = createFrom( drivingTable, drivingAlias );
-
-		//now render the joins
-		JoinFragment jf = createJoin( tableNumbers, drivingAlias );
-
-		//now render the select clause
-		SelectFragment selectFragment = createSelect( columnNumbers, formulaNumbers );
-
-		//now tie it all together
-		Select select = new Select( getFactory().getJdbcServices().getDialect() );
-		select.setSelectClause( selectFragment.toFragmentString().substring( 2 ) );
-		select.setFromClause( from );
-		select.setWhereClause( where );
-		select.setOuterJoins( jf.toFromFragmentString(), jf.toWhereFragmentString() );
-		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
-			select.setComment( "sequential select " + getEntityName() );
-		}
-		return select.toStatementString();
-	}
-
-	private String getRootAlias() {
-		return StringHelper.generateAlias( getEntityName() );
 	}
 
 	/**
@@ -4501,7 +4111,6 @@ public abstract class AbstractEntityPersister
 		}
 
 		//select SQL
-		sqlSnapshotSelectString = generateSnapshotSelectString();
 		sqlLazySelectStringsByFetchGroup = generateLazySelectStringsByFetchGroup();
 		sqlVersionSelectString = generateSelectVersionString();
 		if ( isIdentifierAssignedByInsert() ) {
@@ -5160,16 +4769,6 @@ public abstract class AbstractEntityPersister
 	public String toString() {
 		return StringHelper.unqualify( getClass().getName() ) +
 				'(' + entityMetamodel.getName() + ')';
-	}
-
-	public final String selectFragment(
-			Joinable rhs,
-			String rhsAlias,
-			String lhsAlias,
-			String entitySuffix,
-			String collectionSuffix,
-			boolean includeCollectionColumns) {
-		return selectFragment( lhsAlias, entitySuffix );
 	}
 
 	public boolean isInstrumented() {
@@ -6827,37 +6426,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public Iterable<AttributeDefinition> getAttributes() {
 		return attributeDefinitions;
-	}
-
-	public String[][] getPolymorphicJoinColumns(String lhsTableAlias, String propertyPath) {
-		Set<String> subclassEntityNames = getEntityMetamodel().getSubclassEntityNames();
-		// We will collect all the join columns from the LHS subtypes here
-		List<String[]> polymorphicJoinColumns = new ArrayList<>( subclassEntityNames.size() );
-
-		String[] joinColumns;
-
-		OUTER:
-		for ( String subclassEntityName : subclassEntityNames ) {
-			AbstractEntityPersister subclassPersister = (AbstractEntityPersister) getFactory()
-					.getMetamodel()
-					.entityPersister( subclassEntityName );
-			joinColumns = subclassPersister.toColumns( lhsTableAlias, propertyPath );
-
-			if ( joinColumns.length == 0 ) {
-				// The subtype does not have a "concrete" mapping for the property path
-				continue;
-			}
-
-			// Check for duplicates like this since we will mostly have just a few candidates
-			for ( String[] existingColumns : polymorphicJoinColumns ) {
-				if ( Arrays.deepEquals( existingColumns, joinColumns ) ) {
-					continue OUTER;
-				}
-			}
-			polymorphicJoinColumns.add( joinColumns );
-		}
-
-		return ArrayHelper.to2DStringArray( polymorphicJoinColumns );
 	}
 
 	/**

@@ -21,8 +21,6 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
-import org.hibernate.sql.CaseFragment;
-import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -232,26 +230,9 @@ public class MaxDBDialect extends Dialect {
 	}
 
 	@Override
-	public String getFromDual() {
-		return "from dual";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsOffsetInSubquery() {
 		return true;
 	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public CaseFragment createCaseFragment() {
-		return new DecodeCaseFragment();
-	}
-
 
 	@Override
 	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(

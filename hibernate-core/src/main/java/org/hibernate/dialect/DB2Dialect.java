@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.DB2FormatEmulation;
@@ -52,7 +51,7 @@ import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Locale;
+
 import jakarta.persistence.TemporalType;
 
 /**
@@ -470,25 +469,8 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * NOTE : DB2 is known to support parameters in the <tt>SELECT</tt> clause, but only in casted form
-	 * (see {@link #requiresCastingOfParametersInSelectClause()}).
-	 */
 	@Override
 	public boolean supportsParametersInInsertSelect() {
-		return true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * DB2 in fact does require that parameters appearing in the select clause be wrapped in cast() calls
-	 * to tell the DB parser the type of the select value.
-	 */
-	@Override
-	public boolean requiresCastingOfParametersInSelectClause() {
 		return true;
 	}
 
@@ -497,20 +479,8 @@ public class DB2Dialect extends Dialect {
 		return false;
 	}
 
-	@Override
-	public String getCrossJoinSeparator() {
-		//DB2 v9.1 doesn't support 'cross join' syntax
-		//DB2 9.7 and later support "cross join"
-		return getVersion() < 970 ? ", " : super.getCrossJoinSeparator();
-	}
-
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
 
 	@Override
 	public boolean supportsLobValueChangePropagation() {
@@ -524,16 +494,6 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from sysibm.dual";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
 		return false;
 	}
 
@@ -620,11 +580,6 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String getNotExpression( String expression ) {
-		return "not (" + expression + ")";
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return limitHandler;
 	}
@@ -645,54 +600,6 @@ public class DB2Dialect extends Dialect {
 		};
 	}
 
-	/**
-	 * Handle DB2 "support" for null precedence...
-	 *
-	 * @param expression The SQL order expression. In case of {@code @OrderBy} annotation user receives property placeholder
-	 * (e.g. attribute name enclosed in '{' and '}' signs).
-	 * @param collation Collation string in format {@code collate IDENTIFIER}, or {@code null}
-	 * if expression has not been explicitly specified.
-	 * @param order Order direction. Possible values: {@code asc}, {@code desc}, or {@code null}
-	 * if expression has not been explicitly specified.
-	 * @param nullPrecedence Nulls precedence. Default value: {@link NullPrecedence#NONE}.
-	 *
-	 * @return SQL string.
-	 */
-	@Override
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nullPrecedence) {
-		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
-			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
-		}
-
-		// DB2 FTW!  A null precedence was explicitly requested, but DB2 "support" for null precedence
-		// is a joke.  Basically it supports combos that align with what it does anyway.  Here is the
-		// support matrix:
-		//		* ASC + NULLS FIRST -> case statement
-		//		* ASC + NULLS LAST -> just drop the NULLS LAST from sql fragment
-		//		* DESC + NULLS FIRST -> just drop the NULLS FIRST from sql fragment
-		//		* DESC + NULLS LAST -> case statement
-
-		if ( ( nullPrecedence == NullPrecedence.FIRST  && "desc".equalsIgnoreCase( order ) )
-				|| ( nullPrecedence == NullPrecedence.LAST && "asc".equalsIgnoreCase( order ) ) ) {
-			// we have one of:
-			//		* ASC + NULLS LAST
-			//		* DESC + NULLS FIRST
-			// so just drop the null precedence.  *NOTE*: we could pass along the null precedence here,
-			// but only DB2 9.7 or greater understand it; dropping it is more portable across DB2 versions
-			return super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE );
-		}
-
-		return String.format(
-				Locale.ENGLISH,
-				"case when %s is null then %s else %s end,%s %s",
-				expression,
-				nullPrecedence == NullPrecedence.FIRST ? "0" : "1",
-				nullPrecedence == NullPrecedence.FIRST ? "1" : "0",
-				expression,
-				order == null ? "asc" : order
-		);
-	}
-
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new DB2IdentityColumnSupport();
@@ -701,11 +608,6 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsValuesList() {
 		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
 	}
 
 	@Override
@@ -726,16 +628,6 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public boolean supportsWindowFunctions() {
 		return true;
-	}
-
-	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.FUNCTION;
-	}
-
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
 	}
 
 	@Override

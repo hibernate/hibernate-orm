@@ -9,7 +9,6 @@ package org.hibernate.persister.entity;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +45,6 @@ import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -66,8 +64,6 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.Type;
 
-import static java.util.Collections.emptyMap;
-
 /**
  * The default implementation of the <tt>EntityPersister</tt> interface.
  * Implements the "table-per-class-hierarchy" or "roll-up" mapping strategy
@@ -86,7 +82,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final boolean[] isNullableTable;
 	private final String[][] keyColumnNames;
 	private final boolean[] cascadeDeleteEnabled;
-	private final boolean hasSequentialSelects;
 
 	private final String[] spaces;
 
@@ -130,9 +125,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 	//private final Map propertyTableNumbersByName = new HashMap();
 	private final Map<String, Integer> propertyTableNumbersByNameAndSubclass;
-
-	//Efficiency note: try to not allocate an HashMap if we're not going to need it.
-	private final Map<String, String> sequentialSelectStringsByEntityName;
 
 	private static final Object NULL_DISCRIMINATOR = new MarkerObject( "<null discriminator>" );
 	private static final Object NOT_NULL_DISCRIMINATOR = new MarkerObject( "<not null discriminator>" );
@@ -299,9 +291,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		isClassOrSuperclassJoin = ArrayHelper.toBooleanArray( isClassOrSuperclassJoins );
 		isInverseSubclassTable = ArrayHelper.toBooleanArray( isInverses );
 		isNullableSubclassTable = ArrayHelper.toBooleanArray( isNullables );
-		hasSequentialSelects = hasDeferred;
-
-		sequentialSelectStringsByEntityName = hasSequentialSelects ? new HashMap<>() : emptyMap();
 
 		// DISCRIMINATOR
 
@@ -722,15 +711,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return subclassTableNameClosure[subclassPropertyTableNumberClosure[i]];
 	}
 
-	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
-		if ( isDiscriminatorFormula() ) {
-			select.addFormula( name, getDiscriminatorFormulaTemplate(), getDiscriminatorAlias() );
-		}
-		else {
-			select.addColumn( name, getDiscriminatorColumnName(), getDiscriminatorAlias() );
-		}
-	}
-
 	protected int[] getPropertyTableNumbersInSelect() {
 		return propertyTableNumbers;
 	}
@@ -763,15 +743,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		return propertyTableNumbers;
 	}
 
-	protected boolean isSubclassPropertyDeferred(String propertyName, String entityName) {
-		return hasSequentialSelects &&
-				isSubclassTableSequentialSelect( getSubclassPropertyTableNumber( propertyName, entityName ) );
-	}
-
-	public boolean hasSequentialSelect() {
-		return hasSequentialSelects;
-	}
-
 	private int getSubclassPropertyTableNumber(String propertyName, String entityName) {
 		// When there are duplicated property names in the subclasses
 		// then propertyMapping.toType( propertyName ) may return an
@@ -792,58 +763,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		final Integer tabnum = propertyTableNumbersByNameAndSubclass.get( entityName + '.' + propertyName );
 		return tabnum == null ? 0 : tabnum;
 	}
-
-	protected String getSequentialSelect(String entityName) {
-		return sequentialSelectStringsByEntityName.get( entityName );
-	}
-
-	private String generateSequentialSelect(Loadable persister) {
-		//if ( this==persister || !hasSequentialSelects ) return null;
-
-		//note that this method could easily be moved up to BasicEntityPersister,
-		//if we ever needed to reuse it from other subclasses
-
-		//figure out which tables need to be fetched
-		AbstractEntityPersister subclassPersister = (AbstractEntityPersister) persister;
-		HashSet<Integer> tableNumbers = new HashSet<>();
-		String[] props = subclassPersister.getPropertyNames();
-		String[] classes = subclassPersister.getPropertySubclassNames();
-		for ( int i = 0; i < props.length; i++ ) {
-			int propTableNumber = getSubclassPropertyTableNumber( props[i], classes[i] );
-			if ( isSubclassTableSequentialSelect( propTableNumber ) && !isSubclassTableLazy( propTableNumber ) ) {
-				tableNumbers.add( propTableNumber );
-			}
-		}
-		if ( tableNumbers.isEmpty() ) {
-			return null;
-		}
-
-		//figure out which columns are needed
-		ArrayList<Integer> columnNumbers = new ArrayList<>();
-		final int[] columnTableNumbers = getSubclassColumnTableNumberClosure();
-		for ( int i = 0; i < getSubclassColumnClosure().length; i++ ) {
-			if ( tableNumbers.contains( columnTableNumbers[i] ) ) {
-				columnNumbers.add( i );
-			}
-		}
-
-		//figure out which formulas are needed
-		ArrayList<Integer> formulaNumbers = new ArrayList<>();
-		final int[] formulaTableNumbers = getSubclassColumnTableNumberClosure();
-		for ( int i = 0; i < getSubclassFormulaTemplateClosure().length; i++ ) {
-			if ( tableNumbers.contains( formulaTableNumbers[i] ) ) {
-				formulaNumbers.add( i );
-			}
-		}
-
-		//render the SQL
-		return renderSelect(
-				ArrayHelper.toIntArray( tableNumbers ),
-				ArrayHelper.toIntArray( columnNumbers ),
-				ArrayHelper.toIntArray( formulaNumbers )
-		);
-	}
-
 
 	protected String[] getSubclassTableKeyColumns(int j) {
 		return subclassTableKeyColumnClosure[j];
@@ -889,19 +808,6 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			return null;
 		}
 		return qualifiedTableNames[propertyTableNumbers[index]];
-	}
-
-	protected void doPostInstantiate() {
-		if ( hasSequentialSelects ) {
-			String[] entityNames = getSubclassClosure();
-			for ( int i = 1; i < entityNames.length; i++ ) {
-				Loadable loadable = (Loadable) getFactory().getMetamodel().entityPersister( entityNames[i] );
-				if ( !loadable.isAbstract() ) { //perhaps not really necessary...
-					String sequentialSelect = generateSequentialSelect( loadable );
-					sequentialSelectStringsByEntityName.put( entityNames[i], sequentialSelect );
-				}
-			}
-		}
 	}
 
 	@Override

@@ -36,7 +36,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * @author Scott Marlow
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
- * @see org.hibernate.dialect.Dialect#appendLockHint(LockMode, String)
+ * @see org.hibernate.dialect.Dialect#appendLockHint(LockOptions, String)
  *
  * @since 3.5
  */
@@ -103,7 +103,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 		final SessionFactoryImplementor factory = getLockable().getFactory();
 		final LockOptions lockOptions = new LockOptions( getLockMode() );
 		lockOptions.setTimeOut( lockTimeout );
-		final SimpleSelect select = new SimpleSelect( factory.getDialect() )
+		final SimpleSelect select = new SimpleSelect( factory.getJdbcServices().getDialect() )
 				.setLockOptions( lockOptions )
 				.setTableName( getLockable().getRootTableName() )
 				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )

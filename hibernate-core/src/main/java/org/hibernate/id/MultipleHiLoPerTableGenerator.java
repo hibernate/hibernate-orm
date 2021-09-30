@@ -15,6 +15,7 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -362,7 +363,7 @@ public class MultipleHiLoPerTableGenerator implements PersistentIdentifierGenera
 		query = "select " +
 				valueColumnName +
 				" from " +
-				jdbcEnvironment.getDialect().appendLockHint( LockMode.PESSIMISTIC_WRITE, tableName ) +
+				jdbcEnvironment.getDialect().appendLockHint( new LockOptions( LockMode.PESSIMISTIC_WRITE ), tableName ) +
 				" where " + segmentColumnName + " = '" + segmentName + "'" +
 				jdbcEnvironment.getDialect().getForUpdateString();
 

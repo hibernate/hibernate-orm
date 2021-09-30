@@ -12,6 +12,7 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.PostgreSQLDialect;
 
 /**
@@ -51,18 +52,6 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportsEmptyInListCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsEmptyInList();
-		}
-	}
-
-	public static class NotSupportsEmptyInListCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return !dialect.supportsEmptyInList();
-		}
-	}
-
 	public static class SupportsResultSetPositioningOnForwardOnlyCursorCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsResultSetPositionQueryMethodsOnForwardOnlyCursor();
@@ -95,13 +84,13 @@ abstract public class DialectChecks {
 
 	public static class SupportLimitCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit();
+			return dialect.getLimitHandler().supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsLimit() && dialect.supportsLimitOffset();
+			return dialect.getLimitHandler().supportsLimit() && dialect.getLimitHandler().supportsLimitOffset();
 		}
 	}
 
@@ -123,12 +112,6 @@ abstract public class DialectChecks {
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof MySQLDialect
 					|| dialect instanceof PostgreSQLDialect;
-		}
-	}
-
-	public static class SupportsRowValueConstructorSyntaxInInListCheck implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntaxInInList();
 		}
 	}
 
@@ -211,28 +194,6 @@ abstract public class DialectChecks {
 		}
 	}
 
-	public static class SupportNonQueryValuesListWithCTE implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsValuesList() &&
-					dialect.supportsNonQueryWithCTE() &&
-					dialect.supportsRowValueConstructorSyntaxInInList();
-		}
-	}
-
-	public static class SupportValuesListAndRowValueConstructorSyntaxInInList
-			implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsValuesList() &&
-					dialect.supportsRowValueConstructorSyntaxInInList();
-		}
-	}
-
-	public static class SupportRowValueConstructorSyntaxInInList implements DialectCheck {
-		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntaxInInList();
-		}
-	}
-
 	public static class SupportSkipLocked implements DialectCheck {
 		public boolean isMatch(Dialect dialect) {
 			return dialect.supportsSkipLocked();
@@ -278,7 +239,7 @@ abstract public class DialectChecks {
 	public static class SupportsNClob implements DialectCheck {
 		@Override
 		public boolean isMatch(Dialect dialect) {
-			return dialect.supportsNationalizedTypes();
+			return dialect.getNationalizationSupport() == NationalizationSupport.EXPLICIT;
 //			return !(
 //				dialect instanceof DB2Dialect ||
 //				dialect instanceof PostgreSQL81Dialect ||

@@ -22,8 +22,6 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
-import org.hibernate.sql.CaseFragment;
-import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -321,24 +319,8 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public CaseFragment createCaseFragment() {
-		return new DecodeCaseFragment();
-	}
-
-	@Override
 	public LimitHandler getLimitHandler() {
 		return FetchLimitHandler.INSTANCE;
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from rdms.rdms_dummy where key_col=1";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
 	}
 
 	@Override

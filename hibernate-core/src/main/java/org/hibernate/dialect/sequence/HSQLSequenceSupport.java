@@ -26,7 +26,7 @@ public final class HSQLSequenceSupport extends ANSISequenceSupport {
 
 	/**
 	 * Because of the overridden {@link #getCreateSequenceString(String)}, we must also override
-	 * {@link org.hibernate.dialect.Dialect#getCreateSequenceString(String, int, int)} to prevent
+	 * {@link #getCreateSequenceString(String, int, int)} to prevent
 	 * duplication of {@code start with}.
 	 */
 	@Override

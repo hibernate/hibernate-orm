@@ -32,48 +32,6 @@ public interface Joinable {
 	public String getTableName();
 
 	/**
-	 * All columns to select, when loading.
-	 */
-	public String selectFragment(Joinable rhs, String rhsAlias, String lhsAlias, String currentEntitySuffix, String currentCollectionSuffix, boolean includeCollectionColumns);
-
-	/**
-	 * Get the where clause part of any joins
-	 * (optional operation)
-	 */
-	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses);
-
-	/**
-	 * Get the where clause part of any joins
-	 * (optional operation)
-	 */
-	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations);
-
-	/**
-	 * Get the from clause part of any joins
-	 * (optional operation)
-	 */
-	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses);
-
-	/**
-	 * Get the from clause part of any joins
-	 * (optional operation)
-	 */
-	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses, Set<String> treatAsDeclarations);
-
-	/**
-	 * Get the from clause part of any joins
-	 * (optional operation)
-	 */
-	default String fromJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations,
-			Set<String> referencedTables) {
-		return fromJoinFragment( alias, innerJoin, includeSubclasses, treatAsDeclarations );
-	}
-
-	/**
 	 * The columns to join on
 	 */
 	public String[] getKeyColumnNames();

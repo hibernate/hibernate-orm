@@ -526,16 +526,6 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
-	public boolean requiresCastingOfParametersInSelectClause() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsLobValueChangePropagation() {
 		// May need changes in Jaybird for this to work
 		return false;
@@ -556,11 +546,6 @@ public class FirebirdDialect extends Dialect {
 	public int getInExpressionCountLimit() {
 		// see https://www.firebirdsql.org/file/documentation/html/en/refdocs/fblangref25/firebird-25-language-reference.html#fblangref25-commons-in
 		return 1500;
-	}
-
-	@Override
-	public boolean supportsTuplesInSubqueries() {
-		return false;
 	}
 
 	@Override
@@ -666,16 +651,6 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from rdb$database";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
 		return false;
 	}
 

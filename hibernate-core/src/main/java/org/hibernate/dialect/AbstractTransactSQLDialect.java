@@ -26,7 +26,6 @@ import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStra
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -252,11 +251,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	}
 
 	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.COLUMN_REFERENCE;
-	}
-
-	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
 	}
@@ -288,11 +282,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}
@@ -309,11 +298,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleDistinctCounts() {
-		return false;
-	}
-	
-	@Override
-	public boolean supportsTuplesInSubqueries() {
 		return false;
 	}
 

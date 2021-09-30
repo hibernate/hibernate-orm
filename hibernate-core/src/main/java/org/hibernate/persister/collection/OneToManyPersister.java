@@ -478,62 +478,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		}
 	}
 
-	public String selectFragment(
-			Joinable rhs,
-			String rhsAlias,
-			String lhsAlias,
-			String entitySuffix,
-			String collectionSuffix,
-			boolean includeCollectionColumns) {
-		StringBuilder buf = new StringBuilder();
-		if ( includeCollectionColumns ) {
-//			buf.append( selectFragment( lhsAlias, "" ) )//ignore suffix for collection columns!
-			buf.append( selectFragment( lhsAlias, collectionSuffix ) )
-					.append( ", " );
-		}
-		OuterJoinLoadable ojl = (OuterJoinLoadable) getElementPersister();
-		return buf.append( ojl.selectFragment( lhsAlias, entitySuffix ) )//use suffix for the entity columns
-				.toString();
-	}
-
-	@Override
-	public String fromJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		return ( (Joinable) getElementPersister() ).fromJoinFragment( alias, innerJoin, includeSubclasses );
-	}
-
-	@Override
-	public String fromJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		return ( (Joinable) getElementPersister() ).fromJoinFragment(
-				alias,
-				innerJoin,
-				includeSubclasses,
-				treatAsDeclarations
-		);
-	}
-
-	@Override
-	public String whereJoinFragment(String alias, boolean innerJoin, boolean includeSubclasses) {
-		return ( (Joinable) getElementPersister() ).whereJoinFragment( alias, innerJoin, includeSubclasses );
-	}
-
-	@Override
-	public String whereJoinFragment(
-			String alias,
-			boolean innerJoin,
-			boolean includeSubclasses,
-			Set<String> treatAsDeclarations) {
-		return ( (Joinable) getElementPersister() ).whereJoinFragment(
-				alias,
-				innerJoin,
-				includeSubclasses,
-				treatAsDeclarations
-		);
-	}
-
 	@Override
 	public String getTableName() {
 		return ( (Joinable) getElementPersister() ).getTableName();

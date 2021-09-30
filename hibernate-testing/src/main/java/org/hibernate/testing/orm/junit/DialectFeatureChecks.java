@@ -74,12 +74,6 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
-	public static class SupportsEmptyInListCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsEmptyInList();
-		}
-	}
-
 	public static class SupportsNoColumnInsert implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsNoColumnsInsert();
@@ -118,13 +112,13 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportLimitCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsLimit();
+			return dialect.getLimitHandler().supportsLimit();
 		}
 	}
 
 	public static class SupportLimitAndOffsetCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsLimit() && dialect.supportsLimitOffset();
+			return dialect.getLimitHandler().supportsLimit() && dialect.getLimitHandler().supportsLimitOffset();
 		}
 	}
 
@@ -152,12 +146,6 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsJdbcDriverProxying implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return !( dialect instanceof DB2Dialect ) && !( dialect instanceof DerbyDialect );
-		}
-	}
-
-	public static class SupportsRowValueConstructorSyntaxInInListCheck implements DialectFeatureCheck {
-		public boolean apply(Dialect dialect) {
-			return dialect.supportsRowValueConstructorSyntaxInInList();
 		}
 	}
 

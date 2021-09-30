@@ -8,7 +8,6 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.GroupByConstantRenderingStrategy;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -421,12 +420,6 @@ public class IngresDialect extends Dialect {
 		);
 	}
 
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getCurrentTimestampSQLFunctionName() {
-		return getVersion() >= 930 ? "current_timestamp" : "date(now)";
-	}
-
 	// union subclass support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
@@ -464,28 +457,10 @@ public class IngresDialect extends Dialect {
 		return getVersion() >= 930;
 	}
 
-	// limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public String getFromDual() {
-		//this is only necessary if the query has a where clause
-		return "from (select 0) as dual";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
-	}
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
 	public boolean supportsSubselectAsInPredicateLHS() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsEmptyInList() {
 		return false;
 	}
 
@@ -513,11 +488,6 @@ public class IngresDialect extends Dialect {
 			case WEEK: return "iso_week";
 			default: return super.translateExtractField( unit );
 		}
-	}
-
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.COLUMN_REFERENCE;
 	}
 
 	@Override

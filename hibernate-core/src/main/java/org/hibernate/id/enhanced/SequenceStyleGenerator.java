@@ -564,7 +564,7 @@ public class SequenceStyleGenerator
 
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getDatabaseStructure().getName() );
+		return dialect.getSequenceSupport().getSelectSequenceNextValString( getDatabaseStructure().getName() );
 	}
 
 	@Override

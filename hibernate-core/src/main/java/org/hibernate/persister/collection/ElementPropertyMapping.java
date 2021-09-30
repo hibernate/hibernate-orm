@@ -7,7 +7,6 @@
 package org.hibernate.persister.collection;
 import org.hibernate.MappingException;
 import org.hibernate.QueryException;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.type.Type;
 
@@ -28,15 +27,6 @@ public class ElementPropertyMapping implements PropertyMapping {
 	public Type toType(String propertyName) throws QueryException {
 		if ( propertyName==null || "id".equals(propertyName) ) {
 			return type;
-		}
-		else {
-			throw new QueryException("cannot dereference scalar collection element: " + propertyName);
-		}
-	}
-
-	public String[] toColumns(String alias, String propertyName) throws QueryException {
-		if (propertyName==null || "id".equals(propertyName) ) {
-			return StringHelper.qualify( alias, elementColumns );
 		}
 		else {
 			throw new QueryException("cannot dereference scalar collection element: " + propertyName);

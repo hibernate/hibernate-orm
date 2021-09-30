@@ -45,7 +45,6 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -363,11 +362,6 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	@Override
 	public String getSubclassPropertyTableName(int i) {
 		return getTableName();//ie. the subquery! yuck!
-	}
-
-	@Override
-	protected void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
-		select.addColumn( name, getDiscriminatorColumnName(), getDiscriminatorAlias() );
 	}
 
 	@Override

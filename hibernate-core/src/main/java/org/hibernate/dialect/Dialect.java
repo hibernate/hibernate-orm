@@ -11,20 +11,18 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.NullOrdering;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.boot.spi.SessionFactoryOptions;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.*;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupportImpl;
 import org.hibernate.dialect.lock.*;
-import org.hibernate.dialect.pagination.LegacyLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.DefaultUniqueDelegate;
@@ -39,9 +37,6 @@ import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.SQLExceptionConverter;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
-import org.hibernate.id.IdentityGenerator;
-import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.io.StreamCopier;
@@ -72,7 +67,6 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
@@ -963,60 +957,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Get an instance of the dialect specified by the current <tt>System</tt> properties.
-	 *
-	 * @return The specified Dialect
-	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
-	 *
-	 * @deprecated this just calls the default constructor and does not pass in the
-	 *             {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
-	 */
-	@Deprecated
-	public static Dialect getDialect() throws HibernateException {
-		return instantiateDialect( Environment.getProperties().getProperty( Environment.DIALECT ) );
-	}
-
-	/**
-	 * Get an instance of the dialect specified by the given properties or by
-	 * the current <tt>System</tt> properties.
-	 *
-	 * @param props The properties to use for finding the dialect class to use.
-	 * @return The specified Dialect
-	 * @throws HibernateException If no dialect was specified, or if it could not be instantiated.
-	 *
-	 * @deprecated this just calls the default constructor and does not pass in the
-	 *             {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
-	 */
-	@Deprecated
-	public static Dialect getDialect(Properties props) throws HibernateException {
-		final String dialectName = props.getProperty( Environment.DIALECT );
-		if ( dialectName == null ) {
-			return getDialect();
-		}
-		return instantiateDialect( dialectName );
-	}
-
-	/**
-	 * @deprecated this just calls the default constructor and does not pass in the
-	 *             {@link org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo}.
-	 */
-	@Deprecated
-	private static Dialect instantiateDialect(String dialectName) throws HibernateException {
-		if ( dialectName == null ) {
-			throw new HibernateException( "The dialect was not set. Set the property hibernate.dialect." );
-		}
-		try {
-			return (Dialect) ReflectHelper.classForName( dialectName ).newInstance();
-		}
-		catch ( ClassNotFoundException cnfe ) {
-			throw new HibernateException( "Dialect class not found: " + dialectName );
-		}
-		catch ( Exception e ) {
-			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName, e );
-		}
-	}
-
-	/**
 	 * Retrieve a set of default Hibernate properties for this database.
 	 *
 	 * @return a set of Hibernate properties
@@ -1050,41 +990,6 @@ public abstract class Dialect implements ConversionContext {
 			typeContributions.contributeJdbcTypeDescriptor( NClobTypeDescriptor.DEFAULT );
 		}
 	}
-
-//	public static interface Initializable {
-//		void initialize(
-//				Connection jdbcConnection,
-//				ExtractedDatabaseMetadata extractedMeta,
-//				ServiceRegistry registry) {
-//
-//		}
-//	}
-
-
-	// todo (6.0) : new overall Dialect design?
-	//		original (and currently) Dialect is designed/intended to be completely
-	// 			static information - that works great until databases have have
-	//			deviations between versison for the information we need (which
-	//			is highly likely.  note that "static" here means information that
-	//			the Dialect can know about the underlying database, but without
-	//			actually being able to query the db through JDBC, which would be
-	// 			an example of doing it dynamically
-	//		so might be better to design a better intention, such that Dialect
-	//			is built with has access to information about the underlying
-	//			database either through the JDBC Connection or some form of
-	//			"extracted metadata".  I think the former is both more flexible/powerful
-	//			and simple (if there is no Connection the Dialect can just do what it
-	//			does today
-	//
-	// todo (6.0) : a related point is to consider a singular JDBC Connection
-	// 		that is:
-	//			1) opened once at the stat of bootstrapping (at what specific point?)
-	//			2) can be accessed by different bootstrapping aspects - only ever opening
-	// 				that one for all of bootstrap.  practically this may have to be
-	//				2 Connections because of the "break" between the boot service registry
-	// 				(building JdbcServices, etc) and handling metadata.
-	//			3) closed at conclusion
-
 
 	/**
 	 * Get the name of the database type associated with the given
@@ -1519,22 +1424,6 @@ public abstract class Dialect implements ConversionContext {
 	// native identifier generation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * The class (which implements {@link org.hibernate.id.IdentifierGenerator})
-	 * which acts as this dialects native generation strategy.
-	 * <p/>
-	 * Comes into play whenever the user specifies the native generator.
-	 *
-	 * @return The native generator class.
-	 * @deprecated use {@link #getNativeIdentifierGeneratorStrategy()} instead
-	 */
-	@Deprecated
-	public Class getNativeIdentifierGeneratorClass() {
-		return getIdentityColumnSupport().supportsIdentityColumns()
-				? IdentityGenerator.class
-				: SequenceStyleGenerator.class;
-	}
-
-	/**
 	 * Resolves the native generation strategy associated to this dialect.
 	 * <p/>
 	 * Comes into play whenever the user specifies the native generator.
@@ -1562,7 +1451,7 @@ public abstract class Dialect implements ConversionContext {
 	// SEQUENCE support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	public SequenceSupport getSequenceSupport() {
-		return new LegacySequenceSupport(this);
+		return NoSequenceSupport.INSTANCE;
 	}
 
 	/**
@@ -1597,29 +1486,6 @@ public abstract class Dialect implements ConversionContext {
 		throw new UnsupportedOperationException( getClass().getName() + " does not support GUIDs" );
 	}
 
-	// 'from dual' support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Some databases require a bit of syntactic noise when
-	 * there are no tables in the from clause.
-	 *
-	 * @return the SQL equivalent to Oracle's {@code from dual}.
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public String getFromDual() {
-		// The standard SQL solution to get a dual table is to use the VALUES clause
-		return "from (values (0)) as dual";
-	}
-
-	/**
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return true;
-	}
-
 	public boolean supportsTemporaryTables() {
 		// Most databases do
 		return true;
@@ -1633,11 +1499,7 @@ public abstract class Dialect implements ConversionContext {
 	 * {@link org.hibernate.query.Query#setFirstResult(int)} for
 	 * this dialect.
 	 */
-	@SuppressWarnings("deprecation")
 	public LimitHandler getLimitHandler() {
-		if ( supportsLimit() ) {
-			return new LegacyLimitHandler( this );
-		}
 		throw new UnsupportedOperationException("this dialect does not support query pagination");
 	}
 
@@ -1803,20 +1665,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Does the <tt>FOR UPDATE OF</tt> clause accept a list of columns
-	 * instead of a list of table aliases?
-	 *
-	 * @return True if the database supports <tt>FOR UPDATE OF</tt> syntax;
-	 * false otherwise.
-	 * @deprecated Use {@link #getWriteRowLockStrategy()} instead
-	 */
-	@Deprecated
-	public boolean forUpdateOfColumns() {
-		// by default we report no support
-		return false;
-	}
-
-	/**
 	 * The row lock strategy to use for write locks.
 	 */
 	public RowLockStrategy getWriteRowLockStrategy() {
@@ -1925,27 +1773,10 @@ public abstract class Dialect implements ConversionContext {
 	 * <p/>
 	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
 	 *
-	 * @param mode The lock mode to apply
-	 * @param tableName The name of the table to which to apply the lock hint.
-	 * @return The table with any required lock hints.
-	 * @deprecated use {@code appendLockHint(LockOptions,String)} instead
-	 */
-	@Deprecated
-	public String appendLockHint(LockMode mode, String tableName) {
-		return appendLockHint( new LockOptions( mode ), tableName );
-	}
-	/**
-	 * Some dialects support an alternative means to <tt>SELECT FOR UPDATE</tt>,
-	 * whereby a "lock hint" is appended to the table name in the from clause.
-	 * <p/>
-	 * contributed by <a href="http://sourceforge.net/users/heschulz">Helge Schulz</a>
-	 *
 	 * @param lockOptions The lock options to apply
 	 * @param tableName The name of the table to which to apply the lock hint.
 	 * @return The table with any required lock hints.
-	 * @deprecated This was moved to {@link AbstractSqlAstTranslator}
 	 */
-	@Deprecated
 	public String appendLockHint(LockOptions lockOptions, String tableName){
 		return tableName;
 	}
@@ -2118,9 +1949,7 @@ public abstract class Dialect implements ConversionContext {
 	 * timestamp value?
 	 *
 	 * @return True if the current timestamp can be retrieved; false otherwise.
-	 * @deprecated no longer called
 	 */
-	@Deprecated
 	public boolean supportsCurrentTimestampSelection() {
 		return false;
 	}
@@ -2132,9 +1961,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 * @return True if the {@link #getCurrentTimestampSelectString} return
 	 * is callable; false otherwise.
-	 * @deprecated no longer called
 	 */
-	@Deprecated
 	public boolean isCurrentTimestampSelectStringCallable() {
 		throw new UnsupportedOperationException( "Database not known to define a current timestamp function" );
 	}
@@ -2144,75 +1971,19 @@ public abstract class Dialect implements ConversionContext {
 	 * database.
 	 *
 	 * @return The command.
-	 * @deprecated no longer called, use {@link #currentTimestamp()}
 	 */
-	@Deprecated
 	public String getCurrentTimestampSelectString() {
 		throw new UnsupportedOperationException( "Database not known to define a current timestamp function" );
-	}
-
-	/**
-	 * The name of the database-specific SQL function for retrieving the
-	 * current timestamp.
-	 *
-	 * @return The function name.
-	 *
-	 * @deprecated use {@link #currentTimestamp()},
-	 *                 {@link #currentLocalTimestamp()}, or
-	 *                 {@link #currentTimestampWithTimeZone()}.
-	 */
-	@Deprecated
-	public String getCurrentTimestampSQLFunctionName() {
-		// the standard SQL function name is current_timestamp...
-		return "current_timestamp";
 	}
 
 
 	// SQLException support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**
-	 * Build an instance of the SQLExceptionConverter preferred by this dialect for
-	 * converting SQLExceptions into Hibernate's JDBCException hierarchy.
-	 * <p/>
-	 * The preferred method is to not override this method; if possible,
-	 * {@link #buildSQLExceptionConversionDelegate()} should be overridden
-	 * instead.
-	 *
-	 * If this method is not overridden, the default SQLExceptionConverter
-	 * implementation executes 3 SQLException converter delegates:
-	 * <ol>
-	 *     <li>a "static" delegate based on the JDBC 4 defined SQLException hierarchy;</li>
-	 *     <li>the vendor-specific delegate returned by {@link #buildSQLExceptionConversionDelegate()};
-	 *         (it is strongly recommended that specific Dialect implementations
-	 *         override {@link #buildSQLExceptionConversionDelegate()})</li>
-	 *     <li>a delegate that interprets SQLState codes for either X/Open or SQL-2003 codes,
-	 *         depending on java.sql.DatabaseMetaData#getSQLStateType</li>
-	 * </ol>
-	 * <p/>
-	 * If this method is overridden, it is strongly recommended that the
-	 * returned {@link SQLExceptionConverter} interpret SQL errors based on
-	 * vendor-specific error codes rather than the SQLState since the
-	 * interpretation is more accurate when using vendor-specific ErrorCodes.
-	 *
-	 * @return The Dialect's preferred SQLExceptionConverter, or null to
-	 * indicate that the default {@link SQLExceptionConverter} should be used.
-	 *
-	 * @see #buildSQLExceptionConversionDelegate()
-	 * @deprecated {@link #buildSQLExceptionConversionDelegate()} should be
-	 * overridden instead.
-	 */
-	@Deprecated
-	public SQLExceptionConverter buildSQLExceptionConverter() {
-		return null;
-	}
-
-	/**
 	 * Build an instance of a {@link SQLExceptionConversionDelegate} for
 	 * interpreting dialect-specific error or SQLState codes.
 	 * <p/>
-	 * When {@link #buildSQLExceptionConverter} returns null, the default
-	 * {@link SQLExceptionConverter} is used to interpret SQLState and
-	 * error codes. If this method is overridden to return a non-null value,
+	 * If this method is overridden to return a non-null value,
 	 * the default {@link SQLExceptionConverter} will use the returned
 	 * {@link SQLExceptionConversionDelegate} in addition to the following
 	 * standard delegates:
@@ -2277,32 +2048,6 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	// miscellaneous support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-	/**
-	 * Create a {@link JoinFragment} strategy responsible
-	 * for handling this dialect's variations in how joins are handled.
-	 *
-	 * @return This dialect's {@link JoinFragment} strategy.
-	 * @deprecated migrating away from deprecated {@link JoinFragment}
-	 */
-	@Deprecated
-	public JoinFragment createOuterJoinFragment() {
-		return new ANSIJoinFragment();
-	}
-
-	/**
-	 * Create a {@link CaseFragment} strategy responsible
-	 * for handling this dialect's variations in how CASE statements are
-	 * handled.
-	 *
-	 * @return This dialect's {@link CaseFragment} strategy.
-	 * @deprecated migrating away from deprecated {@link CaseFragment}
-	 */
-	@Deprecated
-	public CaseFragment createCaseFragment() {
-		return new ANSICaseFragment();
-	}
 
 	/**
 	 * The fragment used to insert a row without specifying any column values.
@@ -2907,143 +2652,11 @@ public abstract class Dialect implements ConversionContext {
 		return "";
 	}
 
-	/**
-	 * The separator to use for declaring cross joins in a SQL query,
-	 * typically either {@code " cross join "} or a comma {@code ", "},
-	 * where the spaces are required.
-	 *
-	 * @return The cross join separator, with spaces
-	 */
-	public String getCrossJoinSeparator() {
-		return " cross join ";
-	}
-
-	/**
-	 * The separator to use between a table name and its alias in a SQL
-	 * query, typically either {@code " as "} where the spaces are
-	 * required, or a space character {@code " "}.
-	 *
-	 * @return The separator keyword, if any, with spaces
-	 */
-	public String getTableAliasSeparator() {
-		return " as ";
-	}
-
 	public ColumnAliasExtractor getColumnAliasExtractor() {
 		return ColumnAliasExtractor.COLUMN_LABEL_EXTRACTOR;
 	}
 
-
 	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * Does this dialect support empty IN lists?
-	 * <p/>
-	 * For example, is [where XYZ in ()] a supported construct?
-	 *
-	 * @return True if empty in lists are supported; false otherwise.
-	 * @since 3.2
-	 */
-	public boolean supportsEmptyInList() {
-		return true;
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax.
-	 * <p/>
-	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax; false otherwise.
-	 * @since 3.2
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean supportsRowValueConstructorSyntax() {
-		// return false here, as most databases do not properly support this construct...
-		return false;
-	}
-
-	/**
-	 * Is this dialect known to support  what ANSI-SQL terms "row value constructor" syntax,
-	 * sometimes called tuple syntax, in the SET clause;
-	 * <p/>
-	 * Basically, does it support syntax like
-	 * "... SET (FIRST_NAME, LAST_NAME) = ('Steve', 'Ebersole') ...".
-	 *
-	 * @return True if this SQL dialect is known to support "row value constructor" syntax in the SET clause; false otherwise.
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return supportsRowValueConstructorSyntax();
-	}
-
-	/**
-	 * Is this dialect known to support what ANSI-SQL terms "row value
-	 * constructor" syntax; sometimes called tuple syntax with quantified predicates.
-	 * <p/>
-	 * Basically, does it support syntax like
-	 * "... where (FIRST_NAME, LAST_NAME) = ALL (select ...) ...".
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax with quantified predicates; false otherwise.
-	 * @since 6.0
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		// return false here, as most databases do not properly support this construct...
-		return false;
-	}
-
-	/**
-	 * If the dialect supports {@link #supportsRowValueConstructorSyntax() row values},
-	 * does it offer such support in IN lists as well?
-	 * <p/>
-	 * For example, "... where (FIRST_NAME, LAST_NAME) IN ( (?, ?), (?, ?) ) ..."
-	 *
-	 * @return True if this SQL dialect is known to support "row value
-	 * constructor" syntax in the IN list; false otherwise.
-	 * @since 3.2
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return false;
-	}
-
-	/**
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean supportsRowValueConstructorSyntaxInInSubquery() {
-		return supportsRowValueConstructorSyntaxInInList();
-	}
-
-	/**
-	 * The strategy to use for rendering summarizations in the GROUP BY clause.
-	 *
-	 * @since 6.0
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.NONE;
-	}
-
-	/**
-	 * The strategy to use for rendering constants in the GROUP BY clause.
-	 *
-	 * @since 6.0
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.CONSTANT_EXPRESSION;
-	}
 
 	/**
 	 * Should LOBs (both BLOB and CLOB) be bound using stream operations (i.e.
@@ -3065,23 +2678,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsParametersInInsertSelect() {
 		return true;
-	}
-
-	/**
-	 * Does this dialect require that references to result variables
-	 * (i.e, select expression aliases) in an ORDER BY clause be
-	 * replaced by column positions (1-origin) as defined
-	 * by the select clause?
-
-	 * @return true if result variable references in the ORDER BY
-	 *              clause should be replaced by column positions;
-	 *         false otherwise.
-	 * @deprecated We now use ordinal rendering by default to produce smaller SQL
-	 * @see #supportsOrdinalSelectItemReference
-	 */
-	@Deprecated
-	public boolean replaceResultVariableInOrderByClauseWithPosition() {
-		return false;
 	}
 
 	/**
@@ -3112,47 +2708,6 @@ public abstract class Dialect implements ConversionContext {
 
 	public boolean isAnsiNullOn() {
 		return true;
-	}
-
-	/**
-	 * Renders an ordering fragment
-	 *
-	 * @param expression The SQL order expression. In case of {@code @OrderBy} annotation user receives property placeholder
-	 * (e.g. attribute name enclosed in '{' and '}' signs).
-	 * @param collation Collation string in format {@code collate IDENTIFIER}, or {@code null}
-	 * if expression has not been explicitly specified.
-	 * @param order Order direction. Possible values: {@code asc}, {@code desc}, or {@code null}
-	 * if expression has not been explicitly specified.
-	 * @param nulls Nulls precedence. Default value: {@link NullPrecedence#NONE}.
-	 * @return Renders single element of {@code ORDER BY} clause.
-	 * @deprecated todo (6.0): remove?
-	 */
-	@Deprecated
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		final StringBuilder orderByElement = new StringBuilder( expression );
-		if ( collation != null ) {
-			orderByElement.append( " " ).append( collation );
-		}
-		if ( order != null ) {
-			orderByElement.append( " " ).append( order );
-		}
-		if ( nulls != NullPrecedence.NONE ) {
-			orderByElement.append( " nulls " ).append( nulls.name().toLowerCase( Locale.ROOT ) );
-		}
-		return orderByElement.toString();
-	}
-
-	/**
-	 * Does this dialect require that parameters appearing in the <tt>SELECT</tt> clause be wrapped in <tt>cast()</tt>
-	 * calls to tell the db parser the expected type.
-	 *
-	 * @return True if select clause parameter must be cast()ed
-	 * @since 3.2
-	 * @deprecated Moved to {@link AbstractSqlAstTranslator}
-	 */
-	@Deprecated
-	public boolean requiresCastingOfParametersInSelectClause() {
-		return false;
 	}
 
 	/**
@@ -3397,7 +2952,7 @@ public abstract class Dialect implements ConversionContext {
 	/**
 	 * Return whether the dialect considers an empty-string value as null.
 	 *
-	 * @return boolean True if an empty string is treated as null, false othrwise.
+	 * @return boolean True if an empty string is treated as null, false otherwise.
 	 */
 	public boolean isEmptyStringTreatedAsNull() {
 		return false;
@@ -3418,74 +2973,12 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Negate an expression
-	 *
-	 * @param expression The expression to negate
-	 *
-	 * @return The negated expression
-	 * @deprecated todo (6.0): Remove
-	 */
-	@Deprecated
-	public String getNotExpression(String expression) {
-		return "not " + expression;
-	}
-
-	/**
 	 * Get the UniqueDelegate supported by this dialect
 	 *
 	 * @return The UniqueDelegate
 	 */
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
-	}
-
-	/**
-	 * Does this dialect support the <tt>UNIQUE</tt> column syntax?
-	 *
-	 * @return boolean
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsUnique() {
-		return true;
-	}
-
-	/**
-	 * Does this dialect support adding Unique constraints via create and alter table ?
-	 *
-	 * @return boolean
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
-		return true;
-	}
-
-	/**
-	 * The syntax used to add a unique constraint to a table.
-	 *
-	 * @param constraintName The name of the unique constraint.
-	 * @return The "add unique" fragment
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public String getAddUniqueConstraintString(String constraintName) {
-		return " add constraint " + constraintName + " unique ";
-	}
-
-	/**
-	 * Is the combination of not-null and unique supported?
-	 *
-	 * @return deprecated
-	 *
-	 * @deprecated {@link #getUniqueDelegate()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsNotNullUnique() {
-		return true;
 	}
 
 	/**
@@ -3520,18 +3013,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public ScrollMode defaultScrollMode() {
 		return ScrollMode.SCROLL_INSENSITIVE;
-	}
-
-	/**
-	 * Does this dialect support tuples in subqueries?  Ex:
-	 * delete from Table1 where (col1, col2) in (select col1, col2 from Table2)
-	 *
-	 * @return boolean
-	 * @deprecated See {@link #supportsRowValueConstructorSyntaxInInSubquery()}
-	 */
-	@Deprecated
-	public boolean supportsTuplesInSubqueries() {
-		return true;
 	}
 
 	/**
@@ -3645,20 +3126,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsNamedParameters(DatabaseMetaData databaseMetaData) throws SQLException {
 		return databaseMetaData != null && databaseMetaData.supportsNamedParameters();
-	}
-
-	/**
-	 * Does this dialect supports Nationalized Types
-	 *
-	 * @return boolean
-	 *
-	 * @deprecated (since 6.0) Prefer {@link #getNationalizationSupport()} which gives a little
-	 * better insight into what is supported.  This is interpreted as true if the supported
-	 * strategy is {@link NationalizationSupport#EXPLICIT}
-	 */
-	@Deprecated
-	public final boolean supportsNationalizedTypes() {
-		return getNationalizationSupport() == NationalizationSupport.EXPLICIT;
 	}
 
 	public NationalizationSupport getNationalizationSupport() {
@@ -3990,7 +3457,7 @@ public abstract class Dialect implements ConversionContext {
 		 */
 		Size resolveSize(
 				JdbcTypeDescriptor jdbcType,
-				JavaTypeDescriptor javaType,
+				JavaTypeDescriptor<?> javaType,
 				Integer precision,
 				Integer scale, Long length);
 	}
@@ -3999,7 +3466,7 @@ public abstract class Dialect implements ConversionContext {
 		@Override
 		public Size resolveSize(
 				JdbcTypeDescriptor jdbcType,
-				JavaTypeDescriptor javaType,
+				JavaTypeDescriptor<?> javaType,
 				Integer precision,
 				Integer scale,
 				Long length) {
@@ -4290,168 +3757,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsTimezoneTypes() {
 		return false;
-	}
-
-	// deprecated limit/offset support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsLimit() {
-		return false;
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsLimitOffset() {
-		return supportsLimit();
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean supportsVariableLimit() {
-		return supportsLimit();
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean bindLimitParametersInReverseOrder() {
-		return false;
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean bindLimitParametersFirst() {
-		return false;
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean useMaxForLimit() {
-		return false;
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public boolean forceLimitUsage() {
-		return false;
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public String getLimitString(String query, int offset, int limit) {
-		return getLimitString( query, offset > 0 || forceLimitUsage() );
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	protected String getLimitString(String query, boolean hasOffset) {
-		throw new UnsupportedOperationException( "Paged queries not supported by " + getClass().getName());
-	}
-
-	/**
-	 * @deprecated {@link #getLimitHandler()} should be overridden instead.
-	 */
-	@Deprecated
-	public int convertToFirstRowValue(int zeroBasedFirstResult) {
-		return zeroBasedFirstResult;
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public boolean supportsSequences() {
-		return false;
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public boolean supportsPooledSequences() {
-		return false;
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public String getSequenceNextValString(String sequenceName) throws MappingException {
-		throw new MappingException("dialect does not support sequences");
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public String getSelectSequenceNextValString(String sequenceName) throws MappingException {
-		throw new MappingException("dialect does not support sequences");
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public String getSequenceNextValString(String sequenceName, int increment) throws MappingException {
-		return getSequenceNextValString( sequenceName );
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public String[] getCreateSequenceStrings(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		return new String[] { getCreateSequenceString( sequenceName, initialValue, incrementSize ) };
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	protected String getCreateSequenceString(String sequenceName) throws MappingException {
-		return "create sequence " + sequenceName;
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	protected String getCreateSequenceString(String sequenceName, int initialValue, int incrementSize) throws MappingException {
-		return getCreateSequenceString( sequenceName ) + " start with " + initialValue + " increment by " + incrementSize;
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	public String[] getDropSequenceStrings(String sequenceName) throws MappingException {
-		return new String[]{ getDropSequenceString( sequenceName ) };
-	}
-
-	/**
-	 * @deprecated implement {@link SequenceSupport} and override {@link #getSequenceSupport()}
-	 */
-	@Deprecated
-	protected String getDropSequenceString(String sequenceName) throws MappingException {
-		return "drop sequence " + sequenceName;
 	}
 
 	/**

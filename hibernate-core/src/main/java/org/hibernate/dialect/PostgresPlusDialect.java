@@ -80,12 +80,6 @@ public class PostgresPlusDialect extends PostgreSQLDialect {
 	}
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public String getCurrentTimestampSQLFunctionName() {
-		return "sysdate";
-	}
-
-	@Override
 	public String timestampdiffPattern(TemporalUnit unit, TemporalType fromTemporalType, TemporalType toTemporalType) {
 		if ( toTemporalType != TemporalType.TIMESTAMP && fromTemporalType != TemporalType.TIMESTAMP && unit == DAY ) {
 			// special case: subtraction of two dates results in an INTERVAL on Postgres Plus

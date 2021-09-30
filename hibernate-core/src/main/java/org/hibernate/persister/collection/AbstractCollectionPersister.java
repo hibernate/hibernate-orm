@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -21,6 +22,7 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
@@ -62,6 +64,7 @@ import org.hibernate.loader.ast.internal.CollectionLoaderBatchKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderNamedQuery;
 import org.hibernate.loader.ast.internal.CollectionLoaderSingleKey;
 import org.hibernate.loader.ast.internal.CollectionLoaderSubSelectFetch;
+import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -97,17 +100,27 @@ import org.hibernate.persister.walking.spi.CompositeCollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CompositionDefinition;
 import org.hibernate.persister.walking.spi.EntityDefinition;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.query.NavigablePath;
 import org.hibernate.query.named.NamedQueryMemento;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
 import org.hibernate.sql.Insert;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.Update;
+import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
+import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
+import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.expression.AliasedExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
+import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.CollectionType;
@@ -1181,13 +1194,102 @@ public abstract class AbstractCollectionPersister
 	 */
 	@Override
 	public String selectFragment(String alias, String columnSuffix) {
-		SelectFragment frag = generateSelectFragment( alias, columnSuffix );
-		appendElementColumns( frag, alias );
-		appendIndexColumns( frag, alias );
-		appendIdentifierColumns( frag, alias );
+		final PluralAttributeMapping attributeMapping = getAttributeMapping();
+		final QuerySpec rootQuerySpec = new QuerySpec( true );
+		final LoaderSqlAstCreationState sqlAstCreationState = new LoaderSqlAstCreationState(
+				rootQuerySpec,
+				new SqlAliasBaseManager(),
+				new SimpleFromClauseAccessImpl(),
+				LockOptions.NONE,
+				(fetchParent, querySpec, creationState) -> new ArrayList<>(),
+				true,
+				getFactory()
+		);
 
-		return frag.toFragmentString()
-				.substring( 2 ); // strip leading ','
+		final NavigablePath entityPath = new NavigablePath( attributeMapping.getRootPathName() );
+		final TableGroup rootTableGroup = attributeMapping.createRootTableGroup(
+				true,
+				entityPath,
+				null,
+				() -> p -> {},
+				new SqlAliasBaseConstant( alias ),
+				sqlAstCreationState,
+				getFactory()
+		);
+
+		rootQuerySpec.getFromClause().addRoot( rootTableGroup );
+		sqlAstCreationState.getFromClauseAccess().registerTableGroup( entityPath, rootTableGroup );
+
+		attributeMapping.createDomainResult( entityPath, rootTableGroup, null, sqlAstCreationState );
+
+		// Wrap expressions with aliases
+		final SelectClause selectClause = rootQuerySpec.getSelectClause();
+		final java.util.List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
+		int i = 0;
+		for ( String keyAlias : keyColumnAliases ) {
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							i,
+							i + 1,
+							new AliasedExpression( sqlSelections.get( i ).getExpression(), keyAlias + columnSuffix )
+					)
+			);
+			i++;
+		}
+
+		if ( hasIndex ) {
+			for ( String indexAlias : indexColumnAliases ) {
+				sqlSelections.set(
+						i,
+						new SqlSelectionImpl(
+								i,
+								i + 1,
+								new AliasedExpression( sqlSelections.get( i ).getExpression(), indexAlias + columnSuffix )
+						)
+				);
+				i++;
+			}
+		}
+		if ( hasIdentifier ) {
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							i,
+							i + 1,
+							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierColumnAlias + columnSuffix )
+					)
+			);
+			i++;
+		}
+
+		for ( int columnIndex = 0; i < sqlSelections.size(); i++, columnIndex++ ) {
+			final SqlSelection sqlSelection = sqlSelections.get( i );
+			sqlSelections.set(
+					i,
+					new SqlSelectionImpl(
+							sqlSelection.getValuesArrayPosition(),
+							sqlSelection.getJdbcResultSetIndex(),
+							new AliasedExpression( sqlSelection.getExpression(), elementColumnAliases[columnIndex] + columnSuffix )
+					)
+			);
+		}
+
+		final String sql = getFactory().getJdbcServices()
+				.getDialect()
+				.getSqlAstTranslatorFactory()
+				.buildSelectTranslator( getFactory(), new SelectStatement( rootQuerySpec ) )
+				.translate( null, QueryOptions.NONE )
+				.getSql();
+		final int fromIndex = sql.lastIndexOf( " from" );
+		final String expression;
+		if ( fromIndex != -1 ) {
+			expression = sql.substring( "select ".length(), fromIndex );
+		}
+		else {
+			expression = sql.substring( "select ".length() );
+		}
+		return expression;
 	}
 
 	protected String generateSelectSizeString(boolean isIntegerIndexed) {
@@ -1226,42 +1328,6 @@ public abstract class AbstractCollectionPersister
 				.addWhereToken( sqlWhereString )
 				.addColumn( "1" )
 				.toStatementString();
-	}
-
-	protected SelectFragment generateSelectFragment(String alias, String columnSuffix) {
-		return new SelectFragment()
-				.setSuffix( columnSuffix )
-				.addColumns( alias, keyColumnNames, keyColumnAliases );
-	}
-
-	protected void appendElementColumns(SelectFragment frag, String elemAlias) {
-		for ( int i = 0; i < elementColumnIsGettable.length; i++ ) {
-			if ( elementColumnIsGettable[i] ) {
-				frag.addColumnTemplate( elemAlias, elementColumnReaderTemplates[i], elementColumnAliases[i] );
-			}
-			else {
-				frag.addFormula( elemAlias, elementFormulaTemplates[i], elementColumnAliases[i] );
-			}
-		}
-	}
-
-	protected void appendIndexColumns(SelectFragment frag, String alias) {
-		if ( hasIndex ) {
-			for ( int i = 0; i < indexColumnIsGettable.length; i++ ) {
-				if ( indexColumnIsGettable[i] ) {
-					frag.addColumn( alias, indexColumnNames[i], indexColumnAliases[i] );
-				}
-				else {
-					frag.addFormula( alias, indexFormulaTemplates[i], indexColumnAliases[i] );
-				}
-			}
-		}
-	}
-
-	protected void appendIdentifierColumns(SelectFragment frag, String alias) {
-		if ( hasIdentifier ) {
-			frag.addColumn( alias, identifierColumnName, identifierColumnAlias );
-		}
 	}
 
 	@Override
@@ -1809,14 +1875,6 @@ public abstract class AbstractCollectionPersister
 		}
 
 		return buffer.toString();
-	}
-
-	@Override
-	public String[] toColumns(String alias, String propertyName) throws QueryException {
-		if ( "index".equals( propertyName ) ) {
-			return qualify( alias, indexColumnNames, indexFormulaTemplates );
-		}
-		return elementPropertyMapping.toColumns( alias, propertyName );
 	}
 
 	private String[] indexFragments;

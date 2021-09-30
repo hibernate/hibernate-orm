@@ -15,7 +15,6 @@ import java.util.Map;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.function.QuantifiedLeastGreatestEmulation;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -28,10 +27,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ForUpdateFragment;
-import org.hibernate.sql.JoinFragment;
-import org.hibernate.sql.Sybase11JoinFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
@@ -110,7 +106,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			@Override
 			public Size resolveSize(
 					JdbcTypeDescriptor jdbcType,
-					JavaTypeDescriptor javaType,
+					JavaTypeDescriptor<?> javaType,
 					Integer precision,
 					Integer scale,
 					Long length) {
@@ -486,14 +482,6 @@ public class SybaseASEDialect extends SybaseDialect {
 
 
 	@Override
-	@SuppressWarnings("deprecation")
-	public JoinFragment createOuterJoinFragment() {
-		return getVersion() < 1400
-				? new Sybase11JoinFragment()
-				: super.createOuterJoinFragment();
-	}
-
-	@Override
 	public boolean supportsCascadeDelete() {
 		return false;
 	}
@@ -501,17 +489,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public int getMaxAliasLength() {
 		return 30;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getCurrentTimestampSQLFunctionName() {
-		return "getdate()";
-	}
-
-	@Override
-	public String getCrossJoinSeparator() {
-		return ", ";
 	}
 
 	@Override
@@ -556,11 +533,6 @@ public class SybaseASEDialect extends SybaseDialect {
 	@Override
 	public boolean supportsLobValueChangePropagation() {
 		return false;
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
-		return getVersion() >= 1570;
 	}
 
 	@Override

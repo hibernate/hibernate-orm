@@ -216,17 +216,7 @@ public class TimesTenDialect extends Dialect {
 	}
 
 	@Override
-	public String getCrossJoinSeparator() {
-		return ", ";
-	}
-
-	@Override
 	public boolean supportsNoWait() {
-		return true;
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
 		return true;
 	}
 
@@ -356,11 +346,6 @@ public class TimesTenDialect extends Dialect {
 
 	@Override
 	public boolean supportsCircularCascadeDeleteConstraints() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
 		return false;
 	}
 

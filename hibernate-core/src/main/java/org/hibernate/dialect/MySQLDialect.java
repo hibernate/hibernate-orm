@@ -15,7 +15,6 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.query.CastType;
 import org.hibernate.query.NullOrdering;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cfg.Environment;
@@ -194,7 +193,7 @@ public class MySQLDialect extends Dialect {
 			@Override
 			public Size resolveSize(
 					JdbcTypeDescriptor jdbcType,
-					JavaTypeDescriptor javaType,
+					JavaTypeDescriptor<?> javaType,
 					Integer precision,
 					Integer scale,
 					Long length) {
@@ -535,15 +534,6 @@ public class MySQLDialect extends Dialect {
 		}
 	}
 
-	/**
-	 * @see <a href="https://dev.mysql.com/worklog/task/?id=7019">MySQL 5.7 work log</a>
-	 * @return true for MySQL 5.7 and above
-	 */
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getMySQLVersion() >= 570;
-	}
-
 	@Override
 	public boolean supportsUnionAll() {
 		return getMySQLVersion() >= 500;
@@ -620,11 +610,6 @@ public class MySQLDialect extends Dialect {
 	public LimitHandler getLimitHandler() {
 		//also supports LIMIT n OFFSET m
 		return LimitLimitHandler.INSTANCE;
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from dual";
 	}
 
 	@Override
@@ -797,45 +782,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsNullPrecedence() {
 		return false;
 	}
 
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInSet() {
-		return false;
-	}
-
-	@Override
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		final StringBuilder orderByElement = new StringBuilder();
-		if ( nulls != NullPrecedence.NONE ) {
-			// Workaround for NULLS FIRST / LAST support.
-			orderByElement.append( "case when " ).append( expression ).append( " is null then " );
-			if ( nulls == NullPrecedence.FIRST ) {
-				orderByElement.append( "0 else 1" );
-			}
-			else {
-				orderByElement.append( "1 else 0" );
-			}
-			orderByElement.append( " end," );
-		}
-		// Nulls precedence has already been handled so passing NONE value.
-		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );
-		return orderByElement.toString();
-	}
-
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
 
 	@Override
 	public boolean supportsLobValueChangePropagation() {
@@ -898,11 +849,6 @@ public class MySQLDialect extends Dialect {
 		}
 
 		return super.buildIdentifierHelper( builder, dbMetaData );
-	}
-
-	@Override
-	public String getNotExpression(String expression) {
-		return "not (" + expression + ")";
 	}
 
 	@Override
@@ -1149,8 +1095,4 @@ public class MySQLDialect extends Dialect {
 		return getMySQLVersion() >= 800;
 	}
 
-	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.CLAUSE;
-	}
 }

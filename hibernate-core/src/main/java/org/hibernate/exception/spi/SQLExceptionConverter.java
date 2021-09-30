@@ -23,7 +23,6 @@ import org.hibernate.JDBCException;
  * configuration steps prior to first use.
  *
  * @author Steve Ebersole
- * @see SQLExceptionConverterFactory
  */
 public interface SQLExceptionConverter extends Serializable {
 	/**

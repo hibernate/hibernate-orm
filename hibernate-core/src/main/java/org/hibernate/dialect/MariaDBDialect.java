@@ -8,7 +8,6 @@ package org.hibernate.dialect;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.sql.Types;
 
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
@@ -94,11 +93,6 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsWindowFunctions() {
 		return getVersion() >= 1020;
 	}
@@ -158,11 +152,6 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsWait() {
 		return getVersion() >= 1030;
-	}
-
-	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.CLAUSE;
 	}
 
 	@Override

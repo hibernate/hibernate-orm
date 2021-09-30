@@ -155,9 +155,10 @@ public class OutputsImpl implements Outputs {
 				jdbcStatement,
 				resultSet
 		);
-		ResultSetMapping resultSetMapping = new ResultSetMappingImpl( null );
 
 		final ProcedureCallImpl procedureCall = (ProcedureCallImpl) context;
+		final ResultSetMapping resultSetMapping = procedureCall.getResultSetMapping();
+
 		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = context.getSession()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();

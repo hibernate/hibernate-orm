@@ -986,4 +986,7 @@ public class ProcedureCallImpl<R>
 		return getResultList().stream();
 	}
 
+	public ResultSetMapping getResultSetMapping() {
+		return resultSetMapping;
+	}
 }

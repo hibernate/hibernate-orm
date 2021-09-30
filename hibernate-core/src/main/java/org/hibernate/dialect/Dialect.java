@@ -73,6 +73,7 @@ import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
@@ -82,6 +83,7 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharTypeDescriptor;
@@ -97,7 +99,6 @@ import java.sql.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.hibernate.type.descriptor.DateTimeUtils.*;
@@ -137,15 +138,9 @@ public abstract class Dialect implements ConversionContext {
 	 * Characters used as closing for quoting SQL identifiers
 	 */
 	public static final String CLOSED_QUOTE = "`\"]";
-	private static final Pattern SINGLE_QUOTE_PATTERN = Pattern.compile(
-			"'",
-			Pattern.LITERAL
-	);
 
 	private static final Pattern ESCAPE_CLOSING_COMMENT_PATTERN = Pattern.compile( "\\*/" );
 	private static final Pattern ESCAPE_OPENING_COMMENT_PATTERN = Pattern.compile( "/\\*" );
-
-	public static final String TWO_SINGLE_QUOTES_REPLACEMENT = Matcher.quoteReplacement( "''" );
 
 	private final TypeNames typeNames = new TypeNames();
 	private final TypeNames hibernateTypeNames = new TypeNames();
@@ -2399,7 +2394,13 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The appropriate SQL literal.
 	 */
 	public String toBooleanValueString(boolean bool) {
-		return bool ? "1" : "0";
+		final StringBuilder sb = new StringBuilder();
+		appendBooleanValueString( sb::append, bool );
+		return sb.toString();
+	}
+
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool ? '1' : '0' );
 	}
 
 
@@ -3736,7 +3737,21 @@ public abstract class Dialect implements ConversionContext {
 	 * @return escaped String
 	 */
 	public String inlineLiteral(String literal) {
-		return String.format( "\'%s\'", escapeLiteral( literal ) );
+		final StringBuilder sb = new StringBuilder( literal.length() + 2 );
+		appendLiteral( sb::append, literal );
+		return sb.toString();
+	}
+
+	public void appendLiteral(SqlAppender appender, String literal) {
+		appender.appendSql( '\'' );
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char c = literal.charAt( i );
+			if ( c == '\'' ) {
+				appender.appendSql( '\'' );
+			}
+			appender.appendSql( c );
+		}
+		appender.appendSql( '\'' );
 	}
 
 	/**
@@ -3749,15 +3764,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	public boolean supportsJdbcConnectionLobCreation(DatabaseMetaData databaseMetaData) {
 		return true;
-	}
-
-	/**
-	 * Escape String literal.
-	 *
-	 * @return escaped String
-	 */
-	protected String escapeLiteral(String literal) {
-		return SINGLE_QUOTE_PATTERN.matcher( literal ).replaceAll( TWO_SINGLE_QUOTES_REPLACEMENT );
 	}
 
 	/**
@@ -3943,8 +3949,10 @@ public abstract class Dialect implements ConversionContext {
 		return true;
 	}
 
-	public String formatBinaryLiteral(byte[] bytes) {
-		return "X'" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "X'" );
+		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		appender.appendSql( '\'' );
 	}
 
 	public RowLockStrategy getLockRowIdentifier(LockMode lockMode) {
@@ -4109,11 +4117,11 @@ public abstract class Dialect implements ConversionContext {
 	 * @return a pattern accepted by the function that
 	 *         formats dates and times in this dialect
 	 */
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//most databases support a datetime format
 		//copied from Oracle's to_char() function,
 		//with some minor variation
-		return OracleDialect.datetimeFormat( format, true, false ).result();
+		appender.appendSql( OracleDialect.datetimeFormat( format, true, false ).result() );
 	}
 
 	/**
@@ -4196,70 +4204,78 @@ public abstract class Dialect implements ConversionContext {
 		}
 	}
 
-	protected String wrapTimestampLiteral(String timestamp) {
-		return wrapAsJdbcTimestampLiteral( timestamp );
-	}
-
-	protected String wrapDateLiteral(String date) {
-		return wrapAsJdbcDateLiteral( date );
-	}
-
-	protected String wrapTimeLiteral(String time) {
-		return wrapAsJdbcTimeLiteral( time );
-	}
-
-	public String formatDateTimeLiteral(
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
 			TemporalAccessor temporalAccessor,
 			TemporalType precision,
 			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
-				return wrapDateLiteral( formatAsDate( temporalAccessor ) );
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			case TIME:
-				return wrapTimeLiteral( formatAsTime( temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone ) );
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp( temporalAccessor, jdbcTimeZone ) );
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			default:
 				throw new IllegalArgumentException();
 		}
 	}
 
-	protected String formatAsTimestamp(TemporalAccessor temporalAccessor, TimeZone jdbcTimeZone) {
-		return formatAsTimestampWithMicros( temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-	}
-
-	public String formatDateTimeLiteral(Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
-				return wrapDateLiteral( formatAsDate( date ) );
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			case TIME:
-				return wrapTimeLiteral( formatAsTime( date ) );
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp( date, jdbcTimeZone) );
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			default:
 				throw new IllegalArgumentException();
 		}
 	}
 
-	protected String formatAsTimestamp(Date date, TimeZone jdbcTimeZone) {
-		return formatAsTimestampWithMicros( date, jdbcTimeZone );
-	}
-
-	public String formatDateTimeLiteral(Calendar calendar, TemporalType precision, TimeZone jdbcTimeZone) {
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
 		switch ( precision ) {
 			case DATE:
-				return wrapDateLiteral( formatAsDate( calendar ) );
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, calendar );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			case TIME:
-				return wrapTimeLiteral( formatAsTime( calendar ) );
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, calendar );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			case TIMESTAMP:
-				return wrapTimestampLiteral( formatAsTimestamp( calendar, jdbcTimeZone ) );
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
 			default:
 				throw new IllegalArgumentException();
 		}
-	}
-
-	protected String formatAsTimestamp(Calendar calendar, TimeZone jdbcTimeZone) {
-		return formatAsTimestampWithMicros( calendar, jdbcTimeZone );
 	}
 
 	/**

@@ -58,7 +58,7 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 			datetime.accept( walker );
 		}
 		sqlAppender.appendSql(",'");
-		sqlAppender.appendSql( dialect.translateDatetimeFormat( format.getFormat() ) );
+		dialect.appendDatetimeFormat( sqlAppender, format.getFormat() );
 		sqlAppender.appendSql("')");
 	}
 

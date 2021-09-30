@@ -13,8 +13,12 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import org.hibernate.sql.ast.spi.SqlAppender;
 
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
@@ -71,8 +75,8 @@ public final class DateTimeUtils {
 			.optionalStart().appendZoneOrOffsetId().optionalEnd()
 			.toFormatter();
 
-	private static final ThreadLocal<SimpleDateFormat> LOCAL_DATE_FORMAT = ThreadLocal.withInitial( DateTimeUtils::simpleDateFormatDate );
-	private static final ThreadLocal<SimpleDateFormat> LOCAL_TIME_FORMAT = ThreadLocal.withInitial( DateTimeUtils::simpleDateFormatTime );
+	private static final ThreadLocal<SimpleDateFormat> LOCAL_DATE_FORMAT = ThreadLocal.withInitial( () -> new SimpleDateFormat( FORMAT_STRING_DATE, Locale.ENGLISH ) );
+	private static final ThreadLocal<SimpleDateFormat> LOCAL_TIME_FORMAT = ThreadLocal.withInitial( () -> new SimpleDateFormat( FORMAT_STRING_TIME, Locale.ENGLISH ) );
 	private static final ThreadLocal<SimpleDateFormat> TIMESTAMP_WITH_MILLIS_FORMAT = ThreadLocal.withInitial(
 			() -> new SimpleDateFormat(
 					FORMAT_STRING_TIMESTAMP_WITH_MILLIS,
@@ -103,201 +107,163 @@ public final class DateTimeUtils {
 			.appendOffset("+HH:mm", "+00")
 			.toFormatter();
 
-	public static String formatAsTimestampWithMicros(TemporalAccessor temporalAccessor, boolean supportsOffset, TimeZone jdbcTimeZone) {
+	public static void appendAsTimestampWithMicros(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			boolean supportsOffset,
+			TimeZone jdbcTimeZone) {
 		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
 			if ( supportsOffset ) {
-				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET.format( temporalAccessor );
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS_AND_OFFSET.formatTo( temporalAccessor, appender );
 			}
 			else {
-				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.format(
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.formatTo(
 						LocalDateTime.ofInstant(
 								Instant.from( temporalAccessor ),
 								jdbcTimeZone.toZoneId()
-						)
+						),
+						appender
 				);
 			}
 		}
 		else {
-			return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.format( temporalAccessor );
+			DATE_TIME_FORMATTER_TIMESTAMP_WITH_MICROS.formatTo( temporalAccessor, appender );
 		}
 	}
 
-	public static String formatAsTimestampWithMillis(TemporalAccessor temporalAccessor, boolean supportsOffset, TimeZone jdbcTimeZone) {
+	public static void appendAsTimestampWithMillis(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			boolean supportsOffset,
+			TimeZone jdbcTimeZone) {
 		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
 			if ( supportsOffset ) {
-				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET.format( temporalAccessor );
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS_AND_OFFSET.formatTo( temporalAccessor, appender );
 			}
 			else {
-				return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.format(
+				DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.formatTo(
 						LocalDateTime.ofInstant(
 								Instant.from( temporalAccessor ),
 								jdbcTimeZone.toZoneId()
-						)
+						),
+						appender
 				);
 			}
 		}
 		else {
-			return DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.format( temporalAccessor );
+			DATE_TIME_FORMATTER_TIMESTAMP_WITH_MILLIS.formatTo( temporalAccessor, appender );
 		}
 	}
 
-	public static String formatAsDate(TemporalAccessor temporalAccessor) {
-		return DATE_TIME_FORMATTER_DATE.format( temporalAccessor );
+	public static void appendAsDate(SqlAppender appender, TemporalAccessor temporalAccessor) {
+		DATE_TIME_FORMATTER_DATE.formatTo( temporalAccessor, appender );
 	}
 
-	public static String formatAsTime(TemporalAccessor temporalAccessor, boolean supportsOffset, TimeZone jdbcTimeZone) {
+	public static void appendAsTime(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			boolean supportsOffset,
+			TimeZone jdbcTimeZone) {
 		if ( temporalAccessor.isSupported(ChronoField.OFFSET_SECONDS) ) {
 			if ( supportsOffset ) {
-				return DATE_TIME_FORMATTER_TIME_WITH_OFFSET.format( temporalAccessor );
+				DATE_TIME_FORMATTER_TIME_WITH_OFFSET.formatTo( temporalAccessor, appender );
 			}
 			else {
-				return DATE_TIME_FORMATTER_TIME.format(
+				DATE_TIME_FORMATTER_TIME.formatTo(
 					LocalDateTime.ofInstant(
 							Instant.from( temporalAccessor ),
 							jdbcTimeZone.toZoneId()
-					)
+					),
+					appender
 				);
 			}
 		}
 		else {
-			return DATE_TIME_FORMATTER_TIME.format( temporalAccessor );
+			DATE_TIME_FORMATTER_TIME.formatTo( temporalAccessor, appender );
 		}
 	}
 
-	public static String formatAsTimestampWithMillis(java.util.Date date, TimeZone jdbcTimeZone) {
+	public static void appendAsTimestampWithMillis(SqlAppender appender, java.util.Date date, TimeZone jdbcTimeZone) {
 		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( jdbcTimeZone );
-			return simpleDateFormat.format( date );
+			appender.appendSql( simpleDateFormat.format( date ) );
 		}
 		finally {
 			simpleDateFormat.setTimeZone( originalTimeZone );
 		}
 	}
 
-	public static String formatAsTimestampWithMicros(java.util.Date date, TimeZone jdbcTimeZone) {
+	public static void appendAsTimestampWithMicros(SqlAppender appender, Date date, TimeZone jdbcTimeZone) {
 		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( jdbcTimeZone );
-			return simpleDateFormat.format( date );
+			appender.appendSql( simpleDateFormat.format( date ) );
 		}
 		finally {
 			simpleDateFormat.setTimeZone( originalTimeZone );
 		}
 	}
 
-	public static String wrapAsJdbcDateLiteral(String literal) {
-		return JDBC_ESCAPE_START_DATE + literal + JDBC_ESCAPE_END;
+	public static void appendAsDate(SqlAppender appender, Date date) {
+		appender.appendSql( LOCAL_DATE_FORMAT.get().format( date ) );
 	}
 
-	public static String wrapAsJdbcTimeLiteral(String literal) {
-		return JDBC_ESCAPE_START_TIME + literal + JDBC_ESCAPE_END;
+	public static void appendAsTime(SqlAppender appender, java.util.Date date) {
+		appender.appendSql( LOCAL_TIME_FORMAT.get().format( date ) );
 	}
 
-	public static String wrapAsJdbcTimestampLiteral(String literal) {
-		return JDBC_ESCAPE_START_TIMESTAMP + literal + JDBC_ESCAPE_END;
-	}
-
-	public static String wrapAsAnsiDateLiteral(String literal) {
-		return "date '" + literal + "'";
-	}
-
-	public static String wrapAsAnsiTimeLiteral(String literal) {
-		return "time '" + literal + "'";
-	}
-
-	public static String wrapAsAnsiTimestampLiteral(String literal) {
-		return "timestamp '" + literal + "'";
-	}
-
-	public static String formatAsDate(java.util.Date date) {
-		return LOCAL_DATE_FORMAT.get().format( date );
-	}
-
-	public static SimpleDateFormat simpleDateFormatDate() {
-		return new SimpleDateFormat( FORMAT_STRING_DATE, Locale.ENGLISH );
-	}
-
-	public static String formatAsTime(java.util.Date date) {
-		return LOCAL_TIME_FORMAT.get().format( date );
-	}
-
-	public static SimpleDateFormat simpleDateFormatTime() {
-		return new SimpleDateFormat( FORMAT_STRING_TIME, Locale.ENGLISH );
-	}
-
-	public static String formatAsTimestampWithMillis(java.util.Calendar calendar, TimeZone jdbcTimeZone) {
+	public static void appendAsTimestampWithMillis(
+			SqlAppender appender,
+			java.util.Calendar calendar,
+			TimeZone jdbcTimeZone) {
 		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MILLIS_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( jdbcTimeZone );
-			return simpleDateFormat.format( calendar.getTime() );
+			appender.appendSql( simpleDateFormat.format( calendar.getTime() ) );
 		}
 		finally {
 			simpleDateFormat.setTimeZone( originalTimeZone );
 		}
 	}
 
-	public static SimpleDateFormat simpleDateFormatTimestampWithMillis(TimeZone timeZone) {
-		final SimpleDateFormat formatter = new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MILLIS, Locale.ENGLISH );
-		formatter.setTimeZone( timeZone );
-		return formatter;
-	}
-
-	public static String formatAsTimestampWithMicros(java.util.Calendar calendar, TimeZone jdbcTimeZone) {
+	public static void appendAsTimestampWithMicros(SqlAppender appender, Calendar calendar, TimeZone jdbcTimeZone) {
 		final SimpleDateFormat simpleDateFormat = TIMESTAMP_WITH_MICROS_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( jdbcTimeZone );
-			return simpleDateFormat.format( calendar.getTime() );
+			appender.appendSql( simpleDateFormat.format( calendar.getTime() ) );
 		}
 		finally {
 			simpleDateFormat.setTimeZone( originalTimeZone );
 		}
 	}
 
-	public static SimpleDateFormat simpleDateFormatTimestampWithMicros(TimeZone timeZone) {
-		final SimpleDateFormat formatter = new SimpleDateFormat(FORMAT_STRING_TIMESTAMP_WITH_MICROS, Locale.ENGLISH );
-		formatter.setTimeZone( timeZone );
-		return formatter;
-	}
-
-	public static String formatAsDate(java.util.Calendar calendar) {
+	public static void appendAsDate(SqlAppender appender, java.util.Calendar calendar) {
 		final SimpleDateFormat simpleDateFormat = LOCAL_DATE_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( calendar.getTimeZone() );
-			return simpleDateFormat.format( calendar.getTime() );
+			appender.appendSql( simpleDateFormat.format( calendar.getTime() ) );
 		}
 		finally {
 			simpleDateFormat.setTimeZone( originalTimeZone );
 		}
 	}
 
-	public static SimpleDateFormat simpleDateFormatDate(TimeZone timeZone) {
-		final SimpleDateFormat formatter = new SimpleDateFormat( FORMAT_STRING_DATE, Locale.ENGLISH );
-		formatter.setTimeZone( timeZone );
-		return formatter;
-	}
-
-	public static String formatAsTime(java.util.Calendar calendar) {
+	public static void appendAsTime(SqlAppender appender, java.util.Calendar calendar) {
 		final SimpleDateFormat simpleDateFormat = LOCAL_TIME_FORMAT.get();
 		final TimeZone originalTimeZone = simpleDateFormat.getTimeZone();
 		try {
 			simpleDateFormat.setTimeZone( calendar.getTimeZone() );
-			return simpleDateFormat.format( calendar.getTime() );
+			appender.appendSql( simpleDateFormat.format( calendar.getTime() ) );
 		}
 		finally {
 			simpleDateFormat.setTimeZone( originalTimeZone );
 		}
-	}
-
-	public static SimpleDateFormat simpleDateFormatTime(TimeZone timeZone) {
-		final SimpleDateFormat formatter = new SimpleDateFormat( FORMAT_STRING_TIME, Locale.ENGLISH );
-		formatter.setTimeZone( timeZone );
-		return formatter;
 	}
 
 }

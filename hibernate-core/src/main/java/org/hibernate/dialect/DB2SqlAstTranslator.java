@@ -257,7 +257,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 		}
 		else if ( expression instanceof Summarization ) {
 			Summarization summarization = (Summarization) expression;
-			appendSql( summarization.getKind().name().toLowerCase() );
+			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );
 			appendSql( CLOSE_PARENTHESIS );

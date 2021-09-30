@@ -103,7 +103,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			Summarization summarization = (Summarization) expression;
 			renderCommaSeparated( summarization.getGroupings() );
 			appendSql( " with " );
-			appendSql( summarization.getKind().name().toLowerCase() );
+			appendSql( summarization.getKind().sqlText() );
 		}
 		else {
 			expression.accept( this );

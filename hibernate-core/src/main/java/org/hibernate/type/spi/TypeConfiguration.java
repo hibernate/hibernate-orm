@@ -354,7 +354,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private String sessionFactoryName;
 		private String sessionFactoryUuid;
 
-		private transient JdbcTypeDescriptorIndicators currentSqlTypeIndicators = new JdbcTypeDescriptorIndicators() {
+		private final transient JdbcTypeDescriptorIndicators currentSqlTypeIndicators = new JdbcTypeDescriptorIndicators() {
 			@Override
 			public TypeConfiguration getTypeConfiguration() {
 				return typeConfiguration;

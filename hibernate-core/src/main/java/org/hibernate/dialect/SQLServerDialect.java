@@ -39,24 +39,33 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.regex.Pattern;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
 import static java.util.regex.Pattern.compile;
 import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
  * A dialect for Microsoft SQL Server 2000 and above
@@ -674,8 +683,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return datetimeFormat(format).result();
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql( datetimeFormat(format).result() );
 	}
 
 	public static Replacer datetimeFormat(String format) {
@@ -717,31 +726,96 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				.replace("x", "zz");
 	}
 
-	private static final Pattern OFFSET_PATTERN = compile(".*[-+]\\d{2}(:\\d{2})?$");
-
 	@Override
-	public String formatBinaryLiteral(byte[] bytes) {
-		return "0x" + StandardBasicTypes.BINARY.toString( bytes );
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "0x" );
+		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
 	}
 
 	@Override
-	protected String wrapTimestampLiteral(String timestamp) {
-		//needed because the {ts ... } JDBC escape chokes on microseconds
-		return OFFSET_PATTERN.matcher( timestamp ).matches()
-				? "cast('" + timestamp + "' as datetimeoffset)"
-				: "cast('" + timestamp + "' as datetime2)";
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "cast('" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( "' as date)" );
+				break;
+			case TIME:
+				//needed because the {t ... } JDBC is just buggy
+				appender.appendSql( "cast('" );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( "' as time)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "cast('" );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				//needed because the {ts ... } JDBC escape chokes on microseconds
+				if ( supportsTemporalLiteralOffset() && temporalAccessor.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+					appender.appendSql( "' as datetimeoffset)" );
+				}
+				else {
+					appender.appendSql( "' as datetime2)" );
+				}
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
-	protected String wrapTimeLiteral(String time) {
-		//needed because the {t ... } JDBC is just buggy
-		return "cast('" + time + "' as time)";
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "cast('" );
+				appendAsDate( appender, date );
+				appender.appendSql( "' as date)" );
+				break;
+			case TIME:
+				//needed because the {t ... } JDBC is just buggy
+				appender.appendSql( "cast('" );
+				appendAsTime( appender, date );
+				appender.appendSql( "' as time)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "cast('" );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( "' as datetimeoffset)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
-	protected String wrapDateLiteral(String date) {
-		//possibly not needed
-		return "cast('" + date + "' as date)";
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "cast('" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( "' as date)" );
+				break;
+			case TIME:
+				//needed because the {t ... } JDBC is just buggy
+				appender.appendSql( "cast('" );
+				appendAsTime( appender, calendar );
+				appender.appendSql( "' as time)" );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "cast('" );
+				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appender.appendSql( "' as datetime2)" );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override

@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -269,8 +270,8 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return String.valueOf( bool );
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool );
 	}
 
 	@Override
@@ -462,17 +463,21 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		if ( version == 104200 ) {
 			// See https://github.com/h2database/h2database/issues/2518
-			return OracleDialect.datetimeFormat( format, true, true ).result();
+			appender.appendSql( OracleDialect.datetimeFormat( format, true, true ).result() );
 		}
-		return new Replacer( format, "'", "''" )
-				.replace("e", "u")
-				.replace( "xxx", "XXX" )
-				.replace( "xx", "XX" )
-				.replace( "x", "X" )
-				.result();
+		else {
+			appender.appendSql(
+					new Replacer( format, "'", "''" )
+					.replace("e", "u")
+					.replace( "xxx", "XXX" )
+					.replace( "xx", "XX" )
+					.replace( "x", "X" )
+					.result()
+			);
+		}
 	}
 
 	public String translateExtractField(TemporalUnit unit) {

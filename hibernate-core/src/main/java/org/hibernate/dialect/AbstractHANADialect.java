@@ -45,6 +45,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorHANADatabaseImpl;
@@ -1551,10 +1552,13 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return this.useLegacyBooleanType
-				? super.toBooleanValueString( bool )
-				: String.valueOf( bool );
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		if ( this.useLegacyBooleanType ) {
+			appender.appendSql( bool ? '1' : '0' );
+		}
+		else {
+			appender.appendSql( bool );
+		}
 	}
 
 	@Override
@@ -1630,9 +1634,9 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//I don't think HANA needs FM
-		return OracleDialect.datetimeFormat( format, false, false ).result();
+		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
 	@Override

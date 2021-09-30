@@ -43,7 +43,17 @@ public class Summarization implements Expression {
 	}
 
 	public enum Kind {
-		ROLLUP,
-		CUBE
+		ROLLUP( "rollup" ),
+		CUBE( "cube" );
+
+		private final String sqlText;
+
+		Kind(String sqlText) {
+			this.sqlText = sqlText;
+		}
+
+		public String sqlText() {
+			return sqlText;
+		}
 	}
 }

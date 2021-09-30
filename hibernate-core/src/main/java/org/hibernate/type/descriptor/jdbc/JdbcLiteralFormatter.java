@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -24,5 +25,11 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public interface JdbcLiteralFormatter<T> {
 	String NULL = "null";
 
-	String toJdbcLiteral(T value, Dialect dialect, WrapperOptions wrapperOptions);
+	default String toJdbcLiteral(T value, Dialect dialect, WrapperOptions wrapperOptions) {
+		final StringBuilder sb = new StringBuilder();
+		appendJdbcLiteral( sb::append, value, dialect, wrapperOptions );
+		return sb.toString();
+	}
+
+	void appendJdbcLiteral(SqlAppender appender, T value, Dialect dialect, WrapperOptions wrapperOptions);
 }

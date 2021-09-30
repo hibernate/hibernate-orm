@@ -129,7 +129,7 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends Abstrac
 		else if ( expression instanceof Summarization ) {
 			Summarization summarization = (Summarization) expression;
 			if ( getDialect().getVersion() >= 950 ) {
-				appendSql( summarization.getKind().name().toLowerCase() );
+				appendSql( summarization.getKind().sqlText() );
 				appendSql( OPEN_PARENTHESIS );
 				renderCommaSeparated( summarization.getGroupings() );
 				appendSql( CLOSE_PARENTHESIS );

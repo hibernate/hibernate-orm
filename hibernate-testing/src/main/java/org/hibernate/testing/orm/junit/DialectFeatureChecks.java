@@ -334,7 +334,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsFormat implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			try {
-				dialect.translateDatetimeFormat( "" );
+				dialect.appendDatetimeFormat( new StringBuilder()::append, "" );
 				return true;
 			}
 			catch (Exception ex) {
@@ -346,7 +346,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsTruncateThroughCast implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			try {
-				dialect.translateDatetimeFormat( "" );
+				dialect.appendDatetimeFormat( new StringBuilder()::append, "" );
 				return true;
 			}
 			catch (Exception ex) {

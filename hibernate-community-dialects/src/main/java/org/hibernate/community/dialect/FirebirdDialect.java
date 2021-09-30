@@ -45,6 +45,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -68,7 +69,13 @@ import java.util.regex.Pattern;
 
 import jakarta.persistence.TemporalType;
 
-import static org.hibernate.type.descriptor.DateTimeUtils.formatAsTimestampWithMillis;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_END;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_DATE;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIME;
+import static org.hibernate.type.descriptor.DateTimeUtils.JDBC_ESCAPE_START_TIMESTAMP;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
  * An SQL dialect for Firebird 2.0 and above.
@@ -567,11 +574,14 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		//'boolean' type introduced in 3.0
-		return getVersion() < 300
-				? super.toBooleanValueString( bool )
-				: bool ? "true" : "false";
+		if ( getVersion() < 300 ) {
+			appender.appendSql( bool ? '1' : '0' );
+		}
+		else {
+			appender.appendSql( bool );
+		}
 	}
 
 	@Override
@@ -704,23 +714,82 @@ public class FirebirdDialect extends Dialect {
 		}
 	}
 
-	@Override
-	protected String formatAsTimestamp(Date date, TimeZone jdbcTimeZone) {
-		return formatAsTimestampWithMillis( date, jdbcTimeZone );
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMillis( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, date );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMillis( appender, date, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
+	}
+
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( JDBC_ESCAPE_START_DATE );
+				appendAsDate( appender, calendar );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIME:
+				appender.appendSql( JDBC_ESCAPE_START_TIME );
+				appendAsTime( appender, calendar );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( JDBC_ESCAPE_START_TIMESTAMP );
+				appendAsTimestampWithMillis( appender, calendar, jdbcTimeZone );
+				appender.appendSql( JDBC_ESCAPE_END );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
-	protected String formatAsTimestamp(Calendar calendar, TimeZone jdbcTimeZone) {
-		return formatAsTimestampWithMillis( calendar, jdbcTimeZone );
-	}
-
-	@Override
-	protected String formatAsTimestamp(TemporalAccessor temporalAccessor, TimeZone jdbcTimeZone) {
-		return formatAsTimestampWithMillis( temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
-	}
-
-	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		throw new NotYetImplementedFor6Exception( "format() function not supported on Firebird" );
 	}
 

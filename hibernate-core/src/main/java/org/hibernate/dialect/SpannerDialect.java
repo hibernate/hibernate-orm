@@ -34,6 +34,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -416,8 +417,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return String.valueOf( bool );
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool );
 	}
 
 	@Override
@@ -489,8 +490,8 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return datetimeFormat( format ).result();
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
 	public static Replacer datetimeFormat(String format) {

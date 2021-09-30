@@ -36,6 +36,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -44,6 +45,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
 
 import java.sql.CallableStatement;
@@ -593,8 +595,10 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String formatBinaryLiteral(byte[] bytes) {
-		return "BX'" + StandardBasicTypes.BINARY.toString( bytes ) + "'";
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "BX'" );
+		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		appender.appendSql( '\'' );
 	}
 
 	@Override
@@ -735,9 +739,9 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//DB2 does not need nor support FM
-		return OracleDialect.datetimeFormat( format, false, false ).result();
+		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
 	@Override
@@ -752,12 +756,12 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		if ( getVersion() < 1100 ) {
-			return bool ? "1" : "0";
+			appender.appendSql( bool ? '1' : '0' );
 		}
 		else {
-			return bool ? "true" : "false";
+			appender.appendSql( bool );
 		}
 	}
 

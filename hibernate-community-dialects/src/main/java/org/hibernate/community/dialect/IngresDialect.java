@@ -41,6 +41,7 @@ import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -197,10 +198,13 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return getVersion() < 1000
-				? super.toBooleanValueString( bool )
-				: String.valueOf( bool );
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		if ( getVersion() < 1000 ) {
+			appender.appendSql( bool ? '1' : '0' );
+		}
+		else {
+			appender.appendSql( bool );
+		}
 	}
 
 
@@ -496,8 +500,8 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return MySQLDialect.datetimeFormat( format ).result();
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql( MySQLDialect.datetimeFormat( format ).result() );
 	}
 
 	@Override

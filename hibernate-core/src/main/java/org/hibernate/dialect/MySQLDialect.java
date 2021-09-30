@@ -51,6 +51,7 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -940,13 +941,26 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	protected String escapeLiteral(String literal) {
-		return super.escapeLiteral( literal ).replace("\\", "\\\\");
+	public void appendLiteral(SqlAppender appender, String literal) {
+		appender.appendSql( '\'' );
+		for ( int i = 0; i < literal.length(); i++ ) {
+			final char c = literal.charAt( i );
+			switch ( c ) {
+				case '\'':
+					appender.appendSql( '\'' );
+					break;
+				case '\\':
+					appender.appendSql( '\\' );
+					break;
+			}
+			appender.appendSql( c );
+		}
+		appender.appendSql( '\'' );
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return datetimeFormat( format ).result();
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
 	public static Replacer datetimeFormat(String format) {

@@ -9,7 +9,6 @@ package org.hibernate.orm.test.dialect;
 import java.util.Locale;
 
 import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 import org.junit.After;

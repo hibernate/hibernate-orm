@@ -8,7 +8,6 @@ package org.hibernate.community.dialect.pagination;
 
 import org.hibernate.dialect.pagination.AbstractLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 /**
@@ -23,40 +22,6 @@ public class SkipFirstLimitHandler extends AbstractLimitHandler {
 
 	public SkipFirstLimitHandler(boolean variableLimit) {
 		this.variableLimit = variableLimit;
-	}
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-
-		boolean hasFirstRow = hasFirstRow( selection );
-		boolean hasMaxRows = hasMaxRows( selection );
-
-		if ( !hasFirstRow && !hasMaxRows ) {
-			return sql;
-		}
-
-		StringBuilder skipFirst = new StringBuilder();
-
-		if ( supportsVariableLimit() ) {
-			if ( hasFirstRow ) {
-				skipFirst.append( " skip ?" );
-			}
-			if ( hasMaxRows ) {
-				skipFirst.append( " first ?" );
-			}
-		}
-		else {
-			if ( hasFirstRow ) {
-				skipFirst.append( " skip " )
-						.append( selection.getFirstRow() );
-			}
-			if ( hasMaxRows ) {
-				skipFirst.append( " first " )
-						.append( getMaxOrLimit( selection ) );
-			}
-		}
-
-		return insertAfterSelect( sql, skipFirst.toString() );
 	}
 
 	@Override

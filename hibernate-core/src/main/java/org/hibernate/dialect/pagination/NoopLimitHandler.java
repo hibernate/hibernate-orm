@@ -8,12 +8,9 @@ package org.hibernate.dialect.pagination;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.regex.Pattern;
 
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
-import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.regex.Pattern.compile;
 
 /**
@@ -24,37 +21,6 @@ import static java.util.regex.Pattern.compile;
 public class NoopLimitHandler extends AbstractLimitHandler {
 
 	public static final NoopLimitHandler INSTANCE = new NoopLimitHandler();
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		return sql;
-	}
-
-	@Override
-	public int bindLimitParametersAtStartOfQuery(RowSelection selection, PreparedStatement statement, int index) {
-		return 0;
-	}
-
-	@Override
-	public int bindLimitParametersAtEndOfQuery(RowSelection selection, PreparedStatement statement, int index) {
-		return 0;
-	}
-
-	@Override
-	public void setMaxRows(RowSelection selection, PreparedStatement statement) throws SQLException {
-		if ( selection != null && selection.getMaxRows() != null && selection.getMaxRows() > 0 ) {
-			final int maxRows = selection.getMaxRows() + convertToFirstRowValue(
-					selection.getFirstRow() == null ? 0 : selection.getFirstRow()
-			);
-			// Use Integer.MAX_VALUE on overflow
-			if ( maxRows < 0 ) {
-				statement.setMaxRows( Integer.MAX_VALUE );
-			}
-			else {
-				statement.setMaxRows( maxRows );
-			}
-		}
-	}
 
 	@Override
 	public String processSql(String sql, Limit limit) {

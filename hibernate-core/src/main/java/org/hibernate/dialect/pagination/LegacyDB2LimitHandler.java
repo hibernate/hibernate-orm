@@ -6,7 +6,6 @@
  */
 package org.hibernate.dialect.pagination;
 
-import org.hibernate.engine.spi.RowSelection;
 import org.hibernate.query.Limit;
 
 /**
@@ -17,27 +16,6 @@ import org.hibernate.query.Limit;
 public class LegacyDB2LimitHandler extends AbstractLimitHandler {
 
 	public static final LegacyDB2LimitHandler INSTANCE = new LegacyDB2LimitHandler();
-
-	@Override
-	public String processSql(String sql, RowSelection selection) {
-		if ( hasFirstRow( selection ) ) {
-			//nest the main query in an outer select
-			return "select * from (select row_.*,rownumber() over(order by order of row_) as rownumber_ from ("
-					+ sql + fetchFirstRows( selection )
-					+ ") as row_) as query_ where rownumber_>"
-					+ selection.getFirstRow()
-					+ " order by rownumber_";
-		}
-		else {
-			//on DB2, offset/fetch comes after all the
-			//various "for update"ish clauses
-			return insertAtEnd( fetchFirstRows( selection ), sql );
-		}
-	}
-
-	private String fetchFirstRows(RowSelection limit) {
-		return " fetch first " + getMaxOrLimit( limit ) + " rows only";
-	}
 
 	@Override
 	public String processSql(String sql, Limit limit) {

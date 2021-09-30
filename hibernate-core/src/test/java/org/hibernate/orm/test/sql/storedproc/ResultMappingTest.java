@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Steve Ebersole
@@ -86,7 +87,8 @@ public class ResultMappingTest extends BaseSessionFactoryFunctionalTest {
 					final ResultSetOutput resultSetReturn = assertTyping( ResultSetOutput.class, currentOutput );
 					final Object result = resultSetReturn.getSingleResult();
 					assertTyping( H2ProcTesting.MyEntity.class, result );
-					assertEquals( "Steve", ( (H2ProcTesting.MyEntity) result ).name );
+					assertNull( ( (H2ProcTesting.MyEntity) result ).name );
+					assertNotNull( ( (H2ProcTesting.MyEntity) result ).id );
 				}
 		);
 	}

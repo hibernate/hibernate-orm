@@ -25,12 +25,15 @@ public class DelayedFetchBuilderBasicPart
 		implements CompleteFetchBuilder, BasicValuedFetchBuilder, ModelPartReferenceBasic {
 	private final NavigablePath navigablePath;
 	private final BasicValuedModelPart referencedModelPart;
+	private final boolean isEnhancedForLazyLoading;
 
 	public DelayedFetchBuilderBasicPart(
 			NavigablePath navigablePath,
-			BasicValuedModelPart referencedModelPart) {
+			BasicValuedModelPart referencedModelPart,
+			boolean isEnhancedForLazyLoading) {
 		this.navigablePath = navigablePath;
 		this.referencedModelPart = referencedModelPart;
+		this.isEnhancedForLazyLoading = isEnhancedForLazyLoading;
 	}
 
 	@Override
@@ -58,6 +61,7 @@ public class DelayedFetchBuilderBasicPart
 				true,
 				null,
 				FetchTiming.DELAYED,
+				isEnhancedForLazyLoading,
 				domainResultCreationState
 		);
 	}

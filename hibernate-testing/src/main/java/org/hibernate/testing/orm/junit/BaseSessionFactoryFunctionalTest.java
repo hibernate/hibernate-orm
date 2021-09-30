@@ -105,7 +105,7 @@ public abstract class BaseSessionFactoryFunctionalTest
 		MetadataBuilder metadataBuilder = metadataSources.getMetadataBuilder();
 		applyMetadataBuilder( metadataBuilder );
 		applyMetadataSources( metadataSources );
-		final MetadataImplementor metadata = (MetadataImplementor) metadataSources.buildMetadata();
+		final MetadataImplementor metadata = (MetadataImplementor) metadataBuilder.build();
 		if ( !overrideCacheStrategy() || getCacheConcurrencyStrategy() == null ) {
 			return metadata;
 		}

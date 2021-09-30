@@ -916,6 +916,7 @@ rollup
  */
 identifier
 	: IDENTIFIER
+	| QUOTED_IDENTIFIER
 	| (ABS
 	| ACOS
 	| ALL

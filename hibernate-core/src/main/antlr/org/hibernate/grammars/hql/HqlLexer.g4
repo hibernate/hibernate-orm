@@ -73,10 +73,8 @@ fragment SINGLE_QUOTE : '\'';
 fragment DOUBLE_QUOTE : '"';
 
 STRING_LITERAL
-	: DOUBLE_QUOTE ( ~[\\"] | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
-	  { setText(getText().substring(1, getText().length()-1).replace("\"\"", "\"")); }
-	| SINGLE_QUOTE ( ~[\\'] | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
-	  { setText(getText().substring(1, getText().length()-1).replace("''", "'")); }
+	: DOUBLE_QUOTE ( ~('"') | ESCAPE_SEQUENCE | DOUBLE_QUOTE DOUBLE_QUOTE )* DOUBLE_QUOTE
+	| SINGLE_QUOTE ( ~('\'') | ESCAPE_SEQUENCE | SINGLE_QUOTE SINGLE_QUOTE )* SINGLE_QUOTE
 	;
 
 fragment BACKSLASH : '\\';

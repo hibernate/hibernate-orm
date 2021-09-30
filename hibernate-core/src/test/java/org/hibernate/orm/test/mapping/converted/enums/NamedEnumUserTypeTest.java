@@ -7,7 +7,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Ignore;
 import org.junit.Test;
 
 /**
@@ -38,7 +37,6 @@ public class NamedEnumUserTypeTest extends BaseCoreFunctionalTestCase {
 		return true;
 	}
 	
-	@Ignore
 	@Test
 	@TestForIssue(jiraKey = "HHH-14820")
 	public void testNamedEnumUserType() {

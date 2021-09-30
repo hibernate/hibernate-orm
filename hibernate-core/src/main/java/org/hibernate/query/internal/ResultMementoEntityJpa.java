@@ -83,6 +83,7 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 					)
 			);
 
+			final boolean isEnhancedForLazyLoading = entityDescriptor.getRepresentationStrategy().isBytecodeEnhanced();
 			// Implicit basic fetches are DELAYED by default, so register fetch builders for the remaining basic fetchables
 			entityDescriptor.visitAttributeMappings(
 					attributeMapping -> {
@@ -90,7 +91,8 @@ public class ResultMementoEntityJpa implements ResultMementoEntity, FetchMemento
 						if ( attributeMapping instanceof BasicValuedModelPart ) {
 							fetchBuilderCreator = k -> new DelayedFetchBuilderBasicPart(
 									navigablePath.append( k ),
-									(BasicValuedModelPart) attributeMapping
+									(BasicValuedModelPart) attributeMapping,
+									isEnhancedForLazyLoading
 							);
 							explicitFetchBuilderMap.computeIfAbsent(
 									attributeMapping.getFetchableName(),

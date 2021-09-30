@@ -12,6 +12,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.ResultsHelper;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.UnfetchedBasicPartResultAssembler;
 import org.hibernate.sql.results.graph.UnfetchedResultAssembler;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -44,17 +45,44 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 			BasicValueConverter<T, ?> valueConverter,
 			FetchTiming fetchTiming,
 			DomainResultCreationState creationState) {
+		this(
+				valuesArrayPosition,
+				fetchParent,
+				fetchablePath,
+				valuedMapping,
+				nullable,
+				valueConverter,
+				fetchTiming,
+				true,
+				creationState
+		);
+	}
+
+	public BasicFetch(
+			int valuesArrayPosition,
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			BasicValuedModelPart valuedMapping,
+			boolean nullable,
+			BasicValueConverter<T, ?> valueConverter,
+			FetchTiming fetchTiming,
+			boolean canBasicPartFetchBeDelayed,
+			DomainResultCreationState creationState) {
 		this.nullable = nullable;
 		this.navigablePath = fetchablePath;
 
 		this.fetchParent = fetchParent;
 		this.valuedMapping = valuedMapping;
 		this.fetchTiming = fetchTiming;
-		@SuppressWarnings("unchecked")
-		final JavaTypeDescriptor<T> javaTypeDescriptor = (JavaTypeDescriptor<T>) valuedMapping.getJavaTypeDescriptor();
+		@SuppressWarnings("unchecked") final JavaTypeDescriptor<T> javaTypeDescriptor = (JavaTypeDescriptor<T>) valuedMapping.getJavaTypeDescriptor();
 		// lazy basic attribute
 		if ( fetchTiming == FetchTiming.DELAYED && valuesArrayPosition == -1 ) {
-			this.assembler = new UnfetchedResultAssembler<>( javaTypeDescriptor );
+			if ( canBasicPartFetchBeDelayed ) {
+				this.assembler = new UnfetchedResultAssembler<>( javaTypeDescriptor );
+			}
+			else {
+				this.assembler = new UnfetchedBasicPartResultAssembler( javaTypeDescriptor );
+			}
 		}
 		else {
 			this.assembler = new BasicResultAssembler<>(

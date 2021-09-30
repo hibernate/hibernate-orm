@@ -105,11 +105,23 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( ! getTypeConfiguration().getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
-			if ( bindType != null ) {
-				value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+			try {
+				if ( bindType != null ) {
+					value = bindType.getExpressableJavaTypeDescriptor().coerce( value, this );
+				}
+				else if ( queryParameter.getHibernateType() != null ) {
+					value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+				}
 			}
-			else if ( queryParameter.getHibernateType() != null ) {
-				value = queryParameter.getHibernateType().getExpressableJavaTypeDescriptor().coerce( value, this );
+			catch (CoercionException ce) {
+				throw new IllegalArgumentException(
+						String.format(
+								"Parameter value [%s] did not match expected type [%s ]",
+								value,
+								bindType.getTypeName()
+						),
+						ce
+				);
 			}
 		}
 

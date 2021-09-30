@@ -30,18 +30,18 @@ helper.runWithNotification {
 
 stage('Configure') {
 	this.environments = [
-		buildEnv('8', 'h2'),
-		buildEnv('8', 'hsqldb'),
-		buildEnv('8', 'derby'),
-		buildEnv('8', 'mysql8'),
-		buildEnv('8', 'mariadb'),
-		buildEnv('8', 'postgresql_9_5'),
-		buildEnv('8', 'postgresql_13'),
-		buildEnv('8', 'oracle'),
+// 		buildEnv('8', 'h2'),
+// 		buildEnv('8', 'hsqldb'),
+// 		buildEnv('8', 'derby'),
+// 		buildEnv('8', 'mysql8'),
+// 		buildEnv('8', 'mariadb'),
+// 		buildEnv('8', 'postgresql_9_5'),
+// 		buildEnv('8', 'postgresql_13'),
+// 		buildEnv('8', 'oracle'),
 		buildEnv('8', 'oracle_ee'),
-		buildEnv('8', 'db2'),
-		buildEnv('8', 'mssql'),
-		buildEnv('8', 'sybase'),
+// 		buildEnv('8', 'db2'),
+// 		buildEnv('8', 'mssql'),
+// 		buildEnv('8', 'sybase'),
 		buildEnv('8', 'hana', 'HANA'),
 		// Disable EDB for now as the image is not available anymore
 // 		buildEnv('8', 'edb')

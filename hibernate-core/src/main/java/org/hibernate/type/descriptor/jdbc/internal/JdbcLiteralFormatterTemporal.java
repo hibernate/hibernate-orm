@@ -11,6 +11,7 @@ import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
@@ -21,13 +22,13 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 	private final TemporalType precision;
 
-	public JdbcLiteralFormatterTemporal(JavaTypeDescriptor javaTypeDescriptor, TemporalType precision) {
+	public JdbcLiteralFormatterTemporal(JavaTypeDescriptor<?> javaTypeDescriptor, TemporalType precision) {
 		super( javaTypeDescriptor );
 		this.precision = precision;
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
 		final TimeZone jdbcTimeZone;
 		if ( wrapperOptions == null || wrapperOptions.getJdbcTimeZone() == null ) {
 			jdbcTimeZone = TimeZone.getDefault();
@@ -37,48 +38,55 @@ public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 		}
 		// for performance reasons, avoid conversions if we can
 		if ( value instanceof java.util.Date ) {
-			return dialect.formatDateTimeLiteral(
+			dialect.appendDateTimeLiteral(
+					appender,
 					(java.util.Date) value,
 					precision,
 					jdbcTimeZone
 			);
 		}
 		else if ( value instanceof java.util.Calendar ) {
-			return dialect.formatDateTimeLiteral(
+			dialect.appendDateTimeLiteral(
+					appender,
 					(java.util.Calendar) value,
 					precision,
 					jdbcTimeZone
 			);
 		}
 		else if ( value instanceof TemporalAccessor ) {
-			return dialect.formatDateTimeLiteral(
+			dialect.appendDateTimeLiteral(
+					appender,
 					(TemporalAccessor) value,
 					precision,
 					jdbcTimeZone
 			);
 		}
-
-		switch ( precision) {
-			case DATE: {
-				return dialect.formatDateTimeLiteral(
-						unwrap( value, java.sql.Date.class, wrapperOptions ),
-						precision,
-						jdbcTimeZone
-				);
-			}
-			case TIME: {
-				return dialect.formatDateTimeLiteral(
-						unwrap( value, java.sql.Time.class, wrapperOptions ),
-						precision,
-						jdbcTimeZone
-				);
-			}
-			default: {
-				return dialect.formatDateTimeLiteral(
-						unwrap( value, java.util.Date.class, wrapperOptions ),
-						precision,
-						jdbcTimeZone
-				);
+		else {
+			switch ( precision ) {
+				case DATE:
+					dialect.appendDateTimeLiteral(
+							appender,
+							unwrap( value, java.sql.Date.class, wrapperOptions ),
+							precision,
+							jdbcTimeZone
+					);
+					break;
+				case TIME:
+					dialect.appendDateTimeLiteral(
+							appender,
+							unwrap( value, java.sql.Time.class, wrapperOptions ),
+							precision,
+							jdbcTimeZone
+					);
+					break;
+				default:
+					dialect.appendDateTimeLiteral(
+							appender,
+							unwrap( value, java.util.Date.class, wrapperOptions ),
+							precision,
+							jdbcTimeZone
+					);
+					break;
 			}
 		}
 	}

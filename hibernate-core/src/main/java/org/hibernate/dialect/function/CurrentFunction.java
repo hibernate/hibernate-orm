@@ -38,7 +38,7 @@ public class CurrentFunction
 			SqlAppender sqlAppender,
 			List<SqlAstNode> arguments,
 			SqlAstTranslator<?> walker) {
-		sqlAppender.appendSql(sql);
+		sqlAppender.appendSql( sql );
 	}
 
 	@Override

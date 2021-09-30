@@ -7,6 +7,11 @@
 package org.hibernate.community.dialect;
 
 import java.sql.Types;
+import java.time.temporal.TemporalAccessor;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.ScrollMode;
@@ -39,6 +44,7 @@ import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolv
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -53,6 +59,9 @@ import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.MONTH;
 import static org.hibernate.query.TemporalUnit.QUARTER;
 import static org.hibernate.query.TemporalUnit.YEAR;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
+import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMicros;
 
 /**
  * An SQL dialect for SQLite.
@@ -536,8 +545,8 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return datetimeFormat( format ).result();
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
 	public static Replacer datetimeFormat(String format) {
@@ -600,18 +609,80 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	protected String wrapDateLiteral(String date) {
-		return "date(" + date + ")";
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			TemporalAccessor temporalAccessor,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date(" );
+				appendAsDate( appender, temporalAccessor );
+				appender.appendSql( ')' );
+				break;
+			case TIME:
+				appender.appendSql( "time(" );
+				appendAsTime( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( ')' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "datetime(" );
+				appendAsTimestampWithMicros( appender, temporalAccessor, supportsTemporalLiteralOffset(), jdbcTimeZone );
+				appender.appendSql( ')' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
-	protected String wrapTimeLiteral(String time) {
-		return "time(" + time + ")";
+	public void appendDateTimeLiteral(SqlAppender appender, Date date, TemporalType precision, TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date(" );
+				appendAsDate( appender, date );
+				appender.appendSql( ')' );
+				break;
+			case TIME:
+				appender.appendSql( "time(" );
+				appendAsTime( appender, date );
+				appender.appendSql( ')' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "datetime(" );
+				appendAsTimestampWithMicros( appender, date, jdbcTimeZone );
+				appender.appendSql( ')' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 	@Override
-	protected String wrapTimestampLiteral(String timestamp) {
-		return "datetime(" + timestamp + ")";
+	public void appendDateTimeLiteral(
+			SqlAppender appender,
+			Calendar calendar,
+			TemporalType precision,
+			TimeZone jdbcTimeZone) {
+		switch ( precision ) {
+			case DATE:
+				appender.appendSql( "date(" );
+				appendAsDate( appender, calendar );
+				appender.appendSql( ')' );
+				break;
+			case TIME:
+				appender.appendSql( "time(" );
+				appendAsTime( appender, calendar );
+				appender.appendSql( ')' );
+				break;
+			case TIMESTAMP:
+				appender.appendSql( "datetime(" );
+				appendAsTimestampWithMicros( appender, calendar, jdbcTimeZone );
+				appender.appendSql( ')' );
+				break;
+			default:
+				throw new IllegalArgumentException();
+		}
 	}
 
 }

@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.jdbc.internal;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
@@ -17,12 +18,12 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
  * @author Steve Ebersole
  */
 public class JdbcLiteralFormatterBoolean extends BasicJdbcLiteralFormatter {
-	public JdbcLiteralFormatterBoolean(JavaTypeDescriptor javaTypeDescriptor) {
+	public JdbcLiteralFormatterBoolean(JavaTypeDescriptor<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor );
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		return dialect.toBooleanValueString( unwrap( value, Boolean.class, wrapperOptions ) );
+	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+		dialect.appendBooleanValueString( appender, unwrap( value, Boolean.class, wrapperOptions ) );
 	}
 }

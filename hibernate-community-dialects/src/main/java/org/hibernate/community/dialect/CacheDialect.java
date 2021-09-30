@@ -31,6 +31,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.JoinFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -416,9 +417,9 @@ public class CacheDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//I don't think Cache needs FM
-		return OracleDialect.datetimeFormat( format, false, false ).result();
+		appender.appendSql( OracleDialect.datetimeFormat( format, false, false ).result() );
 	}
 
 }

@@ -6,12 +6,14 @@
  */
 package org.hibernate.sql.ast.spi;
 
+import java.io.IOException;
+
 /**
  * Access to appending SQL fragments to an in-flight buffer
  *
  * @author Steve Ebersole
  */
-public interface SqlAppender {
+public interface SqlAppender extends Appendable {
 	String NO_SEPARATOR = "";
 	String COMA_SEPARATOR = ",";
 	char COMA_SEPARATOR_CHAR = ',';
@@ -29,17 +31,31 @@ public interface SqlAppender {
 	 */
 	void appendSql(String fragment);
 
-	void appendSql(char fragment);
-
-	default void appendQuoted(String value, char quoteChar) {
-		appendSql( quoteChar );
-		for ( int i = 0; i < value.length(); i++ ) {
-			final char c = value.charAt( i );
-			if ( c == quoteChar ) {
-				appendSql( quoteChar );
-			}
-			appendSql( c );
-		}
-		appendSql( quoteChar );
+	default void appendSql(char fragment) {
+		appendSql( Character.toString( fragment ) );
 	}
+
+	default void appendSql(int value) {
+		appendSql( Integer.toString( value ) );
+	}
+
+	default void appendSql(boolean value) {
+		appendSql( String.valueOf( value ) );
+	}
+
+	default Appendable append(CharSequence csq) {
+		appendSql( csq.toString() );
+		return this;
+	}
+
+	default Appendable append(CharSequence csq, int start, int end) {
+		appendSql( csq.toString().substring( start, end ) );
+		return this;
+	}
+
+	default Appendable append(char c) {
+		appendSql( Character.toString( c ) );
+		return this;
+	}
+
 }

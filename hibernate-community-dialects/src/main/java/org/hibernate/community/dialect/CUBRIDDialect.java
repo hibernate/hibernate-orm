@@ -24,6 +24,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -335,17 +336,19 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//I do not know if CUBRID supports FM, but it
 		//seems that it does pad by default, so it needs it!
-		return OracleDialect.datetimeFormat( format, true, false )
+		appender.appendSql(
+				OracleDialect.datetimeFormat( format, true, false )
 				.replace("SSSSSS", "FF")
 				.replace("SSSSS", "FF")
 				.replace("SSSS", "FF")
 				.replace("SSS", "FF")
 				.replace("SS", "FF")
 				.replace("S", "FF")
-				.result();
+				.result()
+		);
 	}
 
 	@Override

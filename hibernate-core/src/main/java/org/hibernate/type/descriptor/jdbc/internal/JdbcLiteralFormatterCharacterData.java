@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.jdbc.internal;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
@@ -21,26 +22,21 @@ public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter
 
 	private final boolean isNationalized;
 
-	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor javaTypeDescriptor) {
+	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor<?> javaTypeDescriptor) {
 		this( javaTypeDescriptor, false );
 	}
 
-	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor javaTypeDescriptor, boolean isNationalized) {
+	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor<?> javaTypeDescriptor, boolean isNationalized) {
 		super( javaTypeDescriptor );
 		this.isNationalized = isNationalized;
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
 		final String literalValue = unwrap( value, String.class, wrapperOptions );
-
-		final String inlineLiteral = dialect.inlineLiteral( literalValue );
-
 		if ( isNationalized ) {
-			// is there a standardized form for n-string literals?  This is the SQL Server syntax for sure
-			return NATIONALIZED_PREFIX.concat( inlineLiteral );
+			appender.appendSql( NATIONALIZED_PREFIX );
 		}
-
-		return inlineLiteral;
+		dialect.appendLiteral( appender, literalValue );
 	}
 }

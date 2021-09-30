@@ -52,9 +52,17 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		if ( javaTypeDescriptor instanceof GeolatteGeometryJavaTypeDescriptor ) {
-			return (value, dialect, wrapperOptions) -> "ST_GeomFromEWKT('" + value + "')";
+			return (appender, value, dialect, wrapperOptions) -> {
+				appender.appendSql( "ST_GeomFromEWKT('" );
+				appender.appendSql( value.toString() );
+				appender.appendSql( "')" );
+			};
 		}
-		return (value, dialect, wrapperOptions) -> "ST_GeomFromEWKT('" + jts2Gl( value ) + "')";
+		return (appender, value, dialect, wrapperOptions) -> {
+			appender.appendSql( "ST_GeomFromEWKT('" );
+			appender.appendSql( jts2Gl( value ).toString() );
+			appender.appendSql( "')" );
+		};
 	}
 
 	private <T> Geometry<?> jts2Gl(T value) {

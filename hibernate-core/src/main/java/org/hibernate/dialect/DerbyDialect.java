@@ -48,6 +48,7 @@ import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -355,10 +356,13 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return getVersion() < 1070
-				? super.toBooleanValueString( bool )
-				: String.valueOf( bool );
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		if ( getVersion() < 1070 ) {
+			appender.appendSql( bool ? '1' : '0' );
+		}
+		else {
+			appender.appendSql( bool );
+		}
 	}
 
 	@Override
@@ -608,7 +612,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		throw new NotYetImplementedFor6Exception("format() function not supported on Derby");
 	}
 

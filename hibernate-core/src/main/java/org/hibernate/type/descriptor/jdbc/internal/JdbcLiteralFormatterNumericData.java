@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.jdbc.internal;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
@@ -18,14 +19,14 @@ public class JdbcLiteralFormatterNumericData extends BasicJdbcLiteralFormatter {
 	private final Class<? extends Number> unwrapJavaType;
 
 	public JdbcLiteralFormatterNumericData(
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaTypeDescriptor<?> javaTypeDescriptor,
 			Class<? extends Number> unwrapJavaType) {
 		super( javaTypeDescriptor );
 		this.unwrapJavaType = unwrapJavaType;
 	}
 
 	@Override
-	public String toJdbcLiteral(Object value, Dialect dialect, WrapperOptions wrapperOptions) {
-		return unwrap( value, unwrapJavaType, wrapperOptions ).toString();
+	public void appendJdbcLiteral(SqlAppender appender, Object value, Dialect dialect, WrapperOptions wrapperOptions) {
+		appender.appendSql( unwrap( value, unwrapJavaType, wrapperOptions ).toString() );
 	}
 }

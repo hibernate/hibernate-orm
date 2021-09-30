@@ -16,6 +16,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -48,14 +49,18 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractClassTypeDescripto
 
 	public String toString(byte[] bytes) {
 		final StringBuilder buf = new StringBuilder( bytes.length * 2 );
+		appendString( buf::append, bytes );
+		return buf.toString();
+	}
+
+	public void appendString(SqlAppender appender, byte[] bytes) {
 		for ( byte aByte : bytes ) {
 			final String hexStr = Integer.toHexString( Byte.toUnsignedInt(aByte) );
 			if ( hexStr.length() == 1 ) {
-				buf.append( '0' );
+				appender.appendSql( '0' );
 			}
-			buf.append( hexStr );
+			appender.appendSql( hexStr );
 		}
-		return buf.toString();
 	}
 
 	@Override

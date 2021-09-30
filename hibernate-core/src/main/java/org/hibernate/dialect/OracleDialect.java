@@ -51,6 +51,7 @@ import org.hibernate.sql.*;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -59,6 +60,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
@@ -1185,10 +1187,10 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		// Unlike other databases, Oracle requires an explicit reset for the fm modifier,
 		// otherwise all following pattern variables trim zeros
-		return datetimeFormat( format, true, true ).result();
+		appender.appendSql( datetimeFormat( format, true, true ).result() );
 	}
 
 	public static Replacer datetimeFormat(String format, boolean useFm, boolean resetFm) {
@@ -1277,8 +1279,10 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String formatBinaryLiteral(byte[] bytes) {
-		return "hextoraw('" + StandardBasicTypes.BINARY.toString( bytes ) + "')";
+	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
+		appender.appendSql( "hextoraw('" );
+		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		appender.appendSql( "')" );
 	}
 
 	@Override

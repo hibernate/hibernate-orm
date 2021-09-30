@@ -45,6 +45,7 @@ import org.hibernate.query.sqm.sql.StandardSqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
@@ -432,8 +433,8 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return bool ? "'t'" : "'f'";
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool ? "'t'" : "'f'" );
 	}
 
 	@Override
@@ -447,9 +448,9 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		//Informix' own variation of MySQL
-		return datetimeFormat( format ).result();
+		appender.appendSql( datetimeFormat( format ).result() );
 	}
 
 	public static Replacer datetimeFormat(String format) {

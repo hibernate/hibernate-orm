@@ -56,6 +56,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -646,8 +647,8 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String toBooleanValueString(boolean bool) {
-		return String.valueOf( bool );
+	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
+		appender.appendSql( bool );
 	}
 
 	@Override
@@ -698,8 +699,9 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return OracleDialect.datetimeFormat( format, false, false )
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql(
+				OracleDialect.datetimeFormat( format, false, false )
 				// HSQL is case sensitive i.e. requires MONTH and DAY instead of Month and Day
 				.replace("MMMM", "MONTH")
 				.replace("EEEE", "DAY")
@@ -709,7 +711,8 @@ public class HSQLDialect extends Dialect {
 				.replace("SSS", "FF")
 				.replace("SS", "FF")
 				.replace("S", "FF")
-				.result();
+				.result()
+		);
 	}
 
 	@Override

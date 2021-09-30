@@ -26,6 +26,7 @@ import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.DecodeCaseFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -370,15 +371,17 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String translateDatetimeFormat(String format) {
-		return OracleDialect.datetimeFormat( format, true, false ) //Does it really support FM?
+	public void appendDatetimeFormat(SqlAppender appender, String format) {
+		appender.appendSql(
+				OracleDialect.datetimeFormat( format, true, false ) //Does it really support FM?
 				.replace("SSSSSS", "MLS")
 				.replace("SSSSS", "MLS")
 				.replace("SSSS", "MLS")
 				.replace("SSS", "MLS")
 				.replace("SS", "MLS")
 				.replace("S", "MLS")
-				.result();
+				.result()
+		);
 	}
 
 	@Override

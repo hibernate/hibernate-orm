@@ -16,7 +16,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -360,6 +359,34 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void appendSql(char fragment) {
 		sqlBuffer.append( fragment );
+	}
+
+	@Override
+	public void appendSql(int value) {
+		sqlBuffer.append( value );
+	}
+
+	@Override
+	public void appendSql(boolean value) {
+		sqlBuffer.append( value );
+	}
+
+	@Override
+	public Appendable append(CharSequence csq) {
+		sqlBuffer.append( csq );
+		return this;
+	}
+
+	@Override
+	public Appendable append(CharSequence csq, int start, int end) {
+		sqlBuffer.append( csq, start, end );
+		return this;
+	}
+
+	@Override
+	public Appendable append(char c) {
+		sqlBuffer.append( c );
+		return this;
 	}
 
 	protected JdbcServices getJdbcServices() {
@@ -964,7 +991,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					forUpdate.merge( getLockOptions() );
-					forUpdate.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
+					forUpdate.applyAliases( getDialect().getWriteRowLockStrategy(), querySpec );
 					if ( LockMode.READ.lessThan( forUpdate.getLockMode() ) ) {
 						final LockStrategy lockStrategy = determineLockingStrategy(
 								querySpec,
@@ -994,7 +1021,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				else if ( lockOptions.getLockMode() != LockMode.NONE ) {
 					final ForUpdateClause forUpdateClause = new ForUpdateClause();
 					forUpdateClause.merge( getLockOptions() );
-					forUpdateClause.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
+					forUpdateClause.applyAliases( getDialect().getWriteRowLockStrategy(), querySpec );
 					if ( LockMode.READ.lessThan( forUpdateClause.getLockMode() ) ) {
 						final LockStrategy lockStrategy = determineLockingStrategy(
 								querySpec,
@@ -1021,7 +1048,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( forUpdate != null ) {
 			forUpdate.merge( getLockOptions() );
-			forUpdate.applyAliases( dialect.getWriteRowLockStrategy(), querySpec );
+			forUpdate.applyAliases( getDialect().getWriteRowLockStrategy(), querySpec );
 			if ( LockMode.READ.lessThan( forUpdate.getLockMode() ) ) {
 				final LockStrategy lockStrategy = determineLockingStrategy( querySpec, forUpdate, null );
 				switch ( lockStrategy ) {
@@ -1095,7 +1122,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				default:
 					if ( getDialect().supportsWait() ) {
 						appendSql( " wait " );
-						appendSql( Integer.toString( Math.round( timeoutMillis / 1e3f ) ) );
+						appendSql( Math.round( timeoutMillis / 1e3f ) );
 					}
 					break;
 			}
@@ -1484,7 +1511,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			visitSelectClause( querySpec.getSelectClause() );
 			visitFromClause( querySpec.getFromClause() );
 			visitWhereClause( querySpec );
-			visitGroupByClause( querySpec, dialect.getGroupBySelectItemReferenceStrategy() );
+			visitGroupByClause( querySpec, getDialect().getGroupBySelectItemReferenceStrategy() );
 			visitHavingClause( querySpec );
 			visitOrderBy( querySpec.getSortSpecifications() );
 			visitOffsetFetchClause( querySpec );
@@ -1681,7 +1708,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( expression instanceof Summarization ) {
 			Summarization summarization = (Summarization) expression;
-			appendSql( summarization.getKind().name().toLowerCase() );
+			appendSql( summarization.getKind().sqlText() );
 			appendSql( OPEN_PARENTHESIS );
 			renderCommaSeparated( summarization.getGroupings() );
 			appendSql( CLOSE_PARENTHESIS );
@@ -2093,8 +2120,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
 		final boolean renderNullPrecedence = nullPrecedence != null &&
-				!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
-		if ( renderNullPrecedence && !dialect.supportsNullPrecedence() ) {
+				!nullPrecedence.isDefaultOrdering( sortOrder, getDialect().getNullOrdering() );
+		if ( renderNullPrecedence && !getDialect().supportsNullPrecedence() ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
 		}
 
@@ -2112,9 +2139,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( " desc" );
 		}
 
-		if ( renderNullPrecedence && dialect.supportsNullPrecedence() ) {
+		if ( renderNullPrecedence && getDialect().supportsNullPrecedence() ) {
 			appendSql( " nulls " );
-			appendSql( nullPrecedence.name().toLowerCase( Locale.ROOT ) );
+			appendSql( nullPrecedence == NullPrecedence.LAST ? "last" : "first" );
 		}
 	}
 
@@ -2397,7 +2424,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		renderOffsetExpression( offsetClauseExpression );
 		if ( offset != 0 ) {
 			appendSql( '+' );
-			appendSql( Integer.toString( offset ) );
+			appendSql( offset );
 		}
 	}
 
@@ -2407,7 +2434,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			int offset) {
 		final Number offsetCount = interpretExpression( offsetClauseExpression, jdbcParameterBindings );
 		final Number fetchCount = interpretExpression( fetchClauseExpression, jdbcParameterBindings );
-		appendSql( Integer.toString( fetchCount.intValue() + offsetCount.intValue() + offset ) );
+		appendSql( fetchCount.intValue() + offsetCount.intValue() + offset );
 	}
 
 	protected void renderFetchPlusOffsetExpressionAsSingleParameter(
@@ -2418,7 +2445,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Number fetchCount = (Number) ( (Literal) fetchClauseExpression ).getLiteralValue();
 			if ( offsetClauseExpression instanceof Literal ) {
 				final Number offsetCount = (Number) ( (Literal) offsetClauseExpression ).getLiteralValue();
-				appendSql( Integer.toString( fetchCount.intValue() + offsetCount.intValue() + offset ) );
+				appendSql( fetchCount.intValue() + offsetCount.intValue() + offset );
 			}
 			else {
 				appendSql( PARAM_MARKER );
@@ -2653,7 +2680,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 			}
 			else {
-				appendSql( Integer.toString( Integer.MAX_VALUE ) );
+				appendSql( Integer.MAX_VALUE );
 			}
 		}
 		else if ( fetchExpression != null ) {
@@ -2693,7 +2720,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		else if ( offsetExpression != null ) {
 			appendSql( " limit " );
-			appendSql( Integer.toString( Integer.MAX_VALUE ) );
+			appendSql( Integer.MAX_VALUE );
 		}
 		if ( offsetExpression != null ) {
 			final Stack<Clause> clauseStack = getClauseStack();
@@ -2784,7 +2811,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( separator );
 					appendSql( alias );
 					appendSql( ".c" );
-					appendSql( Integer.toString( i ) );
+					appendSql( i );
 					separator = COMA_SEPARATOR;
 				}
 			}
@@ -2944,7 +2971,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void visitSqlSelections(SelectClause selectClause) {
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
 		final int size = sqlSelections.size();
-		final SelectItemReferenceStrategy referenceStrategy = dialect.getGroupBySelectItemReferenceStrategy();
+		final SelectItemReferenceStrategy referenceStrategy = getDialect().getGroupBySelectItemReferenceStrategy();
 		// When the dialect needs to render the aliased expression and there are aliased group by items,
 		// we need to inline parameters as the database would otherwise not be able to match the group by item
 		// to the select item, ultimately leading to a query error
@@ -2967,7 +2994,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				visitSqlSelection( sqlSelection );
 				parameterRenderingMode = original;
 				appendSql( " c" );
-				appendSql( Integer.toString( i ) );
+				appendSql( i );
 				separator = COMA_SEPARATOR;
 			}
 			if ( queryPartForRowNumbering != null ) {
@@ -3218,9 +3245,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( "case when " );
 			expression.accept( this );
 			appendSql( " then " );
-			appendSql( getDialect().toBooleanValueString( true ) );
+			final Dialect dialect = getDialect();
+			dialect.appendBooleanValueString( this, true );
 			appendSql( " else " );
-			appendSql( getDialect().toBooleanValueString( false ) );
+			dialect.appendBooleanValueString( this, false );
 			appendSql( " end" );
 		}
 		else {
@@ -3290,12 +3318,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else {
-			appendSql(
-					literalFormatter.toJdbcLiteral(
-							literal.getLiteralValue(),
-							dialect,
-							getWrapperOptions()
-					)
+			literalFormatter.appendJdbcLiteral(
+					this,
+					literal.getLiteralValue(),
+					dialect,
+					getWrapperOptions()
 			);
 		}
 	}
@@ -3557,9 +3584,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitFormat(Format format) {
-		final String dialectFormat = getDialect().translateDatetimeFormat( format.getFormat() );
 		appendSql( '\'' );
-		appendSql( dialectFormat );
+		getDialect().appendDatetimeFormat( this, format.getFormat() );
 		appendSql( '\'' );
 	}
 
@@ -3680,296 +3706,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitSqlSelectionExpression(SqlSelectionExpression expression) {
-		final boolean useSelectionPosition = dialect.supportsOrdinalSelectItemReference();
+		final boolean useSelectionPosition = getDialect().supportsOrdinalSelectItemReference();
 
 		if ( useSelectionPosition ) {
-			appendSql( Integer.toString( expression.getSelection().getJdbcResultSetIndex() ) );
+			appendSql( expression.getSelection().getJdbcResultSetIndex() );
 		}
 		else {
 			expression.getSelection().getExpression().accept( this );
 		}
 	}
-
-
-//	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//	// Expression : Function : Non-Standard
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitNonStandardFunctionExpression(NonStandardFunction function) {
-//		appendSql( function.getFunctionName() );
-//		if ( !function.getArguments().isEmpty() ) {
-//			appendSql( OPEN_PARENTHESIS );
-//			String separator = NO_SEPARATOR;
-//			for ( Expression argumentExpression : function.getArguments() ) {
-//				appendSql( separator );
-//				argumentExpression.accept( this );
-//				separator = COMA_SEPARATOR;
-//			}
-//			appendSql( CLOSE_PARENTHESIS );
-//		}
-//	}
-//
-//
-//	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//	// Expression : Function : Standard
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitAbsFunction(AbsFunction function) {
-//		appendSql( "abs(" );
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitAvgFunction(AvgFunction function) {
-//		appendSql( "avg(" );
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitBitLengthFunction(BitLengthFunction function) {
-//		appendSql( "bit_length(" );
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitCastFunction(CastFunction function) {
-//		sqlAppender.appendSql( "cast(" );
-//		function.getExpressionToCast().accept( this );
-//		sqlAppender.appendSql( AS_KEYWORD );
-//		sqlAppender.appendSql( determineCastTargetTypeSqlExpression( function ) );
-//		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	private String determineCastTargetTypeSqlExpression(CastFunction castFunction) {
-//		if ( castFunction.getExplicitCastTargetTypeSqlExpression() != null ) {
-//			return castFunction.getExplicitCastTargetTypeSqlExpression();
-//		}
-//
-//		final SqlExpressableType castResultType = castFunction.getCastResultType();
-//
-//		if ( castResultType == null ) {
-//			throw new SqlTreeException(
-//					"CastFunction did not define an explicit cast target SQL expression and its return type was null"
-//			);
-//		}
-//
-//		final BasicJavaDescriptor javaTypeDescriptor = castResultType.getJavaTypeDescriptor();
-//		return getJdbcServices()
-//				.getDialect()
-//				.getCastTypeName( javaTypeDescriptor.getJdbcRecommendedSqlType( this ).getJdbcTypeCode() );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitConcatFunction(ConcatFunction function) {
-//		appendSql( "concat(" );
-//
-//		boolean firstPass = true;
-//		for ( Expression expression : function.getExpressions() ) {
-//			if ( ! firstPass ) {
-//				appendSql( COMA_SEPARATOR );
-//			}
-//			expression.accept( this );
-//			firstPass = false;
-//		}
-//
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitSubstrFunction(SubstrFunction function) {
-//		appendSql( "substr(" );
-//
-//		boolean firstPass = true;
-//		for ( Expression expression : function.getExpressions() ) {
-//			if ( ! firstPass ) {
-//				appendSql( COMA_SEPARATOR );
-//			}
-//			expression.accept( this );
-//			firstPass = false;
-//		}
-//
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitCountFunction(CountFunction function) {
-//		appendSql( "count(" );
-//		if ( function.isDistinct() ) {
-//			appendSql( DISTINCT_KEYWORD );
-//		}
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	public void visitCountStarFunction(CountStarFunction function) {
-//		appendSql( "count(" );
-//		if ( function.isDistinct() ) {
-//			appendSql( DISTINCT_KEYWORD );
-//		}
-//		appendSql( "*)" );
-//	}
-//
-//	@Override
-//	public void visitCurrentDateFunction(CurrentDateFunction function) {
-//		appendSql( "current_date" );
-//	}
-//
-//	@Override
-//	public void visitCurrentTimeFunction(CurrentTimeFunction function) {
-//		appendSql( "current_time" );
-//	}
-//
-//	@Override
-//	public void visitCurrentTimestampFunction(CurrentTimestampFunction function) {
-//		appendSql( "current_timestamp" );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitExtractFunction(ExtractFunction extractFunction) {
-//		appendSql( "extract(" );
-//		extractFunction.getUnitToExtract().accept( this );
-//		appendSql( FROM_KEYWORD );
-//		extractFunction.getExtractionSource().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitLengthFunction(LengthFunction function) {
-//		sqlAppender.appendSql( "length(" );
-//		function.getArgument().accept( this );
-//		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitLocateFunction(LocateFunction function) {
-//		appendSql( "locate(" );
-//		function.getPatternString().accept( this );
-//		appendSql( COMA_SEPARATOR );
-//		function.getStringToSearch().accept( this );
-//		if ( function.getStartPosition() != null ) {
-//			appendSql( COMA_SEPARATOR );
-//			function.getStartPosition().accept( this );
-//		}
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitLowerFunction(LowerFunction function) {
-//		appendSql( "lower(" );
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitMaxFunction(MaxFunction function) {
-//		appendSql( "max(" );
-//		if ( function.isDistinct() ) {
-//			appendSql( DISTINCT_KEYWORD );
-//		}
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitMinFunction(MinFunction function) {
-//		appendSql( "min(" );
-//		if ( function.isDistinct() ) {
-//			appendSql( DISTINCT_KEYWORD );
-//		}
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitModFunction(ModFunction function) {
-//		sqlAppender.appendSql( "mod(" );
-//		function.getDividend().accept( this );
-//		sqlAppender.appendSql( COMA_SEPARATOR );
-//		function.getDivisor().accept( this );
-//		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitSqrtFunction(SqrtFunction function) {
-//		appendSql( "sqrt(" );
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitSumFunction(SumFunction function) {
-//		appendSql( "sum(" );
-//		if ( function.isDistinct() ) {
-//			appendSql( DISTINCT_KEYWORD );
-//		}
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitTrimFunction(TrimFunction function) {
-//		sqlAppender.appendSql( "trim(" );
-//		sqlAppender.appendSql( function.getSpecification().toSqlText() );
-//		sqlAppender.appendSql( EMPTY_STRING_SEPARATOR );
-//		function.getTrimCharacter().accept( this );
-//		sqlAppender.appendSql( FROM_KEYWORD );
-//		function.getSource().accept( this );
-//		sqlAppender.appendSql( CLOSE_PARENTHESIS );
-//
-//	}
-//
-//	@Override
-//	@SuppressWarnings("unchecked")
-//	public void visitUpperFunction(UpperFunction function) {
-//		appendSql( "upper(" );
-//		function.getArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	public void visitCoalesceFunction(CoalesceFunction coalesceExpression) {
-//		appendSql( "coalesce(" );
-//		String separator = NO_SEPARATOR;
-//		for ( Expression expression : coalesceExpression.getValues() ) {
-//			appendSql( separator );
-//			expression.accept( this );
-//			separator = COMA_SEPARATOR;
-//		}
-//
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-//
-//	@Override
-//	public void visitNullifFunction(NullifFunction function) {
-//		appendSql( "nullif(" );
-//		function.getFirstArgument().accept( this );
-//		appendSql( COMA_SEPARATOR );
-//		function.getSecondArgument().accept( this );
-//		appendSql( CLOSE_PARENTHESIS );
-//	}
-
 
 	@Override
 	public void visitEntityTypeLiteral(EntityTypeLiteral expression) {
@@ -4179,7 +3924,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
-			// todo : not sure we allow this "higher up"
 			appendSql( SqlAppender.NULL_KEYWORD );
 		}
 		else {
@@ -4199,12 +3943,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalArgumentException( "Can't render parameter as literal, no literal formatter found" );
 			}
 			else {
-				appendSql(
-						literalFormatter.toJdbcLiteral(
-								literalValue,
-								dialect,
-								getWrapperOptions()
-						)
+				literalFormatter.appendJdbcLiteral(
+						this,
+						literalValue,
+						dialect,
+						getWrapperOptions()
 				);
 			}
 		}
@@ -4248,7 +3991,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// Most databases do not support boolean expressions in a predicate context, so we render `expr=true`
 		booleanExpressionPredicate.getExpression().accept( this );
 		appendSql( '=' );
-		appendSql( getDialect().toBooleanValueString( true ) );
+		getDialect().appendBooleanValueString( this, true );
 	}
 
 	@Override
@@ -4314,7 +4057,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						ComparisonOperator.NOT_EQUAL :
 						ComparisonOperator.EQUAL;
 				// Some DBs like Oracle support tuples only for the IN subquery predicate
-				if ( supportsRowValueConstructorSyntaxInInSubQuery() && dialect.supportsUnionAll() ) {
+				if ( supportsRowValueConstructorSyntaxInInSubQuery() && getDialect().supportsUnionAll() ) {
 					inListPredicate.getTestExpression().accept( this );
 					if ( inListPredicate.isNegated() ) {
 						appendSql( " not" );
@@ -4527,7 +4270,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				visitSelectClause( subQuery.getSelectClause() );
 				visitFromClause( subQuery.getFromClause() );
 				visitWhereClause( subQuery );
-				visitGroupByClause( subQuery, dialect.getGroupBySelectItemReferenceStrategy() );
+				visitGroupByClause( subQuery, getDialect().getGroupBySelectItemReferenceStrategy() );
 				visitHavingClause( subQuery );
 
 				appendSql( " order by " );
@@ -4544,7 +4287,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( order );
 				for ( int i = 1; i < sqlSelections.size(); i++ ) {
 					appendSql( COMA_SEPARATOR_CHAR );
-					appendSql( Integer.toString( i + 1 ) );
+					appendSql( i + 1 );
 					appendSql( order );
 				}
 				renderFetch( ONE_LITERAL, null, FetchClauseType.ROWS_ONLY );
@@ -4613,13 +4356,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else {
-			if (dialect.supportsCaseInsensitiveLike()) {
+			if (getDialect().supportsCaseInsensitiveLike()) {
 				likePredicate.getMatchExpression().accept( this );
 				if ( likePredicate.isNegated() ) {
 					appendSql( " not" );
 				}
 				appendSql( WHITESPACE );
-				appendSql( dialect.getCaseInsensitiveLike() );
+				appendSql( getDialect().getCaseInsensitiveLike() );
 				appendSql( WHITESPACE );
 				likePredicate.getPattern().accept( this );
 				if ( likePredicate.getEscapeCharacter() != null ) {
@@ -4637,7 +4380,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	protected void renderCaseInsensitiveLikeEmulation(Expression lhs, Expression rhs, Expression escapeCharacter, boolean negated) {
 		//LOWER(lhs) operator LOWER(rhs)
-		appendSql( dialect.getLowercaseFunction() );
+		appendSql( getDialect().getLowercaseFunction() );
 		appendSql( OPEN_PARENTHESIS );
 		lhs.accept( this );
 		appendSql( CLOSE_PARENTHESIS );
@@ -4645,7 +4388,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( " not" );
 		}
 		appendSql( " like " );
-		appendSql( dialect.getLowercaseFunction() );
+		appendSql( getDialect().getLowercaseFunction() );
 		appendSql( OPEN_PARENTHESIS );
 		rhs.accept( this );
 		appendSql( CLOSE_PARENTHESIS );

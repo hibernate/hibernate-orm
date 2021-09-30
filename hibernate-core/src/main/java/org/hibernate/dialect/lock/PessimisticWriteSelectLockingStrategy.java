@@ -33,7 +33,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * This class is a clone of SelectLockingStrategy.
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
- * @see org.hibernate.dialect.Dialect#appendLockHint(LockMode, String)
+ * @see org.hibernate.dialect.Dialect#appendLockHint(LockOptions, String)
  *
  * @author Steve Ebersole
  * @author Scott Marlow
@@ -106,7 +106,7 @@ public class PessimisticWriteSelectLockingStrategy extends AbstractSelectLocking
 		final SessionFactoryImplementor factory = getLockable().getFactory();
 		final LockOptions lockOptions = new LockOptions( getLockMode() );
 		lockOptions.setTimeOut( lockTimeout );
-		final SimpleSelect select = new SimpleSelect( factory.getDialect() )
+		final SimpleSelect select = new SimpleSelect( factory.getJdbcServices().getDialect() )
 				.setLockOptions( lockOptions )
 				.setTableName( getLockable().getRootTableName() )
 				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )

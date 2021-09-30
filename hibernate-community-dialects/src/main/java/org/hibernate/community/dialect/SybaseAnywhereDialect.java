@@ -8,7 +8,6 @@ package org.hibernate.community.dialect;
 
 
 import org.hibernate.LockOptions;
-import org.hibernate.dialect.GroupByConstantRenderingStrategy;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -125,23 +124,8 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public String getFromDual() {
-		return "from sys.dummy";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
-	}
-
-	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
 		return new SybaseAnywhereIdentityColumnSupport();
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
-		return getVersion() >= 1000;
 	}
 
 	@Override
@@ -183,8 +167,4 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 		return TopLimitHandler.INSTANCE;
 	}
 
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
-	}
 }

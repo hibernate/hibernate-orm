@@ -176,16 +176,6 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
-	}
-
-	@Override
 	public boolean supportsPartitionBy() {
 		return true;
 	}
@@ -585,11 +575,6 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getVersion() >= 2010;
-	}
-
-	@Override
-	public boolean forUpdateOfColumns() {
 		return getVersion() >= 2010;
 	}
 

@@ -15,6 +15,7 @@ import java.sql.Types;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
+import org.hibernate.LockOptions;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.InitCommand;
@@ -272,7 +273,7 @@ public class TableStructure implements DatabaseStructure {
 
 
 		this.selectQuery = "select " + valueColumnNameText + " as id_val" +
-				" from " + dialect.appendLockHint( LockMode.PESSIMISTIC_WRITE, tableNameText ) +
+				" from " + dialect.appendLockHint( new LockOptions( LockMode.PESSIMISTIC_WRITE ), tableNameText ) +
 				dialect.getForUpdateString();
 
 		this.updateQuery = "update " + tableNameText +

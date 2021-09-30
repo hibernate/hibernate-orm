@@ -720,45 +720,6 @@ public class SpannerDialect extends Dialect {
 		return NOOP_UNIQUE_DELEGATE;
 	}
 
-	/**
-	 * The Cloud Spanner Hibernate Dialect does not currently support UNIQUE restrictions.
-	 *
-	 * @return {@code false}.
-	 */
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsUnique() {
-		return false;
-	}
-
-	/**
-	 * The Cloud Spanner Hibernate Dialect does not currently support UNIQUE restrictions.
-	 *
-	 * @return {@code false}.
-	 */
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsNotNullUnique() {
-		return false;
-	}
-
-	/**
-	 * The Cloud Spanner Hibernate Dialect does not currently support UNIQUE restrictions.
-	 *
-	 * @return {@code false}.
-	 */
-	@Override
-	@SuppressWarnings("deprecation")
-	public boolean supportsUniqueConstraintInCreateAlterTable() {
-		return false;
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public String getAddUniqueConstraintString(String constraintName) {
-		return "";
-	}
-
 	@Override
 	public boolean supportsCircularCascadeDeleteConstraints() {
 		return false;

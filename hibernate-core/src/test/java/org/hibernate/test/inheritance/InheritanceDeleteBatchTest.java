@@ -18,8 +18,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.query.sqm.mutation.internal.inline.InlineStrategy;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Before;
@@ -32,7 +30,6 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 /**
  * @author Andrea Boriero
  */
-@RequiresDialectFeature(DialectChecks.SupportsRowValueConstructorSyntaxInInListCheck.class)
 @TestForIssue(jiraKey = "HHH-13214")
 public class InheritanceDeleteBatchTest extends BaseCoreFunctionalTestCase {
 

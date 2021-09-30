@@ -174,7 +174,7 @@ public class SequenceGenerator
 
 	@Override
 	public String determineBulkInsertionIdentifierGenerationSelectFragment(Dialect dialect) {
-		return dialect.getSelectSequenceNextValString( getSequenceName() );
+		return dialect.getSequenceSupport().getSelectSequenceNextValString( getSequenceName() );
 	}
 
 	@Override

@@ -14,19 +14,9 @@ import org.hibernate.type.Type;
  * @author Steve Ebersole
  */
 public interface DiscriminatorMetadata {
-	/**
-	 * Get the sql fragment that is used to determine the actual discriminator value for a row.
-	 *
-	 * @param sqlQualificationAlias The qualification alias to append to any columns references in
-	 * the generated fragment.
-	 *
-	 * @return The fragment
-	 */
-	public String getSqlFragment(String sqlQualificationAlias);
 
 	/**
-	 * Get the type used to resolve the actual discriminator value resulting from
-	 * {@link #getSqlFragment} back into a {@link Class} reference.
+	 * Get the type used to resolve the actual discriminator value.
 	 *
 	 * @return The resolution type.
 	 */

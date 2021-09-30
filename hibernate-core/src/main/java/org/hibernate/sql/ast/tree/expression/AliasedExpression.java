@@ -12,31 +12,30 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 
 /**
- * A wrapper for a literal to render as parameter through a cast function.
- *
- * @see org.hibernate.sql.ast.spi.AbstractSqlAstTranslator
+ * A wrapper for an expression that also renders an alias.
  *
  * @author Christian Beikov
  */
-public class LiteralAsParameter<T> implements SelfRenderingExpression {
+public class AliasedExpression implements SelfRenderingExpression {
 
-	private final Literal literal;
+	private final Expression expression;
+	private final String alias;
 
-	public LiteralAsParameter(Literal literal) {
-		this.literal = literal;
+	public AliasedExpression(Expression expression, String alias) {
+		this.expression = expression;
+		this.alias = alias;
 	}
 
 	@Override
 	public void renderToSql(SqlAppender sqlAppender, SqlAstTranslator<?> walker, SessionFactoryImplementor sessionFactory) {
-		sqlAppender.appendSql( "?" );
+		expression.accept( walker );
+		sqlAppender.appendSql( ' ' );
+		sqlAppender.appendSql( alias );
 	}
 
 	@Override
 	public JdbcMappingContainer getExpressionType() {
-		return literal.getExpressionType();
+		return expression.getExpressionType();
 	}
 
-	public Literal getLiteral() {
-		return literal;
-	}
 }

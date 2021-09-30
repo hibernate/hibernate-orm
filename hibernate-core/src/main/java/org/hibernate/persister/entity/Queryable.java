@@ -5,7 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.persister.entity;
-import org.hibernate.sql.SelectFragment;
 
 /**
  * Extends the generic <tt>EntityPersister</tt> contract to add
@@ -37,16 +36,6 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 	 */
 	public String getDiscriminatorSQLValue();
 
-	/**
-	 * Given a query alias and an identifying suffix, render the identifier select fragment.
-	 */
-	public String identifierSelectFragment(String name, String suffix);
-	/**
-	 * Given a query alias and an identifying suffix, render the property select fragment.
-	 */
-	public String propertySelectFragment(String alias, String suffix, boolean allProperties);
-
-	public SelectFragment propertySelectFragmentFragment(String alias, String suffix, boolean allProperties);
 	/**
 	 * Get the names of columns used to persist the identifier
 	 */

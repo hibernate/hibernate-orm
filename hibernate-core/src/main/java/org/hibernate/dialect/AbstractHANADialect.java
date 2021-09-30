@@ -744,6 +744,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		this.clobTypeDescriptor = new HANAClobTypeDescriptor( MAX_LOB_PREFETCH_SIZE_DEFAULT_VALUE,
 				useUnicodeStringTypesDefault().booleanValue() );
 
+		// Note that 38 is the maximum precision HANA supports
 		registerColumnType( Types.DECIMAL, "decimal($p, $s)" );
 		//there is no 'numeric' type in HANA
 		registerColumnType( Types.NUMERIC, "decimal($p, $s)" );
@@ -946,11 +947,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean forUpdateOfColumns() {
-		return true;
-	}
-
-	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.COLUMN;
 	}
@@ -1016,11 +1012,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String getForUpdateNowaitString() {
 		return getForUpdateString() + " nowait";
-	}
-
-	@Override
-	public String getNotExpression(final String expression) {
-		return "not (" + expression + ")";
 	}
 
 	@Override
@@ -1168,11 +1159,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsExistsInSelect() {
 		return false;
 	}
@@ -1206,16 +1192,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public boolean dropConstraints() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return true;
 	}
 
 	@Override
@@ -1373,16 +1349,6 @@ public abstract class AbstractHANADialect extends Dialect {
 					+ " s, because HANA requires the timeout in seconds" );
 		}
 		return timeoutInSeconds;
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from sys.dummy";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
 	}
 
 	@Override
@@ -1700,8 +1666,4 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	protected abstract Boolean useUnicodeStringTypesDefault();
 
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
-	}
 }

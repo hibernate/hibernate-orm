@@ -13,6 +13,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.internal.util.StringHelper;
 
 /**
@@ -41,7 +42,7 @@ public class ForUpdateFragment {
 			final LockMode lockMode = me.getValue();
 			if ( LockMode.READ.lessThan( lockMode ) ) {
 				final String tableAlias = me.getKey();
-				if ( dialect.forUpdateOfColumns() ) {
+				if ( dialect.getWriteRowLockStrategy() == RowLockStrategy.COLUMN ) {
 					String[] keyColumns = keyColumnNames.get( tableAlias ); //use the id column alias
 					if ( keyColumns == null ) {
 						throw new IllegalArgumentException( "alias not found: " + tableAlias );

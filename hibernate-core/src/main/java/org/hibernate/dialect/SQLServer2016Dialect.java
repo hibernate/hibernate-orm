@@ -28,11 +28,6 @@ public class SQLServer2016Dialect extends SQLServerDialect {
 	}
 
 	@Override
-	public String getDropSequenceString(String sequenceName) {
-		return "drop sequence if exists " + sequenceName;
-	}
-
-	@Override
 	public String[] getDropSchemaCommand(String schemaName) {
 		return new String[] {"drop schema if exists " + schemaName};
 	}

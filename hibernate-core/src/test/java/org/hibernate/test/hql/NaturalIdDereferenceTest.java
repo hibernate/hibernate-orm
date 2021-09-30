@@ -7,14 +7,16 @@
 
 package org.hibernate.test.hql;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,11 +28,9 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -38,76 +38,100 @@ import static org.junit.Assert.assertFalse;
  * @author Jan-Willem Gmelig Meyling
  * @author Christian Beikov
  */
-public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
+@DomainModel(
+		annotatedClasses = {
+				NaturalIdDereferenceTest.Book.class,
+				NaturalIdDereferenceTest.BookRef.class,
+				NaturalIdDereferenceTest.BookRefRef.class
+		}
+)
+@SessionFactory(statementInspectorClass = SQLStatementInspector.class)
+public class NaturalIdDereferenceTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Book.class, BookRef.class, BookRefRef.class };
-	}
+	@BeforeEach
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Book book = new Book();
+					book.isbn = "abcd";
+					session.persist( book );
 
-	@Before
-	public void setUp() {
-		doInHibernate( this::sessionFactory, session -> {
-			Book book = new Book();
-			book.isbn = "abcd";
-			session.persist( book );
+					BookRef bookRef = new BookRef();
+					bookRef.naturalBook = bookRef.normalBook = book;
+					session.persist( bookRef );
 
-			BookRef bookRef = new BookRef();
-			bookRef.naturalBook = bookRef.normalBook = book;
-			session.persist( bookRef );
-
-			session.flush();
-			session.clear();
-		} );
-	}
-
-	@Test
-	public void naturalIdDereferenceTest() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r.normalBook.isbn FROM BookRef r" );
-			List resultList = query.getResultList();
-			assertFalse( resultList.isEmpty() );
-			assertEquals( 1, getSQLJoinCount( query ) );
-		} );
+					session.flush();
+					session.clear();
+				}
+		);
 	}
 
 	@Test
-	public void normalIdDereferenceFromAlias() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r.normalBook.id FROM BookRef r" );
-			List resultList = query.getResultList();
-			assertFalse( resultList.isEmpty() );
-			assertEquals( 0, getSQLJoinCount( query ) );
-		} );
-	}
-
-
-	@Test
-	public void naturalIdDereferenceFromAlias() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r.naturalBook.isbn FROM BookRef r" );
-			List resultList = query.getResultList();
-			assertFalse( resultList.isEmpty() );
-			assertEquals( 0, getSQLJoinCount( query ) );
-		} );
+	public void naturalIdDereferenceTest(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r.normalBook.isbn FROM BookRef r" );
+					List resultList = query.getResultList();
+					assertFalse( resultList.isEmpty() );
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	@Test
-	public void normalIdDereferenceFromImplicitJoin() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.id FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 1, getSQLJoinCount( query ) );
-		} );
+	public void normalIdDereferenceFromAlias(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r.normalBook.id FROM BookRef r" );
+					List resultList = query.getResultList();
+					assertFalse( resultList.isEmpty() );
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 0, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	@Test
-	public void naturalIdDereferenceFromImplicitJoin() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.normalBookRef.naturalBook.isbn FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 1, getSQLJoinCount( query ) );
-		} );
+	public void naturalIdDereferenceFromAlias(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r.naturalBook.isbn FROM BookRef r" );
+					List resultList = query.getResultList();
+					assertFalse( resultList.isEmpty() );
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 0, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	public void normalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.id FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
+	}
+
+	@Test
+	public void naturalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.normalBookRef.naturalBook.isbn FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
@@ -116,43 +140,59 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 	 * can be dereferenced without a single join.
 	 */
 	@Test
-	public void nestedNaturalIdDereferenceFromImplicitJoin() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.isbn FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 0, getSQLJoinCount( query ) );
-		} );
+	public void nestedNaturalIdDereferenceFromImplicitJoin(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.isbn FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 0, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
-	 * Adjustment of {@link #nestedNaturalIdDereferenceFromImplicitJoin()}, that instead selects the {@code id} property,
+	 * Adjustment of {@link #nestedNaturalIdDereferenceFromImplicitJoin(SessionFactoryScope)}, that instead selects the {@code id} property,
 	 * which requires a single join to {@code Book}.
 	 */
 	@Test
-	public void nestedNaturalIdDereferenceFromImplicitJoin2() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.id FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 1, getSQLJoinCount( query ) );
-		} );
+	public void nestedNaturalIdDereferenceFromImplicitJoin2(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook.id FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	@Test
-	public void doNotDereferenceNaturalIdIfIsReferenceToPrimaryKey() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.isbn FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 2, getSQLJoinCount( query ) );
-		} );
+	public void doNotDereferenceNaturalIdIfIsReferenceToPrimaryKey(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook.isbn FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	@Test
-	public void selectedEntityIsNotDereferencedForPrimaryKey() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 2, getSQLJoinCount( query ) );
-		} );
+	public void selectedEntityIsNotDereferencedForPrimaryKey(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.normalBookRef.normalBook FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
@@ -167,47 +207,59 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 	 * so bookRefRef.naturalBookRef.naturalBook yields null which is expected.
 	 */
 	@Test
-	public void selectedEntityIsNotDereferencedForNaturalId() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook FROM BookRefRef r2" );
-			query.getResultList();
-			assertEquals( 1, getSQLJoinCount( query ) );
-		} );
+	public void selectedEntityIsNotDereferencedForNaturalId(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT r2.naturalBookRef.naturalBook FROM BookRefRef r2" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
 	 * {@code r2.normalBookRef.normalBook.id} requires 1 join as seen in {@link #normalIdDereferenceFromImplicitJoin}.
-	 * {@code r3.naturalBookRef.naturalBook.isbn} requires 1 join as seen in {@link #selectedEntityIsNotDereferencedForNaturalId()}.
+	 * {@code r3.naturalBookRef.naturalBook.isbn} requires 1 join as seen in {@link #selectedEntityIsNotDereferencedForNaturalId(SessionFactoryScope)} .
 	 * An additional join is added to join BookRef once more on {@code r2.normalBookRef.normalBook.isbn = r3.naturalBookRef.naturalBook.isbn}.
 	 * This results in three joins in total.
 	 */
 	@Test
-	public void dereferenceNaturalIdInJoin() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery(
-					"SELECT r2.normalBookRef.normalBook.id, r3.naturalBookRef.naturalBook.isbn " +
-							"FROM BookRefRef r2 JOIN BookRefRef r3 ON r2.normalBookRef.normalBook.isbn = r3.naturalBookRef.naturalBook.isbn" );
-			query.getResultList();
-			// r2.normalBookRef.normalBook.id requires
-			assertEquals( 3, getSQLJoinCount( query ) );
-		} );
+	public void dereferenceNaturalIdInJoin(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery(
+							"SELECT r2.normalBookRef.normalBook.id, r3.naturalBookRef.naturalBook.isbn " +
+									"FROM BookRefRef r2 JOIN BookRefRef r3 ON r2.normalBookRef.normalBook.isbn = r3.naturalBookRef.naturalBook.isbn" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					// r2.normalBookRef.normalBook.id requires
+					assertEquals( 3, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
 	 * {@code BookRefRef} is joined with {@code BookRef} on {@code b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn}.
-	 * {@code b.naturalBook.isbn} can be dereferenced without any join ({@link #naturalIdDereferenceFromAlias()}).
-	 * {@code a.naturalBookRef.naturalBook.isbn} can be dereferenced without any join ({@link #nestedNaturalIdDereferenceFromImplicitJoin()}).
+	 * {@code b.naturalBook.isbn} can be dereferenced without any join ({@link #naturalIdDereferenceFromAlias(SessionFactoryScope)} .
+	 * {@code a.naturalBookRef.naturalBook.isbn} can be dereferenced without any join ({@link #nestedNaturalIdDereferenceFromImplicitJoin(SessionFactoryScope)} .
 	 * We finally select all properties of {@code b.normalBook}, which requires {@code Book} to be joined.
 	 * This results in two joins in total.
 	 */
 	@Test
-	public void dereferenceNaturalIdInJoin2() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
-													   "JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
-			query.getResultList();
-			assertEquals( 2, getSQLJoinCount( query ) );
-		} );
+	public void dereferenceNaturalIdInJoin2(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery( "SELECT b.normalBook FROM BookRefRef a " +
+															   "JOIN BookRef b ON b.naturalBook.isbn = a.naturalBookRef.naturalBook.isbn" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
@@ -217,13 +269,17 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 	 * As a result, only a single join is required.
 	 */
 	@Test
-	public void dereferenceNaturalIdInJoin3() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery(
-					"SELECT r.normalBook.isbn FROM BookRef r JOIN r.normalBook b ON b.isbn = r.normalBook.isbn" );
-			query.getResultList();
-			assertEquals( 1, getSQLJoinCount( query ) );
-		} );
+	public void dereferenceNaturalIdInJoin3(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery(
+							"SELECT r.normalBook.isbn FROM BookRef r JOIN r.normalBook b ON b.isbn = r.normalBook.isbn" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 1, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	/**
@@ -234,89 +290,29 @@ public class NaturalIdDereferenceTest extends BaseCoreFunctionalTestCase {
 	 * As a result, 2 joins are required.
 	 */
 	@Test
-	public void dereferenceNaturalIdInJoin4() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery(
-					"SELECT r.normalBook.isbn FROM BookRef r JOIN Book b ON b.isbn = r.normalBook.isbn" );
-			query.getResultList();
-			assertEquals( 2, getSQLJoinCount( query ) );
-		} );
+	public void dereferenceNaturalIdInJoin4(SessionFactoryScope scope) {
+		SQLStatementInspector sqlStatementInterceptor = (SQLStatementInspector) scope.getStatementInspector();
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery(
+							"SELECT r.normalBook.isbn FROM BookRef r JOIN Book b ON b.isbn = r.normalBook.isbn" );
+					query.getResultList();
+					sqlStatementInterceptor.assertExecutedCount( 1 );
+					assertEquals( 2, sqlStatementInterceptor.getNumberOfJoins( 0 ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-13752")
-	public void deleteWithNaturalIdBasedJoinTable() {
-		doInHibernate( this::sessionFactory, session -> {
-			Query query = session.createQuery(
-				"DELETE FROM Book b WHERE 1=0" );
-			query.executeUpdate();
-		} );
-	}
-
-	private int getSQLJoinCount(Query query) {
-		String sqlQuery = getSQLQuery( query ).toLowerCase();
-
-		int lastIndex = 0;
-		int count = 0;
-
-		while ( lastIndex != -1 ) {
-			lastIndex = sqlQuery.indexOf( " join ", lastIndex );
-
-			if ( lastIndex != -1 ) {
-				count++;
-				lastIndex += " join ".length();
-			}
-		}
-
-		// we also have to deal with different cross join operators: in the case of Sybase, it's ", "
-		String crossJoinOperator = getDialect().getCrossJoinSeparator();
-
-		if ( !crossJoinOperator.contains( " join " ) ) {
-			int fromIndex = sqlQuery.indexOf( " from " );
-			if ( fromIndex == -1 ) {
-				return count;
-			}
-
-			int whereIndex = sqlQuery.indexOf( " where " );
-			lastIndex = fromIndex + " from ".length();
-			int endIndex = whereIndex > 0 ? whereIndex : sqlQuery.length();
-
-			while ( lastIndex != -1 && lastIndex <= endIndex ) {
-				lastIndex = sqlQuery.indexOf( crossJoinOperator, lastIndex );
-
-				if ( lastIndex != -1 ) {
-					count++;
-					lastIndex += crossJoinOperator.length();
+	public void deleteWithNaturalIdBasedJoinTable(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Query query = session.createQuery(
+							"DELETE FROM Book b WHERE 1=0" );
+					query.executeUpdate();
 				}
-			}
-		}
-
-		return count;
-	}
-
-	private String getSQLQuery(Query query) {
-//		FilterTranslator naturalIdJoinGenerationTest1 = this.sessionFactory()
-//				.getSettings()
-//				.getQueryTranslatorFactory()
-//				.createFilterTranslator(
-//						"nid",
-//						query.getQueryString(),
-//						Collections.emptyMap(),
-//						this.sessionFactory()
-//				);
-//		naturalIdJoinGenerationTest1.compile( Collections.emptyMap(), false );
-//		return naturalIdJoinGenerationTest1.getSQLString();
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	protected boolean isCleanupTestDataRequired() {
-		return true;
-	}
-
-	@Override
-	protected boolean isCleanupTestDataUsingBulkDelete() {
-		return true;
+		);
 	}
 
 	@Entity(name = "Book")

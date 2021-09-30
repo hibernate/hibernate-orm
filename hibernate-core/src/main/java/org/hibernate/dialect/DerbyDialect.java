@@ -43,8 +43,6 @@ import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStra
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.sql.CaseFragment;
-import org.hibernate.sql.DerbyCaseFragment;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -366,19 +364,6 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String getCrossJoinSeparator() {
-		//Derby 10.5 doesn't support 'cross join' syntax
-		//Derby 10.6 and later support "cross join"
-		return getVersion() < 1060 ? ", " : super.getCrossJoinSeparator();
-	}
-
-	@Override
-	@SuppressWarnings("deprecation")
-	public CaseFragment createCaseFragment() {
-		return new DerbyCaseFragment();
-	}
-
-	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion() < 1060
 				? super.getSequenceSupport()
@@ -407,16 +392,6 @@ public class DerbyDialect extends Dialect {
 	@Override
 	public String getSelectClauseNullString(int sqlType) {
 		return DB2Dialect.selectNullString( sqlType );
-	}
-
-	@Override
-	public String getFromDual() {
-		return "from (values 0) as dual";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
 	}
 
 	@Override
@@ -495,12 +470,6 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTuplesInSubqueries() {
-		//checked on Derby 10.14
-		return false;
-	}
-
-	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {
 		//TODO: check this
 		return true;
@@ -510,18 +479,6 @@ public class DerbyDialect extends Dialect {
 	public boolean supportsParametersInInsertSelect() {
 		//TODO: check this
 		return true;
-	}
-
-	@Override
-	public boolean requiresCastingOfParametersInSelectClause() {
-		//checked on Derby 10.14
-		return true;
-	}
-
-	@Override
-	public boolean supportsEmptyInList() {
-		//checked on Derby 10.14
-		return false;
 	}
 
 	@Override
@@ -565,11 +522,6 @@ public class DerbyDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
-	}
-
-	@Override
-	public String getNotExpression( String expression ) {
-		return "not (" + expression + ")";
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -859,11 +811,6 @@ public class DerbyDialect extends Dialect {
 				TempTableDdlTransactionHandling.NONE,
 				runtimeModelCreationContext.getSessionFactory()
 		);
-	}
-
-	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.FUNCTION;
 	}
 
 	@Override

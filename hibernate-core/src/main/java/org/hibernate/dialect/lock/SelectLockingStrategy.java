@@ -29,7 +29,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
  * SELECT ... FOR UPDATE syntax.
  *
  * @see org.hibernate.dialect.Dialect#getForUpdateString(LockMode)
- * @see org.hibernate.dialect.Dialect#appendLockHint(LockMode, String)
+ * @see org.hibernate.dialect.Dialect#appendLockHint(LockOptions, String)
  *
  * @author Steve Ebersole
  * @since 3.2
@@ -102,7 +102,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 		final SessionFactoryImplementor factory = getLockable().getFactory();
 		final LockOptions lockOptions = new LockOptions( getLockMode() );
 		lockOptions.setTimeOut( timeout );
-		final SimpleSelect select = new SimpleSelect( factory.getDialect() )
+		final SimpleSelect select = new SimpleSelect( factory.getJdbcServices().getDialect() )
 				.setLockOptions( lockOptions )
 				.setTableName( getLockable().getRootTableName() )
 				.addColumn( getLockable().getRootTableIdentifierColumnNames()[0] )

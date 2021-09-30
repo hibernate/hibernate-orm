@@ -21,25 +21,6 @@ import org.hibernate.type.AssociationType;
  * @author Gavin King
  */
 public final class JoinHelper {
-	/**
-	 * Get the qualified (prefixed by alias) names of the columns of the owning entity which are to be used in the join
-	 *
-	 * @param type The association type for the association that represents the join
-	 * @param alias The left-hand side table alias
-	 * @param property The index of the property that represents the association/join
-	 * @param lhsPersister The persister for the left-hand side of the association/join
-	 * @param mapping The mapping (typically the SessionFactory).
-	 *
-	 * @return The qualified column names.
-	 */
-	public static String[] getAliasedLHSColumnNames(
-			AssociationType type,
-			String alias,
-			int property,
-			OuterJoinLoadable lhsPersister,
-			Mapping mapping) {
-		return getAliasedLHSColumnNames( type, alias, property, 0, lhsPersister, mapping );
-	}
 
 	/**
 	 * Get the unqualified names of the columns of the owning entity which are to be used in the join.
@@ -57,63 +38,6 @@ public final class JoinHelper {
 			OuterJoinLoadable lhsPersister,
 			Mapping mapping) {
 		return getLHSColumnNames( type, property, 0, lhsPersister, mapping );
-	}
-
-	/**
-	 *
-	 */
-	/**
-	 * Get the qualified (prefixed by alias) names of the columns of the owning entity which are to be used in the join
-	 *
-	 * @param associationType The association type for the association that represents the join
-	 * @param columnQualifier The left-hand side table alias
-	 * @param propertyIndex The index of the property that represents the association/join
-	 * @param begin The index for any nested (composites) attributes
-	 * @param lhsPersister The persister for the left-hand side of the association/join
-	 * @param mapping The mapping (typically the SessionFactory).
-	 *
-	 * @return The qualified column names.
-	 */
-	public static String[] getAliasedLHSColumnNames(
-			AssociationType associationType,
-			String columnQualifier,
-			int propertyIndex,
-			int begin,
-			OuterJoinLoadable lhsPersister,
-			Mapping mapping) {
-		if ( associationType.useLHSPrimaryKey() ) {
-			return StringHelper.qualify( columnQualifier, lhsPersister.getIdentifierColumnNames() );
-		}
-		else {
-			final String propertyName = associationType.getLHSPropertyName();
-			if ( propertyName == null ) {
-				return ArrayHelper.slice(
-						toColumns( lhsPersister, columnQualifier, propertyIndex ),
-						begin,
-						associationType.getColumnSpan( mapping )
-				);
-			}
-			else {
-				//bad cast
-				return ( (PropertyMapping) lhsPersister ).toColumns( columnQualifier, propertyName );
-			}
-		}
-	}
-
-	private static String[] toColumns(OuterJoinLoadable persister, String columnQualifier, int propertyIndex) {
-		if ( propertyIndex >= 0 ) {
-			return persister.toColumns( columnQualifier, propertyIndex );
-		}
-		else {
-			final String[] cols = persister.getIdentifierColumnNames();
-			final String[] result = new String[cols.length];
-
-			for ( int j = 0; j < cols.length; j++ ) {
-				result[j] = StringHelper.qualify( columnQualifier, cols[j] );
-			}
-
-			return result;
-		}
 	}
 
 	/**

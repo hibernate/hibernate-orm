@@ -17,7 +17,6 @@ import org.hibernate.type.Type;
  * Implemented by a <tt>EntityPersister</tt> that may be loaded
  * using <tt>Loader</tt>.
  *
- * @see org.hibernate.loader.Loader
  * @author Gavin King
  */
 public interface Loadable extends EntityPersister {
@@ -78,33 +77,6 @@ public interface Loadable extends EntityPersister {
 	 * Does the result set contain rowids?
 	 */
 	boolean hasRowId();
-	
-	/**
-	 * Retrieve property values from one row of a result set
-	 */
-	default Object[] hydrate(
-			ResultSet rs,
-			Object id,
-			Object object,
-			Loadable rootLoadable,
-			String[][] suffixedPropertyColumns,
-			boolean forceEager,
-			SharedSessionContractImplementor session) throws SQLException, HibernateException {
-		return hydrate( rs, id, object, rootLoadable, suffixedPropertyColumns, forceEager, null, session );
-	}
-
-	/**
-	 * Retrieve property values from one row of a result set
-	 */
-	Object[] hydrate(
-			ResultSet rs,
-			Object id,
-			Object object,
-			Loadable rootLoadable,
-			String[][] suffixedPropertyColumns,
-			boolean forceEager,
-			boolean[] propertiesForceEager,
-			SharedSessionContractImplementor session) throws SQLException, HibernateException;
 
 	boolean isAbstract();
 

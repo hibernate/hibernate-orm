@@ -71,7 +71,7 @@ public class PersistentListTest {
 					session2.doWork(
 							connection -> {
 								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
-								SimpleSelect select = new SimpleSelect( sessionFactory.getDialect() )
+								SimpleSelect select = new SimpleSelect( sessionFactory.getJdbcServices().getDialect() )
 										.setTableName( queryableCollection.getTableName() )
 										.addColumn( "NAME" )
 										.addColumn( "LIST_INDEX" )
@@ -131,7 +131,7 @@ public class PersistentListTest {
 					session2.doWork(
 							connection -> {
 								final QueryableCollection queryableCollection = (QueryableCollection) collectionPersister;
-								SimpleSelect select = new SimpleSelect( sessionFactory.getDialect() )
+								SimpleSelect select = new SimpleSelect( sessionFactory.getJdbcServices().getDialect() )
 										.setTableName( queryableCollection.getTableName() )
 										.addColumn( "order_id" )
 										.addColumn( "INDX" )

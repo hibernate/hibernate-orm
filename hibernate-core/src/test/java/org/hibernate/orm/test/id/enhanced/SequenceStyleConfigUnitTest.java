@@ -16,6 +16,9 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.sequence.ANSISequenceSupport;
+import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.DatabaseStructure;
@@ -310,10 +313,6 @@ public class SequenceStyleConfigUnitTest {
 		public int getVersion() {
 			return 0;
 		}
-		@Override
-		public boolean supportsSequences() {
-			return false;
-		}
 	}
 
 	public static class SequenceDialect extends Dialect {
@@ -323,22 +322,20 @@ public class SequenceStyleConfigUnitTest {
 		}
 
 		@Override
-		public boolean supportsSequences() {
-			return true;
-		}
-		@Override
-		public boolean supportsPooledSequences() {
-			return false;
-		}
-		@Override
-		public String getSequenceNextValString(String sequenceName) throws MappingException {
-			return "";
+		public SequenceSupport getSequenceSupport() {
+			return new ANSISequenceSupport() {
+				@Override
+				public boolean supportsPooledSequences() {
+					return false;
+				}
+			};
 		}
 	}
 
 	public static class PooledSequenceDialect extends SequenceDialect {
-		public boolean supportsPooledSequences() {
-			return true;
+		@Override
+		public SequenceSupport getSequenceSupport() {
+			return ANSISequenceSupport.INSTANCE;
 		}
 	}
 

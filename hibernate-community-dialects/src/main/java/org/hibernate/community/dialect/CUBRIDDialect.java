@@ -243,18 +243,6 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String getFromDual() {
-		//TODO: is this really needed?
-		//TODO: would "from table({0})" be better?
-		return "from db_root";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
-	}
-
-	@Override
 	public char openQuote() {
 		return '[';
 	}
@@ -281,11 +269,6 @@ public class CUBRIDDialect extends Dialect {
 
 	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsEmptyInList() {
 		return false;
 	}
 

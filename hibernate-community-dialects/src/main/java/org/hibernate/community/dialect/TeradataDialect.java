@@ -13,7 +13,6 @@ import org.hibernate.boot.model.relational.QualifiedNameImpl;
 import org.hibernate.boot.model.relational.QualifiedTableName;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.GroupByConstantRenderingStrategy;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.Teradata14IdentityColumnSupport;
@@ -348,11 +347,6 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsOrderByInSubquery() {
 		// This is just a guess
 		return false;
@@ -604,8 +598,4 @@ public class TeradataDialect extends Dialect {
 		return TopLimitHandler.INSTANCE;
 	}
 
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
-	}
 }

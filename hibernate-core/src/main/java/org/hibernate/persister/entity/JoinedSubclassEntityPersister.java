@@ -18,7 +18,6 @@ import java.util.Set;
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.access.NaturalIdDataAccess;
@@ -28,7 +27,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.MarkerObject;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Column;
@@ -53,10 +51,8 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.CaseFragment;
 import org.hibernate.sql.InFragment;
 import org.hibernate.sql.Insert;
-import org.hibernate.sql.SelectFragment;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -959,20 +955,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		return tableNames[0];
 	}
 
-	public void addDiscriminatorToSelect(SelectFragment select, String name, String suffix) {
-		if ( hasSubclasses() ) {
-			if ( explicitDiscriminatorColumnName == null ) {
-				select.setExtraSelectList( discriminatorFragment( name ), getDiscriminatorAlias() );
-			}
-			else {
-				if ( getEntityMetamodel().getSuperclass() != null ) {
-					name = generateTableAlias( name, getRootHierarchyClassTableIndex() );
-				}
-				select.addColumn( name, explicitDiscriminatorColumnName, discriminatorAlias );
-			}
-		}
-	}
-
 	private int getRootHierarchyClassTableIndex() {
 		final String rootHierarchyClassTableName = naturalOrderTableNames[0];
 		for ( int i = 0; i < subclassTableNameClosure.length; i++ ) {
@@ -981,20 +963,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 		return 0;
-	}
-
-	private CaseFragment discriminatorFragment(String alias) {
-		CaseFragment cases = getFactory().getJdbcServices().getDialect().createCaseFragment();
-
-		for ( int i = 0; i < discriminatorValues.length; i++ ) {
-			cases.addWhenColumnNotNull(
-					generateTableAlias( alias, notNullColumnTableNumbers[i] ),
-					notNullColumnNames[i],
-					discriminatorValues[i]
-			);
-		}
-
-		return cases;
 	}
 
 	@Override
@@ -1026,20 +994,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	public String[] getIdentifierColumnReaders() {
 		return tableKeyColumnReaders[0];
-	}
-
-	public String[] toColumns(String alias, String propertyName) throws QueryException {
-		if ( ENTITY_CLASS.equals( propertyName ) ) {
-			if ( explicitDiscriminatorColumnName == null ) {
-				return new String[] { discriminatorFragment( alias ).toFragmentString() };
-			}
-			else {
-				return new String[] { StringHelper.qualify( alias, explicitDiscriminatorColumnName ) };
-			}
-		}
-		else {
-			return super.toColumns( alias, propertyName );
-		}
 	}
 
 	protected int[] getPropertyTableNumbersInSelect() {

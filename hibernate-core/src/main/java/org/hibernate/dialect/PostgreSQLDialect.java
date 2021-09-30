@@ -397,11 +397,6 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsRowValueConstructorSyntaxInInList() {
-		return getVersion() >= 820;
-	}
-
-	@Override
 	public boolean supportsPartitionBy() {
 		return getVersion() >= 910;
 	}
@@ -654,11 +649,6 @@ public class PostgreSQLDialect extends Dialect {
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsLobValueChangePropagation() {
 		return false;
 	}
@@ -666,16 +656,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public boolean supportsUnboundedLobLocatorMaterialization() {
 		return false;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntax() {
-		return true;
-	}
-
-	@Override
-	public boolean supportsRowValueConstructorSyntaxInQuantifiedPredicates() {
-		return true;
 	}
 
 	@Override
@@ -942,16 +922,6 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.TABLE;
-	}
-
-	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return getVersion() >= 950 ? GroupBySummarizationRenderingStrategy.FUNCTION : GroupBySummarizationRenderingStrategy.NONE;
-	}
-
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return getVersion() >= 950 ? GroupByConstantRenderingStrategy.EMPTY_GROUPING : GroupByConstantRenderingStrategy.SUBQUERY;
 	}
 
 	@Override

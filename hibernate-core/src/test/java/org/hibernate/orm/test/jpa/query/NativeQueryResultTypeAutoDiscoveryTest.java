@@ -31,6 +31,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
+import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
@@ -128,6 +129,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(value = DerbyDialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(value = DB2Dialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "No support for the tinyint datatype so we use smallint")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );
@@ -154,6 +156,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(value = DB2Dialect.class, comment = "Value is too big for the maximum allowed precision of DB2")
 	@SkipForDialect(value = OracleDialect.class, comment = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "Value is too big for the maximum allowed precision of HANA")
 	public void numericType() {
 		createEntityManagerFactory(
 				NumericEntity.class
@@ -166,6 +169,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(value = DB2Dialect.class, comment = "Value is too big for the maximum allowed precision of DB2")
 	@SkipForDialect(value = OracleDialect.class, comment = "Value is too big for the maximum allowed precision of Oracle")
 	@SkipForDialect(value = AbstractTransactSQLDialect.class, comment = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "Value is too big for the maximum allowed precision of HANA")
 	public void decimalType() {
 		createEntityManagerFactory( DecimalEntity.class );
 		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
@@ -186,6 +190,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps LONGVARCHAR to CLOB")
 	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 maps LONGVARCHAR to CLOB")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase maps LONGVARCHAR to CLOB")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA maps LONGVARCHAR to CLOB")
 	public void longCharType() {
 		createEntityManagerFactory(
 				LongvarcharEntity.class
@@ -223,6 +228,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(value = OracleDialect.class, comment = "Oracle maps LONGVARBINARY to BLOB")
 	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 maps LONGVARBINARY to BLOB")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase maps LONGVARBINARY to BLOB")
+	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA maps LONGVARCHAR to BLOB")
 	public void longBinaryType() {
 		createEntityManagerFactory(
 				LongvarbinaryEntity.class

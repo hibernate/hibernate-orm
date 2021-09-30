@@ -396,17 +396,6 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getFromDual() {
-		return "from (values(0))";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		// This is only supported when the PostgreSQL compatibility is enabled
-		return false;
-	}
-
-	@Override
 	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
 		return version < 200 ? EXTRACTOR_18 : EXTRACTOR_20;
 	}
@@ -620,16 +609,6 @@ public class HSQLDialect extends Dialect {
 	}
 
 	// Overridden informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public boolean supportsEmptyInList() {
-		return false;
-	}
-
-	@Override
-	public boolean requiresCastingOfParametersInSelectClause() {
-		return true;
-	}
 
 	@Override
 	public boolean doesReadCommittedCauseWritersToBlockReaders() {

@@ -33,7 +33,6 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.CastType;
 import org.hibernate.query.FetchClauseType;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -458,11 +457,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public GroupBySummarizationRenderingStrategy getGroupBySummarizationRenderingStrategy() {
-		return GroupBySummarizationRenderingStrategy.CLAUSE;
-	}
-
-	@Override
 	public SequenceSupport getSequenceSupport() {
 		if ( getVersion() < 11 ) {
 			return NoSequenceSupport.INSTANCE;
@@ -527,32 +521,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion() >= 11;
-	}
-
-	@Override
-	public String renderOrderByElement(String expression, String collation, String order, NullPrecedence nulls) {
-		if ( getVersion() < 10 ) {
-			return super.renderOrderByElement( expression, collation, order, nulls );
-		}
-
-		final StringBuilder orderByElement = new StringBuilder();
-
-		if ( nulls != null && !NullPrecedence.NONE.equals( nulls ) ) {
-			// Workaround for NULLS FIRST / LAST support.
-			orderByElement.append( "case when " ).append( expression ).append( " is null then " );
-			if ( NullPrecedence.FIRST.equals( nulls ) ) {
-				orderByElement.append( "0 else 1" );
-			}
-			else {
-				orderByElement.append( "1 else 0" );
-			}
-			orderByElement.append( " end," );
-		}
-
-		// Nulls precedence has already been handled so passing NONE value.
-		orderByElement.append( super.renderOrderByElement( expression, collation, order, NullPrecedence.NONE ) );
-
-		return orderByElement.toString();
 	}
 
 	@Override
@@ -831,19 +799,6 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			default:
 				return "";
 		}
-	}
-
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.EMPTY_GROUPING;
-	}
-
-	@Override
-	protected String getDropSequenceString(String sequenceName) throws MappingException {
-		if ( getVersion() >= 16 ) {
-			return "drop sequence if exists " + sequenceName;
-		}
-		return super.getDropSequenceString( sequenceName );
 	}
 
 	@Override

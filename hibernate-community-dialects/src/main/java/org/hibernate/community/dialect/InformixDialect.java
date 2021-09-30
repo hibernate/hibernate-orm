@@ -8,7 +8,6 @@ package org.hibernate.community.dialect;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.GroupByConstantRenderingStrategy;
 import org.hibernate.dialect.Replacer;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -322,16 +321,6 @@ public class InformixDialect extends Dialect {
 	}
 
 	@Override
-	public String getFromDual() {
-		return "from (select 0 from systables where tabid=1) as dual";
-	}
-
-	@Override
-	public boolean supportsSelectQueryWithoutFromClause() {
-		return false;
-	}
-
-	@Override
 	public boolean supportsOrderByInSubquery() {
 		// This is just a guess
 		return false;
@@ -392,11 +381,6 @@ public class InformixDialect extends Dialect {
 	@Override
 	public String getCurrentTimestampSelectString() {
 		return "select distinct current timestamp from informix.systables";
-	}
-
-	@Override
-	public GroupByConstantRenderingStrategy getGroupByConstantRenderingStrategy() {
-		return GroupByConstantRenderingStrategy.COLUMN_REFERENCE;
 	}
 
 	@Override

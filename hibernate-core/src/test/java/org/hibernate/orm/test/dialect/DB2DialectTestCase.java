@@ -10,7 +10,8 @@ import java.sql.Types;
 
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.engine.jdbc.Size;
-import org.hibernate.engine.spi.RowSelection;
+import org.hibernate.query.Limit;
+
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
@@ -70,7 +71,7 @@ public class DB2DialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-12369")
 	public void testIntegerOverflowForMaxResults() {
-		RowSelection rowSelection = new RowSelection();
+		Limit rowSelection = new Limit();
 		rowSelection.setFirstRow(1);
 		rowSelection.setMaxRows(Integer.MAX_VALUE);
 		String sql = dialect.getLimitHandler().processSql( "select a.id from tbl_a a order by a.id", rowSelection );

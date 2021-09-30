@@ -32,23 +32,23 @@ public abstract class AbstractStandardCallableStatementSupport implements Callab
 			SharedSessionContractImplementor session) {
 
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
+		final RefCursorSupport refCursorSupport = procedureCall.getSession().getFactory().getServiceRegistry()
+				.getService( RefCursorSupport.class );
 		try {
 			for ( int i = 0; i < registrations.size(); i++ ) {
-				final ProcedureParameterImplementor<?> paramater = registrations.get( i );
-				if ( paramater.getMode() == ParameterMode.REF_CURSOR ) {
+				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
+				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
 					if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED ) {
-						procedureCall.getSession().getFactory().getServiceRegistry()
-								.getService( RefCursorSupport.class )
-								.registerRefCursorParameter( statement, paramater.getName() );
+						refCursorSupport
+								.registerRefCursorParameter( statement, parameter.getName() );
 					}
 					else {
-						procedureCall.getSession().getFactory().getServiceRegistry()
-								.getService( RefCursorSupport.class )
-								.registerRefCursorParameter( statement, paramater.getPosition() );
+						refCursorSupport
+								.registerRefCursorParameter( statement, parameter.getPosition() );
 					}
 				}
 				else {
-					paramater.prepare( statement, i + 1, procedureCall );
+					parameter.prepare( statement, i + 1, procedureCall );
 				}
 			}
 		}

@@ -31,8 +31,8 @@ public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implem
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Byte fromString(String string) {
-		return Byte.valueOf( string );
+	public Byte fromString(CharSequence string) {
+		return Byte.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

@@ -30,8 +30,8 @@ public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer> 
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Integer fromString(String string) {
-		return string == null ? null : Integer.valueOf( string );
+	public Integer fromString(CharSequence string) {
+		return string == null ? null : Integer.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

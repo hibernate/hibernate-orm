@@ -65,7 +65,7 @@ public class RowVersionTypeDescriptor extends AbstractClassTypeDescriptor<byte[]
 		return (value == null) ? super.extractLoggableRepresentation( null ) : Arrays.toString( value );
 	}
 
-	public byte[] fromString(String string) {
+	public byte[] fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
 		}
@@ -74,7 +74,7 @@ public class RowVersionTypeDescriptor extends AbstractClassTypeDescriptor<byte[]
 		}
 		byte[] bytes = new byte[string.length() / 2];
 		for ( int i = 0; i < bytes.length; i++ ) {
-			final String hexStr = string.substring( i * 2, (i + 1) * 2 );
+			final String hexStr = string.subSequence( i * 2, (i + 1) * 2 ).toString();
 			bytes[i] = (byte) (Integer.parseInt(hexStr, 16) + Byte.MIN_VALUE);
 		}
 		return bytes;

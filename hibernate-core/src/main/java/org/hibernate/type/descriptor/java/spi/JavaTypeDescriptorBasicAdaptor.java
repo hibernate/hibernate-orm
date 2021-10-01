@@ -40,7 +40,7 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassTypeDescript
 	}
 
 	@Override
-	public T fromString(String string) {
+	public T fromString(CharSequence string) {
 		throw new UnsupportedOperationException(
 				"Conversion from String strategy not known for this Java type : " + getJavaType().getTypeName()
 		);

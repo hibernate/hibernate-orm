@@ -83,9 +83,9 @@ public class DateTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
 		return new SimpleDateFormat( DATE_FORMAT ).format( value );
 	}
 	@Override
-	public Date fromString(String string) {
+	public Date fromString(CharSequence string) {
 		try {
-			return new SimpleDateFormat(DATE_FORMAT).parse( string );
+			return new SimpleDateFormat(DATE_FORMAT).parse( string.toString() );
 		}
 		catch ( ParseException pe) {
 			throw new HibernateException( "could not parse date string" + string, pe );

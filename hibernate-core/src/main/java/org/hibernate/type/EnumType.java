@@ -432,7 +432,7 @@ public class EnumType<T extends Enum<T>>
 
 	@Override
 	@SuppressWarnings("RedundantCast")
-	public Object fromXMLString(String xmlValue) {
+	public Object fromXMLString(CharSequence xmlValue) {
 		verifyConfigured();
 		return (T) enumValueConverter.getDomainJavaDescriptor().wrap( xmlValue, null );
 	}

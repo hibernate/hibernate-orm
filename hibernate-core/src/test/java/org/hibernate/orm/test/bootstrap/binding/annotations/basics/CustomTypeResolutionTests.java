@@ -277,15 +277,15 @@ public class CustomTypeResolutionTests {
 		}
 
 		@Override
-		public Gender fromString(String string) {
-			if ( StringHelper.isEmpty( string ) ) {
+		public Gender fromString(CharSequence string) {
+			if ( string == null || string.length() == 0 ) {
 				return null;
 			}
 
-			if ( "M".equalsIgnoreCase( string ) ) {
+			if ( "M".equalsIgnoreCase( string.toString() ) ) {
 				return Gender.MALE;
 			}
-			else if ( "F".equalsIgnoreCase( string ) ) {
+			else if ( "F".equalsIgnoreCase( string.toString() ) ) {
 				return Gender.FEMALE;
 			}
 

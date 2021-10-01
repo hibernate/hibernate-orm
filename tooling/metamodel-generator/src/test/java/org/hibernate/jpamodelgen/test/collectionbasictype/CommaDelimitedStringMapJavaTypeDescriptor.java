@@ -38,7 +38,7 @@ public class CommaDelimitedStringMapJavaTypeDescriptor extends AbstractClassType
     }
 
     @Override
-    public Map fromString(String string) {
+    public Map fromString(CharSequence string) {
         return null;
     }
 

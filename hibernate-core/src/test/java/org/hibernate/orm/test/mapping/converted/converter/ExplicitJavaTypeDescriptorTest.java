@@ -330,8 +330,8 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		}
 
 		@Override
-		public PseudoMutableState fromString(String string) {
-			return string == null ? null : new PseudoMutableState( string );
+		public PseudoMutableState fromString(CharSequence string) {
+			return string == null ? null : new PseudoMutableState( string.toString() );
 		}
 
 		@Override

@@ -90,7 +90,7 @@ public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<
 	}
 
 	@Override
-	public Date fromString(String string) {
+	public Date fromString(CharSequence string) {
 		try {
 			final TemporalAccessor accessor = LITERAL_FORMATTER.parse( string );
 			return new Timestamp(

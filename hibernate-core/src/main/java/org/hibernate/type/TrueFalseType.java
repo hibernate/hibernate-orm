@@ -44,8 +44,8 @@ public class TrueFalseType
 	}
 
 	@Override
-	public Boolean stringToObject(String xml) throws Exception {
-		return fromString( xml );
+	public Boolean stringToObject(CharSequence sequence) throws Exception {
+		return fromString( sequence );
 	}
 
 	@Override

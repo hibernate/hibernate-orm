@@ -31,8 +31,8 @@ public class BigIntegerTypeDescriptor extends AbstractClassTypeDescriptor<BigInt
 	}
 
 	@Override
-	public BigInteger fromString(String string) {
-		return new BigInteger( string );
+	public BigInteger fromString(CharSequence string) {
+		return new BigInteger( string.toString() );
 	}
 
 	@Override

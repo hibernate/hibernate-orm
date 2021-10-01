@@ -38,8 +38,8 @@ public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> impl
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Float fromString(String string) {
-		return Float.valueOf( string );
+	public Float fromString(CharSequence string) {
+		return Float.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

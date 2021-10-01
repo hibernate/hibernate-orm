@@ -40,8 +40,8 @@ public class StringNVarcharType
 		return QueryLiteralHelper.toStringLiteral( value );
 	}
 
-	public String stringToObject(String xml) throws Exception {
-		return xml;
+	public String stringToObject(CharSequence sequence) throws Exception {
+		return sequence.toString();
 	}
 
 	public String toString(String value) {

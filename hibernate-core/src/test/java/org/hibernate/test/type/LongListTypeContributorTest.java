@@ -201,8 +201,12 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 			}
 
 			@Override
-			public LongList fromString(String string) {
-				if ( string == null || "null".equals( string ) ) {
+			public LongList fromString(CharSequence sequence) {
+				if ( sequence == null ) {
+					return null;
+				}
+				final String string = sequence.toString();
+				if ( "null".equals( string ) ) {
 					return null;
 				}
 

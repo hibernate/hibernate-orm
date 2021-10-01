@@ -24,7 +24,7 @@ public interface SingleColumnType<T> extends Type {
 
 	String toString(T value) throws HibernateException;
 
-	T fromStringValue(String xml) throws HibernateException;
+	T fromStringValue(CharSequence sequence) throws HibernateException;
 
 	/**
 	 * Get a column value from a result set by name.

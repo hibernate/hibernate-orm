@@ -45,10 +45,10 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 	}
 
 	@Override
-	public Geometry fromString(String string) {
+	public Geometry fromString(CharSequence string) {
 		final WKTReader reader = new WKTReader();
 		try {
-			return reader.read( string );
+			return reader.read( string.toString() );
 		}
 		catch (ParseException e) {
 			throw new RuntimeException( String.format( Locale.ENGLISH, "Can't parse string %s as WKT", string ) );
@@ -88,8 +88,8 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geomet
 		if ( org.geolatte.geom.Geometry.class.isInstance( value ) ) {
 			return JTS.to( (org.geolatte.geom.Geometry) value );
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String) value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

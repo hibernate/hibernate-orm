@@ -35,8 +35,8 @@ public class StringTypeDescriptor extends AbstractClassTypeDescriptor<String> {
 		return value;
 	}
 
-	public String fromString(String string) {
-		return string;
+	public String fromString(CharSequence string) {
+		return string.toString();
 	}
 
 	@Override

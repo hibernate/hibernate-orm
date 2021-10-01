@@ -40,6 +40,8 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
+import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -2967,7 +2969,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmLiteral<byte[]> binaryLiteral(String text) {
 		return new SqmLiteral<>(
-				StandardBasicTypes.BINARY.fromStringValue( text.substring( 2, text.length()-1 ) ),
+				StandardBasicTypes.BINARY.fromStringValue( CharSequenceHelper.subSequence( text, 2, text.length() - 1 ) ),
 				resolveExpressableTypeBasic( byte[].class ),
 				creationContext.getNodeBuilder()
 		);

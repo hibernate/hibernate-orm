@@ -24,8 +24,8 @@ public class InetJavaTypeDescriptor extends AbstractClassTypeDescriptor<Inet> {
 		return value.toString();
 	}
 
-	public Inet fromString(String string) {
-		return new Inet( string );
+	public Inet fromString(CharSequence string) {
+		return new Inet( string.toString() );
 	}
 
 	@Override

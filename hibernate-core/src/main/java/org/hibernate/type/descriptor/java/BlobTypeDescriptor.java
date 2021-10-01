@@ -81,7 +81,7 @@ public class BlobTypeDescriptor extends AbstractClassTypeDescriptor<Blob> {
 	}
 
 	@Override
-	public Blob fromString(String string) {
+	public Blob fromString(CharSequence string) {
 		return BlobProxy.generateProxy( PrimitiveByteArrayTypeDescriptor.INSTANCE.fromString( string ) );
 	}
 

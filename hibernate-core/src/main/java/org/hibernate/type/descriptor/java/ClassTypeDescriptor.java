@@ -25,13 +25,13 @@ public class ClassTypeDescriptor extends AbstractClassTypeDescriptor<Class> {
 		return value.getName();
 	}
 
-	public Class fromString(String string) {
+	public Class fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
 		}
 
 		try {
-			return ReflectHelper.classForName( string );
+			return ReflectHelper.classForName( string.toString() );
 		}
 		catch ( ClassNotFoundException e ) {
 			throw new HibernateException( "Unable to locate named class " + string );
@@ -59,8 +59,8 @@ public class ClassTypeDescriptor extends AbstractClassTypeDescriptor<Class> {
 		if ( Class.class.isInstance( value ) ) {
 			return (Class) value;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String)value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

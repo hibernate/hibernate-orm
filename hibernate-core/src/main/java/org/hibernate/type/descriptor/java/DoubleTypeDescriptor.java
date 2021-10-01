@@ -39,8 +39,8 @@ public class DoubleTypeDescriptor extends AbstractClassTypeDescriptor<Double> im
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Double fromString(String string) {
-		return Double.valueOf( string );
+	public Double fromString(CharSequence string) {
+		return Double.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

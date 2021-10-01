@@ -58,8 +58,8 @@ public class ShortType
 	}
 
 	@Override
-	public Short stringToObject(String xml) {
-		return Short.valueOf( xml );
+	public Short stringToObject(CharSequence sequence) {
+		return Short.valueOf( sequence.toString() );
 	}
 
 	@Override

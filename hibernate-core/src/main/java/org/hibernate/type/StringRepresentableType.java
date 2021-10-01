@@ -28,11 +28,11 @@ public interface StringRepresentableType<T> {
 	/**
 	 * Consume the given string representation back into this types java form.
 	 *
-	 * @param string The string representation to be consumed.
+	 * @param sequence The string representation to be consumed.
 	 *
 	 * @return The java type representation
 	 *
 	 * @throws HibernateException Problem consuming
 	 */
-	T fromStringValue(String string) throws HibernateException;
+	T fromStringValue(CharSequence sequence) throws HibernateException;
 }

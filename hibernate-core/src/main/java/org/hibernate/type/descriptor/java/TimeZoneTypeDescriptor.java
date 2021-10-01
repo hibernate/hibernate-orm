@@ -35,8 +35,8 @@ public class TimeZoneTypeDescriptor extends AbstractClassTypeDescriptor<TimeZone
 		return value.getID();
 	}
 
-	public TimeZone fromString(String string) {
-		return TimeZone.getTimeZone( string );
+	public TimeZone fromString(CharSequence string) {
+		return TimeZone.getTimeZone( string.toString() );
 	}
 
 	@Override
@@ -59,8 +59,8 @@ public class TimeZoneTypeDescriptor extends AbstractClassTypeDescriptor<TimeZone
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String) value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

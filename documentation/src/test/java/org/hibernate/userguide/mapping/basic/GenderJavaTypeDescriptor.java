@@ -21,8 +21,8 @@ public class GenderJavaTypeDescriptor extends AbstractClassTypeDescriptor<Gender
         return value == null ? null : value.name();
     }
 
-    public Gender fromString(String string) {
-        return string == null ? null : Gender.valueOf( string );
+    public Gender fromString(CharSequence string) {
+        return string == null ? null : Gender.valueOf( string.toString() );
     }
 
     public <X> X unwrap(Gender value, Class<X> type, WrapperOptions options) {

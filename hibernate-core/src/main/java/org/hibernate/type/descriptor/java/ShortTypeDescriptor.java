@@ -29,8 +29,8 @@ public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> impl
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Short fromString(String string) {
-		return Short.valueOf( string );
+	public Short fromString(CharSequence string) {
+		return Short.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

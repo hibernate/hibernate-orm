@@ -88,9 +88,9 @@ public class JdbcDateTypeDescriptor extends AbstractTemporalTypeDescriptor<Date>
 	}
 
 	@Override
-	public Date fromString(String string) {
+	public Date fromString(CharSequence string) {
 		try {
-			return new Date( new SimpleDateFormat(DATE_FORMAT).parse( string ).getTime() );
+			return new Date( new SimpleDateFormat(DATE_FORMAT).parse( string.toString() ).getTime() );
 		}
 		catch ( ParseException pe) {
 			throw new HibernateException( "could not parse date string" + string, pe );

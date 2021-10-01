@@ -65,8 +65,8 @@ public class NClobTypeDescriptor extends AbstractClassTypeDescriptor<NClob> {
 		return DataHelper.extractString( value );
 	}
 
-	public NClob fromString(String string) {
-		return NClobProxy.generateProxy( string );
+	public NClob fromString(CharSequence string) {
+		return NClobProxy.generateProxy( string.toString() );
 	}
 
 	@Override

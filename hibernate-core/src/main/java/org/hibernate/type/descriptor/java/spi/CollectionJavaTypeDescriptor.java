@@ -43,7 +43,7 @@ public class CollectionJavaTypeDescriptor<C> extends AbstractClassTypeDescriptor
 	}
 
 	@Override
-	public C fromString(String string) {
+	public C fromString(CharSequence string) {
 		throw new UnsupportedOperationException(  );
 	}
 

@@ -35,7 +35,7 @@ public interface BasicJavaDescriptor<T> extends JavaTypeDescriptor<T> {
 	}
 
 	@Override
-	default T fromString(String string) {
+	default T fromString(CharSequence string) {
 		throw new UnsupportedOperationException();
 	}
 }

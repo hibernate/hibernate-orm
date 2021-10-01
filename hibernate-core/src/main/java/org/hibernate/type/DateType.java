@@ -57,8 +57,8 @@ public class DateType
 		return StringType.INSTANCE.objectToSQLString( jdbcDate.toString(), dialect );
 	}
 
-	public Date stringToObject(String xml) {
-		return fromString( xml );
+	public Date stringToObject(CharSequence sequence) {
+		return fromString( sequence );
 	}
 
 	@Override

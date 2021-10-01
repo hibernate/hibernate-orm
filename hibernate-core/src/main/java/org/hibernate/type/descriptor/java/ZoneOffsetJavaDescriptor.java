@@ -38,8 +38,8 @@ public class ZoneOffsetJavaDescriptor extends AbstractClassTypeDescriptor<ZoneOf
 		return value.getId();
 	}
 
-	public ZoneOffset fromString(String string) {
-		return ZoneOffset.of( string );
+	public ZoneOffset fromString(CharSequence string) {
+		return ZoneOffset.of( string.toString() );
 	}
 
 	@Override
@@ -69,8 +69,8 @@ public class ZoneOffsetJavaDescriptor extends AbstractClassTypeDescriptor<ZoneOf
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String) value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

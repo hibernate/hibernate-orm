@@ -80,7 +80,7 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<
 	}
 
 	@Override
-	public ZonedDateTime fromString(String string) {
+	public ZonedDateTime fromString(CharSequence string) {
 		return ZonedDateTime.from( DateTimeFormatter.ISO_ZONED_DATE_TIME.parse( string ) );
 	}
 

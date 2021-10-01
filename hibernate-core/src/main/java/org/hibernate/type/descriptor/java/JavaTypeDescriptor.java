@@ -15,6 +15,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -147,7 +148,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 		return value == null ? "null" : value.toString();
 	}
 
-	T fromString(String string);
+	T fromString(CharSequence string);
 
 	/**
 	 * Unwrap an instance of our handled Java type into the requested type.

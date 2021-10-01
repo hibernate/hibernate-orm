@@ -30,8 +30,8 @@ public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long> implem
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Long fromString(String string) {
-		return Long.valueOf( string );
+	public Long fromString(CharSequence string) {
+		return Long.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

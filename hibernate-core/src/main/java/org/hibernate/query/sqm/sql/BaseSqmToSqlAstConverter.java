@@ -2773,8 +2773,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( javaTypeDescriptor.getJavaTypeClass().isInstance( literalValue ) ) {
 					discriminatorValue = literalValue;
 				}
-				else if ( literalValue instanceof String ) {
-					discriminatorValue = javaTypeDescriptor.fromString( (String) literalValue );
+				else if ( literalValue instanceof CharSequence ) {
+					discriminatorValue = javaTypeDescriptor.fromString( (CharSequence) literalValue );
 				}
 				else if ( creationContext.getSessionFactory().getJpaMetamodel().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 					discriminatorValue = literalValue;

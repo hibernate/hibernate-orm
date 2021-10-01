@@ -56,8 +56,8 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	}
 
 	@Override
-	public Integer stringToObject(String xml) {
-		return fromString( xml );
+	public Integer stringToObject(CharSequence sequence) {
+		return fromString( sequence );
 	}
 
 	@Override

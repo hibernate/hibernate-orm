@@ -31,11 +31,11 @@ public class ArrayTypeDescriptor extends AbstractClassTypeDescriptor<Array> {
     }
 
     @Override
-    public Array fromString(String string) {
-        if ( string == null || string.isEmpty() ) {
+    public Array fromString(CharSequence string) {
+        if ( string == null || string.length() == 0 ) {
             return null;
         }
-        String[] tokens = string.split( DELIMITER );
+        String[] tokens = string.toString().split( DELIMITER );
         Array array = new Array();
         array.addAll( Arrays.asList(tokens) );
         return array;

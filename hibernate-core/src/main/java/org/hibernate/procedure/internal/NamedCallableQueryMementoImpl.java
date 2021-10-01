@@ -13,7 +13,6 @@ import jakarta.persistence.ParameterMode;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.ProcedureCall;
@@ -217,7 +216,25 @@ public class NamedCallableQueryMementoImpl extends AbstractNamedQueryMemento imp
 
 		@Override
 		public ProcedureParameterImplementor resolve(SharedSessionContractImplementor session) {
-			throw new NotYetImplementedFor6Exception();
+			if ( getName() != null ) {
+				//noinspection unchecked
+				return new ProcedureParameterImpl(
+						getName(),
+						getMode(),
+						type,
+						getHibernateType()
+				);
+			}
+			else {
+				//noinspection unchecked
+				return new ProcedureParameterImpl(
+						getPosition(),
+						getMode(),
+						type,
+						getHibernateType()
+				);
+			}
+
 		}
 
 		/**

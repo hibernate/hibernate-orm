@@ -46,6 +46,8 @@ import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureParameter;
 import jakarta.persistence.StoredProcedureQuery;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -380,15 +382,25 @@ public class OracleStoredProcedureTest {
 	public void testNamedNativeQueryStoredProcedureRefCursor(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					List<Object[]> postAndComments = entityManager
-							.createNamedQuery(
-									"fn_person_and_phones" )
-							.setParameter( 1, 1L )
-							.getResultList();
-					Object[] postAndComment = postAndComments.get( 0 );
-					Person person = (Person) postAndComment[0];
-					Phone phone = (Phone) postAndComment[1];
-					assertEquals( 2, postAndComments.size() );
+					try {
+						List<Object[]> postAndComments = entityManager
+								.createNamedQuery(
+										"fn_person_and_phones" )
+								.setParameter( 1, 1L )
+								.getResultList();
+						Object[] postAndComment = postAndComments.get( 0 );
+						Person person = (Person) postAndComment[0];
+						Phone phone = (Phone) postAndComment[1];
+						assertEquals( 2, postAndComments.size() );
+						fail( "expected UnsupportedOperationException" );
+					}
+					catch (IllegalArgumentException ex) {
+						assertThat( ex.getCause(), instanceOf( UnsupportedOperationException.class ) );
+						assertEquals(
+								"Recognizing native query as a function call is no longer supported",
+								ex.getCause().getMessage()
+						);
+					}
 				}
 		);
 	}

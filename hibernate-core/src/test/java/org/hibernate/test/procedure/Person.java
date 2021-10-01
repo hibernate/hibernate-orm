@@ -15,6 +15,7 @@ import jakarta.persistence.EntityResult;
 import jakarta.persistence.FieldResult;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.NamedStoredProcedureQueries;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.SqlResultSetMapping;

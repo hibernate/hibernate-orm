@@ -55,6 +55,35 @@ Multiple component mappings for the same java class with different property mapp
 
 Passing null or not is now triggered by whether setting the parameter was called at all.  In other ords a distinction is made between calling `setParameter` passing null versus not calling `setParameter` at all.  In the first case, we pass along the null value; in the second we do not.
 
+=== Native Query
+
+==== Native query as a function call is no longer supported.
+
+Given the `NamedNativeQuery`
+```
+@NamedNativeQuery(
+    name = "fn_person_and_phones",
+    query = "{ ? = call fn_person_and_phones( ? ) }",
+    callable = true,
+    resultSetMapping = "person_with_phones"
+)
+```
+
+the code
+```
+scope.inTransaction(
+entityManager -> {
+try {
+List<Object[]> postAndComments = entityManager.createNamedQuery("fn_person_and_phones" ).setParameter( 1, 1L ).getResultList();
+```
+
+is going to throw an `IllegalArgumentException`.
+
+The migration code is
+```
+List<Object[]> postAndComments = entityManager.createStoredProcedureQuery( "fn_person_and_phones", "person_with_phones" ).setParameter( 1, 1L ).getResultList();
+```
+
 === SQM
 
 * Functions

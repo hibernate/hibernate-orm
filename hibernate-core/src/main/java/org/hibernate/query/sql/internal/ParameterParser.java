@@ -48,6 +48,7 @@ public class ParameterParser {
 	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
 	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+		checkIsNotAFunctionCall( sqlString );
 		final int stringLength = sqlString.length();
 
 		boolean inSingleQuotes = false;
@@ -169,6 +170,41 @@ public class ParameterParser {
 		}
 
 		recognizer.complete();
+	}
+
+	private static void checkIsNotAFunctionCall(String sqlString) {
+		if ( !( sqlString.startsWith( "{" ) && sqlString.endsWith( "}" ) ) ) {
+			return;
+		}
+
+		final int chopLocation = sqlString.indexOf( "call" );
+		if ( chopLocation <= 0 ) {
+			return;
+		}
+
+		final String checkString = sqlString.substring( 1, chopLocation + 4 );
+		final String fixture = "?=call";
+		int fixturePosition = 0;
+		boolean matches = true;
+		final int max = checkString.length();
+		for ( int i = 0; i < max; i++ ) {
+			final char c = Character.toLowerCase( checkString.charAt( i ) );
+			if ( Character.isWhitespace( c ) ) {
+				continue;
+			}
+			if ( c == fixture.charAt( fixturePosition ) ) {
+				fixturePosition++;
+				continue;
+			}
+			matches = false;
+			break;
+		}
+
+		if ( matches ) {
+			throw new UnsupportedOperationException(
+					"Recognizing native query as a function call is no longer supported" );
+
+		}
 	}
 
 }

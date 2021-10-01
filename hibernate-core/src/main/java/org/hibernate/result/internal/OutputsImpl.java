@@ -165,7 +165,7 @@ public class OutputsImpl implements Outputs {
 		procedureCall.getParameterBindings().visitBindings(
 				(parameterImplementor, queryParameterBinding) -> {
 					ProcedureParameter parameter = (ProcedureParameter) parameterImplementor;
-					if ( parameter.getMode() == ParameterMode.IN || parameter.getMode() == ParameterMode.INOUT ) {
+					if ( parameter.getMode() == ParameterMode.INOUT ) {
 						final JavaTypeDescriptor<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
 								parameterImplementor.getParameterType() );
 						if ( basicType != null ) {

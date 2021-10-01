@@ -107,8 +107,8 @@ public class StoredPrefixedStringType
 		return StringType.INSTANCE.objectToSQLString( value, dialect );
 	}
 
-	public String stringToObject(String xml) throws Exception {
-		return StringType.INSTANCE.stringToObject( xml );
+	public String stringToObject(CharSequence sequence) throws Exception {
+		return StringType.INSTANCE.stringToObject( sequence );
 	}
 
 	public String toString(String value) {

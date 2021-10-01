@@ -60,14 +60,14 @@ public class DurationJavaDescriptor extends AbstractClassTypeDescriptor<Duration
 	}
 
 	@Override
-	public Duration fromString(String string) {
+	public Duration fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
 		}
 		int cutoff = string.length() - 9;
 		return Duration.ofSeconds(
-				Long.parseLong( string.substring( 0, cutoff ) ),
-				Long.parseLong( string.substring( cutoff ) )
+				Long.parseLong( string.subSequence( 0, cutoff ).toString() ),
+				Long.parseLong( string.subSequence( cutoff, string.length() ).toString() )
 		);
 	}
 

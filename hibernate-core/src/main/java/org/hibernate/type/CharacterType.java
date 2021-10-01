@@ -61,8 +61,8 @@ public class CharacterType
 		return new String( chars );
 	}
 
-	public Character stringToObject(String xml) {
-		return fromString( xml );
+	public Character stringToObject(CharSequence sequence) {
+		return fromString( sequence );
 	}
 
 	@Override

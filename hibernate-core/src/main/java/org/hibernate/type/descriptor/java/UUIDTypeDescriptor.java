@@ -36,8 +36,8 @@ public class UUIDTypeDescriptor extends AbstractClassTypeDescriptor<UUID> {
 		return ToStringTransformer.INSTANCE.transform( value );
 	}
 
-	public UUID fromString(String string) {
-		return ToStringTransformer.INSTANCE.parse( string );
+	public UUID fromString(CharSequence string) {
+		return ToStringTransformer.INSTANCE.parse( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

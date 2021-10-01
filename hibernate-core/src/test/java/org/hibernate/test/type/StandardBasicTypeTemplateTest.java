@@ -54,8 +54,8 @@ public class StandardBasicTypeTemplateTest extends BaseUnitTestCase {
 		public static final ValidatingUrlJavaTypeDescriptor INSTANCE = new ValidatingUrlJavaTypeDescriptor();
 
 		@Override
-		public URL fromString(String string) {
-			if ( "invalid".equals( string ) ) {
+		public URL fromString(CharSequence string) {
+			if ( "invalid".equals( string.toString() ) ) {
 				throw new IllegalStateException( "Invalid url" );
 			}
 			return super.fromString( string );

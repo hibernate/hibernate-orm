@@ -15,7 +15,6 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -108,8 +107,8 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 	}
 
 	@Override
-	public Object fromXMLString(String xmlValue) {
-		return Classification.valueOf( xmlValue );
+	public Object fromXMLString(CharSequence xmlValue) {
+		return Classification.valueOf( xmlValue.toString() );
 	}
 
 	private String extractName(Object obj) {

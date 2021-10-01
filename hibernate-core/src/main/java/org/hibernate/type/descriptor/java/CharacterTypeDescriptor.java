@@ -28,7 +28,7 @@ public class CharacterTypeDescriptor extends AbstractClassTypeDescriptor<Charact
 	}
 
 	@Override
-	public Character fromString(String string) {
+	public Character fromString(CharSequence string) {
 		if ( string.length() != 1 ) {
 			throw new HibernateException( "multiple or zero characters found parsing string" );
 		}

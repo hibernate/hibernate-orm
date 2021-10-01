@@ -168,7 +168,7 @@ public class QueryParametersValidationArrayTest {
 		}
 
 		@Override
-		public String[] fromString(String string) {
+		public String[] fromString(CharSequence string) {
 			return null;
 		}
 

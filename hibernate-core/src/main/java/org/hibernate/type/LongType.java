@@ -53,8 +53,8 @@ public class LongType
 	}
 
 	@Override
-	public Long stringToObject(String xml) throws Exception {
-		return Long.valueOf( xml );
+	public Long stringToObject(CharSequence sequence) throws Exception {
+		return Long.valueOf( sequence.toString() );
 	}
 
 	@Override

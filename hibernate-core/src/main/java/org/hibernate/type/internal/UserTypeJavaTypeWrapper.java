@@ -133,7 +133,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaDescriptor<J> {
 	}
 
 	@Override
-	public J fromString(String string) {
+	public J fromString(CharSequence string) {
 		throw new UnsupportedOperationException( "No support for parsing UserType values from String: " + userType );
 	}
 

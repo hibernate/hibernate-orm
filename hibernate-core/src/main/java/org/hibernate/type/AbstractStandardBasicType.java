@@ -16,7 +16,6 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
@@ -86,7 +85,7 @@ public abstract class AbstractStandardBasicType<T>
 		return getExpressableJavaTypeDescriptor().getJavaTypeClass();
 	}
 
-	public T fromString(String string) {
+	public T fromString(CharSequence string) {
 		return javaTypeDescriptor.fromString( string );
 	}
 
@@ -96,7 +95,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public T fromStringValue(String xml) throws HibernateException {
+	public T fromStringValue(CharSequence xml) throws HibernateException {
 		return fromString( xml );
 	}
 

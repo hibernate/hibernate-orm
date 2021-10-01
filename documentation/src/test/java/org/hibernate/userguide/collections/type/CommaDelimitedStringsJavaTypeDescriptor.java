@@ -41,9 +41,9 @@ public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractClassTypeDe
     }
 
     @Override
-    public List fromString(String string) {
+    public List fromString(CharSequence string) {
         List<String> values = new ArrayList<>();
-        Collections.addAll( values, string.split( DELIMITER ) );
+        Collections.addAll( values, string.toString().split( DELIMITER ) );
         return values;
     }
 
@@ -54,7 +54,7 @@ public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractClassTypeDe
 
     @Override
     public <X> List wrap(X value, WrapperOptions options) {
-        return fromString( (String) value );
+        return fromString( (CharSequence) value );
     }
 }
 //end::collections-comma-delimited-collection-example[]

@@ -72,9 +72,9 @@ public class CalendarTypeDescriptor extends AbstractTemporalTypeDescriptor<Calen
 		return DateTypeDescriptor.INSTANCE.toString( value.getTime() );
 	}
 
-	public Calendar fromString(String string) {
+	public Calendar fromString(CharSequence string) {
 		Calendar result = new GregorianCalendar();
-		result.setTime( DateTypeDescriptor.INSTANCE.fromString( string ) );
+		result.setTime( DateTypeDescriptor.INSTANCE.fromString( string.toString() ) );
 		return result;
 	}
 

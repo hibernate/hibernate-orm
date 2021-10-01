@@ -93,7 +93,7 @@ public class JavaTypeDescriptorRegistryTest {
 		}
 
 		@Override
-		public CustomType fromString(String string) {
+		public CustomType fromString(CharSequence string) {
 			return null;
 		}
 

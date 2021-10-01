@@ -44,7 +44,7 @@ public class BigIntegerType
 	}
 
 	@Override
-	public BigInteger stringToObject(String string) {
+	public BigInteger stringToObject(CharSequence string) {
 		return BigIntegerTypeDescriptor.INSTANCE.fromString( string );
 	}
 }

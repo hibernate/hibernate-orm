@@ -63,7 +63,7 @@ public class SerializableTypeDescriptor<T extends Serializable> extends Abstract
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.toString( toBytes( value ) );
 	}
 
-	public T fromString(String string) {
+	public T fromString(CharSequence string) {
 		return fromBytes( PrimitiveByteArrayTypeDescriptor.INSTANCE.fromString( string ) );
 	}
 

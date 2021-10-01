@@ -60,8 +60,8 @@ public class ClobTypeDescriptor extends AbstractClassTypeDescriptor<Clob> {
 		return DataHelper.extractString( value );
 	}
 
-	public Clob fromString(String string) {
-		return ClobProxy.generateProxy( string );
+	public Clob fromString(CharSequence string) {
+		return ClobProxy.generateProxy( string.toString() );
 	}
 
 	@Override

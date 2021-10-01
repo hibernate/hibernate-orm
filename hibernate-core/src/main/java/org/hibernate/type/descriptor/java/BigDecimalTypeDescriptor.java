@@ -29,8 +29,8 @@ public class BigDecimalTypeDescriptor extends AbstractClassTypeDescriptor<BigDec
 		return value.toString();
 	}
 
-	public BigDecimal fromString(String string) {
-		return new BigDecimal( string );
+	public BigDecimal fromString(CharSequence string) {
+		return new BigDecimal( string.toString() );
 	}
 
 	@Override

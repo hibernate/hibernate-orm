@@ -24,8 +24,8 @@ public class JsonJavaTypeDescriptor extends AbstractClassTypeDescriptor<Json> {
 		return value.toString();
 	}
 
-	public Json fromString(String string) {
-		return new Json( string );
+	public Json fromString(CharSequence string) {
+		return new Json( string.toString() );
 	}
 
 	@Override

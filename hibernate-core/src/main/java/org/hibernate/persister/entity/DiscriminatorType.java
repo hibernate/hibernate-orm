@@ -232,8 +232,8 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 	}
 
 	@Override
-	public T stringToObject(String xml) throws Exception {
-		return ( (org.hibernate.type.DiscriminatorType<T>) underlyingType ).stringToObject( xml );
+	public T stringToObject(CharSequence sequence) throws Exception {
+		return ( (org.hibernate.type.DiscriminatorType<T>) underlyingType ).stringToObject( sequence );
 	}
 
 	@Override

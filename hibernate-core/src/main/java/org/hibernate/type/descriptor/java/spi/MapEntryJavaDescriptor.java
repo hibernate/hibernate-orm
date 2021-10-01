@@ -32,7 +32,7 @@ public class MapEntryJavaDescriptor extends AbstractClassTypeDescriptor<Map.Entr
 	}
 
 	@Override
-	public Map.Entry fromString(String string) {
+	public Map.Entry fromString(CharSequence string) {
 		throw new UnsupportedOperationException( "Unsupported attempt create Map.Entry from String" );
 	}
 

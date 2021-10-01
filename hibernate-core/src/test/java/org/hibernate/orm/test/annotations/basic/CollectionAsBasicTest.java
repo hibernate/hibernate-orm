@@ -93,7 +93,7 @@ public class CollectionAsBasicTest {
 		}
 
 		@Override
-		public Set fromString(String string) {
+		public Set fromString(CharSequence string) {
 			return null;
 		}
 

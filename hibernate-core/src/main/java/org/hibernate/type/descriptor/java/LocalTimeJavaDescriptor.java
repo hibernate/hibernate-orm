@@ -66,7 +66,7 @@ public class LocalTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<Loca
 	}
 
 	@Override
-	public LocalTime fromString(String string) {
+	public LocalTime fromString(CharSequence string) {
 		return LocalTime.from( DateTimeFormatter.ISO_LOCAL_TIME.parse( string ) );
 	}
 

@@ -28,8 +28,8 @@ public class CurrencyTypeDescriptor extends AbstractClassTypeDescriptor<Currency
 	}
 
 	@Override
-	public Currency fromString(String string) {
-		return Currency.getInstance( string );
+	public Currency fromString(CharSequence string) {
+		return Currency.getInstance( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

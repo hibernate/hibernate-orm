@@ -30,9 +30,10 @@ public interface EnhancedUserType extends UserType {
 	 * Parse a string representation of this value, as it appears in an XML document
 	 *
 	 * @deprecated To be removed in 5.  Implement
-	 * {@link org.hibernate.type.StringRepresentableType#fromStringValue(String)} instead.
+	 * {@link org.hibernate.type.StringRepresentableType#fromStringValue(CharSequence)} instead.
 	 * See <a href="https://hibernate.onjira.com/browse/HHH-7776">HHH-7776</a> for details
+	 * @param xmlValue
 	 */
 	@Deprecated
-	Object fromXMLString(String xmlValue);
+	Object fromXMLString(CharSequence xmlValue);
 }

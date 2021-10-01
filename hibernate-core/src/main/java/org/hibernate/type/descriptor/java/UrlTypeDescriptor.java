@@ -36,9 +36,9 @@ public class UrlTypeDescriptor extends AbstractClassTypeDescriptor<URL> {
 		return value.toExternalForm();
 	}
 
-	public URL fromString(String string) {
+	public URL fromString(CharSequence string) {
 		try {
-			return new URL( string );
+			return new URL( string.toString() );
 		}
 		catch ( MalformedURLException e ) {
 			throw new HibernateException( "Unable to convert string [" + string + "] to URL : " + e );
@@ -60,8 +60,8 @@ public class UrlTypeDescriptor extends AbstractClassTypeDescriptor<URL> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String) value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

@@ -76,7 +76,7 @@ public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instan
 	}
 
 	@Override
-	public Instant fromString(String string) {
+	public Instant fromString(CharSequence string) {
 		return Instant.from( DateTimeFormatter.ISO_INSTANT.parse( string ) );
 	}
 

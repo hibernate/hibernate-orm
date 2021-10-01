@@ -43,7 +43,7 @@ public class NumericBooleanType
 		return Boolean.FALSE;
 	}
 	@Override
-	public Boolean stringToObject(String string) {
+	public Boolean stringToObject(CharSequence string) {
 		return fromString( string );
 	}
 	@Override

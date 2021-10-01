@@ -49,8 +49,8 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassType
 	}
 
 	@Override
-	public T fromString(String string) {
-		return string == null ? null : Enum.valueOf( getJavaTypeClass(), string );
+	public T fromString(CharSequence string) {
+		return string == null ? null : Enum.valueOf( getJavaTypeClass(), string.toString() );
 	}
 
 	@Override

@@ -252,8 +252,8 @@ public class CustomType
 	}
 
 	@Override
-	public Object stringToObject(String xml) {
-		return fromStringValue( xml );
+	public Object stringToObject(CharSequence sequence) {
+		return fromStringValue( sequence );
 	}
 
 	@Override
@@ -318,13 +318,13 @@ public class CustomType
 	}
 
 	@Override
-	public Object fromStringValue(String string) throws HibernateException {
+	public Object fromStringValue(CharSequence sequence) throws HibernateException {
 		if ( getUserType() instanceof StringRepresentableType ) {
-			return ( (StringRepresentableType) getUserType() ).fromStringValue( string );
+			return ( (StringRepresentableType) getUserType() ).fromStringValue( sequence );
 		}
 		if ( getUserType() instanceof EnhancedUserType ) {
 			//noinspection deprecation
-			return ( (EnhancedUserType) getUserType() ).fromXMLString( string );
+			return ( (EnhancedUserType) getUserType() ).fromXMLString( sequence );
 		}
 		throw new HibernateException(
 				String.format(

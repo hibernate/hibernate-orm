@@ -22,8 +22,8 @@ public class BitSetType
     }
 
     @Override
-    public BitSet stringToObject(String xml) throws Exception {
-        return fromString( xml );
+    public BitSet stringToObject(CharSequence sequence) throws Exception {
+        return fromString( sequence );
     }
 
     @Override

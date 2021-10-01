@@ -38,8 +38,8 @@ public class BitSetJavaType extends AbstractClassTypeDescriptor<BitSet> {
     }
 
     @Override
-    public BitSet fromString(String string) {
-        return BitSetHelper.stringToBitSet( string );
+    public BitSet fromString(CharSequence string) {
+        return BitSetHelper.stringToBitSet( string.toString() );
     }
 
     @SuppressWarnings({"unchecked"})
@@ -65,8 +65,8 @@ public class BitSetJavaType extends AbstractClassTypeDescriptor<BitSet> {
         if ( value == null ) {
             return null;
         }
-        if ( value instanceof String ) {
-            return fromString( (String) value );
+        if ( value instanceof CharSequence ) {
+            return fromString( (CharSequence) value );
         }
         if ( value instanceof BitSet ) {
             return (BitSet) value;

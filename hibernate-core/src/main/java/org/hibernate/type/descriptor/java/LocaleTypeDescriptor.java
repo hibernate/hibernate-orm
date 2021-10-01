@@ -40,13 +40,14 @@ public class LocaleTypeDescriptor extends AbstractClassTypeDescriptor<Locale> {
 		return value.toString();
 	}
 
-	public Locale fromString(String string) {
+	public Locale fromString(CharSequence sequence) {
 		// TODO : Ultimately switch to Locale.Builder for this. However, Locale.Builder is Java 7
 
-		if ( string == null ) {
+		if ( sequence == null ) {
 			return null;
 		}
 
+		String string = sequence.toString();
 		if( string.isEmpty() ) {
 			return Locale.ROOT;
 		}
@@ -105,8 +106,8 @@ public class LocaleTypeDescriptor extends AbstractClassTypeDescriptor<Locale> {
 		if ( value == null ) {
 			return null;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String) value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

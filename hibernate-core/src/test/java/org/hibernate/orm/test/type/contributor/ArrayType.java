@@ -29,8 +29,8 @@ public class ArrayType
     }
 
     @Override
-    public Array stringToObject(String xml) throws Exception {
-        return fromString( xml );
+    public Array stringToObject(CharSequence sequence) throws Exception {
+        return fromString( sequence );
     }
 
     @Override

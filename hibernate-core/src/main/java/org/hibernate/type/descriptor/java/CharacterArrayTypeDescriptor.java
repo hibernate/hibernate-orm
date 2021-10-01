@@ -33,8 +33,8 @@ public class CharacterArrayTypeDescriptor extends AbstractClassTypeDescriptor<Ch
 		return new String( unwrapChars( value ) );
 	}
 	@Override
-	public Character[] fromString(String string) {
-		return wrapChars( string.toCharArray() );
+	public Character[] fromString(CharSequence string) {
+		return wrapChars( string.toString().toCharArray() );
 	}
 
 	@Override

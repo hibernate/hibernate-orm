@@ -42,7 +42,7 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implemen
 		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
 	}
 
-	public URL stringToObject(String xml) throws Exception {
-		return UrlTypeDescriptor.INSTANCE.fromString( xml );
+	public URL stringToObject(CharSequence sequence) throws Exception {
+		return UrlTypeDescriptor.INSTANCE.fromString( sequence );
 	}
 }

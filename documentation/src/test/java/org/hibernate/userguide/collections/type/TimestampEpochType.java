@@ -61,7 +61,7 @@ public class TimestampEpochType
 
     @Override
     public Date fromStringValue(
-        String xml) throws HibernateException {
+            CharSequence xml) throws HibernateException {
         return fromString( xml );
     }
 }

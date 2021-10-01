@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.converted.converter.custom;
 
-import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -49,8 +49,8 @@ public class MyCustomJavaTypeDescriptor implements BasicJavaDescriptor<MyCustomJ
 	}
 
 	@Override
-	public MyCustomJavaType fromString(String string) {
-		return StringHelper.isEmpty( string ) ? null : new MyCustomJavaType( string );
+	public MyCustomJavaType fromString(CharSequence string) {
+		return CharSequenceHelper.isEmpty( string ) ? null : new MyCustomJavaType( string.toString() );
 	}
 
 	@Override

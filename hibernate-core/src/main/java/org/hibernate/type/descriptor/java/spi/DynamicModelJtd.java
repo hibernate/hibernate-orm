@@ -26,7 +26,7 @@ public class DynamicModelJtd implements JavaTypeDescriptor<Map<?,?>> {
 	}
 
 	@Override
-	public Map<?,?> fromString(String string) {
+	public Map<?,?> fromString(CharSequence string) {
 		throw new UnsupportedOperationException();
 	}
 

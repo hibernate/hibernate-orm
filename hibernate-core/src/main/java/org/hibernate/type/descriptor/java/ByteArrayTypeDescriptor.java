@@ -57,7 +57,7 @@ public class ByteArrayTypeDescriptor extends AbstractClassTypeDescriptor<Byte[]>
 		return buf.toString();
 	}
 	@Override
-	public Byte[] fromString(String string) {
+	public Byte[] fromString(CharSequence string) {
 		if ( string == null ) {
 			return null;
 		}
@@ -66,7 +66,7 @@ public class ByteArrayTypeDescriptor extends AbstractClassTypeDescriptor<Byte[]>
 		}
 		Byte[] bytes = new Byte[string.length() / 2];
 		for ( int i = 0; i < bytes.length; i++ ) {
-			final String hexStr = string.substring( i * 2, (i + 1) * 2 );
+			final String hexStr = string.subSequence( i * 2, (i + 1) * 2 ).toString();
 			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
 		}
 		return bytes;

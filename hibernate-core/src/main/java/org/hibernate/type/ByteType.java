@@ -58,12 +58,12 @@ public class ByteType
 	}
 
 	@Override
-	public Byte stringToObject(String xml) {
-		return fromString( xml );
+	public Byte stringToObject(CharSequence sequence) {
+		return fromString( sequence );
 	}
 
 	@Override
-	public Byte fromStringValue(String xml) {
+	public Byte fromStringValue(CharSequence xml) {
 		return fromString( xml );
 	}
 

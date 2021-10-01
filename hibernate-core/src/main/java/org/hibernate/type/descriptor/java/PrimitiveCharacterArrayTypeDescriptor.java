@@ -33,8 +33,8 @@ public class PrimitiveCharacterArrayTypeDescriptor extends AbstractClassTypeDesc
 		return new String( value );
 	}
 
-	public char[] fromString(String string) {
-		return string.toCharArray();
+	public char[] fromString(CharSequence string) {
+		return string.toString().toCharArray();
 	}
 
 	@Override

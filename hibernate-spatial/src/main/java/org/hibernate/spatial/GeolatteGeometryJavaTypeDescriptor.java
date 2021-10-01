@@ -45,8 +45,8 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 	}
 
 	@Override
-	public Geometry fromString(String string) {
-		return Wkt.fromWkt( string );
+	public Geometry fromString(CharSequence string) {
+		return Wkt.fromWkt( string.toString() );
 	}
 
 	@Override
@@ -77,8 +77,8 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<G
 		if ( Geometry.class.isInstance( value ) ) {
 			return (Geometry) value;
 		}
-		if ( String.class.isInstance( value ) ) {
-			return fromString( (String) value );
+		if ( CharSequence.class.isInstance( value ) ) {
+			return fromString( (CharSequence) value );
 		}
 
 		if ( org.locationtech.jts.geom.Geometry.class.isInstance( value ) ) {

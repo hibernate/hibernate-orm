@@ -66,7 +66,7 @@ public class OffsetTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<Off
 	}
 
 	@Override
-	public OffsetTime fromString(String string) {
+	public OffsetTime fromString(CharSequence string) {
 		return OffsetTime.from( DateTimeFormatter.ISO_OFFSET_TIME.parse( string ) );
 	}
 

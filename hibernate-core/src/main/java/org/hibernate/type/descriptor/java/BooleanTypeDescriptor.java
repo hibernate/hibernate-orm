@@ -46,8 +46,8 @@ public class BooleanTypeDescriptor extends AbstractClassTypeDescriptor<Boolean> 
 		return value == null ? null : value.toString();
 	}
 	@Override
-	public Boolean fromString(String string) {
-		return Boolean.valueOf( string );
+	public Boolean fromString(CharSequence string) {
+		return Boolean.valueOf( string.toString() );
 	}
 
 	@SuppressWarnings({ "unchecked" })

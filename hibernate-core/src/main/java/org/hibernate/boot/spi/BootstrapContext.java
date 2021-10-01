@@ -25,6 +25,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -43,6 +44,8 @@ public interface BootstrapContext {
 	MutableJpaCompliance getJpaCompliance();
 
 	TypeConfiguration getTypeConfiguration();
+
+	BeanInstanceProducer getBeanInstanceProducer();
 
 	MetadataBuildingOptions getMetadataBuildingOptions();
 

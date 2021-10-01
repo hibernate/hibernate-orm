@@ -6,13 +6,17 @@
  */
 package org.hibernate.userguide.associations.any;
 
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Any;
 
 //tag::associations-any-example[]
 @Entity
@@ -22,10 +26,12 @@ public class PropertyHolder {
     @Id
     private Long id;
 
-    @Any(
-        metaDef = "PropertyMetaDef",
-        metaColumn = @Column( name = "property_type" )
-    )
+    @Any
+    @AnyDiscriminator( DiscriminatorType.STRING )
+    @AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
+    @AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
+    @AnyKeyJavaClass( Long.class )
+    @Column( name = "property_type" )
     @JoinColumn( name = "property_id" )
     private Property property;
 

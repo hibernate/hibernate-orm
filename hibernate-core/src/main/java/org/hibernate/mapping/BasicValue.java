@@ -21,9 +21,11 @@ import org.hibernate.boot.model.process.internal.ConvertedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
 import org.hibernate.boot.model.process.internal.NamedConverterResolution;
+import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.hibernate.boot.model.process.internal.VersionResolution;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
@@ -34,10 +36,13 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
+import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -45,11 +50,15 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
+import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
+
+import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
  * @author Steve Ebersole
@@ -68,7 +77,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	private Map explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJavaTypeAccess;
-	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess;
+	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitJdbcTypeAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
@@ -135,8 +144,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		this.explicitJavaTypeAccess = explicitJavaTypeAccess;
 	}
 
-	public void setExplicitSqlTypeAccess(Function<TypeConfiguration, JdbcTypeDescriptor> sqlTypeAccess) {
-		this.explicitSqlTypeAccess = sqlTypeAccess;
+	public void setExplicitJdbcTypeAccess(Function<TypeConfiguration, JdbcTypeDescriptor> jdbcTypeAccess) {
+		this.explicitJdbcTypeAccess = jdbcTypeAccess;
 	}
 
 	public void setExplicitMutabilityPlanAccess(Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess) {
@@ -291,7 +300,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					enumerationStyle,
 					implicitJavaTypeAccess,
 					explicitJavaTypeAccess,
-					explicitSqlTypeAccess,
+					explicitJdbcTypeAccess,
 					explicitMutabilityPlanAccess,
 					getAttributeConverterDescriptor(),
 					typeParameters,
@@ -307,7 +316,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			return VersionResolution.from(
 					implicitJavaTypeAccess,
 					explicitJavaTypeAccess,
-					explicitSqlTypeAccess,
+					explicitJdbcTypeAccess,
 					typeConfiguration,
 					getBuildingContext()
 			);
@@ -335,7 +344,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			return NamedConverterResolution.from(
 					attributeConverterDescriptor,
 					explicitJavaTypeAccess,
-					explicitSqlTypeAccess,
+					explicitJdbcTypeAccess,
 					explicitMutabilityPlanAccess,
 					this,
 					converterCreationContext,
@@ -370,6 +379,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			}
 		}
 
+		if ( jtd == null ) {
+			if ( explicitJdbcTypeAccess != null ) {
+				final JdbcTypeDescriptor jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
+				if ( jdbcType != null ) {
+					jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+				}
+			}
+		}
+
+		if ( jtd == null ) {
+			throw new MappingException( "Unable to determine JavaTypeDescriptor to use : " + this );
+		}
+
 		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
 		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaTypeDescriptor<?>) jtd );
 		if ( autoAppliedTypeDef != null && ( !jtd.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
@@ -384,7 +406,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 		return InferredBasicValueResolver.from(
 				explicitJavaTypeAccess,
-				explicitSqlTypeAccess,
+				explicitJdbcTypeAccess,
 				resolvedJavaType,
 				this::determineReflectedJavaTypeDescriptor,
 				this,
@@ -421,6 +443,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		resolvedJavaType = impliedJavaType;
+
+		if ( impliedJavaType == null ) {
+			return null;
+		}
+
 		return typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
 	}
 
@@ -618,6 +645,64 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		super.setTypeName( typeName );
+	}
+
+	private static int COUNTER;
+
+	public <T extends UserType<?>> void setExplicitCustomType(Class<T> explicitCustomType) {
+		if ( explicitCustomType != null ) {
+			if ( resolution != null ) {
+				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
+			}
+
+			final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+			final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
+
+			final Properties properties = new Properties();
+			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {
+				properties.putAll( getTypeParameters() );
+			}
+			if ( CollectionHelper.isNotEmpty( explicitLocalTypeParams ) ) {
+				properties.putAll( explicitLocalTypeParams );
+			}
+
+			final ManagedBean<T> typeBean;
+			if ( properties.isEmpty() ) {
+				typeBean = bootstrapContext
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( explicitCustomType, instanceProducer );
+			}
+			else {
+				final String name = explicitCustomType.getName() + COUNTER++;
+				typeBean = bootstrapContext
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( name, explicitCustomType, instanceProducer );
+			}
+
+			final T typeInstance = typeBean.getBeanInstance();
+
+			if ( typeInstance instanceof TypeConfigurationAware ) {
+				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
+			}
+
+			if ( typeInstance instanceof DynamicParameterizedType ) {
+				if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
+					if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
+						properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+					}
+				}
+			}
+
+			injectParameters( typeInstance, properties );
+			// envers - grr
+			setTypeParameters( properties );
+
+			final CustomType customType = new CustomType( typeInstance, typeConfiguration );
+			this.resolution = new UserTypeResolution( customType, null, properties );
+		}
 	}
 
 	public void setTemporalPrecision(TemporalType temporalPrecision) {

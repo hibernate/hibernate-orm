@@ -15,24 +15,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import jakarta.persistence.OptimisticLockException;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.Hibernate;
-import org.hibernate.query.Query;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
-import org.hibernate.cfg.Configuration;
+import org.hibernate.query.Query;
 
 import org.hibernate.testing.DialectChecks;
+import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.ServiceRegistryBuilder;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import jakarta.persistence.OptimisticLockException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -45,7 +40,7 @@ import static org.junit.Assert.fail;
  * @author Emmanuel Bernard
  */
 // todo (6.0): needs a composite user type mechanism e.g. by providing a custom ComponentTuplizer/Instantiator
-@Ignore( "Missing support for composite user types" )
+//@Ignore( "Missing support for composite user types" )
 public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected boolean isCleanupTestDataRequired() {
@@ -250,52 +245,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		tx.commit();
 		s.close();
 
-	}
-
-	/*
-	 * Test import of TypeDefs from MappedSuperclass and 
-	 * Embedded classes.
-	 * The classes 'Name' and 'FormalLastName' both embed the same 
-	 * component 'LastName'. This is to verify that processing the 
-	 * typedef defined in the component TWICE does not create any 
-	 * issues.  
-	 */
-	@Test
-	public void testImportTypeDefinitions() throws Exception {
-		LastName lastName = new LastName();
-		lastName.setName("reddy");
-				
-		Name name = new Name();
-		name.setFirstName("SHARATH");
-		name.setLastName(lastName);
-		
-		FormalLastName formalName = new FormalLastName();
-		formalName.setLastName(lastName);
-		formalName.setDesignation("Mr");
-				
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist(name);
-		s.persist(formalName);
-		tx.commit();
-		s.close();
-		 
-		s = openSession();
-		tx = s.beginTransaction();
-		name = (Name) s.get( Name.class, name.getId() );
-		assertNotNull( name );
-		assertEquals( "sharath", name.getFirstName() );
-		assertEquals( "REDDY", name.getLastName().getName() );
-		
-		formalName = (FormalLastName) s.get(FormalLastName.class, formalName.getId());
-		assertEquals( "REDDY", formalName.getLastName().getName() );
-		
-		s.delete(name);
-		s.delete(formalName);
-		tx.commit();
-		s.close();
 	}
 
 	@Test
@@ -638,6 +587,10 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
+	@FailureExpected(
+			jiraKey = "",
+			message = "Support for custom composite types not implemented - org.hibernate.orm.test.annotations.entity.Ransom#getAmount"
+	)
 	public void testCompositeType() throws Exception {
 		Session s;
 		Transaction tx;
@@ -710,67 +663,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	
 	}
-	
-	@Test
-	public void testTypeDefWithoutNameAndDefaultForTypeAttributes() {
-		SessionFactory sf = null;
-		StandardServiceRegistryImpl ssr = null;
-		try {
-			Configuration config = new Configuration();
-			config.addAnnotatedClass( LocalContactDetails.class );
-			ssr = ServiceRegistryBuilder.buildServiceRegistry( config.getProperties() );
-			sf = config.buildSessionFactory( ssr );
-			fail( "Did not throw expected exception" );
-		}
-		catch ( AnnotationException ex ) {
-			assertEquals(
-					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass org.hibernate.test.annotations.entity.PhoneNumberType",
-					ex.getMessage()
-			);
-		}
-		finally {
-			if ( ssr != null ) {
-				ssr.destroy();
-			}
-			if ( sf != null ) {
-				sf.close();
-			}
-		}
-	}
 
-	
-	/**
-	 * A custom type is used in the base class, but defined in the derived class. 
-	 * This would have caused an exception, because the base class is processed 
-	 * BEFORE the derived class, and the custom type is not yet defined. However, 
-	 * it works now because we are setting the typeName for SimpleValue in the second 
-	 * pass. 
-	 * 
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void testSetSimpleValueTypeNameInSecondPass() throws Exception {
-		Peugot derived = new Peugot();
-		derived.setName("sharath");
-		
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		s.persist(derived);
-		tx.commit();
-		s.close();
-		
-		s = openSession();
-		tx = s.beginTransaction();
-		derived = (Peugot) s.get( Peugot.class, derived.getId() );
-		assertNotNull( derived );
-		assertEquals( "SHARATH", derived.getName() );
-		s.delete(derived);
-		tx.commit();
-		s.close();
-	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -782,8 +675,6 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 				Flight.class,
 				Name.class,
 				FormalLastName.class,
-				Car.class,
-				Peugot.class,
 				ContactDetails.class,
 				Topic.class,
 				Narrative.class,
@@ -792,6 +683,7 @@ public class BasicHibernateAnnotationsTest extends BaseCoreFunctionalTestCase {
 				SoccerTeam.class,
 				Player.class,
 				Doctor.class,
+				PhoneNumberConverter.class
 		};
 	}
 

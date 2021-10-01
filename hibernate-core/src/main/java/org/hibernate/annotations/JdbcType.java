@@ -9,9 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -19,27 +17,36 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Allows specifying the specific {@link JdbcTypeDescriptor}
- * to use for a particular column mapping.  Resolved as a {@link ManagedBean}
+ * Specifies an explicit {@link JdbcTypeDescriptor} to use for a particular column mapping.<ul>
+ *     <li>
+ *         When applied to a Map-valued attribute, describes the Map value. Use
+ *         {@link MapKeyJdbcType} to describe the key instead
+ *     </li>
+ *     <li>
+ *         When applied to a List of array-valued attribute, describes the element. Use
+ *         {@link ListIndexJdbcType} to describe the index instead
+ *     </li>
+ *     <li>
+ *         When mapping an id-bag, describes the collection element.  Use {@link CollectionIdJdbcType}
+ *         to describe the collection-id
+ *     </li>
+ *     <li>
+ *         For other collection mappings, describes the elements
+ *     </li>
+ *     <li>
+ *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
+ *         value.
+ *     </li>
+ * </ul>
  *
- * ````
- * @Entity
- * class User {
- *     ...
- *     @JdbcType ( MyCustomSqlIntegerDescriptor.class )
- *     int getAge() { ... }
+ * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
  *
- *     @JdbcType ( MyCustomSqlVarcharDescriptor.class )
- *     String getName() { ... }
- * }
- * ````
+ * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * of basic value mapping.
  *
- * @apiNote Should not be used in combination with {@link JdbcTypeCode}
- *
- * @see JdbcTypeDescriptor
- * @see JdbcTypeDescriptorRegistry
- *
- * @author Steve Ebersole
+ * @see MapKeyJdbcType
+ * @see CollectionIdJdbcType
+ * @see ListIndexJdbcType
  *
  * @since 6.0
  */
@@ -47,5 +54,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface JdbcType {
+	/**
+	 * The {@link JdbcTypeDescriptor} to use for the mapped column
+	 */
 	Class<? extends JdbcTypeDescriptor> value();
 }

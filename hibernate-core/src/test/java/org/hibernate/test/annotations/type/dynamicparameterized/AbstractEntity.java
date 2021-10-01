@@ -31,13 +31,10 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.hibernate.annotations.TypeDef;
-
 /**
  * @author Daniel Gredler
  */
 @MappedSuperclass
-@TypeDef(name = "string", typeClass = MyStringType.class, defaultForType = String.class)
 public abstract class AbstractEntity {
 
 	@Id

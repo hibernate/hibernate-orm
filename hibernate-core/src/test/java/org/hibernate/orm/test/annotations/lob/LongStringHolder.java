@@ -8,11 +8,14 @@
 //$Id: $
 
 package org.hibernate.orm.test.annotations.lob;
+
+import java.sql.Types;
+
+import org.hibernate.annotations.JdbcTypeCode;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Type;
 
 /**
  * An entity containing data that is materialized into a String immediately.
@@ -38,7 +41,7 @@ public class LongStringHolder {
 		this.id = id;
 	}
 
-	@Type(type = "text")
+	@JdbcTypeCode( Types.LONGVARCHAR )
 	public String getLongString() {
 		return longString;
 	}
@@ -46,7 +49,8 @@ public class LongStringHolder {
 	public void setLongString(String longString) {
 		this.longString = longString;
 	}
-	@Type(type = "char_text")
+
+	@JdbcTypeCode( Types.LONGVARCHAR )
 	public char[] getName() {
 		return name;
 	}
@@ -54,7 +58,8 @@ public class LongStringHolder {
 	public void setName(char[] name) {
 		this.name = name;
 	}
-	@Type(type = "wrapped_char_text")
+
+	@JdbcTypeCode( Types.LONGVARCHAR )
 	public Character[] getWhatEver() {
 		return whatEver;
 	}

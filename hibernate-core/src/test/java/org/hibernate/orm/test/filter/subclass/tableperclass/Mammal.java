@@ -6,13 +6,14 @@
  */
 package org.hibernate.orm.test.filter.subclass.tableperclass;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.Type;
+import org.hibernate.type.NumericBooleanConverter;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 
 @Entity
 @Table(name="ZOOLOGY_MAMMAL")
@@ -21,7 +22,7 @@ import org.hibernate.annotations.Type;
 public class Mammal extends Animal{
 	
 	@Column(name="IS_PREGNANT")
-	@Type( type="numeric_boolean" )
+	@Convert( converter = NumericBooleanConverter.class )
 	private boolean isPregnant;
 
 	public boolean isPregnant() {

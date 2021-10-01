@@ -9,12 +9,7 @@ package org.hibernate.orm.test.bootstrap.binding.annotations.basics.sql;
 import java.sql.Types;
 import java.util.Map;
 import java.util.function.Consumer;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
@@ -31,6 +26,11 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -115,12 +115,12 @@ public class MapKeyJdbcTypeTests {
 
 		@ElementCollection
 		@JdbcTypeCode( Types.NVARCHAR )
-		@MapKeyJdbcTypeCode( @JdbcTypeCode( Types.TINYINT ) )
+		@MapKeyJdbcTypeCode( Types.TINYINT )
 		private Map<Integer,String> sqlTypeCodeMap;
 
 		@ElementCollection
 		@JdbcTypeCode( Types.NVARCHAR )
-		@MapKeyJdbcType( @JdbcType( TinyIntJdbcTypeDescriptor.class ) )
+		@MapKeyJdbcType( TinyIntJdbcTypeDescriptor.class )
 		private Map<Integer,String> sqlTypeMap;
 	}
 }

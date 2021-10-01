@@ -18,44 +18,40 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * @asciidoc
- *
- * Allows specifying the {@link JdbcTypeDescriptor} to
- * use based on the type-code.  This might be a standard {@linkplain java.sql.Types JDBC Type}
- * code or a custom code.  Either way, there must be an entry in the
- * {@link JdbcTypeDescriptorRegistry} registered under this code
- *
- * ````
- * @Entity
- * class User {
- *     ...
- *     // By default Hibernate maps Java's Integer to JDBC's INTEGER
- *     // but here we want to use JDBC's TINYINT instead.
- *     @JdbcTypeCode ( Types.TINYINT )
- *     int getAge() { ... }
- *
- *     // By default Hibernate maps Java's String to JDBC's VARCHAR
- *     // but here we want to use JDBC's NVARCHAR instead.
- *     @JdbcTypeCode ( Types.NVARCHAR )
- *     String getName() { ... }
- * }
- * ````
- *
- * Other forms of influencing the JDBC type used include:<ul>
- *     <li>{@link jakarta.persistence.Enumerated} / {@link jakarta.persistence.EnumType}</li>
- *     <li>{@link jakarta.persistence.TemporalType}</li>
- *     <li>{@link jakarta.persistence.Lob}</li>
- *     <li>{@link Nationalized}</li>
- *     <li>{@link JdbcType}</li>
+ * Specifies the JDBC type-code to use for the column mapping.<ul>
+ *     <li>
+ *         When applied to a Map-valued attribute, describes the Map value. Use
+ *         {@link MapKeyJdbcTypeCode} to describe the key instead
+ *     </li>
+ *     <li>
+ *         When applied to a List of array-valued attribute, describes the element. Use
+ *         {@link ListIndexJdbcTypeCode} to describe the index instead
+ *     </li>
+ *     <li>
+ *         When mapping an id-bag, describes the collection element.  Use {@link CollectionIdJdbcTypeCode}
+ *         to describe the collection-id
+ *     </li>
+ *     <li>
+ *         For other collection mappings, describes the elements
+ *     </li>
+ *     <li>
+ *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
+ *         value.
+ *     </li>
  * </ul>
  *
- * These forms should not be mixed on the same mapping.  The result is not defined
+ * This code is generally as one of the values defined in {@link java.sql.Types}, but are not
+ * limited to these.  The code is resolved against an internal registry of {@link JdbcTypeDescriptor}
+ * references.  See the user-guide for additional details.
  *
- * @apiNote Should not be used in combination with the other forms of influencing the JDBC type used
+ * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * of basic value mapping.
  *
- * @see JdbcTypeRegistration
- *
- * @author Steve Ebersole
+ * @see JdbcTypeDescriptor
+ * @see JdbcTypeDescriptorRegistry
+ * @see MapKeyJdbcTypeCode
+ * @see CollectionIdJdbcTypeCode
+ * @see ListIndexJdbcTypeCode
  *
  * @since 6.0
  */

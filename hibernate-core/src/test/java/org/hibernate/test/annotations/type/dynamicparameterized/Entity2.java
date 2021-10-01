@@ -23,14 +23,14 @@
  */
 package org.hibernate.test.annotations.type.dynamicparameterized;
 
+import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Parameter;
+
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 
 /**
  * @author Daniel Gredler
@@ -41,24 +41,26 @@ import org.hibernate.annotations.Type;
 public class Entity2 extends AbstractEntity {
 
 	@Column(name = "PROP1")
-	@Type(type = "string")
+	@CustomType( MyStringType.class )
 	String entity2_Prop1;
 
 	@Column(name = "PROP2")
-	@Type(type = "string")
+	@CustomType( MyStringType.class )
 	String entity2_Prop2;
 
 	@Column(name = "PROP3")
+	@CustomType( MyStringType.class )
 	String entity2_Prop3;
 
 	@Column(name = "PROP4")
+	@CustomType( MyStringType.class )
 	String entity2_Prop4;
 
 	@Column(name = "PROP5")
-	@Type(type = "string", parameters = @Parameter(name = "suffix", value = "blah"))
+	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "blah"))
 	String entity2_Prop5;
 
 	@Column(name = "PROP6")
-	@Type(type = "string", parameters = @Parameter(name = "suffix", value = "yeah"))
+	@CustomType( value = MyStringType.class, parameters = @Parameter(name = "suffix", value = "yeah"))
 	String entity2_Prop6;
 }

@@ -13,7 +13,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Type;
 import org.hibernate.envers.Audited;
 
 /**
@@ -30,7 +29,7 @@ public class ObjectUserTypeEntity implements Serializable {
 
 	private String buildInType;
 
-	@Type(type = "org.hibernate.envers.test.integration.customtype.ObjectUserType")
+//	@Type(type = "org.hibernate.envers.test.integration.customtype.ObjectUserType")
 	@Columns(columns = {@Column(name = "OBJ_TYPE"), @Column(name = "OBJ_VALUE")})
 	private Object userType;
 

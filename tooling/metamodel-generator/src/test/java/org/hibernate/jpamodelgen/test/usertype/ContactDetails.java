@@ -6,10 +6,9 @@
  */
 package org.hibernate.jpamodelgen.test.usertype;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Type;
 
 /**
  * @author Hardy Ferentschik
@@ -19,7 +18,7 @@ public class ContactDetails {
 	@Id
 	private long id;
 
-	@Type(type = "foo")
+	@Basic
 	private PhoneNumber phoneNumber;
 }
 

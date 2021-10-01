@@ -13,6 +13,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.junit.Test;
+
 import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -33,13 +38,6 @@ import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -254,7 +252,8 @@ public class NestedEmbeddableTest extends BaseEntityManagerFunctionalTestCase {
 		@MapKeyColumn(name = "LOCALE")
 		@Column(name = "LOCALIZED_VALUE")
 		@Lob
-		@Type(type = "org.hibernate.type.TextType")
+		// todo (6.0) : not sure of the "real" effect of dropping this as this test has not yet been re-enabled
+		//@Type(type = "org.hibernate.type.TextType")
 		private Map<Locale, String> values;
 
 		public LocalizedString() {

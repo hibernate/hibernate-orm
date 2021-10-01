@@ -24,6 +24,10 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	private final CustomType userTypeAdapter;
 	private final MutabilityPlan mutabilityPlan;
 
+	/**
+	 * We need this for the way envers interprets the boot-model
+	 * and builds its own :(
+	 */
 	private final Properties combinedTypeParameters;
 
 	public UserTypeResolution(

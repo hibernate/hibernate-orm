@@ -6,27 +6,24 @@
  */
 package org.hibernate.orm.test.annotations.basic;
 
-import java.util.HashSet;
+import java.sql.Types;
 import java.util.Set;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.CustomType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.usertype.UserTypeSupport;
 
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
@@ -36,9 +33,7 @@ public class CollectionAsBasicTest {
 	public void testCollectionAsBasic() {
 		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 		try {
-			Metadata metadata = new MetadataSources(ssr).addAnnotatedClass( Post.class )
-					.getMetadataBuilder().applyBasicType( new DelimitedStringsType() )
-					.build();
+			Metadata metadata = new MetadataSources(ssr).addAnnotatedClass( Post.class ).getMetadataBuilder().build();
 			PersistentClass postBinding = metadata.getEntityBinding( Post.class.getName() );
 			Property tagsAttribute = postBinding.getProperty( "tags" );
 		}
@@ -52,59 +47,15 @@ public class CollectionAsBasicTest {
 	public static class Post {
 		@Id
 		public Integer id;
+		public String name;
 		@Basic
-		@Type( type = "delimited_strings" )
+		@CustomType( DelimitedStringsJavaTypeDescriptor.class )
 		Set<String> tags;
 	}
 
-	public static class DelimitedStringsType extends AbstractSingleColumnStandardBasicType<Set> {
-
-		public DelimitedStringsType() {
-			super(
-					VarcharJdbcTypeDescriptor.INSTANCE,
-					new DelimitedStringsJavaTypeDescriptor()
-			);
-		}
-
-		@Override
-		public String getName() {
-			return "delimited_strings";
-		}
-	}
-
-	public static class DelimitedStringsJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Set> {
+	public static class DelimitedStringsJavaTypeDescriptor extends UserTypeSupport<Set> {
 		public DelimitedStringsJavaTypeDescriptor() {
-			super(
-					Set.class,
-					new MutableMutabilityPlan<Set>() {
-						@Override
-						protected Set deepCopyNotNull(Set value) {
-							Set<String> copy = new HashSet<String>();
-							copy.addAll( value );
-							return copy;
-						}
-					}
-			);
-		}
-
-		@Override
-		public String toString(Set value) {
-			return null;
-		}
-
-		@Override
-		public Set fromString(CharSequence string) {
-			return null;
-		}
-
-		@Override
-		public <X> X unwrap(Set value, Class<X> type, WrapperOptions options) {
-			return null;
-		}
-
-		@Override
-		public <X> Set wrap(X value, WrapperOptions options) {
-			return null;
+			super( Set.class, Types.VARCHAR );
 		}
 	}
 }

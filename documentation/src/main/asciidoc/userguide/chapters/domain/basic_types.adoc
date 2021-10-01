@@ -12,7 +12,7 @@
 
 A basic type is a mapping between a Java type and a single database column.
 
-Hibernate can map many standard Java types (`Integer`, `String`, etc) as basic
+Hibernate can map many standard Java types (`Integer`, `String`, etc.) as basic
 types.  The mapping for many come from tables B-3 and B-4 in the JDBC specification<<jdbc>>.
 Others (`URL` as `VARCHAR`, e.g.) simply make sense.
 
@@ -50,18 +50,6 @@ If provider portability is a concern, you should stick to just these basic types
 Java Persistence 2.1 introduced the `jakarta.persistence.AttributeConverter` providing support for handling
 types beyond those defined in the specification. See <<basic-jpa-convert>> for more on this topic.
 ====
-
-To deal with values of basic type, Hibernate needs to understand a few things about the mapping:
-
-* The capabilities of the Java type
-   ** How to compare values
-   ** How to calculate a hash-code
-   ** How to coerce values of this type to another type
-* The JDBC type it should use
-* Any conversion it should perform on the value to/from the database
-* The mutability of the value - whether the internal state can change like `java.util.Date` or is immutable like `java.lang.String`
-
-This chapter covers how Hibernate determines these pieces and how to influence that determination process.
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -184,20 +172,43 @@ The SQL fragment defined by the `@Formula` annotation can be as complex as you w
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-mapping]]
-==== Data mapping basics
+==== Mapping basic values
+
+To deal with values of basic type, Hibernate needs to understand a few things about the mapping:
+
+* The capabilities of the Java type.  For example:
+** How to compare values
+** How to calculate a hash-code
+** How to coerce values of this type to another type
+* The JDBC type it should use
+** How to bind values to JDBC statements
+** How to extract from JDBC results
+* Any conversion it should perform on the value to/from the database
+* The mutability of the value - whether the internal state can change like `java.util.Date` or is immutable like `java.lang.String`
+
+This section covers how Hibernate determines these pieces and how to influence that determination process.
 
 [NOTE]
 ====
 The following sections focus on approaches introduced in version 6 to influence how Hibernate will
 map basic value to the database.
 
-The legacy approach relying on `BasicType` and `UserType` is only lightly covered here.  Both `BasicType`
-and `UserType` continue to be fully supported, however.  See <<basic-legacy>> for details.
+This includes removal of the following deprecated legacy annotations:
+
+* `@Type`
+* `@TypeDef`
+* `@TypeDefs`
+* `@MapKeyType`
+* `@CollectionId#type`
+* `@AnyMetaDef#metaType`
+* `@AnyMetaDef#idType`
+
+See the 6.0 migration guide for discussions about migrating uses of these annotations
 ====
 
 
 Looking at <<basic-annotation-implicit-example, this example>>, how does Hibernate know what mapping
-to use for these attributes?  The mapping does not really provide much information.
+to use for these attributes?  The annotations do not really provide much information.
 
 This is an illustration of Hibernate's implicit basic-type resolution, which is a series of checks to determine
 the appropriate mapping to use.  Describing the complete process for implicit resolution is beyond the scope
@@ -212,38 +223,63 @@ The fallback is to map the value to the "recommended" JDBC type.
 Worst case, if the Java type is `Serializable` Hibernate will try to handle it via binary serialization.
 
 For cases where the Java type is not a standard type or if some specialized handling is desired, Hibernate
-provides many ways to influence this mapping resolution.  Ultimately we want to influence the resolution of
+provides 2 main approaches to influence this mapping resolution:
 
-`JavaTypeDescriptor`:: Describes capabilities of the Java type as discussed in <<basic>>.  The descriptor
-      used can be influenced through `@JavaType` and `@JavaTypeRegistration`.  `@JavaTypeRegistration` is a global
-      form of `@JavaType`.  `@MapKeyJavaType` is used to influence the descriptor chosen for a `Map` key.
-`JdbcTypeDescriptor`:: Describes aspects of the JDBC type such as how to bind and extract values.  The descriptor
-      used can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
-      `@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`. `@MapKeyJdbcType` and
-      `@MapKeyJdbcTypeCode` are also available to influence the descriptor chosen for a Map key.
-`BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
-        Some Java types (enums, e.g.) have an implicit conversion.  Users can specify an explicit conversion using
-        `AttributeConverter`.  See <<basic-jpa-convert>>.
-`MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
-   `MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
+* A compositional approach using a combination of one-or-more annotations to describe specific
+    aspects of the mapping.  This approach is covered in <<basic-mapping-composition>>.
+* The `UserType` contract, which is covered in <<basic-mapping-custom>>
 
-The legacy `@Type` and `@TypeDefs` can also be used as to indicate the `BasicType` or `UserType` to use.  Refer to <<basic-legacy>>
-for more details.
+These 2 approaches should be considered mutually exclusive.  A custom UserType will always
+take precedence over compositional annotations.
 
 See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
 
 See <<basic-bitset-java-type>> for examples of most of these approaches, mapping `BitSet` as a basic type.
 
 
+[[basic-mapping-composition]]
+==== Compositional basic mapping
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The compositional approach allows defining how the mapping should work in terms of influencing
+individual, basic-valued parts of the model:
+
+
+`JavaTypeDescriptor`:: Describes capabilities of the Java type as discussed in <<basic>>.  The descriptor
+    used can be influenced through `@JavaType` and `@JavaTypeRegistration`.  `@JavaTypeRegistration` is a global
+    form of `@JavaType`.
+`JdbcTypeDescriptor`:: Describes aspects of the JDBC type such as how to bind and extract values.  The descriptor
+    used can be influenced through `@JdbcType`, `@JdbcTypeCode` and `@JdbcTypeRegistration`.
+    `@JdbcTypeRegistration` is a global form of `@JdbcType` / `@JdbcTypeCode`.
+`BasicValueConverter`:: Describes the conversions that need to occur when reading from or writing to the database.
+    Some Java types (enums, e.g.) have an implicit conversion.  Users can specify an explicit conversion using
+    `AttributeConverter`.  See <<basic-jpa-convert>>.
+`MutabilityPlan`:: Describes whether the internal state of values of the type are mutable or immutable.
+    `MutabilityPlan` can be influenced by `@Mutability` or `@Immutable`
+
+When using the compositional approach, there are other ways to influence the resolution are covered
+in <<basic-enums>>, <<basic-temporal>>, <<basic-lob>> and <<basic-nationalized>>
+
+
+[[basic-mapping-custom]]
+==== Custom type mapping
+
+Another approach is to supply the implementation of the `org.hibernate.usertype.UserType` contract using `@CustomType`.
+
+There are also corresponding, specialized forms of `@CustomType` for specific model parts:
+
+* When mapping a Map, `@CustomType` describes the Map value while `@MapKeyCustomType` describe the Map key
+* When mapping a List or array, `@CustomType` describes the elements while `@ListIndexCustomType` describes the index
+* When mapping an id-bag, `@CustomType` describes the elements while `@CollectionIdCustomType` describes the collection-id
+* For other collection mappings, `@CustomType` describes the elements
+* For discriminated association mappings (`@Any` and `@ManyToAny`), `@CustomType` describes the discriminator value
+
 
 [[basic-nationalized]]
 ==== Handling nationalized character data
 
-How nationalized character is handled and stored depends on the underlying database.
+How nationalized character data is handled and stored depends on the underlying database.
 
-Most databases support storing nationalized data through the standardized SQL
+Most databases support storing nationalized character data through the standardized SQL
 NCHAR, NVARCHAR, LONGNVARCHAR and NCLOB variants.
 
 Others support storing nationalized data as part of CHAR, VARCHAR, LONGVARCHAR
@@ -252,7 +288,7 @@ and NCLOB, even as aliased types.
 
 Ultimately Hibernate understands this through `Dialect#getNationalizationSupport()`
 
-To ensure nationalized gets stored and accessed correctly, `@Nationalized` can be used
+To ensure nationalized character data gets stored and accessed correctly, `@Nationalized` can be used
 locally or `hibernate.use_nationalized_character_data` can be set globally.
 
 [NOTE]
@@ -296,9 +332,6 @@ include::{sourcedir}/basic/NationalizedTest.java[tags=basic-nationalized-example
 
 
 
-
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-lob]]
 ==== Handling LOB data
@@ -347,7 +380,6 @@ This trade-off for more familiar is sometimes performance, though this depends o
 
 
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-temporal]]
 ==== Handling temporal data
@@ -451,12 +483,159 @@ https://docs.oracle.com/javase/8/docs/api/java/sql/PreparedStatement.html#setTim
 
 
 
+[[basic-enums]]
+==== Enums
+
+Hibernate supports the mapping of Java enums as basic value types in a number of different ways.
+
+[[basic-enums-Enumerated]]
+===== `@Enumerated`
+
+The original Jakarta Persistence-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated`
+annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated
+by `jakarta.persistence.EnumType`:
+
+`ORDINAL`:: stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
+`STRING`:: stored according to the enum value's name, as indicated by `java.lang.Enum#name`
+
+Assuming the following enumeration:
+
+.`PhoneType` enumeration
+====
+[source, JAVA, indent=0]
+----
+include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
+----
+====
+
+In the ORDINAL example, the `phone_type` column is defined as a (nullable) INTEGER type and would hold:
+
+`NULL`:: For null values
+`0`:: For the `LAND_LINE` enum
+`1`:: For the `MOBILE` enum
+
+[[basic-enums-Enumerated-ordinal-example]]
+.`@Enumerated(ORDINAL)` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-example]
+----
+====
+
+When persisting this entity, Hibernate generates the following SQL statement:
+
+[[basic-enums-Enumerated-ordinal-persistence-example]]
+.Persisting an entity with an `@Enumerated(ORDINAL)` mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
+----
+
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/basic-enums-Enumerated-ordinal-persistence-example.sql[]
+----
+====
+
+In the STRING example, the `phone_type` column is defined as a (nullable) VARCHAR type and would hold:
+
+`NULL`:: For null values
+`LAND_LINE`:: For the `LAND_LINE` enum
+`MOBILE`:: For the `MOBILE` enum
+
+[[basic-enums-Enumerated-string-example]]
+.`@Enumerated(STRING)` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-Enumerated-string-example]
+----
+====
+
+Persisting the same entity as in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
+
+[[basic-enums-Enumerated-string-persistence-example]]
+.Persisting an entity with an `@Enumerated(STRING)` mapping
+====
+[source, SQL, indent=0]
+----
+include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql[]
+----
+====
+
+[[basic-enums-attribute-converter]]
+===== Using AttributeConverter
+
+Let's consider the following `Gender` enum which stores its values using the `'M'` and `'F'` codes.
+
+[[basic-enums-converter-example]]
+.Enum with a custom constructor
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/Gender.java[tags=basic-enums-converter-example]
+----
+====
+
+You can map enums in a Jakarta Persistence compliant way using a Jakarta Persistence AttributeConverter.
+
+[[basic-enums-attribute-converter-example]]
+.Enum mapping with `AttributeConverter` example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/EnumerationConverterTest.java[tags=basic-enums-attribute-converter-example]
+----
+====
+
+Here, the gender column is defined as a CHAR type and would hold:
+
+`NULL`:: For null values
+`'M'`:: For the `MALE` enum
+`'F'`:: For the `FEMALE` enum
+
+For additional details on using AttributeConverters, see <<basic-jpa-convert>> section.
+
+[NOTE]
+====
+Jakarta Persistence explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
+
+So, when using the `AttributeConverter` approach, be sure not to mark the attribute as `@Enumerated`.
+====
 
 
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// Start the baseline type sections
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[[basic-enums-custom-type]]
+===== Custom type
+
+You can also map enums using a Hibernate custom type mapping.
+Let's again revisit the Gender enum example, this time using a custom Type to store the more standardized `'M'` and `'F'` codes.
+
+[[basic-enums-custom-type-example]]
+.Enum mapping with custom Type example
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custom-type-example, indent=0]
+
+include::{sourcedir}/basic/GenderType.java[tags=basic-enums-custom-type-example, indent=0]
+
+include::{sourcedir}/basic/GenderJavaTypeDescriptor.java[tags=basic-enums-custom-type-example, indent=0]
+----
+====
+
+Again, the gender column is defined as a CHAR type and would hold:
+
+`NULL`:: For null values
+`'M'`:: For the `MALE` enum
+`'F'`:: For the `FEMALE` enum
+
+For additional details on using custom types, see <<basic-mapping-custom>> section.
+
+
+
 
 [[basic-boolean]]
 ==== Boolean
@@ -494,20 +673,7 @@ Here the built-in `AttributeConverter` implementations provided by Hibernate are
 `AttributeConverter` could be used also.
 
 
-[[basic-boolean-example-legacy]]
-.Using `@Type`
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-legacy-yes-no]
-
-include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-legacy-t-f]
-
-include::{sourcedir}/basic/BooleanMappingTests.java[tags=basic-boolean-example-explicit-legacy-numeric]
-----
-====
-
-Here the legacy approach is used.
+Booleans can also be mapped using `UserType` and `@CustomType`
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1371,160 +1537,6 @@ For details, see the discussion of generators in <<chapters/domain/identifiers.a
 
 
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-[[basic-enums]]
-==== Mapping enums
-
-Hibernate supports the mapping of Java enums as basic value types in a number of different ways.
-
-[[basic-enums-Enumerated]]
-===== `@Enumerated`
-
-The original Jakarta Persistence-compliant way to map enums was via the `@Enumerated` or `@MapKeyEnumerated`  annotations, working on the principle that the enum values are stored according to one of 2 strategies indicated by `jakarta.persistence.EnumType`:
-
-`ORDINAL`::
-stored according to the enum value's ordinal position within the enum class, as indicated by `java.lang.Enum#ordinal`
-`STRING`::
-stored according to the enum value's name, as indicated by `java.lang.Enum#name`
-
-Assuming the following enumeration:
-
-.`PhoneType` enumeration
-====
-[source, JAVA, indent=0]
-----
-include::{modeldir}/PhoneType.java[tags=hql-examples-domain-model-example]
-----
-====
-
-In the ORDINAL example, the `phone_type` column is defined as a (nullable) INTEGER type and would hold:
-
-`NULL`:: For null values
-`0`:: For the `LAND_LINE` enum
-`1`:: For the `MOBILE` enum
-
-[[basic-enums-Enumerated-ordinal-example]]
-.`@Enumerated(ORDINAL)` example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-example]
-----
-====
-
-When persisting this entity, Hibernate generates the following SQL statement:
-
-[[basic-enums-Enumerated-ordinal-persistence-example]]
-.Persisting an entity with an `@Enumerated(ORDINAL)` mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/PhoneTypeEnumeratedOrdinalTest.java[tags=basic-enums-Enumerated-ordinal-persistence-example]
-----
-
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/basic-enums-Enumerated-ordinal-persistence-example.sql[]
-----
-====
-
-In the STRING example, the `phone_type` column is defined as a (nullable) VARCHAR type and would hold:
-
-`NULL`:: For null values
-`LAND_LINE`:: For the `LAND_LINE` enum
-`MOBILE`:: For the `MOBILE` enum
-
-[[basic-enums-Enumerated-string-example]]
-.`@Enumerated(STRING)` example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/PhoneTypeEnumeratedStringTest.java[tags=basic-enums-Enumerated-string-example]
-----
-====
-
-Persisting the same entity as in the `@Enumerated(ORDINAL)` example, Hibernate generates the following SQL statement:
-
-[[basic-enums-Enumerated-string-persistence-example]]
-.Persisting an entity with an `@Enumerated(STRING)` mapping
-====
-[source, SQL, indent=0]
-----
-include::{extrasdir}/basic/basic-enums-Enumerated-string-persistence-example.sql[]
-----
-====
-
-[[basic-enums-attribute-converter]]
-===== Using AttributeConverter
-
-Let's consider the following `Gender` enum which stores its values using the `'M'` and `'F'` codes.
-
-[[basic-enums-converter-example]]
-.Enum with a custom constructor
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/Gender.java[tags=basic-enums-converter-example]
-----
-====
-
-You can map enums in a Jakarta Persistence compliant way using a Jakarta Persistence AttributeConverter.
-
-[[basic-enums-attribute-converter-example]]
-.Enum mapping with `AttributeConverter` example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/EnumerationConverterTest.java[tags=basic-enums-attribute-converter-example]
-----
-====
-
-Here, the gender column is defined as a CHAR type and would hold:
-
-`NULL`:: For null values
-`'M'`:: For the `MALE` enum
-`'F'`:: For the `FEMALE` enum
-
-For additional details on using AttributeConverters, see <<basic-jpa-convert>> section.
-
-[NOTE]
-====
-Jakarta Persistence explicitly disallows the use of an `AttributeConverter` with an attribute marked as `@Enumerated`.
-
-So, when using the `AttributeConverter` approach, be sure not to mark the attribute as `@Enumerated`.
-====
-
-
-
-[[basic-enums-custom-type]]
-===== Custom type
-
-You can also map enums using a Hibernate custom type mapping.
-Let's again revisit the Gender enum example, this time using a custom Type to store the more standardized `'M'` and `'F'` codes.
-
-[[basic-enums-custom-type-example]]
-.Enum mapping with custom Type example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/EnumerationCustomTypeTest.java[tags=basic-enums-custom-type-example, indent=0]
-
-include::{sourcedir}/basic/GenderType.java[tags=basic-enums-custom-type-example, indent=0]
-
-include::{sourcedir}/basic/GenderJavaTypeDescriptor.java[tags=basic-enums-custom-type-example, indent=0]
-----
-====
-
-Again, the gender column is defined as a CHAR type and would hold:
-
-`NULL`:: For null values
-`'M'`:: For the `MALE` enum
-`'F'`:: For the `FEMALE` enum
-
-For additional details on using custom types, see <<basic-custom-type>> section.
-
-
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1543,15 +1555,12 @@ a Java service (see `java.util.ServiceLoader`).
 
 
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-bitset]]
-==== Custom Java types
+==== Case Study : BitSet
 
-There are many ways to map Java types other than those covered so far.
-
-In this section, we will use the `java.util.BitSet` type as an example and map that
-using different approaches.
+We've covered many ways to specify basic value mappings so far.  This section will look at mapping the
+`java.util.BitSet` type by applying the different techniques covered so far.
 
 [[basic-bitset-example-implicit]]
 .Implicit BitSet mapping
@@ -1564,10 +1573,10 @@ include::{sourcedir}/basic/BitSetImplicitTests.java[tags=basic-bitset-example-im
 
 As mentioned previously, the worst-case fallback for Hibernate mapping a basic type
 which implements `Serializable` is to simply serialize it to the database.  BitSet
-does implement `Serializable`, so by default Hibernate would handle this mapping by serialization
+does implement `Serializable`, so by default Hibernate would handle this mapping by serialization.
 
-In the following sections we will look at approaches to change various aspects of how
-the BitSet gets mapped to the database.
+That is not an ideal mapping.  In the following sections we will look at approaches to change
+various aspects of how the BitSet gets mapped to the database.
 
 
 [[basic-bitset-converter]]
@@ -1607,18 +1616,8 @@ See <<basic-jpa-convert-mutability>> for additional details.
 [[basic-bitset-java-type]]
 ===== Using a custom `JavaTypeDescriptor`
 
-As covered in <<basic-mapping-explicit>>, any of the following can be used to specify
-the `JavaTypeDescriptor` to use:
-
-   * `@JavaTypeRegistration`
-   * `@JavaType`
-   * `@MapKeyJavaType`
-   * `TypeContributor`
-
-We will skip discussing `@MapKeyJavaType` because it is redundant with discussing `@JavaType`.  We will
-also skip discussing using `TypeContributor` as it is discussed in <<basic-type-contributor>>.
-
-First we will define a `JavaTypeDescriptor` for `BitSet` that maps values to `VARCHAR` for storage by default.
+As covered in <<basic-mapping-explicit>>, we will define a `JavaTypeDescriptor`
+for `BitSet` that maps values to `VARCHAR` for storage by default.
 
 [[basic-bitset-example-java-type]]
 .BitSet JavaTypeDescriptor
@@ -1641,7 +1640,8 @@ include::{sourcedir}/basic/BitSetJavaTypeTests.java[tags=basic-bitset-example-ja
 ----
 ====
 
-Or we can apply it globally using `@JavaTypeRegistration`
+Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaTypeDescriptor`
+to be used as the default whenever we encounter the `BitSet` type
 
 [[basic-bitset-example-java-type-global]]
 .@JavaTypeRegistration
@@ -1656,22 +1656,10 @@ include::{sourcedir}/basic/BitSetJavaTypeRegistrationTests.java[tags=basic-bitse
 [[basic-bitset-jdbc-type]]
 ===== Selecting different `JdbcTypeDescriptor`
 
-As covered in <<basic-mapping-explicit>>, any of the following can be used to specify
-the `JdbcTypeDescriptor` to use:
-
-* `@JdbcTypeRegistration`
-* `@JdbcType`
-* `@JdbcTypeCode`
-* `@MapKeyJdbcType`
-* `@MapKeyJdbcTypeCode`
-* `TypeContributor`
-
-We will skip discussing `@MapKeyJdbcType` and `@MapKeyJdbcTypeCode` because they are redundant with
-discussing `@JdbcType` and `@JdbcTypeCode`.  We will also skip discussing using `TypeContributor` as
-it is discussed in <<basic-type-contributor>>.
-
-Our custom `BitSetJavaType` class already has support for being able to map `BitSet` values as binary
-data as well through its coercion support.
+Our custom `BitSetJavaType` maps `BitSet` values to `VARCHAR` by default.  That was a better option
+than direct serialization.  But as `BitSet` is ultimately binary data we would probably really want to
+map this to `VARBINARY` type instead.  One way to do that would be to change `BitSetJavaType#getRecommendedJdbcType`
+to instead return `VARBINARY` descriptor.  Another option would be to use a local `@JdbcType` or `@JdbcTypeCode`.
 
 The following examples for specifying the `JdbcTypeDescriptor` assume our `BitSetJavaType`
 is globally registered.
@@ -1692,9 +1680,6 @@ include::{sourcedir}/basic/BitSetJdbcTypeCodeTests.java[tags=basic-bitset-exampl
 
 In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcTypeDescriptor` registered for JDBC's
 `VARBINARY` type should be used.
-
-A specific `JdbcTypeDescriptor` implementation can be specified either locally using `@JdbcType` or
-globally using `@JdbcTypeRegistration`
 
 
 [[basic-bitset-example-jdbc-type-local]]
@@ -1724,14 +1709,10 @@ include::{sourcedir}/basic/BitSetJdbcTypeRegistrationTests.java[tags=basic-bitse
 
 
 
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-jpa-convert]]
 ==== AttributeConverters
-
-Although Hibernate has long been offering <<basic-custom-type,custom types>>, as a Jakarta Persistence provider,
-it also supports `AttributeConverter` as well.
 
 With a custom `AttributeConverter`, the application developer can map a given JDBC type to an entity basic type.
 

@@ -10,13 +10,6 @@ import java.sql.Clob;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.Instant;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converter;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.IrrelevantEntity;
 import org.hibernate.Session;
@@ -51,6 +44,13 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.util.ExceptionUtil;
 import org.junit.Test;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import org.hamcrest.Matchers;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -506,7 +506,6 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	public static class Tester3 {
 		@Id
 		private Long id;
-		@org.hibernate.annotations.Type( type = "string" )
 		@Convert(disableConversion = true)
 		private String name;
 	}

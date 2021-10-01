@@ -13,11 +13,12 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.orm.test.annotations.enumerated.enums.FirstLetter;
 
 /**
  * @author Janario Oliveira
  */
-public class FirstLetterType extends org.hibernate.type.EnumType {
+public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 
 	@Override
 	public int[] sqlTypes() {

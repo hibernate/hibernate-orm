@@ -14,7 +14,6 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
 
 /**
  * @author Emmanuel Bernard
@@ -27,7 +26,7 @@ public class Dvd {
 	@Id
 	@GeneratedValue(generator = "custom-id")
 	@GenericGenerator(name = "custom-id", strategy = "org.hibernate.test.annotations.type.MyOidGenerator")
-	@Type(type = "org.hibernate.test.annotations.type.MyOidType")
+//	@Type(type = "org.hibernate.test.annotations.type.MyOidType")
 	@Columns(
 			columns = {
 			@Column(name = "high"),

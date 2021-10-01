@@ -15,20 +15,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.AttributeOverrides;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.ConstraintMode;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.MapKey;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.OneToMany;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -44,6 +30,7 @@ import org.hibernate.annotations.FilterJoinTable;
 import org.hibernate.annotations.FilterJoinTables;
 import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
@@ -109,6 +96,21 @@ import org.hibernate.mapping.Table;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.AttributeOverride;
+import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CollectionTable;
+import jakarta.persistence.ConstraintMode;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKey;
+import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToMany;
+
 import static org.hibernate.cfg.BinderHelper.toAliasEntityMap;
 import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
 
@@ -118,7 +120,7 @@ import static org.hibernate.cfg.BinderHelper.toAliasTableMap;
  * @author inger
  * @author Emmanuel Bernard
  */
-@SuppressWarnings({"unchecked", "serial", "WeakerAccess", "deprecation"})
+@SuppressWarnings({"unchecked", "WeakerAccess", "deprecation"})
 public abstract class CollectionBinder {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(CoreMessageLogger.class, CollectionBinder.class.getName());
 
@@ -1482,20 +1484,25 @@ public abstract class CollectionBinder {
 		else if ( anyAnn != null ) {
 			//@ManyToAny
 			//Make sure that collTyp is never used during the @ManyToAny branch: it will be set to void.class
-			PropertyData inferredData = new PropertyInferredData(
+			final PropertyData inferredData = new PropertyInferredData(
 					null,
 					property,
 					"unsupported",
 					buildingContext.getBootstrapContext().getReflectionManager()
 			);
+
+			final jakarta.persistence.Column discriminatorColumnAnn = inferredData.getProperty().getAnnotation( jakarta.persistence.Column.class );
+			final Formula discriminatorFormulaAnn = inferredData.getProperty().getAnnotation( Formula.class );
+
 			//override the table
 			for (Ejb3Column column : inverseJoinColumns) {
 				column.setTable( collValue.getCollectionTable() );
 			}
-			Any any = BinderHelper.buildAnyValue(
-					anyAnn.metaDef(),
+
+			final Any any = BinderHelper.buildAnyValue(
+					discriminatorColumnAnn,
+					discriminatorFormulaAnn,
 					inverseJoinColumns,
-					anyAnn.metaColumn(),
 					inferredData,
 					cascadeDeleteEnabled,
 					anyAnn.fetch() == FetchType.LAZY,

@@ -6,12 +6,13 @@
  */
 package org.hibernate.orm.test.filter.subclass.MappedSuperclass;
 
+import org.hibernate.type.NumericBooleanConverter;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
-
-import org.hibernate.annotations.Type;
 
 /**
  * @author Andrea Boriero
@@ -22,7 +23,7 @@ import org.hibernate.annotations.Type;
 public class Mammal extends Animal {
 
 	@Column(name = "IS_PREGNANT")
-	@Type(type = "numeric_boolean")
+	@Convert( converter = NumericBooleanConverter.class )
 	private boolean isPregnant;
 
 	public boolean isPregnant() {

@@ -2,24 +2,25 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.CustomType;
+import org.hibernate.jpamodelgen.test.collectionbasictype.extras.Phone;
+
+import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.jpamodelgen.test.collectionbasictype.extras.Phone;
 
 /**
  * @author Vlad Mihalcea
  */
 @Entity(name = "Person")
-@TypeDef( name = "comma_delimited_strings", typeClass = CommaDelimitedStringsType.class)
 public class PersonPhone {
 
 	@Id
 	private Long id;
 
-	@Type(type = "comma_delimited_strings")
+	@Basic
+	@CustomType( CommaDelimitedStringsType.class )
 	private List<Phone> phones = new ArrayList<>();
 
 	public List<Phone> getPhones() {

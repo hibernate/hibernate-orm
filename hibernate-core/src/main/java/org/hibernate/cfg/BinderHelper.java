@@ -17,27 +17,21 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Index;
-import jakarta.persistence.SequenceGenerator;
-import jakarta.persistence.TableGenerator;
-import jakarta.persistence.UniqueConstraint;
+import java.util.function.Consumer;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.AnyMetaDefs;
-import org.hibernate.annotations.MetaValue;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyDiscriminatorValues;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.annotations.BasicValueBinder;
 import org.hibernate.cfg.annotations.EntityBinder;
 import org.hibernate.cfg.annotations.Nullability;
 import org.hibernate.cfg.annotations.TableBinder;
@@ -48,6 +42,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -60,9 +55,16 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Index;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.TableGenerator;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * @author Emmanuel Bernard
@@ -942,9 +944,9 @@ public class BinderHelper {
 	}
 
 	public static Any buildAnyValue(
-			String anyMetaDefName,
-			Ejb3JoinColumn[] columns,
-			jakarta.persistence.Column metaColumn,
+			jakarta.persistence.Column discriminatorColumn,
+			Formula discriminatorFormula,
+			Ejb3JoinColumn[] keyColumns,
 			PropertyData inferredData,
 			boolean cascadeOnDelete,
 			boolean lazy,
@@ -955,63 +957,15 @@ public class BinderHelper {
 			MetadataBuildingContext context) {
 		final XProperty xProperty = inferredData.getProperty();
 
-		//All FK columns should be in the same table
-		final Any value = new Any( context, columns[0].getTable() );
-
+		final Any value = new Any( context, keyColumns[0].getTable(), true );
 		value.setLazy( lazy );
-
-		final AnyMetaDef metaDefToUse;
-		final AnyMetaDef localMetaDefAnn = xProperty.getAnnotation( AnyMetaDef.class );
-		if ( localMetaDefAnn != null ) {
-			//local has precedence over general and can be mapped for future reference if named
-			bindAnyMetaDefs(xProperty, context );
-			metaDefToUse = localMetaDefAnn;
-		}
-		else {
-			metaDefToUse = context.getMetadataCollector().getAnyMetaDef( anyMetaDefName );
-			if ( metaDefToUse == null ) {
-				throw new AnnotationException(
-						"Unable to find @AnyMetaDef for an @(ManyTo)Any mapping: "
-								+ StringHelper.qualify( propertyHolder.getPath(), inferredData.getPropertyName() )
-				);
-			}
-		}
-
-		value.setIdentifierType( metaDefToUse.idType() );
-		value.setMetaType( metaDefToUse.metaType() );
-
-		final HashMap<Object,String> values = new HashMap<>();
-		final BasicType<?> metaType = context.getMetadataCollector()
-				.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.getRegisteredType( value.getMetaType() );
-
-		for (int i = 0; i < metaDefToUse.metaValues().length; i++) {
-			final MetaValue metaValue = metaDefToUse.metaValues()[ i ];
-			try {
-				final Object discriminator = metaType.getJavaTypeDescriptor().fromString( metaValue.value() );
-				final String entityName = metaValue.targetEntity().getName();
-				values.put( discriminator, entityName );
-			}
-			catch (Exception e) {
-				throw new MappingException( "Could not interpret @MetaValue", e );
-			}
-		}
-
-		if ( !values.isEmpty() ) {
-			value.setMetaValues( values );
-		}
-
 		value.setCascadeDeleteEnabled( cascadeOnDelete );
-		if ( !optional ) {
-			for (Ejb3JoinColumn column : columns) {
-				column.setNullable( false );
-			}
-		}
 
-		Ejb3Column[] metaColumns = Ejb3Column.buildColumnFromAnnotation(
-				new jakarta.persistence.Column[] { metaColumn },
-				null,
+		final BasicValueBinder discriminatorValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_DISCRIMINATOR, context );
+
+		final Ejb3Column[] discriminatorColumns = Ejb3Column.buildColumnFromAnnotation(
+				new jakarta.persistence.Column[] { discriminatorColumn },
+				discriminatorFormula,
 				null,
 				nullability,
 				propertyHolder,
@@ -1019,60 +973,70 @@ public class BinderHelper {
 				entityBinder.getSecondaryTables(),
 				context
 		);
+		assert discriminatorColumns.length == 1;
+		discriminatorColumns[0].setTable( value.getTable() );
+		discriminatorValueBinder.setColumns( discriminatorColumns );
 
-		//set metaColumn to the right table
-		for (Ejb3Column column : metaColumns) {
-			column.setTable( value.getTable() );
-		}
-		//meta column
-		for (Ejb3Column column : metaColumns) {
-			column.linkWithValue( value );
-		}
+		discriminatorValueBinder.setReturnedClassName( inferredData.getTypeName() );
+		discriminatorValueBinder.setType( xProperty, xProperty.getType(), null, null );
 
-		//id columns
-		final String propertyName = inferredData.getPropertyName();
-		Ejb3Column.checkPropertyConsistency( columns, propertyHolder.getEntityName() + "." + propertyName );
-		for (Ejb3JoinColumn column : columns) {
-			column.linkWithValue( value );
+		final BasicValue discriminatorDescriptor = discriminatorValueBinder.make();
+		value.setDiscriminator( discriminatorDescriptor );
+		discriminatorValueBinder.fillSimpleValue();
+		discriminatorColumns[0].linkWithValue( discriminatorDescriptor );
+
+		final JavaTypeDescriptor<?> discriminatorJavaType = discriminatorDescriptor
+				.resolve()
+				.getRelationalJavaDescriptor();
+
+		final Map<Object,Class<?>> discriminatorValueMappings = new HashMap<>();
+		processAnyDiscriminatorValues(
+				inferredData.getProperty(),
+				(valueMapping) -> discriminatorValueMappings.put(
+						discriminatorJavaType.wrap( valueMapping.discriminator(), null ),
+						valueMapping.entity()
+				)
+		);
+		value.setDiscriminatorValueMappings( discriminatorValueMappings );
+
+		BasicValueBinder keyValueBinder = new BasicValueBinder( BasicValueBinder.Kind.ANY_KEY, context );
+		assert keyColumns.length == 1;
+		keyColumns[0].setTable( value.getTable() );
+		keyValueBinder.setColumns( keyColumns );
+
+		if ( !optional ) {
+			for (Ejb3JoinColumn column : keyColumns) {
+				column.setNullable( false );
+			}
 		}
+		keyValueBinder.setType( xProperty, xProperty.getType(), null, null );
+		final BasicValue keyDescriptor = keyValueBinder.make();
+		value.setKey( keyDescriptor );
+		keyValueBinder.fillSimpleValue();
+		Ejb3Column.checkPropertyConsistency( keyColumns, propertyHolder.getEntityName() + "." + inferredData.getPropertyName() );
+		keyColumns[0].linkWithValue( keyDescriptor );
+
 		return value;
 	}
 
-	public static void bindAnyMetaDefs(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-		AnyMetaDef defAnn = annotatedElement.getAnnotation( AnyMetaDef.class );
-		AnyMetaDefs defsAnn = annotatedElement.getAnnotation( AnyMetaDefs.class );
-		boolean mustHaveName = XClass.class.isAssignableFrom( annotatedElement.getClass() )
-				|| XPackage.class.isAssignableFrom( annotatedElement.getClass() );
-		if ( defAnn != null ) {
-			checkAnyMetaDefValidity( mustHaveName, defAnn, annotatedElement );
-			bindAnyMetaDef( defAnn, context );
-		}
-		if ( defsAnn != null ) {
-			for (AnyMetaDef def : defsAnn.value()) {
-				checkAnyMetaDefValidity( mustHaveName, def, annotatedElement );
-				bindAnyMetaDef( def, context );
-			}
-		}
-	}
-
-	private static void checkAnyMetaDefValidity(boolean mustHaveName, AnyMetaDef defAnn, XAnnotatedElement annotatedElement) {
-		if ( mustHaveName && isEmptyAnnotationValue( defAnn.name() ) ) {
-			String name = XClass.class.isAssignableFrom( annotatedElement.getClass() ) ?
-					( (XClass) annotatedElement ).getName() :
-					( (XPackage) annotatedElement ).getName();
-			throw new AnnotationException( "@AnyMetaDef.name cannot be null on an entity or a package: " + name );
-		}
-	}
-
-	private static void bindAnyMetaDef(AnyMetaDef defAnn, MetadataBuildingContext context) {
-		if ( isEmptyAnnotationValue( defAnn.name() ) ) {
-			//don't map not named definitions
+	private static void processAnyDiscriminatorValues(
+			XProperty property,
+			Consumer<AnyDiscriminatorValue> consumer) {
+		final AnyDiscriminatorValue valueAnn = property.getAnnotation( AnyDiscriminatorValue.class );
+		if ( valueAnn != null ) {
+			consumer.accept( valueAnn );
 			return;
 		}
-		if ( LOG.isDebugEnabled() ) {
-			LOG.debugf( "Binding Any Meta definition: %s", defAnn.name() );
+
+		final AnyDiscriminatorValues valuesAnn = property.getAnnotation( AnyDiscriminatorValues.class );
+		if ( valuesAnn != null ) {
+			final AnyDiscriminatorValue[] valueAnns = valuesAnn.value();
+			if ( valueAnns != null && valueAnns.length > 0 ) {
+				for ( int i = 0; i < valueAnns.length; i++ ) {
+					consumer.accept( valueAnns[i] );
+				}
+			}
 		}
-		context.getMetadataCollector().addAnyMetaDef( defAnn );
 	}
 
 	public static MappedSuperclass getMappedSuperclassOrNull(

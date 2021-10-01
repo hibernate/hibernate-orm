@@ -2,23 +2,24 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import org.hibernate.annotations.CustomType;
+
+import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 
 /**
  * @author Vlad Mihalcea
  */
 @Entity(name = "Person")
-@TypeDef( name = "comma_delimited_string_map", typeClass = CommaDelimitedStringsMapType.class)
 public class PhoneBook {
 
 	@Id
 	private Long id;
 
-	@Type(type = "comma_delimited_string_map")
+	@Basic
+	@CustomType( CommaDelimitedStringsMapType.class )
 	private Map<String, String> phones = new HashMap<>();
 
 	public Map<String, String> getPhones() {

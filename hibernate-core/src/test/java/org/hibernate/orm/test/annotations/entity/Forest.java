@@ -8,12 +8,8 @@
 //$Id$
 package org.hibernate.orm.test.annotations.entity;
 
+import java.sql.Types;
 import java.util.Set;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.DynamicInsert;
@@ -21,16 +17,22 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.Index;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.Where;
+
+import jakarta.persistence.Convert;
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 
 /**
  * Use hibernate specific annotations
@@ -59,8 +61,8 @@ public class Forest {
 	private Country country;
 	private Set near;
 	
-	@OptimisticLock(excluded=true) 
-	@Type(type = "text")
+	@OptimisticLock(excluded=true)
+	@JdbcTypeCode( Types.LONGVARCHAR )
 	public String getLongDescription() {
 		return longDescription;
 	}
@@ -95,12 +97,12 @@ public class Forest {
 		this.name = name;
 	}
 
-	@Type(type = "caster")
+	@Convert( converter = ToLowerConverter.class )
 	public String getSmallText() {
 		return smallText;
 	}
 
-	@Type(type = "caster", parameters = {@Parameter(name = "cast", value = "upper")})
+	@Convert( converter = ToUpperConverter.class )
 	public String getBigText() {
 		return bigText;
 	}

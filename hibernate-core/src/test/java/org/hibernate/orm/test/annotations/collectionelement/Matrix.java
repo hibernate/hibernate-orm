@@ -7,19 +7,19 @@
 
 //$
 package org.hibernate.orm.test.annotations.collectionelement;
+
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+
+import org.hibernate.annotations.SortNatural;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
-
-import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.Type;
 
 /**
  * @author Emmanuel Bernard
@@ -31,11 +31,9 @@ public class Matrix {
 	@Column(name="mId")
 	private Integer id;
 
-	@MapKeyType( @Type(type="integer") )
 	@ElementCollection
 	@SortNatural
-	@Type(type = "float")
-	@MapKeyColumn(nullable = false)
+	@MapKeyColumn
 	private SortedMap<Integer, Float> mvalues = new TreeMap<Integer, Float>();
 
 	public Integer getId() {

@@ -6,19 +6,21 @@
  */
 package org.hibernate.orm.test.annotations.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import java.sql.Types;
 
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.SelectBeforeUpdate;
-import org.hibernate.annotations.Type;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 /**
  * Mapping following lines of {@link Forest}, but using the replacements for the now deprecated
@@ -56,7 +58,7 @@ public class Forest2 {
 	}
 
 	@OptimisticLock(excluded=true)
-	@Type(type = "text")
+	@JdbcTypeCode( Types.LONGVARCHAR )
 	public String getLongDescription() {
 		return longDescription;
 	}

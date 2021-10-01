@@ -983,32 +983,45 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public QueryImplementor<R> setParameter(String name, Object value) {
 		if ( value instanceof TypedParameterValue ) {
 			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
-			setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
+			return setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
 		}
-		else if ( value instanceof Collection ) {
-			//noinspection rawtypes
-			setParameterList( name, (Collection) value );
+
+		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
+		if ( param.allowsMultiValuedBinding() ) {
+			final AllowableParameterType<?> hibernateType = param.getHibernateType();
+			if ( hibernateType == null || ! hibernateType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isInstance( value ) ) {
+				if ( value instanceof Collection ) {
+					//noinspection rawtypes
+					setParameterList( name, (Collection) value );
+				}
+			}
 		}
-		else {
-			locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
-		}
+
+		locateBinding( name ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 
 		return this;
 	}
 
 	@Override
 	public QueryImplementor<R> setParameter(int position, Object value) {
+		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
+
 		if ( value instanceof TypedParameterValue ) {
 			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
-			setParameter( position, typedParameterValue.getValue(), typedParameterValue.getType() );
+			setParameter( param, typedParameterValue.getValue(), typedParameterValue.getType() );
 		}
 
-		if ( value instanceof Collection ) {
-			setParameterList( position, (Collection<?>) value );
+		if ( param.allowsMultiValuedBinding() ) {
+			final AllowableParameterType<?> hibernateType = param.getHibernateType();
+			if ( hibernateType == null || ! hibernateType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isInstance( value ) ) {
+				if ( value instanceof Collection ) {
+					//noinspection rawtypes
+					setParameterList( param, (Collection) value );
+				}
+			}
 		}
-		else {
-			locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
-		}
+
+		locateBinding( position ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
 		return this;
 	}
 

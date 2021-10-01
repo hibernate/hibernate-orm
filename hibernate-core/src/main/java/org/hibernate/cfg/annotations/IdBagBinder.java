@@ -9,10 +9,8 @@ package org.hibernate.cfg.annotations;
 import java.util.Collections;
 import java.util.Map;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.spi.MetadataBuildingContext;
@@ -24,12 +22,13 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyInferredData;
 import org.hibernate.cfg.SecondPass;
 import org.hibernate.cfg.WrappedInferredData;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
+
+import jakarta.persistence.Column;
 
 /**
  * @author Emmanuel Bernard
@@ -78,7 +77,7 @@ public class IdBagBinder extends BagBinder {
 		);
 
 		final Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
-				collectionIdAnn.columns(),
+				new Column[] { collectionIdAnn.column() },
 				null,
 				null,
 				Nullability.FORCED_NOT_NULL,
@@ -98,15 +97,6 @@ public class IdBagBinder extends BagBinder {
 		final Table table = collection.getCollectionTable();
 		valueBinder.setTable( table );
 		valueBinder.setColumns( idColumns );
-
-		final Type typeAnn = collectionIdAnn.type();
-		if ( ! BinderHelper.isEmptyAnnotationValue( typeAnn.type() ) ) {
-			valueBinder.setExplicitType( typeAnn );
-		}
-		else {
-			throw new AnnotationException( "@CollectionId is missing type: "
-					+ StringHelper.qualify( propertyHolder.getPath(), propertyName ) );
-		}
 
 		valueBinder.setType(
 				property,

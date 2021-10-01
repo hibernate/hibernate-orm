@@ -7,11 +7,23 @@
 package org.hibernate.userguide.collections;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.hibernate.annotations.MapKeyJavaType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.jpa.boot.spi.Bootstrap;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+
+import org.junit.Test;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -20,16 +32,9 @@ import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.Type;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.junit.Test;
+import jakarta.persistence.TemporalType;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -41,9 +46,7 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			PersonDummy.class,
-		};
+		return new Class<?>[] { PersonDummy.class };
 	}
 
 	@Test
@@ -138,11 +141,10 @@ public class MapKeyTypeTest extends BaseEntityManagerFunctionalTestCase {
 			name = "call_register",
 			joinColumns = @JoinColumn(name = "person_id")
 		)
-		@MapKeyType(
-			@Type(
-				type = "org.hibernate.userguide.collections.type.TimestampEpochType"
-			)
-		)
+		@MapKeyJdbcTypeCode( Types.BIGINT )
+// todo (6.0) : figure out why `@MapKeyTemporal` did not work.  imo it should
+//		@MapKeyTemporal( TemporalType.TIMESTAMP )
+		@MapKeyJavaType( JdbcTimestampJavaTypeDescriptor.class )
 		@MapKeyColumn( name = "call_timestamp_epoch" )
 		@Column(name = "phone_number")
 		private Map<Date, Integer> callRegister = new HashMap<>();

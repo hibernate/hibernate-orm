@@ -5,8 +5,17 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.orm.test.any.annotations;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.ManyToAny;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,13 +23,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Any;
-import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MetaValue;
 
 @Entity
 @Table( name = "property_set" )
@@ -39,14 +41,15 @@ public class PropertySet {
 		this.name = name;
 	}
 
-	@ManyToAny(
-			metaColumn = @Column( name = "property_type" ) )
-	@AnyMetaDef( idType = "integer", metaType = "string",
-			metaValues = {
-			@MetaValue( value = "S", targetEntity = StringProperty.class ),
-			@MetaValue( value = "I", targetEntity = IntegerProperty.class ) } )
+	@ManyToAny
+	@Column( name = "property_type" )
+	@AnyKeyJavaClass( Integer.class )
+	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
+	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
 	@Cascade( { CascadeType.ALL } )
-	@JoinTable( name = "obj_properties", joinColumns = @JoinColumn( name = "obj_id" ),
+	@JoinTable(
+			name = "obj_properties",
+			joinColumns = @JoinColumn( name = "obj_id" ),
 			inverseJoinColumns = @JoinColumn( name = "property_id" ) )
 	public List<Property> getGeneralProperties() {
 		return generalProperties;
@@ -74,12 +77,12 @@ public class PropertySet {
 		this.name = name;
 	}
 
-	@Any( metaColumn = @Column( name = "property_type" ) )
+	@Any
+	@Column( name = "property_type" )
+	@AnyKeyJavaClass( Integer.class )
+	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
+	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
 	@Cascade( value = { CascadeType.ALL } )
-	@AnyMetaDef( idType = "integer", metaType = "string", metaValues = {
-	@MetaValue( value = "S", targetEntity = StringProperty.class ),
-	@MetaValue( value = "I", targetEntity = IntegerProperty.class )
-			} )
 	@JoinColumn( name = "property_id" )
 	public Property getSomeProperty() {
 		return someProperty;

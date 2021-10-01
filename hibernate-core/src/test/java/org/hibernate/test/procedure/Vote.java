@@ -6,12 +6,13 @@
  */
 package org.hibernate.test.procedure;
 
+import org.hibernate.type.YesNoConverter;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Type;
 
 /**
  * @author Vlad Mihalcea
@@ -24,7 +25,7 @@ public class Vote {
     private Long id;
 
     @Column(name = "vote_choice")
-    @Type(type = "yes_no")
+    @Convert( converter = YesNoConverter.class )
     private boolean voteChoice;
 
     public Long getId() {

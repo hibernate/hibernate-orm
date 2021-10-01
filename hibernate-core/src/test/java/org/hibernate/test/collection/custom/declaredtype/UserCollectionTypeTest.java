@@ -45,7 +45,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.annotations.CollectionType;
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.collection.internal.PersistentList;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -186,7 +185,7 @@ public abstract class UserCollectionTypeTest extends BaseCoreFunctionalTestCase 
 	 */
 	@Entity
 	@Table(name = "UC_BSC_USER")
-	@TypeDef( name = "HeadListType", typeClass = HeadListType.class )
+	//@TypeDef( name = "HeadListType", typeClass = HeadListType.class )
 	public static class User {
 		private String userName;
 		private IHeadList<Email> emailAddresses = new HeadList<Email>();

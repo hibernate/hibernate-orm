@@ -9,14 +9,6 @@ package org.hibernate.envers.test.integration.customtype;
 import java.util.Arrays;
 import java.util.List;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.envers.Audited;
@@ -26,9 +18,15 @@ import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
-import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
@@ -50,24 +48,23 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 
 	// An extended type to trigger the need for Envers to supply type information in the HBM mappings.
 	// This should be treated the same as any other property annotated as Enumerated or uses an Enum.
-	public static class ExtendedEnumType extends org.hibernate.type.EnumType {
+	public static class ExtendedEnumType extends org.hibernate.type.EnumType<Widget.Status> {
 
 	}
 
 	@Entity(name = "Widget")
-	@TypeDef(name = "extended_enum", typeClass = ExtendedEnumType.class)
 	@Audited
 	public static class Widget {
 		@Id
 		@GeneratedValue
 		private Integer id;
 
+		@org.hibernate.annotations.CustomType( ExtendedEnumType.class )
 		@Enumerated(EnumType.STRING)
-		@Type(type = "extended_enum")
 		private Status status;
 
 		@Enumerated
-		@Type(type = "extended_enum")
+		@org.hibernate.annotations.CustomType( ExtendedEnumType.class )
 		private Status status2;
 
 		public enum Status {

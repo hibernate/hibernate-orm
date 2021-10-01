@@ -6,25 +6,16 @@
  */
 package org.hibernate.orm.test.idgen.enhanced.auto;
 
+import java.sql.Types;
 import java.util.Collection;
 import java.util.UUID;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IncrementGenerator;
@@ -37,11 +28,20 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.orm.junit.FailureExpectedExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -202,11 +202,8 @@ public class AutoGenerationTypeTests {
 		private Integer id;
 
 		@OneToMany( mappedBy = "theOne" )
-		@CollectionId(
-				columns = @Column( name = "child_" ),
-				type = @Type( type = "int" ),
-				generator = "sequence"
-		)
+		@CollectionId( column = @Column( name = "child_" ), generator = "sequence" )
+		@CollectionIdJdbcTypeCode( Types.INTEGER )
 		private Collection<Entity2> theTwos;
 	}
 

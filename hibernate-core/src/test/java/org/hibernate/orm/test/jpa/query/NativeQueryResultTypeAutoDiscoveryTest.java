@@ -19,23 +19,16 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -46,7 +39,6 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.spi.Bootstrap;
-import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
@@ -61,12 +53,19 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.CustomRunner;
+import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.MappedSuperclass;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 
@@ -415,13 +414,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Entity(name = "realEntity")
-	@TypeDef(name = FloatAsRealType.NAME, typeClass = FloatAsRealType.class)
 	public static class RealEntity extends TestedEntity<Float> {
 		/**
 		 * The custom type sets the SQL type to {@link Types#REAL}
 		 * instead of the default {@link Types#FLOAT}.
 		 */
-		@Type(type = FloatAsRealType.NAME)
+		@JdbcTypeCode( Types.REAL )
 		public Float getTestedProperty() {
 			return testedProperty;
 		}
@@ -436,13 +434,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Entity(name = "decimalEntity")
-	@TypeDef(name = BigDecimalAsDecimalType.NAME, typeClass = BigDecimalAsDecimalType.class)
 	public static class DecimalEntity extends TestedEntity<BigDecimal> {
 		/**
 		 * The custom type sets the SQL type to {@link Types#DECIMAL}
 		 * instead of the default {@link Types#NUMERIC}.
 		 */
-		@Type(type = BigDecimalAsDecimalType.NAME)
+		@JdbcTypeCode( Types.DECIMAL )
 		@Column(precision = 50, scale = 15)
 		public BigDecimal getTestedProperty() {
 			return testedProperty;
@@ -473,13 +470,12 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	}
 
 	@Entity(name = "char255Entity")
-	@TypeDef(name = StringAsNonVarCharType.NAME, typeClass = StringAsNonVarCharType.class)
 	public static class Char255Entity extends TestedEntity<String> {
 		/**
 		 * The custom type sets the SQL type to {@link Types#CHAR}
 		 * instead of the default {@link Types#VARCHAR}.
 		 */
-		@Type(type = StringAsNonVarCharType.NAME)
+		@JdbcTypeCode( Types.CHAR )
 		@Column(length = 255)
 		public String getTestedProperty() {
 			return testedProperty;
@@ -489,23 +485,21 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Entity(name = "longvarcharEntity")
 	public static class LongvarcharEntity extends TestedEntity<String> {
 		/**
-		 * The custom type sets the SQL type to {@link Types#LONGVARCHAR}
-		 * instead of the default {@link Types#VARCHAR}.
+		 * Use {@link Types#LONGVARCHAR} instead of the default {@link Types#VARCHAR}.
 		 */
-		@Type(type = "text")
+		@JdbcTypeCode( Types.LONGVARCHAR )
 		public String getTestedProperty() {
 			return testedProperty;
 		}
 	}
 
 	@Entity(name = "binaryEntity")
-	@TypeDef(name = ByteArrayAsNonVarBinaryType.NAME, typeClass = ByteArrayAsNonVarBinaryType.class)
 	public static class BinaryEntity extends TestedEntity<byte[]> {
 		/**
 		 * The custom type sets the SQL type to {@link Types#BINARY}
 		 * instead of the default {@link Types#VARBINARY}.
 		 */
-		@Type(type = ByteArrayAsNonVarBinaryType.NAME)
+		@JdbcTypeCode( Types.BINARY )
 		public byte[] getTestedProperty() {
 			return testedProperty;
 		}
@@ -521,10 +515,9 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Entity(name = "longvarbinaryEntity")
 	public static class LongvarbinaryEntity extends TestedEntity<byte[]> {
 		/**
-		 * The custom type sets the SQL type to {@link Types#LONGVARBINARY}
-		 * instead of the default {@link Types#VARBINARY}.
+		 * Use {@link Types#LONGVARBINARY} instead of the default {@link Types#VARBINARY}.
 		 */
-		@Type(type = "image")
+		@JdbcTypeCode( Types.LONGVARBINARY )
 		public byte[] getTestedProperty() {
 			return testedProperty;
 		}

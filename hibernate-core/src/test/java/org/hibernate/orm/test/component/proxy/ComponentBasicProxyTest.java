@@ -62,7 +62,7 @@ public class ComponentBasicProxyTest extends BaseEntityManagerFunctionalTestCase
 
 		try {
 			Metadata metadata = new MetadataSources( ssr ).addAnnotatedClass( Person.class )
-					.getMetadataBuilder().applyBasicType( new CollectionAsBasicTest.DelimitedStringsType() )
+					.getMetadataBuilder()
 					.build();
 			PersistentClass persistentClass = metadata.getEntityBinding( Person.class.getName() );
 

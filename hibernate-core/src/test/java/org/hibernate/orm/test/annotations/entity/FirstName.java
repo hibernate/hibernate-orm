@@ -5,25 +5,15 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.entity;
+
+import jakarta.persistence.Convert;
 import jakarta.persistence.MappedSuperclass;
 
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-
-
-@TypeDef(
-		name = "lowerCase",
-		typeClass = CasterStringType.class,
-		parameters = {
-			@Parameter(name = "cast", value = "lower")
-		}
-)
 
 @MappedSuperclass
 public class FirstName {
 
-	@Type(type="lowerCase")
+	@Convert( converter = ToLowerConverter.class )
 	private String firstName;
 
 	public String getFirstName() {

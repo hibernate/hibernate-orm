@@ -17,9 +17,33 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Explicit BasicJavaDescriptor for the associated attribute
+ * Specify an explicit BasicJavaDescriptor to use for a particular
+ * column mapping.  <ul>
+ *     <li>
+ *         When applied to a Map-valued attribute, describes the Map value. Use
+ *         {@link MapKeyJavaType} to describe the key instead
+ *     </li>
+ *     <li>
+ *         When applied to a List of array-valued attribute, describes the element. Use
+ *         {@link ListIndexJavaType} to describe the index instead
+ *     </li>
+ *     <li>
+ *         When mapping an id-bag, describes the collection element.  Use {@link CollectionIdJavaType}
+ *         to describe the collection-id
+ *     </li>
+ *     <li>
+ *         For other collection mappings, describes the elements
+ *     </li>
+ * </ul>
  *
- * @author Steve Ebersole
+ * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
+ *
+ * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * of basic value mapping.
+ *
+ * @see MapKeyJavaType
+ * @see CollectionIdJavaType
+ * @see ListIndexJavaType
  *
  * @since 6.0
  */
@@ -28,7 +52,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface JavaType {
 	/**
-	 * The JavaTypeDescriptor to use
+	 * The {@link BasicJavaTypeDescriptor} to use for the mapped column
 	 */
 	Class<? extends BasicJavaTypeDescriptor<?>> value();
 }

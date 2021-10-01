@@ -9,16 +9,15 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Same function as {@link JavaType}, but used to define the Java type descriptor to
- * use for the map-key
- *
- * @author Steve Ebersole
+ * Form of {@link JavaType} for describing the key of a Map
  *
  * @since 6.0
  */
@@ -26,5 +25,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface MapKeyJavaType {
-	JavaType value();
+	/**
+	 * The descriptor to use for the map-key column
+	 *
+	 * @see JavaType#value
+	 */
+	Class<? extends BasicJavaTypeDescriptor<?>> value();
 }

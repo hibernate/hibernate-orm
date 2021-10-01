@@ -6,9 +6,14 @@
  */
 package org.hibernate.orm.test.bytecode.enhancement.lazy.cache;
 
+import java.nio.charset.Charset;
+import java.sql.Types;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
@@ -27,9 +32,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -93,7 +95,7 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
         List<Tag> tags = new ArrayList<>();
 
         @Basic( fetch = FetchType.LAZY )
-        @Type( type = "org.hibernate.type.BinaryType" )
+        @JdbcTypeCode(Types.LONGVARBINARY)
         byte[] data;
     }
 

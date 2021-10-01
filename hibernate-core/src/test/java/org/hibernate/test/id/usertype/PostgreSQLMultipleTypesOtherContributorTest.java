@@ -15,7 +15,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
@@ -117,8 +116,8 @@ public class PostgreSQLMultipleTypesOtherContributorTest extends BaseEntityManag
 
 	@Entity(name = "Event")
 	@Table(name = "event")
-	@TypeDef(name = "ipv4", typeClass = InetType.class, defaultForType = Inet.class)
-	@TypeDef(name = "json", typeClass = JsonType.class, defaultForType = Json.class)
+//	@TypeDef(name = "ipv4", typeClass = InetType.class, defaultForType = Inet.class)
+//	@TypeDef(name = "json", typeClass = JsonType.class, defaultForType = Json.class)
 	public class Event {
 
 		@Id

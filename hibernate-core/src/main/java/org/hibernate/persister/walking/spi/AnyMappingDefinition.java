@@ -33,8 +33,6 @@ public interface AnyMappingDefinition {
 	 * Access to the type of the value that makes up the identifier portion of the AnyType.
 	 *
 	 * @return The identifier type
-	 *
-	 * @see org.hibernate.annotations.AnyMetaDef#idType()
 	 */
 	public Type getIdentifierType();
 
@@ -45,9 +43,6 @@ public interface AnyMappingDefinition {
 	 * NOTE : If explicit discriminator mappings are given, the type here will be a {@link org.hibernate.type.MetaType}.
 	 *
 	 * @return The discriminator type
-	 *
-	 * @see org.hibernate.annotations.Any#metaColumn()
-	 * @see org.hibernate.annotations.AnyMetaDef#metaType()
 	 */
 	public Type getDiscriminatorType();
 
@@ -62,8 +57,7 @@ public interface AnyMappingDefinition {
 	 *     </li>
 	 *     <li>
 	 *         The database holds discriminator values that are interpreted to corresponding entity names based on
-	 *         discriminator mappings explicitly supplied in the mapping metadata (see
-	 *         {@link org.hibernate.annotations.AnyMetaDef#metaValues()}).  In this case, this method gives access
+	 *         discriminator mappings explicitly supplied in the mapping metadata.  In this case, this method gives access
 	 *         to those explicitly defined mappings.
 	 *     </li>
 	 * </ol>

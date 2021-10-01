@@ -1,9 +1,12 @@
 package org.hibernate.orm.test.type.contributor;
 
+import java.sql.Types;
 import java.util.Arrays;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Vlad Mihalcea
@@ -19,7 +22,23 @@ public class ArrayTypeDescriptor extends AbstractClassJavaTypeDescriptor<Array> 
     }
 
     @Override
+    public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+        return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
+    }
+
+    @Override
     public String toString(Array value) {
+        StringBuilder builder = new StringBuilder();
+        for ( String token : value ) {
+            if ( builder.length() > 0 ) {
+                builder.append( DELIMITER );
+            }
+            builder.append( token );
+        }
+        return builder.toString();
+    }
+
+    public static String extractString(Array value) {
         StringBuilder builder = new StringBuilder();
         for ( String token : value ) {
             if ( builder.length() > 0 ) {

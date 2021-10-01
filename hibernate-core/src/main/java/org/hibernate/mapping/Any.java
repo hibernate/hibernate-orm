@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -18,26 +19,55 @@ import org.hibernate.type.AnyType;
 import org.hibernate.type.Type;
 
 /**
- * A Hibernate "any" type (ie. polymorphic association to
- * one-of-several tables).
+ * Boot-time descriptor of a polymorphic association to one-of-several tables.
+ *
  * @author Gavin King
  */
 public class Any extends SimpleValue {
+	// hbm.xml mapping
 	private final MetaValue metaMapping;
 	private final SimpleValue keyMapping;
 
+	// annotations
+	private BasicValue discriminatorDescriptor;
+	private BasicValue keyDescriptor;
+
+	// common
 	private Map<Object,String> metaValueToEntityNameMap;
 	private boolean lazy = true;
 
 	private AnyType resolvedType;
 
 	public Any(MetadataBuildingContext buildingContext, Table table) {
+		this( buildingContext, table, false );
+	}
+
+	public Any(MetadataBuildingContext buildingContext, Table table, boolean annotations) {
 		super( buildingContext, table );
 
-		this.metaMapping = new MetaValue( this::applySelectableToSuper, buildingContext, table );
-		this.keyMapping = new KeyValue( this::applySelectableToSuper, buildingContext, table );
+		if ( ! annotations ) {
+			metaMapping = new MetaValue( this::applySelectableToSuper, buildingContext, table );
+			metaMapping.setTypeName( "string" );
+			keyMapping = new KeyValue( this::applySelectableToSuper, buildingContext, table );
+		}
+		else {
+			metaMapping = null;
+			keyMapping = null;
+		}
 
-		this.metaMapping.setTypeName( "string" );
+	}
+
+	public void addSelectable(Selectable selectable) {
+		if ( selectable == null ) {
+			return;
+		}
+
+		if ( selectable instanceof Column ) {
+			super.justAddColumn( (Column) selectable );
+		}
+		else {
+			super.justAddFormula( (Formula) selectable );
+		}
 	}
 
 	private void applySelectableToSuper(Selectable selectable) {
@@ -48,6 +78,10 @@ public class Any extends SimpleValue {
 			assert selectable instanceof Formula;
 			super.justAddFormula( (Formula) selectable );
 		}
+	}
+
+	public BasicValue getDiscriminatorDescriptor() {
+		return discriminatorDescriptor;
 	}
 
 	public MetaValue getMetaMapping() {
@@ -69,11 +103,24 @@ public class Any extends SimpleValue {
 	@Override
 	public AnyType getType() throws MappingException {
 		if ( resolvedType == null ) {
-			final Type metaType = metaMapping.getType();
-			final Type identifierType = keyMapping.getType();
+			final Type discriminatorType;
+			if ( discriminatorDescriptor != null ) {
+				discriminatorType = discriminatorDescriptor.getType();
+			}
+			else {
+				discriminatorType = metaMapping.getType();
+			}
+
+			final Type identifierType;
+			if ( keyDescriptor != null ) {
+				identifierType = keyDescriptor.getType();
+			}
+			else {
+				identifierType = keyMapping.getType();
+			}
 
 			resolvedType = MappingHelper.anyMapping(
-					metaType,
+					discriminatorType,
 					identifierType,
 					metaValueToEntityNameMap,
 					isLazy(),
@@ -102,7 +149,8 @@ public class Any extends SimpleValue {
 	private void applySelectableLocally(Selectable selectable) {
 		// note: adding column to meta or key mapping ultimately calls back into `#applySelectableToSuper`
 		//		to add the column to the ANY super.
-		if ( getColumnSpan() == 0 ) {
+
+		if ( discriminatorDescriptor == null && getColumnSpan() == 0 ) {
 			if ( selectable instanceof Column ) {
 				metaMapping.addColumn( (Column) selectable );
 			}
@@ -170,6 +218,9 @@ public class Any extends SimpleValue {
 	}
 
 	public boolean isValid(Mapping mapping) throws MappingException {
+		if ( discriminatorDescriptor != null ) {
+			return discriminatorDescriptor.isValid( mapping ) && keyDescriptor.isValid( mapping );
+		}
 		return metaMapping.isValid( mapping ) && keyMapping.isValid( mapping );
 	}
 
@@ -180,6 +231,33 @@ public class Any extends SimpleValue {
 				.getService( JdbcServices.class );
 
 		return column.getQuotedName( jdbcServices .getDialect() );
+	}
+
+	public void setDiscriminator(BasicValue discriminatorDescriptor) {
+		this.discriminatorDescriptor = discriminatorDescriptor;
+		if ( discriminatorDescriptor.getColumn() instanceof Column ) {
+			justAddColumn( (Column) discriminatorDescriptor.getColumn() );
+		}
+		else {
+			justAddFormula( (Formula) discriminatorDescriptor.getColumn() );
+		}
+	}
+
+	public void setDiscriminatorValueMappings(Map<Object, Class<?>> discriminatorValueMappings) {
+		metaValueToEntityNameMap = new HashMap<>();
+		discriminatorValueMappings.forEach( (value, entity) -> {
+			metaValueToEntityNameMap.put( value, entity.getName() );
+		} );
+	}
+
+	public void setKey(BasicValue keyDescriptor) {
+		this.keyDescriptor = keyDescriptor;
+		if ( keyDescriptor.getColumn() instanceof Column ) {
+			justAddColumn( (Column) keyDescriptor.getColumn() );
+		}
+		else {
+			justAddFormula( (Formula) keyDescriptor.getColumn() );
+		}
 	}
 
 	public static class MetaValue extends SimpleValue {
@@ -325,6 +403,7 @@ public class Any extends SimpleValue {
 
 		@Override
 		public boolean isValid(Mapping mapping) throws MappingException {
+			// check
 			return super.isValid( mapping );
 		}
 	}

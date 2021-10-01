@@ -5,12 +5,13 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.orm.test.annotations.generics;
+
+import org.hibernate.annotations.CustomType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
-
-import org.hibernate.annotations.Type;
 
 /**
  * @author Paolo Perrotta
@@ -21,7 +22,7 @@ public class Gene<T, STE extends Enum> {
 	private Integer id;
 	private STE state;
 
-	@Type(type="org.hibernate.orm.test.annotations.generics.StateType")
+	@CustomType( StateType.class )
 	public STE getState() {
 		return state;
 	}

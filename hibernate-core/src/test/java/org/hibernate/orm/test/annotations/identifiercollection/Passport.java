@@ -7,8 +7,14 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.identifiercollection;
+
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,9 +23,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.TableGenerator;
-
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.Type;
 
 /**
  * @author Emmanuel Bernard
@@ -32,13 +35,15 @@ public class Passport {
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name="PASSPORT_STAMP")
-	@CollectionId(columns = @Column(name="COLLECTION_ID"), type=@Type(type="long"), generator = "generator")
+	@CollectionId(column = @Column(name="COLLECTION_ID"), generator = "generator")
+	@CollectionIdJdbcTypeCode( Types.BIGINT )
 	@TableGenerator(name="generator", table="IDSTAMP")
 	private Collection<Stamp> stamps = new ArrayList();
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name="PASSPORT_VISASTAMP")
-	@CollectionId(columns = @Column(name="COLLECTION_ID"), type=@Type(type="long"), generator = "ids_generator")
+	@CollectionId(column = @Column(name="COLLECTION_ID"), generator = "ids_generator")
+	@CollectionIdJdbcTypeCode( Types.BIGINT )
 	//TODO test identity generator
 	private Collection<Stamp> visaStamp = new ArrayList();
 

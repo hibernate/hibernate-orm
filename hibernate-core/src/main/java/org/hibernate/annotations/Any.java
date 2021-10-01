@@ -8,56 +8,38 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.Inheritance;
 
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Defines a ToOne-style association pointing to one of several entity types depending on a local discriminator,
- * as opposed to discriminated inheritance where the discriminator is kept as part of the entity hierarchy.
+ * Maps a discriminated to-one style associations pointing to one of several entity types
+ * depending on a local discriminator, as opposed to discriminated inheritance where the
+ * discriminator is kept as part of the entity hierarchy (see {@link jakarta.persistence.Inheritance}
+ * and {@link jakarta.persistence.InheritanceType#SINGLE_TABLE} for details about discriminated inheritance
+ * mappings).
  *
  * For example, if you consider an Order entity containing Payment information where Payment might be of type
  * CashPayment or CreditCardPayment the @Any approach would be to keep that discriminator and matching value on the
- * Order itself.  Thought of another way, the "foreign-key" really is made up of the value and discriminator
- * (there is no physical foreign key here as databases do not support this):
- * <blockquote><pre>
- *    &#064;Entity
- *    class Order {
- *        ...
- *        &#064;Any( metaColumn = @Column( name="payment_type" ) )
- *        &#064;AnyMetDef(
- *                idType = "long"
- *                metaValues = {
- *                        &#064;MetaValue( value="C", targetEntity=CashPayment.class ),
- *                        &#064;MetaValue( value="CC", targetEntity=CreditCardPayment.class ),
- *                }
- *        )
- *        pubic Payment getPayment() { ... }
- *    }
- * }
- * </pre></blockquote>
+ * Order itself.  Thought of another way, the "foreign-key" really is made up of the value and discriminator.
  *
- * @author Emmanuel Bernard
- * @author Steve Ebersole
+ * Use {@link Column} or {@link Formula} to define the "column" to which the discriminator is mapped.
  *
- * @see AnyMetaDef
+ * Use {@link jakarta.persistence.JoinColumn} to describe the key column
+ *
+ * Use {@link AnyDiscriminator}, {@link JdbcType} or {@link JdbcTypeCode} to describe the mapping for the discriminator
+ *
+ * Use {@link AnyKeyJavaType}, {@link AnyKeyJavaClass}, {@link AnyKeyJdbcType} or {@link AnyKeyJdbcTypeCode} to describe the mapping for the key
+ *
+ * Use {@link AnyDiscriminatorValues} to specify the discriminator {@code <->} entity mappings
+ *
+ * @see ManyToAny
  */
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Any {
-	/**
-	 * Metadata definition used.
-	 * If defined, should point to a @AnyMetaDef name
-	 * If not defined, the local (ie in the same field or property) @AnyMetaDef is used
-	 */
-	String metaDef() default "";
-
-	/**
-	 * Identifies the discriminator column.  This column will hold the value that identifies the targeted entity.
-	 */
-	Column metaColumn();
-
 	/**
 	 * Defines whether the value of the field or property should be lazily loaded or must be
 	 * eagerly fetched. The EAGER strategy is a requirement on the persistence provider runtime
@@ -65,6 +47,7 @@ public @interface Any {
 	 * enhancement is used. If not specified, defaults to EAGER.
 	 */
 	FetchType fetch() default FetchType.EAGER;
+
 	/**
 	 * Whether the association is optional. If set to false then a non-null relationship must always exist.
 	 */

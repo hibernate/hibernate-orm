@@ -6,9 +6,8 @@
  */
 
 /**
- * Tests for {@link org.hibernate.annotations.JdbcTypeCode}, {@link org.hibernate.annotations.JdbcType},
- * {@link org.hibernate.annotations.JdbcTypeRegistration}, {@link org.hibernate.annotations.MapKeyJdbcType},
- * {@link org.hibernate.annotations.MapKeyJdbcTypeCode}
+ * Tests for influencing {@link org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor}
+ * used for various basic mappings
  *
  * @author Steve Ebersole
  */

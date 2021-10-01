@@ -6,8 +6,10 @@
  */
 package org.hibernate.mapping;
 
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.function.Supplier;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -15,6 +17,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.metamodel.mapping.MappingModelCreationLogger;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CustomCollectionType;
@@ -31,7 +34,7 @@ import org.hibernate.usertype.UserCollectionType;
  * @author Steve Ebersole
  */
 @Internal
-final class MappingHelper {
+public final class MappingHelper {
 	private final static Properties EMPTY_PROPERTIES = new Properties();
 
 	private MappingHelper() {
@@ -70,8 +73,15 @@ final class MappingHelper {
 			}
 		}
 		else if ( parameters != null && !parameters.isEmpty() ) {
-			throw new MappingException( "UserCollectionType impl does not implement ParameterizedType but parameters were present : " + type.getClass().getName() );
+			MappingModelCreationLogger.LOGGER.debugf(
+					"UserCollectionType impl does not implement ParameterizedType but parameters were present : `%s`",
+					type.getClass().getName()
+			);
 		}
+	}
+
+	public static void injectParameters(Object type, Supplier<Properties> parameterAccess) {
+		injectParameters( type, parameterAccess.get() );
 	}
 
 	public static AnyType anyMapping(

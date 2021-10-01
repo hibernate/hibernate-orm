@@ -21,6 +21,7 @@ import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
 import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
+import org.hibernate.boot.model.TypeBeanInstanceProducer;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -37,6 +38,7 @@ import org.hibernate.jpa.spi.MutableJpaCompliance;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -57,6 +59,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 	private final MutableJpaCompliance jpaCompliance;
 
 	private final ClassLoaderAccessImpl classLoaderAccess;
+	private final BeanInstanceProducer beanInstanceProducer;
 
 	private boolean isJpaBootstrap;
 
@@ -111,6 +114,7 @@ public class BootstrapContextImpl implements BootstrapContext {
 		this.representationStrategySelector = ManagedTypeRepresentationResolverStandard.INSTANCE;
 
 		this.typeConfiguration = new TypeConfiguration();
+		this.beanInstanceProducer = new TypeBeanInstanceProducer( typeConfiguration );
 	}
 
 	@Override
@@ -126,6 +130,11 @@ public class BootstrapContextImpl implements BootstrapContext {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
+	}
+
+	@Override
+	public BeanInstanceProducer getBeanInstanceProducer() {
+		return beanInstanceProducer;
 	}
 
 	@Override

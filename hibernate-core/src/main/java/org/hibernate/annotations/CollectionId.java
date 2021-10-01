@@ -8,6 +8,10 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import org.hibernate.annotations.internal.NoIdentifierGenerator;
+import org.hibernate.id.IdentifierGenerator;
+
 import jakarta.persistence.Column;
 
 import static java.lang.annotation.ElementType.FIELD;
@@ -25,17 +29,24 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CollectionId {
 	/**
-	 * Collection id column(s).
+	 * The column containing the collection-id
 	 */
-	Column[] columns();
+	Column column() default @Column;
 
 	/**
-	 * id type, type.type() must be set.
+	 * Implementation for generating values
+	 *
+	 * @apiNote Mutually exclusive with {@link #generator()}
 	 */
-	Type type();
+	Class<? extends IdentifierGenerator> generatorImplementation() default NoIdentifierGenerator.class;
 
 	/**
-	 * The generator name.  For example 'identity' or a defined generator name
+	 * The generator name.
+	 *
+	 * Can specify either a built-in strategy ("sequence", e.g.) or a named generator
+	 * ({@link jakarta.persistence.SequenceGenerator}, e.g.)
+	 *
+	 * @apiNote Mutually exclusive with {@link #generatorImplementation()} ()}
 	 */
-	String generator();
+	String generator() default "";
 }

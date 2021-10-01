@@ -6,17 +6,10 @@
  */
 package org.hibernate.orm.test.any.annotations;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Table;
-
 import org.hibernate.annotations.Any;
-import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.MetaValue;
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -24,6 +17,15 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Table;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -105,11 +107,12 @@ public class EmbeddedAnyTest {
 	@Embeddable
 	public static class FooEmbeddable {
 
-		@AnyMetaDef(idType = "integer", metaType = "string", metaValues = {
-				@MetaValue(value = "1", targetEntity = Bar1.class),
-				@MetaValue(value = "2", targetEntity = Bar2.class)
-		})
-		@Any(metaColumn = @Column(name = "bar_type"))
+		@Any
+		@AnyDiscriminator( DiscriminatorType.STRING )
+		@AnyDiscriminatorValue( discriminator = "1", entity = Bar1.class )
+		@AnyDiscriminatorValue( discriminator = "2", entity = Bar2.class )
+		@Column(name = "bar_type")
+		@AnyKeyJavaClass( Integer.class )
 		@JoinColumn(name = "bar_id")
 		private BarInt bar;
 

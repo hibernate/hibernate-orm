@@ -11,12 +11,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
-import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
@@ -53,6 +51,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+
+import jakarta.persistence.AttributeConverter;
 
 /**
  * An in-flight representation of Metadata while Metadata is being built.
@@ -284,9 +284,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition);
 
 	void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition);
-
-	void addAnyMetaDef(AnyMetaDef defAnn);
-	AnyMetaDef getAnyMetaDef(String anyMetaDefName);
 
 	AnnotatedClassType addClassType(XClass clazz);
 	AnnotatedClassType getClassType(XClass clazz);

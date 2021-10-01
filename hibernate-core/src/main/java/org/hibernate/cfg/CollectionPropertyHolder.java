@@ -9,21 +9,11 @@ package org.hibernate.cfg;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Converts;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.MapKeyClass;
-import jakarta.persistence.MapKeyEnumerated;
-import jakarta.persistence.MapKeyTemporal;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Temporal;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.annotations.CollectionType;
 import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyType;
+import org.hibernate.annotations.MapKeyCustomType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -37,6 +27,17 @@ import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Table;
+
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converts;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.MapKeyClass;
+import jakarta.persistence.MapKeyEnumerated;
+import jakarta.persistence.MapKeyTemporal;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Temporal;
 
 /**
  * @author Emmanuel Bernard
@@ -346,7 +347,7 @@ public class CollectionPropertyHolder extends AbstractPropertyHolder {
 			else if ( collectionProperty.isAnnotationPresent( MapKeyClass.class ) ) {
 				canKeyBeConverted = false;
 			}
-			else if ( collectionProperty.isAnnotationPresent( MapKeyType.class ) ) {
+			else if ( collectionProperty.isAnnotationPresent( MapKeyCustomType.class ) ) {
 				canKeyBeConverted = false;
 			}
 		}

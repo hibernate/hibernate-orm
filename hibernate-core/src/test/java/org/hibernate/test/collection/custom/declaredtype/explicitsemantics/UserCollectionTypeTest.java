@@ -50,7 +50,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.annotations.CollectionType;
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.collection.internal.PersistentSet;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -154,7 +153,7 @@ public class UserCollectionTypeTest extends BaseCoreFunctionalTestCase {
 
 	@Entity(name = "User")
 	@Table(name = "UC_BSC_USER")
-	@TypeDef(name = "HeadSetListType", typeClass = HeadSetListType.class)
+//	@TypeDef(name = "HeadSetListType", typeClass = HeadSetListType.class)
 	public static class User {
 
 		private String userName;

@@ -18,6 +18,110 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+
+import org.hibernate.AnnotationException;
+import org.hibernate.AssertionFailure;
+import org.hibernate.FetchMode;
+import org.hibernate.MappingException;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.Check;
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.Comment;
+import org.hibernate.annotations.DiscriminatorFormula;
+import org.hibernate.annotations.DiscriminatorOptions;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfiles;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.FilterDefs;
+import org.hibernate.annotations.Filters;
+import org.hibernate.annotations.ForeignKey;
+import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.GenericGenerators;
+import org.hibernate.annotations.Index;
+import org.hibernate.annotations.JavaTypeRegistration;
+import org.hibernate.annotations.JavaTypeRegistrations;
+import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.annotations.JdbcTypeRegistrations;
+import org.hibernate.annotations.LazyGroup;
+import org.hibernate.annotations.LazyToOne;
+import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.annotations.ListIndexBase;
+import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.MapKeyCustomType;
+import org.hibernate.annotations.MapKeyJavaType;
+import org.hibernate.annotations.MapKeyJdbcType;
+import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.annotations.MapKeyMutability;
+import org.hibernate.annotations.NaturalId;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+import org.hibernate.annotations.OrderBy;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Parent;
+import org.hibernate.annotations.Proxy;
+import org.hibernate.annotations.SortComparator;
+import org.hibernate.annotations.SortNatural;
+import org.hibernate.annotations.Source;
+import org.hibernate.annotations.Where;
+import org.hibernate.annotations.common.reflection.ReflectionManager;
+import org.hibernate.annotations.common.reflection.XAnnotatedElement;
+import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XMethod;
+import org.hibernate.annotations.common.reflection.XPackage;
+import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
+import org.hibernate.boot.model.IdentifierGeneratorDefinition;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
+import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
+import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.cfg.annotations.BasicValueBinder;
+import org.hibernate.cfg.annotations.CollectionBinder;
+import org.hibernate.cfg.annotations.EntityBinder;
+import org.hibernate.cfg.annotations.HCANNHelper;
+import org.hibernate.cfg.annotations.MapKeyColumnDelegator;
+import org.hibernate.cfg.annotations.MapKeyJoinColumnDelegator;
+import org.hibernate.cfg.annotations.Nullability;
+import org.hibernate.cfg.annotations.PropertyBinder;
+import org.hibernate.cfg.annotations.QueryBinder;
+import org.hibernate.cfg.annotations.TableBinder;
+import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
+import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.spi.FilterDefinition;
+import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.loader.PropertyPath;
+import org.hibernate.mapping.Any;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Component;
+import org.hibernate.mapping.Constraint;
+import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Join;
+import org.hibernate.mapping.JoinedSubclass;
+import org.hibernate.mapping.KeyValue;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Subclass;
+import org.hibernate.mapping.ToOne;
+import org.hibernate.mapping.UnionSubclass;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
 import jakarta.persistence.Basic;
@@ -70,108 +174,6 @@ import jakarta.persistence.TableGenerator;
 import jakarta.persistence.TableGenerators;
 import jakarta.persistence.UniqueConstraint;
 import jakarta.persistence.Version;
-
-import org.hibernate.AnnotationException;
-import org.hibernate.AssertionFailure;
-import org.hibernate.FetchMode;
-import org.hibernate.MappingException;
-import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.Check;
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Comment;
-import org.hibernate.annotations.DiscriminatorFormula;
-import org.hibernate.annotations.DiscriminatorOptions;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchProfile;
-import org.hibernate.annotations.FetchProfiles;
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
-import org.hibernate.annotations.Formula;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.GenericGenerators;
-import org.hibernate.annotations.Index;
-import org.hibernate.annotations.JavaTypeRegistration;
-import org.hibernate.annotations.JavaTypeRegistrations;
-import org.hibernate.annotations.LazyGroup;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
-import org.hibernate.annotations.ListIndexBase;
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MapKeyType;
-import org.hibernate.annotations.NaturalId;
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-import org.hibernate.annotations.OrderBy;
-import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Parent;
-import org.hibernate.annotations.Proxy;
-import org.hibernate.annotations.SortComparator;
-import org.hibernate.annotations.SortNatural;
-import org.hibernate.annotations.Source;
-import org.hibernate.annotations.JdbcTypeRegistration;
-import org.hibernate.annotations.JdbcTypeRegistrations;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.annotations.TypeDefs;
-import org.hibernate.annotations.Where;
-import org.hibernate.annotations.common.reflection.ReflectionManager;
-import org.hibernate.annotations.common.reflection.XAnnotatedElement;
-import org.hibernate.annotations.common.reflection.XClass;
-import org.hibernate.annotations.common.reflection.XMethod;
-import org.hibernate.annotations.common.reflection.XPackage;
-import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
-import org.hibernate.boot.model.IdentifierGeneratorDefinition;
-import org.hibernate.boot.model.TypeDefinition;
-import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.boot.spi.InFlightMetadataCollector;
-import org.hibernate.boot.spi.InFlightMetadataCollector.EntityTableXref;
-import org.hibernate.boot.spi.MetadataBuildingContext;
-import org.hibernate.cfg.annotations.BasicValueBinder;
-import org.hibernate.cfg.annotations.CollectionBinder;
-import org.hibernate.cfg.annotations.EntityBinder;
-import org.hibernate.cfg.annotations.HCANNHelper;
-import org.hibernate.cfg.annotations.MapKeyColumnDelegator;
-import org.hibernate.cfg.annotations.MapKeyJoinColumnDelegator;
-import org.hibernate.cfg.annotations.Nullability;
-import org.hibernate.cfg.annotations.PropertyBinder;
-import org.hibernate.cfg.annotations.QueryBinder;
-import org.hibernate.cfg.annotations.TableBinder;
-import org.hibernate.cfg.internal.NullableDiscriminatorColumnSecondPass;
-import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.spi.FilterDefinition;
-import org.hibernate.id.PersistentIdentifierGenerator;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.loader.PropertyPath;
-import org.hibernate.mapping.Any;
-import org.hibernate.mapping.BasicValue;
-import org.hibernate.mapping.Component;
-import org.hibernate.mapping.Constraint;
-import org.hibernate.mapping.DependantValue;
-import org.hibernate.mapping.Join;
-import org.hibernate.mapping.JoinedSubclass;
-import org.hibernate.mapping.KeyValue;
-import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Property;
-import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.SimpleValue;
-import org.hibernate.mapping.SingleTableSubclass;
-import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.ToOne;
-import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -349,31 +351,6 @@ public final class AnnotationBinder {
 		bindGenericGenerators( pckg, context );
 		bindQueries( pckg, context );
 		bindFilterDefs( pckg, context );
-		bindTypeDefs( pckg, context );
-		BinderHelper.bindAnyMetaDefs( pckg, context );
-
-	}
-
-	private static void handleSqlTypeDescriptorRegistration(
-			MetadataBuildingContext context,
-			ManagedBeanRegistry managedBeanRegistry,
-			JdbcTypeRegistration annotation) {
-		final Class<? extends JdbcTypeDescriptor> jdbcTypeClass = annotation.value();
-		final JdbcTypeDescriptor jdbcTypeDescriptor = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
-
-		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
-				? jdbcTypeDescriptor.getJdbcTypeCode()
-				: annotation.registrationCode();
-		context.getMetadataCollector().addJdbcTypeRegistration( typeCode, jdbcTypeDescriptor );
-	}
-
-	private static void handleJavaTypeDescriptorRegistration(
-			MetadataBuildingContext context,
-			ManagedBeanRegistry managedBeanRegistry,
-			JavaTypeRegistration annotation) {
-		final Class<? extends BasicJavaTypeDescriptor<?>> jtdClass = annotation.descriptorClass();
-		final BasicJavaTypeDescriptor<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
-		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
 	}
 
 	private static void bindGenericGenerators(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
@@ -575,7 +552,6 @@ public final class AnnotationBinder {
 		//Queries declared in MappedSuperclass should be usable in Subclasses
 		if ( AnnotatedClassType.EMBEDDABLE_SUPERCLASS.equals( classType ) ) {
 			bindQueries( clazzToProcess, context );
-			bindTypeDefs( clazzToProcess, context );
 			bindFilterDefs( clazzToProcess, context );
 		}
 
@@ -612,8 +588,6 @@ public final class AnnotationBinder {
 
 		bindQueries( clazzToProcess, context );
 		bindFilterDefs( clazzToProcess, context );
-		bindTypeDefs( clazzToProcess, context );
-		BinderHelper.bindAnyMetaDefs( clazzToProcess, context );
 
 		String schema = "";
 		String table = ""; //might be no @Table annotation on the annotated class
@@ -866,34 +840,69 @@ public final class AnnotationBinder {
 	}
 
 	private static void handleTypeDescriptorRegistrations(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-
 		final ManagedBeanRegistry managedBeanRegistry = context.getBootstrapContext()
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
 
-		if ( annotatedElement.isAnnotationPresent( JavaTypeRegistration.class ) ) {
-			final JavaTypeRegistration annotation = annotatedElement.getAnnotation( JavaTypeRegistration.class );
-			handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, annotation );
+		final JavaTypeRegistration javaTypeAnn = annotatedElement.getAnnotation( JavaTypeRegistration.class );
+		if ( javaTypeAnn != null ) {
+			handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, javaTypeAnn );
 		}
-		if ( annotatedElement.isAnnotationPresent( JavaTypeRegistrations.class ) ) {
+		else {
 			final JavaTypeRegistrations annotation = annotatedElement.getAnnotation( JavaTypeRegistrations.class );
-			final JavaTypeRegistration[] registrations = annotation.value();
-			for ( int i = 0; i < registrations.length; i++ ) {
-				handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
+			if ( annotation != null ) {
+				final JavaTypeRegistration[] registrations = annotation.value();
+				for ( int i = 0; i < registrations.length; i++ ) {
+					handleJavaTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
+				}
 			}
 		}
 
-		if ( annotatedElement.isAnnotationPresent( JdbcTypeRegistration.class ) ) {
-			final JdbcTypeRegistration annotation = annotatedElement.getAnnotation( JdbcTypeRegistration.class );
-			handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, annotation );
+		final JdbcTypeRegistration jdbcTypeAnn = annotatedElement.getAnnotation( JdbcTypeRegistration.class );
+		if ( jdbcTypeAnn != null ) {
+			handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, jdbcTypeAnn );
 		}
-		if ( annotatedElement.isAnnotationPresent( JdbcTypeRegistrations.class ) ) {
-			final JdbcTypeRegistrations annotation = annotatedElement.getAnnotation( JdbcTypeRegistrations.class );
-			final JdbcTypeRegistration[] registrations = annotation.value();
-			for ( int i = 0; i < registrations.length; i++ ) {
-				handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, registrations[i] );
+		else {
+			final JdbcTypeRegistrations jdbcTypesAnn = annotatedElement.getAnnotation( JdbcTypeRegistrations.class );
+			if ( jdbcTypesAnn != null ) {
+				final JdbcTypeRegistration[] registrations = jdbcTypesAnn.value();
+				for ( int i = 0; i < registrations.length; i++ ) {
+					handleSqlTypeDescriptorRegistration( context, managedBeanRegistry, registrations[ i ] );
+				}
 			}
 		}
+	}
+
+	private static Properties extractProperties(Parameter[] parameters) {
+		final Properties properties = new Properties();
+		if ( parameters.length > 0 ) {
+			for ( int i = 0; i < parameters.length; i++ ) {
+				properties.setProperty( parameters[i].name(), parameters[i].value() );
+			}
+		}
+		return properties;
+	}
+
+	private static void handleSqlTypeDescriptorRegistration(
+			MetadataBuildingContext context,
+			ManagedBeanRegistry managedBeanRegistry,
+			JdbcTypeRegistration annotation) {
+		final Class<? extends JdbcTypeDescriptor> jdbcTypeClass = annotation.value();
+		final JdbcTypeDescriptor jdbcTypeDescriptor = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
+
+		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
+				? jdbcTypeDescriptor.getJdbcTypeCode()
+				: annotation.registrationCode();
+		context.getMetadataCollector().addJdbcTypeRegistration( typeCode, jdbcTypeDescriptor );
+	}
+
+	private static void handleJavaTypeDescriptorRegistration(
+			MetadataBuildingContext context,
+			ManagedBeanRegistry managedBeanRegistry,
+			JavaTypeRegistration annotation) {
+		final Class<? extends BasicJavaTypeDescriptor<?>> jtdClass = annotation.descriptorClass();
+		final BasicJavaTypeDescriptor<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
+		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
 	}
 
 	/**
@@ -1423,75 +1432,6 @@ public final class AnnotationBinder {
 		context.getMetadataCollector().addFilterDefinition( def );
 	}
 
-	private static void bindTypeDefs(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-		TypeDef defAnn = annotatedElement.getAnnotation( TypeDef.class );
-		TypeDefs defsAnn = annotatedElement.getAnnotation( TypeDefs.class );
-		if ( defAnn != null ) {
-			bindTypeDef( defAnn, context );
-		}
-		if ( defsAnn != null ) {
-			for ( TypeDef def : defsAnn.value() ) {
-				bindTypeDef( def, context );
-			}
-		}
-	}
-
-	private static void bindTypeDef(TypeDef defAnn, MetadataBuildingContext context) {
-		Properties params = new Properties();
-		for ( Parameter param : defAnn.parameters() ) {
-			params.setProperty( param.name(), param.value() );
-		}
-
-		if ( BinderHelper.isEmptyAnnotationValue( defAnn.name() ) && defAnn.defaultForType().equals( void.class ) ) {
-			throw new AnnotationException(
-					"Either name or defaultForType (or both) attribute should be set in TypeDef having typeClass " +
-							defAnn.typeClass().getName()
-			);
-		}
-
-		final String typeBindMessageF = "Binding type definition: %s";
-		if ( !BinderHelper.isEmptyAnnotationValue( defAnn.name() ) ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( typeBindMessageF, defAnn.name() );
-			}
-//			context.getMetadataCollector().addTypeDefinition(
-//					new TypeDefinition(
-//							defAnn.name(),
-//							defAnn.typeClass(),
-//							null,
-//							params,
-//							context.getMetadataCollector().getTypeConfiguration()
-//					)
-//			);
-			context.getTypeDefinitionRegistry().register(
-					new TypeDefinition(
-							defAnn.name(),
-							defAnn.typeClass(),
-							null,
-							params,
-							context.getMetadataCollector().getTypeConfiguration()
-					)
-			);
-		}
-
-		if ( !defAnn.defaultForType().equals( void.class ) ) {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debugf( typeBindMessageF, defAnn.defaultForType().getName() );
-			}
-
-			context.getTypeDefinitionRegistry().register(
-					new TypeDefinition(
-							defAnn.defaultForType().getName(),
-							defAnn.typeClass(),
-							new String[]{ defAnn.defaultForType().getName() },
-							params,
-							context.getMetadataCollector().getTypeConfiguration()
-					)
-			);
-		}
-
-	}
-
 	public static void bindFetchProfilesForClass(XClass clazzToProcess, MetadataBuildingContext context) {
 		bindFetchProfiles( clazzToProcess, context );
 	}
@@ -1951,11 +1891,14 @@ public final class AnnotationBinder {
 			else if ( property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
 
 				//check validity
-				if ( property.isAnnotationPresent( Column.class )
-						|| property.isAnnotationPresent( Columns.class ) ) {
+				if (  property.isAnnotationPresent( Columns.class ) ) {
 					throw new AnnotationException(
-							"@Column(s) not allowed on a @Any property: "
-									+ BinderHelper.getPath( propertyHolder, inferredData )
+							String.format(
+									Locale.ROOT,
+									"@Columns not allowed on a @Any property [%s]; @Column or @Formula is used to map the discriminator" +
+											"and only one is allowed",
+									BinderHelper.getPath( propertyHolder, inferredData )
+							)
 					);
 				}
 
@@ -2030,7 +1973,13 @@ public final class AnnotationBinder {
 						propertyHolder.getEntityName(),
 						property,
 						!indexColumn.isImplicit(),
-						property.isAnnotationPresent( MapKeyType.class ),
+						// ugh
+						property.isAnnotationPresent( MapKeyJavaType.class )
+							|| property.isAnnotationPresent( MapKeyJdbcType.class )
+							|| property.isAnnotationPresent( MapKeyJdbcTypeCode.class )
+							|| property.isAnnotationPresent( MapKeyMutability.class )
+							|| property.isAnnotationPresent( MapKey.class )
+							|| property.isAnnotationPresent( MapKeyCustomType.class ),
 						context
 				);
 				collectionBinder.setIndexColumn( indexColumn );
@@ -2803,7 +2752,6 @@ public final class AnnotationBinder {
 		if ( baseInferredData != null ) {
 			baseClassElements = new ArrayList<>();
 			baseReturnedClassOrElement = baseInferredData.getClassOrElement();
-			bindTypeDefs( baseReturnedClassOrElement, buildingContext );
 			// iterate from base returned class up hierarchy to handle cases where the @Id attributes
 			// might be spread across the subclasses and super classes.
 			while ( !Object.class.getName().equals( baseReturnedClassOrElement.getName() ) ) {
@@ -2817,7 +2765,6 @@ public final class AnnotationBinder {
 		}
 
 		//embeddable elements can have type defs
-		bindTypeDefs( returnedClassOrElement, buildingContext );
 		PropertyContainer propContainer = new PropertyContainer( returnedClassOrElement, xClassProcessed, propertyAccessor );
 		addElementsOfClass( classElements, propContainer, buildingContext );
 
@@ -3342,7 +3289,8 @@ public final class AnnotationBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext buildingContext) {
-		org.hibernate.annotations.Any anyAnn = inferredData.getProperty()
+		org.hibernate.annotations.Any anyAnn = inferredData
+				.getProperty()
 				.getAnnotation( org.hibernate.annotations.Any.class );
 		if ( anyAnn == null ) {
 			throw new AssertionFailure(
@@ -3350,11 +3298,15 @@ public final class AnnotationBinder {
 							+ BinderHelper.getPath( propertyHolder, inferredData )
 			);
 		}
+
+		final Column discriminatorColumnAnn = inferredData.getProperty().getAnnotation( Column.class );
+		final Formula discriminatorFormulaAnn = inferredData.getProperty().getAnnotation( Formula.class );
+
 		boolean lazy = ( anyAnn.fetch() == FetchType.LAZY );
 		Any value = BinderHelper.buildAnyValue(
-				anyAnn.metaDef(),
+				discriminatorColumnAnn,
+				discriminatorFormulaAnn,
 				columns,
-				anyAnn.metaColumn(),
 				inferredData,
 				cascadeOnDelete,
 				lazy,

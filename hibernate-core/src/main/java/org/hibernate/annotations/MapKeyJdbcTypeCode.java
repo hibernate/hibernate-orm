@@ -15,10 +15,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Same function as {@link JdbcTypeCode}, but used to define the SQL type descriptor to
- * use for the map-key
- *
- * @author Steve Ebersole
+ * Form of {@link JdbcTypeCode} for describing the key of a Map
  *
  * @since 6.0
  */
@@ -26,5 +23,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface MapKeyJdbcTypeCode {
-	JdbcTypeCode value();
+	 /**
+	 * The code for the descriptor to use for the map-key column
+	 *
+	 * @see JdbcTypeCode#value
+	 */
+	int value();
 }

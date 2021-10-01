@@ -11,6 +11,7 @@ import java.sql.SQLException;
 import java.util.Objects;
 import jakarta.persistence.ParameterMode;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -21,6 +22,7 @@ import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.AbstractQueryParameter;
 import org.hibernate.query.spi.QueryParameterBinding;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ProcedureParameterNamedBinder;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -128,7 +130,6 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		return Objects.hash( name, position, mode );
 	}
 
-
 	@Override
 	public void prepare(
 			CallableStatement statement,
@@ -150,12 +151,8 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			typeToUse = getHibernateType();
 		}
 
-		final JdbcTypeDescriptor recommendedJdbcType = typeToUse.getExpressableJavaTypeDescriptor()
-				.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
-
-		final ValueBinder binder = recommendedJdbcType.getBinder( typeToUse.getExpressableJavaTypeDescriptor() );
-
 		if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
+
 //				if ( sqlTypesToUse.length > 1 ) {
 //					// there is more than one column involved; see if the Hibernate Type can handle
 //					// multi-param extraction...
@@ -177,6 +174,9 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			// This will cause a failure if there are other parameters bound by
 			// name and the dialect does not support "mixed" named/positional parameters;
 			// e.g., Oracle.
+			final JdbcTypeDescriptor recommendedJdbcType = typeToUse.getExpressableJavaTypeDescriptor()
+					.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+
 			if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&
 					canDoNameParameterBinding( typeToUse, procedureCall ) ) {
 				statement.registerOutParameter( getName(), recommendedJdbcType.getJdbcTypeCode() );
@@ -192,6 +192,15 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		}
 
 		if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
+			final ValueBinder binder;
+			final BasicType basicType;
+			if ( typeToUse instanceof BasicType ) {
+				basicType = ( (BasicType) typeToUse );
+				binder = basicType.getJdbcValueBinder();
+			}
+			else {
+				throw new NotYetImplementedFor6Exception( getClass() );
+			}
 			if ( binding == null || binding.getBindValue() == null ) {
 				// the user did not binding a value to the parameter being processed.  This is the condition
 				// defined by `passNulls` and that value controls what happens here.  If `passNulls` is

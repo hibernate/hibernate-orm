@@ -42,7 +42,10 @@ public abstract class AbstractPreDatabaseOperationEvent extends AbstractEvent {
 	 * Retrieves the entity involved in the database operation.
 	 *
 	 * @return The entity.
+	 *
+	 * @deprecated Support for JACC will be removed in 6.0
 	 */
+	@Deprecated
 	public Object getEntity() {
 		return entity;
 	}

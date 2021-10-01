@@ -1847,13 +1847,6 @@ public interface AvailableSettings {
 	 */
 	String HBM2DDL_DEFAULT_CONSTRAINT_MODE = "hibernate.hbm2ddl.default_constraint_mode";
 
-	String JMX_ENABLED = "hibernate.jmx.enabled";
-	String JMX_PLATFORM_SERVER = "hibernate.jmx.usePlatformServer";
-	String JMX_AGENT_ID = "hibernate.jmx.agentId";
-	String JMX_DOMAIN_NAME = "hibernate.jmx.defaultDomain";
-	String JMX_SF_NAME = "hibernate.jmx.sessionFactoryName";
-	String JMX_DEFAULT_OBJ_NAME_DOMAIN = "org.hibernate.core";
-
 	/**
 	 * Setting to identify a {@link org.hibernate.CustomEntityDirtinessStrategy} to use.  May point to
 	 * either a class name or instance.

@@ -14,10 +14,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import org.hibernate.boot.model.process.internal.UserTypeResolution;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.BasicValue;
@@ -136,8 +135,9 @@ public class TypeDefinition implements Serializable {
 			Map<?,?> usageSiteProperties,
 			JdbcTypeDescriptorIndicators indicators,
 			MetadataBuildingContext context) {
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
-		final TypeBeanInstanceProducer instanceProducer = new TypeBeanInstanceProducer( typeConfiguration );
+		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
+		final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
 		final boolean isKnownType = Type.class.isAssignableFrom( typeImplementorClass )
 				|| UserType.class.isAssignableFrom( typeImplementorClass );
 
@@ -145,13 +145,13 @@ public class TypeDefinition implements Serializable {
 		if ( isKnownType ) {
 			final ManagedBean typeBean;
 			if ( name != null ) {
-				typeBean = context.getBootstrapContext()
+				typeBean = bootstrapContext
 						.getServiceRegistry()
 						.getService( ManagedBeanRegistry.class )
 						.getBean( name, typeImplementorClass, instanceProducer );
 			}
 			else {
-				typeBean = context.getBootstrapContext()
+				typeBean = bootstrapContext
 						.getServiceRegistry()
 						.getService( ManagedBeanRegistry.class )
 						.getBean( typeImplementorClass, instanceProducer );

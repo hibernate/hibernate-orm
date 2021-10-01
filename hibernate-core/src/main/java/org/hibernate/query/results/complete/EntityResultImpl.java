@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.results.ResultsHelper;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
@@ -55,6 +56,24 @@ public class EntityResultImpl implements EntityResult {
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.resultAlias = resultAlias;
 		this.lockMode = lockMode;
+
+
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		sqlAstCreationState.getFromClauseAccess().resolveTableGroup(
+				navigablePath,
+				np -> {
+					return entityValuedModelPart.getEntityMappingType()
+							.getEntityPersister()
+							.createRootTableGroup(
+									true,
+									navigablePath,
+									null,
+									() -> p -> {},
+									sqlAstCreationState,
+									sqlAstCreationState.getCreationContext().getSessionFactory()
+							);
+				}
+		);
 
 		this.discriminatorFetch = discriminatorFetchBuilder.apply( this );
 

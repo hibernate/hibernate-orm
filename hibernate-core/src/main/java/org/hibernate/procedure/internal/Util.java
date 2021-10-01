@@ -8,7 +8,6 @@ package org.hibernate.procedure.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.persister.entity.EntityPersister;
@@ -16,9 +15,8 @@ import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -76,20 +74,21 @@ public class Util {
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
 		final MappingMetamodel domainModel = context.getSessionFactory().getDomainModel();
-		final TypeConfiguration typeConfiguration = domainModel.getTypeConfiguration();
+		final JavaTypeDescriptorRegistry javaTypeDescriptorRegistry = domainModel.getTypeConfiguration().getJavaTypeDescriptorRegistry();
 
 		for ( Class<?> resultSetMappingClass : resultSetMappingClasses ) {
-			final JavaTypeDescriptor<?> basicType = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( resultSetMappingClass );
-			if ( basicType != null ) {
-				resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
-				continue;
-			}
-
 			final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( resultSetMappingClass );
 			if ( entityDescriptor != null ) {
 				resultSetMapping.addResultBuilder( new EntityDomainResultBuilder( entityDescriptor ) );
 				for ( String querySpace : entityDescriptor.getSynchronizedQuerySpaces() ) {
 					querySpaceConsumer.accept( querySpace );
+				}
+			}
+			else {
+				final JavaTypeDescriptor<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
+						resultSetMappingClass );
+				if ( basicType != null ) {
+					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );
 				}
 			}
 		}

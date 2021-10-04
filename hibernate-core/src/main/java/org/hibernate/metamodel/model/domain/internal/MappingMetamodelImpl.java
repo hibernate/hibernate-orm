@@ -91,7 +91,6 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	// todo : Integrate EntityManagerLogger into CoreMessageLogger
 	private static final EntityManagerMessageLogger log = HEMLogging.messageLogger( MappingMetamodelImpl.class );
 
-	private static final String INVALID_IMPORT = "";
 	private static final String[] EMPTY_IMPLEMENTORS = ArrayHelper.EMPTY_STRING_ARRAY;
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -549,11 +548,7 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 
 	@Override
 	public String getImportedName(String name) {
-		// we have to go back through TypeConfiguration / SessionFactory to get to the JpaMetamodel :(
-		final String qualifiedName = typeConfiguration.getSessionFactory()
-				.getRuntimeMetamodels()
-				.getJpaMetamodel()
-				.qualifyImportableName( name );
+		final String qualifiedName = jpaMetamodel.qualifyImportableName( name );
 		return qualifiedName == null ? name : qualifiedName;
 	}
 

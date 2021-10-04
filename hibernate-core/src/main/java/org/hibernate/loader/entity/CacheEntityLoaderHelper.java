@@ -301,7 +301,7 @@ public class CacheEntityLoaderHelper {
 
 	private Object convertCacheReferenceEntryToEntity(
 			ReferenceCacheEntryImpl referenceCacheEntry,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			EntityKey entityKey) {
 		final Object entity = referenceCacheEntry.getReference();
 
@@ -317,7 +317,7 @@ public class CacheEntityLoaderHelper {
 
 	private void makeEntityCircularReferenceSafe(
 			ReferenceCacheEntryImpl referenceCacheEntry,
-			EventSource session,
+			SharedSessionContractImplementor session,
 			Object entity,
 			EntityKey entityKey) {
 

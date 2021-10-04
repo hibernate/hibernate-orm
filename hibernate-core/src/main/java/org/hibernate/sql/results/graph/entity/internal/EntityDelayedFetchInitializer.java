@@ -12,6 +12,8 @@ import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.loader.entity.CacheEntityLoaderHelper;
@@ -104,7 +106,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 							final Object cachedEntity;
 							if ( concreteDescriptor.getEntityMetamodel().hasSubclasses() ) {
 								cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-										(EventSource) rowProcessingState.getSession(),
+										(SharedSessionContractImplementor) rowProcessingState.getSession(),
 										null,
 										LockMode.NONE,
 										concreteDescriptor,

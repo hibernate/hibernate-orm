@@ -20,6 +20,9 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.test.bytecode.enhancement.lazy.proxy.Activity;
+import org.hibernate.test.bytecode.enhancement.lazy.proxy.Instruction;
+import org.hibernate.test.bytecode.enhancement.lazy.proxy.WebApplication;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
- * @author Gail Badner
+ * @author Gail BadnerMergeProxyTest
  */
 @SuppressWarnings({"unused", "WeakerAccess","ResultOfMethodCallIgnored"})
 @TestForIssue( jiraKey = "HHH-11147" )

@@ -23,7 +23,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Hibernate extension to the JPA {@link Metamodel} contract
@@ -34,43 +33,11 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 @Deprecated
 public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
-	/**
-	 * Access to the TypeConfiguration in effect for this SessionFactory/Metamodel
-	 *
-	 * @return Access to the TypeConfiguration
-	 */
-	TypeConfiguration getTypeConfiguration();
 
 	@Override
 	SessionFactoryImplementor getSessionFactory();
 
 	Collection<EntityNameResolver> getEntityNameResolvers();
-
-	/**
-	 * Locate an EntityPersister by the entity class.  The passed Class might refer to either
-	 * the entity name directly, or it might name a proxy interface for the entity.  This
-	 * method accounts for both, preferring the direct named entity name.
-	 *
-	 * @param byClass The concrete Class or proxy interface for the entity to locate the persister for.
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 */
-	default EntityPersister locateEntityPersister(Class byClass){
-		return locateEntityDescriptor( byClass );
-	}
-
-	/**
-	 * Locate the entity persister by name.
-	 *
-	 * @param byName The entity name
-	 *
-	 * @return The located EntityPersister, never {@code null}
-	 *
-	 * @throws org.hibernate.UnknownEntityTypeException If a matching EntityPersister cannot be located
-	 */
-	EntityPersister locateEntityPersister(String byName);
 
 	/**
 	 * Locate the persister for an entity by the entity class.
@@ -169,9 +136,6 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Co-variant returns
 
-
-	@Override
-	<X> EntityDomainType<X> entity(String entityName);
 
 	@Override
 	<X> EntityDomainType<X> entity(Class<X> cls);

@@ -94,25 +94,6 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
-	public String castPattern(CastType from, CastType to) {
-		if ( to == CastType.INTEGER_BOOLEAN ) {
-			switch ( from ) {
-				case STRING:
-				case INTEGER:
-				case LONG:
-				case YN_BOOLEAN:
-				case TF_BOOLEAN:
-				case BOOLEAN:
-					break;
-				default:
-					// MariaDB doesn't support casting to bit
-					return "abs(sign(?1))";
-			}
-		}
-		return super.castPattern( from, to );
-	}
-
-	@Override
 	public boolean supportsRowValueConstructorSyntaxInInList() {
 		return true;
 	}

@@ -7,11 +7,13 @@
 package org.hibernate.dialect;
 
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.FieldFunction;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.query.CastType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.PessimisticLockException;
@@ -46,14 +48,18 @@ import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
@@ -392,6 +398,24 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		// MySQL requires a custom binder for binding untyped nulls with the NULL type
+		typeContributions.contributeJdbcTypeDescriptor( NullJdbcTypeDescriptor.INSTANCE );
+
+		// Until we remove StandardBasicTypes, we have to keep this
+		typeContributions.contributeType(
+				new NullType(
+						NullJdbcTypeDescriptor.INSTANCE,
+						typeContributions.getTypeConfiguration()
+								.getJavaTypeDescriptorRegistry()
+								.getDescriptor( Object.class )
+				)
+		);
+	}
+
+	@Override
 	public SqlAstTranslatorFactory getSqlAstTranslatorFactory() {
 		return new StandardSqlAstTranslatorFactory() {
 			@Override
@@ -400,6 +424,25 @@ public class MySQLDialect extends Dialect {
 				return new MySQLSqlAstTranslator<>( sessionFactory, statement );
 			}
 		};
+	}
+
+	@Override
+	public String castPattern(CastType from, CastType to) {
+		if ( to == CastType.INTEGER_BOOLEAN ) {
+			switch ( from ) {
+				case STRING:
+				case INTEGER:
+				case LONG:
+				case YN_BOOLEAN:
+				case TF_BOOLEAN:
+				case BOOLEAN:
+					break;
+				default:
+					// MySQL/MariaDB don't support casting to bit
+					return "abs(sign(?1))";
+			}
+		}
+		return super.castPattern( from, to );
 	}
 
 	private void time(QueryEngine queryEngine) {

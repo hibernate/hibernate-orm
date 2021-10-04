@@ -41,6 +41,7 @@ import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
@@ -472,6 +473,56 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	}
 
 	@Override
+	public <X> EntityDomainType<X> getHqlEntityReference(String entityName) {
+		return jpaMetamodel.getHqlEntityReference( entityName );
+	}
+
+	@Override
+	public <X> EntityDomainType<X> resolveHqlEntityReference(String entityName) {
+		return jpaMetamodel.resolveHqlEntityReference( entityName );
+	}
+
+	@Override
+	public void visitManagedTypes(Consumer<ManagedDomainType<?>> action) {
+		jpaMetamodel.visitManagedTypes( action );
+	}
+
+	@Override
+	public <X> ManagedDomainType<X> findManagedType(Class<X> cls) {
+		return jpaMetamodel.findManagedType( cls );
+	}
+
+	@Override
+	public void visitEntityTypes(Consumer<EntityDomainType<?>> action) {
+		jpaMetamodel.visitEntityTypes( action );
+	}
+
+	@Override
+	public <X> EntityDomainType<X> findEntityType(Class<X> cls) {
+		return jpaMetamodel.findEntityType( cls );
+	}
+
+	@Override
+	public void visitRootEntityTypes(Consumer<EntityDomainType<?>> action) {
+		jpaMetamodel.visitRootEntityTypes( action );
+	}
+
+	@Override
+	public void visitEmbeddables(Consumer<EmbeddableDomainType<?>> action) {
+		jpaMetamodel.visitEmbeddables( action );
+	}
+
+	@Override
+	public String qualifyImportableName(String queryName) {
+		return jpaMetamodel.qualifyImportableName( queryName );
+	}
+
+	@Override
+	public Map<String, Map<Class<?>, Enum<?>>> getAllowedEnumLiteralTexts() {
+		return jpaMetamodel.getAllowedEnumLiteralTexts();
+	}
+
+	@Override
 	public String getImportedClassName(String className) {
 		throw new UnsupportedOperationException(  );
 	}
@@ -614,6 +665,11 @@ public class MappingMetamodelImpl implements MappingMetamodel, MetamodelImplemen
 	@Override
 	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		return jpaMetamodel.findEntityGraphsByJavaType( entityClass );
+	}
+
+	@Override
+	public JpaCompliance getJpaCompliance() {
+		return jpaMetamodel.getJpaCompliance();
 	}
 
 	@Override

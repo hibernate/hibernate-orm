@@ -18,9 +18,7 @@ import org.hibernate.Metamodel;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
@@ -110,17 +108,11 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 	 */
 	String[] getAllCollectionRoles();
 
-	<T> void addNamedEntityGraph(String graphName, RootGraphImplementor<T> entityGraph);
-
 	/**
 	 * @deprecated Use {@link #addNamedEntityGraph(String, RootGraphImplementor)} instead.
 	 */
 	@Deprecated
 	<T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph);
-
-	<T> RootGraphImplementor<T> findEntityGraphByName(String name);
-
-	<T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass);
 
 	/**
 	 * @deprecated Use {@link #findEntityGraphsByJavaType(Class)} instead.
@@ -135,16 +127,6 @@ public interface MetamodelImplementor extends MappingMetamodel, Metamodel {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Co-variant returns
-
-
-	@Override
-	<X> EntityDomainType<X> entity(Class<X> cls);
-
-	@Override
-	<X> ManagedDomainType<X> managedType(Class<X> cls);
-
-	@Override
-	<X> EmbeddableDomainType<X> embeddable(Class<X> cls);
 
 	@Override
 	default EntityDomainType getEntityTypeByName(String entityName) {

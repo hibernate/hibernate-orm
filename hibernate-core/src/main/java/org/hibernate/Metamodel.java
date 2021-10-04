@@ -8,7 +8,6 @@ package org.hibernate;
 
 import jakarta.persistence.metamodel.EntityType;
 
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 
 /**
@@ -19,7 +18,7 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
  * @see JpaMetamodel
  */
 @Deprecated
-public interface Metamodel extends jakarta.persistence.metamodel.Metamodel {
+public interface Metamodel extends JpaMetamodel {
 	/**
 	 * Access to the SessionFactory that this Metamodel instance is bound to.
 	 *
@@ -34,15 +33,6 @@ public interface Metamodel extends jakarta.persistence.metamodel.Metamodel {
 	default EntityType getEntityTypeByName(String entityName) {
 		return entity( entityName );
 	}
-
-	/**
-	 * Access to an entity supporting Hibernate's entity-name feature
-	 *
-	 * @param entityName The entity-name
-	 *
-	 * @return The entity descriptor
-	 */
-	<X> EntityDomainType<X> entity(String entityName);
 
 	String getImportedClassName(String className);
 

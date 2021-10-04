@@ -5,6 +5,8 @@ if [ "$RDBMS" == "derby" ]; then
   goal="-Pdb=derby"
 elif [ "$RDBMS" == "hsqldb" ]; then
   goal="-Pdb=hsqldb"
+elif [ "$RDBMS" == "mysql8" ]; then
+  goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mysql" ]; then
   goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ]; then

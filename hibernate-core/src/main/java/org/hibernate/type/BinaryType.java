@@ -89,17 +89,4 @@ public class BinaryType
 		return PrimitiveByteArrayTypeDescriptor.INSTANCE.getComparator();
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<X> domainJtd) {
-		if ( ! indicators.isLob() ) {
-			return (BasicType<X>) this;
-		}
-
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-		final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( Types.BLOB );
-
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType, getName() );
-	}
 }

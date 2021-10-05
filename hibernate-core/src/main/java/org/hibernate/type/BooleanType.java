@@ -67,31 +67,4 @@ public class BooleanType
 		return dialect.toBooleanValueString( value );
 	}
 
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
-		final JdbcTypeDescriptor jdbcTypeDescriptor;
-		// We treat BIT like BOOLEAN because it uses the same JDBC access methods
-		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != getJdbcTypeDescriptor().getJdbcTypeCode() ) {
-			jdbcTypeDescriptor = indicators.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry()
-					.getDescriptor( preferredSqlTypeCodeForBoolean );
-		}
-		else {
-			jdbcTypeDescriptor = indicators.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry()
-					.getDescriptor( Types.BOOLEAN );
-		}
-		if ( jdbcTypeDescriptor != getJdbcTypeDescriptor() ) {
-			//noinspection unchecked
-			return (BasicType<X>) indicators.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.resolve( getJavaTypeDescriptor(), jdbcTypeDescriptor, getName() );
-		}
-
-		//noinspection unchecked
-		return (BasicType<X>) this;
-	}
 }

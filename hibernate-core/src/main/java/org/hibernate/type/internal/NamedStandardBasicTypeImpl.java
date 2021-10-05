@@ -29,17 +29,4 @@ public class NamedStandardBasicTypeImpl<J> extends StandardBasicTypeImpl<J> {
 		return name;
 	}
 
-	@Override
-	public BasicType resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor domainJtd) {
-		final JdbcTypeDescriptor recommendedSqlType = getJavaTypeDescriptor().getRecommendedJdbcType( indicators );
-		if ( recommendedSqlType == getJdbcTypeDescriptor() ) {
-			return this;
-		}
-
-		return indicators.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( getJavaTypeDescriptor(), recommendedSqlType, getName() );
-	}
 }

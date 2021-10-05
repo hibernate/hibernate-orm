@@ -25,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class BooleanTypeDescriptor implements JdbcTypeDescriptor {
+public class BooleanTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	public static final BooleanTypeDescriptor INSTANCE = new BooleanTypeDescriptor();
 
 	public BooleanTypeDescriptor() {
@@ -62,6 +62,18 @@ public class BooleanTypeDescriptor implements JdbcTypeDescriptor {
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return new JdbcLiteralFormatterBoolean( javaTypeDescriptor );
+	}
+
+	@Override
+	public JdbcTypeDescriptor resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<?> domainJtd) {
+		final int preferredSqlTypeCodeForBoolean = indicators.getPreferredSqlTypeCodeForBoolean();
+		// We treat BIT like BOOLEAN because it uses the same JDBC access methods
+		if ( preferredSqlTypeCodeForBoolean != Types.BIT && preferredSqlTypeCodeForBoolean != Types.BOOLEAN ) {
+			return indicators.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry()
+					.getDescriptor( preferredSqlTypeCodeForBoolean );
+		}
+		return this;
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

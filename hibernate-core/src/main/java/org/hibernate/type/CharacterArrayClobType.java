@@ -37,26 +37,4 @@ public class CharacterArrayClobType
 		// todo name these annotation types for addition to the registry
 		return null;
 	}
-
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		if ( domainJtd != null && domainJtd.getJavaTypeClass() == char[].class ) {
-			// domainJtd is a `char[]` instead of a `Character[]`....
-			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-			final JdbcTypeDescriptor jdbcType = indicators.isNationalized()
-					? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
-					: jdbcTypeRegistry.getDescriptor( Types.CLOB );
-
-			return typeConfiguration.getBasicTypeRegistry().resolve(
-					typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( domainJtd.getJavaType() ),
-					jdbcType,
-					getName()
-			);
-		}
-
-		return (BasicType<X>) ( indicators.isNationalized() ? CharacterArrayNClobType.INSTANCE : this );
-	}
 }

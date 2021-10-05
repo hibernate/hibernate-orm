@@ -45,20 +45,6 @@ public class StandardBasicTypeImpl<J>
 	}
 
 	@Override
-	public BasicType resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor domainJtd) {
-		final JdbcTypeDescriptor recommendedSqlType = getJavaTypeDescriptor().getRecommendedJdbcType( indicators );
-		if ( recommendedSqlType == getJdbcTypeDescriptor() ) {
-			return this;
-		}
-
-		return indicators.getTypeConfiguration()
-				.getBasicTypeRegistry()
-				.resolve( getJavaTypeDescriptor(), recommendedSqlType );
-	}
-
-	@Override
 	public CastType getCastType() {
 		if ( getJavaTypeDescriptor() == BooleanTypeDescriptor.INSTANCE ) {
 			switch ( getJdbcTypeCode() ) {

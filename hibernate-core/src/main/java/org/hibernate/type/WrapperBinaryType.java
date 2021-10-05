@@ -5,14 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type mapping {@link Types#VARBINARY VARBINARY} and {@link Byte Byte[]}
@@ -35,23 +32,5 @@ public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byt
 	public String getName() {
 		//TODO find a decent name before documenting
 		return "wrapper-binary";
-	}
-
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		if ( ! indicators.isLob() ) {
-			//noinspection unchecked
-			return (BasicType<X>) this;
-		}
-
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-		return typeConfiguration.getBasicTypeRegistry().resolve(
-				domainJtd,
-				jdbcTypeRegistry.getDescriptor( Types.BLOB ),
-				getName()
-		);
 	}
 }

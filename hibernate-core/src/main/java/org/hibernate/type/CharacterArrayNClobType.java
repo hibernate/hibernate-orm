@@ -9,12 +9,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link Types#NCLOB NCLOB} and {@link Character Character[]}
@@ -38,24 +33,4 @@ public class CharacterArrayNClobType
 		return null;
 	}
 
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		if ( domainJtd != null && domainJtd.getJavaTypeClass() == char[].class ) {
-			// domainJtd is a `char[]` instead of a `Character[]`....
-			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-			final JdbcTypeDescriptor jdbcType = jdbcTypeRegistry.getDescriptor( Types.NCLOB );
-
-			return typeConfiguration.getBasicTypeRegistry().resolve(
-					typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( domainJtd.getJavaType() ),
-					jdbcType,
-					getName()
-			);
-		}
-
-		//noinspection unchecked
-		return (BasicType<X>) this;
-	}
 }

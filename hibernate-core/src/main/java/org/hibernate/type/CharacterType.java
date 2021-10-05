@@ -11,12 +11,7 @@ import java.sql.Types;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link Types#CHAR CHAR(1)} and {@link Character}
@@ -65,16 +60,4 @@ public class CharacterType
 		return fromString( sequence );
 	}
 
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-		final JdbcTypeDescriptor jdbcType = indicators.isNationalized()
-				? jdbcTypeRegistry.getDescriptor( Types.NCHAR )
-				:  jdbcTypeRegistry.getDescriptor( Types.CHAR );
-
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, jdbcType, getName() );
-	}
 }

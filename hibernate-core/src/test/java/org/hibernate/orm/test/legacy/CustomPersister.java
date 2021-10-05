@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.legacy;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Hashtable;
@@ -117,6 +118,21 @@ public class CustomPersister implements EntityPersister {
 
 	public String getEntityName() {
 		return Custom.class.getName();
+	}
+
+	@Override
+	public AttributeMapping findDeclaredAttributeMapping(String name) {
+		return null;
+	}
+
+	@Override
+	public Collection<AttributeMapping> getDeclaredAttributeMappings() {
+		return null;
+	}
+
+	@Override
+	public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
+
 	}
 
 	public boolean isSubclassEntityName(String entityName) {
@@ -737,6 +753,11 @@ public class CustomPersister implements EntityPersister {
 	@Override
 	public EntityRowIdMapping getRowIdMapping() {
 		return null;
+	}
+
+	@Override
+	public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+
 	}
 
 	@Override

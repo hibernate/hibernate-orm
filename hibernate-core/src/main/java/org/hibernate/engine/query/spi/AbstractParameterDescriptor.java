@@ -8,6 +8,8 @@ package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
+import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.query.QueryParameter;
 
 /**
@@ -53,5 +55,13 @@ public abstract class AbstractParameterDescriptor implements QueryParameter {
 
 	public void resetExpectedType(AllowableParameterType expectedType) {
 		this.expectedType = expectedType;
+	}
+
+	@Override
+	public boolean allowsMultiValuedBinding() {
+		if ( expectedType instanceof EntityTypeImpl ) {
+			return ( (EntityTypeImpl) expectedType ).getIdType() instanceof EmbeddableDomainType;
+		}
+		return expectedType instanceof EmbeddableDomainType;
 	}
 }

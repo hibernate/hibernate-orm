@@ -368,6 +368,15 @@ public class EntityCollectionPart
 	}
 
 	@Override
+	public <T> DomainResult<T> createDelayedDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public JavaType<?> getJavaTypeDescriptor() {
 		return getEntityMappingType().getJavaTypeDescriptor();
 	}

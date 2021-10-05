@@ -7,11 +7,8 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sql.internal.NativeSelectQueryPlanImpl;
-import org.hibernate.query.sql.spi.NativeNonSelectQueryDefinition;
-import org.hibernate.query.sql.spi.NativeNonSelectQueryPlan;
 import org.hibernate.query.sql.spi.NativeSelectQueryDefinition;
 import org.hibernate.query.sql.spi.NativeSelectQueryPlan;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -50,12 +47,4 @@ public interface NativeQueryInterpreter extends Service {
 		);
 	}
 
-	/**
-	 * Creates a new query plan for the passed native query values
-	 */
-	default NativeNonSelectQueryPlan createQueryPlan(
-			NativeNonSelectQueryDefinition queryDefinition,
-			SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedFor6Exception(  );
-	}
 }

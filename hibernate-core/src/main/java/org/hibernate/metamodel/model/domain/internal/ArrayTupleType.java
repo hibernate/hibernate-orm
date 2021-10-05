@@ -9,12 +9,15 @@ package org.hibernate.metamodel.model.domain.internal;
 import java.util.Arrays;
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.sqm.SqmExpressable;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
 
@@ -84,4 +87,20 @@ public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterTy
 	public String toString() {
 		return "ArrayTupleType" + Arrays.toString( components );
 	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception(getClass());
+	}
+
 }

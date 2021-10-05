@@ -782,6 +782,18 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public TableGroup createRootTableGroup(
+			boolean canUseInnerJoins,
+			NavigablePath navigablePath,
+			String explicitSourceAlias,
+			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
+			SqlAliasBase sqlAliasBase,
+			SqlAstCreationState creationState,
+			SqlAstCreationContext creationContext) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
 	}

@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.Loadable;
@@ -110,40 +109,30 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default ModelPart findSubPart(String name, EntityMappingType targetType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	ModelPart findSubPart(String name, EntityMappingType targetType);
 
 	@Override
-	default void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType targetType) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType targetType);
 
 	@Override
-	default <T> DomainResult<T> createDomainResult(
+	<T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			DomainResultCreationState creationState);
 
 	@Override
-	default void applySqlSelections(
+	void applySqlSelections(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			DomainResultCreationState creationState);
 
 	@Override
-	default void applySqlSelections(
+	void applySqlSelections(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
 
 	@Override
 	default int getJdbcTypeCount() {
@@ -151,24 +140,18 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);
 
 	@Override
-	default Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	Object disassemble(Object value, SharedSessionContractImplementor session);
 
 	@Override
-	default int forEachDisassembledJdbcValue(
+	int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 	@Override
 	default int forEachJdbcValue(
@@ -187,11 +170,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		return getEntityPersister().getEntityMetamodel().hasSubclasses();
 	}
 
-	default AttributeMapping findDeclaredAttributeMapping(String name) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-		// or ?
-		//throw new UnsupportedOperationException();
-	}
+	AttributeMapping findDeclaredAttributeMapping(String name);
 
 	/**
 	 * Get the number of attributes defined on this class - do not access attributes defined on the super
@@ -203,16 +182,12 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	/**
 	 * Get access to the attributes defined on this class - do not access attributes defined on the super
 	 */
-	default Collection<AttributeMapping> getDeclaredAttributeMappings() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	Collection<AttributeMapping> getDeclaredAttributeMappings();
 
 	/**
 	 * Visit attributes defined on this class - do not visit attributes defined on the super
 	 */
-	default void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action);
 
 	default EntityMappingType getSuperMappingType() {
 		return null;
@@ -244,7 +219,9 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	EntityIdentifierMapping getIdentifierMapping();
 
 	EntityDiscriminatorMapping getDiscriminatorMapping();
+
 	Object getDiscriminatorValue();
+
 	String getSubclassForDiscriminatorValue(Object value);
 
 	EntityVersionMapping getVersionMapping();
@@ -278,9 +255,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 		// by default do nothing
 	}
 
-	default void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer);
 
 	default EntityMappingType getRootEntityDescriptor() {
 		final EntityMappingType superMappingType = getSuperMappingType();

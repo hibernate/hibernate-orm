@@ -25,6 +25,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyLoadable;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -322,4 +323,12 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		}
 	}
 
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return fetchable.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+	}
 }

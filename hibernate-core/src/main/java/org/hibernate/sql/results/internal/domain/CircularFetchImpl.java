@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -184,6 +185,15 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 	@Override
 	public NavigableRole getNavigableRole() {
 		return fetchable.getNavigableRole();
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return fetchable.createDomainResult( navigablePath, tableGroup,resultVariable, creationState );
 	}
 
 	@Override

@@ -67,13 +67,11 @@ public interface ModelPart extends MappingModelExpressable {
 	/**
 	 * Create a DomainResult for a specific reference to this ModelPart.
 	 */
-	default <T> DomainResult<T> createDomainResult(
+	<T> DomainResult<T> createDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			DomainResultCreationState creationState);
 
 	/**
 	 * Apply SQL selections for a specific reference to this ModelPart outside the domain query's root select clause.

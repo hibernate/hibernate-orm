@@ -103,6 +103,7 @@ import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Loadable;
+import org.hibernate.persister.entity.SessionFactoryBasedWrapperOptions;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.proxy.HibernateProxyHelper;
@@ -126,6 +127,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tool.schema.spi.DelayedDropAction;
 import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -186,6 +188,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	private final transient Map<String, FetchProfile> fetchProfiles;
 
 	private final transient FastSessionServices fastSessionServices;
+	private final transient WrapperOptions wrapperOptions;
 	private final transient SessionBuilder defaultSessionOpenOptions;
 	private final transient SessionBuilder temporarySessionOpenOptions;
 	private final transient StatelessSessionBuilder defaultStatelessOptions;
@@ -372,6 +375,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			this.temporarySessionOpenOptions = this.defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			this.defaultStatelessOptions = this.defaultSessionOpenOptions == null ? null : withStatelessOptions();
 			this.fastSessionServices = new FastSessionServices( this );
+			this.wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
 			this.observer.sessionFactoryCreated( this );
 
@@ -1641,6 +1645,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 	@Override
 	public FastSessionServices getFastSessionServices() {
 		return this.fastSessionServices;
+	}
+
+	@Override
+	public WrapperOptions getWrapperOptions() {
+		return wrapperOptions;
 	}
 
 	private enum Status {

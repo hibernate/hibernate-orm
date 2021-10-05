@@ -8,8 +8,6 @@ package org.hibernate.type;
 
 import java.sql.Types;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
@@ -36,10 +34,6 @@ public class StringType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	public String objectToSQLString(String value, Dialect dialect) throws Exception {
-		return QueryLiteralHelper.toStringLiteral( value );
 	}
 
 	public String stringToObject(CharSequence sequence) throws Exception {

@@ -2,7 +2,6 @@ package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
@@ -26,12 +25,7 @@ public class BitSetType
         return fromString( sequence );
     }
 
-    @Override
-    public String objectToSQLString(BitSet value, Dialect dialect) throws Exception {
-        return toString( value );
-    }
-
-    @Override
+	@Override
     public String getName() {
         return "bitset";
     }

@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StringType;
@@ -101,10 +100,6 @@ public class StoredPrefixedStringType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	public String objectToSQLString(String value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value, dialect );
 	}
 
 	public String stringToObject(CharSequence sequence) throws Exception {

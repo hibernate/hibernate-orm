@@ -24,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ZonedDateTimeType
 		extends AbstractSingleColumnStandardBasicType<ZonedDateTime>
-		implements VersionType<ZonedDateTime>, LiteralType<ZonedDateTime>, AllowableTemporalParameterType<ZonedDateTime> {
+		implements VersionType<ZonedDateTime>, AllowableTemporalParameterType<ZonedDateTime> {
 
 	/**
 	 * Singleton access

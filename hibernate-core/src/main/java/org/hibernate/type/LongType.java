@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.LongTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
@@ -72,8 +71,4 @@ public class LongType
 		return getJavaTypeDescriptor().getComparator();
 	}
 
-	@Override
-	public String objectToSQLString(Long value, Dialect dialect) throws Exception {
-		return value.toString();
-	}
 }

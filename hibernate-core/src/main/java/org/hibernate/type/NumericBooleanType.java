@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
@@ -46,10 +45,7 @@ public class NumericBooleanType
 	public Boolean stringToObject(CharSequence string) {
 		return fromString( string );
 	}
-	@Override
-	public String objectToSQLString(Boolean value, Dialect dialect) {
-		return value ? "1" : "0";
-	}
+
 	@Override
 	public CastType getCastType() {
 		return CastType.INTEGER_BOOLEAN;

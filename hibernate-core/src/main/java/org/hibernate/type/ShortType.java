@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
@@ -50,11 +49,6 @@ public class ShortType
 	@Override
 	public Class getPrimitiveClass() {
 		return short.class;
-	}
-
-	@Override
-	public String objectToSQLString(Short value, Dialect dialect) {
-		return value.toString();
 	}
 
 	@Override

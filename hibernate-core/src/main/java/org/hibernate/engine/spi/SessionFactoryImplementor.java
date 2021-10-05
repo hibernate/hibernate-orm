@@ -45,6 +45,7 @@ import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -160,6 +161,8 @@ public interface SessionFactoryImplementor
 	 * @return the FastSessionServices instance associated with this SessionFactory
 	 */
 	FastSessionServices getFastSessionServices();
+
+	WrapperOptions getWrapperOptions();
 
 	/**
 	 * Contract for resolving this SessionFactory on deserialization

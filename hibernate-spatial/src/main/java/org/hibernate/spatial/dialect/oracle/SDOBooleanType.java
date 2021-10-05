@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.BooleanType;
 
 class SDOBooleanType extends BooleanType {
@@ -49,10 +48,6 @@ class SDOBooleanType extends BooleanType {
 		else {
 			st.setString( index, value ? "TRUE" : "FALSE" );
 		}
-	}
-
-	public String objectToSQLString(Boolean value, Dialect dialect) {
-		return value ? "'TRUE'" : "'FALSE'";
 	}
 
 }

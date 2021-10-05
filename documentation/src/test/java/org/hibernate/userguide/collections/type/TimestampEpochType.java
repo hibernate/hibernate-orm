@@ -13,7 +13,6 @@ import java.util.Date;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.LiteralType;
 import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
@@ -25,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
 
 public class TimestampEpochType
         extends AbstractSingleColumnStandardBasicType<Date>
-        implements VersionType<Date>, LiteralType<Date> {
+        implements VersionType<Date> {
 
     public static final TimestampEpochType INSTANCE = new TimestampEpochType();
 

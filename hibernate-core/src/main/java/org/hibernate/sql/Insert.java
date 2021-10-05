@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LiteralType;
 
 /**
  * An SQL <tt>INSERT</tt> statement
@@ -72,10 +71,6 @@ public class Insert {
 	public Insert addColumn(String columnName, String valueExpression) {
 		columns.put( columnName, valueExpression );
 		return this;
-	}
-
-	public Insert addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString( value, dialect ) );
 	}
 
 	public Insert addIdentityColumn(String columnName) {

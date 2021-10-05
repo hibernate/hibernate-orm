@@ -69,6 +69,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -194,10 +195,12 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				else {
 					try {
 						discriminatorValue = discriminatorType.stringToObject( persistentClass.getDiscriminatorValue() );
-						discriminatorSQLString = ((DiscriminatorType) discriminatorType).objectToSQLString(
-								discriminatorValue,
-								factory.getJdbcServices().getDialect()
-						);
+						discriminatorSQLString = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaTypeDescriptor) discriminatorType.getJavaTypeDescriptor() )
+								.toJdbcLiteral(
+										discriminatorValue,
+										factory.getJdbcServices().getDialect(),
+										factory.getWrapperOptions()
+								);
 					}
 					catch (ClassCastException cce) {
 						throw new MappingException("Illegal discriminator type: " + discriminatorType.getName() );

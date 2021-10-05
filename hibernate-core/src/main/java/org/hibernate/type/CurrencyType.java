@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.Currency;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CurrencyTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
@@ -19,8 +18,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CurrencyType
-		extends AbstractSingleColumnStandardBasicType<Currency>
-		implements LiteralType<Currency> {
+		extends AbstractSingleColumnStandardBasicType<Currency> {
 
 	public static final CurrencyType INSTANCE = new CurrencyType();
 
@@ -37,7 +35,4 @@ public class CurrencyType
 		return true;
 	}
 
-	public String objectToSQLString(Currency value, Dialect dialect) throws Exception {
-		return "'" + toString(  value ) + "'";
-	}
 }

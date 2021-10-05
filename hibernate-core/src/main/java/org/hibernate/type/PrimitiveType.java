@@ -12,7 +12,7 @@ package org.hibernate.type;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface PrimitiveType<T> extends LiteralType<T>, AdjustableBasicType<T> {
+public interface PrimitiveType<T> extends AdjustableBasicType<T> {
 	/**
 	 * Retrieve the primitive counterpart to the wrapper type identified by
 	 * {@link Type#getReturnedClass()}.

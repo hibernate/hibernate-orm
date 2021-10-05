@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.sql.Types;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
 
@@ -44,16 +43,6 @@ public class CharacterType
 
 	public Class getPrimitiveClass() {
 		return char.class;
-	}
-
-	public String objectToSQLString(Character value, Dialect dialect) {
-		if ( value == '\'' ) {
-			return "''''";
-		}
-		final char[] chars = new char[3];
-		chars[0] = chars[2] = '\'';
-		chars[1] = value;
-		return new String( chars );
 	}
 
 	public Character stringToObject(CharSequence sequence) {

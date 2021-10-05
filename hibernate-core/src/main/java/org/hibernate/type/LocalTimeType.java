@@ -21,7 +21,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class LocalTimeType
 		extends AbstractSingleColumnStandardBasicType<LocalTime>
-		implements LiteralType<LocalTime>, AllowableTemporalParameterType<LocalTime> {
+		implements AllowableTemporalParameterType<LocalTime> {
 	/**
 	 * Singleton access
 	 */

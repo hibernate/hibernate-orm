@@ -11,7 +11,6 @@ import java.util.Date;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -24,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class DateType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements IdentifierType<Date>, LiteralType<Date>, AllowableTemporalParameterType<Date> {
+		implements IdentifierType<Date>, AllowableTemporalParameterType<Date> {
 
 	public static final DateType INSTANCE = new DateType();
 
@@ -48,14 +47,6 @@ public class DateType
 //	protected boolean registerUnderJavaType() {
 //		return true;
 //	}
-
-	public String objectToSQLString(Date value, Dialect dialect) throws Exception {
-		final java.sql.Date jdbcDate = java.sql.Date.class.isInstance( value )
-				? ( java.sql.Date ) value
-				: new java.sql.Date( value.getTime() );
-		// TODO : use JDBC date literal escape syntax? -> {d 'date-string'} in yyyy-mm-dd format
-		return StringType.INSTANCE.objectToSQLString( jdbcDate.toString(), dialect );
-	}
 
 	public Date stringToObject(CharSequence sequence) {
 		return fromString( sequence );

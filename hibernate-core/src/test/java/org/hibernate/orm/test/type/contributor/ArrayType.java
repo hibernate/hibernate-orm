@@ -2,7 +2,6 @@ package org.hibernate.orm.test.type.contributor;
 
 import java.util.Map;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
@@ -31,11 +30,6 @@ public class ArrayType
     @Override
     public Array stringToObject(CharSequence sequence) throws Exception {
         return fromString( sequence );
-    }
-
-    @Override
-    public String objectToSQLString(Array value, Dialect dialect) throws Exception {
-        return toString( value );
     }
 
     @Override

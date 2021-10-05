@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 
@@ -48,11 +47,6 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	@Override
 	public Class getPrimitiveClass() {
 		return int.class;
-	}
-
-	@Override
-	public String objectToSQLString(Integer value, Dialect dialect) throws Exception {
-		return toString( value );
 	}
 
 	@Override

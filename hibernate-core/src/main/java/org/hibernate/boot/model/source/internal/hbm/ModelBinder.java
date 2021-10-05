@@ -155,7 +155,6 @@ import org.hibernate.type.BlobType;
 import org.hibernate.type.ClobType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.NClobType;
 import org.hibernate.type.StandardBasicTypes;
@@ -2396,7 +2395,7 @@ public class ModelBinder {
 		);
 
 		final String discriminatorTypeName;
-		final DiscriminatorType<?> discriminatorType;
+		final BasicType<?> discriminatorType;
 		if ( discriminatorTypeResolution != null && discriminatorTypeResolution.typeName != null ) {
 			discriminatorTypeName = discriminatorTypeResolution.typeName;
 			discriminatorType = resolveExplicitlyNamedAnyDiscriminatorType(
@@ -2417,7 +2416,7 @@ public class ModelBinder {
 		anyMapping.getDiscriminatorSource().getValueMappings().forEach(
 				(discriminatorValueString, entityName) -> {
 					try {
-						final Object discriminatorValue = discriminatorType.stringToObject( discriminatorValueString );
+						final Object discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorValueString );
 						discriminatorValueToEntityNameMap.put( discriminatorValue, entityName );
 					}
 					catch (Exception e) {
@@ -2458,7 +2457,7 @@ public class ModelBinder {
 		);
 	}
 
-	private DiscriminatorType<?> resolveExplicitlyNamedAnyDiscriminatorType(
+	private BasicType<?> resolveExplicitlyNamedAnyDiscriminatorType(
 			String typeName,
 			Properties parameters,
 			Any.MetaValue discriminatorMapping) {
@@ -2471,7 +2470,7 @@ public class ModelBinder {
 					.getBasicTypeRegistry()
 					.getRegisteredType( typeName );
 			if ( basicTypeByName != null ) {
-				return (DiscriminatorType<?>) basicTypeByName;
+				return basicTypeByName;
 			}
 		}
 
@@ -2489,7 +2488,7 @@ public class ModelBinder {
 				discriminatorMapping.setTypeParameters( resolution.getCombinedTypeParameters() );
 			}
 
-			return (DiscriminatorType<?>) resolution.getLegacyResolvedBasicType();
+			return resolution.getLegacyResolvedBasicType();
 		}
 
 		final ClassLoaderService classLoaderService = bootstrapContext
@@ -2520,7 +2519,7 @@ public class ModelBinder {
 			}
 
 			assert typeInstance instanceof BasicType;
-			return (DiscriminatorType<?>) typeInstance;
+			return (BasicType<?>) typeInstance;
 		}
 		catch (ClassLoadingException e) {
 			log.debugf( "Unable to load explicit any-discriminator type name as Java Class - %s", typeName );

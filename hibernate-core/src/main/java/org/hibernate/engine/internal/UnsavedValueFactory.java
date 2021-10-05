@@ -6,7 +6,6 @@
  */
 package org.hibernate.engine.internal;
 
-import java.io.Serializable;
 import java.lang.reflect.Constructor;
 
 import org.hibernate.InstantiationException;
@@ -14,10 +13,11 @@ import org.hibernate.MappingException;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.type.IdentifierType;
-import org.hibernate.type.PrimitiveType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -68,8 +68,9 @@ public class UnsavedValueFactory {
 				final Object defaultValue = identifierGetter.get( instantiate( constructor ) );
 				return new IdentifierValue( defaultValue );
 			}
-			else if ( identifierGetter != null && (identifierType instanceof PrimitiveType) ) {
-				final Object defaultValue = ( (PrimitiveType) identifierType ).getDefaultValue();
+			final JavaTypeDescriptor<?> jtd;
+			if ( identifierGetter != null && ( identifierType instanceof BasicType<?> ) && ( jtd = ( (BasicType<?>) identifierType ).getJavaTypeDescriptor() ) instanceof PrimitiveJavaTypeDescriptor ) {
+				final Object defaultValue = ( (PrimitiveJavaTypeDescriptor<?>) jtd ).getDefaultValue();
 				return new IdentifierValue( defaultValue );
 			}
 			else {
@@ -90,7 +91,7 @@ public class UnsavedValueFactory {
 		}
 		else {
 			try {
-				return new IdentifierValue( ( (IdentifierType) identifierType ).stringToObject( unsavedValue ) );
+				return new IdentifierValue( ( (BasicType<?>) identifierType ).getJavaTypeDescriptor().fromString( unsavedValue ) );
 			}
 			catch ( ClassCastException cce ) {
 				throw new MappingException( "Bad identifier type: " + identifierType.getName() );

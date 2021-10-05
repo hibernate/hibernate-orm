@@ -18,10 +18,10 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 
@@ -35,10 +35,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
  */
 @BaseUnitTest
 public class StringValueMappingTest {
-	private final StringTypeDescriptor stringJavaDescriptor = new StringTypeDescriptor();
+	private final StringJavaTypeDescriptor stringJavaDescriptor = new StringJavaTypeDescriptor();
 
-	private final VarcharTypeDescriptor varcharSqlDescriptor = new VarcharTypeDescriptor();
-	private final ClobTypeDescriptor clobSqlDescriptor = ClobTypeDescriptor.DEFAULT;
+	private final VarcharJdbcTypeDescriptor varcharSqlDescriptor = new VarcharJdbcTypeDescriptor();
+	private final ClobJdbcTypeDescriptor clobSqlDescriptor = ClobJdbcTypeDescriptor.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
 		@Override

@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -52,14 +52,14 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType
 		extends AbstractType
-		implements BasicType, IdentifierType, DiscriminatorType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
 	private final UserType<Object> userType;
 	private final String[] registrationKeys;
 
 	private final String name;
 
-	private final BasicJavaDescriptor<Object> mappedJavaTypeDescriptor;
+	private final BasicJavaTypeDescriptor<Object> mappedJavaTypeDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private final ValueExtractor<Object> valueExtractor;
@@ -76,13 +76,13 @@ public class CustomType
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 
-		if ( userType instanceof BasicJavaDescriptor ) {
+		if ( userType instanceof BasicJavaTypeDescriptor ) {
 			//noinspection rawtypes
-			this.mappedJavaTypeDescriptor = ( (BasicJavaDescriptor) userType );
+			this.mappedJavaTypeDescriptor = ( (BasicJavaTypeDescriptor) userType );
 		}
 		else if ( userType instanceof JavaTypedExpressable ) {
 			//noinspection rawtypes
-			this.mappedJavaTypeDescriptor = (BasicJavaDescriptor) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
+			this.mappedJavaTypeDescriptor = (BasicJavaTypeDescriptor) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
 		}
 		else if ( userType instanceof UserVersionType ) {
 			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType) userType );
@@ -251,11 +251,6 @@ public class CustomType
 	@Override
 	public boolean isMutable() {
 		return getUserType().isMutable();
-	}
-
-	@Override
-	public Object stringToObject(CharSequence sequence) {
-		return fromStringValue( sequence );
 	}
 
 	@Override

@@ -30,45 +30,45 @@ import org.hibernate.collection.internal.StandardOrderedSetSemantics;
 import org.hibernate.collection.internal.StandardSetSemantics;
 import org.hibernate.collection.internal.StandardSortedMapSemantics;
 import org.hibernate.collection.internal.StandardSortedSetSemantics;
-import org.hibernate.type.descriptor.java.BigDecimalTypeDescriptor;
-import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
-import org.hibernate.type.descriptor.java.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
-import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
-import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.java.CurrencyTypeDescriptor;
-import org.hibernate.type.descriptor.java.DateTypeDescriptor;
-import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
-import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
+import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigIntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BlobJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ByteJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CalendarJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClobJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CurrencyJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.DateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.DurationJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
-import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
-import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaObjectTypeDescriptor;
+import org.hibernate.type.descriptor.java.InstantJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ObjectJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
-import org.hibernate.type.descriptor.java.LocalDateJavaDescriptor;
-import org.hibernate.type.descriptor.java.LocalDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
-import org.hibernate.type.descriptor.java.LongTypeDescriptor;
-import org.hibernate.type.descriptor.java.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.OffsetTimeJavaDescriptor;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.java.TimeZoneTypeDescriptor;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
-import org.hibernate.type.descriptor.java.ZoneOffsetJavaDescriptor;
+import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocalDateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocalDateTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocalTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocaleJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.LongJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.NClobJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.OffsetDateTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ShortJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.TimeZoneJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.ZoneOffsetJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 
 /**
@@ -83,54 +83,54 @@ public class JavaTypeDescriptorBaseline {
 
 	@SuppressWarnings("unchecked")
 	public static void prime(BaselineTarget target) {
-		primePrimitive( target, ByteTypeDescriptor.INSTANCE );
-		primePrimitive( target, BooleanTypeDescriptor.INSTANCE );
-		primePrimitive( target, CharacterTypeDescriptor.INSTANCE );
-		primePrimitive( target, ShortTypeDescriptor.INSTANCE );
-		primePrimitive( target, IntegerTypeDescriptor.INSTANCE );
-		primePrimitive( target, LongTypeDescriptor.INSTANCE );
+		primePrimitive( target, ByteJavaTypeDescriptor.INSTANCE );
+		primePrimitive( target, BooleanJavaTypeDescriptor.INSTANCE );
+		primePrimitive( target, CharacterJavaTypeDescriptor.INSTANCE );
+		primePrimitive( target, ShortJavaTypeDescriptor.INSTANCE );
+		primePrimitive( target, IntegerJavaTypeDescriptor.INSTANCE );
+		primePrimitive( target, LongJavaTypeDescriptor.INSTANCE );
 		primePrimitive( target, FloatTypeDescriptor.INSTANCE );
-		primePrimitive( target, DoubleTypeDescriptor.INSTANCE );
+		primePrimitive( target, DoubleJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( JavaObjectTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ObjectJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( BigDecimalTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( BigIntegerTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( BigDecimalJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( BigIntegerJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( StringTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( StringJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( BlobTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ClobTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( NClobTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( BlobJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ClobJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( NClobJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( ByteArrayTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( CharacterArrayTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( PrimitiveByteArrayTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ByteArrayJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( CharacterArrayJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( PrimitiveCharacterArrayJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( DurationJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( InstantJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocalDateJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocalDateTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocalTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( OffsetTimeJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( DurationJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( InstantJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( LocalDateJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( LocalDateTimeJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( LocalTimeJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( OffsetDateTimeJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( OffsetTimeJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( ZonedDateTimeJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( CalendarTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( DateTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Date.class, JdbcDateTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Time.class, JdbcTimeTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( java.sql.Timestamp.class, JdbcTimestampTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( TimeZoneTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ZoneOffsetJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( CalendarJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( DateJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( java.sql.Date.class, JdbcDateJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( java.sql.Time.class, JdbcTimeJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( java.sql.Timestamp.class, JdbcTimestampJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( TimeZoneJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ZoneOffsetJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( ClassTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ClassJavaTypeDescriptor.INSTANCE );
 
-		target.addBaselineDescriptor( CurrencyTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( LocaleTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( UrlTypeDescriptor.INSTANCE );
-		target.addBaselineDescriptor( UUIDTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( CurrencyJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( LocaleJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( UrlJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( UUIDJavaTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Collection.class, StandardBagSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Object[].class, StandardArraySemantics.INSTANCE ) );
@@ -152,6 +152,6 @@ public class JavaTypeDescriptorBaseline {
 
 	private static void primePrimitive(BaselineTarget target, JavaTypeDescriptor descriptor) {
 		target.addBaselineDescriptor( descriptor );
-		target.addBaselineDescriptor( ( (Primitive) descriptor ).getPrimitiveClass(), descriptor );
+		target.addBaselineDescriptor( ( (PrimitiveJavaTypeDescriptor) descriptor ).getPrimitiveClass(), descriptor );
 	}
 }

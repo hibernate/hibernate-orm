@@ -6,8 +6,12 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Types;
+
 import org.hibernate.Incubating;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * Specialized JavaTypeDescriptor for temporal types.
@@ -15,17 +19,30 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 @Incubating
-public interface TemporalJavaTypeDescriptor<T> extends BasicJavaDescriptor<T> {
+public interface TemporalJavaTypeDescriptor<T> extends BasicJavaTypeDescriptor<T> {
+
+	static int resolveJdbcTypeCode(TemporalType requestedTemporalPrecision) {
+		switch ( requestedTemporalPrecision ) {
+			case DATE:
+				return Types.DATE;
+			case TIME:
+				return Types.TIME;
+			case TIMESTAMP:
+				return Types.TIMESTAMP;
+		}
+		throw new UnsupportedOperationException( "Unsupported precision: " + requestedTemporalPrecision );
+	}
+
 	/**
 	 * The precision represented by this type
 	 */
-	jakarta.persistence.TemporalType getPrecision();
+	TemporalType getPrecision();
 
 	/**
 	 * Resolve the appropriate TemporalJavaTypeDescriptor for the given precision
 	 * "relative" to this type.
 	 */
 	<X> TemporalJavaTypeDescriptor<X> resolveTypeForPrecision(
-			jakarta.persistence.TemporalType precision,
+			TemporalType precision,
 			TypeConfiguration typeConfiguration);
 }

@@ -8,7 +8,7 @@ package org.hibernate.orm.test.mapping.converted.converter.custom;
 
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 /**
  * @author Steve Ebersole
  */
-public class MyCustomJavaTypeDescriptor implements BasicJavaDescriptor<MyCustomJavaType> {
+public class MyCustomJavaTypeDescriptor implements BasicJavaTypeDescriptor<MyCustomJavaType> {
 	/**
 	 * Singleton access
 	 */

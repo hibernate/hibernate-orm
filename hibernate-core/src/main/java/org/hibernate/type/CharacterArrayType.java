@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link Types#VARCHAR VARCHAR} and {@link Character Character[]}
@@ -23,7 +23,7 @@ public class CharacterArrayType
 	public static final CharacterArrayType INSTANCE = new CharacterArrayType();
 
 	public CharacterArrayType() {
-		super( VarcharTypeDescriptor.INSTANCE, CharacterArrayTypeDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, CharacterArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

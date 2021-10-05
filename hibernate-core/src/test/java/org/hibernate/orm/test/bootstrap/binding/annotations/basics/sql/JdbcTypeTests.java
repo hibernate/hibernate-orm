@@ -28,12 +28,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -163,12 +159,12 @@ public class JdbcTypeTests {
 
 		@Override
 		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return TinyIntTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
+			return TinyIntJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-			return TinyIntTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
+			return TinyIntJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 		}
 	}
 

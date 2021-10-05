@@ -59,8 +59,8 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
@@ -665,9 +665,9 @@ public class OracleDialect extends Dialect {
 					false
 			);
 
-			BlobTypeDescriptor descriptor = preferLong ?
-					BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING :
-					BlobTypeDescriptor.DEFAULT;
+			BlobJdbcTypeDescriptor descriptor = preferLong ?
+					BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING :
+					BlobJdbcTypeDescriptor.DEFAULT;
 
 			typeContributions.contributeJdbcTypeDescriptor( descriptor );
 		}
@@ -1189,7 +1189,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "hextoraw('" );
-		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( "')" );
 	}
 

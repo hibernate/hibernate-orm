@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NCharTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#NCHAR NCHAR(1)} and {@link Character}
@@ -18,29 +16,16 @@ import org.hibernate.type.descriptor.jdbc.NCharTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CharacterNCharType
-		extends AbstractSingleColumnStandardBasicType<Character>
-		implements PrimitiveType<Character>, DiscriminatorType<Character> {
+		extends AbstractSingleColumnStandardBasicType<Character> {
 
 	public static final CharacterNCharType INSTANCE = new CharacterNCharType();
 
 	public CharacterNCharType() {
-		super( NCharTypeDescriptor.INSTANCE, CharacterTypeDescriptor.INSTANCE );
+		super( NCharJdbcTypeDescriptor.INSTANCE, CharacterJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
 		return "ncharacter";
-	}
-
-	public Serializable getDefaultValue() {
-		throw new UnsupportedOperationException( "not a valid id type" );
-	}
-
-	public Class getPrimitiveClass() {
-		return char.class;
-	}
-
-	public Character stringToObject(CharSequence sequence) {
-		return fromString( sequence );
 	}
 
 }

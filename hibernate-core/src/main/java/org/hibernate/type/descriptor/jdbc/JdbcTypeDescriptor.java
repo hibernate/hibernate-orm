@@ -12,7 +12,7 @@ import java.sql.Types;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -65,12 +65,12 @@ public interface JdbcTypeDescriptor extends Serializable {
 	 */
 	boolean canBeRemapped();
 
-	default <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	default <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
-		return (BasicJavaDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
+		return (BasicJavaTypeDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getJdbcTypeCode() )
 		);
 	}

@@ -6,11 +6,10 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link Types#CHAR CHAR(1)} and {@link Character}
@@ -20,12 +19,12 @@ import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
  */
 public class CharacterType
 		extends AbstractSingleColumnStandardBasicType<Character>
-		implements PrimitiveType<Character>, DiscriminatorType<Character>, AdjustableBasicType<Character> {
+		implements AdjustableBasicType<Character> {
 
 	public static final CharacterType INSTANCE = new CharacterType();
 
 	public CharacterType() {
-		super( CharTypeDescriptor.INSTANCE, CharacterTypeDescriptor.INSTANCE );
+		super( CharJdbcTypeDescriptor.INSTANCE, CharacterJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -35,18 +34,6 @@ public class CharacterType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), char.class.getName(), Character.class.getName() };
-	}
-
-	public Serializable getDefaultValue() {
-		throw new UnsupportedOperationException( "not a valid id type" );
-	}
-
-	public Class getPrimitiveClass() {
-		return char.class;
-	}
-
-	public Character stringToObject(CharSequence sequence) {
-		return fromString( sequence );
 	}
 
 }

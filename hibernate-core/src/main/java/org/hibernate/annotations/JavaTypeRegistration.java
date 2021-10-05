@@ -10,7 +10,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -31,5 +31,5 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 public @interface JavaTypeRegistration {
 	Class<?> javaType();
 
-	Class<? extends BasicJavaDescriptor<?>> descriptorClass();
+	Class<? extends BasicJavaTypeDescriptor<?>> descriptorClass();
 }

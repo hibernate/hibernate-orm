@@ -7,12 +7,9 @@
 package org.hibernate.type;
 
 import java.time.LocalTime;
-import jakarta.persistence.TemporalType;
 
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
-import org.hibernate.type.descriptor.java.LocalTimeJavaDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.LocalTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -20,15 +17,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class LocalTimeType
-		extends AbstractSingleColumnStandardBasicType<LocalTime>
-		implements AllowableTemporalParameterType<LocalTime> {
+		extends AbstractSingleColumnStandardBasicType<LocalTime> {
 	/**
 	 * Singleton access
 	 */
 	public static final LocalTimeType INSTANCE = new LocalTimeType();
 
 	public LocalTimeType() {
-		super( TimeTypeDescriptor.INSTANCE, LocalTimeJavaDescriptor.INSTANCE );
+		super( TimeJdbcTypeDescriptor.INSTANCE, LocalTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -41,22 +37,4 @@ public class LocalTimeType
 		return true;
 	}
 
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case TIME: {
-				return this;
-			}
-			case TIMESTAMP: {
-				return LocalDateTimeType.INSTANCE;
-			}
-			case DATE: {
-				return LocalDateType.INSTANCE;
-			}
-		}
-		// Why Java?  Why?
-		return null;
-	}
 }

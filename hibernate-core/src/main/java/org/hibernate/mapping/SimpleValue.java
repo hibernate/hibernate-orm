@@ -51,7 +51,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeDescriptorAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
@@ -657,7 +657,7 @@ public abstract class SimpleValue implements KeyValue {
 				}
 		);
 
-		final BasicJavaDescriptor<?> domainJtd = (BasicJavaDescriptor<?>) jpaAttributeConverter.getDomainJavaTypeDescriptor();
+		final BasicJavaTypeDescriptor<?> domainJtd = (BasicJavaTypeDescriptor<?>) jpaAttributeConverter.getDomainJavaTypeDescriptor();
 
 
 		// build the SqlTypeDescriptor adapter ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

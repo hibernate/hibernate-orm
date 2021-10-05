@@ -8,7 +8,7 @@
 package org.hibernate.spatial;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractJavaTypeDescriptor;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.codec.Wkt;
@@ -20,7 +20,7 @@ import org.geolatte.geom.jts.JTS;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 10/12/12
  */
-public class GeolatteGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geometry> {
+public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Geometry> {
 
 	/**
 	 * an instance of this descriptor

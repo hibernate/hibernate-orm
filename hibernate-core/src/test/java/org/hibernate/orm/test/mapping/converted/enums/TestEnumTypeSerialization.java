@@ -11,9 +11,10 @@ import org.hibernate.metamodel.model.convert.internal.NamedEnumValueConverter;
 import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -33,8 +34,8 @@ public class TestEnumTypeSerialization {
 
 		final OrdinalEnumValueConverter valueConverter = new OrdinalEnumValueConverter(
 				enumJtd,
-				IntegerTypeDescriptor.INSTANCE,
-				org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE
+				IntegerJdbcTypeDescriptor.INSTANCE,
+				IntegerJavaTypeDescriptor.INSTANCE
 		);
 
 		final EnumType<UnspecifiedEnumTypeEntity.E1> enumType = new EnumType<>(
@@ -55,8 +56,8 @@ public class TestEnumTypeSerialization {
 
 		final NamedEnumValueConverter valueConverter = new NamedEnumValueConverter(
 				enumJtd,
-				VarcharTypeDescriptor.INSTANCE,
-				StringTypeDescriptor.INSTANCE
+				VarcharJdbcTypeDescriptor.INSTANCE,
+				StringJavaTypeDescriptor.INSTANCE
 		);
 
 		final EnumType<UnspecifiedEnumTypeEntity.E1> enumType = new EnumType<>(

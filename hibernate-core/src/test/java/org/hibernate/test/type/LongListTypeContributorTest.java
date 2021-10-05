@@ -21,7 +21,8 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -154,7 +155,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 			public static final StringifiedCollectionType INSTANCE = new StringifiedCollectionType();
 
 			public StringifiedCollectionType() {
-				super( org.hibernate.type.descriptor.jdbc.LongVarcharTypeDescriptor.INSTANCE,
+				super( LongVarcharJdbcTypeDescriptor.INSTANCE,
 					   StringifiedCollectionJavaTypeDescriptor.INSTANCE );
 				regKeys = new String[]{ LongList.class.getName() };
 				name = "StringifiedCollection";
@@ -176,7 +177,7 @@ public class LongListTypeContributorTest extends BaseEntityManagerFunctionalTest
 			}
 		}
 
-		private static class StringifiedCollectionJavaTypeDescriptor extends AbstractClassTypeDescriptor<LongList> {
+		private static class StringifiedCollectionJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<LongList> {
 
 			public static StringifiedCollectionJavaTypeDescriptor INSTANCE = new StringifiedCollectionJavaTypeDescriptor();
 

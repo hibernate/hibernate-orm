@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 
 import java.time.Instant;
-import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
+import org.hibernate.type.descriptor.java.InstantJavaTypeDescriptor;
 
 /**
  * @author Jordan Gigov
@@ -18,7 +18,7 @@ public class InstantDescriptorTest extends AbstractDescriptorTest<Instant> {
 	final Instant different = Instant.ofEpochMilli( 1476340818746L );
 
 	public InstantDescriptorTest() {
-		super(InstantJavaDescriptor.INSTANCE);
+		super( InstantJavaTypeDescriptor.INSTANCE);
 	}
 
 	@Override

@@ -49,8 +49,8 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -319,9 +319,9 @@ public class SQLiteDialect extends Dialect {
 	public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		switch (sqlCode) {
 			case Types.BLOB:
-				return BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+				return BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
 			case Types.CLOB:
-				return ClobTypeDescriptor.STRING_BINDING;
+				return ClobJdbcTypeDescriptor.STRING_BINDING;
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}

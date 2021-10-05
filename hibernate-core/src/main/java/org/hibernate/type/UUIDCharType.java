@@ -9,8 +9,8 @@ package org.hibernate.type;
 import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#CHAR} (or {@link java.sql.Types#VARCHAR}) and {@link UUID}
@@ -21,7 +21,7 @@ public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> {
 	public static final UUIDCharType INSTANCE = new UUIDCharType();
 
 	public UUIDCharType() {
-		super( VarcharTypeDescriptor.INSTANCE, new UUIDTypeDescriptor() {
+		super( VarcharJdbcTypeDescriptor.INSTANCE, new UUIDJavaTypeDescriptor() {
 			@Override
 			public long getDefaultSqlLength(Dialect dialect) {
 				return 36;

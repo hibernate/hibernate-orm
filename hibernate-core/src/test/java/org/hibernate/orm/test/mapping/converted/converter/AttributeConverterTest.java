@@ -42,7 +42,7 @@ import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
@@ -239,7 +239,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 				fail( "AttributeConverter applied (should not have been)" );
 			}
 			AbstractStandardBasicType basicType = assertTyping( AbstractStandardBasicType.class, type );
-			assertSame( StringTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+			assertSame( StringJavaTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
 			assertEquals( Types.VARCHAR, basicType.getJdbcTypeDescriptor().getJdbcTypeCode() );
 		}
 		finally {

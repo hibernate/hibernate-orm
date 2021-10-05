@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link Types#VARCHAR VARCHAR} and {@link String}
@@ -19,12 +19,12 @@ import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
  */
 public class StringType
 		extends AbstractSingleColumnStandardBasicType<String>
-		implements DiscriminatorType<String>, AdjustableBasicType<String> {
+		implements AdjustableBasicType<String> {
 
 	public static final StringType INSTANCE = new StringType();
 
 	public StringType() {
-		super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -34,14 +34,6 @@ public class StringType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	public String stringToObject(CharSequence sequence) throws Exception {
-		return sequence.toString();
-	}
-
-	public String toString(String value) {
-		return value;
 	}
 
 }

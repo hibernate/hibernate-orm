@@ -15,12 +15,12 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.AbstractQueryParameter;
+import org.hibernate.query.internal.BindingTypeHelper;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ProcedureParameterNamedBinder;
@@ -136,20 +136,14 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) throws SQLException {
 		final QueryParameterBinding<?> binding = procedureCall.getParameterBindings().getBinding( this );
-		final AllowableParameterType typeToUse;
-
-		// for Calendar binding with an explicit TemporalType we may need to adjust this...
 		final TypeConfiguration typeConfiguration = procedureCall.getSession().getFactory().getTypeConfiguration();
-		if ( binding != null && binding.getExplicitTemporalPrecision() != null ) {
-			typeToUse = ( (AllowableTemporalParameterType) getHibernateType() ).resolveTemporalPrecision(
-					binding.getExplicitTemporalPrecision(),
-					typeConfiguration
-			);
-		}
-		else {
-			//set up the Type we will use for binding as the explicit type.
-			typeToUse = getHibernateType();
-		}
+		final AllowableParameterType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
+				binding == null || binding.getExplicitTemporalPrecision() == null
+						? null
+						: binding.getExplicitTemporalPrecision(),
+				getHibernateType(),
+				typeConfiguration
+		);
 
 		if ( mode == ParameterMode.INOUT || mode == ParameterMode.OUT ) {
 

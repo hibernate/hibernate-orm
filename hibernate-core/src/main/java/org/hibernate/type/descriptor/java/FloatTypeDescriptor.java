@@ -12,7 +12,8 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.Primitive;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.FloatJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
@@ -21,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> implements Primitive<Float> {
+public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> implements PrimitiveJavaTypeDescriptor<Float> {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {
@@ -30,7 +31,7 @@ public class FloatTypeDescriptor extends AbstractClassTypeDescriptor<Float> impl
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
-		return org.hibernate.type.descriptor.jdbc.FloatTypeDescriptor.INSTANCE;
+		return FloatJdbcTypeDescriptor.INSTANCE;
 	}
 
 	@Override

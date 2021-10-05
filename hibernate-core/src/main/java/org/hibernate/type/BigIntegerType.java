@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import java.math.BigInteger;
 
-import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
+import org.hibernate.type.descriptor.java.BigIntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NumericJdbcTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigInteger}.
@@ -18,13 +18,12 @@ import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
  * @author Steve Ebersole
  */
 public class BigIntegerType
-		extends AbstractSingleColumnStandardBasicType<BigInteger>
-		implements DiscriminatorType<BigInteger> {
+		extends AbstractSingleColumnStandardBasicType<BigInteger> {
 
 	public static final BigIntegerType INSTANCE = new BigIntegerType();
 
 	public BigIntegerType() {
-		super( NumericTypeDescriptor.INSTANCE, BigIntegerTypeDescriptor.INSTANCE );
+		super( NumericJdbcTypeDescriptor.INSTANCE, BigIntegerJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -37,8 +36,4 @@ public class BigIntegerType
 		return true;
 	}
 
-	@Override
-	public BigInteger stringToObject(CharSequence string) {
-		return BigIntegerTypeDescriptor.INSTANCE.fromString( string );
-	}
 }

@@ -9,8 +9,8 @@ package org.hibernate.type;
 import java.io.Serializable;
 
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@link Serializable} classes.
@@ -33,12 +33,12 @@ public class SerializableType<T extends Serializable> extends AbstractSingleColu
 	private final Class<T> serializableClass;
 
 	public SerializableType(Class<T> serializableClass) {
-		super( VarbinaryTypeDescriptor.INSTANCE, new SerializableTypeDescriptor<>( serializableClass )  );
+		super( VarbinaryJdbcTypeDescriptor.INSTANCE, new SerializableJavaTypeDescriptor<>( serializableClass )  );
 		this.serializableClass = serializableClass;
 	}
 
 	public SerializableType(JavaTypeDescriptor<T> jtd) {
-		super( VarbinaryTypeDescriptor.INSTANCE, jtd  );
+		super( VarbinaryJdbcTypeDescriptor.INSTANCE, jtd  );
 		this.serializableClass = jtd.getJavaTypeClass();
 	}
 

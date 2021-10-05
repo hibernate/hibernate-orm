@@ -8,21 +8,15 @@ package org.hibernate.type;
 
 import java.time.ZonedDateTime;
 
-import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.TemporalType;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class ZonedDateTimeType
-		extends AbstractSingleColumnStandardBasicType<ZonedDateTime>
-		implements AllowableTemporalParameterType<ZonedDateTime> {
+		extends AbstractSingleColumnStandardBasicType<ZonedDateTime>  {
 
 	/**
 	 * Singleton access
@@ -30,7 +24,7 @@ public class ZonedDateTimeType
 	public static final ZonedDateTimeType INSTANCE = new ZonedDateTimeType();
 
 	public ZonedDateTimeType() {
-		super( TimestampWithTimeZoneDescriptor.INSTANCE, ZonedDateTimeJavaTypeDescriptor.INSTANCE );
+		super( TimestampWithTimeZoneJdbcTypeDescriptor.INSTANCE, ZonedDateTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -41,20 +35,6 @@ public class ZonedDateTimeType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case TIMESTAMP: {
-				return this;
-			}
-			default: {
-				throw new QueryException( "ZonedDateTime type cannot be treated using `" + temporalPrecision.name() + "` precision" );
-			}
-		}
 	}
 
 	@Override

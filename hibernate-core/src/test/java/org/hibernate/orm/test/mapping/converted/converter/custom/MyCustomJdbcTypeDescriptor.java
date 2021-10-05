@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A custom SqlTypeDescriptor.  For example, this might be used to provide support
@@ -79,6 +79,6 @@ public class MyCustomJdbcTypeDescriptor implements JdbcTypeDescriptor {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
-		return VarcharTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
+		return VarcharJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 	}
 }

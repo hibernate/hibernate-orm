@@ -66,7 +66,6 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -139,7 +138,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 
 	private final Object discriminatorValue;
 	private final String discriminatorSQLString;
-	private final DiscriminatorType<?> discriminatorType;
+	private final BasicType<?> discriminatorType;
 	private final String explicitDiscriminatorColumnName;
 	private final String discriminatorAlias;
 
@@ -183,7 +182,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					explicitDiscriminatorColumnName = column.getQuotedName( factory.getDialect() );
 					discriminatorAlias = column.getAlias( factory.getDialect(), persistentClass.getRootTable() );
 				}
-				discriminatorType = (DiscriminatorType<?>) persistentClass.getDiscriminator().getType();
+				discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
 				if ( persistentClass.isDiscriminatorValueNull() ) {
 					discriminatorValue = NULL_DISCRIMINATOR;
 					discriminatorSQLString = InFragment.NULL;
@@ -194,7 +193,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				}
 				else {
 					try {
-						discriminatorValue = discriminatorType.stringToObject( persistentClass.getDiscriminatorValue() );
+						discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
 						discriminatorSQLString = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaTypeDescriptor) discriminatorType.getJavaTypeDescriptor() )
 								.toJdbcLiteral(
 										discriminatorValue,
@@ -535,7 +534,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			// 	the type indicated by `#discriminatorType` (String -> Integer, e.g.).
 			try {
 				Table table = persistentClass.getTable();
-				final Object convertedDiscriminatorValue = discriminatorType.stringToObject( discriminatorSQLString );
+				final Object convertedDiscriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( discriminatorSQLString );
 				discriminatorValues = new String[subclassSpan];
 				initDiscriminatorProperties( factory, jdbcEnvironment, subclassSpanMinusOne, table, convertedDiscriminatorValue
 				);
@@ -592,7 +591,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						}
 						else {
 							try {
-								discriminatorValue = discriminatorType.stringToObject( sc.getDiscriminatorValue() );
+								discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( sc.getDiscriminatorValue() );
 							}
 							catch (ClassCastException cce) {
 								throw new MappingException( "Illegal discriminator type: " + discriminatorType.getName() );

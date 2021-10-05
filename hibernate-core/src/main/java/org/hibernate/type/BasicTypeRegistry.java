@@ -63,6 +63,21 @@ public class BasicTypeRegistry implements Serializable {
 		return getRegisteredType( javaType.getName() );
 	}
 
+	public <J> BasicType<J> resolve(Class<J> javaType, int sqlTypeCode) {
+		return resolve( (java.lang.reflect.Type) javaType, sqlTypeCode );
+	}
+
+	public <J> BasicType<J> resolve(java.lang.reflect.Type javaType, int sqlTypeCode) {
+		return resolve( typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( javaType ), sqlTypeCode );
+	}
+
+	public <J> BasicType<J> resolve(JavaTypeDescriptor<J> jtdToUse, int sqlTypeCode) {
+		return resolve(
+				jtdToUse,
+				typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( sqlTypeCode )
+		);
+	}
+
 	/**
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.

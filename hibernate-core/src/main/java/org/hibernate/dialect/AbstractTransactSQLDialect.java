@@ -26,7 +26,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStra
 import org.hibernate.query.sqm.mutation.internal.idtable.TempIdTableExporter;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
@@ -314,6 +314,6 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
-		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
 	}
 }

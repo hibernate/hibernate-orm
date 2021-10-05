@@ -10,6 +10,7 @@ import java.sql.Types;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -17,7 +18,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * More-or-less a parameter-object intended for use in determining the SQL/JDBC type recommended
  * by the JDBC spec (explicitly or implicitly) for a given Java type.
  *
- * @see org.hibernate.type.descriptor.java.BasicJavaDescriptor#getRecommendedJdbcType
+ * @see BasicJavaTypeDescriptor#getRecommendedJdbcType
  *
  * @author Steve Ebersole
  */

@@ -73,7 +73,6 @@ import jakarta.persistence.Version;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
-import org.hibernate.EntityMode;
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
@@ -171,7 +170,7 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
@@ -372,8 +371,8 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
 			JavaTypeRegistration annotation) {
-		final Class<? extends BasicJavaDescriptor<?>> jtdClass = annotation.descriptorClass();
-		final BasicJavaDescriptor<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
+		final Class<? extends BasicJavaTypeDescriptor<?>> jtdClass = annotation.descriptorClass();
+		final BasicJavaTypeDescriptor<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
 	}
 

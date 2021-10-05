@@ -12,14 +12,14 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::collections-comma-delimited-collection-example[]
-public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractClassTypeDescriptor<List> {
+public class CommaDelimitedStringsJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<List> {
 
     public static final String DELIMITER = ",";
 

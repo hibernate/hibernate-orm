@@ -35,8 +35,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
@@ -185,11 +185,11 @@ public class SybaseASEDialect extends SybaseDialect {
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		switch ( sqlCode ) {
 			case Types.BOOLEAN:
-				return TinyIntTypeDescriptor.INSTANCE;
+				return TinyIntJdbcTypeDescriptor.INSTANCE;
 			case Types.TIMESTAMP_WITH_TIMEZONE:
 				// At least the jTDS driver does not support this type code
 				if ( jtdsDriver ) {
-					return TimestampTypeDescriptor.INSTANCE;
+					return TimestampJdbcTypeDescriptor.INSTANCE;
 				}
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );

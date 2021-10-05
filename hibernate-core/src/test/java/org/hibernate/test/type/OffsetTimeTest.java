@@ -28,8 +28,8 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
@@ -260,13 +260,13 @@ public class OffsetTimeTest extends AbstractJavaTimeTypeTest<OffsetTime, OffsetT
 
 	public static class TimeAsTimestampRemappingH2Dialect extends AbstractRemappingH2Dialect {
 		public TimeAsTimestampRemappingH2Dialect() {
-			super( Types.TIME, TimestampTypeDescriptor.INSTANCE );
+			super( Types.TIME, TimestampJdbcTypeDescriptor.INSTANCE );
 		}
 	}
 
 	public static class TimeAsBigIntRemappingH2Dialect extends AbstractRemappingH2Dialect {
 		public TimeAsBigIntRemappingH2Dialect() {
-			super( Types.TIME, BigIntTypeDescriptor.INSTANCE );
+			super( Types.TIME, BigIntJdbcTypeDescriptor.INSTANCE );
 		}
 	}
 }

@@ -3,12 +3,12 @@ package org.hibernate.orm.test.type.contributor;
 import java.util.Arrays;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
-public class ArrayTypeDescriptor extends AbstractClassTypeDescriptor<Array> {
+public class ArrayTypeDescriptor extends AbstractClassJavaTypeDescriptor<Array> {
 
     private static final String DELIMITER = ",";
 

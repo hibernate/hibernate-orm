@@ -21,7 +21,7 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -37,7 +37,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 	public static NamedConverterResolution from(
 			ConverterDescriptor converterDescriptor,
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeDescriptorIndicators sqlTypeIndicators,
@@ -55,7 +55,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 	public static NamedConverterResolution from(
 			String name,
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeDescriptorIndicators sqlTypeIndicators,
@@ -84,7 +84,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	private static NamedConverterResolution fromInternal(
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JpaAttributeConverter converter, JdbcTypeDescriptorIndicators sqlTypeIndicators,

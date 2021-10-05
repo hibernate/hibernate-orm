@@ -24,7 +24,6 @@ import org.hibernate.annotations.Type;
 import org.hibernate.annotations.TypeDef;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -32,11 +31,11 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -256,7 +255,7 @@ public class CustomTypeResolutionTests {
 	public static class CustomTypeImpl extends AbstractSingleColumnStandardBasicType<URL> {
 
 		public CustomTypeImpl() {
-			super( VarcharTypeDescriptor.INSTANCE, UrlTypeDescriptor.INSTANCE );
+			super( VarcharJdbcTypeDescriptor.INSTANCE, UrlJavaTypeDescriptor.INSTANCE );
 		}
 
 		@Override
@@ -273,7 +272,7 @@ public class CustomTypeResolutionTests {
 
 		@Override
 		public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-			return CharTypeDescriptor.INSTANCE;
+			return CharJdbcTypeDescriptor.INSTANCE;
 		}
 
 		@Override
@@ -339,7 +338,7 @@ public class CustomTypeResolutionTests {
 	public static class GenderType extends AbstractSingleColumnStandardBasicType<Gender> {
 
 		public GenderType() {
-			super( VarcharTypeDescriptor.INSTANCE, GenderJtd.INSTANCE );
+			super( VarcharJdbcTypeDescriptor.INSTANCE, GenderJtd.INSTANCE );
 		}
 
 		@Override

@@ -6,12 +6,12 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BooleanJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -22,14 +22,14 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  */
 public class BooleanType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, AdjustableBasicType<Boolean> {
+		implements AdjustableBasicType<Boolean> {
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
-		this( org.hibernate.type.descriptor.jdbc.BooleanTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
+		this( BooleanJdbcTypeDescriptor.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
 	}
 
-	protected BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, BooleanTypeDescriptor javaTypeDescriptor) {
+	protected BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, BooleanJavaTypeDescriptor javaTypeDescriptor) {
 		super( jdbcTypeDescriptor, javaTypeDescriptor );
 	}
 
@@ -46,18 +46,6 @@ public class BooleanType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), boolean.class.getName(), Boolean.class.getName() };
-	}
-	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
-	}
-	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
-	}
-	@Override
-	public Boolean stringToObject(CharSequence string) {
-		return fromString( string );
 	}
 
 }

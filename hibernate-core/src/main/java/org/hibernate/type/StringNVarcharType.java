@@ -6,8 +6,8 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}
@@ -16,13 +16,12 @@ import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
  * @author Steve Ebersole
  */
 public class StringNVarcharType
-		extends AbstractSingleColumnStandardBasicType<String>
-		implements DiscriminatorType<String> {
+		extends AbstractSingleColumnStandardBasicType<String> {
 
 	public static final StringNVarcharType INSTANCE = new StringNVarcharType();
 
 	public StringNVarcharType() {
-		super( NVarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+		super( NVarcharJdbcTypeDescriptor.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -32,13 +31,5 @@ public class StringNVarcharType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return false;
-	}
-
-	public String stringToObject(CharSequence sequence) throws Exception {
-		return sequence.toString();
-	}
-
-	public String toString(String value) {
-		return value;
 	}
 }

@@ -10,13 +10,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 
 /**
  * @author Vlad Mihalcea
  */
-public class CommaDelimitedStringMapJavaTypeDescriptor extends AbstractClassTypeDescriptor<Map> {
+public class CommaDelimitedStringMapJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Map> {
 
     public static final String DELIMITER = ",";
 

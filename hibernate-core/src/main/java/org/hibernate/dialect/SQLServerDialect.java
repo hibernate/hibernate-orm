@@ -45,9 +45,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -159,7 +159,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		return sqlCode == Types.TINYINT
-				? SmallIntTypeDescriptor.INSTANCE
+				? SmallIntJdbcTypeDescriptor.INSTANCE
 				: super.getSqlTypeDescriptorOverride( sqlCode );
 	}
 
@@ -697,7 +697,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "0x" );
-		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
 	}
 
 	@Override

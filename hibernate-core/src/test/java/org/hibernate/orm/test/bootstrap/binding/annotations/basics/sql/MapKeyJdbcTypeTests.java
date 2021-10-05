@@ -25,7 +25,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -120,7 +120,7 @@ public class MapKeyJdbcTypeTests {
 
 		@ElementCollection
 		@JdbcTypeCode( Types.NVARCHAR )
-		@MapKeyJdbcType( @JdbcType( TinyIntTypeDescriptor.class ) )
+		@MapKeyJdbcType( @JdbcType( TinyIntJdbcTypeDescriptor.class ) )
 		private Map<Integer,String> sqlTypeMap;
 	}
 }

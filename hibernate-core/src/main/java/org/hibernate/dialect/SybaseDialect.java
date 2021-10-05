@@ -39,13 +39,13 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
@@ -115,8 +115,8 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		if ( jtdsDriver && TinyIntTypeDescriptor.INSTANCE == jdbcTypeDescriptor ) {
-			return SmallIntTypeDescriptor.INSTANCE;
+		if ( jtdsDriver && TinyIntJdbcTypeDescriptor.INSTANCE == jdbcTypeDescriptor ) {
+			return SmallIntJdbcTypeDescriptor.INSTANCE;
 		}
 		return super.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
@@ -177,13 +177,13 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		if ( jtdsDriver ) {
 			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
 					Types.NCLOB,
-					ClobTypeDescriptor.CLOB_BINDING
+					ClobJdbcTypeDescriptor.CLOB_BINDING
 			);
 			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
 					Types.NVARCHAR,
-					ClobTypeDescriptor.CLOB_BINDING
+					ClobJdbcTypeDescriptor.CLOB_BINDING
 			);
-			typeContributions.contributeJdbcTypeDescriptor( ClobTypeDescriptor.CLOB_BINDING );
+			typeContributions.contributeJdbcTypeDescriptor( ClobJdbcTypeDescriptor.CLOB_BINDING );
 		}
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
@@ -210,20 +210,20 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		switch (sqlCode) {
 		case Types.BLOB:
-			return BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
+			return BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
 		case Types.CLOB:
 			// Some Sybase drivers cannot support getClob.  See HHH-7889
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			return jtdsDriver ? ClobTypeDescriptor.CLOB_BINDING : ClobTypeDescriptor.STREAM_BINDING_EXTRACTING;
+			return jtdsDriver ? ClobJdbcTypeDescriptor.CLOB_BINDING : ClobJdbcTypeDescriptor.STREAM_BINDING_EXTRACTING;
 		case Types.NCLOB:
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			if ( jtdsDriver ) {
-				return NClobTypeDescriptor.NCLOB_BINDING;
+				return NClobJdbcTypeDescriptor.NCLOB_BINDING;
 			}
 		case Types.NVARCHAR:
 			// The jTDS driver doesn't support the JDBC4 setNString method
 			if ( jtdsDriver ) {
-				return NClobTypeDescriptor.NCLOB_BINDING;
+				return NClobJdbcTypeDescriptor.NCLOB_BINDING;
 			}
 		default:
 			return super.getSqlTypeDescriptorOverride( sqlCode );

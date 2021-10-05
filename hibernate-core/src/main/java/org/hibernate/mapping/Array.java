@@ -13,8 +13,10 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.collection.internal.StandardArraySemantics;
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.type.ArrayType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.PrimitiveType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -30,10 +32,11 @@ public class Array extends List {
 
 	public Class getElementClass() throws MappingException {
 		if ( elementClassName == null ) {
-			org.hibernate.type.Type elementType = getElement().getType();
-			return isPrimitiveArray()
-					? ( (PrimitiveType) elementType ).getPrimitiveClass()
-					: elementType.getReturnedClass();
+			final org.hibernate.type.Type elementType = getElement().getType();
+			if ( isPrimitiveArray() ) {
+				return ( (PrimitiveJavaTypeDescriptor<?>) ( (BasicType<?>) elementType ).getJavaTypeDescriptor() ).getPrimitiveClass();
+			}
+			return elementType.getReturnedClass();
 		}
 		else {
 			try {

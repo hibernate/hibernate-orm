@@ -60,7 +60,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableToBlobType;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -105,7 +105,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	private Map explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess;
-	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess;
+	private Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
@@ -545,7 +545,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			}
 
 			final JavaType jtdAnn = mapKeyJtdAnn.value();
-			final Class<? extends BasicJavaDescriptor<?>> jtdJavaType = jtdAnn.value();
+			final Class<? extends BasicJavaTypeDescriptor<?>> jtdJavaType = jtdAnn.value();
 			try {
 				return jtdJavaType.newInstance();
 			}
@@ -583,7 +583,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		explicitJtdAccess = typeConfiguration -> {
 			final JavaType explicitJtdAnn = attributeXProperty.getAnnotation( JavaType.class );
 			if ( explicitJtdAnn != null ) {
-				final Class<? extends BasicJavaDescriptor<?>> jtdImplJavaType = explicitJtdAnn.value();
+				final Class<? extends BasicJavaTypeDescriptor<?>> jtdImplJavaType = explicitJtdAnn.value();
 
 				try {
 					return jtdImplJavaType.newInstance();

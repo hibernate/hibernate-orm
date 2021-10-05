@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.ByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
+import org.hibernate.type.descriptor.java.ByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#BLOB BLOB} and {@code Byte[]}.
@@ -18,7 +18,7 @@ public class WrappedMaterializedBlobType extends AbstractSingleColumnStandardBas
 	public static final WrappedMaterializedBlobType INSTANCE = new WrappedMaterializedBlobType();
 
 	public WrappedMaterializedBlobType() {
-		super( BlobTypeDescriptor.DEFAULT, ByteArrayTypeDescriptor.INSTANCE );
+		super( BlobJdbcTypeDescriptor.DEFAULT, ByteArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

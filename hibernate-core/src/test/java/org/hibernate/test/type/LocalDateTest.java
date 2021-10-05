@@ -25,7 +25,7 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -167,7 +167,7 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 
 	public static class DateAsTimestampRemappingH2Dialect extends AbstractRemappingH2Dialect {
 		public DateAsTimestampRemappingH2Dialect() {
-			super( Types.DATE, TimestampTypeDescriptor.INSTANCE );
+			super( Types.DATE, TimestampJdbcTypeDescriptor.INSTANCE );
 		}
 	}
 }

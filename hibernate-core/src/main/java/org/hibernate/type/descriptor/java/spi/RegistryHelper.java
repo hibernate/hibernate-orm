@@ -20,7 +20,7 @@ import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.SerializableTypeDescriptor;
+import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -79,7 +79,7 @@ public class RegistryHelper {
 		}
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
-			return (MutabilityPlan<J>) SerializableTypeDescriptor.SerializableMutabilityPlan.INSTANCE;
+			return (MutabilityPlan<J>) SerializableJavaTypeDescriptor.SerializableMutabilityPlan.INSTANCE;
 		}
 
 		return null;
@@ -101,7 +101,7 @@ public class RegistryHelper {
 
 		if ( Serializable.class.isAssignableFrom( javaTypeClass ) ) {
 			//noinspection rawtypes
-			return new SerializableTypeDescriptor( javaTypeClass, plan );
+			return new SerializableJavaTypeDescriptor( javaTypeClass, plan );
 		}
 
 		return new JavaTypeDescriptorBasicAdaptor<>( javaTypeClass, plan );

@@ -8,29 +8,29 @@ package org.hibernate.type.descriptor.jdbc.internal;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BinaryTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DateTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DoubleTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.FloatTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BooleanJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DecimalJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DoubleJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.FloatJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongVarbinaryTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongVarcharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.RealTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NumericJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.RealJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * Registers the base {@link JdbcTypeDescriptor} instances.
@@ -44,40 +44,40 @@ public class JdbcTypeDescriptorBaseline {
 	}
 
 	public static void prime(BaselineTarget target) {
-		target.addDescriptor( BooleanTypeDescriptor.INSTANCE );
+		target.addDescriptor( BooleanJdbcTypeDescriptor.INSTANCE );
 		// ResultSetMetaData might report BIT on some DBs, so we need to register the boolean type descriptor for that code
-		target.addDescriptor( Types.BIT, BooleanTypeDescriptor.INSTANCE );
-		target.addDescriptor( BigIntTypeDescriptor.INSTANCE );
-		target.addDescriptor( DecimalTypeDescriptor.INSTANCE );
-		target.addDescriptor( DoubleTypeDescriptor.INSTANCE );
-		target.addDescriptor( FloatTypeDescriptor.INSTANCE );
-		target.addDescriptor( IntegerTypeDescriptor.INSTANCE );
-		target.addDescriptor( NumericTypeDescriptor.INSTANCE );
-		target.addDescriptor( RealTypeDescriptor.INSTANCE );
-		target.addDescriptor( SmallIntTypeDescriptor.INSTANCE );
-		target.addDescriptor( TinyIntTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.BIT, BooleanJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( BigIntJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( DecimalJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( DoubleJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( FloatJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( IntegerJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( NumericJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( RealJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( SmallIntJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( TinyIntJdbcTypeDescriptor.INSTANCE );
 
-		target.addDescriptor( DateTypeDescriptor.INSTANCE );
-		target.addDescriptor( TimestampTypeDescriptor.INSTANCE );
-		target.addDescriptor( TimestampWithTimeZoneDescriptor.INSTANCE );
-		target.addDescriptor( TimeTypeDescriptor.INSTANCE );
+		target.addDescriptor( DateJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( TimestampJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( TimestampWithTimeZoneJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( TimeJdbcTypeDescriptor.INSTANCE );
 
-		target.addDescriptor( BinaryTypeDescriptor.INSTANCE );
-		target.addDescriptor( VarbinaryTypeDescriptor.INSTANCE );
-		target.addDescriptor( LongVarbinaryTypeDescriptor.INSTANCE );
+		target.addDescriptor( BinaryJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( VarbinaryJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( LongVarbinaryJdbcTypeDescriptor.INSTANCE );
 
-		target.addDescriptor( CharTypeDescriptor.INSTANCE );
-		target.addDescriptor( VarcharTypeDescriptor.INSTANCE );
-		target.addDescriptor( LongVarcharTypeDescriptor.INSTANCE );
+		target.addDescriptor( CharJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( VarcharJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( LongVarcharJdbcTypeDescriptor.INSTANCE );
 
-		target.addDescriptor( BlobTypeDescriptor.DEFAULT );
-		target.addDescriptor( ClobTypeDescriptor.DEFAULT );
+		target.addDescriptor( BlobJdbcTypeDescriptor.DEFAULT );
+		target.addDescriptor( ClobJdbcTypeDescriptor.DEFAULT );
 
 		// Assume `NationalizationSupport#IMPLICIT`.  Dialects needing the
 		// explicit type will map them..
-		target.addDescriptor( Types.NCHAR, CharTypeDescriptor.INSTANCE );
-		target.addDescriptor( Types.NVARCHAR, VarcharTypeDescriptor.INSTANCE );
-		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharTypeDescriptor.INSTANCE );
-		target.addDescriptor( Types.NCLOB, ClobTypeDescriptor.DEFAULT );
+		target.addDescriptor( Types.NCHAR, CharJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.NVARCHAR, VarcharJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.LONGNVARCHAR, LongVarcharJdbcTypeDescriptor.INSTANCE );
+		target.addDescriptor( Types.NCLOB, ClobJdbcTypeDescriptor.DEFAULT );
 	}
 }

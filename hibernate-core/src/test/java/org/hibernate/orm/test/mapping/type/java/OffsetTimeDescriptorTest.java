@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.type.java;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
-import org.hibernate.type.descriptor.java.OffsetTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaTypeDescriptor;
 
 /**
  * @author Jordan Gigov
@@ -20,7 +20,7 @@ public class OffsetTimeDescriptorTest extends AbstractDescriptorTest<OffsetTime>
 	final OffsetTime different = OffsetTime.of(LocalTime.of( 15, 13 ), ZoneOffset.ofHoursMinutes( 4, 30));
 
 	public OffsetTimeDescriptorTest() {
-		super(OffsetTimeJavaDescriptor.INSTANCE);
+		super( OffsetTimeJavaTypeDescriptor.INSTANCE);
 	}
 
 	@Override

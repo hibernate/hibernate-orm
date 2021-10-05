@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
-import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
+import org.hibernate.type.descriptor.java.ByteJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TINYINT TINYINT} and {@link Byte}
@@ -18,15 +16,12 @@ import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ByteType
-		extends AbstractSingleColumnStandardBasicType<Byte>
-		implements PrimitiveType<Byte>, DiscriminatorType<Byte> {
+		extends AbstractSingleColumnStandardBasicType<Byte> {
 
 	public static final ByteType INSTANCE = new ByteType();
 
-	private static final Byte ZERO = (byte) 0;
-
 	public ByteType() {
-		super( TinyIntTypeDescriptor.INSTANCE, ByteTypeDescriptor.INSTANCE );
+		super( TinyIntJdbcTypeDescriptor.INSTANCE, ByteJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -37,25 +32,5 @@ public class ByteType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] {getName(), byte.class.getName(), Byte.class.getName()};
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return byte.class;
-	}
-
-	@Override
-	public Byte stringToObject(CharSequence sequence) {
-		return fromString( sequence );
-	}
-
-	@Override
-	public Byte fromStringValue(CharSequence xml) {
-		return fromString( xml );
 	}
 }

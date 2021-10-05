@@ -72,7 +72,6 @@ public class ComponentPOJOClass extends BasicPOJOClass {
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Iterator<Property> getAllPropertiesIterator() {
 		return clazz.getPropertyIterator();
 	}

@@ -335,7 +335,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		return propertyValue != null && propertyValue.equals( defaultValue );
 	}
 
-	@SuppressWarnings("unchecked")
 	public String generateJoinColumnsAnnotation(Property property, Metadata md) {
 		boolean insertable = property.isInsertable();
 		boolean updatable = property.isUpdateable();

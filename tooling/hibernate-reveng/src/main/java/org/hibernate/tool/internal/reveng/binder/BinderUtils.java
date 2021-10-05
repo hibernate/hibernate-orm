@@ -57,7 +57,6 @@ public class BinderUtils {
         return BinderUtils.makeUnique(iterator, propertyName);
     }
  
-    @SuppressWarnings("unchecked")
 	public static String makeUnique(Component clazz, String propertyName) {
         return BinderUtils.makeUnique(clazz.getPropertyIterator(), propertyName);
     }

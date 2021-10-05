@@ -115,13 +115,6 @@ public final class DocHelper {
 	
 	private Metadata metadata;
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param cfg
-	 *            Hibernate configuration.
-	 */
-	@SuppressWarnings("unchecked")
 	public DocHelper(Metadata metadata, Properties properties, Cfg2JavaTool cfg2JavaTool) {
 
 		super();

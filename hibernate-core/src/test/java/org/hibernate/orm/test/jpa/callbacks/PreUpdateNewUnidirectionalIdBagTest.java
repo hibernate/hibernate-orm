@@ -6,11 +6,23 @@
  */
 package org.hibernate.orm.test.jpa.callbacks;
 
+import java.sql.Types;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.GenericGenerator;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,17 +31,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PreUpdate;
-
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.Jpa;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -110,10 +111,8 @@ public class PreUpdateNewUnidirectionalIdBagTest {
 			this.lastUpdatedAt = lastUpdatedAt;
 		}
 
-		@CollectionId(
-				column = @Column(name = "n_key_tag"),
-				type = @Type(type = "long"),
-				generator = "increment" )
+		@CollectionId( column = @Column(name = "n_key_tag"), generator = "increment" )
+		@CollectionIdJdbcTypeCode( Types.BIGINT )
 		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 		private Collection<Tag> tags = new ArrayList<Tag>();
 	}

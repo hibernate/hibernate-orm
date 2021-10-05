@@ -18,32 +18,40 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies the JDBC type-code to use for the column mapping.
- *
- * This code is generally one of the values defined in
- * {@link java.sql.Types}, but are not limited to those.  See the
- * user-guide for additional details.
- *
- * The code is resolved against an internal registry of
- * {@link JdbcTypeDescriptor} references.
- *
- * Can be applied in conjunction with the following sources to
- * control the mapping of a particular column in a compositional way:<ul>
- *     <li>{@link JavaType}</li>
- *     <li>{@link Mutability}</li>
- *     <li>{@link jakarta.persistence.AttributeConverter}</li>
- *     <li>{@link jakarta.persistence.Enumerated}</li>
- *     <li>{@link jakarta.persistence.Temporal}</li>
+ * Specifies the JDBC type-code to use for the column mapping.<ul>
+ *     <li>
+ *         When applied to a Map-valued attribute, describes the Map value. Use
+ *         {@link MapKeyJdbcTypeCode} to describe the key instead
+ *     </li>
+ *     <li>
+ *         When applied to a List of array-valued attribute, describes the element. Use
+ *         {@link ListIndexJdbcTypeCode} to describe the index instead
+ *     </li>
+ *     <li>
+ *         When mapping an id-bag, describes the collection element.  Use {@link CollectionIdJdbcTypeCode}
+ *         to describe the collection-id
+ *     </li>
+ *     <li>
+ *         For other collection mappings, describes the elements
+ *     </li>
+ *     <li>
+ *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
+ *         value.
+ *     </li>
  * </ul>
  *
- * Should not be used with some forms of influencing the JDBC type used:<ul>
- *     <li>{@link JavaType}</li>
- *     <li>{@link jakarta.persistence.Lob}</li>
- *     <li>{@link Nationalized}</li>
- * </ul>
+ * This code is generally as one of the values defined in {@link java.sql.Types}, but are not
+ * limited to these.  The code is resolved against an internal registry of {@link JdbcTypeDescriptor}
+ * references.  See the user-guide for additional details.
+ *
+ * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * of basic value mapping.
  *
  * @see JdbcTypeDescriptor
  * @see JdbcTypeDescriptorRegistry
+ * @see MapKeyJdbcTypeCode
+ * @see CollectionIdJdbcTypeCode
+ * @see ListIndexJdbcTypeCode
  *
  * @since 6.0
  */

@@ -9,10 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.usertype.UserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -20,25 +17,36 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies an explicit {@link JdbcTypeDescriptor} to use for
- * a particular column mapping.
+ * Specifies an explicit {@link JdbcTypeDescriptor} to use for a particular column mapping.<ul>
+ *     <li>
+ *         When applied to a Map-valued attribute, describes the Map value. Use
+ *         {@link MapKeyJdbcType} to describe the key instead
+ *     </li>
+ *     <li>
+ *         When applied to a List of array-valued attribute, describes the element. Use
+ *         {@link ListIndexJdbcType} to describe the index instead
+ *     </li>
+ *     <li>
+ *         When mapping an id-bag, describes the collection element.  Use {@link CollectionIdJdbcType}
+ *         to describe the collection-id
+ *     </li>
+ *     <li>
+ *         For other collection mappings, describes the elements
+ *     </li>
+ *     <li>
+ *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
+ *         value.
+ *     </li>
+ * </ul>
  *
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
  *
- * Can be applied in conjunction with the following sources to
- * control the mapping of a particular column in a compositional way:<ul>
- *     <li>{@link JavaType}</li>
- *     <li>{@link Mutability}</li>
- *     <li>{@link jakarta.persistence.AttributeConverter}</li>
- *     <li>{@link jakarta.persistence.Enumerated}</li>
- *     <li>{@link jakarta.persistence.Temporal}</li>
- * </ul>
+ * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * of basic value mapping.
  *
- * Should not be used with some forms of influencing the JDBC type used:<ul>
- *     <li>{@link JavaType}</li>
- *     <li>{@link jakarta.persistence.Lob}</li>
- *     <li>{@link Nationalized}</li>
- * </ul>
+ * @see MapKeyJdbcType
+ * @see CollectionIdJdbcType
+ * @see ListIndexJdbcType
  *
  * @since 6.0
  */

@@ -6,19 +6,19 @@
  */
 package org.hibernate.userguide.collections;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Type;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.userguide.collections.type.CommaDelimitedStringsType;
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.userguide.collections.type.CommaDelimitedStringsJavaTypeDescriptor;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-import org.jboss.logging.Logger;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -50,14 +50,6 @@ public class BasicTypeCollectionTest extends BaseCoreFunctionalTestCase {
 		} );
 	}
 
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
-			typeContributions.contributeType( new CommaDelimitedStringsType() );
-		} );
-	}
-
 	//tag::collections-comma-delimited-collection-example[]
 	@Entity(name = "Person")
 	public static class Person {
@@ -65,7 +57,8 @@ public class BasicTypeCollectionTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Long id;
 
-		@Type(type = "comma_delimited_strings")
+		@JavaType( CommaDelimitedStringsJavaTypeDescriptor.class )
+		@JdbcTypeCode( Types.VARCHAR )
 		private List<String> phones = new ArrayList<>();
 
 		public List<String> getPhones() {

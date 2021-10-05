@@ -6,13 +6,13 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.CustomType;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -48,7 +48,7 @@ public class EnumerationCustomTypeTest extends BaseEntityManagerFunctionalTestCa
 
 		private String name;
 
-		@Type( type = "org.hibernate.userguide.mapping.basic.GenderType" )
+		@CustomType( org.hibernate.userguide.mapping.basic.GenderType.class )
 		public Gender gender;
 
 		//Getters and setters are omitted for brevity

@@ -15,10 +15,9 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Applies a custom {@link UserType} for the mapping of an id-bag id column
+ * Form of {@link CustomType} for describing the id of an id-bag mapping
  *
- * Generally, mutually exclusive with the compositional approach of
- * {@link JavaType}, {@link JdbcType}, etc.
+ * @since 6.0
  */
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)
@@ -26,6 +25,8 @@ public @interface CollectionIdCustomType {
 
 	/**
 	 * The custom type implementor class
+	 *
+	 * @see CustomType#value
 	 */
 	Class<? extends UserType<?>> value();
 
@@ -35,6 +36,8 @@ public @interface CollectionIdCustomType {
 	 *
 	 * The type should implement {@link org.hibernate.usertype.ParameterizedType}
 	 * to receive the parameters
+	 *
+	 * @see CustomType#parameters
 	 */
 	Parameter[] parameters() default {};
 }

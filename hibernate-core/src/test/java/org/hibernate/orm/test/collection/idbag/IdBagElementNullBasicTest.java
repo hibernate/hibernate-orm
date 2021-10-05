@@ -6,8 +6,19 @@
  */
 package org.hibernate.orm.test.collection.idbag;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.GenericGenerator;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -16,15 +27,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.CollectionId;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Type;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -174,11 +176,8 @@ public class IdBagElementNullBasicTest {
 
 		@ElementCollection
 		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
-		@CollectionId(
-				column = @Column,
-				type = @Type(type = "long"),
-				generator = "increment"
-		)
+		@CollectionId( column = @Column, generator = "increment" )
+		@CollectionIdJdbcTypeCode( Types.BIGINT )
 		private List<String> aCollection = new ArrayList<>();
 	}
 }

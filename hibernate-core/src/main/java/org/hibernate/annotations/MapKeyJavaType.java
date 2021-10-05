@@ -17,10 +17,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Same function as {@link JavaType}, but used to define the Java type descriptor to
- * use for the map-key
- *
- * @author Steve Ebersole
+ * Form of {@link JavaType} for describing the key of a Map
  *
  * @since 6.0
  */
@@ -28,5 +25,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface MapKeyJavaType {
+	/**
+	 * The {@link BasicJavaDescriptor} to use for the mapped column
+	 *
+	 * @see JavaType#value
+	 */
 	Class<? extends BasicJavaDescriptor<?>> value();
 }

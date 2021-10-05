@@ -379,6 +379,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			}
 		}
 
+		if ( jtd == null ) {
+			if ( explicitJdbcTypeAccess != null ) {
+				final JdbcTypeDescriptor jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
+				if ( jdbcType != null ) {
+					jtd = jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, typeConfiguration );
+				}
+			}
+		}
+
+		if ( jtd == null ) {
+			throw new MappingException( "Unable to determine JavaTypeDescriptor to use" );
+		}
+
 		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
 		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
 		if ( autoAppliedTypeDef != null && ( !jtd.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
@@ -430,6 +443,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		resolvedJavaType = impliedJavaType;
+
+		if ( impliedJavaType == null ) {
+			return null;
+		}
+
 		return typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( impliedJavaType );
 	}
 

@@ -19,7 +19,7 @@ import org.jboss.logging.Logger;
  * @author Vlad Mihalcea
  */
 //tag::basic-custom-type-BitSetUserType-example[]
-public class BitSetUserType implements UserType {
+public class BitSetUserType implements UserType<Object> {
 
 	public static final BitSetUserType INSTANCE = new BitSetUserType();
 

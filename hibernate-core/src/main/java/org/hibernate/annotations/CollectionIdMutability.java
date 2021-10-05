@@ -17,9 +17,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specify the MutabilityPlan for the collection-id value
- *
- * @see Immutable
+ * Form of {@link Mutability} for describing the id of an id-bag mapping
  *
  * @author Steve Ebersole
  */
@@ -27,5 +25,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface CollectionIdMutability {
+	/**
+	 * The MutabilityPlan implementation
+	 *
+	 * @see Mutability#value
+	 */
 	Class<? extends MutabilityPlan<?>> value();
 }

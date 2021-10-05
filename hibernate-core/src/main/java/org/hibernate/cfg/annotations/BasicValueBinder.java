@@ -329,12 +329,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				explicitTypeAnn = null;
 			}
 		}
-		else if ( kind == Kind.COLLECTION_ID ) {
-			final CollectionId collectionIdAnn = modelXProperty.getAnnotation( CollectionId.class );
-			assert collectionIdAnn != null;
-
-			explicitTypeAnn = collectionIdAnn.type();
-		}
 		else {
 			explicitTypeAnn = modelXProperty.getAnnotation( Type.class );
 		}
@@ -403,17 +397,52 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			throw new MappingException( "idbag mapping missing @CollectionId" );
 		}
 
-		explicitBasicTypeName = collectionIdAnn.type().type();
+		final ManagedBeanRegistry beanRegistry = buildingContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+
+		explicitBasicTypeName = null;
 		implicitJavaTypeAccess = (typeConfiguration) -> null;
+
+		explicitJtdAccess = (typeConfiguration) -> {
+			final CollectionIdJavaType javaTypeAnn = modelXProperty.getAnnotation( CollectionIdJavaType.class );
+			if ( javaTypeAnn != null ) {
+				final Class<? extends BasicJavaDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
+				if ( javaType != null ) {
+					final ManagedBean<? extends BasicJavaDescriptor<?>> bean = beanRegistry.getBean( javaType );
+					return bean.getBeanInstance();
+				}
+			}
+
+			return null;
+		};
+
+		explicitJdbcTypeAccess = (typeConfiguration) -> {
+			final CollectionIdJdbcType jdbcTypeAnn = modelXProperty.getAnnotation( CollectionIdJdbcType.class );
+			if ( jdbcTypeAnn != null ) {
+				final Class<? extends JdbcTypeDescriptor> jdbcType = normalizeJdbcType( jdbcTypeAnn.value() );
+				if ( jdbcType != null ) {
+					final ManagedBean<? extends JdbcTypeDescriptor> managedBean = beanRegistry.getBean( jdbcType );
+					return managedBean.getBeanInstance();
+				}
+			}
+
+			final CollectionIdJdbcTypeCode jdbcTypeCodeAnn = modelXProperty.getAnnotation( CollectionIdJdbcTypeCode.class );
+			if ( jdbcTypeCodeAnn != null ) {
+				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
+					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
+				}
+			}
+
+			return null;
+		};
 
 		explicitMutabilityAccess = (typeConfiguration) -> {
 			final CollectionIdMutability mutabilityAnn = modelXProperty.getAnnotation( CollectionIdMutability.class );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
 				if ( mutability != null ) {
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = buildingContext.getBootstrapContext()
-							.getServiceRegistry()
-							.getService( ManagedBeanRegistry.class )
+					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = beanRegistry
 							.getBean( mutability );
 					return jtdBean.getBeanInstance();
 				}

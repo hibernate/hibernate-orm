@@ -10,7 +10,6 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
-import org.hibernate.usertype.UserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -18,26 +17,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specify an explicit BasicJavaDescriptor to use for a particular
- * column mapping.
- *
- * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
- *
- * Can be applied in conjunction with the following sources to
- * control the mapping of a particular column in a compositional way:<ul>
- *     <li>{@link JdbcType}</li>
- *     <li>{@link JdbcTypeCode}</li>
- *     <li>{@link Mutability}</li>
- *     <li>{@link jakarta.persistence.AttributeConverter}</li>
- *     <li>{@link jakarta.persistence.Lob}</li>
- *     <li>{@link jakarta.persistence.Enumerated}</li>
- *     <li>{@link jakarta.persistence.Temporal}</li>
- *     <li>{@link Nationalized}</li>
- * </ul>
- *
- * @apiNote Mutually exclusive with {@link CustomType} which is an approach to the
- * mapping the column through the {@link UserType} contract, which performs all the
- * composed functions itself.
+ * Form of {@link JavaType} for describing the id of an id-bag mapping
  *
  * @since 6.0
  */
@@ -46,7 +26,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface CollectionIdJavaType {
 	/**
-	 * The {@link BasicJavaDescriptor} to use for the mapped column
+	 * The {@link BasicJavaDescriptor} to use for the id column
+	 *
+	 * @see JavaType#value
 	 */
 	Class<? extends BasicJavaDescriptor<?>> value();
 }

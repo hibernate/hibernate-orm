@@ -7,11 +7,6 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.sql.Types;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -22,6 +17,12 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Basic;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -88,40 +89,6 @@ public class BooleanMappingTests {
 		}
 
 
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Legacy
-
-		{
-			final BasicAttributeMapping legacyYesNo = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "legacyYesNo" );
-			final JdbcMapping jdbcMapping = legacyYesNo.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Character.class ) );
-			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					// could be NCHAR if nationalization is globally enabled
-					isOneOf( Types.CHAR, Types.NCHAR )
-			);
-		}
-
-		{
-			final BasicAttributeMapping legacyTrueFalse = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "legacyTrueFalse" );
-			final JdbcMapping jdbcMapping = legacyTrueFalse.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Character.class ) );
-			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					// could be NCHAR if nationalization is globally enabled
-					isOneOf( Types.CHAR, Types.NCHAR )
-			);
-		}
-
-		{
-			final BasicAttributeMapping legacyNumeric = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "legacyNumeric" );
-			final JdbcMapping jdbcMapping = legacyNumeric.getJdbcMapping();
-			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaType(), equalTo( Integer.class ) );
-			assertThat(
-					jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(),
-					equalTo( Types.INTEGER )
-			);
-		}
 	}
 
 	@Entity( name = "EntityOfBooleans" )
@@ -160,30 +127,5 @@ public class BooleanMappingTests {
 		@Convert( converter = org.hibernate.type.NumericBooleanConverter.class )
 		boolean convertedNumeric;
 		//end::basic-boolean-example-explicit-numeric[]
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Legacy
-
-		//tag::basic-boolean-example-explicit-legacy-yes-no[]
-		// this will get mapped to CHAR or NCHAR with a conversion
-		@Basic
-		@org.hibernate.annotations.Type( type = "yes_no" )
-		boolean legacyYesNo;
-		//end::basic-boolean-example-explicit-legacy-yes-no[]
-
-		//tag::basic-boolean-example-explicit-legacy-t-f[]
-		// this will get mapped to CHAR or NCHAR with a conversion
-		@Basic
-		@org.hibernate.annotations.Type( type = "true_false" )
-		boolean legacyTrueFalse;
-		//end::basic-boolean-example-explicit-legacy-t-f[]
-
-		//tag::basic-boolean-example-explicit-legacy-numeric[]
-		// this will get mapped to TINYINT with a conversion
-		@Basic
-		@org.hibernate.annotations.Type( type = "numeric_boolean" )
-		boolean legacyNumeric;
-		//end::basic-boolean-example-explicit-legacy-numeric[]
 	}
 }

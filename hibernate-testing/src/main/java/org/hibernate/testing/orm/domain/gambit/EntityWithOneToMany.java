@@ -6,18 +6,22 @@
  */
 package org.hibernate.testing.orm.domain.gambit;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.hibernate.annotations.CollectionId;
+import org.hibernate.annotations.CollectionIdJdbcTypeCode;
+import org.hibernate.annotations.GenericGenerator;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
-
-import org.hibernate.annotations.GenericGenerator;
 
 /**
  * @author Andrea Boriero
@@ -82,10 +86,8 @@ public class EntityWithOneToMany {
 
 	@OneToMany
 	@CollectionTable(name = "idbag")
-	@org.hibernate.annotations.CollectionId(
-			column = @Column(name = "BAG_ID"),
-			type = @org.hibernate.annotations.Type(type = "long"),
-			generator = "increment")
+	@CollectionId( column = @Column(name = "BAG_ID"), generator = "increment" )
+	@CollectionIdJdbcTypeCode( Types.BIGINT )
 	public List<SimpleEntity> getOthersIdentifierBag() {
 		return othersIdentifierBag;
 	}

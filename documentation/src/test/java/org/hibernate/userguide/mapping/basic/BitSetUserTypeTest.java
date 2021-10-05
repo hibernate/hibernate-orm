@@ -7,6 +7,12 @@
 package org.hibernate.userguide.mapping.basic;
 
 import java.util.BitSet;
+
+import org.hibernate.annotations.CustomType;
+
+import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
@@ -14,12 +20,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQuery;
 import jakarta.persistence.SqlResultSetMapping;
-
-import org.hibernate.annotations.Type;
-import org.hibernate.cfg.Configuration;
-
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
@@ -34,16 +34,6 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		return new Class<?>[] {
 			Product.class
 		};
-	}
-
-	@Override
-	protected void configure(Configuration configuration) {
-		super.configure( configuration );
-		//tag::basic-custom-type-register-UserType-example[]
-		configuration.registerTypeContributor( (typeContributions, serviceRegistry) -> {
-			typeContributions.contributeType( BitSetUserType.INSTANCE, "bitset");
-		} );
-		//end::basic-custom-type-register-UserType-example[]
 	}
 
 	@Test
@@ -117,7 +107,7 @@ public class BitSetUserTypeTest extends BaseCoreFunctionalTestCase {
 		@Id
 		private Integer id;
 
-		@Type( type = "bitset" )
+		@CustomType( BitSetUserType.class )
 		@Column(name = "bitset_col")
 		private BitSet bitSet;
 

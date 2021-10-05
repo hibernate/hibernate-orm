@@ -1,30 +1,16 @@
 package org.hibernate.userguide.mapping.basic;
 
-import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import java.sql.Types;
+
+import org.hibernate.usertype.UserTypeSupport;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::basic-enums-custom-type-example[]
-public class GenderType extends AbstractSingleColumnStandardBasicType<Gender> {
-
-    public static final GenderType INSTANCE = new GenderType();
-
+public class GenderType extends UserTypeSupport<Gender> {
     public GenderType() {
-        super(
-            CharTypeDescriptor.INSTANCE,
-            GenderJavaTypeDescriptor.INSTANCE
-        );
-    }
-
-    public String getName() {
-        return "gender";
-    }
-
-    @Override
-    protected boolean registerUnderJavaType() {
-        return true;
+        super( Gender.class, Types.CHAR );
     }
 }
 //end::basic-enums-custom-type-example[]

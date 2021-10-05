@@ -17,7 +17,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Used to specify the MutabilityPlan for a basic map-key
+ * Form of {@link Mutability} for describing the key of a Map
  *
  * @see Immutable
  *
@@ -27,5 +27,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Inherited
 @Retention(RUNTIME)
 public @interface MapKeyMutability {
+	/**
+	 * The MutabilityPlan implementation
+	 *
+	 * @see Mutability#value
+	 */
 	Class<? extends MutabilityPlan<?>> value();
 }

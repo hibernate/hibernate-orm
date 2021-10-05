@@ -49,9 +49,4 @@ public @interface CollectionId {
 	 * @apiNote Mutually exclusive with {@link #generatorImplementation()} ()}
 	 */
 	String generator() default "";
-
-	/**
-	 * id type, type.type() must be set.
-	 */
-	Type type();
 }

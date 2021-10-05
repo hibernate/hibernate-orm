@@ -1426,7 +1426,7 @@ public class MappingModelCreationHelper {
 
 			return new DiscriminatedCollectionPart(
 					CollectionPart.Nature.ELEMENT,
-					collectionDescriptor.getNavigableRole(),
+					collectionDescriptor,
 					baseJtd,
 					anyBootMapping,
 					anyBootMapping.getType(),

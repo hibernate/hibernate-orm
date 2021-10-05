@@ -42,7 +42,7 @@ public abstract class AbstractCollectionResultNode implements CollectionResultGr
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return attributeMapping.getJavaTypeDescriptor();
 	}
 

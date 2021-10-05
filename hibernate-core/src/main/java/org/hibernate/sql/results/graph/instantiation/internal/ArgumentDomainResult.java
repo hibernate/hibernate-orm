@@ -32,7 +32,7 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return realDomainResult.getResultJavaTypeDescriptor();
 	}
 

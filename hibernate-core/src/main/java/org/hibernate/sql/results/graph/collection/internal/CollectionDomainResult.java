@@ -78,7 +78,7 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return loadingAttribute.getJavaTypeDescriptor();
 	}
 

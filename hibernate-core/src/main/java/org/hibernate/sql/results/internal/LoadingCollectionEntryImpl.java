@@ -27,15 +27,14 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 	private final CollectionPersister collectionDescriptor;
 	private final CollectionInitializer initializer;
 	private final Object key;
-	private final PersistentCollection collectionInstance;
-
-	private List loadingState = new ArrayList();
+	private final PersistentCollection<?> collectionInstance;
+	private final List<Object> loadingState = new ArrayList<>();
 
 	public LoadingCollectionEntryImpl(
 			CollectionPersister collectionDescriptor,
 			CollectionInitializer initializer,
 			Object key,
-			PersistentCollection collectionInstance) {
+			PersistentCollection<?> collectionInstance) {
 		this.collectionDescriptor = collectionDescriptor;
 		this.initializer = initializer;
 		this.key = key;
@@ -61,12 +60,12 @@ public class LoadingCollectionEntryImpl implements LoadingCollectionEntry {
 		return key;
 	}
 
-	@Override public PersistentCollection getCollectionInstance() {
+	@Override public PersistentCollection<?> getCollectionInstance() {
 		return collectionInstance;
 	}
 
 	@Override
-	public void load(Consumer<List> loadingEntryConsumer) {
+	public void load(Consumer<List<Object>> loadingEntryConsumer) {
 		loadingEntryConsumer.accept( loadingState );
 	}
 

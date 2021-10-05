@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
@@ -26,28 +25,12 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  */
 public class SelectEagerCollectionInitializer extends AbstractCollectionInitializer {
 
-	private final DomainResultAssembler keyCollectionResultAssembler;
-
 	public SelectEagerCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
-			DomainResultAssembler keyCollectionResult) {
-		super( fetchedPath, fetchedMapping, parentAccess );
-		this.keyCollectionResultAssembler = keyCollectionResult;
-	}
-
-	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( keyCollectionResultAssembler == null ) {
-			super.resolveKey( rowProcessingState );
-		}
-		else {
-			collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					keyCollectionResultAssembler.assemble( rowProcessingState )
-			);
-		}
+			DomainResultAssembler<?> collectionKeyResultAssembler) {
+		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResultAssembler );
 	}
 
 	@Override
@@ -64,7 +47,7 @@ public class SelectEagerCollectionInitializer extends AbstractCollectionInitiali
 				return;
 			}
 
-			final PersistentCollection existing = persistenceContext.getCollection( collectionKey );
+			final PersistentCollection<?> existing = persistenceContext.getCollection( collectionKey );
 
 			if ( existing != null ) {
 				collectionInstance = existing;
@@ -72,9 +55,7 @@ public class SelectEagerCollectionInitializer extends AbstractCollectionInitiali
 			}
 
 			final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
-
-			final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
-
+			final CollectionSemantics<?, ?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 			final Object key = collectionKey.getKey();
 
 			collectionInstance = collectionSemantics.instantiateWrapper(

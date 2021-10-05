@@ -20,15 +20,15 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Andrea Boriero
  */
 public class SelectEagerCollectionFetch extends CollectionFetch {
-	private final DomainResult keyDomainResult;
+	private final DomainResult<?> collectionKeyDomainResult;
 
 	public SelectEagerCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
-			DomainResult<?> keyDomainResult,
+			DomainResult<?> collectionKeyDomainResult,
 			FetchParent fetchParent) {
 		super( fetchedPath, fetchedAttribute, fetchParent );
-		this.keyDomainResult = keyDomainResult;
+		this.collectionKeyDomainResult = collectionKeyDomainResult;
 	}
 
 	@Override
@@ -42,20 +42,20 @@ public class SelectEagerCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
+	public DomainResultAssembler<?> createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		return new SelectEagerCollectionAssembler(
 				getNavigablePath(),
 				getFetchedMapping(),
 				parentAccess,
-				keyDomainResult == null ? null : keyDomainResult.createResultAssembler( creationState ),
+				collectionKeyDomainResult == null ? null : collectionKeyDomainResult.createResultAssembler( creationState ),
 				creationState
 		);
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return getFetchedMapping().getJavaTypeDescriptor();
 	}
 }

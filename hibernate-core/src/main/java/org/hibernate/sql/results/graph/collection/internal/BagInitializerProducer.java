@@ -49,15 +49,15 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler elementAssembler = elementFetch.createAssembler(
+		final DomainResultAssembler<?> elementAssembler = elementFetch.createAssembler(
 				parentAccess,
 				creationState
 		);
 
-		final DomainResultAssembler collectionIdAssembler;
+		final DomainResultAssembler<?> collectionIdAssembler;
 		if ( bagDescriptor.getIdentifierDescriptor() == null ) {
 			collectionIdAssembler = null;
 		}
@@ -73,8 +73,8 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 				parentAccess,
 				navigablePath,
 				lockMode,
-				keyContainerAssembler,
-				keyCollectionAssembler,
+				collectionKeyAssembler,
+				collectionValueKeyAssembler,
 				elementAssembler,
 				collectionIdAssembler
 		);

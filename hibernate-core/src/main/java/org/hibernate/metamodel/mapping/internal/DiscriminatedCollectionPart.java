@@ -20,6 +20,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -37,17 +38,19 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	private final Nature nature;
 
 	private final NavigableRole partRole;
+	private final CollectionPersister collectionDescriptor;
 	private final DiscriminatedAssociationMapping discriminatorMapping;
 
 	public DiscriminatedCollectionPart(
 			Nature nature,
-			NavigableRole collectionRole,
+			CollectionPersister collectionDescriptor,
 			JavaTypeDescriptor<Object> baseAssociationJtd,
 			Any bootValueMapping,
 			AnyType anyType,
 			MappingModelCreationProcess creationProcess) {
 		this.nature = nature;
-		this.partRole = collectionRole.append( nature.getName() );
+		this.partRole = collectionDescriptor.getNavigableRole().append( nature.getName() );
+		this.collectionDescriptor = collectionDescriptor;
 
 		this.discriminatorMapping = DiscriminatedAssociationMapping.from(
 				partRole,
@@ -148,7 +151,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 
 	@Override
 	public EntityMappingType findContainingEntityMapping() {
-		return discriminatorMapping.getModelPart().findContainingEntityMapping();
+		return collectionDescriptor.getAttributeMapping().findContainingEntityMapping();
 	}
 
 	@Override

@@ -537,20 +537,20 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState, SqlAstCreationState sqlAstCreationState) {
 		if ( referencedPropertyName != null ) {
-			final TableGroup collectionTableGroup = resolveCollectionTableGroup(
+			resolveCollectionTableGroup(
 					fetchParent,
 					fetchablePath,
 					creationState,
 					sqlAstCreationState
 			);
 
-			final DomainResult<?> keyDomainResult = getKeyDescriptor().createKeyDomainResult(
+			final DomainResult<?> collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
 					fetchablePath,
-					collectionTableGroup,
+					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
 					creationState
 			);
 
-			return new SelectEagerCollectionFetch( fetchablePath, this, keyDomainResult, fetchParent );
+			return new SelectEagerCollectionFetch( fetchablePath, this, collectionKeyDomainResult, fetchParent );
 
 		}
 		return new SelectEagerCollectionFetch( fetchablePath, this, null, fetchParent );
@@ -584,16 +584,16 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchablePath,
 			DomainResultCreationState creationState,
 			SqlAstCreationState sqlAstCreationState) {
-		final DomainResult<?> foreignKeyDomainResult;
+		final DomainResult<?> collectionKeyDomainResult;
 		// Lazy property. A null foreign key domain result will lead to
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
 		if ( fetchParent.getReferencedModePart() == containingEntityMapping
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
-			foreignKeyDomainResult = null;
+			collectionKeyDomainResult = null;
 		}
 		else {
-			foreignKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
+			collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
 					fetchablePath,
 					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
 					creationState
@@ -603,7 +603,7 @@ public class PluralAttributeMappingImpl
 				fetchablePath,
 				this,
 				fetchParent,
-				foreignKeyDomainResult
+				collectionKeyDomainResult
 		);
 	}
 
@@ -1015,24 +1015,31 @@ public class PluralAttributeMappingImpl
 			TableReference elementAssociatedPrimaryTable,
 			Function<TableGroup, TableReferenceJoin> elementTableGroupFinalizer,
 			String tableExpression, TableGroup tableGroup) {
+		TableReferenceJoin elementTableReferenceJoin;
 		if ( elementAssociatedPrimaryTable.getTableExpression().equals( tableExpression ) ) {
-			TableReferenceJoin tableReferenceJoin = elementTableGroupFinalizer.apply( tableGroup );
-			return tableReferenceJoin;
+			return elementTableGroupFinalizer.apply( tableGroup );
 		}
 		else {
 			StandardTableGroup standardTableGroup = (StandardTableGroup) tableGroup;
 			if ( standardTableGroup.getTableReferenceJoins().isEmpty() ) {
-				TableReferenceJoin tableReferenceJoin = elementTableGroupFinalizer.apply( tableGroup );
-				standardTableGroup.addTableReferenceJoin( tableReferenceJoin );
+				elementTableReferenceJoin = elementTableGroupFinalizer.apply( tableGroup );
+			}
+			else {
+				elementTableReferenceJoin = null;
 			}
 		}
-		return elementDescriptorEntityMappingType.createTableReferenceJoin(
+		final TableReferenceJoin tableReferenceJoin = elementDescriptorEntityMappingType.createTableReferenceJoin(
 				tableExpression,
 				sqlAliasBase,
 				elementAssociatedPrimaryTable,
 				sqlExpressionResolver,
 				creationContext
 		);
+		if ( tableReferenceJoin != null && elementTableReferenceJoin != null ) {
+			( (StandardTableGroup) tableGroup ).addTableReferenceJoin( elementTableReferenceJoin );
+			return tableReferenceJoin;
+		}
+		return elementTableReferenceJoin == null ? tableReferenceJoin : elementTableReferenceJoin;
 	}
 
 	private Function<TableGroup, TableReferenceJoin> createTableGroupFinalizer(
@@ -1043,7 +1050,6 @@ public class PluralAttributeMappingImpl
 			SqlAstJoinType joinType,
 			ForeignKeyDescriptor elementFkDescriptor) {
 		return tableGroup -> {
-
 			final TableReferenceJoin associationJoin = new TableReferenceJoin(
 					joinType,
 					elementAssociatedPrimaryTable,

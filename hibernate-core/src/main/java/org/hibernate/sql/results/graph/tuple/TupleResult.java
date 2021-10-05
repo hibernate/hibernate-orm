@@ -51,7 +51,7 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<T> getResultJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

@@ -110,6 +110,10 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 	}
 
 	public NavigablePath getParent() {
+		return parent instanceof TreatedNavigablePath ? parent.getParent() : parent;
+	}
+
+	public NavigablePath getRealParent() {
 		return parent;
 	}
 

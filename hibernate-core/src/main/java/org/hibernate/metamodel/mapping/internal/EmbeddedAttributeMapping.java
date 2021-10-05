@@ -14,8 +14,10 @@ import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -110,7 +112,19 @@ public class EmbeddedAttributeMapping
 			SelectableMappings selectableMappings,
 			EmbeddableValuedModelPart inverseModelPart,
 			MappingModelCreationProcess creationProcess) {
-		super( inverseModelPart.getFetchableName(), -1, null, inverseModelPart.getMappedFetchOptions(), null, null, null );
+		super(
+				inverseModelPart.getFetchableName(),
+				-1,
+				null,
+				inverseModelPart.getMappedFetchOptions(),
+				inverseModelPart instanceof AttributeMapping
+						? ( (AttributeMapping) inverseModelPart ).getDeclaringType()
+						: inverseModelPart instanceof EntityIdentifierMapping
+						? inverseModelPart.findContainingEntityMapping()
+						: null,
+				null,
+				null
+		);
 
 		this.navigableRole = inverseModelPart.getNavigableRole().getParent().append( inverseModelPart.getFetchableName() );
 

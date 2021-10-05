@@ -8,13 +8,16 @@ package org.hibernate.sql.results.graph;
 
 import java.util.List;
 
-import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.Association;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.query.TreatedNavigablePath;
 
 /**
  * Contract for things that can be the parent of a fetch
@@ -49,6 +52,22 @@ public interface FetchParent extends DomainResultGraphNode {
 			return new EntityIdentifierNavigablePath( getNavigablePath(), fetchableName );
 		}
 		else {
+			final FetchableContainer referencedMappingContainer = getReferencedMappingContainer();
+			final EntityMappingType fetchableEntityType = fetchable.findContainingEntityMapping();
+			final EntityMappingType fetchParentType;
+			if ( referencedMappingContainer instanceof EmbeddableMappingType || referencedMappingContainer instanceof EmbeddableValuedModelPart ) {
+				fetchParentType = referencedMappingContainer.findContainingEntityMapping();
+			}
+			else if ( referencedMappingContainer instanceof EntityMappingType ) {
+				fetchParentType = (EntityMappingType) referencedMappingContainer;
+			}
+			else {
+				fetchParentType = fetchableEntityType;
+			}
+			if ( fetchParentType != fetchableEntityType ) {
+				return new TreatedNavigablePath( getNavigablePath(), fetchableEntityType.getEntityName() )
+						.append( fetchableName );
+			}
 			return getNavigablePath().append( fetchableName );
 		}
 	}

@@ -8,22 +8,15 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
-import org.hibernate.query.EntityIdentifierNavigablePath;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-
-import static org.hibernate.query.results.ResultsHelper.attributeName;
 
 /**
  * Selects just the FK and builds a proxy
@@ -51,7 +44,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return entityValuedModelPart.getAssociatedEntityMappingType().getMappedJavaTypeDescriptor();
 	}
 

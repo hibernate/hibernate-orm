@@ -24,8 +24,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	private static final String CONCRETE_NAME = ArrayInitializer.class.getSimpleName();
 
-	private final DomainResultAssembler listIndexAssembler;
-	private final DomainResultAssembler elementAssembler;
+	private final DomainResultAssembler<Integer> listIndexAssembler;
+	private final DomainResultAssembler<?> elementAssembler;
 
 	private final int indexBase;
 
@@ -34,21 +34,20 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			PluralAttributeMapping arrayDescriptor,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
-			DomainResultAssembler listIndexAssembler,
-			DomainResultAssembler elementAssembler) {
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResultAssembler<Integer> listIndexAssembler,
+			DomainResultAssembler<?> elementAssembler) {
 		super(
 				navigablePath,
 				arrayDescriptor,
 				parentAccess,
 				lockMode,
-				keyContainerAssembler,
-				keyCollectionAssembler
+				collectionKeyAssembler,
+				collectionValueKeyAssembler
 		);
 		this.listIndexAssembler = listIndexAssembler;
 		this.elementAssembler = elementAssembler;
-
 		this.indexBase = getCollectionAttributeMapping().getIndexMetadata().getListIndexBase();
 	}
 
@@ -58,27 +57,25 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentArrayHolder getCollectionInstance() {
-		return (PersistentArrayHolder) super.getCollectionInstance();
+	public PersistentArrayHolder<?> getCollectionInstance() {
+		return (PersistentArrayHolder<?>) super.getCollectionInstance();
 	}
 
 	@Override
 	protected void readCollectionRow(
 			CollectionKey collectionKey,
-			List loadingState,
+			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		int index = (int) listIndexAssembler.assemble( rowProcessingState );
+		int index = listIndexAssembler.assemble( rowProcessingState );
 
 		if ( indexBase != 0 ) {
 			index -= indexBase;
 		}
 
 		for ( int i = loadingState.size(); i <= index; ++i ) {
-			//noinspection unchecked
 			loadingState.add( i, null );
 		}
 
-		//noinspection unchecked
 		loadingState.set( index, elementAssembler.assemble( rowProcessingState ) );
 	}
 

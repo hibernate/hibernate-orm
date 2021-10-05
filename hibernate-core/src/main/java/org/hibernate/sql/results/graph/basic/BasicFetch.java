@@ -98,7 +98,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return null;
 	}
 

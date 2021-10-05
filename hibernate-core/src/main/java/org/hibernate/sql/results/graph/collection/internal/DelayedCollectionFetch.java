@@ -22,23 +22,23 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class DelayedCollectionFetch extends CollectionFetch {
 
-	private final DomainResult fkResult;
+	private final DomainResult<?> collectionKeyResult;
 
 	public DelayedCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
-			DomainResult fkResult) {
+			DomainResult<?> collectionKeyResult) {
 		super( fetchedPath, fetchedAttribute, fetchParent );
-		this.fkResult = fkResult;
+		this.collectionKeyResult = collectionKeyResult;
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(
+	public DomainResultAssembler<?> createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		// lazy attribute
-		if ( fkResult == null ) {
+		if ( collectionKeyResult == null ) {
 			return new UnfetchedResultAssembler<>( getResultJavaTypeDescriptor() );
 		}
 		else {
@@ -46,7 +46,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 					getNavigablePath(),
 					getFetchedMapping(),
 					parentAccess,
-					fkResult,
+					collectionKeyResult,
 					creationState
 			);
 		}
@@ -63,7 +63,7 @@ public class DelayedCollectionFetch extends CollectionFetch {
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return getFetchedMapping().getJavaTypeDescriptor();
 	}
 }

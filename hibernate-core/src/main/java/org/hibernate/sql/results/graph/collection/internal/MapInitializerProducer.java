@@ -39,15 +39,15 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler mapKeyAssembler = mapKeyFetch.createAssembler(
+		final DomainResultAssembler<?> mapKeyAssembler = mapKeyFetch.createAssembler(
 				parentAccess,
 				creationState
 		);
 
-		final DomainResultAssembler mapValueAssembler = mapValueFetch.createAssembler(
+		final DomainResultAssembler<?> mapValueAssembler = mapValueFetch.createAssembler(
 				parentAccess,
 				creationState
 		);
@@ -57,8 +57,8 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 				mapDescriptor,
 				parentAccess,
 				lockMode,
-				keyContainerAssembler,
-				keyCollectionAssembler,
+				collectionKeyAssembler,
+				collectionValueKeyAssembler,
 				mapKeyAssembler,
 				mapValueAssembler
 		);

@@ -23,7 +23,6 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -42,30 +41,23 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	private LoadingCollectionEntryImpl responsibility;
 
 	/**
-	 * refers to the collection's container value - which collection-key?
-	 */
-	private final DomainResultAssembler keyContainerAssembler;
-
-	/**
 	 * refers to the rows entry in the collection.  null indicates that the collection is empty
 	 */
-	private final DomainResultAssembler keyCollectionAssembler;
+	private final DomainResultAssembler<?> collectionValueKeyResultAssembler;
 
 
 	// per-row state
-	private Object keyContainerValue;
-	private Object keyCollectionValue;
+	private Object collectionValueKey;
 
 	public AbstractImmediateCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler) {
-		super( collectionPath, collectionAttributeMapping, parentAccess );
-		this.keyContainerAssembler = keyContainerAssembler;
-		this.keyCollectionAssembler = keyCollectionAssembler;
+			DomainResultAssembler<?> collectionKeyResultAssembler,
+			DomainResultAssembler<?> collectionValueKeyResultAssembler) {
+		super( collectionPath, collectionAttributeMapping, parentAccess, collectionKeyResultAssembler );
+		this.collectionValueKeyResultAssembler = collectionValueKeyResultAssembler;
 		this.lockMode = lockMode;
 	}
 
@@ -96,8 +88,6 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		final LoadingCollectionEntry existingLoadingEntry = persistenceContext
 				.getLoadContexts()
 				.findLoadingCollectionEntry( collectionKey );
-//		final LoadingCollectionEntry existingLoadingEntry = rowProcessingState.getJdbcValuesSourceProcessingState()
-//				.findLoadingCollectionLocally( getCollectionDescriptor(), collectionKey.getKey() );
 
 		if ( existingLoadingEntry != null ) {
 			collectionInstance = existingLoadingEntry.getCollectionInstance();
@@ -131,7 +121,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			}
 		}
 		else {
-			final PersistentCollection existing = persistenceContext.getCollection( collectionKey );
+			final PersistentCollection<?> existing = persistenceContext.getCollection( collectionKey );
 			if ( existing != null ) {
 				collectionInstance = existing;
 
@@ -156,7 +146,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				}
 			}
 			else {
-				final PersistentCollection existingUnowned = persistenceContext.useUnownedCollection( collectionKey );
+				final PersistentCollection<?> existingUnowned = persistenceContext.useUnownedCollection( collectionKey );
 				if ( existingUnowned != null ) {
 					collectionInstance = existingUnowned;
 
@@ -185,7 +175,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 		if ( collectionInstance == null && collectionKey != null ) {
 			final CollectionPersister collectionDescriptor = getCollectionAttributeMapping().getCollectionDescriptor();
-			final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
+			final CollectionSemantics<?, ?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 
 			collectionInstance = collectionSemantics.instantiateWrapper(
 					collectionKey.getKey(),
@@ -233,7 +223,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	 * Specialized toString handling for PersistentCollection.  All `PersistentCollection#toString`
 	 * implementations are crazy expensive as they trigger a load
 	 */
-	private String toLoggableString(PersistentCollection collectionInstance) {
+	private String toLoggableString(PersistentCollection<?> collectionInstance) {
 		return collectionInstance == null
 				? LoggingHelper.NULL
 				: collectionInstance.getClass().getName() + "@" + System.identityHashCode( collectionInstance );
@@ -258,88 +248,15 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			// already resolved
 			return;
 		}
-
-		if ( !isAttributeAssignableToConcreteDescriptor() ) {
-			return;
-		}
-
-		resolveKeyCollectionValue( rowProcessingState );
-
-		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();
-		if ( loadingKey != null && loadingKey.getRole().equals( getCollectionAttributeMapping().getNavigableRole().getNavigableName() ) ) {
-			collectionKey = loadingKey;
-			return;
-		}
-
-		Object keyContainerValue = getKeyContainerValue();
-		if ( keyContainerValue != null ) {
-			this.collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					keyContainerValue
-			);
-
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
-						"(%s) Current row collection key : %s",
-						getSimpleConcreteImplName(),
-						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
-				);
-			}
-		}
-		else if ( keyCollectionValue != null ) {
-			this.collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					keyCollectionValue
-			);
-
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
-						"(%s) Current row collection key : %s",
-						getSimpleConcreteImplName(),
-						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
-				);
-			}
+		super.resolveKey( rowProcessingState );
+		if ( collectionValueKeyResultAssembler == null ) {
+			collectionValueKey = collectionKey.getKey();
 		}
 		else {
-			final Object parentKey = parentAccess.getParentKey();
-			if ( parentKey == null ) {
-				return;
-			}
-			this.collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					parentKey
-			);
+			collectionValueKey = collectionValueKeyResultAssembler.assemble( rowProcessingState );
 		}
 	}
 
-	private void resolveKeyCollectionValue(RowProcessingState rowProcessingState) {
-		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.getProcessingOptions();
-
-		keyContainerValue = keyContainerAssembler.assemble(
-				rowProcessingState,
-				processingOptions
-		);
-
-		if ( keyCollectionAssembler == null || keyContainerAssembler == keyCollectionAssembler ) {
-			keyCollectionValue = keyContainerValue;
-		}
-		else {
-			keyCollectionValue = keyCollectionAssembler.assemble(
-					rowProcessingState,
-					processingOptions
-			);
-		}
-	}
-
-	/**
-	 * The value of the container/owner side of the collection key (FK).  Identifies the
-	 * owner of the collection
-	 */
-	@SuppressWarnings("WeakerAccess")
-	protected Object getKeyContainerValue() {
-		return keyContainerValue;
-	}
 
 	/**
 	 * The value of the collection side of the collection key (FK).  Identifies
@@ -347,8 +264,8 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 	 * does not contain any collection values
 	 */
 	@SuppressWarnings("WeakerAccess")
-	protected Object getKeyCollectionValue() {
-		return keyCollectionValue;
+	protected Object getCollectionValueKey() {
+		return collectionValueKey;
 	}
 
 	@Override
@@ -361,7 +278,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		final CollectionKey collectionKey = resolveCollectionKey( rowProcessingState );
 
 		// the RHS key value of the association - determines if the row contains an element of the initializing collection
-		final Object collectionValueKey = getKeyCollectionValue();
+		final Object collectionValueKey = getCollectionValueKey();
 
 		if ( collectionValueKey != null ) {
 			// the row contains an element in the collection...
@@ -382,15 +299,14 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 	protected abstract void readCollectionRow(
 			CollectionKey collectionKey,
-			List loadingState,
+			List<Object> loadingState,
 			RowProcessingState rowProcessingState);
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		super.finishUpRow( rowProcessingState );
 
-		keyContainerValue = null;
-		keyCollectionValue = null;
+		collectionValueKey = null;
 		collectionInstance = null;
 		responsibility = null;
 	}

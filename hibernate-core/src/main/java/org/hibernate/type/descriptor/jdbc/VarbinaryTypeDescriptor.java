@@ -12,12 +12,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterBinary;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -25,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class VarbinaryTypeDescriptor implements JdbcTypeDescriptor {
+public class VarbinaryTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	public static final VarbinaryTypeDescriptor INSTANCE = new VarbinaryTypeDescriptor();
 	public static final VarbinaryTypeDescriptor INSTANCE_WITHOUT_LITERALS = new VarbinaryTypeDescriptor( false );
 
@@ -70,6 +72,14 @@ public class VarbinaryTypeDescriptor implements JdbcTypeDescriptor {
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return supportsLiterals ? new JdbcLiteralFormatterBinary( javaTypeDescriptor ) : null;
+	}
+
+	@Override
+	public JdbcTypeDescriptor resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<?> domainJtd) {
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
+		return indicators.isLob()
+				? jdbcTypeRegistry.getDescriptor( Types.BLOB )
+				: jdbcTypeRegistry.getDescriptor( Types.VARBINARY );
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {

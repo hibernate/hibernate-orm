@@ -14,10 +14,14 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.engine.jdbc.CharacterStream;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.CharacterArrayNClobType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#CLOB CLOB} handling.
@@ -25,7 +29,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  * @author Gail Badner
  */
-public abstract class ClobTypeDescriptor implements JdbcTypeDescriptor {
+public abstract class ClobTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.CLOB;
@@ -44,6 +48,17 @@ public abstract class ClobTypeDescriptor implements JdbcTypeDescriptor {
 	@Override
 	public boolean canBeRemapped() {
 		return true;
+	}
+
+	@Override
+	public JdbcTypeDescriptor resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<?> domainJtd) {
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+		return indicators.isNationalized()
+				? jdbcTypeRegistry.getDescriptor( Types.NCLOB )
+				: jdbcTypeRegistry.getDescriptor( Types.CLOB );
 	}
 
 	@Override

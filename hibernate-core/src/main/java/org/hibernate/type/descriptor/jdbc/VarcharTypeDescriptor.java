@@ -18,6 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -25,7 +26,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class VarcharTypeDescriptor implements JdbcTypeDescriptor {
+public class VarcharTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	public static final VarcharTypeDescriptor INSTANCE = new VarcharTypeDescriptor();
 
 	public VarcharTypeDescriptor() {
@@ -66,6 +67,26 @@ public class VarcharTypeDescriptor implements JdbcTypeDescriptor {
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return new JdbcLiteralFormatterCharacterData( javaTypeDescriptor );
+	}
+
+	@Override
+	public JdbcTypeDescriptor resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<?> domainJtd) {
+		assert domainJtd != null;
+
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+
+		final int jdbcTypeCode;
+		if ( indicators.isLob() ) {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
+		}
+
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	@Override

@@ -11,10 +11,6 @@ import java.sql.Types;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link Types#CLOB CLOB} and {@link Clob}
@@ -42,24 +38,5 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> implem
 	@Override
 	protected Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
 		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
-	}
-
-	@Override
-	@SuppressWarnings( "unchecked" )
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		if ( ! indicators.isNationalized() ) {
-			return (BasicType<X>) this;
-		}
-
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-
-		return typeConfiguration.getBasicTypeRegistry().resolve(
-				domainJtd,
-				jdbcTypeRegistry.getDescriptor( Types.NCLOB ),
-				getName()
-		);
 	}
 }

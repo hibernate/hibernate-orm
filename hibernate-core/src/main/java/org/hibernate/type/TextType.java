@@ -5,10 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.LongVarcharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link java.sql.Types#LONGVARCHAR LONGVARCHAR} and {@link String}
@@ -28,18 +27,5 @@ public class TextType
 
 	public String getName() { 
 		return "text";
-	}
-
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		if ( indicators.isNationalized() ) {
-			//noinspection unchecked
-			return (BasicType<X>) NTextType.INSTANCE;
-		}
-
-		//noinspection unchecked
-		return (BasicType<X>) this;
 	}
 }

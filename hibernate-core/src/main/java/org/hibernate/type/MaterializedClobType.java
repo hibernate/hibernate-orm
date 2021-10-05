@@ -5,15 +5,11 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
+
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A type that maps between {@link Types#CLOB CLOB} and {@link String}
@@ -33,25 +29,5 @@ public class MaterializedClobType
 
 	public String getName() {
 		return "materialized_clob";
-	}
-
-	@Override
-	public <X> BasicType<X> resolveIndicatedType(
-			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<X> domainJtd) {
-		if ( indicators.isNationalized() ) {
-			final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
-			final JdbcTypeDescriptor nclobType = jdbcTypeRegistry.getDescriptor( Types.NCLOB );
-
-			return typeConfiguration.getBasicTypeRegistry().resolve(
-					domainJtd,
-					nclobType,
-					getName()
-			);
-		}
-
-		//noinspection unchecked
-		return (BasicType<X>) this;
 	}
 }

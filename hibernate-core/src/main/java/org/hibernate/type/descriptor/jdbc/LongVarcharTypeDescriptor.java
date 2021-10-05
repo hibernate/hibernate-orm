@@ -8,6 +8,9 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+
 /**
  * Descriptor for {@link Types#LONGVARCHAR LONGVARCHAR} handling.
  *
@@ -27,5 +30,16 @@ public class LongVarcharTypeDescriptor extends VarcharTypeDescriptor {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.LONGVARCHAR;
+	}
+
+	@Override
+	public JdbcTypeDescriptor resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaTypeDescriptor<?> domainJtd) {
+		final JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry = indicators.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		return indicators.isNationalized()
+				? jdbcTypeDescriptorRegistry.getDescriptor( Types.LONGNVARCHAR )
+				: jdbcTypeDescriptorRegistry.getDescriptor( Types.LONGVARCHAR );
 	}
 }

@@ -40,8 +40,9 @@ import org.hibernate.cfg.PropertyData;
 import org.hibernate.cfg.PropertyHolderBuilder;
 import org.hibernate.cfg.PropertyPreloadedData;
 import org.hibernate.cfg.SecondPass;
-import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
@@ -471,7 +472,10 @@ public class MapBinder extends CollectionBinder {
 			}
 
 			if ( fromAndWhere != null ) {
-				formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", new HSQLDialect() );
+				final Dialect dialect = buildingContext.getBootstrapContext().getServiceRegistry()
+						.getService( JdbcServices.class )
+						.getDialect();
+				formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", dialect );
 				formulaString = "(select " + formulaString + fromAndWhere + ")";
 				formulaString = StringHelper.replace( formulaString, "$alias$", "a987" );
 			}
@@ -513,7 +517,10 @@ public class MapBinder extends CollectionBinder {
 					throw new AssertionFailure( "Unknown element in column iterator: " + current.getClass() );
 				}
 				if ( fromAndWhere != null ) {
-					formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", new HSQLDialect() );
+					final Dialect dialect = buildingContext.getBootstrapContext().getServiceRegistry()
+							.getService( JdbcServices.class )
+							.getDialect();
+					formulaString = Template.renderWhereStringTemplate( formulaString, "$alias$", dialect );
 					formulaString = "(select " + formulaString + fromAndWhere + ")";
 					formulaString = StringHelper.replace(
 							formulaString,

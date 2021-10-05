@@ -6,10 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.spi.TypeConfiguration;
-
 /**
  * Additional contract for primitive / primitive wrapper types.
  *
@@ -41,9 +37,4 @@ public interface PrimitiveType<T> extends LiteralType<T>, AdjustableBasicType<T>
 	 */
 	Object getDefaultValue();
 
-	@Override
-	default  <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<X> domainJtd) {
-		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
-		return typeConfiguration.getBasicTypeRegistry().resolve( domainJtd, getJdbcTypeDescriptor(), getName() );
-	}
 }

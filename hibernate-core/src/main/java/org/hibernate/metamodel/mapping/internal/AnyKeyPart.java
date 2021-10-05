@@ -30,6 +30,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -224,5 +225,14 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	@Override
 	public List<JdbcMapping> getJdbcMappings() {
 		return Collections.singletonList( jdbcMapping );
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return anyPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
 	}
 }

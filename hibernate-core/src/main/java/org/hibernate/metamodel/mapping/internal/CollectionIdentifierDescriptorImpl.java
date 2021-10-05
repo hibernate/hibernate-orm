@@ -113,6 +113,20 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		return collectionDescriptor.getAttributeMapping().createDomainResult(
+				navigablePath,
+				tableGroup,
+				resultVariable,
+				creationState
+		);
+	}
+
+	@Override
 	public void breakDownJdbcValues(Object domainValue, JdbcValueConsumer valueConsumer, SharedSessionContractImplementor session) {
 		valueConsumer.consume( domainValue, this );
 	}
@@ -238,4 +252,5 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
 	}
+
 }

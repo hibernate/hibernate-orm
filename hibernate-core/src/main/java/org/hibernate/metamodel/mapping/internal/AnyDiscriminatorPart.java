@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -31,6 +32,7 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
@@ -124,6 +126,15 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
+	}
+
+	@Override
+	public <T> DomainResult<T> createDomainResult(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

@@ -21,8 +21,8 @@ import org.hibernate.persister.entity.Lockable;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.sql.Update;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
 
 import org.jboss.logging.Logger;
 
@@ -84,7 +84,7 @@ public class UpdateLockingStrategy implements LockingStrategy {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( sql );
 			try {
-				final VersionType lockableVersionType = lockable.getVersionType();
+				final BasicType<?> lockableVersionType = lockable.getVersionType();
 				lockableVersionType.nullSafeSet( st, version, 1, session );
 				int offset = 2;
 

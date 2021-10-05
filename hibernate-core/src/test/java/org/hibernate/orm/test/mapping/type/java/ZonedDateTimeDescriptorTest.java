@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.type.java;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 
 /**
  * @author Jordan Gigov
@@ -20,7 +20,7 @@ public class ZonedDateTimeDescriptorTest extends AbstractDescriptorTest<ZonedDat
 	final ZonedDateTime different = ZonedDateTime.of( LocalDateTime.of( 2016, 10, 8, 15, 13 ), ZoneId.of( "EET" ) );
 
 	public ZonedDateTimeDescriptorTest() {
-		super(ZonedDateTimeJavaDescriptor.INSTANCE);
+		super( ZonedDateTimeJavaTypeDescriptor.INSTANCE);
 	}
 
 	@Override

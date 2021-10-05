@@ -7,9 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.Comparator;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
 
@@ -21,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
  */
 public class ByteType
 		extends AbstractSingleColumnStandardBasicType<Byte>
-		implements PrimitiveType<Byte>, DiscriminatorType<Byte>, VersionType<Byte> {
+		implements PrimitiveType<Byte>, DiscriminatorType<Byte> {
 
 	public static final ByteType INSTANCE = new ByteType();
 
@@ -59,20 +57,5 @@ public class ByteType
 	@Override
 	public Byte fromStringValue(CharSequence xml) {
 		return fromString( xml );
-	}
-
-	@Override
-	public Byte next(Byte current, SharedSessionContractImplementor session) {
-		return (byte) ( current + 1 );
-	}
-
-	@Override
-	public Byte seed(SharedSessionContractImplementor session) {
-		return ZERO;
-	}
-
-	@Override
-	public Comparator<Byte> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
 	}
 }

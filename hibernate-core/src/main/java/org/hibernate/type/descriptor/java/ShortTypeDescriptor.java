@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -18,7 +19,10 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> implements Primitive<Short> {
+public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short>
+		implements Primitive<Short>, VersionJavaTypeDescriptor<Short> {
+
+	private static final Short ZERO = (short) 0;
 	public static final ShortTypeDescriptor INSTANCE = new ShortTypeDescriptor();
 
 	public ShortTypeDescriptor() {
@@ -166,5 +170,14 @@ public class ShortTypeDescriptor extends AbstractClassTypeDescriptor<Short> impl
 						value.getClass().getName()
 				)
 		);
+	}
+	@Override
+	public Short seed(SharedSessionContractImplementor session) {
+		return ZERO;
+	}
+
+	@Override
+	public Short next(Short current, SharedSessionContractImplementor session) {
+		return (short) ( current + 1 );
 	}
 }

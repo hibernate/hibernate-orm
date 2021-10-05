@@ -314,7 +314,6 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -711,7 +710,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			throw new SemanticException( "increment option specified for update of non-versioned entity" );
 		}
 
-		final VersionType<?> versionType = persister.getVersionType();
+		final BasicType<?> versionType = persister.getVersionType();
 		if ( versionType instanceof UserVersionType ) {
 			throw new SemanticException( "user-defined version types not supported for increment option" );
 		}
@@ -728,28 +727,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final ColumnReference versionColumn = targetColumnReferences.get( 0 );
 		final Expression value;
-		if ( isTimestampBasedVersion( versionType ) ) {
-			value = new VersionTypeSeedParameterSpecification( versionType );
+		if ( versionMapping.getJdbcMapping().getJdbcTypeDescriptor().isTemporal() ) {
+			value = new VersionTypeSeedParameterSpecification( versionType, persister.getVersionJavaTypeDescriptor() );
 		}
 		else {
-			final BasicValuedMapping basicValuedMapping = (BasicValuedMapping) versionType;
 			value = new BinaryArithmeticExpression(
 					versionColumn,
 					ADD,
-					new QueryLiteral<>( 1, basicValuedMapping ),
-					basicValuedMapping
+					new QueryLiteral<>( 1, versionType ),
+					versionType
 			);
 		}
 		assignmentConsumer.accept( new Assignment( versionColumn, value ) );
-	}
-
-	private boolean isTimestampBasedVersion(VersionType<?> versionType) {
-		if ( versionType instanceof BasicType<?> ) {
-			return ( (BasicType<?>) versionType ).getJdbcTypeDescriptor().isTemporal();
-		}
-		final Class<?> javaType = versionType.getReturnedClass();
-		return java.util.Date.class.isAssignableFrom( javaType )
-				|| Calendar.class.isAssignableFrom( javaType );
 	}
 
 	@Override
@@ -1024,8 +1013,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		);
 
 		if ( needsVersionInsert ) {
-			final VersionType versionType = entityDescriptor.getVersionType();
-			final Expression expression = new VersionTypeSeedParameterSpecification( versionType );
+			final Expression expression = new VersionTypeSeedParameterSpecification(
+					entityDescriptor.getVersionMapping().getJdbcMapping(),
+					entityDescriptor.getVersionJavaTypeDescriptor()
+			);
 			insertStatement.getSourceSelectStatement().forEachQuerySpec(
 					querySpec -> {
 						querySpec.getSelectClause().addSqlSelection(

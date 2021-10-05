@@ -10,6 +10,7 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -19,7 +20,9 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  * @author Steve Ebersole
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
-public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implements Primitive<Byte> {
+public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implements Primitive<Byte>, VersionJavaTypeDescriptor<Byte>{
+
+	private static final Byte ZERO = (byte) 0;
 	public static final ByteTypeDescriptor INSTANCE = new ByteTypeDescriptor();
 
 	public ByteTypeDescriptor() {
@@ -169,5 +172,14 @@ public class ByteTypeDescriptor extends AbstractClassTypeDescriptor<Byte> implem
 						value.getClass().getName()
 				)
 		);
+	}
+	@Override
+	public Byte next(Byte current, SharedSessionContractImplementor session) {
+		return (byte) ( current + 1 );
+	}
+
+	@Override
+	public Byte seed(SharedSessionContractImplementor session) {
+		return ZERO;
 	}
 }

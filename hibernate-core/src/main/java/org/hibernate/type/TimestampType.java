@@ -7,17 +7,18 @@
 package org.hibernate.type;
 
 import java.sql.Timestamp;
-import java.util.Comparator;
 import java.util.Date;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}
@@ -27,12 +28,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class TimestampType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements VersionType<Date>, AllowableTemporalParameterType<Date> {
+		implements AllowableTemporalParameterType<Date> {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 
 	public TimestampType() {
 		super( TimestampTypeDescriptor.INSTANCE, JdbcTimestampTypeDescriptor.INSTANCE );
+	}
+
+	protected TimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Date> javaTypeDescriptor) {
+		super( jdbcTypeDescriptor, javaTypeDescriptor );
 	}
 
 	@Override
@@ -43,21 +48,6 @@ public class TimestampType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), Timestamp.class.getName(), Date.class.getName() };
-	}
-
-	@Override
-	public Date next(Date current, SharedSessionContractImplementor session) {
-		return seed( session );
-	}
-
-	@Override
-	public Date seed(SharedSessionContractImplementor session) {
-		return new Timestamp( System.currentTimeMillis() );
-	}
-
-	@Override
-	public Comparator<Date> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
 	}
 
 	@Override

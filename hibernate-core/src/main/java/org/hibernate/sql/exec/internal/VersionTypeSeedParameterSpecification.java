@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
 
 /**
  * Parameter bind specification used for optimistic lock version seeding (from insert statements).
@@ -20,15 +20,15 @@ import org.hibernate.type.VersionType;
  * @author Steve Ebersole
  */
 public class VersionTypeSeedParameterSpecification extends JdbcParameterImpl {
-	private final VersionType type;
+	private final VersionJavaTypeDescriptor<?> type;
 
 	/**
 	 * Constructs a version seed parameter bind specification.
 	 *
 	 * @param type The version type.
 	 */
-	public VersionTypeSeedParameterSpecification(VersionType type) {
-		super( (JdbcMapping) type );
+	public VersionTypeSeedParameterSpecification(JdbcMapping jdbcMapping, VersionJavaTypeDescriptor<?> type) {
+		super( jdbcMapping );
 		this.type = type;
 	}
 
@@ -38,6 +38,12 @@ public class VersionTypeSeedParameterSpecification extends JdbcParameterImpl {
 			int startPosition,
 			JdbcParameterBindings jdbcParamBindings,
 			ExecutionContext executionContext) throws SQLException {
-		type.nullSafeSet( statement, type.seed( executionContext.getSession() ), startPosition, executionContext.getSession() );
+		//noinspection unchecked
+		getJdbcMapping().getJdbcValueBinder().bind(
+				statement,
+				type.seed( executionContext.getSession() ),
+				startPosition,
+				executionContext.getSession()
+		);
 	}
 }

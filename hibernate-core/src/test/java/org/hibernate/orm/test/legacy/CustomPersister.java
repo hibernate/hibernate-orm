@@ -63,9 +63,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 public class CustomPersister implements EntityPersister {
@@ -295,7 +295,7 @@ public class CustomPersister implements EntityPersister {
 	/**
 	 * @see EntityPersister#getVersionType()
 	 */
-	public VersionType getVersionType() {
+	public BasicType<?> getVersionType() {
 		return null;
 	}
 

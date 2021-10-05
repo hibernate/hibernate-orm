@@ -7,9 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.Comparator;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.LongTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
 
@@ -21,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
  */
 public class LongType
 		extends AbstractSingleColumnStandardBasicType<Long>
-		implements PrimitiveType<Long>, DiscriminatorType<Long>, VersionType<Long> {
+		implements PrimitiveType<Long>, DiscriminatorType<Long> {
 
 	public static final LongType INSTANCE = new LongType();
 
@@ -54,21 +52,6 @@ public class LongType
 	@Override
 	public Long stringToObject(CharSequence sequence) throws Exception {
 		return Long.valueOf( sequence.toString() );
-	}
-
-	@Override
-	public Long next(Long current, SharedSessionContractImplementor session) {
-		return current + 1L;
-	}
-
-	@Override
-	public Long seed(SharedSessionContractImplementor session) {
-		return ZERO;
-	}
-
-	@Override
-	public Comparator<Long> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
 	}
 
 }

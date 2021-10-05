@@ -28,7 +28,7 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public class UserTypeJavaTypeWrapper<J> implements BasicJavaDescriptor<J> {
-	private final UserType<J> userType;
+	protected final UserType<J> userType;
 	private final MutabilityPlan<J> mutabilityPlan;
 
 	private final Comparator<J> comparator;

@@ -12,7 +12,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
@@ -30,6 +29,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
 import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
+import org.hibernate.type.internal.UserTypeVersionJavaTypeWrapper;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.Sized;
@@ -52,7 +52,7 @@ import org.hibernate.usertype.UserVersionType;
  */
 public class CustomType
 		extends AbstractType
-		implements BasicType, IdentifierType, DiscriminatorType, VersionType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements BasicType, IdentifierType, DiscriminatorType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
 
 	private final UserType<Object> userType;
 	private final String[] registrationKeys;
@@ -83,6 +83,9 @@ public class CustomType
 		else if ( userType instanceof JavaTypedExpressable ) {
 			//noinspection rawtypes
 			this.mappedJavaTypeDescriptor = (BasicJavaDescriptor) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
+		}
+		else if ( userType instanceof UserVersionType ) {
+			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType) userType );
 		}
 		else {
 			this.mappedJavaTypeDescriptor = new UserTypeJavaTypeWrapper<>( userType );
@@ -253,21 +256,6 @@ public class CustomType
 	@Override
 	public Object stringToObject(CharSequence sequence) {
 		return fromStringValue( sequence );
-	}
-
-	@Override
-	public Comparator getComparator() {
-		return (Comparator) getUserType();
-	}
-
-	@Override
-	public Object next(Object current, SharedSessionContractImplementor session) {
-		return ( (UserVersionType) getUserType() ).next( current, session );
-	}
-
-	@Override
-	public Object seed(SharedSessionContractImplementor session) {
-		return ( (UserVersionType) getUserType() ).seed( session );
 	}
 
 	@Override

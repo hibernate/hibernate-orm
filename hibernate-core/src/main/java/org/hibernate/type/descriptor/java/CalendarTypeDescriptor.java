@@ -13,6 +13,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -25,7 +26,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class CalendarTypeDescriptor extends AbstractTemporalTypeDescriptor<Calendar> {
+public class CalendarTypeDescriptor extends AbstractTemporalTypeDescriptor<Calendar> implements VersionJavaTypeDescriptor<Calendar> {
 	public static final CalendarTypeDescriptor INSTANCE = new CalendarTypeDescriptor();
 
 	public static class CalendarMutabilityPlan extends MutableMutabilityPlan<Calendar> {
@@ -157,5 +158,15 @@ public class CalendarTypeDescriptor extends AbstractTemporalTypeDescriptor<Calen
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultTimestampPrecision();
+	}
+
+	@Override
+	public Calendar next(Calendar current, SharedSessionContractImplementor session) {
+		return seed( session );
+	}
+
+	@Override
+	public Calendar seed(SharedSessionContractImplementor session) {
+		return Calendar.getInstance();
 	}
 }

@@ -48,8 +48,9 @@ import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
@@ -364,7 +365,15 @@ public interface EntityPersister
 	 *
 	 * @return The type of the version property; or null, if not versioned.
 	 */
-	VersionType<?> getVersionType();
+	BasicType<?> getVersionType();
+
+	default VersionJavaTypeDescriptor<Object> getVersionJavaTypeDescriptor() {
+		final BasicType<?> versionType = getVersionType();
+		//noinspection unchecked
+		return versionType == null
+				? null
+				: (VersionJavaTypeDescriptor<Object>) versionType.getJavaTypeDescriptor();
+	}
 
 	/**
 	 * If {@link #isVersioned()}, then what is the index of the property

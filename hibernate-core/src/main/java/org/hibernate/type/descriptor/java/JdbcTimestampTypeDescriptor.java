@@ -21,6 +21,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -32,7 +33,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> {
+public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<Date> implements VersionJavaTypeDescriptor<Date> {
 	public static final JdbcTimestampTypeDescriptor INSTANCE = new JdbcTimestampTypeDescriptor();
 
 	@SuppressWarnings("WeakerAccess")
@@ -208,4 +209,15 @@ public class JdbcTimestampTypeDescriptor extends AbstractTemporalTypeDescriptor<
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultTimestampPrecision();
 	}
+
+	@Override
+	public Date next(Date current, SharedSessionContractImplementor session) {
+		return seed( session );
+	}
+
+	@Override
+	public Date seed(SharedSessionContractImplementor session) {
+		return new Timestamp( System.currentTimeMillis() );
+	}
+
 }

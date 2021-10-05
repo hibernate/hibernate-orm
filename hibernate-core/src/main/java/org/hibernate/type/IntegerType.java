@@ -7,9 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.Comparator;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
 
 /**
@@ -19,7 +17,7 @@ import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
  * @author Steve Ebersole
  */
 public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
-		implements PrimitiveType<Integer>, DiscriminatorType<Integer>, VersionType<Integer> {
+		implements PrimitiveType<Integer>, DiscriminatorType<Integer> {
 
 	public static final IntegerType INSTANCE = new IntegerType();
 
@@ -52,20 +50,5 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 	@Override
 	public Integer stringToObject(CharSequence sequence) {
 		return fromString( sequence );
-	}
-
-	@Override
-	public Integer seed(SharedSessionContractImplementor session) {
-		return ZERO;
-	}
-
-	@Override
-	public Integer next(Integer current, SharedSessionContractImplementor session) {
-		return current + 1;
-	}
-
-	@Override
-	public Comparator<Integer> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
 	}
 }

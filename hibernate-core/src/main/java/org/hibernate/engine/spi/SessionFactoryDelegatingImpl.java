@@ -55,6 +55,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -443,5 +444,10 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public AllowableParameterType<?> resolveParameterBindType(Class<?> clazz) {
 		return delegate.resolveParameterBindType( clazz );
+	}
+
+	@Override
+	public WrapperOptions getWrapperOptions() {
+		return delegate.getWrapperOptions();
 	}
 }

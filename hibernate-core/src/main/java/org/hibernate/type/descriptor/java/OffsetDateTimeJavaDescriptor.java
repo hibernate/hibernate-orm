@@ -13,12 +13,14 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.DateTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -32,7 +34,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class OffsetDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<OffsetDateTime> {
+public class OffsetDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<OffsetDateTime>
+		implements VersionJavaTypeDescriptor<OffsetDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -199,5 +202,20 @@ public class OffsetDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultTimestampPrecision();
+	}
+
+	@Override
+	public OffsetDateTime seed(SharedSessionContractImplementor session) {
+		return OffsetDateTime.now();
+	}
+
+	@Override
+	public OffsetDateTime next(OffsetDateTime current, SharedSessionContractImplementor session) {
+		return OffsetDateTime.now();
+	}
+
+	@Override
+	public Comparator<OffsetDateTime> getComparator() {
+		return OffsetDateTime.timeLineOrder();
 	}
 }

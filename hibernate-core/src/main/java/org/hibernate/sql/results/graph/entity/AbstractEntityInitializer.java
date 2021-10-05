@@ -51,8 +51,8 @@ import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.VersionType;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -517,7 +517,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		if ( version != null ) {
 			// null version means the object is in the process of being loaded somewhere else in the ResultSet
-			final VersionType<?> versionType = concreteDescriptor.getVersionType();
+			final BasicType<?> versionType = concreteDescriptor.getVersionType();
 			final Object currentVersion = versionAssembler.assemble( rowProcessingState );
 			if ( !versionType.isEqual( version, currentVersion ) ) {
 				final StatisticsImplementor statistics = rowProcessingState.getSession().getFactory().getStatistics();

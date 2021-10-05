@@ -18,6 +18,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -29,7 +30,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class LocalDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<LocalDateTime> {
+public class LocalDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<LocalDateTime>
+		implements VersionJavaTypeDescriptor<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -159,5 +161,15 @@ public class LocalDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultTimestampPrecision();
+	}
+
+	@Override
+	public LocalDateTime seed(SharedSessionContractImplementor session) {
+		return LocalDateTime.now();
+	}
+
+	@Override
+	public LocalDateTime next(LocalDateTime current, SharedSessionContractImplementor session) {
+		return LocalDateTime.now();
 	}
 }

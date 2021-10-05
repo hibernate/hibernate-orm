@@ -6,14 +6,10 @@
  */
 package org.hibernate.userguide.collections.type;
 
-import java.sql.Timestamp;
-import java.util.Comparator;
 import java.util.Date;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
 
@@ -22,9 +18,7 @@ import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
  */
 //tag::collections-map-custom-key-type-mapping-example[]
 
-public class TimestampEpochType
-        extends AbstractSingleColumnStandardBasicType<Date>
-        implements VersionType<Date> {
+public class TimestampEpochType extends AbstractSingleColumnStandardBasicType<Date> {
 
     public static final TimestampEpochType INSTANCE = new TimestampEpochType();
 
@@ -41,26 +35,7 @@ public class TimestampEpochType
     }
 
     @Override
-    public Date next(
-        Date current,
-        SharedSessionContractImplementor session) {
-        return seed( session );
-    }
-
-    @Override
-    public Date seed(
-        SharedSessionContractImplementor session) {
-        return new Timestamp( System.currentTimeMillis() );
-    }
-
-    @Override
-    public Comparator<Date> getComparator() {
-        return getJavaTypeDescriptor().getComparator();
-    }
-
-    @Override
-    public Date fromStringValue(
-            CharSequence xml) throws HibernateException {
+    public Date fromStringValue(CharSequence xml) throws HibernateException {
         return fromString( xml );
     }
 }

@@ -8,17 +8,15 @@ package org.hibernate.type;
 
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.Locale;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.InstantJavaDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -27,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class InstantType
 		extends AbstractSingleColumnStandardBasicType<Instant>
-		implements VersionType<Instant>, AllowableTemporalParameterType<Instant> {
+		implements AllowableTemporalParameterType<Instant> {
 	/**
 	 * Singleton access
 	 */
@@ -37,22 +35,6 @@ public class InstantType
 
 	public InstantType() {
 		super( TimestampTypeDescriptor.INSTANCE, InstantJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public Instant seed(SharedSessionContractImplementor session) {
-		return Instant.now();
-	}
-
-	@Override
-	public Instant next(Instant current, SharedSessionContractImplementor session) {
-		return Instant.now();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Comparator<Instant> getComparator() {
-		return ComparableComparator.INSTANCE;
 	}
 
 	@Override

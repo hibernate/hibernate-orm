@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -19,7 +20,10 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long> implements Primitive<Long> {
+public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long>
+		implements Primitive<Long>, VersionJavaTypeDescriptor<Long> {
+
+	private static final Long ZERO = (long) 0;
 	public static final LongTypeDescriptor INSTANCE = new LongTypeDescriptor();
 
 	public LongTypeDescriptor() {
@@ -174,5 +178,15 @@ public class LongTypeDescriptor extends AbstractClassTypeDescriptor<Long> implem
 	@Override
 	public int getDefaultSqlScale() {
 		return 0;
+	}
+
+	@Override
+	public Long next(Long current, SharedSessionContractImplementor session) {
+		return current + 1L;
+	}
+
+	@Override
+	public Long seed(SharedSessionContractImplementor session) {
+		return ZERO;
 	}
 }

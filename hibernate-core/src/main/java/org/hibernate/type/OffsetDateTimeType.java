@@ -7,24 +7,22 @@
 package org.hibernate.type;
 
 import java.time.OffsetDateTime;
-import java.util.Comparator;
-
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.TemporalType;
+
 /**
  * @author Steve Ebersole
  */
 public class OffsetDateTimeType
 		extends AbstractSingleColumnStandardBasicType<OffsetDateTime>
-		implements VersionType<OffsetDateTime>, AllowableTemporalParameterType<OffsetDateTime> {
+		implements AllowableTemporalParameterType<OffsetDateTime> {
 
 	/**
 	 * Singleton access
@@ -33,21 +31,6 @@ public class OffsetDateTimeType
 
 	public OffsetDateTimeType() {
 		super( TimestampWithTimeZoneDescriptor.INSTANCE, OffsetDateTimeJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public OffsetDateTime seed(SharedSessionContractImplementor session) {
-		return OffsetDateTime.now();
-	}
-
-	@Override
-	public OffsetDateTime next(OffsetDateTime current, SharedSessionContractImplementor session) {
-		return OffsetDateTime.now();
-	}
-
-	@Override
-	public Comparator<OffsetDateTime> getComparator() {
-		return OffsetDateTime.timeLineOrder();
 	}
 
 	@Override

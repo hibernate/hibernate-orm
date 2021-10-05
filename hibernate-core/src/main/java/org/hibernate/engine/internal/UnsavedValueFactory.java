@@ -17,7 +17,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.IdentifierType;
 import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -114,18 +114,19 @@ public class UnsavedValueFactory {
 	 *
 	 * @return The appropriate VersionValue
 	 */
-	public static VersionValue getUnsavedVersionValue(
-			String versionUnsavedValue, 
+	public static <X> VersionValue getUnsavedVersionValue(
+			String versionUnsavedValue,
 			Getter versionGetter,
-			VersionType versionType,
+			VersionJavaTypeDescriptor<X> versionType,
 			Constructor constructor) {
 		
 		if ( versionUnsavedValue == null ) {
 			if ( constructor!=null ) {
-				final Object defaultValue = versionGetter.get( instantiate( constructor ) );
+				@SuppressWarnings("unchecked")
+				final X defaultValue = (X) versionGetter.get( instantiate( constructor ) );
 				// if the version of a newly instantiated object is not the same
 				// as the version seed value, use that as the unsaved-value
-				return versionType.isEqual( versionType.seed( null ), defaultValue )
+				return versionType.areEqual( versionType.seed( null ), defaultValue )
 						? VersionValue.UNDEFINED
 						: new VersionValue( defaultValue );
 			}

@@ -11,6 +11,7 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.Primitive;
 
@@ -19,7 +20,10 @@ import org.hibernate.type.descriptor.java.spi.Primitive;
  *
  * @author Steve Ebersole
  */
-public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer> implements Primitive<Integer> {
+public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer>
+		implements Primitive<Integer>, VersionJavaTypeDescriptor<Integer> {
+
+	public static final Integer ZERO = 0;
 	public static final IntegerTypeDescriptor INSTANCE = new IntegerTypeDescriptor();
 
 	public IntegerTypeDescriptor() {
@@ -175,4 +179,15 @@ public class IntegerTypeDescriptor extends AbstractClassTypeDescriptor<Integer> 
 				)
 		);
 	}
+
+	@Override
+	public Integer seed(SharedSessionContractImplementor session) {
+		return ZERO;
+	}
+
+	@Override
+	public Integer next(Integer current, SharedSessionContractImplementor session) {
+		return current + 1;
+	}
+
 }

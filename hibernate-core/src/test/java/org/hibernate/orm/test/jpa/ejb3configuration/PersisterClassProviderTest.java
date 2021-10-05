@@ -62,8 +62,8 @@ import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.junit.jupiter.api.Assertions;
@@ -262,7 +262,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public VersionType getVersionType() {
+		public BasicType<?> getVersionType() {
 			return null;
 		}
 

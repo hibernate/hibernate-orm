@@ -32,7 +32,6 @@ import java.util.ArrayList;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.types.selectors.FilenameSelector;
-import org.hibernate.tool.ant.fresh.MetadataTask;
 import org.hibernate.tool.ant.fresh.MetadataTask.Type;
 import org.hibernate.tool.api.metadata.MetadataDescriptor;
 import org.junit.jupiter.api.Test;

@@ -3,33 +3,26 @@ package org.hibernate.orm.test.type.contributor;
 import java.util.Map;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.DiscriminatorType;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeBootstrapContext;
 
 /**
  * @author Vlad Mihalcea
  */
 public class ArrayType
-        extends AbstractSingleColumnStandardBasicType<Array>
-        implements DiscriminatorType<Array> {
+        extends AbstractSingleColumnStandardBasicType<Array> {
 
     public static final ArrayType INSTANCE = new ArrayType();
 
     private Map<String, Object> settings;
 
     public ArrayType() {
-        super( VarcharTypeDescriptor.INSTANCE, ArrayTypeDescriptor.INSTANCE );
+        super( VarcharJdbcTypeDescriptor.INSTANCE, ArrayTypeDescriptor.INSTANCE );
     }
 
     public ArrayType(TypeBootstrapContext typeBootstrapContext) {
-        super( VarcharTypeDescriptor.INSTANCE, ArrayTypeDescriptor.INSTANCE );
+        super( VarcharJdbcTypeDescriptor.INSTANCE, ArrayTypeDescriptor.INSTANCE );
         this.settings = typeBootstrapContext.getConfigurationSettings();
-    }
-
-    @Override
-    public Array stringToObject(CharSequence sequence) throws Exception {
-        return fromString( sequence );
     }
 
     @Override

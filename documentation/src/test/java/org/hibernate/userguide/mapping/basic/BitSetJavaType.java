@@ -4,7 +4,7 @@ import java.sql.Types;
 import java.util.BitSet;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  * @author Vlad Mihalcea
  */
 //tag::basic-bitset-example-java-type[]
-public class BitSetJavaType extends AbstractClassTypeDescriptor<BitSet> {
+public class BitSetJavaType extends AbstractClassJavaTypeDescriptor<BitSet> {
     public static final BitSetJavaType INSTANCE = new BitSetJavaType();
 
     public BitSetJavaType() {

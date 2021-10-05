@@ -13,7 +13,6 @@ import java.sql.SQLException;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -22,20 +21,19 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  *
  * @author Gail Badner
  */
 public class StoredPrefixedStringType
-		extends AbstractSingleColumnStandardBasicType<String>
-		implements DiscriminatorType<String> {
+		extends AbstractSingleColumnStandardBasicType<String> {
 
 	public static final String PREFIX = "PRE:";
 
 	public static final JdbcTypeDescriptor PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
-			new VarcharTypeDescriptor() {
+			new VarcharJdbcTypeDescriptor() {
 				public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override
@@ -100,13 +98,5 @@ public class StoredPrefixedStringType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	public String stringToObject(CharSequence sequence) throws Exception {
-		return StringType.INSTANCE.stringToObject( sequence );
-	}
-
-	public String toString(String value) {
-		return StringType.INSTANCE.toString( value );
 	}
 }

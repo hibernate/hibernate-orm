@@ -27,9 +27,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -37,7 +37,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class DiscriminatorType<T> extends AbstractType implements org.hibernate.type.DiscriminatorType<T>, BasicType<T>, ValueExtractor<T>, ValueBinder<T> {
+public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, ValueExtractor<T>, ValueBinder<T> {
 	private final BasicType<Object> underlyingType;
 	private final Loadable persister;
 
@@ -226,11 +226,6 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 	}
 
 	@Override
-	public T stringToObject(CharSequence sequence) throws Exception {
-		return ( (org.hibernate.type.DiscriminatorType<T>) underlyingType ).stringToObject( sequence );
-	}
-
-	@Override
 	public boolean canDoExtraction() {
 		return underlyingType.canDoExtraction();
 	}
@@ -238,8 +233,8 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 	@Override
 	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
 		return (JavaTypeDescriptor<T>) ( EntityMode.POJO == persister.getEntityMode() ?
-				ClassTypeDescriptor.INSTANCE :
-				StringTypeDescriptor.INSTANCE );
+				ClassJavaTypeDescriptor.INSTANCE :
+				StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

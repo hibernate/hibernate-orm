@@ -16,9 +16,9 @@ import java.time.LocalTime;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimeTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
 public class LiteralHelper {
 	public static SqmLiteral<Timestamp> timestampLiteralFrom(String literalText, SqmCreationState creationState) {
 		final Timestamp literal = Timestamp.valueOf(
-				LocalDateTime.from( JdbcTimestampTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )
+				LocalDateTime.from( JdbcTimestampJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) )
 		);
 
 		return new SqmLiteral<>(
@@ -53,7 +53,7 @@ public class LiteralHelper {
 	}
 
 	public static SqmLiteral<Date> dateLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalDate localDate = LocalDate.from( JdbcDateTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
+		final LocalDate localDate = LocalDate.from( JdbcDateJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
 		final Date literal = new Date( localDate.toEpochDay() );
 
 		return new SqmLiteral<>(
@@ -64,7 +64,7 @@ public class LiteralHelper {
 	}
 
 	public static SqmLiteral<Time> timeLiteralFrom(String literalText, SqmCreationState creationState) {
-		final LocalTime localTime = LocalTime.from( JdbcTimeTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
+		final LocalTime localTime = LocalTime.from( JdbcTimeJavaTypeDescriptor.LITERAL_FORMATTER.parse( literalText ) );
 		final Time literal = Time.valueOf( localTime );
 
 		return new SqmLiteral<>(

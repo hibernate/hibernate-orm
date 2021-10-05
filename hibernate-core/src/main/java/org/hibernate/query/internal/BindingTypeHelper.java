@@ -15,7 +15,6 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.CalendarDateType;
 import org.hibernate.type.CalendarTimeType;
 import org.hibernate.type.CalendarType;
@@ -39,16 +38,25 @@ public class BindingTypeHelper {
 	private BindingTypeHelper() {
 	}
 
-	@SuppressWarnings("unchecked")
 	public <T> AllowableParameterType<T> resolveTemporalPrecision(
 			TemporalType precision,
-			AllowableParameterType baseType,
+			AllowableParameterType<T> declaredParameterType,
 			TypeConfiguration typeConfiguration) {
-		if ( ! ( baseType instanceof AllowableTemporalParameterType ) ) {
-			throw new UnsupportedOperationException( "Cannot treat non-temporal parameter type with temporal precision" );
+		if ( precision != null ) {
+			if ( !( declaredParameterType.getExpressableJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor ) ) {
+				throw new UnsupportedOperationException(
+						"Cannot treat non-temporal parameter type with temporal precision"
+				);
+			}
+			final TemporalJavaTypeDescriptor<T> temporalJtd = (TemporalJavaTypeDescriptor<T>) declaredParameterType.getExpressableJavaTypeDescriptor();
+			if ( temporalJtd.getPrecision() != precision ) {
+				return typeConfiguration.getBasicTypeRegistry().resolve(
+						temporalJtd.resolveTypeForPrecision( precision, typeConfiguration ),
+						TemporalJavaTypeDescriptor.resolveJdbcTypeCode( precision )
+				);
+			}
 		}
-
-		return ( (AllowableTemporalParameterType) baseType ).resolveTemporalPrecision( precision, typeConfiguration );
+		return declaredParameterType;
 	}
 
 	public AllowableParameterType determineTypeForTemporalType(TemporalType temporalType, AllowableParameterType baseType, Object bindValue) {

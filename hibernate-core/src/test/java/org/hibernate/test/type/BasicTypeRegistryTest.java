@@ -20,8 +20,8 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.UUIDBinaryType;
 import org.hibernate.type.UUIDCharType;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -97,7 +97,7 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		public static final SomeNoopType INSTANCE = new SomeNoopType();
 
 		public SomeNoopType() {
-			super( VarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+			super( VarcharJdbcTypeDescriptor.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
 		}
 
 		public String getName() {

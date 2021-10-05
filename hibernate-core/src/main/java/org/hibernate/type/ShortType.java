@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
-import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
+import org.hibernate.type.descriptor.java.ShortJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#SMALLINT SMALLINT} and {@link Short}
@@ -18,15 +16,14 @@ import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ShortType
-		extends AbstractSingleColumnStandardBasicType<Short>
-		implements PrimitiveType<Short>, DiscriminatorType<Short> {
+		extends AbstractSingleColumnStandardBasicType<Short> {
 
 	public static final ShortType INSTANCE = new ShortType();
 
 	private static final Short ZERO = (short) 0;
 
 	public ShortType() {
-		super( SmallIntTypeDescriptor.INSTANCE, ShortTypeDescriptor.INSTANCE );
+		super( SmallIntJdbcTypeDescriptor.INSTANCE, ShortJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -37,21 +34,6 @@ public class ShortType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] {getName(), short.class.getName(), Short.class.getName()};
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return short.class;
-	}
-
-	@Override
-	public Short stringToObject(CharSequence sequence) {
-		return Short.valueOf( sequence.toString() );
 	}
 
 }

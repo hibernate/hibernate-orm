@@ -6,8 +6,8 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.ZoneOffsetJavaDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.ZoneOffsetJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import java.time.ZoneOffset;
 
@@ -23,7 +23,7 @@ public class ZoneOffsetType
 	public static final ZoneOffsetType INSTANCE = new ZoneOffsetType();
 
 	public ZoneOffsetType() {
-		super( VarcharTypeDescriptor.INSTANCE, ZoneOffsetJavaDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, ZoneOffsetJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

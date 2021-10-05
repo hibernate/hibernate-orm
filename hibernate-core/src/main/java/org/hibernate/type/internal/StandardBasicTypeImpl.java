@@ -11,12 +11,10 @@ import java.sql.Types;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.CastType;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.AdjustableBasicType;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
@@ -46,7 +44,7 @@ public class StandardBasicTypeImpl<J>
 
 	@Override
 	public CastType getCastType() {
-		if ( getJavaTypeDescriptor() == BooleanTypeDescriptor.INSTANCE ) {
+		if ( getJavaTypeDescriptor() == BooleanJavaTypeDescriptor.INSTANCE ) {
 			switch ( getJdbcTypeCode() ) {
 				case Types.BIT:
 				case Types.SMALLINT:

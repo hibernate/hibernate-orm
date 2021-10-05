@@ -61,7 +61,6 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.DiscriminatorType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
@@ -116,7 +115,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	private final String discriminatorFormula;
 	private final String discriminatorFormulaTemplate;
 	private final String discriminatorAlias;
-	private final DiscriminatorType<?> discriminatorType;
+	private final BasicType<?> discriminatorType;
 	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
 	private final boolean discriminatorInsertable;
@@ -326,7 +325,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorFormula = null;
 				discriminatorFormulaTemplate = null;
 			}
-			discriminatorType = (DiscriminatorType<?>) persistentClass.getDiscriminator().getType();
+			discriminatorType = (BasicType<?>) persistentClass.getDiscriminator().getType();
 			if ( persistentClass.isDiscriminatorValueNull() ) {
 				discriminatorValue = NULL_DISCRIMINATOR;
 				discriminatorSQLValue = InFragment.NULL;
@@ -340,7 +339,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			else {
 				discriminatorInsertable = persistentClass.isDiscriminatorInsertable() && !discrimValue.hasFormula();
 				try {
-					discriminatorValue = discriminatorType.stringToObject( persistentClass.getDiscriminatorValue() );
+					discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
 					discriminatorSQLValue = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaTypeDescriptor) discriminatorType.getJavaTypeDescriptor() )
 							.toJdbcLiteral(
 									discriminatorValue,
@@ -444,7 +443,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					try {
 						addSubclassByDiscriminatorValue(
 								subclassesByDiscriminatorValueLocal,
-								discriminatorType.stringToObject( sc.getDiscriminatorValue() ),
+								discriminatorType.getJavaTypeDescriptor().fromString( sc.getDiscriminatorValue() ),
 								sc.getEntityName()
 						);
 					}

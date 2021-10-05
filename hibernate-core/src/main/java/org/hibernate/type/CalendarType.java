@@ -9,13 +9,8 @@ package org.hibernate.type;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
-import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
-import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.TemporalType;
+import org.hibernate.type.descriptor.java.CalendarJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Calendar}
@@ -24,13 +19,12 @@ import jakarta.persistence.TemporalType;
  * @author Steve Ebersole
  */
 public class CalendarType
-		extends AbstractSingleColumnStandardBasicType<Calendar>
-		implements AllowableTemporalParameterType<Calendar> {
+		extends AbstractSingleColumnStandardBasicType<Calendar> {
 
 	public static final CalendarType INSTANCE = new CalendarType();
 
 	public CalendarType() {
-		super( TimestampTypeDescriptor.INSTANCE, CalendarTypeDescriptor.INSTANCE );
+		super( TimestampJdbcTypeDescriptor.INSTANCE, CalendarJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -43,21 +37,4 @@ public class CalendarType
 		return new String[] { getName(), Calendar.class.getName(), GregorianCalendar.class.getName() };
 	}
 
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case TIMESTAMP: {
-				return this;
-			}
-			case DATE: {
-				return CalendarDateType.INSTANCE;
-			}
-			case TIME: {
-				return CalendarTimeType.INSTANCE;
-			}
-		}
-		throw new QueryException( "Calendar type cannot be treated using `" + temporalPrecision.name() + "` precision" );
-	}
 }

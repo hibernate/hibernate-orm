@@ -22,7 +22,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.TextType;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectContext;
@@ -45,7 +45,7 @@ public class ImmutableTest extends BaseSessionFactoryFunctionalTest {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
 
 		public TextAsMaterializedClobType() {
-			super( ClobTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
+			super( ClobJdbcTypeDescriptor.DEFAULT, TextType.INSTANCE.getJavaTypeDescriptor() );
 		}
 
 		public String getName() {

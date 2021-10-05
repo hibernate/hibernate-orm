@@ -8,13 +8,8 @@ package org.hibernate.type;
 
 import java.time.LocalDateTime;
 
-import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
-import org.hibernate.type.descriptor.java.LocalDateTimeJavaDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.TemporalType;
+import org.hibernate.type.descriptor.java.LocalDateTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link LocalDateTime}.
@@ -22,15 +17,14 @@ import jakarta.persistence.TemporalType;
  * @author Steve Ebersole
  */
 public class LocalDateTimeType
-		extends AbstractSingleColumnStandardBasicType<LocalDateTime>
-		implements AllowableTemporalParameterType<LocalDateTime> {
+		extends AbstractSingleColumnStandardBasicType<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */
 	public static final LocalDateTimeType INSTANCE = new LocalDateTimeType();
 
 	public LocalDateTimeType() {
-		super( TimestampTypeDescriptor.INSTANCE, LocalDateTimeJavaDescriptor.INSTANCE );
+		super( TimestampJdbcTypeDescriptor.INSTANCE, LocalDateTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -43,20 +37,4 @@ public class LocalDateTimeType
 		return true;
 	}
 
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case TIMESTAMP: {
-				return this;
-			}
-			case DATE: {
-				return LocalDateType.INSTANCE;
-			}
-			default: {
-				throw new QueryException( "LocalDateTime type cannot be treated using `" + temporalPrecision.name() + "` precision" );
-			}
-		}
-	}
 }

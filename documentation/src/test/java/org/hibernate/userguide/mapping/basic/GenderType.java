@@ -1,7 +1,7 @@
 package org.hibernate.userguide.mapping.basic;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
@@ -13,8 +13,8 @@ public class GenderType extends AbstractSingleColumnStandardBasicType<Gender> {
 
     public GenderType() {
         super(
-            CharTypeDescriptor.INSTANCE,
-            GenderJavaTypeDescriptor.INSTANCE
+				CharJdbcTypeDescriptor.INSTANCE,
+				GenderJavaTypeDescriptor.INSTANCE
         );
     }
 

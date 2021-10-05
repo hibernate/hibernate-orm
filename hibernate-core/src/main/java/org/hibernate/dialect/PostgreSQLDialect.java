@@ -66,9 +66,9 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcTypeDescriptor;
 
@@ -356,9 +356,9 @@ public class PostgreSQLDialect extends Dialect {
 				// with @Lob will attempt to use
 				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
 				// dialect uses oid for Blobs, byte arrays cannot be used.
-				return BlobTypeDescriptor.BLOB_BINDING;
+				return BlobJdbcTypeDescriptor.BLOB_BINDING;
 			case Types.CLOB:
-				return ClobTypeDescriptor.CLOB_BINDING;
+				return ClobJdbcTypeDescriptor.CLOB_BINDING;
 			default:
 				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
@@ -740,7 +740,7 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "bytea '\\x" );
-		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 

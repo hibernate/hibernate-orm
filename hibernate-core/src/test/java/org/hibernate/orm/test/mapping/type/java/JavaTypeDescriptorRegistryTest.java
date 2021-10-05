@@ -11,7 +11,7 @@ import java.util.Comparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -34,7 +34,7 @@ public class JavaTypeDescriptorRegistryTest {
 
 		final JavaTypeDescriptor<String> descriptor = registry.getDescriptor( String.class );
 
-		assertThat( descriptor, instanceOf( StringTypeDescriptor.class ) );
+		assertThat( descriptor, instanceOf( StringJavaTypeDescriptor.class ) );
 	}
 
 	@Test

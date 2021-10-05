@@ -6,13 +6,12 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and {@link Boolean} (using 1 and 0)
@@ -21,29 +20,18 @@ import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
  */
 public class NumericBooleanType 
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, ConvertedBasicType<Boolean> {
+		implements ConvertedBasicType<Boolean> {
 
 	public static final NumericBooleanType INSTANCE = new NumericBooleanType();
 	public static final NumericConverter CONVERTER = new NumericConverter();
 
 	public NumericBooleanType() {
-		super( IntegerTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
+		super( IntegerJdbcTypeDescriptor.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
 	}
+
 	@Override
 	public String getName() {
 		return "numeric_boolean";
-	}
-	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
-	}
-	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
-	}
-	@Override
-	public Boolean stringToObject(CharSequence string) {
-		return fromString( string );
 	}
 
 	@Override
@@ -98,12 +86,12 @@ public class NumericBooleanType
 
 		@Override
 		public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
-			return BooleanTypeDescriptor.INSTANCE;
+			return BooleanJavaTypeDescriptor.INSTANCE;
 		}
 
 		@Override
 		public JavaTypeDescriptor<Integer> getRelationalJavaDescriptor() {
-			return org.hibernate.type.descriptor.java.IntegerTypeDescriptor.INSTANCE;
+			return IntegerJavaTypeDescriptor.INSTANCE;
 		}
 	}
 }

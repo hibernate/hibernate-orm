@@ -7,20 +7,15 @@
 package org.hibernate.type;
 
 import java.time.OffsetTime;
-import jakarta.persistence.TemporalType;
 
-import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
-import org.hibernate.type.descriptor.java.OffsetTimeJavaDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.OffsetTimeJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public class OffsetTimeType
-		extends AbstractSingleColumnStandardBasicType<OffsetTime>
-		implements AllowableTemporalParameterType<OffsetTime> {
+		extends AbstractSingleColumnStandardBasicType<OffsetTime> {
 
 	/**
 	 * Singleton access
@@ -28,7 +23,7 @@ public class OffsetTimeType
 	public static final OffsetTimeType INSTANCE = new OffsetTimeType();
 
 	public OffsetTimeType() {
-		super( TimeTypeDescriptor.INSTANCE, OffsetTimeJavaDescriptor.INSTANCE );
+		super( TimeJdbcTypeDescriptor.INSTANCE, OffsetTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -41,20 +36,4 @@ public class OffsetTimeType
 		return true;
 	}
 
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case TIME: {
-				return this;
-			}
-			case TIMESTAMP: {
-				return OffsetDateTimeType.INSTANCE;
-			}
-			default: {
-				throw new QueryException( "OffsetTime type cannot be treated using `" + temporalPrecision.name() + "` precision" );
-			}
-		}
-	}
 }

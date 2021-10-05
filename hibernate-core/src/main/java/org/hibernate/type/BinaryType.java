@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 
 /**
  * A type that maps between a {@link Types#VARBINARY VARBINARY} and {@code byte[]}
@@ -28,7 +28,7 @@ public class BinaryType
 	}
 
 	public BinaryType() {
-		super( VarbinaryTypeDescriptor.INSTANCE, PrimitiveByteArrayTypeDescriptor.INSTANCE );
+		super( VarbinaryJdbcTypeDescriptor.INSTANCE, PrimitiveByteArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

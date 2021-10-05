@@ -22,9 +22,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import org.junit.jupiter.api.Test;
 
@@ -61,7 +61,7 @@ public class CollectionAsBasicTest {
 
 		public DelimitedStringsType() {
 			super(
-					VarcharTypeDescriptor.INSTANCE,
+					VarcharJdbcTypeDescriptor.INSTANCE,
 					new DelimitedStringsJavaTypeDescriptor()
 			);
 		}
@@ -72,7 +72,7 @@ public class CollectionAsBasicTest {
 		}
 	}
 
-	public static class DelimitedStringsJavaTypeDescriptor extends AbstractClassTypeDescriptor<Set> {
+	public static class DelimitedStringsJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Set> {
 		public DelimitedStringsJavaTypeDescriptor() {
 			super(
 					Set.class,

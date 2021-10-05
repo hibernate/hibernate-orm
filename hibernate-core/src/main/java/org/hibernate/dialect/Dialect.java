@@ -9,7 +9,6 @@ package org.hibernate.dialect;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.MappingException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
 import org.hibernate.query.FetchClauseType;
@@ -77,13 +76,13 @@ import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongNVarcharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NCharTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -984,10 +983,10 @@ public abstract class Dialect implements ConversionContext {
 
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
-			typeContributions.contributeJdbcTypeDescriptor( NCharTypeDescriptor.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NVarcharTypeDescriptor.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharTypeDescriptor.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NClobTypeDescriptor.DEFAULT );
+			typeContributions.contributeJdbcTypeDescriptor( NCharJdbcTypeDescriptor.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( NVarcharJdbcTypeDescriptor.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharJdbcTypeDescriptor.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( NClobJdbcTypeDescriptor.DEFAULT );
 		}
 	}
 
@@ -1182,7 +1181,7 @@ public abstract class Dialect implements ConversionContext {
 		JdbcTypeDescriptor descriptor;
 		switch ( sqlCode ) {
 			case Types.CLOB: {
-				descriptor = useInputStreamToInsertBlob() ? ClobTypeDescriptor.STREAM_BINDING : null;
+				descriptor = useInputStreamToInsertBlob() ? ClobJdbcTypeDescriptor.STREAM_BINDING : null;
 				break;
 			}
 			default: {
@@ -3418,7 +3417,7 @@ public abstract class Dialect implements ConversionContext {
 
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "X'" );
-		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 

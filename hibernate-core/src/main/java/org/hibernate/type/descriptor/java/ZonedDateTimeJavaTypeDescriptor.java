@@ -23,11 +23,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.DateTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimeTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -35,7 +35,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalTypeDescriptor<ZonedDateTime> implements VersionJavaTypeDescriptor<ZonedDateTime> {
+public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<ZonedDateTime> implements VersionJavaTypeDescriptor<ZonedDateTime> {
 	/**
 	 * Singleton access
 	 */
@@ -55,15 +55,15 @@ public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalTypeDescrip
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators stdIndicators) {
 		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
-			return TimestampWithTimeZoneDescriptor.INSTANCE;
+			return TimestampWithTimeZoneJdbcTypeDescriptor.INSTANCE;
 		}
 
 		switch ( temporalPrecision ) {
 			case TIME: {
-				return TimeTypeDescriptor.INSTANCE;
+				return TimeJdbcTypeDescriptor.INSTANCE;
 			}
 			case DATE: {
-				return DateTypeDescriptor.INSTANCE;
+				return DateJdbcTypeDescriptor.INSTANCE;
 			}
 			default: {
 				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );

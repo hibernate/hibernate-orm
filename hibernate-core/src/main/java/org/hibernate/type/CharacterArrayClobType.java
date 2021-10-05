@@ -8,13 +8,8 @@ package org.hibernate.type;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link Types#CLOB CLOB} and {@link Character Character[]}
@@ -30,7 +25,7 @@ public class CharacterArrayClobType
 	public static final CharacterArrayClobType INSTANCE = new CharacterArrayClobType();
 
 	public CharacterArrayClobType() {
-		super( ClobTypeDescriptor.DEFAULT, CharacterArrayTypeDescriptor.INSTANCE );
+		super( ClobJdbcTypeDescriptor.DEFAULT, CharacterArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

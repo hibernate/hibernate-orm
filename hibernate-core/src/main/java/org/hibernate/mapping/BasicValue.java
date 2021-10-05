@@ -39,7 +39,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -67,7 +67,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	private String explicitTypeName;
 	private Map explicitLocalTypeParams;
 
-	private Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJavaTypeAccess;
 	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
@@ -131,7 +131,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	}
 
 	@SuppressWarnings({"rawtypes"})
-	public void setExplicitJavaTypeAccess(Function<TypeConfiguration, BasicJavaDescriptor> explicitJavaTypeAccess) {
+	public void setExplicitJavaTypeAccess(Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJavaTypeAccess) {
 		this.explicitJavaTypeAccess = explicitJavaTypeAccess;
 	}
 
@@ -348,7 +348,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		// determine JTD if we can
 
 		if ( explicitJavaTypeAccess != null ) {
-			final BasicJavaDescriptor explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
+			final BasicJavaTypeDescriptor explicitJtd = explicitJavaTypeAccess.apply( typeConfiguration );
 			if ( explicitJtd != null ) {
 				jtd = explicitJtd;
 			}
@@ -371,7 +371,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
-		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaDescriptor<?>) jtd );
+		final TypeDefinition autoAppliedTypeDef = typeDefinitionRegistry.resolveAutoApplied( (BasicJavaTypeDescriptor<?>) jtd );
 		if ( autoAppliedTypeDef != null && ( !jtd.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
 			log.debug( "BasicValue resolution matched auto-applied type-definition" );
 			return autoAppliedTypeDef.resolve(
@@ -430,7 +430,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			String name,
 			EnumType enumerationStyle,
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			ConverterDescriptor converterDescriptor,

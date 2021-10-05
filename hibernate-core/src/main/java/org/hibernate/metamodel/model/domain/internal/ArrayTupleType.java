@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.ObjectArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
 
 /**
  * @author Christian Beikov
@@ -23,12 +23,12 @@ import org.hibernate.type.descriptor.java.ObjectArrayTypeDescriptor;
 public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterType<Object[]>, AllowableFunctionReturnType<Object[]>,
 		MappingModelExpressable {
 
-	private final ObjectArrayTypeDescriptor javaTypeDescriptor;
+	private final ObjectArrayJavaTypeDescriptor javaTypeDescriptor;
 	private final SqmExpressable<?>[] components;
 
 	public ArrayTupleType(SqmExpressable<?>[] components) {
 		this.components = components;
-		this.javaTypeDescriptor = new ObjectArrayTypeDescriptor( getTypeDescriptors( components ) );
+		this.javaTypeDescriptor = new ObjectArrayJavaTypeDescriptor( getTypeDescriptors( components ) );
 	}
 
 	private static JavaTypeDescriptor<?>[] getTypeDescriptors(SqmExpressable<?>[] components) {

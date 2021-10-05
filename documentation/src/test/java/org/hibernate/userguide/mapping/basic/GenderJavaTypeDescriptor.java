@@ -1,14 +1,14 @@
 package org.hibernate.userguide.mapping.basic;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
 //tag::basic-enums-custom-type-example[]
-public class GenderJavaTypeDescriptor extends AbstractClassTypeDescriptor<Gender> {
+public class GenderJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Gender> {
 
     public static final GenderJavaTypeDescriptor INSTANCE =
         new GenderJavaTypeDescriptor();
@@ -26,7 +26,7 @@ public class GenderJavaTypeDescriptor extends AbstractClassTypeDescriptor<Gender
     }
 
     public <X> X unwrap(Gender value, Class<X> type, WrapperOptions options) {
-        return CharacterTypeDescriptor.INSTANCE.unwrap(
+        return CharacterJavaTypeDescriptor.INSTANCE.unwrap(
             value == null ? null : value.getCode(),
             type,
             options
@@ -35,7 +35,7 @@ public class GenderJavaTypeDescriptor extends AbstractClassTypeDescriptor<Gender
 
     public <X> Gender wrap(X value, WrapperOptions options) {
         return Gender.fromCode(
-            CharacterTypeDescriptor.INSTANCE.wrap( value, options )
+				CharacterJavaTypeDescriptor.INSTANCE.wrap( value, options )
         );
     }
 }

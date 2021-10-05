@@ -34,7 +34,7 @@ public class ObjectNullResolvingJdbcTypeDescriptor extends ObjectJdbcTypeDescrip
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-			return VarbinaryTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
+			return VarbinaryJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}
 
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {

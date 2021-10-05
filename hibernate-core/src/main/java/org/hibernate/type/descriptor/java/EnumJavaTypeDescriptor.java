@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassTypeDescriptor<T> {
+public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassJavaTypeDescriptor<T> {
 	@SuppressWarnings("unchecked")
 	public EnumJavaTypeDescriptor(Class<T> type) {
 		super( type, ImmutableMutabilityPlan.INSTANCE );

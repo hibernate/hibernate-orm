@@ -8,10 +8,9 @@ package org.hibernate.userguide.collections.type;
 
 import java.util.Date;
 
-import org.hibernate.HibernateException;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntJdbcTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
@@ -24,8 +23,8 @@ public class TimestampEpochType extends AbstractSingleColumnStandardBasicType<Da
 
     public TimestampEpochType() {
         super(
-            BigIntTypeDescriptor.INSTANCE,
-            JdbcTimestampTypeDescriptor.INSTANCE
+                BigIntJdbcTypeDescriptor.INSTANCE,
+                JdbcTimestampJavaTypeDescriptor.INSTANCE
         );
     }
 
@@ -34,9 +33,5 @@ public class TimestampEpochType extends AbstractSingleColumnStandardBasicType<Da
         return "epoch";
     }
 
-    @Override
-    public Date fromStringValue(CharSequence xml) throws HibernateException {
-        return fromString( xml );
-    }
 }
 //end::collections-map-custom-key-type-mapping-example[]

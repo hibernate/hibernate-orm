@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import java.util.Locale;
 
-import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.LocaleJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and @link Locale}
@@ -22,7 +22,7 @@ public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale> {
 	public static final LocaleType INSTANCE = new LocaleType();
 
 	public LocaleType() {
-		super( VarcharTypeDescriptor.INSTANCE, LocaleTypeDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, LocaleJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

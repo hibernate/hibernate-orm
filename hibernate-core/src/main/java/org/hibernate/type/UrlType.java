@@ -8,19 +8,19 @@ package org.hibernate.type;
 
 import java.net.URL;
 
-import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link URL}
  *
  * @author Steve Ebersole
  */
-public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implements DiscriminatorType<URL> {
+public class UrlType extends AbstractSingleColumnStandardBasicType<URL> {
 	public static final UrlType INSTANCE = new UrlType();
 
 	public UrlType() {
-		super( VarcharTypeDescriptor.INSTANCE, UrlTypeDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, UrlJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -32,12 +32,4 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implemen
 		return true;
 	}
 
-	@Override
-	public String toString(URL value) {
-		return UrlTypeDescriptor.INSTANCE.toString( value );
-	}
-
-	public URL stringToObject(CharSequence sequence) throws Exception {
-		return UrlTypeDescriptor.INSTANCE.fromString( sequence );
-	}
 }

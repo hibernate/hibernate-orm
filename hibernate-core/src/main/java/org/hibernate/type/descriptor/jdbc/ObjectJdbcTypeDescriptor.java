@@ -53,7 +53,7 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-			return VarbinaryTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
+			return VarbinaryJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}
 
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
@@ -75,7 +75,7 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	@SuppressWarnings("unchecked")
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
-			return VarbinaryTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
+			return VarbinaryJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 		}
 
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {

@@ -55,11 +55,11 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.DecimalTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DecimalJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -494,13 +494,13 @@ public class DerbyDialect extends Dialect {
 
 	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
 		if ( getVersion() < 1070 && sqlCode == Types.BOOLEAN) {
-			return SmallIntTypeDescriptor.INSTANCE;
+			return SmallIntJdbcTypeDescriptor.INSTANCE;
 		}
 		switch ( sqlCode ) {
 			case Types.NUMERIC:
-				return DecimalTypeDescriptor.INSTANCE;
+				return DecimalJdbcTypeDescriptor.INSTANCE;
 			case Types.TIMESTAMP_WITH_TIMEZONE:
-				return TimestampTypeDescriptor.INSTANCE;
+				return TimestampJdbcTypeDescriptor.INSTANCE;
 			default:
 				return super.getSqlTypeDescriptorOverride(sqlCode);
 		}

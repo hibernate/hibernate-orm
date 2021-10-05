@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import java.util.TimeZone;
 
-import org.hibernate.type.descriptor.java.TimeZoneTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.TimeZoneJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#VARCHAR VARCHAR} and {@link TimeZone}
@@ -23,7 +23,7 @@ public class TimeZoneType
 	public static final TimeZoneType INSTANCE = new TimeZoneType();
 
 	public TimeZoneType() {
-		super( VarcharTypeDescriptor.INSTANCE, TimeZoneTypeDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, TimeZoneJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

@@ -7,12 +7,12 @@
 package org.hibernate.test.id.usertype.json;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
-public class JsonJavaTypeDescriptor extends AbstractClassTypeDescriptor<Json> {
+public class JsonJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Json> {
 
 	public static final JsonJavaTypeDescriptor INSTANCE = new JsonJavaTypeDescriptor();
 

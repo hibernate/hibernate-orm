@@ -6,9 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
-import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
+import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DoubleJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#DOUBLE DOUBLE} and {@link Double}
@@ -17,14 +16,11 @@ import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DoubleType
-		extends AbstractSingleColumnStandardBasicType<Double>
-		implements PrimitiveType<Double> {
+		extends AbstractSingleColumnStandardBasicType<Double> {
 	public static final DoubleType INSTANCE = new DoubleType();
 
-	public static final Double ZERO = 0.0;
-
 	public DoubleType() {
-		super( org.hibernate.type.descriptor.jdbc.DoubleTypeDescriptor.INSTANCE, DoubleTypeDescriptor.INSTANCE );
+		super( DoubleJdbcTypeDescriptor.INSTANCE, DoubleJavaTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {
@@ -34,13 +30,5 @@ public class DoubleType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), double.class.getName(), Double.class.getName() };
-	}
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-	@Override
-	public Class getPrimitiveClass() {
-		return double.class;
 	}
 }

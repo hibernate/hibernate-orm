@@ -13,11 +13,11 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.type.descriptor.jdbc.BlobTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -47,37 +47,37 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testStandardBasicSqlTypeDescriptor() {
 		// no override
-		assertSame( IntegerTypeDescriptor.INSTANCE, remapSqlTypeDescriptor( IntegerTypeDescriptor.INSTANCE ) );
+		assertSame( IntegerJdbcTypeDescriptor.INSTANCE, remapSqlTypeDescriptor( IntegerJdbcTypeDescriptor.INSTANCE ) );
 
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
 		if ( CockroachDialect.class.isInstance( getDialect() ) ) {
 			assertSame(
-					VarbinaryTypeDescriptor.INSTANCE,
-					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					VarbinaryJdbcTypeDescriptor.INSTANCE,
+					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
 			);
 		}
 		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) ) {
 			assertSame(
-					BlobTypeDescriptor.BLOB_BINDING,
-					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					BlobJdbcTypeDescriptor.BLOB_BINDING,
+					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
 			);
 		}
 		else if ( SybaseDialect.class.isInstance( getDialect() ) ) {
 			assertSame(
-					BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
-					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
+					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
 			);
 		}
 		else if ( AbstractHANADialect.class.isInstance( getDialect() ) ) {
 			assertSame(
 					( (AbstractHANADialect) getDialect() ).getBlobTypeDescriptor(),
-					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
 			);
 		}
 		else {
 			assertSame(
-					BlobTypeDescriptor.DEFAULT,
-					getDialect().remapSqlTypeDescriptor( BlobTypeDescriptor.DEFAULT )
+					BlobJdbcTypeDescriptor.DEFAULT,
+					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
 			);
 		}
 	}
@@ -85,7 +85,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	public void testNonStandardSqlTypeDescriptor() {
 		// no override
-		JdbcTypeDescriptor jdbcTypeDescriptor = new IntegerTypeDescriptor() {
+		JdbcTypeDescriptor jdbcTypeDescriptor = new IntegerJdbcTypeDescriptor() {
 			@Override
 			public boolean canBeRemapped() {
 				return false;
@@ -96,13 +96,13 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testDialectWithNonStandardSqlTypeDescriptor() {
-		assertNotSame( VarcharTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getJdbcTypeDescriptor() );
+		assertNotSame( VarcharJdbcTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getJdbcTypeDescriptor() );
 		final Dialect dialect = new H2DialectOverridePrefixedVarcharSqlTypeDesc();
 		final JdbcTypeDescriptor remapped = remapSqlTypeDescriptor(
 				dialect,
 				StoredPrefixedStringType.PREFIXED_VARCHAR_TYPE_DESCRIPTOR
 		);
-		assertSame( VarcharTypeDescriptor.INSTANCE, remapped );
+		assertSame( VarcharJdbcTypeDescriptor.INSTANCE, remapped );
 	}
 
 	private JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {

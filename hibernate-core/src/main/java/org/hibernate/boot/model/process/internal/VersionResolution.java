@@ -15,11 +15,11 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.RowVersionType;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -36,7 +36,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			TypeConfiguration typeConfiguration,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {
@@ -46,7 +46,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
 		final JavaTypeDescriptor registered = typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( implicitJavaType );
 
-		if ( registered instanceof PrimitiveByteArrayTypeDescriptor ) {
+		if ( registered instanceof PrimitiveByteArrayJavaTypeDescriptor ) {
 			return new VersionResolution<>(
 					RowVersionType.INSTANCE.getJavaTypeDescriptor(),
 					RowVersionType.INSTANCE.getJdbcTypeDescriptor(),
@@ -55,7 +55,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 			);
 		}
 
-		final BasicJavaDescriptor jtd = (BasicJavaDescriptor) registered;
+		final BasicJavaTypeDescriptor jtd = (BasicJavaTypeDescriptor) registered;
 
 		final JdbcTypeDescriptor recommendedJdbcType = jtd.getRecommendedJdbcType(
 				new JdbcTypeDescriptorIndicators() {

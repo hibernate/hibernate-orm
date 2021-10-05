@@ -7,12 +7,12 @@
 package org.hibernate.test.id.usertype.inet;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
  */
-public class InetJavaTypeDescriptor extends AbstractClassTypeDescriptor<Inet> {
+public class InetJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Inet> {
 
 	public static final InetJavaTypeDescriptor INSTANCE = new InetJavaTypeDescriptor();
 

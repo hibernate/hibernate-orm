@@ -9,14 +9,14 @@ package org.hibernate.type.descriptor.java.spi;
 import java.util.Map;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * @author Steve Ebersole
  */
-public class MapEntryJavaDescriptor extends AbstractClassTypeDescriptor<Map.Entry> {
+public class MapEntryJavaDescriptor extends AbstractClassJavaTypeDescriptor<Map.Entry> {
 	/**
 	 * Singleton access
 	 */

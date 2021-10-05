@@ -6,9 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
-import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
+import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and @link Integer}
@@ -16,15 +15,12 @@ import org.hibernate.type.descriptor.java.IntegerTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
-		implements PrimitiveType<Integer>, DiscriminatorType<Integer> {
+public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer> {
 
 	public static final IntegerType INSTANCE = new IntegerType();
 
-	public static final Integer ZERO = 0;
-
 	public IntegerType() {
-		super( org.hibernate.type.descriptor.jdbc.IntegerTypeDescriptor.INSTANCE, IntegerTypeDescriptor.INSTANCE );
+		super( IntegerJdbcTypeDescriptor.INSTANCE, IntegerJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -37,18 +33,4 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer>
 		return new String[] {getName(), int.class.getName(), Integer.class.getName()};
 	}
 
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return int.class;
-	}
-
-	@Override
-	public Integer stringToObject(CharSequence sequence) {
-		return fromString( sequence );
-	}
 }

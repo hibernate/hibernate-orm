@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 
 import java.time.Duration;
-import org.hibernate.type.descriptor.java.DurationJavaDescriptor;
+import org.hibernate.type.descriptor.java.DurationJavaTypeDescriptor;
 
 /**
  * @author Jordan Gigov
@@ -18,7 +18,7 @@ public class DurationDescriptorTest extends AbstractDescriptorTest<Duration> {
 	final Duration different = Duration.ofSeconds( 1621, 156);
 
 	public DurationDescriptorTest() {
-		super(DurationJavaDescriptor.INSTANCE);
+		super( DurationJavaTypeDescriptor.INSTANCE);
 	}
 
 	@Override

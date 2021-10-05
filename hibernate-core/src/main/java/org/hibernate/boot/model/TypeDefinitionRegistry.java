@@ -8,7 +8,7 @@ package org.hibernate.boot.model;
 
 import java.util.Map;
 
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 
 /**
  * @author Chris Cranford
@@ -23,7 +23,7 @@ public interface TypeDefinitionRegistry {
 	}
 
 	TypeDefinition resolve(String typeName);
-	TypeDefinition resolveAutoApplied(BasicJavaDescriptor<?> jtd);
+	TypeDefinition resolveAutoApplied(BasicJavaTypeDescriptor<?> jtd);
 
 	TypeDefinitionRegistry register(TypeDefinition typeDefinition);
 	TypeDefinitionRegistry register(TypeDefinition typeDefinition, DuplicationStrategy duplicationStrategy);

@@ -16,9 +16,9 @@ import java.util.UUID;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -37,7 +37,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 	public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 	public PostgresUUIDType() {
-		super( PostgresUUIDJdbcTypeDescriptor.INSTANCE, UUIDTypeDescriptor.INSTANCE );
+		super( PostgresUUIDJdbcTypeDescriptor.INSTANCE, UUIDJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -76,11 +76,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		}
 
 		@Override
-		public <J> BasicJavaDescriptor<J> getJdbcRecommendedJavaTypeMapping(
+		public <J> BasicJavaTypeDescriptor<J> getJdbcRecommendedJavaTypeMapping(
 				Integer length,
 				Integer scale,
 				TypeConfiguration typeConfiguration) {
-			return (BasicJavaDescriptor<J>) typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( UUID.class );
+			return (BasicJavaTypeDescriptor<J>) typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( UUID.class );
 		}
 
 		@Override

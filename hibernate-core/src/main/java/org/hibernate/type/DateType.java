@@ -8,12 +8,8 @@ package org.hibernate.type;
 
 import java.util.Date;
 
-import jakarta.persistence.TemporalType;
-
-import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
-import org.hibernate.type.descriptor.java.JdbcDateTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#DATE DATE} and {@link java.sql.Date}
@@ -22,13 +18,12 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class DateType
-		extends AbstractSingleColumnStandardBasicType<Date>
-		implements IdentifierType<Date>, AllowableTemporalParameterType<Date> {
+		extends AbstractSingleColumnStandardBasicType<Date> {
 
 	public static final DateType INSTANCE = new DateType();
 
 	public DateType() {
-		super( org.hibernate.type.descriptor.jdbc.DateTypeDescriptor.INSTANCE, JdbcDateTypeDescriptor.INSTANCE );
+		super( DateJdbcTypeDescriptor.INSTANCE, JdbcDateJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -43,30 +38,4 @@ public class DateType
 		};
 	}
 
-//	@Override
-//	protected boolean registerUnderJavaType() {
-//		return true;
-//	}
-
-	public Date stringToObject(CharSequence sequence) {
-		return fromString( sequence );
-	}
-
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case DATE: {
-				return this;
-			}
-			case TIME: {
-				return TimeType.INSTANCE;
-			}
-			case TIMESTAMP: {
-				return TimestampType.INSTANCE;
-			}
-		}
-		throw new QueryException( "Date type cannot be treated using `" + temporalPrecision.name() + "` precision" );
-	}
 }

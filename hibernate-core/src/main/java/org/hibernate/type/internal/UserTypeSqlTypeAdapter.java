@@ -15,7 +15,7 @@ import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -28,12 +28,12 @@ import org.hibernate.usertype.UserType;
  */
 public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 	private final UserType<J> userType;
-	private final BasicJavaDescriptor<J> jtd;
+	private final BasicJavaTypeDescriptor<J> jtd;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 
-	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaDescriptor<J> jtd) {
+	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaTypeDescriptor<J> jtd) {
 		this.userType = userType;
 		this.jtd = jtd;
 
@@ -71,12 +71,12 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
-		return (BasicJavaDescriptor<T>) jtd;
+		return (BasicJavaTypeDescriptor<T>) jtd;
 	}
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {

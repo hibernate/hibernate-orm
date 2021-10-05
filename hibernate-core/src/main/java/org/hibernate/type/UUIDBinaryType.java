@@ -9,8 +9,8 @@ package org.hibernate.type;
 import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BinaryTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
 
 /**
  * A type mapping {@link java.sql.Types#BINARY} and {@link UUID}
@@ -21,7 +21,7 @@ public class UUIDBinaryType extends AbstractSingleColumnStandardBasicType<UUID> 
 	public static final UUIDBinaryType INSTANCE = new UUIDBinaryType();
 
 	public UUIDBinaryType() {
-		super( BinaryTypeDescriptor.INSTANCE, new UUIDTypeDescriptor() {
+		super( BinaryJdbcTypeDescriptor.INSTANCE, new UUIDJavaTypeDescriptor() {
 			@Override
 			public long getDefaultSqlLength(Dialect dialect) {
 				return 16;

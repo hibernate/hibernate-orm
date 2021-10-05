@@ -5,8 +5,8 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.type;
-import org.hibernate.type.descriptor.java.ClassTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Class}
@@ -18,7 +18,7 @@ public class ClassType extends AbstractSingleColumnStandardBasicType<Class> {
 	public static final ClassType INSTANCE = new ClassType();
 
 	public ClassType() {
-		super( VarcharTypeDescriptor.INSTANCE, ClassTypeDescriptor.INSTANCE );
+		super( VarcharJdbcTypeDescriptor.INSTANCE, ClassJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

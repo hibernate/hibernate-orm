@@ -6,14 +6,12 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'T' and 'F')
@@ -23,33 +21,18 @@ import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
  */
 public class TrueFalseType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, ConvertedBasicType<Boolean> {
+		implements ConvertedBasicType<Boolean> {
 
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
 	private static final TrueFalseConverter CONVERTER = new TrueFalseConverter();
 
 	public TrueFalseType() {
-		super( CharTypeDescriptor.INSTANCE, new BooleanTypeDescriptor( 'T', 'F' ) );
+		super( CharJdbcTypeDescriptor.INSTANCE, new BooleanJavaTypeDescriptor( 'T', 'F' ) );
 	}
 
 	@Override
 	public String getName() {
 		return "true_false";
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
-	}
-
-	@Override
-	public Boolean stringToObject(CharSequence sequence) throws Exception {
-		return fromString( sequence );
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
 	}
 
 	@Override
@@ -104,12 +87,12 @@ public class TrueFalseType
 
 		@Override
 		public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
-			return BooleanTypeDescriptor.INSTANCE;
+			return BooleanJavaTypeDescriptor.INSTANCE;
 		}
 
 		@Override
 		public JavaTypeDescriptor<Character> getRelationalJavaDescriptor() {
-			return CharacterTypeDescriptor.INSTANCE;
+			return CharacterJavaTypeDescriptor.INSTANCE;
 		}
 	}
 }

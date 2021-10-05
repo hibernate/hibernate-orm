@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
-import org.hibernate.type.descriptor.java.LongTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
+import org.hibernate.type.descriptor.java.LongJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#BIGINT BIGINT} and {@link Long}
@@ -18,15 +16,12 @@ import org.hibernate.type.descriptor.jdbc.BigIntTypeDescriptor;
  * @author Steve Ebersole
  */
 public class LongType
-		extends AbstractSingleColumnStandardBasicType<Long>
-		implements PrimitiveType<Long>, DiscriminatorType<Long> {
+		extends AbstractSingleColumnStandardBasicType<Long> {
 
 	public static final LongType INSTANCE = new LongType();
 
-	private static final Long ZERO = (long) 0;
-
 	public LongType() {
-		super( BigIntTypeDescriptor.INSTANCE, LongTypeDescriptor.INSTANCE );
+		super( BigIntJdbcTypeDescriptor.INSTANCE, LongJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
@@ -37,21 +32,6 @@ public class LongType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), long.class.getName(), Long.class.getName() };
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return ZERO;
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return long.class;
-	}
-
-	@Override
-	public Long stringToObject(CharSequence sequence) throws Exception {
-		return Long.valueOf( sequence.toString() );
 	}
 
 }

@@ -44,7 +44,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
 
 import java.sql.CallableStatement;
@@ -502,15 +502,15 @@ public class DB2Dialect extends Dialect {
 		final int version = getVersion();
 
 		if ( version < 1100 && sqlCode == Types.BOOLEAN ) {
-			return SmallIntTypeDescriptor.INSTANCE;
+			return SmallIntJdbcTypeDescriptor.INSTANCE;
 		}
 		else if ( version < 1100 && sqlCode == Types.VARBINARY ) {
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
-			return VarbinaryTypeDescriptor.INSTANCE_WITHOUT_LITERALS;
+			return VarbinaryJdbcTypeDescriptor.INSTANCE_WITHOUT_LITERALS;
 		}
 		else if ( version < 970 ) {
 			return sqlCode == Types.NUMERIC
-					? DecimalTypeDescriptor.INSTANCE
+					? DecimalJdbcTypeDescriptor.INSTANCE
 					: super.getSqlTypeDescriptorOverride(sqlCode);
 		}
 		else {
@@ -521,15 +521,15 @@ public class DB2Dialect extends Dialect {
 			// use the non-N variants which are supported.
 			switch ( sqlCode ) {
 				case Types.NCHAR:
-					return CharTypeDescriptor.INSTANCE;
+					return CharJdbcTypeDescriptor.INSTANCE;
 				case Types.NCLOB:
 					return useInputStreamToInsertBlob()
-							? ClobTypeDescriptor.STREAM_BINDING
-							: ClobTypeDescriptor.CLOB_BINDING;
+							? ClobJdbcTypeDescriptor.STREAM_BINDING
+							: ClobJdbcTypeDescriptor.CLOB_BINDING;
 				case Types.NVARCHAR:
-					return VarcharTypeDescriptor.INSTANCE;
+					return VarcharJdbcTypeDescriptor.INSTANCE;
 				case Types.NUMERIC:
-					return DecimalTypeDescriptor.INSTANCE;
+					return DecimalJdbcTypeDescriptor.INSTANCE;
 				default:
 					return super.getSqlTypeDescriptorOverride(sqlCode);
 			}
@@ -557,7 +557,7 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public void appendBinaryLiteral(SqlAppender appender, byte[] bytes) {
 		appender.appendSql( "BX'" );
-		PrimitiveByteArrayTypeDescriptor.INSTANCE.appendString( appender, bytes );
+		PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.appendString( appender, bytes );
 		appender.appendSql( '\'' );
 	}
 

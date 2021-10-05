@@ -7,7 +7,7 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractClassTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassTypeDescriptor<T> {
+public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassJavaTypeDescriptor<T> {
 	public JavaTypeDescriptorBasicAdaptor(Class<T> type) {
 		super( type );
 	}

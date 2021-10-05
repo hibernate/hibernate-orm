@@ -10,7 +10,7 @@ package org.hibernate.spatial;
 import java.util.Locale;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.AbstractTypeDescriptor;
+import org.hibernate.type.descriptor.java.AbstractJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import org.geolatte.geom.jts.JTSUtils;
@@ -25,7 +25,7 @@ import org.geolatte.geom.jts.JTS;
  * @author Karel Maesen, Geovise BVBA
  * creation-date: 7/27/11
  */
-public class JTSGeometryJavaTypeDescriptor extends AbstractTypeDescriptor<Geometry> {
+public class JTSGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Geometry> {
 
 	/**
 	 * An instance of this descriptor

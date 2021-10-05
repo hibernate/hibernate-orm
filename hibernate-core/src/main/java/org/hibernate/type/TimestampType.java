@@ -9,16 +9,10 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.hibernate.HibernateException;
-import org.hibernate.QueryException;
-import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JdbcTimestampTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
-
-import jakarta.persistence.TemporalType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}
@@ -27,13 +21,12 @@ import jakarta.persistence.TemporalType;
  * @author Steve Ebersole
  */
 public class TimestampType
-		extends AbstractSingleColumnStandardBasicType<Date>
-		implements AllowableTemporalParameterType<Date> {
+		extends AbstractSingleColumnStandardBasicType<Date> {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 
 	public TimestampType() {
-		super( TimestampTypeDescriptor.INSTANCE, JdbcTimestampTypeDescriptor.INSTANCE );
+		super( TimestampJdbcTypeDescriptor.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
 	}
 
 	protected TimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Date> javaTypeDescriptor) {
@@ -50,26 +43,4 @@ public class TimestampType
 		return new String[] { getName(), Timestamp.class.getName(), Date.class.getName() };
 	}
 
-	@Override
-	public Date fromStringValue(CharSequence xml) throws HibernateException {
-		return fromString( xml );
-	}
-
-	@Override
-	public AllowableTemporalParameterType resolveTemporalPrecision(
-			TemporalType temporalPrecision,
-			TypeConfiguration typeConfiguration) {
-		switch ( temporalPrecision ) {
-			case TIMESTAMP: {
-				return this;
-			}
-			case DATE: {
-				return DateType.INSTANCE;
-			}
-			case TIME: {
-				return TimeType.INSTANCE;
-			}
-		}
-		throw new QueryException( "Timestamp type cannot be treated using `" + temporalPrecision.name() + "` precision" );
-	}
 }

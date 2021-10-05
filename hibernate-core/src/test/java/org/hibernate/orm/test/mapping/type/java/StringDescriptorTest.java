@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.mapping.type.java;
 
 
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +18,7 @@ public class StringDescriptorTest extends AbstractDescriptorTest<String> {
 	final String different = "xyz";
 
 	public StringDescriptorTest() {
-		super( StringTypeDescriptor.INSTANCE );
+		super( StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

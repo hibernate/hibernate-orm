@@ -6,8 +6,8 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 
 /**
  * Map a char[] to a NClob
@@ -18,7 +18,7 @@ public class PrimitiveCharacterArrayNClobType extends AbstractSingleColumnStanda
 	public static final CharacterArrayNClobType INSTANCE = new CharacterArrayNClobType();
 
 	public PrimitiveCharacterArrayNClobType() {
-		super( NClobTypeDescriptor.DEFAULT, PrimitiveCharacterArrayTypeDescriptor.INSTANCE );
+		super( NClobJdbcTypeDescriptor.DEFAULT, PrimitiveCharacterArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

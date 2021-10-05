@@ -6,15 +6,13 @@
  */
 package org.hibernate.type;
 
-import java.io.Serializable;
-
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
-import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterTypeDescriptor;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'Y' and 'N')
@@ -24,33 +22,18 @@ import org.hibernate.type.descriptor.jdbc.CharTypeDescriptor;
  */
 public class YesNoType
 		extends AbstractSingleColumnStandardBasicType<Boolean>
-		implements PrimitiveType<Boolean>, DiscriminatorType<Boolean>, ConvertedBasicType<Boolean> {
+		implements ConvertedBasicType<Boolean> {
 
 	public static final YesNoType INSTANCE = new YesNoType();
 	private static final YesNoConverter CONVERTER = new YesNoConverter();
 
 	public YesNoType() {
-		super( CharTypeDescriptor.INSTANCE, BooleanTypeDescriptor.INSTANCE );
+		super( CharJdbcTypeDescriptor.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
 	public String getName() {
 		return "yes_no";
-	}
-
-	@Override
-	public Class getPrimitiveClass() {
-		return boolean.class;
-	}
-
-	@Override
-	public Boolean stringToObject(CharSequence sequence) throws Exception {
-		return fromString( sequence );
-	}
-
-	@Override
-	public Serializable getDefaultValue() {
-		return Boolean.FALSE;
 	}
 
 	@Override
@@ -106,12 +89,12 @@ public class YesNoType
 
 		@Override
 		public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
-			return BooleanTypeDescriptor.INSTANCE;
+			return BooleanJavaTypeDescriptor.INSTANCE;
 		}
 
 		@Override
 		public JavaTypeDescriptor<Character> getRelationalJavaDescriptor() {
-			return CharacterTypeDescriptor.INSTANCE;
+			return CharacterJavaTypeDescriptor.INSTANCE;
 		}
 	}
 }

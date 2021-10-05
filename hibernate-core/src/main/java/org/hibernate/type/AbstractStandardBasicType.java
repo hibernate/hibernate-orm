@@ -95,8 +95,8 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public T fromStringValue(CharSequence xml) throws HibernateException {
-		return fromString( xml );
+	public T fromStringValue(CharSequence charSequence) throws HibernateException {
+		return javaTypeDescriptor.fromString( charSequence );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {

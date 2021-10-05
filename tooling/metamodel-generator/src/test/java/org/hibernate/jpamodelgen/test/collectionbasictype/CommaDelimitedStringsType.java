@@ -9,7 +9,7 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 import java.util.List;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 /**
  * @author Vlad Mihalcea
@@ -18,8 +18,8 @@ public class CommaDelimitedStringsType extends AbstractSingleColumnStandardBasic
 
     public CommaDelimitedStringsType() {
         super(
-            VarcharTypeDescriptor.INSTANCE,
-            new CommaDelimitedStringsJavaTypeDescriptor()
+				VarcharJdbcTypeDescriptor.INSTANCE,
+				new CommaDelimitedStringsJavaTypeDescriptor()
         );
     }
 

@@ -6,8 +6,8 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.StringTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongNVarcharTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcTypeDescriptor;
 
 /**
  * A type that maps between {@link java.sql.Types#LONGNVARCHAR LONGNVARCHAR} and {@link String}
@@ -20,7 +20,7 @@ public class NTextType extends AbstractSingleColumnStandardBasicType<String> {
 	public static final NTextType INSTANCE = new NTextType();
 
 	public NTextType() {
-		super( LongNVarcharTypeDescriptor.INSTANCE, StringTypeDescriptor.INSTANCE );
+		super( LongNVarcharJdbcTypeDescriptor.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() { 

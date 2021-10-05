@@ -10,11 +10,9 @@ import java.io.Serializable;
 import java.sql.Types;
 
 import org.hibernate.Incubating;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
  * A type that maps between {@link Types#BOOLEAN BOOLEAN} and {@link Boolean}
@@ -60,11 +58,6 @@ public class BooleanType
 	@Override
 	public Boolean stringToObject(CharSequence string) {
 		return fromString( string );
-	}
-
-	@Override
-	public String objectToSQLString(Boolean value, Dialect dialect) {
-		return dialect.toBooleanValueString( value );
 	}
 
 }

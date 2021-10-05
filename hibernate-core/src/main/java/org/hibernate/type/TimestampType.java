@@ -27,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class TimestampType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements VersionType<Date>, LiteralType<Date>, AllowableTemporalParameterType<Date> {
+		implements VersionType<Date>, AllowableTemporalParameterType<Date> {
 
 	public static final TimestampType INSTANCE = new TimestampType();
 

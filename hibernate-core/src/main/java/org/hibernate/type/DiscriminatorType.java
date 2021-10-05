@@ -7,7 +7,8 @@
 package org.hibernate.type;
 
 
-import org.hibernate.dialect.Dialect;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Additional contract for a {@link Type} may be used for a discriminator.
@@ -15,16 +16,17 @@ import org.hibernate.dialect.Dialect;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public interface DiscriminatorType<T> extends IdentifierType<T>, LiteralType<T> {
+public interface DiscriminatorType<T> extends IdentifierType<T> {
+
 	/**
-	 * Render the given discriminator value to a literal format
-	 * for embedding in the generated SQL.
-	 *
-	 * @param value The value to convert
-	 * @param dialect The SQL dialect
-	 *
-	 * @return The value's SQL literal representation
+	 * The descriptor for the Java type represented by this
+	 * expressable type
 	 */
-	@Override
-	String objectToSQLString(T value, Dialect dialect) throws Exception;
+	JavaTypeDescriptor<T> getJavaTypeDescriptor();
+
+	/**
+	 * The descriptor for the SQL type represented by this
+	 * expressable type
+	 */
+	JdbcTypeDescriptor getJdbcTypeDescriptor();
 }

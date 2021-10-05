@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> implements LiteralType<UUID> {
+public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> {
 	public static final UUIDCharType INSTANCE = new UUIDCharType();
 
 	public UUIDCharType() {
@@ -33,7 +33,4 @@ public class UUIDCharType extends AbstractSingleColumnStandardBasicType<UUID> im
 		return "uuid-char";
 	}
 
-	public String objectToSQLString(UUID value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value.toString(), dialect );
-	}
 }

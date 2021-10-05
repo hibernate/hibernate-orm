@@ -17,7 +17,6 @@ import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -254,11 +253,6 @@ public class CustomType
 	@Override
 	public Object stringToObject(CharSequence sequence) {
 		return fromStringValue( sequence );
-	}
-
-	@Override
-	public String objectToSQLString(Object value, Dialect dialect) throws Exception {
-		return ( (EnhancedUserType) getUserType() ).objectToSQLString( value);
 	}
 
 	@Override

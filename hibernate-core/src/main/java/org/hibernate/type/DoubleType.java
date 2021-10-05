@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.DoubleTypeDescriptor;
 
 /**
@@ -43,9 +42,5 @@ public class DoubleType
 	@Override
 	public Class getPrimitiveClass() {
 		return double.class;
-	}
-	@Override
-	public String objectToSQLString(Double value, Dialect dialect) throws Exception {
-		return toString( value );
 	}
 }

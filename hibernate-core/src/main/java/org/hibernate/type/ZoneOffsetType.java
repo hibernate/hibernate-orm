@@ -6,7 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.ZoneOffsetJavaDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
@@ -19,8 +18,7 @@ import java.time.ZoneOffset;
  * @author Steve Ebersole
  */
 public class ZoneOffsetType
-		extends AbstractSingleColumnStandardBasicType<ZoneOffset>
-		implements LiteralType<ZoneOffset> {
+		extends AbstractSingleColumnStandardBasicType<ZoneOffset> {
 
 	public static final ZoneOffsetType INSTANCE = new ZoneOffsetType();
 
@@ -35,10 +33,6 @@ public class ZoneOffsetType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	public String objectToSQLString(ZoneOffset value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value.getId(), dialect );
 	}
 
 }

@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.math.BigInteger;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.BigIntegerTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
 
@@ -36,11 +35,6 @@ public class BigIntegerType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	public String objectToSQLString(BigInteger value, Dialect dialect) {
-		return BigIntegerTypeDescriptor.INSTANCE.toString( value );
 	}
 
 	@Override

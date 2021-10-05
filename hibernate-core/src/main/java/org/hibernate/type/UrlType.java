@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.net.URL;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
@@ -36,10 +35,6 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> implemen
 	@Override
 	public String toString(URL value) {
 		return UrlTypeDescriptor.INSTANCE.toString( value );
-	}
-
-	public String objectToSQLString(URL value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
 	}
 
 	public URL stringToObject(CharSequence sequence) throws Exception {

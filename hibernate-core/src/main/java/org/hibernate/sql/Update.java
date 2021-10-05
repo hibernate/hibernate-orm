@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.LiteralType;
 
 /**
  * An SQL <tt>UPDATE</tt> statement
@@ -129,10 +128,6 @@ public class Update {
 	public Update addColumn(String columnName, String valueExpression) {
 		columns.put(columnName, valueExpression);
 		return this;
-	}
-
-	public Update addColumn(String columnName, Object value, LiteralType type) throws Exception {
-		return addColumn( columnName, type.objectToSQLString(value, dialect) );
 	}
 
 	public Update addWhereColumns(String[] columnNames) {

@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
 
 /**
@@ -41,9 +40,5 @@ public class FloatType extends AbstractSingleColumnStandardBasicType<Float> impl
 	@Override
 	public Class getPrimitiveClass() {
 		return float.class;
-	}
-	@Override
-	public String objectToSQLString(Float value, Dialect dialect) throws Exception {
-		return toString( value );
 	}
 }

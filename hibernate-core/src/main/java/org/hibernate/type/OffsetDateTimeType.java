@@ -24,7 +24,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class OffsetDateTimeType
 		extends AbstractSingleColumnStandardBasicType<OffsetDateTime>
-		implements VersionType<OffsetDateTime>, LiteralType<OffsetDateTime>, AllowableTemporalParameterType<OffsetDateTime> {
+		implements VersionType<OffsetDateTime>, AllowableTemporalParameterType<OffsetDateTime> {
 
 	/**
 	 * Singleton access

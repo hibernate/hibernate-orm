@@ -27,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class InstantType
 		extends AbstractSingleColumnStandardBasicType<Instant>
-		implements VersionType<Instant>, LiteralType<Instant>, AllowableTemporalParameterType<Instant> {
+		implements VersionType<Instant>, AllowableTemporalParameterType<Instant> {
 	/**
 	 * Singleton access
 	 */

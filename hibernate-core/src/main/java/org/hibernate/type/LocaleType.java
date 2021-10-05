@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.util.Locale;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.LocaleTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
 
@@ -18,8 +17,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharTypeDescriptor;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale>
-		implements LiteralType<Locale> {
+public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale> {
 
 	public static final LocaleType INSTANCE = new LocaleType();
 
@@ -36,7 +34,4 @@ public class LocaleType extends AbstractSingleColumnStandardBasicType<Locale>
 		return true;
 	}
 
-	public String objectToSQLString(Locale value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( toString( value ), dialect );
-	}
 }

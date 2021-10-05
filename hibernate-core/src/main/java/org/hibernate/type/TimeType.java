@@ -23,7 +23,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class TimeType
 		extends AbstractSingleColumnStandardBasicType<Date>
-		implements LiteralType<Date>, AllowableTemporalParameterType<Date> {
+		implements AllowableTemporalParameterType<Date> {
 
 	public static final TimeType INSTANCE = new TimeType();
 

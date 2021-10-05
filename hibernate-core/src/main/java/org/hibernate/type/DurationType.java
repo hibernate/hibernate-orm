@@ -15,8 +15,7 @@ import org.hibernate.type.descriptor.jdbc.NumericTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DurationType
-		extends AbstractSingleColumnStandardBasicType<Duration>
-		implements LiteralType<Duration> {
+		extends AbstractSingleColumnStandardBasicType<Duration> {
 	/**
 	 * Singleton access
 	 */

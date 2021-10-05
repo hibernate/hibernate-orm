@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.io.Serializable;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanTypeDescriptor;
@@ -51,11 +50,6 @@ public class TrueFalseType
 	@Override
 	public Serializable getDefaultValue() {
 		return Boolean.FALSE;
-	}
-
-	@Override
-	public String objectToSQLString(Boolean value, Dialect dialect) throws Exception {
-		return StringType.INSTANCE.objectToSQLString( value ? "T" : "F", dialect );
 	}
 
 	@Override

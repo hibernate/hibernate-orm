@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.util.Comparator;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ByteTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntTypeDescriptor;
@@ -50,11 +49,6 @@ public class ByteType
 	@Override
 	public Class getPrimitiveClass() {
 		return byte.class;
-	}
-
-	@Override
-	public String objectToSQLString(Byte value, Dialect dialect) {
-		return toString( value );
 	}
 
 	@Override

@@ -6,8 +6,6 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.dialect.Dialect;
-import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.type.descriptor.java.StringTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharTypeDescriptor;
 
@@ -34,10 +32,6 @@ public class StringNVarcharType
 	@Override
 	protected boolean registerUnderJavaType() {
 		return false;
-	}
-
-	public String objectToSQLString(String value, Dialect dialect) throws Exception {
-		return QueryLiteralHelper.toStringLiteral( value );
 	}
 
 	public String stringToObject(CharSequence sequence) throws Exception {

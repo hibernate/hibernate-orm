@@ -16,7 +16,6 @@ import java.util.Objects;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -224,11 +223,6 @@ public class DiscriminatorType<T> extends AbstractType implements org.hibernate.
 	@Override
 	public int getColumnSpan(Mapping mapping) throws MappingException {
 		return underlyingType.getColumnSpan( mapping );
-	}
-
-	@Override
-	public String objectToSQLString(T value, Dialect dialect) throws Exception {
-		return ( (org.hibernate.type.DiscriminatorType<T>) underlyingType ).objectToSQLString( value, dialect );
 	}
 
 	@Override

@@ -7,17 +7,15 @@
 package org.hibernate.type;
 
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.GregorianCalendar;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.type.descriptor.java.CalendarTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Calendar}
@@ -27,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class CalendarType
 		extends AbstractSingleColumnStandardBasicType<Calendar>
-		implements VersionType<Calendar>, AllowableTemporalParameterType<Calendar> {
+		implements AllowableTemporalParameterType<Calendar> {
 
 	public static final CalendarType INSTANCE = new CalendarType();
 
@@ -43,21 +41,6 @@ public class CalendarType
 	@Override
 	public String[] getRegistrationKeys() {
 		return new String[] { getName(), Calendar.class.getName(), GregorianCalendar.class.getName() };
-	}
-
-	@Override
-	public Calendar next(Calendar current, SharedSessionContractImplementor session) {
-		return seed( session );
-	}
-
-	@Override
-	public Calendar seed(SharedSessionContractImplementor session) {
-		return Calendar.getInstance();
-	}
-
-	@Override
-	public Comparator<Calendar> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
 	}
 
 	@Override

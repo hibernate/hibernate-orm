@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Gavin King
  */
-public interface UserVersionType extends UserType, Comparator {
+public interface UserVersionType<T> extends UserType<T>, Comparator<T> {
 	/**
 	 * Generate an initial version.
 	 *
@@ -24,7 +24,7 @@ public interface UserVersionType extends UserType, Comparator {
 	 * the "unsaved value" of entities.
 	 * @return an instance of the type
 	 */
-	Object seed(SharedSessionContractImplementor session);
+	T seed(SharedSessionContractImplementor session);
 
 	/**
 	 * Increment the version.
@@ -33,5 +33,5 @@ public interface UserVersionType extends UserType, Comparator {
 	 * @param current the current version
 	 * @return an instance of the type
 	 */
-	Object next(Object current, SharedSessionContractImplementor session);
+	T next(T current, SharedSessionContractImplementor session);
 }

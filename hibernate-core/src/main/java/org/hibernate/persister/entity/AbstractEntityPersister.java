@@ -258,7 +258,6 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.VersionType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -2070,6 +2069,7 @@ public abstract class AbstractEntityPersister
 		boolean includeProperty(int propertyNumber);
 	}
 
+	@Override
 	public Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) {
 		if ( !isVersioned() ) {
 			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
@@ -2081,7 +2081,7 @@ public abstract class AbstractEntityPersister
 			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
 		}
 
-		Object nextVersion = ((VersionType) getVersionType()).next( currentVersion, session );
+		Object nextVersion = getVersionJavaTypeDescriptor().next( currentVersion, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.trace(
 					"Forcing version increment [" + MessageHelper.infoString( this, id, getFactory() ) + "; "
@@ -4494,7 +4494,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Comparator<?> getVersionComparator() {
-		return isVersioned() ? getVersionType().getComparator() : null;
+		return isVersioned() ? getVersionType().getJavaTypeDescriptor().getComparator() : null;
 	}
 
 	// temporary ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4522,10 +4522,10 @@ public abstract class AbstractEntityPersister
 		return !entityMetamodel.getIdentifierProperty().isVirtual();
 	}
 
-	public VersionType<?> getVersionType() {
+	public BasicType<?> getVersionType() {
 		return entityMetamodel.getVersionProperty() == null
 				? null
-				: (VersionType<?>) entityMetamodel.getVersionProperty().getType();
+				: (BasicType<?>) entityMetamodel.getVersionProperty().getType();
 	}
 
 	public int getVersionProperty() {

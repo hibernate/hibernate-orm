@@ -16,6 +16,7 @@ import java.util.Comparator;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -24,7 +25,8 @@ import org.hibernate.type.descriptor.WrapperOptions;
  *
  * @author Steve Ebersole
  */
-public class PrimitiveByteArrayTypeDescriptor extends AbstractClassTypeDescriptor<byte[]> {
+public class PrimitiveByteArrayTypeDescriptor extends AbstractClassTypeDescriptor<byte[]>
+		implements VersionJavaTypeDescriptor<byte[]> {
 	public static final PrimitiveByteArrayTypeDescriptor INSTANCE = new PrimitiveByteArrayTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })
@@ -131,5 +133,19 @@ public class PrimitiveByteArrayTypeDescriptor extends AbstractClassTypeDescripto
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public byte[] seed(SharedSessionContractImplementor session) {
+		// Note : simply returns null for seed() and next() as the only known
+		// 		application of binary types for versioning is for use with the
+		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
+		// 		are completely db-generated values...
+		return null;
+	}
+
+	@Override
+	public byte[] next(byte[] current, SharedSessionContractImplementor session) {
+		return current;
 	}
 }

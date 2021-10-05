@@ -69,7 +69,7 @@ import org.hibernate.type.descriptor.java.TimeZoneTypeDescriptor;
 import org.hibernate.type.descriptor.java.UUIDTypeDescriptor;
 import org.hibernate.type.descriptor.java.UrlTypeDescriptor;
 import org.hibernate.type.descriptor.java.ZoneOffsetJavaDescriptor;
-import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 
 /**
  *
@@ -115,7 +115,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( LocalTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetDateTimeJavaDescriptor.INSTANCE );
 		target.addBaselineDescriptor( OffsetTimeJavaDescriptor.INSTANCE );
-		target.addBaselineDescriptor( ZonedDateTimeJavaDescriptor.INSTANCE );
+		target.addBaselineDescriptor( ZonedDateTimeJavaTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( CalendarTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( DateTypeDescriptor.INSTANCE );

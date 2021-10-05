@@ -12,7 +12,7 @@ import org.hibernate.cache.cfg.spi.CollectionDataCachingConfig;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.mapping.Collection;
 import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.BasicType;
 
 /**
  * @author Steve Ebersole
@@ -46,7 +46,7 @@ public class CollectionDataCachingConfigImpl
 		if ( !isVersioned() ) {
 			return null;
 		}
-		return ( (VersionType) collectionDescriptor.getOwner().getVersion().getType() ).getComparator();
+		return ( (BasicType<?>) collectionDescriptor.getOwner().getVersion().getType() ).getJavaTypeDescriptor().getComparator();
 	}
 
 	@Override

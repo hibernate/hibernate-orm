@@ -33,9 +33,10 @@ import org.hibernate.tuple.entity.EntityBasedBasicAttribute;
 import org.hibernate.tuple.entity.EntityBasedCompositionAttribute;
 import org.hibernate.tuple.entity.VersionProperty;
 import org.hibernate.type.AssociationType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.VersionType;
+import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
 
 /**
  * Responsible for generation of runtime metamodel {@link Property} representations.
@@ -107,10 +108,11 @@ public final class PropertyFactory {
 			boolean lazyAvailable) {
 		String mappedUnsavedValue = ( (KeyValue) property.getValue() ).getNullValue();
 
+		//noinspection unchecked
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
-				(VersionType) property.getType(),
+				( VersionJavaTypeDescriptor<Object>) ((BasicType<?>) property.getType()).getJavaTypeDescriptor(),
 				getConstructor( property.getPersistentClass() )
 		);
 

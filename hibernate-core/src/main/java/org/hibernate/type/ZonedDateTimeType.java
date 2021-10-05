@@ -7,24 +7,22 @@
 package org.hibernate.type;
 
 import java.time.ZonedDateTime;
-import java.util.Comparator;
-import jakarta.persistence.TemporalType;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.metamodel.model.domain.AllowableTemporalParameterType;
 import org.hibernate.query.CastType;
-import org.hibernate.type.descriptor.java.ZonedDateTimeJavaDescriptor;
+import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.TemporalType;
 
 /**
  * @author Steve Ebersole
  */
 public class ZonedDateTimeType
 		extends AbstractSingleColumnStandardBasicType<ZonedDateTime>
-		implements VersionType<ZonedDateTime>, AllowableTemporalParameterType<ZonedDateTime> {
+		implements AllowableTemporalParameterType<ZonedDateTime> {
 
 	/**
 	 * Singleton access
@@ -32,23 +30,7 @@ public class ZonedDateTimeType
 	public static final ZonedDateTimeType INSTANCE = new ZonedDateTimeType();
 
 	public ZonedDateTimeType() {
-		super( TimestampWithTimeZoneDescriptor.INSTANCE, ZonedDateTimeJavaDescriptor.INSTANCE );
-	}
-
-	@Override
-	public ZonedDateTime seed(SharedSessionContractImplementor session) {
-		return ZonedDateTime.now();
-	}
-
-	@Override
-	public ZonedDateTime next(ZonedDateTime current, SharedSessionContractImplementor session) {
-		return ZonedDateTime.now();
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public Comparator<ZonedDateTime> getComparator() {
-		return ZonedDateTimeComparator.INSTANCE;
+		super( TimestampWithTimeZoneDescriptor.INSTANCE, ZonedDateTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

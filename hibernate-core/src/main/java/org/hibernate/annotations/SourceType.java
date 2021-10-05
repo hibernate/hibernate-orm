@@ -29,7 +29,7 @@ public enum SourceType {
 	}
 
 	/**
-	 * Get the corresponding Hibernate {@link org.hibernate.type.VersionType} name.
+	 * Get the corresponding Hibernate {@link org.hibernate.type.BasicType} name.
 	 *
 	 * @return The corresponding type name.
 	 */

@@ -13,12 +13,15 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.ZonedDateTimeComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.DateTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -32,14 +35,14 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class ZonedDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<ZonedDateTime> {
+public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalTypeDescriptor<ZonedDateTime> implements VersionJavaTypeDescriptor<ZonedDateTime> {
 	/**
 	 * Singleton access
 	 */
-	public static final ZonedDateTimeJavaDescriptor INSTANCE = new ZonedDateTimeJavaDescriptor();
+	public static final ZonedDateTimeJavaTypeDescriptor INSTANCE = new ZonedDateTimeJavaTypeDescriptor();
 
 	@SuppressWarnings("unchecked")
-	public ZonedDateTimeJavaDescriptor() {
+	public ZonedDateTimeJavaTypeDescriptor() {
 		super( ZonedDateTime.class, ImmutableMutabilityPlan.INSTANCE );
 	}
 
@@ -198,5 +201,20 @@ public class ZonedDateTimeJavaDescriptor extends AbstractTemporalTypeDescriptor<
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultTimestampPrecision();
+	}
+
+	@Override
+	public ZonedDateTime seed(SharedSessionContractImplementor session) {
+		return ZonedDateTime.now();
+	}
+
+	@Override
+	public ZonedDateTime next(ZonedDateTime current, SharedSessionContractImplementor session) {
+		return ZonedDateTime.now();
+	}
+
+	@Override
+	public Comparator<ZonedDateTime> getComparator() {
+		return ZonedDateTimeComparator.INSTANCE;
 	}
 }

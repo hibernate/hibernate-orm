@@ -25,6 +25,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 
 /**
@@ -96,11 +97,12 @@ public class DefaultReplicateEventListener extends AbstractSaveEventListener imp
 			/// HHH-2378
 			final Object realOldVersion = persister.isVersioned() ? oldVersion : null;
 
+			@SuppressWarnings("unchecked")
 			boolean canReplicate = replicationMode.shouldOverwriteCurrentVersion(
 					entity,
 					realOldVersion,
 					persister.getVersion( entity ),
-					persister.getVersionType()
+					(BasicType<Object>) persister.getVersionType()
 			);
 
 			// if can replicate, will result in a SQL UPDATE

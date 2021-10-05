@@ -7,9 +7,7 @@
 package org.hibernate.type;
 
 import java.io.Serializable;
-import java.util.Comparator;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ShortTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
 
@@ -21,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.SmallIntTypeDescriptor;
  */
 public class ShortType
 		extends AbstractSingleColumnStandardBasicType<Short>
-		implements PrimitiveType<Short>, DiscriminatorType<Short>, VersionType<Short> {
+		implements PrimitiveType<Short>, DiscriminatorType<Short> {
 
 	public static final ShortType INSTANCE = new ShortType();
 
@@ -54,21 +52,6 @@ public class ShortType
 	@Override
 	public Short stringToObject(CharSequence sequence) {
 		return Short.valueOf( sequence.toString() );
-	}
-
-	@Override
-	public Short seed(SharedSessionContractImplementor session) {
-		return ZERO;
-	}
-
-	@Override
-	public Short next(Short current, SharedSessionContractImplementor session) {
-		return (short) ( current + 1 );
-	}
-
-	@Override
-	public Comparator<Short> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
 	}
 
 }

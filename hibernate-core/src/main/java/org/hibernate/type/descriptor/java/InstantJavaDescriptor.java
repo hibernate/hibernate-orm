@@ -19,6 +19,7 @@ import java.util.GregorianCalendar;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -30,7 +31,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instant> {
+public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instant>
+		implements VersionJavaTypeDescriptor<Instant> {
 	/**
 	 * Singleton access
 	 */
@@ -185,4 +187,15 @@ public class InstantJavaDescriptor extends AbstractTemporalTypeDescriptor<Instan
 	public int getDefaultSqlPrecision(Dialect dialect) {
 		return dialect.getDefaultTimestampPrecision();
 	}
+
+	@Override
+	public Instant seed(SharedSessionContractImplementor session) {
+		return Instant.now();
+	}
+
+	@Override
+	public Instant next(Instant current, SharedSessionContractImplementor session) {
+		return Instant.now();
+	}
+
 }

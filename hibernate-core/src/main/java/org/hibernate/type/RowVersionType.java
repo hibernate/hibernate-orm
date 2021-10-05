@@ -6,9 +6,6 @@
  */
 package org.hibernate.type;
 
-import java.util.Comparator;
-
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.RowVersionTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
 
@@ -21,8 +18,7 @@ import org.hibernate.type.descriptor.jdbc.VarbinaryTypeDescriptor;
  * @author Gail Badner
  */
 public class RowVersionType
-		extends AbstractSingleColumnStandardBasicType<byte[]>
-		implements VersionType<byte[]> {
+		extends AbstractSingleColumnStandardBasicType<byte[]> {
 
 	public static final RowVersionType INSTANCE = new RowVersionType();
 
@@ -39,22 +35,4 @@ public class RowVersionType
 		return new String[] { getName() };
 	}
 
-	@Override
-	public byte[] seed(SharedSessionContractImplementor session) {
-		// Note : simply returns null for seed() and next() as the only known
-		// 		application of binary types for versioning is for use with the
-		// 		TIMESTAMP datatype supported by Sybase and SQL Server, which
-		// 		are completely db-generated values...
-		return null;
-	}
-
-	@Override
-	public byte[] next(byte[] current, SharedSessionContractImplementor session) {
-		return current;
-	}
-
-	@Override
-	public Comparator<byte[]> getComparator() {
-		return getJavaTypeDescriptor().getComparator();
-	}
 }

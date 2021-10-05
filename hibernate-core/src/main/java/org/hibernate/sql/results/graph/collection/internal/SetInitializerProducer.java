@@ -36,18 +36,18 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler elementAssembler = elementFetch.createAssembler( parentAccess, creationState );
+		final DomainResultAssembler<?> elementAssembler = elementFetch.createAssembler( parentAccess, creationState );
 
 		return new SetInitializer(
 				navigablePath,
 				setDescriptor,
 				parentAccess,
 				lockMode,
-				keyContainerAssembler,
-				keyCollectionAssembler,
+				collectionKeyAssembler,
+				collectionValueKeyAssembler,
 				elementAssembler
 		);
 	}

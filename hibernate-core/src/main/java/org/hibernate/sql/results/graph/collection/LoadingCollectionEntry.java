@@ -42,7 +42,7 @@ public interface LoadingCollectionEntry {
 	/**
 	 * Callback for row loading.  Allows delayed List creation
 	 */
-	void load(Consumer<List> loadingEntryConsumer);
+	void load(Consumer<List<Object>> loadingEntryConsumer);
 
 	/**
 	 * Complete the load

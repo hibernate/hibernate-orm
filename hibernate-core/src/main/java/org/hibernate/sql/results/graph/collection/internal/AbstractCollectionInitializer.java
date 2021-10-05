@@ -8,12 +8,14 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -28,6 +30,11 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 
 	protected final FetchParentAccess parentAccess;
 
+	/**
+	 * refers to the collection's container value - which collection-key?
+	 */
+	protected final DomainResultAssembler<?> collectionKeyResultAssembler;
+
 	protected PersistentCollection collectionInstance;
 	protected CollectionKey collectionKey;
 
@@ -35,10 +42,12 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 	protected AbstractCollectionInitializer(
 			NavigablePath collectionPath,
 			PluralAttributeMapping collectionAttributeMapping,
-			FetchParentAccess parentAccess) {
+			FetchParentAccess parentAccess,
+			DomainResultAssembler<?> collectionKeyResultAssembler) {
 		this.collectionPath = collectionPath;
 		this.collectionAttributeMapping = collectionAttributeMapping;
 		this.parentAccess = parentAccess;
+		this.collectionKeyResultAssembler = collectionKeyResultAssembler;
 	}
 
 	@Override
@@ -52,12 +61,27 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 			return;
 		}
 
-		final Object parentKey = parentAccess.getParentKey();
-		if ( parentKey != null ) {
-			collectionKey = new CollectionKey(
+		// A null collection key result assembler means that we can use the parent key
+		final Object collectionKeyValue;
+		if ( collectionKeyResultAssembler == null ) {
+			collectionKeyValue = parentAccess.getParentKey();
+		}
+		else {
+			collectionKeyValue = collectionKeyResultAssembler.assemble( rowProcessingState );
+		}
+		if ( collectionKeyValue != null ) {
+			this.collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),
-					parentKey
+					collectionKeyValue
 			);
+
+			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+				CollectionLoadingLogger.INSTANCE.debugf(
+						"(%s) Current row collection key : %s",
+						DelayedCollectionInitializer.class.getSimpleName(),
+						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
+				);
+			}
 		}
 	}
 

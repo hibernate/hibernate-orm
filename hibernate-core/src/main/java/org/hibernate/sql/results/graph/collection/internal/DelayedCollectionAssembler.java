@@ -6,15 +6,12 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.function.Consumer;
-
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 
 /**
@@ -25,7 +22,7 @@ public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
 			NavigablePath fetchPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
-			DomainResult fkResult,
+			DomainResult<?> collectionKeyResult,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedMapping,
@@ -33,12 +30,12 @@ public class DelayedCollectionAssembler extends AbstractCollectionAssembler {
 						fetchPath,
 						fetchedMapping,
 						() -> {
-							final DomainResultAssembler fkAssembler = fkResult.createResultAssembler( creationState );
+							final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler( creationState );
 							return new DelayedCollectionInitializer(
 									fetchPath,
 									fetchedMapping,
 									parentAccess,
-									fkAssembler
+									collectionKeyAssembler
 							);
 						}
 				)

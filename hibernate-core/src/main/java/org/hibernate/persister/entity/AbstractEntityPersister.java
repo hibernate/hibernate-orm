@@ -6027,7 +6027,7 @@ public abstract class AbstractEntityPersister
 			return new DiscriminatedAssociationAttributeMapping(
 					navigableRole.append( bootProperty.getName() ),
 					baseAssociationJtd,
-					superMappingType,
+					this,
 					stateArrayPosition,
 					entityMappingType -> new StateArrayContributorMetadata() {
 

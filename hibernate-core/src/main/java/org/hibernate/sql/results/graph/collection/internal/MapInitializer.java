@@ -29,19 +29,19 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	private static final String CONCRETE_NAME = MapInitializer.class.getSimpleName();
 
-	private final DomainResultAssembler mapKeyAssembler;
-	private final DomainResultAssembler mapValueAssembler;
+	private final DomainResultAssembler<?> mapKeyAssembler;
+	private final DomainResultAssembler<?> mapValueAssembler;
 
 	public MapInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
-			DomainResultAssembler mapKeyAssembler,
-			DomainResultAssembler mapValueAssembler) {
-		super( navigablePath, attributeMapping, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResultAssembler<?> mapKeyAssembler,
+			DomainResultAssembler<?> mapValueAssembler) {
+		super( navigablePath, attributeMapping, parentAccess, lockMode, collectionKeyAssembler, collectionValueKeyAssembler );
 		this.mapKeyAssembler = mapKeyAssembler;
 		this.mapValueAssembler = mapValueAssembler;
 	}
@@ -52,16 +52,15 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentMap getCollectionInstance() {
-		return (PersistentMap) super.getCollectionInstance();
+	public PersistentMap<?, ?> getCollectionInstance() {
+		return (PersistentMap<?, ?>) super.getCollectionInstance();
 	}
 
 	@Override
 	protected void readCollectionRow(
 			CollectionKey collectionKey,
-			List loadingState,
+			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		//noinspection unchecked
 		loadingState.add(
 				new Object[] {
 						mapKeyAssembler.assemble( rowProcessingState ),

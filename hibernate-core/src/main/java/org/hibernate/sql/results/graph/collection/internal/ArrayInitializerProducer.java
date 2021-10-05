@@ -39,17 +39,18 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
+		//noinspection unchecked
 		return new ArrayInitializer(
 				navigablePath,
 				arrayDescriptor,
 				parentAccess,
 				lockMode,
-				keyContainerAssembler,
-				keyCollectionAssembler,
-				listIndexFetch.createAssembler( parentAccess, creationState ),
+				collectionKeyAssembler,
+				collectionValueKeyAssembler,
+				(DomainResultAssembler<Integer>) listIndexFetch.createAssembler( parentAccess, creationState ),
 				elementFetch.createAssembler( parentAccess, creationState )
 		);
 	}

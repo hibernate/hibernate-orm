@@ -28,19 +28,26 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class BagInitializer extends AbstractImmediateCollectionInitializer {
 	private static final String CONCRETE_NAME = BagInitializer.class.getSimpleName();
 
-	private final DomainResultAssembler elementAssembler;
-	private final DomainResultAssembler collectionIdAssembler;
+	private final DomainResultAssembler<?> elementAssembler;
+	private final DomainResultAssembler<?> collectionIdAssembler;
 
 	public BagInitializer(
 			PluralAttributeMapping bagDescriptor,
 			FetchParentAccess parentAccess,
 			NavigablePath navigablePath,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
-			DomainResultAssembler elementAssembler,
-			DomainResultAssembler collectionIdAssembler) {
-		super( navigablePath, bagDescriptor, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResultAssembler<?> elementAssembler,
+			DomainResultAssembler<?> collectionIdAssembler) {
+		super(
+				navigablePath,
+				bagDescriptor,
+				parentAccess,
+				lockMode,
+				collectionKeyAssembler,
+				collectionValueKeyAssembler
+		);
 		this.elementAssembler = elementAssembler;
 		this.collectionIdAssembler = collectionIdAssembler;
 	}
@@ -53,18 +60,16 @@ public class BagInitializer extends AbstractImmediateCollectionInitializer {
 	@Override
 	protected void readCollectionRow(
 			CollectionKey collectionKey,
-			List loadingState,
+			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
 		if ( collectionIdAssembler != null ) {
 			final Object[] row = new Object[2];
 			row[0] = collectionIdAssembler.assemble( rowProcessingState );
 			row[1] = elementAssembler.assemble( rowProcessingState );
 
-			//noinspection unchecked
 			loadingState.add( row );
 		}
 		else {
-			//noinspection unchecked
 			loadingState.add( elementAssembler.assemble( rowProcessingState ) );
 		}
 	}

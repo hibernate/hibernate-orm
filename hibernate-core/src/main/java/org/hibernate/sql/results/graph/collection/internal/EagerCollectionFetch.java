@@ -33,8 +33,8 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class EagerCollectionFetch extends CollectionFetch implements FetchParent {
-	private final DomainResult keyContainerResult;
-	private final DomainResult keyCollectionResult;
+	private final DomainResult<?> collectionKeyResult;
+	private final DomainResult<?> collectionValueKeyResult;
 
 	private final Fetch elementFetch;
 	private final Fetch indexFetch;
@@ -53,12 +53,12 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 
 		final FromClauseAccess fromClauseAccess = creationState.getSqlAstCreationState().getFromClauseAccess();
 		final NavigablePath parentPath = fetchedPath.getParent();
-		final TableGroup parentTableGroup = parentPath == null ? null : fromClauseAccess.findTableGroup( parentPath );
+		final TableGroup parentTableGroup = fromClauseAccess.findTableGroup( parentPath );
 
 
 		// NOTE :
-		// 		`keyContainerResult` = fk target-side
-		//		`keyCollectionResult` = fk key-side
+		// 		`collectionKeyResult` = fk target-side
+		//		`collectionValueKeyResult` = fk key-side
 
 		// 3 cases:
 		//
@@ -88,25 +88,10 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 		//			target : teacher.id
 
 		final ForeignKeyDescriptor keyDescriptor = fetchedAttribute.getKeyDescriptor();
-		if ( parentTableGroup != null ) {
-			// join fetch
-
-			// target-side
-			keyContainerResult = keyDescriptor.createTargetDomainResult( fetchedPath, parentTableGroup, creationState );
-
-			// referring(key)-side
-			keyCollectionResult = keyDescriptor.createKeyDomainResult( fetchedPath, collectionTableGroup, creationState );
-		}
-		else {
-			// select fetch
-
-			// todo (6.0) : we could potentially leverage batch fetching for performance
-			keyContainerResult = keyDescriptor.createCollectionFetchDomainResult( fetchedPath, collectionTableGroup, creationState );
-
-			// use null for `keyCollectionResult`... the initializer will see that as trigger to use
-			// the assembled container-key value as the collection-key value.
-			keyCollectionResult = null;
-		}
+		// The collection key must be fetched from the side of the declaring type of the attribute
+		// So that this is guaranteed to be not-null
+		collectionKeyResult = keyDescriptor.createTargetDomainResult( fetchedPath, parentTableGroup, creationState );
+		collectionValueKeyResult = keyDescriptor.createKeyDomainResult( fetchedPath, collectionTableGroup, creationState );
 
 		fetches = creationState.visitFetches( this );
 		if ( fetchedAttribute.getIndexDescriptor() != null ) {
@@ -126,7 +111,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 			}
 		}
 
-		final CollectionSemantics collectionSemantics = getFetchedMapping().getCollectionDescriptor().getCollectionSemantics();
+		final CollectionSemantics<?, ?> collectionSemantics = getFetchedMapping().getCollectionDescriptor().getCollectionSemantics();
 		initializerProducer = collectionSemantics.createInitializerProducer(
 				fetchedPath,
 				fetchedAttribute,
@@ -140,28 +125,21 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public DomainResultAssembler createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+	public DomainResultAssembler<?> createAssembler(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
 		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
 				getNavigablePath(),
 				getReferencedModePart(),
 				() -> {
-					final DomainResultAssembler keyContainerAssembler = keyContainerResult.createResultAssembler( creationState );
-
-					final DomainResultAssembler keyCollectionAssembler;
-					if ( keyCollectionResult == null ) {
-						keyCollectionAssembler = null;
-					}
-					else {
-						keyCollectionAssembler = keyCollectionResult.createResultAssembler( creationState );
-					}
+					final DomainResultAssembler<?> collectionKeyAssembler = collectionKeyResult.createResultAssembler( creationState );
+					final DomainResultAssembler<?> collectionValueKeyAssembler = collectionValueKeyResult.createResultAssembler( creationState );
 
 					return initializerProducer.produceInitializer(
 							getNavigablePath(),
 							getFetchedMapping(),
 							parentAccess,
 							null,
-							keyContainerAssembler,
-							keyCollectionAssembler,
+							collectionKeyAssembler,
+							collectionValueKeyAssembler,
 							creationState
 					);
 				}
@@ -212,7 +190,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return getFetchedMapping().getJavaTypeDescriptor();
 	}
 }

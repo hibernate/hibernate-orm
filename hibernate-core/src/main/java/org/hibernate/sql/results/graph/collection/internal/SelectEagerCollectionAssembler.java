@@ -22,7 +22,7 @@ public class SelectEagerCollectionAssembler extends AbstractCollectionAssembler 
 			NavigablePath fetchPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
-			DomainResultAssembler keyCollectionResultAssembler,
+			DomainResultAssembler<?> collectionKeyResultAssembler,
 			AssemblerCreationState creationState) {
 		super(
 				fetchedMapping,
@@ -33,7 +33,7 @@ public class SelectEagerCollectionAssembler extends AbstractCollectionAssembler 
 								fetchPath,
 								fetchedMapping,
 								parentAccess,
-								keyCollectionResultAssembler
+								collectionKeyResultAssembler
 						)
 				)
 		);

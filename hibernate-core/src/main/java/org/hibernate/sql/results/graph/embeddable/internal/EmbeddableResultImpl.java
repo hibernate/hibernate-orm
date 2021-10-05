@@ -93,7 +93,7 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 	}
 
 	@Override
-	public JavaTypeDescriptor getResultJavaTypeDescriptor() {
+	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
 		return getReferencedMappingType().getJavaTypeDescriptor();
 	}
 

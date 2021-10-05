@@ -24,17 +24,17 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	private static final String CONCRETE_NAME = SetInitializer.class.getSimpleName();
 
-	private final DomainResultAssembler elementAssembler;
+	private final DomainResultAssembler<?> elementAssembler;
 
 	public SetInitializer(
 			NavigablePath navigablePath,
 			PluralAttributeMapping setDescriptor,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
-			DomainResultAssembler elementAssembler) {
-		super( navigablePath, setDescriptor, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResultAssembler<?> elementAssembler) {
+		super( navigablePath, setDescriptor, parentAccess, lockMode, collectionKeyAssembler, collectionValueKeyAssembler );
 		this.elementAssembler = elementAssembler;
 	}
 
@@ -44,16 +44,15 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentSet getCollectionInstance() {
-		return (PersistentSet) super.getCollectionInstance();
+	public PersistentSet<?> getCollectionInstance() {
+		return (PersistentSet<?>) super.getCollectionInstance();
 	}
 
 	@Override
 	protected void readCollectionRow(
 			CollectionKey collectionKey,
-			List loadingState,
+			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		//noinspection unchecked
 		loadingState.add( elementAssembler.assemble( rowProcessingState ) );
 	}
 

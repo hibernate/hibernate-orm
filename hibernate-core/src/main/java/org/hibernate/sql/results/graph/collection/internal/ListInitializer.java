@@ -26,8 +26,8 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	private static final String CONCRETE_NAME = ListInitializer.class.getSimpleName();
 
-	private final DomainResultAssembler listIndexAssembler;
-	private final DomainResultAssembler elementAssembler;
+	private final DomainResultAssembler<Integer> listIndexAssembler;
+	private final DomainResultAssembler<?> elementAssembler;
 
 	private final int listIndexBase;
 
@@ -36,15 +36,21 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
-			DomainResultAssembler listIndexAssembler,
-			DomainResultAssembler elementAssembler) {
-		super( navigablePath, attributeMapping, parentAccess, lockMode, keyContainerAssembler, keyCollectionAssembler );
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
+			DomainResultAssembler<Integer> listIndexAssembler,
+			DomainResultAssembler<?> elementAssembler) {
+		super(
+				navigablePath,
+				attributeMapping,
+				parentAccess,
+				lockMode,
+				collectionKeyAssembler,
+				collectionValueKeyAssembler
+		);
 		this.listIndexAssembler = listIndexAssembler;
 		this.elementAssembler = elementAssembler;
-
-		listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
+		this.listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
 	}
 
 	@Override
@@ -53,27 +59,25 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentList getCollectionInstance() {
-		return (PersistentList) super.getCollectionInstance();
+	public PersistentList<?> getCollectionInstance() {
+		return (PersistentList<?>) super.getCollectionInstance();
 	}
 
 	@Override
 	protected void readCollectionRow(
 			CollectionKey collectionKey,
-			List loadingState,
+			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		int index = (int) listIndexAssembler.assemble( rowProcessingState );
+		int index = listIndexAssembler.assemble( rowProcessingState );
 
 		if ( listIndexBase != 0 ) {
 			index -= listIndexBase;
 		}
 
 		for ( int i = loadingState.size(); i <= index; ++i ) {
-			//noinspection unchecked
 			loadingState.add( i, null );
 		}
 
-		//noinspection unchecked
 		loadingState.set( index, elementAssembler.assemble( rowProcessingState ) );
 	}
 

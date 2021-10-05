@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
@@ -19,7 +18,6 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -27,83 +25,12 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
  */
 public class DelayedCollectionInitializer extends AbstractCollectionInitializer {
 
-	/**
-	 * refers to the collection's container value - which collection-key?
-	 */
-	private final DomainResultAssembler keyContainerAssembler;
-
 	public DelayedCollectionInitializer(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
-			DomainResultAssembler keyContainerAssembler) {
-		super( fetchedPath, fetchedMapping, parentAccess );
-		this.keyContainerAssembler = keyContainerAssembler;
-	}
-
-	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
-		if ( collectionKey != null ) {
-			// already resolved
-			return;
-		}
-
-		if ( !isAttributeAssignableToConcreteDescriptor() ) {
-			return;
-		}
-
-		final Object parentKey = parentAccess.getParentKey();
-
-		// We can only use the parent key if the key descriptor uses the primary key of the owner i.e. refersToPrimaryKey
-		if ( parentKey != null && collectionAttributeMapping.getKeyDescriptor().getKeyPart().getNavigableRole().equals(
-				collectionAttributeMapping.findContainingEntityMapping().getIdentifierMapping().getNavigableRole() ) ) {
-			collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					parentKey
-			);
-			parentAccess.registerResolutionListener( owner -> {
-				if ( collectionInstance != null ) {
-					collectionInstance.setOwner( owner );
-				}
-			} );
-			return;
-		}
-
-		final CollectionKey loadingKey = rowProcessingState.getCollectionKey();
-		if ( loadingKey != null && loadingKey.getRole()
-				.equals( getCollectionAttributeMapping().getNavigableRole().getNavigableName() ) ) {
-			collectionKey = loadingKey;
-			return;
-		}
-
-		final JdbcValuesSourceProcessingOptions processingOptions = rowProcessingState.getJdbcValuesSourceProcessingState()
-				.getProcessingOptions();
-
-		final Object keyContainerValue = keyContainerAssembler.assemble(
-				rowProcessingState,
-				processingOptions
-		);
-		if ( keyContainerValue != null ) {
-			this.collectionKey = new CollectionKey(
-					collectionAttributeMapping.getCollectionDescriptor(),
-					keyContainerValue
-			);
-
-			// TODO: This fails e.g. EagerCollectionLazyKeyManyToOneTest because Order$Id#customer is null
-			//   which is required for the hash code. Is this being null at this point a bug?
-//			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-//				CollectionLoadingLogger.INSTANCE.debugf(
-//						"(%s) Current row collection key : %s",
-//						DelayedCollectionInitializer.class.getSimpleName(),
-//						LoggingHelper.toLoggableString( getNavigablePath(), this.collectionKey.getKey() )
-//				);
-//			}
-			parentAccess.registerResolutionListener( owner -> {
-				if ( collectionInstance != null ) {
-					collectionInstance.setOwner( owner );
-				}
-			} );
-		}
+			DomainResultAssembler<?> collectionKeyResultAssembler) {
+		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResultAssembler );
 	}
 
 	@Override
@@ -120,7 +47,7 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 				return;
 			}
 
-			final PersistentCollection existing = persistenceContext.getCollection( collectionKey );
+			final PersistentCollection<?> existing = persistenceContext.getCollection( collectionKey );
 
 			if ( existing != null ) {
 				collectionInstance = existing;
@@ -128,9 +55,7 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 			}
 
 			final CollectionPersister collectionDescriptor = collectionAttributeMapping.getCollectionDescriptor();
-
-			final CollectionSemantics collectionSemantics = collectionDescriptor.getCollectionSemantics();
-
+			final CollectionSemantics<?, ?> collectionSemantics = collectionDescriptor.getCollectionSemantics();
 			final Object key = collectionKey.getKey();
 
 			collectionInstance = collectionSemantics.instantiateWrapper(

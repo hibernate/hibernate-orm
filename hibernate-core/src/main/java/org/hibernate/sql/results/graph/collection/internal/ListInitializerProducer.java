@@ -39,17 +39,18 @@ public class ListInitializerProducer implements CollectionInitializerProducer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler keyContainerAssembler,
-			DomainResultAssembler keyCollectionAssembler,
+			DomainResultAssembler<?> collectionKeyAssembler,
+			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
+		//noinspection unchecked
 		return new ListInitializer(
 				navigablePath,
 				attributeMapping,
 				parentAccess,
 				lockMode,
-				keyContainerAssembler,
-				keyCollectionAssembler,
-				listIndexFetch.createAssembler( parentAccess, creationState ),
+				collectionKeyAssembler,
+				collectionValueKeyAssembler,
+				(DomainResultAssembler<Integer>) listIndexFetch.createAssembler( parentAccess, creationState ),
 				elementFetch.createAssembler( parentAccess, creationState )
 		);
 	}

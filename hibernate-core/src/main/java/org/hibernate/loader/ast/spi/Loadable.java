@@ -6,21 +6,9 @@
  */
 package org.hibernate.loader.ast.spi;
 
-import java.util.function.Consumer;
-import java.util.function.Supplier;
-
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
-import org.hibernate.sql.ast.spi.SqlAliasBase;
-import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.RootTableGroupProducer;
-import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
  * Contract for things that can be loaded by a Loader.
@@ -38,27 +26,4 @@ public interface Loadable extends ModelPart, RootTableGroupProducer {
 
 	String getRootPathName();
 
-	@Override
-	default TableGroup createRootTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAstCreationState creationState,
-			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
-	default TableGroup createRootTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAliasBase sqlAliasBase,
-			SqlExpressionResolver expressionResolver,
-			FromClauseAccess fromClauseAccess,
-			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 }

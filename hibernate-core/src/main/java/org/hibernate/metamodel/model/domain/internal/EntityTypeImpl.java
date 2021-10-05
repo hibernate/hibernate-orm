@@ -74,7 +74,7 @@ public class EntityTypeImpl<J>
 					.resolve( StandardBasicTypes.STRING );
 		}
 
-		this.discriminatorPathSource = new DiscriminatorSqmPathSource<>(
+		this.discriminatorPathSource = new DiscriminatorSqmPathSource(
 				discriminatorType,
 				this,
 				entityPersister

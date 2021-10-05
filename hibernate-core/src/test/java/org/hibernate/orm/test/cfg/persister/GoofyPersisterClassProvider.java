@@ -138,6 +138,21 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public AttributeMapping findDeclaredAttributeMapping(String name) {
+			return null;
+		}
+
+		@Override
+		public java.util.Collection<AttributeMapping> getDeclaredAttributeMappings() {
+			return null;
+		}
+
+		@Override
+		public void visitDeclaredAttributeMappings(Consumer<? super AttributeMapping> action) {
+
+		}
+
+		@Override
 		public EntityMetamodel getEntityMetamodel() {
 			return null;
 		}
@@ -625,6 +640,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		@Override
 		public EntityRowIdMapping getRowIdMapping() {
 			return null;
+		}
+
+		@Override
+		public void visitConstraintOrderedTables(ConstraintOrderedTableConsumer consumer) {
+
 		}
 
 		@Override

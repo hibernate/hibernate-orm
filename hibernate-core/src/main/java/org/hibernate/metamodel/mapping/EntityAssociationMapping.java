@@ -6,7 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
@@ -40,11 +39,9 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	/**
 	 * Create a delayed DomainResult for a specific reference to this ModelPart.
 	 */
-	default <T> DomainResult<T> createDelayedDomainResult(
+	 <T> DomainResult<T> createDelayedDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			DomainResultCreationState creationState);
 }

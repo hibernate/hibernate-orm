@@ -7,7 +7,6 @@
 package org.hibernate.engine.query.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 
 /**
@@ -54,8 +53,4 @@ public class NamedParameterDescriptor extends AbstractParameterDescriptor {
 		return getName().hashCode();
 	}
 
-	@Override
-	public boolean allowsMultiValuedBinding() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 }

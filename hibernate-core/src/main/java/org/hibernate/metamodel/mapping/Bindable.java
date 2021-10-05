@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
 
@@ -69,13 +68,6 @@ public interface Bindable extends JdbcMappingContainer {
 	 */
 	default int forEachJdbcType(IndexedConsumer<JdbcMapping> action) {
 		return forEachJdbcType( 0, action );
-	}
-
-	/**
-	 * Visit each JdbcMapping starting from the given offset
-	 */
-	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**

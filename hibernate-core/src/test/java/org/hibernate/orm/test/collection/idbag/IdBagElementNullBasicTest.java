@@ -175,7 +175,7 @@ public class IdBagElementNullBasicTest {
 		@ElementCollection
 		@CollectionTable(name = "AnEntity_aCollection", joinColumns = { @JoinColumn(name = "AnEntity_id") })
 		@CollectionId(
-				columns = { @Column },
+				column = @Column,
 				type = @Type(type = "long"),
 				generator = "increment"
 		)

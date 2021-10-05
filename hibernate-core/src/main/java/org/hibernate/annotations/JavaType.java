@@ -10,6 +10,8 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.usertype.UserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -17,9 +19,13 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Explicit BasicJavaDescriptor for the associated attribute
+ * Specify an explicit BasicJavaDescriptor to use for a particular
+ * column mapping.
  *
- * @author Steve Ebersole
+ * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
+ *
+ * See <a href="package-summary.html#basic-value-mapping"/> for high-level discussion
+ * of basic value mapping.
  *
  * @since 6.0
  */
@@ -28,7 +34,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface JavaType {
 	/**
-	 * The JavaTypeDescriptor to use
+	 * The {@link BasicJavaDescriptor} to use for the mapped column
 	 */
 	Class<? extends BasicJavaDescriptor<?>> value();
 }

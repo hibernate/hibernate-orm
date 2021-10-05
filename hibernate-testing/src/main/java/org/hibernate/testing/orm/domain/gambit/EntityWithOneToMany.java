@@ -83,7 +83,7 @@ public class EntityWithOneToMany {
 	@OneToMany
 	@CollectionTable(name = "idbag")
 	@org.hibernate.annotations.CollectionId(
-			columns = @Column(name = "BAG_ID"),
+			column = @Column(name = "BAG_ID"),
 			type = @org.hibernate.annotations.Type(type = "long"),
 			generator = "increment")
 	public List<SimpleEntity> getOthersIdentifierBag() {

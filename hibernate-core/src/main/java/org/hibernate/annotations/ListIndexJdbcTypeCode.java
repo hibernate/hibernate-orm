@@ -9,10 +9,8 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.usertype.UserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -20,10 +18,14 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies an explicit {@link JdbcTypeDescriptor} to use for
- * a particular column mapping.
+ * Specifies the JDBC type-code to use for the column mapping.
  *
- * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
+ * This code is generally one of the values defined in
+ * {@link java.sql.Types}, but are not limited to those.  See the
+ * user-guide for additional details.
+ *
+ * The code is resolved against an internal registry of
+ * {@link JdbcTypeDescriptor} references.
  *
  * Can be applied in conjunction with the following sources to
  * control the mapping of a particular column in a compositional way:<ul>
@@ -40,14 +42,19 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>{@link Nationalized}</li>
  * </ul>
  *
+ * @see JdbcTypeDescriptor
+ * @see JdbcTypeDescriptorRegistry
+ *
  * @since 6.0
  */
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
-public @interface JdbcType {
+public @interface ListIndexJdbcTypeCode {
 	/**
-	 * The {@link JdbcTypeDescriptor} to use for the mapped column
+	 * The standard {@linkplain java.sql.Types JDBC Types} code or a custom code.
+	 * This ultimately decides which {@link JdbcTypeDescriptor}
+	 * is used to "understand" the described SQL data type
 	 */
-	Class<? extends JdbcTypeDescriptor> value();
+	int value();
 }

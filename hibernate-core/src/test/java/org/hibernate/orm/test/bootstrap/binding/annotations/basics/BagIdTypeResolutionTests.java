@@ -56,7 +56,7 @@ public class BagIdTypeResolutionTests {
 		private String name;
 		@ElementCollection
 		@CollectionId(
-				columns = @Column( name = "bag_id" ),
+				column = @Column( name = "bag_id" ),
 				type = @Type( type = "short" ),
 				generator = "increment"
 		)

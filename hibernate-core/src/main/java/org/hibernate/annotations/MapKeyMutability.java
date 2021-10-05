@@ -9,22 +9,23 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Same function as {@link JdbcTypeCode}, but used to define the SQL type descriptor to
- * use for the map-key
+ * Used to specify the MutabilityPlan for a basic map-key
+ *
+ * @see Immutable
  *
  * @author Steve Ebersole
- *
- * @since 6.0
  */
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
-public @interface MapKeyJdbcTypeCode {
-	int value();
+public @interface MapKeyMutability {
+	Class<? extends MutabilityPlan<?>> value();
 }

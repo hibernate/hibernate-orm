@@ -203,7 +203,7 @@ public class AutoGenerationTypeTests {
 
 		@OneToMany( mappedBy = "theOne" )
 		@CollectionId(
-				columns = @Column( name = "child_" ),
+				column = @Column( name = "child_" ),
 				type = @Type( type = "int" ),
 				generator = "sequence"
 		)

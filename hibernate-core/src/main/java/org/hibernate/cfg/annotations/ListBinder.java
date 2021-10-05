@@ -90,12 +90,12 @@ public class ListBinder extends CollectionBinder {
 						ignoreNotFound,
 						buildingContext
 				);
-				bindIndex( buildingContext );
+				bindIndex( property, collType, buildingContext );
 			}
 		};
 	}
 
-	private void bindIndex(final MetadataBuildingContext buildingContext) {
+	private void bindIndex(XProperty property, XClass collType, final MetadataBuildingContext buildingContext) {
 		if ( !indexColumn.isImplicit() ) {
 			PropertyHolder valueHolder = PropertyHolderBuilder.buildPropertyHolder(
 					this.collection,
@@ -110,7 +110,9 @@ public class ListBinder extends CollectionBinder {
 			indexColumn.setPropertyHolder( valueHolder );
 			final BasicValueBinder valueBinder = new BasicValueBinder( BasicValueBinder.Kind.LIST_INDEX, buildingContext );
 			valueBinder.setColumns( new Ejb3Column[] { indexColumn } );
-			valueBinder.setExplicitType( "integer" );
+			valueBinder.setReturnedClassName( Integer.class.getName() );
+			valueBinder.setType( property, collType, null, null );
+//			valueBinder.setExplicitType( "integer" );
 			SimpleValue indexValue = valueBinder.make();
 			indexColumn.linkWithValue( indexValue );
 			list.setIndex( indexValue );

@@ -9,9 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.descriptor.java.BasicJavaDescriptor;
 import org.hibernate.usertype.UserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -20,34 +18,35 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies an explicit {@link JdbcTypeDescriptor} to use for
- * a particular column mapping.
+ * Specify an explicit BasicJavaDescriptor to use for a particular
+ * column mapping.
  *
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
  *
  * Can be applied in conjunction with the following sources to
  * control the mapping of a particular column in a compositional way:<ul>
- *     <li>{@link JavaType}</li>
+ *     <li>{@link JdbcType}</li>
+ *     <li>{@link JdbcTypeCode}</li>
  *     <li>{@link Mutability}</li>
  *     <li>{@link jakarta.persistence.AttributeConverter}</li>
+ *     <li>{@link jakarta.persistence.Lob}</li>
  *     <li>{@link jakarta.persistence.Enumerated}</li>
  *     <li>{@link jakarta.persistence.Temporal}</li>
- * </ul>
- *
- * Should not be used with some forms of influencing the JDBC type used:<ul>
- *     <li>{@link JavaType}</li>
- *     <li>{@link jakarta.persistence.Lob}</li>
  *     <li>{@link Nationalized}</li>
  * </ul>
  *
+ * @apiNote Mutually exclusive with {@link CustomType} which is an approach to the
+ * mapping the column through the {@link UserType} contract, which performs all the
+ * composed functions itself.
+ *
  * @since 6.0
  */
-@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited
+@java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
-public @interface JdbcType {
+public @interface ListIndexJavaType {
 	/**
-	 * The {@link JdbcTypeDescriptor} to use for the mapped column
+	 * The {@link BasicJavaDescriptor} to use for the mapped column
 	 */
-	Class<? extends JdbcTypeDescriptor> value();
+	Class<? extends BasicJavaDescriptor<?>> value();
 }

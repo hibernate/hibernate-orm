@@ -32,13 +32,13 @@ public class Passport {
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name="PASSPORT_STAMP")
-	@CollectionId(columns = @Column(name="COLLECTION_ID"), type=@Type(type="long"), generator = "generator")
+	@CollectionId(column = @Column(name="COLLECTION_ID"), type=@Type(type="long"), generator = "generator")
 	@TableGenerator(name="generator", table="IDSTAMP")
 	private Collection<Stamp> stamps = new ArrayList();
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name="PASSPORT_VISASTAMP")
-	@CollectionId(columns = @Column(name="COLLECTION_ID"), type=@Type(type="long"), generator = "ids_generator")
+	@CollectionId(column = @Column(name="COLLECTION_ID"), type=@Type(type="long"), generator = "ids_generator")
 	//TODO test identity generator
 	private Collection<Stamp> visaStamp = new ArrayList();
 

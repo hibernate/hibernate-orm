@@ -36,8 +36,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
-import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
+
+import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
  * Models the information pertaining to a custom type definition supplied by the user.  Used
@@ -173,11 +174,7 @@ public class TypeDefinition implements Serializable {
 				combinedTypeParameters = parameters;
 			}
 
-			if ( typeInstance instanceof ParameterizedType ) {
-				if ( combinedTypeParameters != null ) {
-					( (ParameterizedType) typeInstance ).setParameterValues( combinedTypeParameters );
-				}
-			}
+			injectParameters( typeInstance, combinedTypeParameters );
 
 			if ( typeInstance instanceof UserType ) {
 				final UserType userType = (UserType) typeInstance;

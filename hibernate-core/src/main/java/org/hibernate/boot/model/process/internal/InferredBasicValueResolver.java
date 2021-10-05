@@ -72,10 +72,10 @@ public class InferredBasicValueResolver {
 		final BasicType<?> legacyType;
 
 		if ( explicitJavaType != null ) {
-			// we have an explicit @JavaType
+			// we have an explicit JavaTypeDescriptor
 
 			if ( explicitJdbcType != null ) {
-				// we also have an explicit @SqlType(Code)
+				// we also have an explicit JdbcTypeDescriptor
 
 				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
 						explicitJavaType,
@@ -132,7 +132,7 @@ public class InferredBasicValueResolver {
 		else if ( reflectedJtd != null ) {
 			// we were able to determine the "reflected java-type"
 			if ( explicitJdbcType != null ) {
-				// we also have an explicit @JdbcType(Code)
+				// we also have an explicit JdbcTypeDescriptor
 
 				jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve(
 						reflectedJtd,
@@ -392,7 +392,7 @@ public class InferredBasicValueResolver {
 		final TemporalType requestedTemporalPrecision = stdIndicators.getTemporalPrecision();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Case #1 - @JavaType
+		// Case #1 - explicit JavaTypeDescriptor
 
 		if ( explicitJavaType != null ) {
 			if ( !TemporalJavaTypeDescriptor.class.isInstance( explicitJavaType ) ) {
@@ -428,7 +428,7 @@ public class InferredBasicValueResolver {
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Case #2 - SqlType(Code)
+		// Case #2 - explicit JdbcTypeDescriptor
 		//
 		// 		- still a special case because we want to perform the new resolution
 		// 		due to the new annotations being used
@@ -460,7 +460,7 @@ public class InferredBasicValueResolver {
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Case #3 - no @JavaType nor @SqlType(Code)
+		// Case #3 - no explicit JavaTypeDescriptor or JdbcTypeDescriptor
 		//
 		// 		- for the moment continue to use the legacy resolution to registered
 		// 		BasicType

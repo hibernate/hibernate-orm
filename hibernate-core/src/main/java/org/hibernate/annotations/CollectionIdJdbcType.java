@@ -11,8 +11,6 @@ import java.lang.annotation.Retention;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.usertype.UserType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -23,7 +21,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * Specifies an explicit {@link JdbcTypeDescriptor} to use for
  * a particular column mapping.
  *
- * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}
+ * Resolved as a {@link ManagedBean}
  *
  * Can be applied in conjunction with the following sources to
  * control the mapping of a particular column in a compositional way:<ul>
@@ -45,7 +43,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @java.lang.annotation.Target({METHOD, FIELD, ANNOTATION_TYPE})
 @Inherited
 @Retention(RUNTIME)
-public @interface JdbcType {
+public @interface CollectionIdJdbcType {
 	/**
 	 * The {@link JdbcTypeDescriptor} to use for the mapped column
 	 */

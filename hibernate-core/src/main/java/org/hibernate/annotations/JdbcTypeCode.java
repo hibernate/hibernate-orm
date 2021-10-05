@@ -18,44 +18,32 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * @asciidoc
+ * Specifies the JDBC type-code to use for the column mapping.
  *
- * Allows specifying the {@link JdbcTypeDescriptor} to
- * use based on the type-code.  This might be a standard {@linkplain java.sql.Types JDBC Type}
- * code or a custom code.  Either way, there must be an entry in the
- * {@link JdbcTypeDescriptorRegistry} registered under this code
+ * This code is generally one of the values defined in
+ * {@link java.sql.Types}, but are not limited to those.  See the
+ * user-guide for additional details.
  *
- * ````
- * @Entity
- * class User {
- *     ...
- *     // By default Hibernate maps Java's Integer to JDBC's INTEGER
- *     // but here we want to use JDBC's TINYINT instead.
- *     @JdbcTypeCode ( Types.TINYINT )
- *     int getAge() { ... }
+ * The code is resolved against an internal registry of
+ * {@link JdbcTypeDescriptor} references.
  *
- *     // By default Hibernate maps Java's String to JDBC's VARCHAR
- *     // but here we want to use JDBC's NVARCHAR instead.
- *     @JdbcTypeCode ( Types.NVARCHAR )
- *     String getName() { ... }
- * }
- * ````
- *
- * Other forms of influencing the JDBC type used include:<ul>
- *     <li>{@link jakarta.persistence.Enumerated} / {@link jakarta.persistence.EnumType}</li>
- *     <li>{@link jakarta.persistence.TemporalType}</li>
- *     <li>{@link jakarta.persistence.Lob}</li>
- *     <li>{@link Nationalized}</li>
- *     <li>{@link JdbcType}</li>
+ * Can be applied in conjunction with the following sources to
+ * control the mapping of a particular column in a compositional way:<ul>
+ *     <li>{@link JavaType}</li>
+ *     <li>{@link Mutability}</li>
+ *     <li>{@link jakarta.persistence.AttributeConverter}</li>
+ *     <li>{@link jakarta.persistence.Enumerated}</li>
+ *     <li>{@link jakarta.persistence.Temporal}</li>
  * </ul>
  *
- * These forms should not be mixed on the same mapping.  The result is not defined
+ * Should not be used with some forms of influencing the JDBC type used:<ul>
+ *     <li>{@link JavaType}</li>
+ *     <li>{@link jakarta.persistence.Lob}</li>
+ *     <li>{@link Nationalized}</li>
+ * </ul>
  *
- * @apiNote Should not be used in combination with the other forms of influencing the JDBC type used
- *
- * @see JdbcTypeRegistration
- *
- * @author Steve Ebersole
+ * @see JdbcTypeDescriptor
+ * @see JdbcTypeDescriptorRegistry
  *
  * @since 6.0
  */

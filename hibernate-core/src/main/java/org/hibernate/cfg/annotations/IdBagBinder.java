@@ -31,6 +31,8 @@ import org.hibernate.mapping.IdentifierCollection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 
+import jakarta.persistence.Column;
+
 /**
  * @author Emmanuel Bernard
  */
@@ -78,7 +80,7 @@ public class IdBagBinder extends BagBinder {
 		);
 
 		final Ejb3Column[] idColumns = Ejb3Column.buildColumnFromAnnotation(
-				collectionIdAnn.columns(),
+				new Column[] { collectionIdAnn.column() },
 				null,
 				null,
 				Nullability.FORCED_NOT_NULL,

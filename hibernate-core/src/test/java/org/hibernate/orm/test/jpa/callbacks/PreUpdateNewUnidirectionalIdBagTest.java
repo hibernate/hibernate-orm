@@ -111,7 +111,7 @@ public class PreUpdateNewUnidirectionalIdBagTest {
 		}
 
 		@CollectionId(
-				columns = @Column(name = "n_key_tag"),
+				column = @Column(name = "n_key_tag"),
 				type = @Type(type = "long"),
 				generator = "increment" )
 		@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)

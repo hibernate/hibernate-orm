@@ -33,7 +33,7 @@ public class Sale {
         name = "contact",
         joinColumns = @JoinColumn(name = "n_key_person"))
     @CollectionId(
-        columns = @Column(name = "n_key_contact"),
+        column = @Column(name = "n_key_contact"),
         type = @Type(type = "long"),
         generator = "increment" ) 
 	private List<Contact> contacts = new ArrayList<Contact>();

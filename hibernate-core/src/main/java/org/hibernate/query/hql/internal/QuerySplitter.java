@@ -25,7 +25,6 @@ import org.hibernate.query.sqm.internal.SqmQuerySpecCreationProcessingStateStand
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
-import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -790,17 +789,6 @@ public class QuerySplitter {
 			return () -> false;
 		}
 
-//		@Override
-//		public String generateUniqueIdentifier() {
-//			// todo (6.0) : not sure these are needed
-//			throw new NotYetImplementedFor6Exception(  );
-//		}
-//
-//		@Override
-//		public ImplicitAliasGenerator getImplicitAliasGenerator() {
-//			// todo (6.0) : not sure these are needed
-//			throw new NotYetImplementedFor6Exception(  );
-//		}
 	}
 
 }

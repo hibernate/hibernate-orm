@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.entity;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.QueryException;
 import org.hibernate.type.Type;
 
@@ -44,9 +43,7 @@ public interface PropertyMapping {
 	 * todo (6.0) : define an exception in the signature for cases where the PropertyMapping
 	 * cannot be de-referenced (basic values)
 	 */
-	default PropertyMapping resolveSubMapping(String name) {
-		throw new NotYetImplementedFor6Exception();
-	}
+	//	PropertyMapping resolveSubMapping(String name);
 
 	// todo (6.0) : add capability to create SqmPath, i.e.
 	// SqmPath createSqmPath(SqmPath<?> lhs, SqmCreationState creationState);
@@ -61,10 +58,10 @@ public interface PropertyMapping {
 	/**
 	 * Given a component path expression, get the type of the property
 	 */
-	public Type toType(String propertyName) throws QueryException;
+	Type toType(String propertyName) throws QueryException;
 
 	/**
 	 * Given a property path, return the corresponding column name(s).
 	 */
-	public String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException;
+	String[] toColumns(String propertyName) throws QueryException, UnsupportedOperationException;
 }

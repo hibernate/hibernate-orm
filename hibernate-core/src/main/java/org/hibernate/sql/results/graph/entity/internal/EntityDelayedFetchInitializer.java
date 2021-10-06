@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
@@ -213,12 +212,12 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 	@Override
 	public EntityKey getEntityKey() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Object getParentKey() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

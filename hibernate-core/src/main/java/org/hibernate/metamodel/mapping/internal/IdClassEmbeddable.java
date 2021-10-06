@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.EntityKey;
@@ -20,7 +19,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -396,6 +394,16 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		}
 
 		return result;
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

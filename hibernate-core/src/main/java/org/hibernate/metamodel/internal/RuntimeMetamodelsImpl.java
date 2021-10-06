@@ -6,11 +6,13 @@
  */
 package org.hibernate.metamodel.internal;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RuntimeMetamodels;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 
@@ -32,6 +34,11 @@ public class RuntimeMetamodelsImpl implements RuntimeMetamodels {
 	@Override
 	public MappingMetamodel getMappingMetamodel() {
 		return mappingMetamodel;
+	}
+
+	@Override
+	public EmbeddableValuedModelPart getEmbedded(String role) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	/**

@@ -7,7 +7,6 @@
 package org.hibernate.metamodel;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -46,10 +45,8 @@ public interface RuntimeMetamodels {
 		return getMappingMetamodel().findCollectionDescriptor( role ).getAttributeMapping();
 	}
 
-	default EmbeddableValuedModelPart getEmbedded(String role) {
-		// todo (6.0) : I think we might need a form of mapping-model look-up for embeddables, something like:
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	// todo (6.0) : I think we might need a form of mapping-model look-up for embeddables, something like:
+	EmbeddableValuedModelPart getEmbedded(String role);
 
 	default String getImportedName(String name) {
 		return getMappingMetamodel().getImportedName( name );

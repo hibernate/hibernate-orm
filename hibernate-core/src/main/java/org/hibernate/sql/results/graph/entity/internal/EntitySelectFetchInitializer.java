@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -247,12 +246,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public EntityKey getEntityKey() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	public Object getParentKey() {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		return parentAccess.getParentKey();
 	}
 
 	@Override

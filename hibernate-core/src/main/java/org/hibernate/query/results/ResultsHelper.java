@@ -6,36 +6,15 @@
  */
 package org.hibernate.query.results;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.query.EntityIdentifierNavigablePath;
-import org.hibernate.query.NavigablePath;
-import org.hibernate.query.internal.ImplicitAttributeFetchMemento;
-import org.hibernate.query.internal.ImplicitModelPartResultMemento;
-import org.hibernate.query.internal.ResultSetMappingResolutionContext;
-import org.hibernate.query.named.FetchMemento;
-import org.hibernate.query.named.ModelPartResultMemento;
-import org.hibernate.query.named.ResultMemento;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilder;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderBasic;
-import org.hibernate.query.results.implicit.ImplicitFetchBuilderEmbeddable;
-import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
-import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 
 /**
  * @author Steve Ebersole

@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Locale;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -19,6 +20,8 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Christian Beikov
@@ -110,5 +113,16 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> implements Doma
 				getNavigablePath().getFullPath(),
 				getReferencedPathSource().getPathName()
 		);
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(
+			String resultVariable, DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

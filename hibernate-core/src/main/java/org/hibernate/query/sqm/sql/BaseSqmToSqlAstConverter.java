@@ -3453,6 +3453,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.resolveDescriptor( Map.Entry.class );
 				return new SqmMapEntryResult<>( indexResult, valueResult, resultVariable, mapEntryDescriptor );
 			}
+
+			@Override
+			public void applySqlSelections(DomainResultCreationState creationState) {
+				throw new NotYetImplementedFor6Exception( getClass() );
+			}
 		};
 	}
 

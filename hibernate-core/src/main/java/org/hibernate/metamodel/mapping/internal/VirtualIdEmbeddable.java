@@ -10,11 +10,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.IndexedConsumer;
-import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;

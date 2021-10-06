@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import jakarta.persistence.criteria.Selection;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -18,6 +19,8 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -122,5 +125,17 @@ public class SqmJpaCompoundSelection<T>
 	@Override
 	public void visitSubSelectableNodes(Consumer<SqmSelectableNode<?>> jpaSelectionConsumer) {
 		selectableNodes.forEach( jpaSelectionConsumer );
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

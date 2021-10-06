@@ -6,13 +6,8 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import java.util.function.Consumer;
-
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Something that can produce a DomainResult as part of a SQM interpretation
@@ -46,11 +41,9 @@ public interface DomainResultProducer<T> {
 	/**
 	 * Produce the domain query
 	 */
-	default DomainResult<T> createDomainResult(
+	DomainResult<T> createDomainResult(
 			String resultVariable,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			DomainResultCreationState creationState);
 
 	/**
 	 * Used when this producer is a selection in a sub-query.  The
@@ -58,13 +51,5 @@ public interface DomainResultProducer<T> {
 	 *
 	 * This default impl assumes this producer is a true (Sql)Expression
 	 */
-	default void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-//		// this form works for basic-valued nodes
-//		creationState.getSqlExpressionResolver().resolveSqlSelection(
-//				(Expression) this,
-//				( (Expression) this ).getType().getJavaTypeDescriptor(),
-//				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
-//		);
-	}
+	void applySqlSelections(DomainResultCreationState creationState);
 }

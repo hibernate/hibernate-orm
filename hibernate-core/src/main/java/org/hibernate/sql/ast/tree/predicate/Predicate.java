@@ -46,4 +46,16 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 		//noinspection unchecked
 		return new BasicResult( sqlSelection.getValuesArrayPosition(), resultVariable, javaTypeDescriptor );
 	}
+
+	@Override
+	default void applySqlSelections(DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+
+		sqlExpressionResolver.resolveSqlSelection(
+				this,
+				getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
+				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+		);
+	}
 }

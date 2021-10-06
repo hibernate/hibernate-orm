@@ -11,9 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -116,6 +119,12 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 						.collect( Collectors.toList() )
 		);
 	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
 //
 //	@SuppressWarnings("unchecked")
 //	private static DomainResultAssembler resolveAssembler(

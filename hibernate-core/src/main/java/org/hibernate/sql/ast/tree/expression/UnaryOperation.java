@@ -13,6 +13,8 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -72,7 +74,14 @@ public class UnaryOperation implements Expression, DomainResultProducer {
 
 	@Override
 	public void applySqlSelections(DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+
+		sqlExpressionResolver.resolveSqlSelection(
+				this,
+				type.getJdbcMapping().getJavaTypeDescriptor(),
+				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
+		);
 	}
 
 }

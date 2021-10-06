@@ -11,11 +11,8 @@ import java.util.Locale;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmJoinable;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -23,7 +20,7 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 /**
  * @author Steve Ebersole
  */
-public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements DomainResultProducer<T> {
+public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
 			SingularPersistentAttribute<O, T> joinedNavigable,

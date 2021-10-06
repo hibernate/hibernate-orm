@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -80,6 +81,26 @@ public class CaseSearchedExpression implements Expression, DomainResultProducer 
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
 				type.getExpressableJavaTypeDescriptor()
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
+				.getSqlExpressionResolver();
+		final SqlSelection sqlSelection = sqlExpressionResolver
+				.resolveSqlSelection(
+						this,
+						type.getExpressableJavaTypeDescriptor(),
+						creationState.getSqlAstCreationState()
+								.getCreationContext()
+								.getSessionFactory()
+								.getTypeConfiguration()
+				);
+		sqlExpressionResolver.resolveSqlSelection(
+				this,
+				type.getExpressableJavaTypeDescriptor(),
+				creationState.getSqlAstCreationState().getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
 

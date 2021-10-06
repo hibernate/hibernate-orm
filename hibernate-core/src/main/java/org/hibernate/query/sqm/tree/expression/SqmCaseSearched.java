@@ -8,16 +8,19 @@ package org.hibernate.query.sqm.tree.expression;
 
 import java.util.ArrayList;
 import java.util.List;
-import jakarta.persistence.criteria.Expression;
 
-import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
+
+import jakarta.persistence.criteria.Expression;
 
 /**
  * @author Steve Ebersole
@@ -98,6 +101,18 @@ public class SqmCaseSearched<R>
 	@Override
 	public String asLoggableText() {
 		return "<searched-case>";
+	}
+
+	@Override
+	public DomainResult<R> createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	public static class WhenFragment<R> {

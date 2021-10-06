@@ -11,14 +11,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.criteria.JpaCompoundSelection;
-import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
-import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
@@ -70,7 +72,7 @@ public class SqmDynamicInstantiation<T>
 
 	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		return (SqmDynamicInstantiation<M>) (SqmDynamicInstantiation<?>) forMapInstantiation(
+		return forMapInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( Map.class ),
 				nodeBuilder
 		);
@@ -87,7 +89,7 @@ public class SqmDynamicInstantiation<T>
 
 	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(NodeBuilder nodeBuilder) {
 		//noinspection unchecked
-		return (SqmDynamicInstantiation<L>) (SqmDynamicInstantiation<?>) forListInstantiation(
+		return forListInstantiation(
 				nodeBuilder.getTypeConfiguration().getJavaTypeDescriptorRegistry().getDescriptor( List.class ),
 				nodeBuilder
 		);
@@ -196,6 +198,18 @@ public class SqmDynamicInstantiation<T>
 	@SuppressWarnings("unused")
 	public SqmDynamicInstantiation<T> makeShallowCopy() {
 		return new SqmDynamicInstantiation<>( getInstantiationTarget(), nodeBuilder() );
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	private static class DynamicInstantiationTargetImpl<T> implements SqmDynamicInstantiationTarget<T> {

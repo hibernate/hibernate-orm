@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
@@ -76,23 +75,19 @@ public interface ModelPart extends MappingModelExpressable {
 	/**
 	 * Apply SQL selections for a specific reference to this ModelPart outside the domain query's root select clause.
 	 */
-	default void applySqlSelections(
+	void applySqlSelections(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
-			DomainResultCreationState creationState) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			DomainResultCreationState creationState);
 
 	/**
 	 * Apply SQL selections for a specific reference to this ModelPart outside the domain query's root select clause.
 	 */
-	default void applySqlSelections(
+	void applySqlSelections(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
-			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			BiConsumer<SqlSelection,JdbcMapping> selectionConsumer);
 
 	default int forEachSelectable(SelectableConsumer consumer) {
 		return forEachSelectable( 0, consumer );

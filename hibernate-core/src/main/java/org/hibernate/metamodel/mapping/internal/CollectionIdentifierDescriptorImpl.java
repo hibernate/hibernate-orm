@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.function.BiConsumer;
+
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -124,6 +126,28 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 				tableGroup,
 				resultVariable,
 				creationState
+		);
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		collectionDescriptor.getAttributeMapping().applySqlSelections( navigablePath, tableGroup, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		collectionDescriptor.getAttributeMapping().applySqlSelections(
+				navigablePath,
+				tableGroup,
+				creationState,
+				selectionConsumer
 		);
 	}
 

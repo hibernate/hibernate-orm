@@ -39,7 +39,7 @@ public interface EntityAssociationMapping extends ModelPart, Association, TableG
 	/**
 	 * Create a delayed DomainResult for a specific reference to this ModelPart.
 	 */
-	 <T> DomainResult<T> createDelayedDomainResult(
+	<T> DomainResult<T> createDelayedDomainResult(
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			String resultVariable,

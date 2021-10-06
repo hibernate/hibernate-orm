@@ -6,11 +6,7 @@
  */
 package org.hibernate.metamodel.relational;
 
-import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.annotations.ColumnTransformer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.sql.ast.tree.from.ColumnReferenceQualifier;
 
 /**
  * @author Steve Ebersole
@@ -21,20 +17,4 @@ public interface Column {
 	Table getTable();
 
 	JdbcMapping getJdbcMapping();
-
-	/**
-	 * Render this Column's expression for reading accounting for any
-	 * configured {@link ColumnTransformer#read()}
-	 */
-	default String renderForRead(ColumnReferenceQualifier qualifier, SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	/**
-	 * Render this Column's expression for reading accounting for any
-	 * configured {@link ColumnTransformer#write()}
-	 */
-	default String renderForWrite(SessionFactoryImplementor sessionFactory) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
 }

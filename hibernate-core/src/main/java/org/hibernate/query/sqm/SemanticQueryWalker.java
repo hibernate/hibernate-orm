@@ -185,10 +185,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation);
 
-	default T visitJpaCompoundSelection(SqmJpaCompoundSelection<?> selection) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
+	T visitJpaCompoundSelection(SqmJpaCompoundSelection<?> selection);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// expressions - general

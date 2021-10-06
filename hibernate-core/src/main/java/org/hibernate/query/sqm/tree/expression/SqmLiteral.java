@@ -6,11 +6,14 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.internal.QueryLiteralHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -66,6 +69,18 @@ public class SqmLiteral<T>
 		else {
 			sb.append( string );
 		}
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 }

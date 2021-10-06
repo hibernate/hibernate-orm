@@ -20,7 +20,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**

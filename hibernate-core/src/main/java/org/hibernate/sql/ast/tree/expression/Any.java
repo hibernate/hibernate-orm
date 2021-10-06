@@ -9,6 +9,8 @@ package org.hibernate.sql.ast.tree.expression;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
@@ -55,6 +57,18 @@ public class Any implements Expression, DomainResultProducer {
 				).getValuesArrayPosition(),
 				resultVariable,
 				javaTypeDescriptor
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+
+		sqlExpressionResolver.resolveSqlSelection(
+				this,
+				type.getJdbcMappings().get( 0 ).getJavaTypeDescriptor(),
+				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
 }

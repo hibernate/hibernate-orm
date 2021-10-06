@@ -7,10 +7,7 @@
 package org.hibernate.sql.ast.tree.expression;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.BinaryArithmeticOperator;
-import org.hibernate.query.SemanticException;
-import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;

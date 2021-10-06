@@ -11,6 +11,7 @@ import java.util.List;
 
 import jakarta.persistence.criteria.Expression;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.internal.QueryHelper;
@@ -18,6 +19,8 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * @author Steve Ebersole
@@ -105,6 +108,18 @@ public class SqmCaseSimple<T, R>
 	@Override
 	public String asLoggableText() {
 		return "<simple-case>";
+	}
+
+	@Override
+	public DomainResult<R> createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	public static class WhenFragment<T,R> {

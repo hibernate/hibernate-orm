@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.expression;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.ParameterMetadata;
@@ -15,6 +16,8 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 
 /**
  * {@link JpaParameterExpression} created via JPA {@link jakarta.persistence.criteria.CriteriaBuilder}.
@@ -158,5 +161,17 @@ public class JpaCriteriaParameter<T>
 			sb.append( ':' );
 			sb.append( getName() );
 		}
+	}
+
+	@Override
+	public DomainResult<T> createDomainResult(
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

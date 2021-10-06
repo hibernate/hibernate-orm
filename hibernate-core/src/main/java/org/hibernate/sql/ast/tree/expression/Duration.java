@@ -9,7 +9,10 @@ package org.hibernate.sql.ast.tree.expression;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
+import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -62,6 +65,18 @@ public class Duration implements Expression, DomainResultProducer {
 				).getValuesArrayPosition(),
 				resultVariable,
 				type.getJdbcMapping().getJavaTypeDescriptor()
+		);
+	}
+
+	@Override
+	public void applySqlSelections(DomainResultCreationState creationState) {
+		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
+		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
+
+		sqlExpressionResolver.resolveSqlSelection(
+				this,
+				type.getJdbcMapping().getJavaTypeDescriptor(),
+				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
 	}
 

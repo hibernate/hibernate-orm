@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -35,6 +36,7 @@ import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -278,6 +280,23 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return createDomainResult( navigablePath, tableGroup, resultVariable, keyTable, keySide.getModelPart(), creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		throw new UnsupportedOperationException();
 	}
 
 	private <T> DomainResult<T> createDomainResult(

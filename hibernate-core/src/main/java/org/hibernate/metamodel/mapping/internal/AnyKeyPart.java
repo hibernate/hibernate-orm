@@ -8,6 +8,7 @@ package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -249,5 +250,22 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		return anyPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		anyPart.applySqlSelections( navigablePath, tableGroup, creationState );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+		anyPart.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
 	}
 }

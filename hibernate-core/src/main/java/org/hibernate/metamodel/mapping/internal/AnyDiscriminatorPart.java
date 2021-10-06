@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.io.Serializable;
+import java.util.function.BiConsumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.FetchStyle;
@@ -135,6 +136,21 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
+
+	@Override
+	public void applySqlSelections(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState,
+			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

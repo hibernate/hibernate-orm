@@ -15,7 +15,6 @@ import java.util.function.Consumer;
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -356,13 +355,8 @@ public interface CollectionPersister extends CollectionDefinition, Restrictable 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// mapping model
 
-	default CollectionSemantics getCollectionSemantics() {
-		throw new NotYetImplementedFor6Exception(
-				"The persister used for this collection [" + getNavigableRole()
-						+ "] does not yet implement support for `"
-						+ CollectionSemantics.class.getName() + "`"
-		);
-	}
+	CollectionSemantics getCollectionSemantics();
+
 
 	void applyBaseManyToManyRestrictions(
 			Consumer<Predicate> predicateConsumer,

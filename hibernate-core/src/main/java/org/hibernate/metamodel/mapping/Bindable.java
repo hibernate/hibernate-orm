@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.ast.Clause;
@@ -115,9 +114,7 @@ public interface Bindable extends JdbcMappingContainer {
 	 * Note that the identifier is not part of this disassembled state.  Note also
 	 * how the embedded value results in a sub-array.
 	 */
-	default Object disassemble(Object value, SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	Object disassemble(Object value, SharedSessionContractImplementor session);
 
 	/**
 	 * @asciidoc
@@ -143,14 +140,12 @@ public interface Bindable extends JdbcMappingContainer {
 		return forEachDisassembledJdbcValue( value, clause, 0, valuesConsumer, session );
 	}
 
-	default int forEachDisassembledJdbcValue(
+	int forEachDisassembledJdbcValue(
 			Object value,
 			Clause clause,
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
-			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			SharedSessionContractImplementor session);
 
 	/**
 	 * Visit each constituent JDBC value extracted from the entity instance itself.

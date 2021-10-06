@@ -10,7 +10,6 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.Incubating;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.spi.QueryParameterImplementor;
 
@@ -27,10 +26,8 @@ public interface ProcedureParameterImplementor<T> extends ProcedureParameter<T>,
 	 *
 	 * @throws SQLException Indicates a problem with any underlying JDBC calls
 	 */
-	default void prepare(
+	void prepare(
 			CallableStatement statement,
 			int startIndex,
-			ProcedureCallImplementor<?> callImplementor) throws SQLException{
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+			ProcedureCallImplementor<?> callImplementor) throws SQLException;
 }

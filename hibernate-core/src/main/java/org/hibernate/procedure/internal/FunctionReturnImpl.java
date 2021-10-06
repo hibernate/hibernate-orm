@@ -7,6 +7,8 @@
 
 package org.hibernate.procedure.internal;
 
+import java.sql.CallableStatement;
+import java.sql.SQLException;
 import java.sql.Types;
 import jakarta.persistence.ParameterMode;
 
@@ -129,5 +131,11 @@ public class FunctionReturnImpl implements FunctionReturnImplementor {
 				return new FunctionReturnImpl( procedureCall, jdbcTypeCode );
 			}
 		};
+	}
+
+	@Override
+	public void prepare(CallableStatement statement, int startIndex, ProcedureCallImplementor callImplementor)
+			throws SQLException {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

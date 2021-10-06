@@ -90,12 +90,14 @@ import org.hibernate.query.sqm.tree.predicate.SqmOrPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
+import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectClause;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
@@ -459,6 +461,20 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 					() -> predicate.accept( this )
 			);
 		}
+
+		return null;
+	}
+
+	@Override
+	public Object visitJpaCompoundSelection(SqmJpaCompoundSelection<?> selection) {
+		processStanza(
+				"JpaCompoundSelection",
+				() -> {
+					for ( SqmSelectableNode<?> selectionItem : selection.getSelectionItems() ) {
+						selectionItem.accept( this );
+					}
+				}
+		);
 
 		return null;
 	}

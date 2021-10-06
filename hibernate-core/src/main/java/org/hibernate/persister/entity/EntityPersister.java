@@ -156,10 +156,7 @@ public interface EntityPersister
 	 */
 	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
-	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
+	SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy();
 	/**
 	 * Retrieve the underlying entity metamodel instance...
 	 *

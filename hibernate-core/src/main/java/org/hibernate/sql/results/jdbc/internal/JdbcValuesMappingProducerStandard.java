@@ -33,10 +33,10 @@ public class JdbcValuesMappingProducerStandard implements JdbcValuesMappingProdu
 		resolvedMapping = new StandardJdbcValuesMapping( sqlSelections, domainResults );
 	}
 
-//	@Override
-//	public void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
-//
-//	}
+	@Override
+	public void addAffectedTableNames(Set<String> affectedTableNames, SessionFactoryImplementor sessionFactory) {
+
+	}
 
 	@Override
 	public JdbcValuesMapping resolve(

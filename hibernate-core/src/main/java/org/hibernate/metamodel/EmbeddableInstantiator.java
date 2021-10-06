@@ -28,7 +28,4 @@ public interface EmbeddableInstantiator extends Instantiator {
 	 */
 	Object instantiate(Supplier<Object[]> valuesAccess, SessionFactoryImplementor sessionFactory);
 
-//	default Object instantiate(IntFunction<Object> valueAccess, SessionFactoryImplementor sessionFactory) {
-//		throw new NotYetImplementedFor6Exception( getClass() );
-//	}
 }

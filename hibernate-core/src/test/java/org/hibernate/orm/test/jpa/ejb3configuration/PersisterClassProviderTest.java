@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
@@ -36,6 +37,7 @@ import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.mapping.Collection;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -44,6 +46,8 @@ import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
@@ -55,7 +59,14 @@ import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.query.NavigablePath;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -164,7 +175,68 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public ModelPart findSubPart(
+				String name, EntityMappingType targetType) {
+			return null;
+		}
+
+		@Override
+		public void visitSubParts(Consumer<ModelPart> consumer, EntityMappingType targetType) {
+
+		}
+
+		@Override
+		public <T> DomainResult<T> createDomainResult(
+				NavigablePath navigablePath,
+				TableGroup tableGroup,
+				String resultVariable,
+				DomainResultCreationState creationState) {
+			return null;
+		}
+
+		@Override
+		public void applySqlSelections(
+				NavigablePath navigablePath, TableGroup tableGroup, DomainResultCreationState creationState) {
+
+		}
+
+		@Override
+		public void applySqlSelections(
+				NavigablePath navigablePath,
+				TableGroup tableGroup,
+				DomainResultCreationState creationState,
+				BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
+
+		}
+
+		@Override
+		public int forEachJdbcType(
+				int offset, IndexedConsumer<JdbcMapping> action) {
+			return 0;
+		}
+
+		@Override
+		public Object disassemble(Object value, SharedSessionContractImplementor session) {
+			return null;
+		}
+
+		@Override
+		public int forEachDisassembledJdbcValue(
+				Object value,
+				Clause clause,
+				int offset,
+				JdbcValuesConsumer valuesConsumer,
+				SharedSessionContractImplementor session) {
+			return 0;
+		}
+
+		@Override
 		public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
+			return null;
+		}
+
+		@Override
+		public SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
 			return null;
 		}
 

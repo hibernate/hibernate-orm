@@ -8,7 +8,6 @@ package org.hibernate.query.sqm;
 
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.query.sqm.sql.internal.SelfInterpretingSqmPath;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;

@@ -9,7 +9,6 @@ package org.hibernate.envers.boot.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmJoinedSubclassEntityType;
 import org.hibernate.envers.configuration.internal.metadata.AuditTableData;

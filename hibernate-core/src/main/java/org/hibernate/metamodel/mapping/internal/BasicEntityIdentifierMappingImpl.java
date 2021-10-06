@@ -320,6 +320,16 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 	}
 
 	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return idType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+	@Override
 	public Fetch generateFetch(
 			FetchParent fetchParent,
 			NavigablePath fetchablePath,

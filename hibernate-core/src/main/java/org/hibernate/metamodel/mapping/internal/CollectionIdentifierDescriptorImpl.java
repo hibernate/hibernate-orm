@@ -18,6 +18,7 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
@@ -253,4 +254,18 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		return FetchTiming.IMMEDIATE;
 	}
 
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return type.disassemble( value, session );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return type.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
 }

@@ -17,6 +17,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.BiDirectionalFetch;
@@ -234,6 +235,21 @@ public class CircularFetchImpl implements BiDirectionalFetch, Association {
 			boolean selected,
 			String resultVariable,
 			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
 		throw new UnsupportedOperationException();
 	}
 

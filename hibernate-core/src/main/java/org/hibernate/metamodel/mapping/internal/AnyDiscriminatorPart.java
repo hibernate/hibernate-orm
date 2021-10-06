@@ -24,6 +24,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
@@ -141,6 +142,16 @@ public class AnyDiscriminatorPart implements BasicValuedModelPart, FetchOptions,
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		final Serializable discriminator = metaType.disassemble( value, session, value );
 		return discriminator;
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override

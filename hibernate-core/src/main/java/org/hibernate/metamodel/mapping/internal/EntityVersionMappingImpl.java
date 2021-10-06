@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -278,5 +279,20 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		return versionBasicType.disassemble( value, session );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return versionBasicType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 }

@@ -41,6 +41,7 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.NavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -782,18 +783,6 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
-	public TableGroup createRootTableGroup(
-			boolean canUseInnerJoins,
-			NavigablePath navigablePath,
-			String explicitSourceAlias,
-			Supplier<Consumer<Predicate>> additionalPredicateCollectorAccess,
-			SqlAliasBase sqlAliasBase,
-			SqlAstCreationState creationState,
-			SqlAstCreationContext creationContext) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
-
-	@Override
 	public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 		return getCollectionDescriptor().isAffectedByEnabledFilters( influencers );
 	}
@@ -885,6 +874,16 @@ public class PluralAttributeMappingImpl
 	@Override
 	public Object disassemble(Object value, SharedSessionContractImplementor session) {
 		return elementDescriptor.disassemble( value,session );
+	}
+
+	@Override
+	public int forEachDisassembledJdbcValue(
+			Object value,
+			Clause clause,
+			int offset,
+			JdbcValuesConsumer valuesConsumer,
+			SharedSessionContractImplementor session) {
+		return elementDescriptor.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
 	}
 
 	@Override

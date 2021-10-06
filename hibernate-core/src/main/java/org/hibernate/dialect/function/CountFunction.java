@@ -34,6 +34,7 @@ import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Christian Beikov
@@ -45,12 +46,14 @@ public class CountFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	private final String concatOperator;
 	private final String concatArgumentCastType;
 
-	public CountFunction(Dialect dialect, String concatOperator, String concatArgumentCastType) {
+	public CountFunction(Dialect dialect, TypeConfiguration typeConfiguration, String concatOperator, String concatArgumentCastType) {
 		super(
 				FUNCTION_NAME,
 				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.LONG )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
+				)
 		);
 		this.dialect = dialect;
 		this.concatOperator = concatOperator;

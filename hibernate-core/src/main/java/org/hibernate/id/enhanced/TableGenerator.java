@@ -50,7 +50,9 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.Table;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
@@ -714,12 +716,13 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					(identifier) -> new Table( contributor, namespace, identifier, false )
 			);
 
+			final BasicTypeRegistry basicTypeRegistry = database.getTypeConfiguration().getBasicTypeRegistry();
 			// todo : not sure the best solution here.  do we add the columns if missing?  other?
 			final Column segmentColumn = new ExportableColumn(
 					database,
 					table,
 					segmentColumnName,
-					StringType.INSTANCE,
+					basicTypeRegistry.resolve( StandardBasicTypes.STRING ),
 					dialect.getTypeName( Types.VARCHAR, Size.length(segmentValueLength) )
 			);
 			segmentColumn.setNullable( false );
@@ -733,7 +736,7 @@ public class TableGenerator implements PersistentIdentifierGenerator, Configurab
 					database,
 					table,
 					valueColumnName,
-					LongType.INSTANCE
+					basicTypeRegistry.resolve( StandardBasicTypes.LONG )
 			);
 			table.addColumn( valueColumn );
 		}

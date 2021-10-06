@@ -8,6 +8,7 @@
 package org.hibernate.spatial;
 
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
 
 /**
@@ -78,11 +79,11 @@ public enum CommonSpatialFunction {
 	}
 
 	private final FunctionKey key;
-	private final BasicType<?> ReturnType;
+	private final BasicTypeReference<?> ReturnType;
 	private final boolean spatialReturnType;
 	private final int numArgs;
 
-	CommonSpatialFunction(FunctionKey key, int numArgs, BasicType<?> returnType) {
+	CommonSpatialFunction(FunctionKey key, int numArgs, BasicTypeReference<?> returnType) {
 		this.key = key;
 		ReturnType = returnType;
 		spatialReturnType = false;
@@ -101,7 +102,7 @@ public enum CommonSpatialFunction {
 		return key;
 	}
 
-	public BasicType<?> getReturnType() {
+	public BasicTypeReference<?> getReturnType() {
 		return ReturnType;
 	}
 

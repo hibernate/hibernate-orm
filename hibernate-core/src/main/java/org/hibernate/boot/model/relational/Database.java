@@ -22,6 +22,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
@@ -29,6 +30,7 @@ import org.hibernate.service.ServiceRegistry;
 public class Database {
 
 	private final Dialect dialect;
+	private final TypeConfiguration typeConfiguration;
 	private final JdbcEnvironment jdbcEnvironment;
 	private final Map<Namespace.Name,Namespace> namespaceMap = new TreeMap<>();
 	private final Map<String,AuxiliaryDatabaseObject> auxiliaryDatabaseObjects = new HashMap<>();
@@ -44,6 +46,7 @@ public class Database {
 
 	public Database(MetadataBuildingOptions buildingOptions, JdbcEnvironment jdbcEnvironment) {
 		this.serviceRegistry = buildingOptions.getServiceRegistry();
+		this.typeConfiguration = buildingOptions.getTypeConfiguration();
 		this.jdbcEnvironment = jdbcEnvironment;
 		this.physicalNamingStrategy = buildingOptions.getPhysicalNamingStrategy();
 		this.dialect = determineDialect( buildingOptions );
@@ -168,5 +171,9 @@ public class Database {
 
 	public ServiceRegistry getServiceRegistry() {
 		return serviceRegistry;
+	}
+
+	public TypeConfiguration getTypeConfiguration() {
+		return typeConfiguration;
 	}
 }

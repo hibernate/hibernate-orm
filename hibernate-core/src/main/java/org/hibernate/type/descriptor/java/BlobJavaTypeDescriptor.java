@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
@@ -21,7 +20,9 @@ import org.hibernate.engine.jdbc.BlobImplementer;
 import org.hibernate.engine.jdbc.BlobProxy;
 import org.hibernate.engine.jdbc.WrappedBlob;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Descriptor for {@link Blob} handling.
@@ -60,7 +61,7 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 	}
 
 	public BlobJavaTypeDescriptor() {
-		super( Blob.class, BlobMutabilityPlan.INSTANCE );
+		super( Blob.class, BlobMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
 
 	@Override
@@ -86,12 +87,6 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<Blob> getComparator() {
-		return IncomparableComparator.INSTANCE;
-	}
-
-	@Override
 	public int extractHashCode(Blob value) {
 		return System.identityHashCode( value );
 	}
@@ -99,6 +94,11 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 	@Override
 	public boolean areEqual(Blob one, Blob another) {
 		return one == another;
+	}
+
+	@Override
+	public Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
 
 	@Override
@@ -171,7 +171,7 @@ public class BlobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Blob
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return dialect.getDefaultLobLength();
 	}
 }

@@ -41,18 +41,36 @@ public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaTyp
 	}
 
 	/**
-	 * Initialize a type descriptor for the given type.  Assumed immutable.
+	 * Initialize a type descriptor for the given type and mutability plan.
 	 *
 	 * @param type The Java type.
 	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
 	 */
 	@SuppressWarnings({ "unchecked" })
 	protected AbstractClassJavaTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
+		this(
+				type,
+				mutabilityPlan,
+				Comparable.class.isAssignableFrom( type )
+						? (Comparator<T>) ComparableComparator.INSTANCE
+						: null
+		);
+	}
+
+	/**
+	 * Initialize a type descriptor for the given type, mutability plan and comparator.
+	 *
+	 * @param type The Java type.
+	 * @param mutabilityPlan The plan for handling mutability aspects of the java type.
+	 * @param comparator The comparator for handling comparison of values
+	 */
+	protected AbstractClassJavaTypeDescriptor(
+			Class<T> type,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator) {
 		this.type = type;
 		this.mutabilityPlan = mutabilityPlan;
-		this.comparator = Comparable.class.isAssignableFrom( type )
-				? (Comparator<T>) ComparableComparator.INSTANCE
-				: null;
+		this.comparator = comparator;
 	}
 
 	@Override

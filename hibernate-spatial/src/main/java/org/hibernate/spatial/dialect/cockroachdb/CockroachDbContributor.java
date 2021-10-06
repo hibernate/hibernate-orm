@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.dialect.cockroachdb;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -34,9 +35,10 @@ public class CockroachDbContributor implements ContributorImplementor {
 	}
 
 	@Override
-	public void contributeFunctions(SqmFunctionRegistry functionRegistry) {
+	public void contributeFunctions(FunctionContributions functionContributions) {
 		HSMessageLogger.LOGGER.functionContributions( this.getClass().getCanonicalName() );
-		PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( getServiceRegistry() );
+		final PostgisSqmFunctionDescriptors postgisFunctions = new PostgisSqmFunctionDescriptors( functionContributions );
+		final SqmFunctionRegistry functionRegistry = functionContributions.getFunctionRegistry();
 
 		postgisFunctions.asMap()
 				.forEach( (key, desc) -> {

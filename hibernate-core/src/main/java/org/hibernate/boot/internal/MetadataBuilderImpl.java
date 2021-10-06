@@ -750,6 +750,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public TypeConfiguration getTypeConfiguration() {
+			return bootstrapContext.getTypeConfiguration();
+		}
+
+		@Override
 		public ReflectionManager getReflectionManager() {
 			return bootstrapContext.getReflectionManager();
 		}
@@ -887,7 +892,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			}
 		}
 
-		public void setBootstrapContext(BootstrapContextImpl bootstrapContext) {
+		public void setBootstrapContext(BootstrapContext bootstrapContext) {
 			this.bootstrapContext = bootstrapContext;
 		}
 	}

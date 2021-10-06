@@ -17,6 +17,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.TrimSpec;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslator;
@@ -26,6 +27,7 @@ import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.CharacterType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -44,10 +46,9 @@ public class AnsiTrimEmulationFunctionTest  {
 	private static final String trimSource = "a.column";
 
     @Test
-	@FailureExpected
 	public void testBasicSqlServerProcessing() {
 		Dialect dialect = new SQLServerDialect();
-		TrimFunction function = new TrimFunction( dialect );
+		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
 
 		performBasicSpaceTrimmingTests( dialect, function );
 
@@ -72,10 +73,9 @@ public class AnsiTrimEmulationFunctionTest  {
 	}
 
     @Test
-	@FailureExpected
 	public void testBasicSybaseProcessing() {
 		Dialect dialect = new SybaseDialect();
-		TrimFunction function = new TrimFunction( dialect );
+		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
 
 		performBasicSpaceTrimmingTests( dialect, function );
 

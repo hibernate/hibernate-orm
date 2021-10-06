@@ -28,11 +28,13 @@ import static java.util.Arrays.asList;
 public class LpadRpadPadEmulation
 		extends AbstractSqmFunctionDescriptor {
 
-	public LpadRpadPadEmulation() {
+	public LpadRpadPadEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"pad",
 				StandardArgumentsValidators.between( 3, 4 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 	}
 

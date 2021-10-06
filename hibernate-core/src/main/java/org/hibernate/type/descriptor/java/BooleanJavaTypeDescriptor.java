@@ -153,7 +153,7 @@ public class BooleanJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<B
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return 1;
 	}
 

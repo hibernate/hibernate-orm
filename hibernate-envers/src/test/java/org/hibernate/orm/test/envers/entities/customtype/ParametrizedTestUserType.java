@@ -16,6 +16,8 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.StringType;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -53,11 +55,10 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 			if ( !v.endsWith( param2 ) ) {
 				v = v + param2;
 			}
-			StringType.INSTANCE.nullSafeSet( st, v, index, session );
+			value = v;
 		}
-		else {
-			StringType.INSTANCE.nullSafeSet( st, null, index, session );
-		}
+		VarcharJdbcTypeDescriptor.INSTANCE.getBinder( StringJavaTypeDescriptor.INSTANCE )
+				.bind( st, (String) value, index, session );
 	}
 
 	public int[] sqlTypes() {

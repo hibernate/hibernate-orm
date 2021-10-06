@@ -21,6 +21,7 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.MySQL57Dialect;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.TimestampType;
 
 import org.hibernate.testing.RequiresDialect;
@@ -70,7 +71,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		s.getTransaction().begin();
 		final Query queryWithTimestamp = s.createQuery( "from Entity where ts= ?1" )
-				.setParameter( 1, eOrig.ts, TimestampType.INSTANCE );
+				.setParameter( 1, eOrig.ts, StandardBasicTypes.TIMESTAMP );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -118,7 +119,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
 				s.createQuery( "from Entity where tsColumnDefault= ?1" )
-						.setParameter( 1, eOrig.tsColumnDefault, TimestampType.INSTANCE );
+						.setParameter( 1, eOrig.tsColumnDefault, StandardBasicTypes.TIMESTAMP );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();
@@ -166,7 +167,7 @@ public class MySQL57TimestampPropertyTest extends BaseCoreFunctionalTestCase {
 		s.getTransaction().begin();
 		final Query queryWithTimestamp =
 				s.createQuery( "from Entity where tsColumnDefinition= ?1" )
-						.setParameter( 1, eOrig.tsColumnDefinition, TimestampType.INSTANCE );
+						.setParameter( 1, eOrig.tsColumnDefinition, StandardBasicTypes.TIMESTAMP );
 		final Entity eQueriedWithTimestamp = (Entity) queryWithTimestamp.uniqueResult();
 		assertNotNull( eQueriedWithTimestamp );
 		s.getTransaction().commit();

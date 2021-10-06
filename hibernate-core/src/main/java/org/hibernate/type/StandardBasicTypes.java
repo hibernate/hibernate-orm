@@ -9,9 +9,13 @@ package org.hibernate.type;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URL;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.NClob;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -51,32 +55,43 @@ public final class StandardBasicTypes {
 	// Boolean mappings
 
 	/**
-	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#BIT BIT}.
-	 *
-	 * @see BooleanType
+	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#BOOLEAN BOOLEAN}.
 	 */
-	public static final BooleanType BOOLEAN = BooleanType.INSTANCE;
+	public static final BasicTypeReference<Boolean> BOOLEAN = new BasicTypeReference<>(
+			"boolean",
+			Boolean.class,
+			Types.BOOLEAN
+	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
-	 *
-	 * @see NumericBooleanType
+	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final NumericBooleanType NUMERIC_BOOLEAN = NumericBooleanType.INSTANCE;
+	public static final BasicTypeReference<Boolean> NUMERIC_BOOLEAN = new BasicTypeReference<>(
+			"numeric_boolean",
+			Boolean.class,
+			Types.TINYINT,
+			NumericBooleanConverter.INSTANCE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'T'/'F').
-	 *
-	 * @see TrueFalseType
 	 */
-	public static final TrueFalseType TRUE_FALSE = TrueFalseType.INSTANCE;
+	public static final BasicTypeReference<Boolean> TRUE_FALSE = new BasicTypeReference<>(
+			"true_false",
+			Boolean.class,
+			Types.CHAR,
+			TrueFalseConverter.INSTANCE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Boolean} to JDBC {@link java.sql.Types#CHAR CHAR(1)} (using 'Y'/'N').
-	 *
-	 * @see YesNoType
 	 */
-	public static final YesNoType YES_NO = YesNoType.INSTANCE;
+	public static final BasicTypeReference<Boolean> YES_NO = new BasicTypeReference<>(
+			"yes_no",
+			Boolean.class,
+			Types.CHAR,
+			YesNoConverter.INSTANCE
+	);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -85,56 +100,74 @@ public final class StandardBasicTypes {
 	/**
 	 * The standard Hibernate type for mapping {@link Byte} to JDBC {@link java.sql.Types#TINYINT TINYINT}.
 	 */
-	public static final ByteType BYTE = ByteType.INSTANCE;
+	public static final BasicTypeReference<Byte> BYTE = new BasicTypeReference<>(
+			"byte",
+			Byte.class,
+			Types.TINYINT
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Short} to JDBC {@link java.sql.Types#SMALLINT SMALLINT}.
-	 *
-	 * @see ShortType
 	 */
-	public static final ShortType SHORT = ShortType.INSTANCE;
+	public static final BasicTypeReference<Short> SHORT = new BasicTypeReference<>(
+			"short",
+			Short.class,
+			Types.SMALLINT
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Integer} to JDBC {@link java.sql.Types#INTEGER INTEGER}.
-	 *
-	 * @see IntegerType
 	 */
-	public static final IntegerType INTEGER = IntegerType.INSTANCE;
+	public static final BasicTypeReference<Integer> INTEGER = new BasicTypeReference<>(
+			"integer",
+			Integer.class,
+			Types.INTEGER
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Long} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
-	 *
-	 * @see LongType
 	 */
-	public static final LongType LONG = LongType.INSTANCE;
+	public static final BasicTypeReference<Long> LONG = new BasicTypeReference<>(
+			"long",
+			Long.class,
+			Types.BIGINT
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Float} to JDBC {@link java.sql.Types#FLOAT FLOAT}.
-	 *
-	 * @see FloatType
 	 */
-	public static final FloatType FLOAT = FloatType.INSTANCE;
+	public static final BasicTypeReference<Float> FLOAT = new BasicTypeReference<>(
+			"float",
+			Float.class,
+			Types.FLOAT
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Double} to JDBC {@link java.sql.Types#DOUBLE DOUBLE}.
-	 *
-	 * @see DoubleType
 	 */
-	public static final DoubleType DOUBLE = DoubleType.INSTANCE;
+	public static final BasicTypeReference<Double> DOUBLE = new BasicTypeReference<>(
+			"double",
+			Double.class,
+			Types.DOUBLE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link BigInteger} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
-	 *
-	 * @see BigIntegerType
 	 */
-	public static final BigIntegerType BIG_INTEGER = BigIntegerType.INSTANCE;
+	public static final BasicTypeReference<BigInteger> BIG_INTEGER = new BasicTypeReference<>(
+			"big_integer",
+			BigInteger.class,
+			Types.NUMERIC
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link BigDecimal} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
-	 *
-	 * @see BigDecimalType
 	 */
-	public static final BigDecimalType BIG_DECIMAL = BigDecimalType.INSTANCE;
+	public static final BasicTypeReference<BigDecimal> BIG_DECIMAL = new BasicTypeReference<>(
+			"big_decimal",
+			BigDecimal.class,
+			Types.NUMERIC
+	);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -142,94 +175,126 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#CHAR CHAR(1)}.
-	 *
-	 * @see CharacterType
 	 */
-	public static final CharacterType CHARACTER = CharacterType.INSTANCE;
+	public static final BasicTypeReference<Character> CHARACTER = new BasicTypeReference<>(
+			"character",
+			Character.class,
+			Types.CHAR
+	);;
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character} to JDBC {@link java.sql.Types#NCHAR NCHAR(1)}.
 	 */
-	public static final CharacterNCharType CHARACTER_NCHAR = CharacterNCharType.INSTANCE;
+	public static final BasicTypeReference<Character> CHARACTER_NCHAR = new BasicTypeReference<>(
+			"ncharacter",
+			Character.class,
+			Types.NCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see StringType
 	 */
-	public static final StringType STRING = StringType.INSTANCE;
+	public static final BasicTypeReference<String> STRING = new BasicTypeReference<>(
+			"string",
+			String.class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NVARCHAR NVARCHAR}
 	 */
-	public static final StringNVarcharType NSTRING = StringNVarcharType.INSTANCE;
+	public static final BasicTypeReference<String> NSTRING = new BasicTypeReference<>(
+			"nstring",
+			String.class,
+			Types.NVARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@code char[]} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see CharArrayType
 	 */
-	public static final CharArrayType CHAR_ARRAY = CharArrayType.INSTANCE;
+	public static final BasicTypeReference<char[]> CHAR_ARRAY = new BasicTypeReference<>(
+			"characters",
+			char[].class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Character Character[]} to JDBC
 	 * {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see CharacterArrayType
 	 */
-	public static final CharacterArrayType CHARACTER_ARRAY = CharacterArrayType.INSTANCE;
+	public static final BasicTypeReference<Character[]> CHARACTER_ARRAY = new BasicTypeReference<>(
+			"wrapper-characters",
+			Character[].class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR}.
 	 * <p/>
 	 * Similar to a {@link #MATERIALIZED_CLOB}
-	 *
-	 * @see TextType
 	 */
-	public static final TextType TEXT = TextType.INSTANCE;
+	public static final BasicTypeReference<String> TEXT = new BasicTypeReference<>(
+			"text",
+			String.class,
+			Types.LONGVARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#LONGNVARCHAR LONGNVARCHAR}.
 	 * <p/>
 	 * Similar to a {@link #MATERIALIZED_NCLOB}
-	 *
-	 * @see NTextType
 	 */
-	public static final NTextType NTEXT = NTextType.INSTANCE;
+	public static final BasicTypeReference<String> NTEXT = new BasicTypeReference<>(
+			"ntext",
+			String.class,
+			Types.LONGNVARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Clob} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
-	 * @see ClobType
 	 * @see #MATERIALIZED_CLOB
 	 */
-	public static final ClobType CLOB = ClobType.INSTANCE;
+	public static final BasicTypeReference<Clob> CLOB = new BasicTypeReference<>(
+			"clob",
+			Clob.class,
+			Types.CLOB
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link NClob} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
-	 * @see NClobType
 	 * @see #MATERIALIZED_NCLOB
 	 */
-	public static final NClobType NCLOB = NClobType.INSTANCE;
+	public static final BasicTypeReference<NClob> NCLOB = new BasicTypeReference<>(
+			"nclob",
+			NClob.class,
+			Types.NCLOB
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#CLOB CLOB}.
 	 *
-	 * @see MaterializedClobType
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final MaterializedClobType MATERIALIZED_CLOB = MaterializedClobType.INSTANCE;
+	public static final BasicTypeReference<String> MATERIALIZED_CLOB = new BasicTypeReference<>(
+			"materialized_clob",
+			String.class,
+			Types.CLOB
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link String} to JDBC {@link java.sql.Types#NCLOB NCLOB}.
 	 *
-	 * @see MaterializedNClobType
 	 * @see #MATERIALIZED_CLOB
 	 * @see #NTEXT
 	 */
-	public static final MaterializedNClobType MATERIALIZED_NCLOB = MaterializedNClobType.INSTANCE;
+	public static final BasicTypeReference<String> MATERIALIZED_NCLOB = new BasicTypeReference<>(
+			"materialized_nclob",
+			String.class,
+			Types.NCLOB
+	);
 
 
 	/**
@@ -238,7 +303,11 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final CharacterArrayClobType MATERIALIZED_CLOB_CHAR_ARRAY = PrimitiveCharacterArrayClobType.INSTANCE;
+	public static final BasicTypeReference<char[]> MATERIALIZED_CLOB_CHAR_ARRAY = new BasicTypeReference<>(
+			"materialized_clob_char_array",
+			char[].class,
+			Types.CLOB
+	);
 
 
 	/**
@@ -247,7 +316,11 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_CLOB
 	 * @see #TEXT
 	 */
-	public static final CharacterArrayClobType MATERIALIZED_CLOB_CHARACTER_ARRAY = CharacterArrayClobType.INSTANCE;
+	public static final BasicTypeReference<Character[]> MATERIALIZED_CLOB_CHARACTER_ARRAY = new BasicTypeReference<>(
+			"materialized_clob_character_array",
+			Character[].class,
+			Types.CLOB
+	);
 
 
 	/**
@@ -256,7 +329,11 @@ public final class StandardBasicTypes {
 	 * @see #MATERIALIZED_NCLOB
 	 * @see #TEXT
 	 */
-	public static final CharacterArrayNClobType MATERIALIZED_NCLOB_CHAR_ARRAY = PrimitiveCharacterArrayNClobType.INSTANCE;
+	public static final BasicTypeReference<char[]> MATERIALIZED_NCLOB_CHAR_ARRAY = new BasicTypeReference<>(
+			"materialized_nclob_char_array",
+			char[].class,
+			Types.NCLOB
+	);
 
 
 	/**
@@ -265,99 +342,148 @@ public final class StandardBasicTypes {
 	 * @see #NCLOB
 	 * @see #CHAR_ARRAY
 	 */
-	public static final CharacterArrayNClobType MATERIALIZED_NCLOB_CHARACTER_ARRAY = CharacterArrayNClobType.INSTANCE;
+	public static final BasicTypeReference<Character[]> MATERIALIZED_NCLOB_CHARACTER_ARRAY = new BasicTypeReference<>(
+			"materialized_nclob_character_array",
+			Character[].class,
+			Types.NCLOB
+	);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Date / time data
 
 	/**
-	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link java.sql.Types#BIGINT BIGINT}.
+	 * The standard Hibernate type for mapping {@link Duration} to JDBC {@link java.sql.Types#NUMERIC NUMERIC}.
 	 */
-	public static final DurationType DURATION = DurationType.INSTANCE;
+	public static final BasicTypeReference<Duration> DURATION = new BasicTypeReference<>(
+			"Duration",
+			Duration.class,
+			Types.NUMERIC
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final LocalDateTimeType LOCAL_DATE_TIME = LocalDateTimeType.INSTANCE;
+	public static final BasicTypeReference<LocalDateTime> LOCAL_DATE_TIME = new BasicTypeReference<>(
+			"LocalDateTime",
+			LocalDateTime.class,
+			Types.TIMESTAMP
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link LocalDate} to JDBC {@link java.sql.Types#DATE DATE}.
 	 */
-	public static final LocalDateType LOCAL_DATE = LocalDateType.INSTANCE;
+	public static final BasicTypeReference<LocalDate> LOCAL_DATE = new BasicTypeReference<>(
+			"LocalDate",
+			LocalDate.class,
+			Types.DATE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link LocalTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final LocalTimeType LOCAL_TIME = LocalTimeType.INSTANCE;
+	public static final BasicTypeReference<LocalTime> LOCAL_TIME = new BasicTypeReference<>(
+			"LocalTime",
+			LocalTime.class,
+			Types.TIME
+	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
 	 */
-	public static final OffsetDateTimeType OFFSET_DATE_TIME = OffsetDateTimeType.INSTANCE;
+	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME = new BasicTypeReference<>(
+			"OffsetDateTime",
+			OffsetDateTime.class,
+			Types.TIMESTAMP_WITH_TIMEZONE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final OffsetTimeType OFFSET_TIME = OffsetTimeType.INSTANCE;
+	public static final BasicTypeReference<OffsetTime> OFFSET_TIME = new BasicTypeReference<>(
+			"ZonedDateTime",
+			OffsetTime.class,
+			// todo (6.0): why not TIME_WITH_TIMEZONE ?
+			Types.TIME
+	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
 	 */
-	public static final ZonedDateTimeType ZONED_DATE_TIME = ZonedDateTimeType.INSTANCE;
+	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME = new BasicTypeReference<>(
+			"ZonedDateTime",
+			ZonedDateTime.class,
+			Types.TIMESTAMP_WITH_TIMEZONE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Instant} to JDBC
-	 * {@link java.sql.Types#TIME TIME}.
-	 *
-	 * @see TimeType
+	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
 	 */
-	public static final InstantType INSTANT = InstantType.INSTANCE;
+	public static final BasicTypeReference<Instant> INSTANT = new BasicTypeReference<>(
+			"instant",
+			Instant.class,
+			Types.TIMESTAMP
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Time}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
-	 *
-	 * @see TimeType
 	 */
-	public static final TimeType TIME = TimeType.INSTANCE;
+	public static final BasicTypeReference<Date> TIME = new BasicTypeReference<>(
+			"time",
+			Time.class,
+			Types.TIME
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Date}) to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
-	 *
-	 * @see TimeType
 	 */
-	public static final DateType DATE = DateType.INSTANCE;
+	public static final BasicTypeReference<Date> DATE = new BasicTypeReference<>(
+			"date",
+			java.sql.Date.class,
+			Types.DATE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Date} ({@link java.sql.Timestamp}) to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
-	 *
-	 * @see TimeType
 	 */
-	public static final TimestampType TIMESTAMP = TimestampType.INSTANCE;
+	public static final BasicTypeReference<Date> TIMESTAMP = new BasicTypeReference<>(
+			"timestamp",
+			Timestamp.class,
+			Types.TIMESTAMP
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
-	 *
-	 * @see CalendarType
 	 */
-	public static final CalendarType CALENDAR = CalendarType.INSTANCE;
+	public static final BasicTypeReference<Calendar> CALENDAR = new BasicTypeReference<>(
+			"calendar",
+			Calendar.class,
+			Types.TIMESTAMP
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#DATE DATE}.
-	 *
-	 * @see CalendarDateType
 	 */
-	public static final CalendarDateType CALENDAR_DATE = CalendarDateType.INSTANCE;
+	public static final BasicTypeReference<Calendar> CALENDAR_DATE = new BasicTypeReference<>(
+			"calendar_date",
+			Calendar.class,
+			Types.DATE
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Calendar} to JDBC
 	 * {@link java.sql.Types#TIME TIME}.
 	 */
-	public static final CalendarTimeType CALENDAR_TIME = CalendarTimeType.INSTANCE;
+	public static final BasicTypeReference<Calendar> CALENDAR_TIME = new BasicTypeReference<>(
+			"calendar_time",
+			Calendar.class,
+			Types.TIME
+	);
 
 
 
@@ -366,54 +492,85 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
-	 *
-	 * @see BinaryType
 	 */
-	public static final BinaryType BINARY = BinaryType.INSTANCE;
+	public static final BasicTypeReference<byte[]> BINARY = new BasicTypeReference<>(
+			"binary",
+			byte[].class,
+			Types.VARBINARY
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Byte Byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
-	 *
-	 * @see WrapperBinaryType
 	 */
-	public static final WrapperBinaryType WRAPPER_BINARY = WrapperBinaryType.INSTANCE;
+	public static final BasicTypeReference<Byte[]> WRAPPER_BINARY = new BasicTypeReference<>(
+			//TODO find a decent name before documenting
+			"wrapper-binary",
+			Byte[].class,
+			Types.VARBINARY
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY}.
 	 *
-	 * @see ImageType
 	 * @see #MATERIALIZED_BLOB
 	 */
-	public static final ImageType IMAGE = ImageType.INSTANCE;
+	public static final BasicTypeReference<byte[]> IMAGE = new BasicTypeReference<>(
+			"image",
+			byte[].class,
+			Types.LONGVARBINARY
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Blob} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
-	 * @see BlobType
 	 * @see #MATERIALIZED_BLOB
 	 */
-	public static final BlobType BLOB = BlobType.INSTANCE;
+	public static final BasicTypeReference<Blob> BLOB = new BasicTypeReference<>(
+			"blob",
+			Blob.class,
+			Types.BLOB
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
 	 *
-	 * @see MaterializedBlobType
 	 * @see #MATERIALIZED_BLOB
 	 * @see #IMAGE
 	 */
-	public static final MaterializedBlobType MATERIALIZED_BLOB = MaterializedBlobType.INSTANCE;
+	public static final BasicTypeReference<byte[]> MATERIALIZED_BLOB = new BasicTypeReference<>(
+			"materialized_blob",
+			byte[].class,
+			Types.BLOB
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@code Byte[]} to JDBC {@link java.sql.Types#BLOB BLOB}.
+	 *
+	 * @see #MATERIALIZED_BLOB
+	 * @see #IMAGE
+	 */
+	public static final BasicTypeReference<Byte[]> WRAPPED_MATERIALIZED_BLOB = new BasicTypeReference<>(
+			"wrapped_materialized_blob",
+			Byte[].class,
+			Types.BLOB
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Serializable} to JDBC {@link java.sql.Types#VARBINARY VARBINARY}.
 	 * <p/>
 	 * See especially the discussion wrt {@link ClassLoader} determination on {@link SerializableType}
-	 *
-	 * @see SerializableType
 	 */
-	@SuppressWarnings("rawtypes")
-	public static final SerializableType SERIALIZABLE = SerializableType.INSTANCE;
+	public static final BasicTypeReference<Serializable> SERIALIZABLE = new BasicTypeReference<>(
+			"serializable",
+			Serializable.class,
+			Types.VARBINARY
+	);
 
-	public static final JavaObjectType OBJECT_TYPE = JavaObjectType.INSTANCE;
+	public static final BasicTypeReference<Object> OBJECT_TYPE = new BasicTypeReference<>(
+			"JAVA_OBJECT",
+			Object.class,
+			Types.JAVA_OBJECT
+	);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -421,45 +578,57 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link Class} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see ClassType
 	 */
-	public static final ClassType CLASS = ClassType.INSTANCE;
+	public static final BasicTypeReference<Class> CLASS = new BasicTypeReference<>(
+			"class",
+			Class.class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Locale} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see LocaleType
 	 */
-	public static final LocaleType LOCALE = LocaleType.INSTANCE;
+	public static final BasicTypeReference<Locale> LOCALE = new BasicTypeReference<>(
+			"locale",
+			Locale.class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link Currency} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see CurrencyType
 	 */
-	public static final CurrencyType CURRENCY = CurrencyType.INSTANCE;
+	public static final BasicTypeReference<Currency> CURRENCY = new BasicTypeReference<>(
+			"currency",
+			Currency.class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link ZoneOffset} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see ZoneOffsetType
 	 */
-	public static final ZoneOffsetType ZONE_OFFSET = ZoneOffsetType.INSTANCE;
+	public static final BasicTypeReference<ZoneOffset> ZONE_OFFSET = new BasicTypeReference<>(
+			"ZoneOffset",
+			ZoneOffset.class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link TimeZone} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see TimeZoneType
 	 */
-	public static final TimeZoneType TIMEZONE = TimeZoneType.INSTANCE;
+	public static final BasicTypeReference<TimeZone> TIMEZONE = new BasicTypeReference<>(
+			"timezone",
+			TimeZone.class,
+			Types.VARCHAR
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link java.net.URL} to JDBC {@link java.sql.Types#VARCHAR VARCHAR}.
-	 *
-	 * @see UrlType
 	 */
-	public static final UrlType URL = UrlType.INSTANCE;
+	public static final BasicTypeReference<URL> URL = new BasicTypeReference<>(
+			"url",
+			java.net.URL.class,
+			Types.VARCHAR
+	);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -467,26 +636,30 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link UUID} to JDBC {@link java.sql.Types#BINARY BINARY}.
-	 *
-	 * @see UUIDBinaryType
 	 */
-	public static final UUIDBinaryType UUID_BINARY = UUIDBinaryType.INSTANCE;
+	public static final BasicTypeReference<UUID> UUID_BINARY = new BasicTypeReference<>(
+			"uuid-binary",
+			UUID.class,
+			Types.BINARY
+	);
 
 	/**
 	 * The standard Hibernate type for mapping {@link UUID} to JDBC {@link java.sql.Types#CHAR CHAR}.
-	 *
-	 * @see UUIDCharType
 	 */
-	public static final UUIDCharType UUID_CHAR = UUIDCharType.INSTANCE;
+	public static final BasicTypeReference<UUID> UUID_CHAR = new BasicTypeReference<>(
+			"uuid-char",
+			UUID.class,
+			Types.CHAR
+	);
 
 
 	/**
 	 * The standard Hibernate type for mapping {@code byte[]} to JDBC {@link java.sql.Types#VARBINARY VARBINARY},
 	 * specifically for entity versions/timestamps.  Only useful for T-SQL databases (MS, Sybase, etc)
-	 *
-	 * @see RowVersionType
 	 */
-	public static final RowVersionType ROW_VERSION = RowVersionType.INSTANCE;
+	public static final BasicTypeReference<byte[]> ROW_VERSION = new BasicTypeReference<>(
+			"row_version", byte[].class, Types.VARBINARY
+	);
 
 
 	public static void prime(TypeConfiguration typeConfiguration) {
@@ -576,7 +749,7 @@ public final class StandardBasicTypes {
 		);
 
 		handle(
-				WrappedMaterializedBlobType.INSTANCE,
+				WRAPPED_MATERIALIZED_BLOB,
 				"org.hibernate.type.MaterializedBlobType",
 				basicTypeRegistry,
 				"wrapped_materialized_blob"
@@ -963,27 +1136,28 @@ public final class StandardBasicTypes {
 		//handle( new AdaptedImmutableType( DbTimestampType.INSTANCE ), typeConfiguration,
 		//		basicTypeProducerRegistry, "imm_dbtimestamp" );
 
-		final AdaptedImmutableType dateTypeImmutableType = new AdaptedImmutableType( DateType.INSTANCE );
+		final BasicTypeReference<Date> dateTypeImmutableType = DATE.asImmutable();
 		handle( dateTypeImmutableType, null, basicTypeRegistry, dateTypeImmutableType.getName() );
 
-		final AdaptedImmutableType timeTypeImmutableType = new AdaptedImmutableType( TimeType.INSTANCE );
+		final BasicTypeReference<Date> timeTypeImmutableType = TIME.asImmutable();
 		handle( timeTypeImmutableType, null, basicTypeRegistry, timeTypeImmutableType.getName() );
 
-		final AdaptedImmutableType timeStampImmutableType = new AdaptedImmutableType( TimestampType.INSTANCE );
+		final BasicTypeReference<Date> timeStampImmutableType = TIMESTAMP.asImmutable();
 		handle( timeStampImmutableType, null, basicTypeRegistry, timeStampImmutableType.getName() );
 
-		final AdaptedImmutableType calendarImmutableType = new AdaptedImmutableType( CalendarType.INSTANCE );
+		final BasicTypeReference<Calendar> calendarImmutableType = CALENDAR.asImmutable();
 		handle( calendarImmutableType, null, basicTypeRegistry, calendarImmutableType.getName() );
 
-		final AdaptedImmutableType calendarDateImmutableType = new AdaptedImmutableType( CalendarDateType.INSTANCE );
+		final BasicTypeReference<Calendar> calendarDateImmutableType = CALENDAR_DATE.asImmutable();
 		handle( calendarDateImmutableType, null, basicTypeRegistry, calendarDateImmutableType.getName() );
 
-		//noinspection unchecked
-		final AdaptedImmutableType binaryImmutableType = new AdaptedImmutableType( BinaryType.INSTANCE );
+		final BasicTypeReference<Calendar> calendarTimeImmutableType = CALENDAR_TIME.asImmutable();
+		handle( calendarTimeImmutableType, null, basicTypeRegistry, calendarTimeImmutableType.getName() );
+
+		final BasicTypeReference<byte[]> binaryImmutableType = BINARY.asImmutable();
 		handle( binaryImmutableType, null, basicTypeRegistry, binaryImmutableType.getName() );
 
-		//noinspection unchecked
-		final AdaptedImmutableType serializableImmutableType = new AdaptedImmutableType( SerializableType.INSTANCE );
+		final BasicTypeReference<Serializable> serializableImmutableType = SERIALIZABLE.asImmutable();
 		handle( serializableImmutableType, null, basicTypeRegistry, serializableImmutableType.getName() );
 
 		basicTypeRegistry.primed();
@@ -992,6 +1166,14 @@ public final class StandardBasicTypes {
 	@SuppressWarnings("rawtypes")
 	private static void handle(
 			BasicType type,
+			String legacyTypeClassName,
+			BasicTypeRegistry basicTypeRegistry,
+			String... registrationKeys) {
+		basicTypeRegistry.addPrimeEntry( type, legacyTypeClassName, registrationKeys );
+	}
+
+	private static void handle(
+			BasicTypeReference<?> type,
 			String legacyTypeClassName,
 			BasicTypeRegistry basicTypeRegistry,
 			String... registrationKeys) {

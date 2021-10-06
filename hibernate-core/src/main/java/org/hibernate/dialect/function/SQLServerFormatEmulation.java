@@ -10,6 +10,7 @@ import java.util.List;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -30,11 +31,13 @@ public class SQLServerFormatEmulation extends AbstractSqmSelfRenderingFunctionDe
 
 	private final SQLServerDialect dialect;
 
-	public SQLServerFormatEmulation(SQLServerDialect dialect) {
+	public SQLServerFormatEmulation(SQLServerDialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"format",
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 		this.dialect = dialect;
 	}

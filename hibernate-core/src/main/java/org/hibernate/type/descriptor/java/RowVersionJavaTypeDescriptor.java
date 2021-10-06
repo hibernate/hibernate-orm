@@ -32,7 +32,7 @@ public class RowVersionJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 
 	@SuppressWarnings({ "unchecked" })
 	public RowVersionJavaTypeDescriptor() {
-		super( byte[].class, ArrayMutabilityPlan.INSTANCE );
+		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
 	}
 
 	@Override
@@ -80,12 +80,6 @@ public class RowVersionJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 			bytes[i] = (byte) (Integer.parseInt(hexStr, 16) + Byte.MIN_VALUE);
 		}
 		return bytes;
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<byte[]> getComparator() {
-		return RowVersionComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

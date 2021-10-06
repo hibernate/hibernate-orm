@@ -55,6 +55,7 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -63,6 +64,7 @@ import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 import static org.hibernate.LockMode.UPGRADE;
@@ -1029,6 +1031,22 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	public QueryImplementor setParameter(int position, Object value, AllowableParameterType type) {
 		locateBinding( position ).setBindValue( value, type );
 		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setParameter(String name, Object value, BasicTypeReference<?> type) {
+		return setParameter( name, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
+	}
+
+	@Override
+	@SuppressWarnings( {"unchecked", "rawtypes"} )
+	public QueryImplementor setParameter(int position, Object value, BasicTypeReference<?> type) {
+		return setParameter( position, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
+	}
+
+	@Override
+	public <P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type) {
+		return setParameter( parameter, val, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
 	}
 
 	@Override

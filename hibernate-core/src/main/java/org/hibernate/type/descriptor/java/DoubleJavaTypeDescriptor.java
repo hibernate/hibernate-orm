@@ -118,7 +118,7 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		//this is the number of decimal digits
 		// + sign + decimal point
 		// + space for "E+nnn"

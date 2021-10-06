@@ -32,8 +32,9 @@ public class MetadataBuildingContextTestingImpl implements MetadataBuildingConte
 	private final TypeDefinitionRegistryStandardImpl typeDefinitionRegistry;
 
 	public MetadataBuildingContextTestingImpl(StandardServiceRegistry serviceRegistry) {
-		buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
-		bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions );
+		MetadataBuilderImpl.MetadataBuildingOptionsImpl buildingOptions = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry );
+		this.buildingOptions = buildingOptions;
+		buildingOptions.setBootstrapContext( bootstrapContext = new BootstrapContextImpl( serviceRegistry, buildingOptions ) );
 		mappingDefaults = new MetadataBuilderImpl.MappingDefaultsImpl( serviceRegistry );
 		metadataCollector = new InFlightMetadataCollectorImpl( bootstrapContext, buildingOptions );
 

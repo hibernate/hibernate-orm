@@ -12,6 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Descriptor for {@link BigInteger} handling.
@@ -96,7 +97,7 @@ public class BigIntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return getDefaultSqlPrecision(dialect)+1;
 	}
 

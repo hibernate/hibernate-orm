@@ -47,7 +47,7 @@ public class LiteralHelper {
 	public static SqmLiteral<Integer> integerLiteral(int value, QueryEngine queryEngine) {
 		return new SqmLiteral<>(
 				value,
-				StandardBasicTypes.INTEGER,
+				queryEngine.getCriteriaBuilder().getIntegerType(),
 				queryEngine.getCriteriaBuilder()
 		);
 	}

@@ -25,6 +25,7 @@ import org.hibernate.sql.ast.tree.expression.CastTarget;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -43,8 +44,9 @@ public class TimestampaddFunction
 
 	private final Dialect dialect;
 	private final CastFunction castFunction;
+	private final BasicType<Integer> integerType;
 
-	public TimestampaddFunction(Dialect dialect) {
+	public TimestampaddFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"timestampadd",
 				StandardArgumentsValidators.exactly( 3 ),
@@ -52,6 +54,7 @@ public class TimestampaddFunction
 		);
 		this.dialect = dialect;
 		this.castFunction = new CastFunction( dialect, Types.BOOLEAN );
+		this.integerType = typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER );
 	}
 
 	@Override
@@ -123,7 +126,8 @@ public class TimestampaddFunction
 						)
 				);
 			}
-			castArguments.add( new CastTarget( StandardBasicTypes.INTEGER ) );
+
+			castArguments.add( new CastTarget( integerType ) );
 			newArguments.set( 0, new DurationUnit( unit, field.getExpressionType() ) );
 			newArguments.set(
 					1,
@@ -131,8 +135,8 @@ public class TimestampaddFunction
 							"cast",
 							castFunction::render,
 							castArguments,
-							StandardBasicTypes.INTEGER,
-							StandardBasicTypes.INTEGER
+							integerType,
+							integerType
 					)
 
 			);

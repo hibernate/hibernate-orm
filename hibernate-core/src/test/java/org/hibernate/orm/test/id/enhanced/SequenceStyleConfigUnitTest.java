@@ -13,6 +13,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -33,6 +34,7 @@ import org.hibernate.id.enhanced.SequenceStyleGenerator;
 import org.hibernate.id.enhanced.StandardOptimizerDescriptor;
 import org.hibernate.id.enhanced.TableStructure;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -61,12 +63,18 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
@@ -80,11 +88,11 @@ public class SequenceStyleConfigUnitTest {
 		}
 	}
 
-	private Properties buildGeneratorPropertiesBase(StandardServiceRegistry serviceRegistry) {
+	private Properties buildGeneratorPropertiesBase(MetadataBuildingContext buildingContext) {
 		Properties props = new Properties();
 		props.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				new MetadataBuildingContextTestingImpl( serviceRegistry ).getObjectNameNormalizer()
+				buildingContext.getObjectNameNormalizer()
 		);
 		props.put(
 				PersistentIdentifierGenerator.IMPLICIT_NAME_BASE,
@@ -101,12 +109,18 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
@@ -131,14 +145,20 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
@@ -150,13 +170,19 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
@@ -175,13 +201,19 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, TableDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "10" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			assertClassAssignability( TableStructure.class, generator.getDatabaseStructure().getClass() );
@@ -198,13 +230,19 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.FORCE_TBL_PARAM, "true" );
 
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			final DatabaseStructure databaseStructure = generator.getDatabaseStructure();
@@ -227,13 +265,19 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, SequenceDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.NONE.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
@@ -242,13 +286,18 @@ public class SequenceStyleConfigUnitTest {
 			assertEquals( 1, generator.getDatabaseStructure().getIncrementSize() );
 
 			// optimizer=hilo w/ increment > 1 => hilo
-			props = buildGeneratorPropertiesBase( serviceRegistry );
+			props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.HILO.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( HiLoOptimizer.class, generator.getOptimizer().getClass() );
@@ -256,13 +305,18 @@ public class SequenceStyleConfigUnitTest {
 			assertEquals( 20, generator.getDatabaseStructure().getIncrementSize() );
 
 			// optimizer=pooled w/ increment > 1 => hilo
-			props = buildGeneratorPropertiesBase( serviceRegistry );
+			props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.OPT_PARAM, StandardOptimizerDescriptor.POOLED.getExternalName() );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 			// because the dialect reports to not support pooled seqyences, the expectation is that we will
 			// use a table for the backing structure...
@@ -278,30 +332,46 @@ public class SequenceStyleConfigUnitTest {
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PooledSequenceDialect.class.getName() )
 				.build()) {
-			Properties props = buildGeneratorPropertiesBase( serviceRegistry );
+			MetadataBuildingContextTestingImpl buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+			Properties props = buildGeneratorPropertiesBase( buildingContext );
 			props.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "20" );
 			SequenceStyleGenerator generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledOptimizer.class, generator.getOptimizer().getClass() );
 
 			props.setProperty( Environment.PREFER_POOLED_VALUES_LO, "true" );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoOptimizer.class, generator.getOptimizer().getClass() );
 
 			props.setProperty( Environment.PREFERRED_POOLED_OPTIMIZER, StandardOptimizerDescriptor.POOLED_LOTL.getExternalName() );
 			generator = new SequenceStyleGenerator();
-			generator.configure( StandardBasicTypes.LONG, props, serviceRegistry );
+			generator.configure(
+					new TypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG ),
+					props,
+					serviceRegistry
+			);
 			generator.registerExportables(
-					new Database( new MetadataBuilderImpl.MetadataBuildingOptionsImpl( serviceRegistry ) )
+					new Database( buildingContext.getBuildingOptions() )
 			);
 			assertClassAssignability( SequenceStructure.class, generator.getDatabaseStructure().getClass() );
 			assertClassAssignability( PooledLoThreadLocalOptimizer.class, generator.getOptimizer().getClass() );

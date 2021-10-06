@@ -13,6 +13,7 @@ import java.util.Objects;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -43,6 +44,15 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 		return ImmutableMutabilityPlan.INSTANCE;
 	}
 
+	default T getReplacement(T original, T target, SharedSessionContractImplementor session) {
+		if ( !getMutabilityPlan().isMutable() || ( target != null && areEqual( original, target ) ) ) {
+			return original;
+		}
+		else {
+			return getMutabilityPlan().deepCopy( original );
+		}
+	}
+
 	/**
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
 	 * aspect comes from the JDBC spec (mostly).
@@ -60,7 +70,7 @@ public interface JavaTypeDescriptor<T> extends Serializable {
 	 *
 	 * @return {@link Size#DEFAULT_LENGTH} unless overridden
 	 */
-	default long getDefaultSqlLength(Dialect dialect) {
+	default long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return Size.DEFAULT_LENGTH;
 	}
 

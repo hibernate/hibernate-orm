@@ -29,11 +29,13 @@ import static java.util.Arrays.asList;
 public class CastStrEmulation
 		extends AbstractSqmFunctionDescriptor {
 
-	public CastStrEmulation() {
+	public CastStrEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"str",
 				StandardArgumentsValidators.exactly( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 	}
 
@@ -56,7 +58,7 @@ public class CastStrEmulation
 						asList(
 								argument,
 								new SqmCastTarget<>(
-										StandardBasicTypes.STRING,
+										typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
 										argument.nodeBuilder()
 								)
 						),

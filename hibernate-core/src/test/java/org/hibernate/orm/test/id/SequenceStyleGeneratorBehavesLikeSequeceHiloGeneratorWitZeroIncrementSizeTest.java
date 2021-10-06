@@ -55,6 +55,8 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
 				.build();
 
+		MetadataBuildingContext buildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+
 		generator = new SequenceStyleGenerator();
 
 		// Build the properties used to configure the id generator
@@ -64,14 +66,16 @@ public class SequenceStyleGeneratorBehavesLikeSequeceHiloGeneratorWitZeroIncreme
 		properties.setProperty( SequenceStyleGenerator.INCREMENT_PARAM, "0" ); // JPA allocationSize of 1
 		properties.put(
 				PersistentIdentifierGenerator.IDENTIFIER_NORMALIZER,
-				new ObjectNameNormalizer() {
-					@Override
-					protected MetadataBuildingContext getBuildingContext() {
-						return new MetadataBuildingContextTestingImpl( serviceRegistry );
-					}
-				}
+				buildingContext.getObjectNameNormalizer()
 		);
-		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
+		generator.configure(
+				buildingContext.getBootstrapContext()
+						.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.LONG ),
+				properties,
+				serviceRegistry
+		);
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );

@@ -33,6 +33,7 @@ import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.FloatType;
 import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.type.TimestampType;
 
@@ -202,7 +203,7 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		List l = s.createNativeQuery( getOrgEmpRegionSQL() )
 				.addEntity("org", Organization.class)
 				.addJoin("emp", "org.employments")
-				.addScalar("regionCode", StringType.INSTANCE)
+				.addScalar("regionCode", StandardBasicTypes.STRING )
 				.list();
 		assertEquals( 2, l.size() );
 
@@ -698,16 +699,16 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		sqlQuery.list();
 
 		// lets try a totally different approach now and pull back scalars, first with explicit types
-		sqlQuery.addScalar( "orgid", LongType.INSTANCE )
-				.addScalar( "name", StringType.INSTANCE )
-				.addScalar( "empid", LongType.INSTANCE )
-				.addScalar( "employee", LongType.INSTANCE )
-				.addScalar( "startDate", TimestampType.INSTANCE )
-				.addScalar( "endDate", TimestampType.INSTANCE )
-				.addScalar( "regionCode", StringType.INSTANCE )
-				.addScalar( "empId", LongType.INSTANCE )
-				.addScalar( "AMOUNT", FloatType.INSTANCE )
-				.addScalar( "CURRENCY", StringType.INSTANCE );
+		sqlQuery.addScalar( "orgid", StandardBasicTypes.LONG )
+				.addScalar( "name", StandardBasicTypes.STRING )
+				.addScalar( "empid", StandardBasicTypes.LONG )
+				.addScalar( "employee", StandardBasicTypes.LONG )
+				.addScalar( "startDate", StandardBasicTypes.TIMESTAMP )
+				.addScalar( "endDate", StandardBasicTypes.TIMESTAMP )
+				.addScalar( "regionCode", StandardBasicTypes.STRING )
+				.addScalar( "empId", StandardBasicTypes.LONG )
+				.addScalar( "AMOUNT", StandardBasicTypes.FLOAT )
+				.addScalar( "CURRENCY", StandardBasicTypes.STRING );
 
 
 		s.getTransaction().commit();

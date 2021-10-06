@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.UUID;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FlushMode;
@@ -39,14 +40,9 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.PostgresUUIDType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-import org.hibernate.type.UUIDBinaryType;
-import org.hibernate.type.UUIDCharType;
 
 /**
  * Base class implementing {@link PersistentCollection}
@@ -1261,12 +1257,14 @@ public abstract class AbstractPersistentCollection<E> implements Serializable, P
 	}
 
 	private static boolean mayUseIdDirect(Type idType) {
-		return idType == StringType.INSTANCE
-			|| idType == IntegerType.INSTANCE
-			|| idType == LongType.INSTANCE
-			|| idType == UUIDBinaryType.INSTANCE
-			|| idType == UUIDCharType.INSTANCE
-			|| idType == PostgresUUIDType.INSTANCE;
+		if ( idType instanceof BasicType<?> ) {
+			final Class<?> javaType = ( (BasicType<?>) idType ).getJavaType();
+			return javaType == String.class
+					|| javaType == Integer.class
+					|| javaType == Long.class
+					|| javaType == UUID.class;
+		}
+		return false;
 	}
 
 	/**

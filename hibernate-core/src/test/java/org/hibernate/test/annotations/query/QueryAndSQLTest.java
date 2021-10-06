@@ -288,10 +288,10 @@ public class QueryAndSQLTest extends BaseCoreFunctionalTestCase {
 		s = openSession();
 		tx = s.beginTransaction();
 		Query q = s.getNamedQuery( "night.moreRecentThan" );
-		q.setParameter( "date", aMonthAgo, DateType.INSTANCE  );
+		q.setParameter( "date", aMonthAgo, StandardBasicTypes.DATE );
 		assertEquals( 1, q.list().size() );
 		q = s.getNamedQuery( "night.moreRecentThan" );
-		q.setParameter( "date", inAMonth, DateType.INSTANCE  );
+		q.setParameter( "date", inAMonth, StandardBasicTypes.DATE );
 		assertEquals( 0, q.list().size() );
 		Statistics stats = sessionFactory().getStatistics();
 		stats.setStatisticsEnabled( true );

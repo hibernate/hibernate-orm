@@ -36,6 +36,7 @@ import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * @author Steve Ebersole
@@ -224,6 +225,15 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 
 	@Override
 	NativeQueryImplementor<R> setParameter(int position, Object val, AllowableParameterType type);
+
+	@Override
+	NativeQueryImplementor<R> setParameter(String name, Object val, BasicTypeReference<?> type);
+
+	@Override
+	NativeQueryImplementor<R> setParameter(int position, Object val, BasicTypeReference<?> type);
+
+	@Override
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(

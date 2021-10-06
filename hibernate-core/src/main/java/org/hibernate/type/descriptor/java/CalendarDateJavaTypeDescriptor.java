@@ -30,21 +30,17 @@ public class CalendarDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDesc
 	public static final CalendarDateJavaTypeDescriptor INSTANCE = new CalendarDateJavaTypeDescriptor();
 
 	protected CalendarDateJavaTypeDescriptor() {
-		super( Calendar.class, CalendarJavaTypeDescriptor.CalendarMutabilityPlan.INSTANCE );
+		super( Calendar.class, CalendarJavaTypeDescriptor.CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
 
 	@Override
 	public TemporalType getPrecision() {
 		return TemporalType.DATE;
 	}
+
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return DateJdbcTypeDescriptor.INSTANCE;
-	}
-
-	@Override
-	public Comparator<Calendar> getComparator() {
-		return CalendarComparator.INSTANCE;
 	}
 
 	@Override

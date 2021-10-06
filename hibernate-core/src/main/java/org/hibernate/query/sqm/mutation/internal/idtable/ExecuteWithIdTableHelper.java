@@ -17,6 +17,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.spi.IsolationDelegate;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
@@ -118,7 +119,7 @@ public final class ExecuteWithIdTableHelper {
 							jdbcPosition + 1,
 							new QueryLiteral<>(
 									sessionUidAccess.apply( executionContext.getSession() ),
-									StandardBasicTypes.STRING
+									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
 							)
 					)
 			);
@@ -238,7 +239,7 @@ public final class ExecuteWithIdTableHelper {
 							ComparisonOperator.EQUAL,
 							new QueryLiteral<>(
 									sessionUidAccess.apply( executionContext.getSession() ),
-									UUIDCharType.INSTANCE
+									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
 							)
 					)
 			);

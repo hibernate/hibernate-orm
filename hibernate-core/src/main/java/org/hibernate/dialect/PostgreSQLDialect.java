@@ -335,7 +335,7 @@ public class PostgreSQLDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
 		).setArgumentListSignature("(pattern, string[, start])");

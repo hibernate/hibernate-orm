@@ -7,6 +7,7 @@
 
 package org.hibernate.spatial.contributor;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -18,7 +19,7 @@ public interface ContributorImplementor {
 
 	void contributeTypes(TypeContributions typeContributions);
 
-	void contributeFunctions(SqmFunctionRegistry functionRegistry);
+	void contributeFunctions(FunctionContributions functionContributions);
 
 	ServiceRegistry getServiceRegistry();
 }

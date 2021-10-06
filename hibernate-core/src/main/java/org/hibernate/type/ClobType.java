@@ -9,7 +9,6 @@ package org.hibernate.type;
 import java.sql.Clob;
 import java.sql.Types;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.ClobJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 
@@ -34,10 +33,5 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> implem
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	protected Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
 	}
 }

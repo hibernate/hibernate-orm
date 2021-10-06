@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -16,6 +17,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * A derby implementation for lpad.
@@ -25,11 +27,13 @@ import org.hibernate.type.StandardBasicTypes;
 public class DerbyLpadEmulation
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public DerbyLpadEmulation() {
+	public DerbyLpadEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"lpad",
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 	}
 

@@ -7,20 +7,19 @@
 
 package org.hibernate.spatial.contributor;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.query.sqm.function.SqmFunctionRegistry;
-import org.hibernate.service.ServiceRegistry;
 
 public class SpatialFunctionContributor implements FunctionContributor {
 
 	@Override
-	public void contributeFunctions(
-			SqmFunctionRegistry functionRegistry, ServiceRegistry serviceRegistry) {
-		ContributorImplementor contributorImplementor = ContributorResolver.resolveSpatialtypeContributorImplementor(
-				serviceRegistry );
+	public void contributeFunctions(FunctionContributions functionContributions) {
+		final ContributorImplementor contributorImplementor = ContributorResolver.resolveSpatialtypeContributorImplementor(
+				functionContributions.getServiceRegistry()
+		);
 
 		if ( contributorImplementor != null ) {
-			contributorImplementor.contributeFunctions( functionRegistry );
+			contributorImplementor.contributeFunctions( functionContributions );
 		}
 	}
 

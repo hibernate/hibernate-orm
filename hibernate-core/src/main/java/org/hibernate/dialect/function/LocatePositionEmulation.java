@@ -21,14 +21,15 @@ import java.util.List;
 /**
  * @author Gavin King
  */
-public class LocatePositionEmulation
-		extends AbstractSqmFunctionDescriptor {
+public class LocatePositionEmulation extends AbstractSqmFunctionDescriptor {
 
-	public LocatePositionEmulation() {
+	public LocatePositionEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"position",
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.INTEGER )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
+				)
 		);
 	}
 

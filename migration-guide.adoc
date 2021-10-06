@@ -38,6 +38,10 @@ Read-by-position rather than read-by-name
 
 === Type system / custom types
 
+==== Type changes
+
+* The default type for `Duration` was changed to `NUMERIC` which could lead to schema validation errors
+
 ==== Influencing JdbcTypeDescriptor to use
 
 Discuss `JdbcTypeCode`, `JdbcType`, `JdbcTypeRegistration`

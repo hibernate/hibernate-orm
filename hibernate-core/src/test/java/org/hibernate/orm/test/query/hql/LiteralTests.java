@@ -16,9 +16,10 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hibernate.type.StandardBasicTypes.BINARY;
 
 /**
  * @author Steve Ebersole
@@ -34,14 +35,14 @@ public class LiteralTests {
 		scope.inTransaction(
 				session -> {
 					byte[] bytes1 = (byte[]) session.createQuery( "select X'DEADBEEF'" ).getSingleResult();
-					assertThat( BINARY.toString(bytes1), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString( bytes1), is( "deadbeef") );
 					byte[] bytes2 = (byte[]) session.createQuery( "select X'deadbeef'" ).getSingleResult();
-					assertThat( BINARY.toString(bytes2), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes2), is("deadbeef") );
 
 					byte[] bytes3 = (byte[]) session.createQuery( "select {0xDE, 0xAD, 0xBE, 0xEF}" ).getSingleResult();
-					assertThat( BINARY.toString(bytes3), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes3), is("deadbeef") );
 					byte[] bytes4 = (byte[]) session.createQuery( "select {0xde, 0xad, 0xbe, 0xef}" ).getSingleResult();
-					assertThat( BINARY.toString(bytes4), is("deadbeef") );
+					assertThat( PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.toString(bytes4), is("deadbeef") );
 				}
 		);
 	}

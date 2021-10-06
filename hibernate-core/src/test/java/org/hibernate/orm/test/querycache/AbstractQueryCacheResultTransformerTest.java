@@ -29,8 +29,10 @@ import org.hibernate.transform.AliasToBeanConstructorResultTransformer;
 import org.hibernate.transform.AliasToEntityMapResultTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.LongJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntJdbcTypeDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -3080,7 +3082,13 @@ public abstract class AbstractQueryCacheResultTransformerTest {
 								.getPropertyType( "name" );
 				return ReflectHelper.getConstructor(
 						Student.class,
-						new Type[] { StandardBasicTypes.LONG, studentNametype }
+						new Type[] {
+								new BasicTypeImpl<>(
+										LongJavaTypeDescriptor.INSTANCE,
+										BigIntJdbcTypeDescriptor.INSTANCE
+								),
+								studentNametype
+						}
 				);
 			}
 		};

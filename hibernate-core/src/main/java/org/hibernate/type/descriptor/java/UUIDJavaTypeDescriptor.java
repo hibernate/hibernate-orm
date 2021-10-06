@@ -7,8 +7,10 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
+import java.sql.Types;
 import java.util.UUID;
 
+import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.BytesHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
@@ -38,6 +40,17 @@ public class UUIDJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<UUID
 
 	public UUID fromString(CharSequence string) {
 		return ToStringTransformer.INSTANCE.parse( string.toString() );
+	}
+
+	@Override
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+		if ( jdbcType.isString() ) {
+			return 36L;
+		}
+		else if ( jdbcType.isBinary() ) {
+			return 16L;
+		}
+		return super.getDefaultSqlLength( dialect, jdbcType );
 	}
 
 	@SuppressWarnings({ "unchecked" })

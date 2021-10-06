@@ -6,27 +6,19 @@
  */
 package org.hibernate.type.internal;
 
-import java.sql.Types;
-
 import org.hibernate.internal.util.collections.ArrayHelper;
-import org.hibernate.query.CastType;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.AdjustableBasicType;
-import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-@SuppressWarnings("rawtypes")
-public class StandardBasicTypeImpl<J>
-		extends AbstractSingleColumnStandardBasicType
-		implements AdjustableBasicType {
+public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> implements AdjustableBasicType<J> {
 	public static final String[] NO_REG_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
-	public StandardBasicTypeImpl(JavaTypeDescriptor<J> jtd, JdbcTypeDescriptor std) {
-		//noinspection unchecked
+	public BasicTypeImpl(JavaTypeDescriptor<J> jtd, JdbcTypeDescriptor std) {
 		super( std, jtd );
 	}
 
@@ -40,21 +32,5 @@ public class StandardBasicTypeImpl<J>
 	public String getName() {
 		// again, irrelevant
 		return null;
-	}
-
-	@Override
-	public CastType getCastType() {
-		if ( getJavaTypeDescriptor() == BooleanJavaTypeDescriptor.INSTANCE ) {
-			switch ( getJdbcTypeCode() ) {
-				case Types.BIT:
-				case Types.SMALLINT:
-				case Types.TINYINT:
-				case Types.INTEGER:
-					return CastType.INTEGER_BOOLEAN;
-				case Types.CHAR:
-					return CastType.YN_BOOLEAN;
-			}
-		}
-		return super.getCastType();
 	}
 }

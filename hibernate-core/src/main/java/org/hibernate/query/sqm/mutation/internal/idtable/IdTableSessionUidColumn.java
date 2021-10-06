@@ -6,18 +6,21 @@
  */
 package org.hibernate.query.sqm.mutation.internal.idtable;
 
-import org.hibernate.type.UUIDCharType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 
 /**
  * @author Steve Ebersole
  */
 public class IdTableSessionUidColumn extends IdTableColumn {
-	public IdTableSessionUidColumn(IdTable containingTable) {
+	public IdTableSessionUidColumn(
+			IdTable containingTable,
+			JdbcMapping jdbcMapping,
+			String sqlTypeName) {
 		super(
 				containingTable,
 				IdTableHelper.SESSION_ID_COLUMN_NAME,
-				UUIDCharType.INSTANCE,
-				null
+				jdbcMapping,
+				sqlTypeName
 		);
 	}
 }

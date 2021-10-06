@@ -26,7 +26,7 @@ public class PrimitiveCharacterArrayJavaTypeDescriptor extends AbstractClassJava
 
 	@SuppressWarnings({ "unchecked" })
 	protected PrimitiveCharacterArrayJavaTypeDescriptor() {
-		super( char[].class, ArrayMutabilityPlan.INSTANCE );
+		super( char[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
 
 	public String toString(char[] value) {
@@ -50,12 +50,6 @@ public class PrimitiveCharacterArrayJavaTypeDescriptor extends AbstractClassJava
 			hashCode = 31 * hashCode + aChar;
 		}
 		return hashCode;
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<char[]> getComparator() {
-		return IncomparableComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

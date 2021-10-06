@@ -30,7 +30,6 @@ public class QueryHelper {
 		//noinspection unchecked
 		SqmExpressable<? extends T> highest = highestPrecedenceType2( (SqmExpressable) types[0], types[1] );
 		for ( int i = 2; i < types.length; i++ ) {
-			//noinspection unchecked
 			highest = highestPrecedenceType2( highest, types[i] );
 		}
 

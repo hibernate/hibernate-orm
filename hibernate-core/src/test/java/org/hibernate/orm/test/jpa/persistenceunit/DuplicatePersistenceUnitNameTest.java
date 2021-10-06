@@ -29,9 +29,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-import org.jboss.byteman.contrib.bmunit.BMUnitRunner;
 import org.jboss.logging.Logger;
 
 import static org.hibernate.internal.util.ConfigHelper.findAsResource;
@@ -41,7 +39,6 @@ import static org.junit.Assert.assertTrue;
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-11845")
-@RunWith(BMUnitRunner.class)
 public class DuplicatePersistenceUnitNameTest extends BaseUnitTestCase {
 	private Triggerable triggerable;
 

@@ -18,6 +18,7 @@ import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.IntegerType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;
 
@@ -42,7 +43,14 @@ public class Db2GenerationTest {
 
 			final TableGenerator generator = new TableGenerator();
 
-			generator.configure( IntegerType.INSTANCE, new Properties(), ssr );
+			generator.configure(
+					metadata.getDatabase()
+							.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.INTEGER ),
+					new Properties(),
+					ssr
+			);
 
 			generator.registerExportables( metadata.getDatabase() );
 
@@ -73,7 +81,14 @@ public class Db2GenerationTest {
 			MultipleHiLoPerTableGenerator generator = new MultipleHiLoPerTableGenerator();
 
 			Properties properties = new Properties();
-			generator.configure( IntegerType.INSTANCE, properties, ssr );
+			generator.configure(
+					metadata.getDatabase()
+							.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.INTEGER ),
+					new Properties(),
+					ssr
+			);
 
 			generator.registerExportables( metadata.getDatabase() );
 

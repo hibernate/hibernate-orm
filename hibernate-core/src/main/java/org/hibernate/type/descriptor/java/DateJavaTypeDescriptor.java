@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -16,6 +17,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -27,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> {
+public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> implements VersionJavaTypeDescriptor<Date> {
 	public static final DateJavaTypeDescriptor INSTANCE = new DateJavaTypeDescriptor();
 	public static final String DATE_FORMAT = "dd MMMM yyyy";
 
@@ -56,8 +58,6 @@ public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<D
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return TimestampJdbcTypeDescriptor.INSTANCE;
-//
-//		return org.hibernate.type.descriptor.sql.DateTypeDescriptor.INSTANCE;
 	}
 
 	@Override
@@ -163,5 +163,15 @@ public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<D
 		}
 
 		throw unknownWrap( value.getClass() );
+	}
+
+	@Override
+	public Date next(Date current, SharedSessionContractImplementor session) {
+		return seed( session );
+	}
+
+	@Override
+	public Date seed(SharedSessionContractImplementor session) {
+		return new Timestamp( System.currentTimeMillis() );
 	}
 }

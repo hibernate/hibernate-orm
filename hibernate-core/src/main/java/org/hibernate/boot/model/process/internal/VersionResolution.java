@@ -14,12 +14,10 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.RowVersionType;
 import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -45,16 +43,6 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
 		final JavaTypeDescriptor registered = typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( implicitJavaType );
-
-		if ( registered instanceof PrimitiveByteArrayJavaTypeDescriptor ) {
-			return new VersionResolution<>(
-					RowVersionType.INSTANCE.getJavaTypeDescriptor(),
-					RowVersionType.INSTANCE.getJdbcTypeDescriptor(),
-					RowVersionType.INSTANCE,
-					RowVersionType.INSTANCE
-			);
-		}
-
 		final BasicJavaTypeDescriptor jtd = (BasicJavaTypeDescriptor) registered;
 
 		final JdbcTypeDescriptor recommendedJdbcType = jtd.getRecommendedJdbcType(

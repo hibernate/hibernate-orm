@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.boot.internal;
 
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -22,13 +23,13 @@ import org.hibernate.service.ServiceRegistry;
 public class FunctionContributorImpl implements FunctionContributor {
 
 	@Override
-	public void contributeFunctions(SqmFunctionRegistry functionRegistry, ServiceRegistry serviceRegistry) {
-		final EnversService enversService = serviceRegistry.getService( EnversService.class );
+	public void contributeFunctions(FunctionContributions functionContributions) {
+		final EnversService enversService = functionContributions.getServiceRegistry().getService( EnversService.class );
 		if ( !enversService.isEnabled() ) {
 			return;
 		}
 
-		functionRegistry.register( OrderByFragmentFunction.FUNCTION_NAME, OrderByFragmentFunction.INSTANCE );
+		functionContributions.getFunctionRegistry().register( OrderByFragmentFunction.FUNCTION_NAME, OrderByFragmentFunction.INSTANCE );
 	}
 
 }

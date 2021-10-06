@@ -36,9 +36,4 @@ public class ZonedDateTimeType
 	protected boolean registerUnderJavaType() {
 		return true;
 	}
-
-	@Override
-	public CastType getCastType() {
-		return CastType.ZONE_TIMESTAMP;
-	}
 }

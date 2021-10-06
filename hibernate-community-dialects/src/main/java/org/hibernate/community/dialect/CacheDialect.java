@@ -152,7 +152,7 @@ public class CacheDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"$find(?2,?1)",
 				"$find(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");

@@ -15,7 +15,7 @@ public class SqlFunctionMetadataBuilderContributor
     @Override
     public void contribute(MetadataBuilder metadataBuilder) {
         metadataBuilder.applySqlFunction(
-            "instr", new StandardSQLFunction( "instr", StandardBasicTypes.STRING )
+            "instr", new StandardSQLFunction( "instr", StandardBasicTypes.INTEGER )
         );
     }
 }

@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -28,16 +29,16 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 class SDOObjectProperty implements SqmFunctionDescriptor {
 
-	private final Type type;
+	private final BasicTypeReference<?> type;
 
 	private final String name;
 
-	public SDOObjectProperty(String name, Type type) {
+	public SDOObjectProperty(String name, BasicTypeReference<?> type) {
 		this.type = type;
 		this.name = name;
 	}
 
-	public Type getReturnType(Type columnType, Mapping mapping)
+	public BasicTypeReference<?> getReturnType(BasicTypeReference<?> columnType, Mapping mapping)
 			throws QueryException {
 		return type == null ? columnType : type;
 	}

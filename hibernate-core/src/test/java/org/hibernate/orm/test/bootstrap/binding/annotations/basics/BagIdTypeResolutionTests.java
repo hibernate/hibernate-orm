@@ -20,15 +20,16 @@ import org.hibernate.mapping.IdentifierBag;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.ShortType;
+import org.hibernate.type.descriptor.java.ShortJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -44,7 +45,8 @@ public class BagIdTypeResolutionTests {
 		final BasicValue.Resolution<?> identifierResolution = identifier.resolve();
 
 		final BasicType<?> legacyResolvedBasicType = identifierResolution.getLegacyResolvedBasicType();
-		assertThat( legacyResolvedBasicType, instanceOf( ShortType.class ) );
+		assertSame( ShortJavaTypeDescriptor.INSTANCE, legacyResolvedBasicType.getJavaTypeDescriptor() );
+		assertSame( SmallIntJdbcTypeDescriptor.INSTANCE, legacyResolvedBasicType.getJdbcTypeDescriptor() );
 		assertThat( identifier.getIdentifierGeneratorStrategy(), equalTo( "increment" ) );
 	}
 

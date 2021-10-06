@@ -19,7 +19,7 @@ public abstract class AbstractNegatableSqmPredicate extends AbstractSqmPredicate
 	}
 
 	public AbstractNegatableSqmPredicate(boolean negated, NodeBuilder nodeBuilder) {
-		super( nodeBuilder );
+		super( nodeBuilder.getBooleanType(), nodeBuilder );
 		this.negated = negated;
 	}
 

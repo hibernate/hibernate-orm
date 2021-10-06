@@ -11,12 +11,12 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.engine.jdbc.internal.BinaryStreamImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.compare.RowVersionComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 
@@ -31,7 +31,7 @@ public class PrimitiveByteArrayJavaTypeDescriptor extends AbstractClassJavaTypeD
 
 	@SuppressWarnings({ "unchecked" })
 	public PrimitiveByteArrayJavaTypeDescriptor() {
-		super( byte[].class, ArrayMutabilityPlan.INSTANCE );
+		super( byte[].class, ArrayMutabilityPlan.INSTANCE, RowVersionComparator.INSTANCE );
 	}
 
 	@Override
@@ -84,12 +84,6 @@ public class PrimitiveByteArrayJavaTypeDescriptor extends AbstractClassJavaTypeD
 			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
 		}
 		return bytes;
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<byte[]> getComparator() {
-		return IncomparableComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

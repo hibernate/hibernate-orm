@@ -18,10 +18,12 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.UUIDBinaryType;
-import org.hibernate.type.UUIDCharType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -33,6 +35,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Steve Ebersole
@@ -43,21 +46,15 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
 		BasicTypeRegistry registry = typeConfiguration.getBasicTypeRegistry();
 
-		BasicType type = registry.getRegisteredType( "uuid-binary" );
-		assertSame( UUIDBinaryType.INSTANCE, type );
-		type = registry.getRegisteredType( UUID.class.getName() );
-		assertSame( UUIDBinaryType.INSTANCE, type );
+		BasicType<?> type = registry.getRegisteredType( "uuid-binary" );
+		assertTrue( type.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );
+		assertTrue( type.getJdbcTypeDescriptor() instanceof BinaryJdbcTypeDescriptor );
+		assertSame( type, registry.getRegisteredType( UUID.class.getName() ) );
 
-		BasicType override = new UUIDCharType() {
-			@Override
-			protected boolean registerUnderJavaType() {
-				return true;
-			}
-		};
-		registry.register( override );
-		type = registry.getRegisteredType( UUID.class.getName() );
-		assertNotSame( UUIDBinaryType.INSTANCE, type );
-		assertSame( override, type );
+		BasicType<?> override = new BasicTypeImpl<>( UUIDJavaTypeDescriptor.INSTANCE, CharJdbcTypeDescriptor.INSTANCE );
+		registry.register( override, UUID.class.getName() );
+		assertNotSame( type, registry.getRegisteredType( UUID.class.getName() ) );
+		assertSame( override, registry.getRegisteredType( UUID.class.getName() ) );
 	}
 
 	@Test
@@ -65,7 +62,7 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		TypeConfiguration typeConfiguration = new TypeConfiguration();
 		BasicTypeRegistry registry = typeConfiguration.getBasicTypeRegistry();
 
-		BasicType type = registry.getRegisteredType( SomeNoopType.INSTANCE.getName() );
+		BasicType<?> type = registry.getRegisteredType( SomeNoopType.INSTANCE.getName() );
 		assertNull( type );
 
 		registry.register( SomeNoopType.INSTANCE );
@@ -80,17 +77,17 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		BasicTypeRegistry registry = typeConfiguration.getBasicTypeRegistry();
 
 		registry.register( new TotallyIrrelevantUserType(), "key" );
-		BasicType type = registry.getRegisteredType( "key" );
-		assertNotNull( type );
-		assertEquals( CustomType.class, type.getClass() );
-		assertEquals( TotallyIrrelevantUserType.class, ( (CustomType) type ).getUserType().getClass() );
+		BasicType<?> customType = registry.getRegisteredType( "key" );
+		assertNotNull( customType );
+		assertEquals( CustomType.class, customType.getClass() );
+		assertEquals( TotallyIrrelevantUserType.class, ( (CustomType) customType ).getUserType().getClass() );
 
-		type = registry.getRegisteredType( UUID.class.getName() );
-		assertSame( UUIDBinaryType.INSTANCE, type );
+		BasicType<?> type = registry.getRegisteredType( UUID.class.getName() );
+		assertTrue( type.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );
+		assertTrue( type.getJdbcTypeDescriptor() instanceof BinaryJdbcTypeDescriptor );
 		registry.register( new TotallyIrrelevantUserType(), UUID.class.getName() );
-		type = registry.getRegisteredType( UUID.class.getName() );
-		assertNotSame( UUIDBinaryType.INSTANCE, type );
-		assertEquals( CustomType.class, type.getClass() );
+		assertNotSame( type, registry.getRegisteredType( UUID.class.getName() ) );
+		assertEquals( CustomType.class, registry.getRegisteredType( UUID.class.getName() ).getClass() );
 	}
 
 	public static class SomeNoopType extends AbstractSingleColumnStandardBasicType<String> {

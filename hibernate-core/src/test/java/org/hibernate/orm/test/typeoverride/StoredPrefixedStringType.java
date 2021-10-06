@@ -18,6 +18,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -88,11 +89,11 @@ public class StoredPrefixedStringType
 	public static final StoredPrefixedStringType INSTANCE = new StoredPrefixedStringType();
 
 	public StoredPrefixedStringType() {
-		super( PREFIXED_VARCHAR_TYPE_DESCRIPTOR, StringType.INSTANCE.getJavaTypeDescriptor() );
+		super( PREFIXED_VARCHAR_TYPE_DESCRIPTOR, StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
-		return StringType.INSTANCE.getName();
+		return "string";
 	}
 
 	@Override

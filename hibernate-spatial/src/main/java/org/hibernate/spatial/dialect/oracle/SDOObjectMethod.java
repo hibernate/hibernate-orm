@@ -12,6 +12,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.Type;
 
 /**
@@ -21,17 +22,17 @@ import org.hibernate.type.Type;
  */
 class SDOObjectMethod extends StandardSQLFunction {
 
-	private final Type type;
+	private final BasicTypeReference<?> type;
 
 	private final String name;
 
-	public SDOObjectMethod(String name, Type type) {
+	public SDOObjectMethod(String name, BasicTypeReference<?> type) {
 		super(name);
 		this.type = type;
 		this.name = name;
 	}
 
-	public Type getReturnType(Type columnType, Mapping mapping)
+	public BasicTypeReference<?> getReturnType(BasicTypeReference<?> columnType, Mapping mapping)
 			throws QueryException {
 		return type == null ? columnType : type;
 	}

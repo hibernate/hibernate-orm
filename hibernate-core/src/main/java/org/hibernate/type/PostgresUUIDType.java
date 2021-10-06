@@ -50,11 +50,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		return true;
 	}
 
-	private static class PostgresUUIDJdbcTypeDescriptor implements JdbcTypeDescriptor {
+	public static class PostgresUUIDJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		/**
 		 * Singleton access
 		 */
-		private static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
+		public static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
 
 		/**
 		 * Postgres reports its UUID type as {@link Types#OTHER}.  Unfortunately

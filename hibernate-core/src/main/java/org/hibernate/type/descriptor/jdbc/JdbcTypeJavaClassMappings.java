@@ -114,7 +114,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( Long.class, Types.BIGINT );
 		workMap.put( Float.class, Types.REAL );
 		workMap.put( Double.class, Types.DOUBLE );
-		workMap.put( byte[].class, Types.LONGVARBINARY );
+		workMap.put( byte[].class, Types.VARBINARY );
 		workMap.put( java.sql.Date.class, Types.DATE );
 		workMap.put( Time.class, Types.TIME );
 		workMap.put( Timestamp.class, Types.TIMESTAMP );
@@ -137,7 +137,7 @@ public class JdbcTypeJavaClassMappings {
 		workMap.put( Character.class, Types.CHAR );
 		workMap.put( char[].class, Types.VARCHAR );
 		workMap.put( Character[].class, Types.VARCHAR );
-		workMap.put( Byte[].class, Types.LONGVARBINARY );
+		workMap.put( Byte[].class, Types.VARBINARY );
 		workMap.put( java.util.Date.class, Types.TIMESTAMP );
 		workMap.put( Calendar.class, Types.TIMESTAMP );
 

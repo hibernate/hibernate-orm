@@ -59,7 +59,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
@@ -394,7 +393,7 @@ public class MySQLDialect extends Dialect {
 			CommonFunctionFactory.sysdateExplicitMicros( queryEngine );
 		}
 
-		queryEngine.getSqmFunctionRegistry().register( "field", new FieldFunction() );
+		queryEngine.getSqmFunctionRegistry().register( "field", new FieldFunction( queryEngine.getTypeConfiguration() ) );
 	}
 
 	@Override
@@ -448,7 +447,9 @@ public class MySQLDialect extends Dialect {
 	private void time(QueryEngine queryEngine) {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "time" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType(
+					queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 				.register();
 	}
 
@@ -731,7 +732,10 @@ public class MySQLDialect extends Dialect {
 				//inconsistent with other Dialects which need a length
 				return String.format(
 						"binary(%d)",
-						length == null ? type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlLength(this) : length
+						length != null ? length : type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlLength(
+								this,
+								type.getJdbcMapping().getJdbcTypeDescriptor()
+						)
 				);
 			case Types.VARCHAR:
 			case Types.LONGVARCHAR:
@@ -740,7 +744,10 @@ public class MySQLDialect extends Dialect {
 				//inconsistent with other Dialects which need a length
 				return String.format(
 						"char(%d)",
-						length == null ? type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlLength(this) : length
+						length != null ? length : type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlLength(
+								this,
+								type.getJdbcMapping().getJdbcTypeDescriptor()
+						)
 				);
 			default:
 				return super.getCastTypeName( type, length, precision, scale );

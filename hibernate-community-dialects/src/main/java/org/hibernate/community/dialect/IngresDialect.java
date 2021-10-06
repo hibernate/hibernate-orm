@@ -48,6 +48,8 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -217,6 +219,9 @@ public class IngresDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// Common functions
 
@@ -247,20 +252,22 @@ public class IngresDialect extends Dialect {
 		CommonFunctionFactory.dateTrunc( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(hex(?1))*4" );
 
+		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
+				.resolve( StandardBasicTypes.INTEGER );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				integerType,
 				"position(?1 in ?2)",
 				"(position(?1 in substring(?2 from ?3))+(?3)-1)"
 		).setArgumentListSignature("(pattern, string[, start])");
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "date_part('?1',?2)", integerType );
 
 		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot(queryEngine);
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "squeeze" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.register();
 
 	}

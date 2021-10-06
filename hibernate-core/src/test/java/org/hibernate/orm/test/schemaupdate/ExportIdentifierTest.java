@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.boot.internal.BootstrapContextImpl;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Database;
@@ -43,7 +44,8 @@ public class ExportIdentifierTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-12935" )
 	public void testUniqueExportableIdentifier() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
-		final MetadataBuildingOptions options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( ssr );
+		final MetadataBuilderImpl.MetadataBuildingOptionsImpl options = new MetadataBuilderImpl.MetadataBuildingOptionsImpl( ssr );
+		options.setBootstrapContext( new BootstrapContextImpl( ssr, options ) );
 		final Database database = new Database( options );
 
 		database.locateNamespace( null, null );

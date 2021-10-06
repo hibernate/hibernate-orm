@@ -65,6 +65,7 @@ import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.results.NoMoreOutputsException;
+import org.hibernate.type.BasicTypeReference;
 
 import org.jboss.logging.Logger;
 
@@ -898,7 +899,8 @@ public class ProcedureCallImpl<R>
 			QueryParameter<P> parameter,
 			P value,
 			AllowableParameterType type) {
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
+		super.setParameter( parameter, value, type );
+		return this;
 	}
 
 //	@Override
@@ -908,7 +910,8 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
-		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
+		super.setParameter( name, value, type );
+		return this;
 	}
 
 //	@Override
@@ -918,10 +921,27 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
-		//noinspection unchecked
-		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
+		super.setParameter( position, value, type );
+		return this;
 	}
 
+	@Override
+	public ProcedureCallImplementor<R> setParameter(String name, Object value, BasicTypeReference<?> type) {
+		super.setParameter( name, value, type );
+		return this;
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> setParameter(int position, Object value, BasicTypeReference<?> type) {
+		super.setParameter( position, value, type );
+		return this;
+	}
+
+	@Override
+	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type) {
+		super.setParameter( parameter, val, type );
+		return this;
+	}
 //	@Override
 //	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
 //		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );

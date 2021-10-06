@@ -6,6 +6,11 @@
  */
 package org.hibernate.type;
 
+import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
@@ -15,14 +20,54 @@ import jakarta.persistence.Converter;
  * @author Steve Ebersole
  */
 @Converter
-public class TrueFalseConverter implements AttributeConverter<Boolean,Character> {
+public class TrueFalseConverter implements AttributeConverter<Boolean, Character>,
+		BasicValueConverter<Boolean, Character> {
+	/**
+	 * Singleton access
+	 */
+	public static final TrueFalseConverter INSTANCE = new TrueFalseConverter();
+
 	@Override
 	public Character convertToDatabaseColumn(Boolean attribute) {
-		return TrueFalseType.TrueFalseConverter.toRelational( attribute );
+		return toRelationalValue( attribute );
 	}
 
 	@Override
 	public Boolean convertToEntityAttribute(Character dbData) {
-		return TrueFalseType.TrueFalseConverter.toDomain( dbData );
+		return toDomainValue( dbData );
+	}
+
+	@Override
+	public Boolean toDomainValue(Character relationalForm) {
+		if ( relationalForm == null ) {
+			return null;
+		}
+
+		switch ( relationalForm ) {
+			case 'T':
+				return true;
+			case 'F':
+				return false;
+		}
+		return null;
+	}
+
+	@Override
+	public Character toRelationalValue(Boolean domainForm) {
+		if ( domainForm == null ) {
+			return null;
+		}
+
+		return domainForm ? 'T' : 'F';
+	}
+
+	@Override
+	public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
+		return BooleanJavaTypeDescriptor.INSTANCE;
+	}
+
+	@Override
+	public JavaTypeDescriptor<Character> getRelationalJavaDescriptor() {
+		return CharacterJavaTypeDescriptor.INSTANCE;
 	}
 }

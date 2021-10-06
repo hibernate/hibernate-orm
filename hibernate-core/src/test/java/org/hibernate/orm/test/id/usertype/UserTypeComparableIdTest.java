@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Comparator;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -128,11 +129,9 @@ public class UserTypeComparableIdTest {
 
 	public static class CustomIdType implements UserType, Comparator<CustomId> {
 
-		public static final LongType SQL_TYPE = LongType.INSTANCE;
-
 		@Override
 		public int[] sqlTypes() {
-			return new int[] { SQL_TYPE.getJdbcTypeDescriptor().getDefaultSqlTypeCode() };
+			return new int[] { Types.BIGINT };
 		}
 
 		@Override
@@ -152,7 +151,7 @@ public class UserTypeComparableIdTest {
 			CustomId customId = (CustomId) value;
 
 			if ( customId == null ) {
-				preparedStatement.setNull( index, SQL_TYPE.getJdbcTypeCode() );
+				preparedStatement.setNull( index, Types.BIGINT );
 			}
 			else {
 				preparedStatement.setLong( index, customId.getValue() );

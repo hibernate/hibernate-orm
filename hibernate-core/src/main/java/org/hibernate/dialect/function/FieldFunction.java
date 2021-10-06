@@ -18,13 +18,17 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class FieldFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
-	public FieldFunction() {
+
+	public FieldFunction(TypeConfiguration typeConfiguration) {
 		super(
 				"field",
 				StandardArgumentsValidators.min( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.INTEGER )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
+				)
 		);
 	}
 

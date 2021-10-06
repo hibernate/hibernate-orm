@@ -6,8 +6,8 @@
  */
 package org.hibernate.dialect.function;
 
-import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * Simplified API allowing users to contribute
@@ -17,22 +17,22 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
  * @author David Channon
  */
 public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
-	private final AllowableFunctionReturnType type;
+	private final BasicTypeReference<?> type;
 
 	public StandardSQLFunction(String name) {
 		this( name, null );
 	}
 
-	public StandardSQLFunction(String name, AllowableFunctionReturnType type) {
+	public StandardSQLFunction(String name, BasicTypeReference<?> type) {
 		this( name, true, type );
 	}
 
-	public StandardSQLFunction(String name, boolean useParentheses, AllowableFunctionReturnType type) {
+	public StandardSQLFunction(String name, boolean useParentheses, BasicTypeReference<?> type) {
 		super( name, useParentheses, null, null );
 		this.type = type;
 	}
 
-	public AllowableFunctionReturnType getType() {
+	public BasicTypeReference<?> getType() {
 		return type;
 	}
 }

@@ -60,37 +60,37 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public SqmExpression<Long> asLong() {
-		return castAs( StandardBasicTypes.LONG );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Long.class ) );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return castAs( StandardBasicTypes.INTEGER );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return castAs( StandardBasicTypes.FLOAT );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Float.class ) );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return castAs( StandardBasicTypes.DOUBLE );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castAs( StandardBasicTypes.BIG_DECIMAL );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigDecimal.class ) );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return castAs( StandardBasicTypes.BIG_INTEGER );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigInteger.class ) );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return castAs( StandardBasicTypes.STRING );
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( String.class ) );
 	}
 
 	@Override

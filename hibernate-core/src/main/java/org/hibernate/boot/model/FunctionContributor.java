@@ -27,10 +27,9 @@ public interface FunctionContributor {
 	/**
 	 *  Contribute functions
 	 *
-	 * @param functionRegistry The target for the contributions
-	 * @param serviceRegistry The service registry
+	 * @param functionContributions The target for the contributions
 	 */
-	void contributeFunctions(SqmFunctionRegistry functionRegistry, ServiceRegistry serviceRegistry);
+	void contributeFunctions(FunctionContributions functionContributions);
 
 	/**
 	 * Determines order in which the contributions will be applied (lowest ordinal first).

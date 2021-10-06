@@ -31,7 +31,7 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	}
 
 	public ZoneOffsetJavaTypeDescriptor() {
-		super( ZoneOffset.class );
+		super( ZoneOffset.class, ImmutableMutabilityPlan.INSTANCE, ZoneOffsetComparator.INSTANCE );
 	}
 
 	public String toString(ZoneOffset value) {
@@ -45,11 +45,6 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return StringJavaTypeDescriptor.INSTANCE.getRecommendedJdbcType( context );
-	}
-
-	@Override
-	public Comparator<ZoneOffset> getComparator() {
-		return ZoneOffsetComparator.INSTANCE;
 	}
 
 	@Override
@@ -76,7 +71,7 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return 6;
 	}
 }

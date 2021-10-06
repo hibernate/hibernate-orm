@@ -16,7 +16,6 @@ import java.util.Objects;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.envers.RevisionType;
-import org.hibernate.type.IntegerType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -41,21 +40,22 @@ public class RevisionTypeType implements UserType, Serializable {
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		final Integer representationInt = IntegerType.INSTANCE.getJdbcValueExtractor().extract( rs, position, session );
-		return representationInt == null
-				? null
-				: RevisionType.fromRepresentation( representationInt.byteValue() );
+		byte byteValue = rs.getByte( position );
+		if ( rs.wasNull() ) {
+			return null;
+		}
+		return RevisionType.fromRepresentation( byteValue );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement preparedStatement, Object value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
-		IntegerType.INSTANCE.nullSafeSet(
-				preparedStatement,
-				(value == null ? null : ( (RevisionType) value ).getRepresentation().intValue()),
-				index,
-				session
-		);
+		if ( value == null ) {
+			preparedStatement.setNull( index, Types.TINYINT );
+		}
+		else {
+			preparedStatement.setByte( index, ( (RevisionType) value ).getRepresentation() );
+		}
 	}
 
 	@Override

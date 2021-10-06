@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -32,11 +33,13 @@ import jakarta.persistence.TemporalType;
 public class DB2FormatEmulation
 		extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public DB2FormatEmulation() {
+	public DB2FormatEmulation(TypeConfiguration typeConfiguration) {
 		super(
 				"format",
 				StandardArgumentsValidators.exactly( 2 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 	}
 

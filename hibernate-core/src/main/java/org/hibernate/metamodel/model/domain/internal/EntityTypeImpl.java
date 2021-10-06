@@ -68,7 +68,9 @@ public class EntityTypeImpl<J>
 			discriminatorType = (DomainType) discriminatorMetadata.getResolutionType();
 		}
 		else {
-			discriminatorType = StandardBasicTypes.STRING;
+			discriminatorType = jpaMetamodel.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.STRING );
 		}
 
 		this.discriminatorPathSource = new DiscriminatorSqmPathSource<>(

@@ -52,12 +52,16 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorFirebirdDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceNameExtractorImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
@@ -227,6 +231,13 @@ public class FirebirdDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<byte[]> byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
+		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+		final BasicType<Short> shortType = basicTypeRegistry.resolve( StandardBasicTypes.SHORT );
+		final BasicType<Double> doubleType = basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE );
+		final BasicType<Character> characterType = basicTypeRegistry.resolve( StandardBasicTypes.CHARACTER );
+
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.cot( queryEngine );
 		CommonFunctionFactory.cosh( queryEngine );
@@ -260,30 +271,30 @@ public class FirebirdDialect extends Dialect {
 		SqmFunctionRegistry functionRegistry = queryEngine.getSqmFunctionRegistry();
 		functionRegistry.registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				integerType,
 				"position(?1 in ?2)",
 				"position(?1,?2,?3)"
 		).setArgumentListSignature( "(pattern, string[, start])" );
 		functionRegistry.namedDescriptorBuilder( "ascii_val" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.SHORT )
+				.setInvariantType( shortType )
 				.register();
 		functionRegistry.registerAlternateKey( "ascii", "ascii_val" );
 		functionRegistry.namedDescriptorBuilder( "ascii_char" )
 				.setExactArgumentCount( 1 )
-				.setInvariantType( StandardBasicTypes.CHARACTER )
+				.setInvariantType( characterType )
 				.register();
 		functionRegistry.registerAlternateKey( "chr", "ascii_char" );
 		functionRegistry.registerAlternateKey( "char", "ascii_char" );
 		functionRegistry.registerPattern(
 				"radians",
 				"((?1)*pi()/180e0)",
-				StandardBasicTypes.DOUBLE
+				doubleType
 		);
 		functionRegistry.registerPattern(
 				"degrees",
 				"((?1)*180e0/pi())",
-				StandardBasicTypes.DOUBLE
+				doubleType
 		);
 
 		if ( getVersion() >= 400 ) {
@@ -291,13 +302,13 @@ public class FirebirdDialect extends Dialect {
 					.forEach( hash -> functionRegistry.registerPattern(
 							hash,
 							"crypt_hash(?1 using " + hash + ")",
-							StandardBasicTypes.BINARY
+							byteArrayType
 					) );
 			functionRegistry.registerAlternateKey( "sha", "sha1" );
 			functionRegistry.registerPattern(
 					"crc32",
 					"hash(?1 using crc32)",
-					StandardBasicTypes.INTEGER
+					integerType
 			);
 		}
 	}

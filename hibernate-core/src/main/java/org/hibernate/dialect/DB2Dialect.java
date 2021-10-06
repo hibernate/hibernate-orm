@@ -197,10 +197,12 @@ public class DB2Dialect extends Dialect {
 		CommonFunctionFactory.dateTrunc( queryEngine );
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "length(?1)*8" );
 
-		queryEngine.getSqmFunctionRegistry().register( "format", new DB2FormatEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "format", new DB2FormatEmulation( queryEngine.getTypeConfiguration() ) );
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "posstr" )
-				.setInvariantType( StandardBasicTypes.INTEGER )
+				.setInvariantType(
+						queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER )
+				)
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(string, pattern)")
 				.register();

@@ -62,6 +62,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -639,4 +640,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	SqmSortSpecification desc(Expression<?> x);
+
+	BasicType<Boolean> getBooleanType();
+
+	BasicType<Integer> getIntegerType();
 }

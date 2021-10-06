@@ -40,11 +40,13 @@ public class InsertSubstringOverlayEmulation
 
 	private final boolean strictSubstring;
 
-	public InsertSubstringOverlayEmulation(boolean strictSubstring) {
+	public InsertSubstringOverlayEmulation(TypeConfiguration typeConfiguration, boolean strictSubstring) {
 		super(
 				"overlay",
 				StandardArgumentsValidators.between( 3, 4 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 		this.strictSubstring = strictSubstring;
 	}

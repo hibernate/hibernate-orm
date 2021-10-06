@@ -19,6 +19,7 @@ import org.hibernate.engine.jdbc.NClobImplementer;
 import org.hibernate.engine.jdbc.NClobProxy;
 import org.hibernate.engine.jdbc.WrappedNClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -53,7 +54,7 @@ public class NClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<NCl
 	}
 
 	public NClobJavaTypeDescriptor() {
-		super( NClob.class, NClobMutabilityPlan.INSTANCE );
+		super( NClob.class, NClobMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
 
 	@Override
@@ -70,12 +71,6 @@ public class NClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<NCl
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<NClob> getComparator() {
-		return IncomparableComparator.INSTANCE;
-	}
-
-	@Override
 	public int extractHashCode(NClob value) {
 		return System.identityHashCode( value );
 	}
@@ -83,6 +78,11 @@ public class NClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<NCl
 	@Override
 	public boolean areEqual(NClob one, NClob another) {
 		return one == another;
+	}
+
+	@Override
+	public NClob getReplacement(NClob original, NClob target, SharedSessionContractImplementor session) {
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeNClob( original, target, session );
 	}
 
 	@SuppressWarnings({ "unchecked" })

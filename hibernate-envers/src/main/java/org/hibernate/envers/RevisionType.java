@@ -37,11 +37,14 @@ public enum RevisionType {
 	}
 
 	public static RevisionType fromRepresentation(Object representation) {
-		if ( representation == null || !(representation instanceof Byte) ) {
+		if ( !( representation instanceof Byte ) ) {
 			return null;
 		}
+		return fromRepresentation( (byte) representation );
+	}
 
-		switch ( (Byte) representation ) {
+	public static RevisionType fromRepresentation(byte representation) {
+		switch ( representation ) {
 			case 0: {
 				return ADD;
 			}

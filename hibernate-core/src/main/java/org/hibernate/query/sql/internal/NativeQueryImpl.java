@@ -54,6 +54,7 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.Limit;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
@@ -76,6 +77,7 @@ import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
@@ -95,6 +97,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.spi.RowTransformer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeReference;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 
@@ -711,6 +714,16 @@ public class NativeQueryImpl<R>
 	protected NativeQueryImplementor<R> registerBuilder(ResultBuilder builder) {
 		resultSetMapping.addResultBuilder( builder );
 		return this;
+	}
+
+	@Override
+	public NativeQuery<R> addScalar(String columnAlias, BasicTypeReference<?> type) {
+		return registerBuilder(
+				Builders.scalar(
+						columnAlias,
+						getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().resolve( type )
+				)
+		);
 	}
 
 	@Override
@@ -1337,44 +1350,62 @@ public class NativeQueryImpl<R>
 
 	@Override
 	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameter( parameter, value, type );
+		super.setParameter( parameter, value, type );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameter( name, value, type );
+		super.setParameter( name, value, type );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameter( position, value, type );
+		super.setParameter( position, value, type );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(String name, Object value, BasicTypeReference<?> type) {
+		super.setParameter( name, value, type );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setParameter(int position, Object value, BasicTypeReference<?> type) {
+		super.setParameter( position, value, type );
+		return this;
+	}
+
+	@Override
+	public <P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type) {
+		super.setParameter( parameter, val, type );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setParameterList(int position, Collection values) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameterList( position, values );
+		super.setParameterList( position, values );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setParameterList(int position, Object[] values) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameterList( position, values );
+		super.setParameterList( position, values );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setParameterList(String name, Collection values, Class javaType) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameterList( name, values, javaType );
+		super.setParameterList( name, values, javaType );
+		return this;
 	}
 
 	@Override
 	public NativeQueryImplementor<R> setParameterList(int position, Collection values, Class javaType) {
-		//noinspection unchecked
-		return (NativeQueryImplementor) super.setParameterList( position, values, javaType );
+		super.setParameterList( position, values, javaType );
+		return this;
 	}
 
 

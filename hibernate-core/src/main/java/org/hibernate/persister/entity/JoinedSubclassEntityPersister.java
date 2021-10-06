@@ -212,7 +212,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			else {
 				explicitDiscriminatorColumnName = null;
 				discriminatorAlias = IMPLICIT_DISCRIMINATOR_ALIAS;
-				discriminatorType = StandardBasicTypes.INTEGER;
+				discriminatorType = factory.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.INTEGER );
 				try {
 					discriminatorValue = persistentClass.getSubclassId();
 					discriminatorSQLString = discriminatorValue.toString();
@@ -225,7 +227,9 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		else {
 			explicitDiscriminatorColumnName = null;
 			discriminatorAlias = IMPLICIT_DISCRIMINATOR_ALIAS;
-			discriminatorType = StandardBasicTypes.INTEGER;
+			discriminatorType = factory.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.INTEGER );
 			discriminatorValue = null;
 			discriminatorSQLString = null;
 		}

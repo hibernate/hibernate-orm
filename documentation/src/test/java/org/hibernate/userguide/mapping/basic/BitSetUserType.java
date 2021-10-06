@@ -27,7 +27,7 @@ public class BitSetUserType implements UserType {
 
     @Override
     public int[] sqlTypes() {
-        return new int[] {StringType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode()};
+        return new int[] { Types.VARCHAR };
     }
 
     @Override

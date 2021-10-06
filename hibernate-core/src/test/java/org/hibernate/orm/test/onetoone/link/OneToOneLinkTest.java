@@ -11,6 +11,7 @@ import java.util.Date;
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.type.DateType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -64,7 +65,7 @@ public class OneToOneLinkTest {
 					session.clear();
 
 					e = (Employee) session.createQuery( "from Employee e where e.person.dob = :date" )
-							.setParameter( "date", new Date(), DateType.INSTANCE )
+							.setParameter( "date", new Date(), StandardBasicTypes.DATE )
 							.uniqueResult();
 					assertEquals( e.getPerson().getName(), "Gavin King" );
 					assertFalse( Hibernate.isInitialized( e.getPerson() ) );

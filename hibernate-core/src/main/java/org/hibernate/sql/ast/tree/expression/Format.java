@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
@@ -38,5 +39,11 @@ public class Format implements SqlExpressable, SqlAstNode {
 	@Override
 	public void accept(SqlAstWalker walker) {
 		walker.visitFormat( this );
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, type.getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

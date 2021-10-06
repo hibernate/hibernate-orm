@@ -100,7 +100,11 @@ public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterTy
 			int offset,
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
-		throw new NotYetImplementedFor6Exception(getClass());
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		throw new NotYetImplementedFor6Exception( getClass() );
+	}
 }

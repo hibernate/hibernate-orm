@@ -8,8 +8,10 @@ package org.hibernate.query.sqm.function;
 
 import java.util.List;
 
+import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -203,5 +205,11 @@ public class SelfRenderingFunctionSqlAstExpression
 				type.getExpressableJavaTypeDescriptor(),
 				sqlAstCreationState.getCreationContext().getDomainModel().getTypeConfiguration()
 		);
+	}
+
+	@Override
+	public int forEachJdbcType(
+			int offset, IndexedConsumer<JdbcMapping> action) {
+		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

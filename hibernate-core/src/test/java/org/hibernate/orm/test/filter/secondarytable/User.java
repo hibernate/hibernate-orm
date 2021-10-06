@@ -6,18 +6,19 @@
  */
 package org.hibernate.orm.test.filter.secondarytable;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.SqlFragmentAlias;
+import org.hibernate.type.NumericBooleanConverter;
+
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Filter;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.ParamDef;
-import org.hibernate.annotations.SqlFragmentAlias;
-import org.hibernate.annotations.Type;
 
 @Entity
 @Table(name="T_USER")
@@ -45,7 +46,7 @@ public class User {
 	private String password;
 	
 	@Column(name="LOCKED_OUT", table="SECURITY_USER")
-	@Type( type = "numeric_boolean")
+	@Convert( converter = NumericBooleanConverter.class )
 	private boolean lockedOut;
 
 	public int getId() {

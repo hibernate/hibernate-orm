@@ -8,6 +8,10 @@
 //$Id: $
 
 package org.hibernate.orm.test.annotations.lob;
+import java.sql.Types;
+
+import org.hibernate.annotations.JdbcTypeCode;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -35,8 +39,8 @@ public class ImageHolder {
 	public void setId(Long id) {
 		this.id = id;
 	}
-	
-	@org.hibernate.annotations.Type(type="image")
+
+	@JdbcTypeCode( Types.LONGVARBINARY )
 	public byte[] getLongByteArray() {
 		return longByteArray;
 	}
@@ -44,7 +48,8 @@ public class ImageHolder {
 	public void setLongByteArray(byte[] longByteArray) {
 		this.longByteArray = longByteArray;
 	}
-	@org.hibernate.annotations.Type(type="serializable_image")
+
+	@JdbcTypeCode( Types.LONGVARBINARY )
 	public Dog getDog() {
 		return dog;
 	}
@@ -52,7 +57,8 @@ public class ImageHolder {
 	public void setDog(Dog dog) {
 		this.dog = dog;
 	}
-	@org.hibernate.annotations.Type(type="wrapped_image")
+
+	@JdbcTypeCode( Types.LONGVARBINARY )
 	public Byte[] getPicByteArray() {
 		return picByteArray;
 	}

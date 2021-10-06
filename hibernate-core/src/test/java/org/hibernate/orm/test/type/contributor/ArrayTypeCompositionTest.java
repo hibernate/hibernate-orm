@@ -7,43 +7,30 @@
 package org.hibernate.orm.test.type.contributor;
 
 import java.util.List;
-import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 
-import org.hibernate.annotations.Type;
-import org.hibernate.boot.spi.MetadataBuilderContributor;
-import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.annotations.JavaType;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue( jiraKey = "HHH-11409" )
-public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCase {
+public class ArrayTypeCompositionTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] { CorporateUser.class };
-	}
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		options.put(
-				EntityManagerFactoryBuilderImpl.METADATA_BUILDER_CONTRIBUTOR,
-				(MetadataBuilderContributor) metadataBuilder ->
-						metadataBuilder.applyTypes( (typeContributions, serviceRegistry) -> {
-							typeContributions.contributeType( ArrayType.INSTANCE );
-						} ));
 	}
 
 	@Override
@@ -64,7 +51,7 @@ public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCas
 			List<CorporateUser> users = entityManager.createQuery(
 				"select u from CorporateUser u where u.emailAddresses = :address", CorporateUser.class )
 			.unwrap( Query.class )
-			.setParameter( "address", new Array(), ArrayType.INSTANCE )
+			.setParameter( "address", new Array() )
 			.getResultList();
 
 			assertTrue( users.isEmpty() );
@@ -89,7 +76,7 @@ public class ArrayTypeContributorTest extends BaseEntityManagerFunctionalTestCas
 		@Id
 		private String userName;
 
-		@Type(type = "comma-separated-array")
+		@JavaType( ArrayTypeDescriptor.class )
 		private Array emailAddresses = new Array();
 
 		public String getUserName() {

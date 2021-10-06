@@ -6,22 +6,19 @@
  */
 package org.hibernate.orm.test.envers.entities.customtype;
 
+import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.Parameter;
+import org.hibernate.envers.Audited;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
-import org.hibernate.envers.Audited;
-
 /**
  * @author Adam Warski (adam at warski dot org)
  */
 @Entity
-@TypeDef(name = "param", typeClass = ParametrizedTestUserType.class,
-		 parameters = {@Parameter(name = "param1", value = "x"), @Parameter(name = "param2", value = "y")})
 @Table(name = "ParamCustType")
 public class ParametrizedCustomTypeEntity {
 	@Id
@@ -29,7 +26,13 @@ public class ParametrizedCustomTypeEntity {
 	private Integer id;
 
 	@Audited
-	@Type(type = "param")
+	@CustomType(
+			value = ParametrizedTestUserType.class,
+			parameters = {
+					@Parameter(name = "param1", value = "x"),
+					@Parameter(name = "param2", value = "y")
+			}
+	)
 	private String str;
 
 	public ParametrizedCustomTypeEntity() {

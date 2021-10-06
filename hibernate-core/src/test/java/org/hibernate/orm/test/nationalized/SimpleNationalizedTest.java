@@ -7,12 +7,9 @@
 package org.hibernate.orm.test.nationalized;
 
 import java.sql.NClob;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
+import java.sql.Types;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.Type;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -20,6 +17,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.CharacterArrayType;
@@ -28,7 +26,6 @@ import org.hibernate.type.CharacterType;
 import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.NClobType;
-import org.hibernate.type.NTextType;
 import org.hibernate.type.StringNVarcharType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.descriptor.java.CharacterArrayTypeDescriptor;
@@ -39,6 +36,11 @@ import org.hibernate.type.internal.StandardBasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -74,7 +76,8 @@ public class SimpleNationalizedTest {
 		@Nationalized
 		private Character[] ncharArrAtt;
 
-		@Type(type = "ntext")
+		@Lob
+		@Nationalized
 		private String nlongvarcharcharAtt;
 	}
 
@@ -121,7 +124,18 @@ public class SimpleNationalizedTest {
 			assertSame( NClobType.INSTANCE, prop.getType() );
 
 			prop = pc.getProperty( "nlongvarcharcharAtt" );
-			assertSame( NTextType.INSTANCE, prop.getType() );
+			{
+				final BasicValue.Resolution<?> resolution = ( (BasicValue) prop.getValue() ).resolve();
+
+				final int jdbcTypeExpected;
+				if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
+					jdbcTypeExpected = Types.CLOB;
+				}
+				else {
+					jdbcTypeExpected = Types.NCLOB;
+				}
+				Assertions.assertThat( resolution.getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( jdbcTypeExpected );
+			}
 
 			prop = pc.getProperty( "ncharArrAtt" );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {

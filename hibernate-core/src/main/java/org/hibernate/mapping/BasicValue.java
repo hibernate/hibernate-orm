@@ -647,6 +647,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		super.setTypeName( typeName );
 	}
 
+	private static int COUNTER;
+
 	public <T extends UserType<?>> void setExplicitCustomType(Class<T> explicitCustomType) {
 		if ( explicitCustomType != null ) {
 			if ( resolution != null ) {
@@ -656,10 +658,28 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
 			final BeanInstanceProducer instanceProducer = bootstrapContext.getBeanInstanceProducer();
 
-			final ManagedBean<T> typeBean = bootstrapContext
-					.getServiceRegistry()
-					.getService( ManagedBeanRegistry.class )
-					.getBean( explicitCustomType, instanceProducer );
+			final Properties properties = new Properties();
+			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {
+				properties.putAll( getTypeParameters() );
+			}
+			if ( CollectionHelper.isNotEmpty( explicitLocalTypeParams ) ) {
+				properties.putAll( explicitLocalTypeParams );
+			}
+
+			final ManagedBean<T> typeBean;
+			if ( properties.isEmpty() ) {
+				typeBean = bootstrapContext
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( explicitCustomType, instanceProducer );
+			}
+			else {
+				final String name = explicitCustomType.getName() + COUNTER++;
+				typeBean = bootstrapContext
+						.getServiceRegistry()
+						.getService( ManagedBeanRegistry.class )
+						.getBean( name, explicitCustomType, instanceProducer );
+			}
 
 			final T typeInstance = typeBean.getBeanInstance();
 
@@ -667,12 +687,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( typeConfiguration );
 			}
 
-			final Properties properties = new Properties();
-			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {
-				properties.putAll( getTypeParameters() );
-			}
-			if ( CollectionHelper.isNotEmpty( explicitLocalTypeParams ) ) {
-				properties.putAll( explicitLocalTypeParams );
+			if ( typeInstance instanceof DynamicParameterizedType ) {
+				if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
+					if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
+						properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+					}
+				}
 			}
 
 			injectParameters( typeInstance, properties );

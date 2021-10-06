@@ -7,14 +7,13 @@
 
 //$Id$
 package org.hibernate.orm.test.annotations.entity;
+
 import java.util.Date;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-
-import org.hibernate.annotations.Columns;
-import org.hibernate.annotations.Type;
 
 /**
  * @author Emmanuel Bernard
@@ -44,11 +43,11 @@ public class Ransom {
 		this.kidnapperName = kidnapperName;
 	}
 
-	@Type(type = "org.hibernate.test.annotations.entity.MonetaryAmountUserType")
-	@Columns(columns = {
-	@Column(name = "r_amount"),
-	@Column(name = "r_currency")
-			})
+//	@Type(type = "org.hibernate.test.annotations.entity.MonetaryAmountUserType")
+//	@Columns(columns = {
+//	@Column(name = "r_amount"),
+//	@Column(name = "r_currency")
+//			})
 	public MonetaryAmount getAmount() {
 		return amount;
 	}

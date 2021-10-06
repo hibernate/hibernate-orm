@@ -13,16 +13,11 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.CustomType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -30,6 +25,12 @@ import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
 /**
  * @author Andrea Boriero
@@ -121,7 +122,7 @@ public class QueryParametersValidationTest extends BaseEntityManagerFunctionalTe
 		@GeneratedValue(strategy = GenerationType.AUTO)
 		private Long id;
 
-		@Type(type = "org.hibernate.orm.test.jpa.query.QueryParametersValidationTest$BooleanUserType")
+		@CustomType( QueryParametersValidationTest.BooleanUserType.class )
 		private boolean active;
 	}
 

@@ -17,18 +17,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import jakarta.persistence.Access;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Transient;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.MappingException;
+import org.hibernate.annotations.CustomType;
+import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.jaxb.Origin;
@@ -39,6 +33,14 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.Access;
+import jakarta.persistence.Basic;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Transient;
 
 /**
  * A helper class to keep the {@code XProperty}s of a class ordered by access type.
@@ -380,7 +382,13 @@ class PropertyContainer {
 			}
 			return true;
 		}
-		else if ( p.isAnnotationPresent( Type.class ) ) {
+		else if ( p.isAnnotationPresent( Basic.class ) ) {
+			return true;
+		}
+		else if ( p.isAnnotationPresent( CustomType.class ) ) {
+			return true;
+		}
+		else if ( p.isAnnotationPresent( JavaType.class ) ) {
 			return true;
 		}
 		else if ( p.isAnnotationPresent( Target.class ) ) {

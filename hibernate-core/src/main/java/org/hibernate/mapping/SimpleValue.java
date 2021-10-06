@@ -883,6 +883,46 @@ public abstract class SimpleValue implements KeyValue {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
+	public DynamicParameterizedType.ParameterType makeParameterImpl() {
+		try {
+			final String[] columnNames = new String[ columns.size() ];
+			final Long[] columnLengths = new Long[ columns.size() ];
+
+			for ( int i = 0; i < columns.size(); i++ ) {
+				final Selectable selectable = columns.get(i);
+				if ( selectable instanceof Column ) {
+					final Column column = (Column) selectable;
+					columnNames[i] = column.getName();
+					columnLengths[i] = column.getLength();
+				}
+			}
+
+			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
+			// todo : not sure this works for handling @MapKeyEnumerated
+			final Annotation[] annotations = xProperty == null
+					? null
+					: xProperty.getAnnotations();
+
+			final ClassLoaderService classLoaderService = getMetadata()
+					.getMetadataBuildingOptions()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+
+			return new ParameterTypeImpl(
+					classLoaderService.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
+					annotations,
+					table.getCatalog(),
+					table.getSchema(),
+					table.getName(),
+					Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+					columnNames,
+					columnLengths
+			);
+		}
+		catch ( ClassLoadingException e ) {
+			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
+		}
+	}
 
 	private static final class ParameterTypeImpl implements DynamicParameterizedType.ParameterType {
 

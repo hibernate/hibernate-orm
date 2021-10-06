@@ -16,8 +16,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OrderColumn;
 
 import org.hibernate.annotations.CollectionType;
-import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.TypeDef;
 
 
 /**
@@ -25,11 +23,11 @@ import org.hibernate.annotations.TypeDef;
  *
  * @author Steve Ebersole
  */
-@TypeDef(
-		name = "DefaultableList", 
-		typeClass = DefaultableListType.class,
-		parameters = @Parameter(name = "default", value = "Hello" )
-)
+//@TypeDef(
+//		name = "DefaultableList",
+//		typeClass = DefaultableListType.class,
+//		parameters = @Parameter(name = "default", value = "Hello" )
+//)
 @jakarta.persistence.Entity
 public class Entity {
 	private String name;

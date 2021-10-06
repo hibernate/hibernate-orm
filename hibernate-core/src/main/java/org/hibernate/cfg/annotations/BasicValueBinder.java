@@ -8,6 +8,7 @@ package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,11 +36,9 @@ import org.hibernate.annotations.MapKeyJavaType;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
 import org.hibernate.annotations.MapKeyMutability;
-import org.hibernate.annotations.MapKeyType;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
-import org.hibernate.annotations.Type;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.internal.NoJavaTypeDescriptor;
@@ -54,7 +53,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AccessType;
 import org.hibernate.cfg.Ejb3Column;
 import org.hibernate.cfg.Ejb3JoinColumn;
-import org.hibernate.cfg.NotYetImplementedException;
 import org.hibernate.cfg.PkDrivenByDefaultMapsIdSecondPass;
 import org.hibernate.cfg.SetBasicValueTypeSecondPass;
 import org.hibernate.dialect.Dialect;
@@ -62,7 +60,6 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -269,7 +266,10 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		if ( columns == null ) {
 			throw new AssertionFailure( "`BasicValueBinder#setColumns` should be called before `BasicValueBinder#setType`" );
 		}
-		assert columns.length == 1;
+
+		if ( columns.length != 1 ) {
+			throw new AssertionFailure( "Expecting just one column, but found `" + Arrays.toString( columns ) + "`" );
+		}
 
 		final XClass modelTypeXClass = isArray
 				? modelXProperty.getElementClass()
@@ -304,38 +304,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			applyExplicitType( userTypeImpl, kind.mappingAccess.customTypeParameters( modelXProperty ) );
 
 			// An explicit custom UserType has top precedence when we get to BasicValue resolution.
-			return;
-		}
-
-		final String legacyTypeName = kind.mappingAccess.legacyTypeName( modelXProperty );
-		if ( StringHelper.isNotEmpty( legacyTypeName ) ) {
-			setExplicitType( legacyTypeName );
-			this.explicitLocalTypeParams = extractTypeParams( kind.mappingAccess.legacyTypeParameters( modelXProperty ) );
-
-			// An explicit legacy Type has second precedence when we get to BasicValue resolution.
-			return;
-		}
-
-		// Next, if we find a legacy `@Type` annotation that has the next
-		// highest precedence.
-		final Type explicitTypeAnn;
-		if ( kind == Kind.MAP_KEY ) {
-			assert isMap;
-			final MapKeyType mapKeyTypeAnn = modelXProperty.getAnnotation( MapKeyType.class );
-			if ( mapKeyTypeAnn != null ) {
-				explicitTypeAnn = mapKeyTypeAnn.value();
-			}
-			else {
-				explicitTypeAnn = null;
-			}
-		}
-		else {
-			explicitTypeAnn = modelXProperty.getAnnotation( Type.class );
-		}
-
-		if ( explicitTypeAnn != null ) {
-			setExplicitType( explicitTypeAnn );
-
 			return;
 		}
 
@@ -492,44 +460,93 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getReflectionManager()
 				.toClass( mapKeyClass );
 
-		implicitJavaTypeAccess = typeConfiguration -> implicitJavaType;
+		implicitJavaTypeAccess = (typeConfiguration) -> implicitJavaType;
 
-		final MapKeyType mapKeyTypeAnn = mapAttribute.getAnnotation( MapKeyType.class );
-		if ( mapKeyTypeAnn != null ) {
-			// See BasicTypeProducerRegistry registrations in StandardBasicTypes
-			//
-			// todo (6.0) : need to move those to MetadataBuildingContext
-			//		I like the idea too of having TypeDefs fold into that
-			throw new NotYetImplementedException( "see comment at throw site" );
+		final MapKeyEnumerated mapKeyEnumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
+		if ( mapKeyEnumeratedAnn != null ) {
+			enumType = mapKeyEnumeratedAnn.value();
 		}
 
 		final MapKeyTemporal mapKeyTemporalAnn = mapAttribute.getAnnotation( MapKeyTemporal.class );
 		if ( mapKeyTemporalAnn != null ) {
 			temporalPrecision = mapKeyTemporalAnn.value();
 		}
-		else {
-			temporalPrecision = null;
-		}
 
-		if ( implicitJavaType.isEnum() ) {
-			final MapKeyEnumerated enumeratedAnn = mapAttribute.getAnnotation( MapKeyEnumerated.class );
-			if ( enumeratedAnn != null ) {
-				enumType = enumeratedAnn.value();
-				//noinspection ConstantConditions
-				if ( enumType == null ) {
-					// should never happen, but to be safe
-					throw new IllegalStateException(
-							"jakarta.persistence.EnumType was null on @jakarta.persistence.MapKeyEnumerated " +
-									" associated with attribute " + mapAttribute.getDeclaringClass().getName() +
-									'.' + mapAttribute.getName()
-					);
+		final ManagedBeanRegistry managedBeanRegistry = buildingContext.getBootstrapContext()
+				.getServiceRegistry()
+				.getService( ManagedBeanRegistry.class );
+
+		explicitJdbcTypeAccess = typeConfiguration -> {
+			final MapKeyJdbcType jdbcTypeAnn = mapAttribute.getAnnotation( MapKeyJdbcType.class );
+			if ( jdbcTypeAnn != null ) {
+				final Class<? extends JdbcTypeDescriptor> jdbcTypeImpl = normalizeJdbcType( jdbcTypeAnn.value() );
+				if ( jdbcTypeImpl != null ) {
+					final ManagedBean<? extends JdbcTypeDescriptor> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
+					return jdbcTypeBean.getBeanInstance();
 				}
 			}
-		}
-		else {
-			enumType = null;
-		}
 
+			final MapKeyJdbcTypeCode jdbcTypeCodeAnn = mapAttribute.getAnnotation( MapKeyJdbcTypeCode.class );
+			if ( jdbcTypeCodeAnn != null ) {
+				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
+				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
+					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
+				}
+			}
+
+			return null;
+		};
+
+		explicitJtdAccess = typeConfiguration -> {
+			final MapKeyJavaType javaTypeAnn = mapAttribute.getAnnotation( MapKeyJavaType.class );
+			if ( javaTypeAnn != null ) {
+				final Class<? extends BasicJavaDescriptor<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
+				if ( jdbcTypeImpl != null ) {
+					final ManagedBean<? extends BasicJavaDescriptor> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
+					return jdbcTypeBean.getBeanInstance();
+				}
+			}
+
+			return null;
+		};
+
+		explicitMutabilityAccess = typeConfiguration -> {
+			final MapKeyMutability mutabilityAnn = mapAttribute.getAnnotation( MapKeyMutability.class );
+			if ( mutabilityAnn != null ) {
+				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
+				if ( mutability != null ) {
+					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = managedBeanRegistry.getBean( mutability );
+					return jtdBean.getBeanInstance();
+				}
+			}
+
+			// see if the value's type Class is annotated `@Immutable`
+			if ( implicitJavaTypeAccess != null ) {
+				final Class<?> attributeType = ReflectHelper.getClass( implicitJavaTypeAccess.apply( typeConfiguration ) );
+				if ( attributeType != null ) {
+					if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
+						return ImmutableMutabilityPlan.instance();
+					}
+				}
+			}
+
+			// if the value is converted, see if the converter Class is annotated `@Immutable`
+			if ( converterDescriptor != null ) {
+				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
+					return ImmutableMutabilityPlan.instance();
+				}
+			}
+
+			final Class<? extends UserType> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( mapAttribute );
+			if ( customTypeImpl != null ) {
+				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
+					return ImmutableMutabilityPlan.instance();
+				}
+			}
+
+			// generally, this will trigger usage of the `JavaTypeDescriptor#getMutabilityPlan`
+			return null;
+		};
 		mapKeySupplementalDetails( mapAttribute );
 	}
 
@@ -681,91 +698,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	}
 
 	private void mapKeySupplementalDetails(XProperty attributeXProperty) {
-		final MapKeyEnumerated mapKeyEnumeratedAnn = attributeXProperty.getAnnotation( MapKeyEnumerated.class );
-		if ( mapKeyEnumeratedAnn != null ) {
-			enumType = mapKeyEnumeratedAnn.value();
-		}
-
-		final MapKeyTemporal mapKeyTemporalAnn = attributeXProperty.getAnnotation( MapKeyTemporal.class );
-		if ( mapKeyTemporalAnn != null ) {
-			temporalPrecision = mapKeyTemporalAnn.value();
-		}
-
-		final ManagedBeanRegistry managedBeanRegistry = buildingContext.getBootstrapContext()
-				.getServiceRegistry()
-				.getService( ManagedBeanRegistry.class );
-
-		explicitJdbcTypeAccess = typeConfiguration -> {
-			final MapKeyJdbcType jdbcTypeAnn = attributeXProperty.getAnnotation( MapKeyJdbcType.class );
-			if ( jdbcTypeAnn != null ) {
-				final Class<? extends JdbcTypeDescriptor> jdbcTypeImpl = normalizeJdbcType( jdbcTypeAnn.value() );
-				if ( jdbcTypeImpl != null ) {
-					final ManagedBean<? extends JdbcTypeDescriptor> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
-					return jdbcTypeBean.getBeanInstance();
-				}
-			}
-
-			final MapKeyJdbcTypeCode jdbcTypeCodeAnn = attributeXProperty.getAnnotation( MapKeyJdbcTypeCode.class );
-			if ( jdbcTypeCodeAnn != null ) {
-				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
-				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCode );
-				}
-			}
-
-			return null;
-		};
-
-		explicitJtdAccess = typeConfiguration -> {
-			final MapKeyJavaType javaTypeAnn = attributeXProperty.getAnnotation( MapKeyJavaType.class );
-			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaDescriptor<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
-				if ( jdbcTypeImpl != null ) {
-					final ManagedBean<? extends BasicJavaDescriptor> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
-					return jdbcTypeBean.getBeanInstance();
-				}
-			}
-
-			return null;
-		};
-
-		explicitMutabilityAccess = typeConfiguration -> {
-			final MapKeyMutability mutabilityAnn = attributeXProperty.getAnnotation( MapKeyMutability.class );
-			if ( mutabilityAnn != null ) {
-				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
-				if ( mutability != null ) {
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = managedBeanRegistry.getBean( mutability );
-					return jtdBean.getBeanInstance();
-				}
-			}
-
-			// see if the value's type Class is annotated `@Immutable`
-			if ( implicitJavaTypeAccess != null ) {
-				final Class<?> attributeType = ReflectHelper.getClass( implicitJavaTypeAccess.apply( typeConfiguration ) );
-				if ( attributeType != null ) {
-					if ( attributeType.isAnnotationPresent( Immutable.class ) ) {
-						return ImmutableMutabilityPlan.instance();
-					}
-				}
-			}
-
-			// if the value is converted, see if the converter Class is annotated `@Immutable`
-			if ( converterDescriptor != null ) {
-				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
-					return ImmutableMutabilityPlan.instance();
-				}
-			}
-
-			final Class<? extends UserType> customTypeImpl = Kind.MAP_KEY.mappingAccess.customType( attributeXProperty );
-			if ( customTypeImpl != null ) {
-				if ( customTypeImpl.isAnnotationPresent( Immutable.class ) ) {
-					return ImmutableMutabilityPlan.instance();
-				}
-			}
-
-			// generally, this will trigger usage of the `JavaTypeDescriptor#getMutabilityPlan`
-			return null;
-		};
 	}
 
 
@@ -870,18 +802,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		if ( customTypeAnn == null ) {
 			return null;
 		}
-		return normalizeUserType( customTypeAnn.value() );
-	}
-	private Class<? extends JdbcTypeDescriptor> normalizeJdbcType(Class<? extends JdbcTypeDescriptor> jdbcType) {
-		if ( jdbcType == null ) {
-			return null;
-		}
-
-		if ( NoJdbcTypeDescriptor.class.isAssignableFrom( jdbcType ) ) {
-			return null;
-		}
-
-		return jdbcType;
+		return normalizeUserType( (Class) customTypeAnn.value() );
 	}
 
 	private static Class<? extends UserType<?>> normalizeUserType(Class<? extends UserType<?>> userType) {
@@ -894,6 +815,18 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		}
 
 		return userType;
+	}
+
+	private Class<? extends JdbcTypeDescriptor> normalizeJdbcType(Class<? extends JdbcTypeDescriptor> jdbcType) {
+		if ( jdbcType == null ) {
+			return null;
+		}
+
+		if ( NoJdbcTypeDescriptor.class.isAssignableFrom( jdbcType ) ) {
+			return null;
+		}
+
+		return jdbcType;
 	}
 
 	private static Class<? extends BasicJavaDescriptor<?>> normalizeJavaType(Class<? extends BasicJavaDescriptor<?>> javaType) {
@@ -990,11 +923,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 	public void setExplicitType(String explicitType) {
 		this.explicitBasicTypeName = explicitType;
-	}
-
-	public void setExplicitType(Type typeAnn) {
-		setExplicitType( typeAnn.type() );
-		this.explicitLocalTypeParams = extractTypeParams( typeAnn.parameters() );
 	}
 
 	private void validate() {
@@ -1220,9 +1148,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		Class<? extends UserType> customType(XProperty xProperty);
 		Parameter[] customTypeParameters(XProperty xProperty);
-
-		String legacyTypeName(XProperty xProperty);
-		Parameter[] legacyTypeParameters(XProperty xProperty);
 	}
 
 	private static class ValueMappingAccess implements BasicMappingAccess {
@@ -1262,7 +1187,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				return null;
 			}
 
-			return normalizeUserType( customType.value() );
+			return normalizeUserType( (Class) customType.value() );
 		}
 
 		@Override
@@ -1272,26 +1197,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				return null;
 			}
 			return customType.parameters();
-		}
-
-		@Override
-		public String legacyTypeName(XProperty xProperty) {
-			final Type legacyType = xProperty.getAnnotation( Type.class );
-			if ( legacyType == null ) {
-				return null;
-			}
-
-			return legacyType.type();
-		}
-
-		@Override
-		public Parameter[] legacyTypeParameters(XProperty xProperty) {
-			final Type legacyType = xProperty.getAnnotation( Type.class );
-			if ( legacyType == null ) {
-				return null;
-			}
-
-			return legacyType.parameters();
 		}
 	}
 
@@ -1343,26 +1248,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			}
 			return customType.parameters();
 		}
-
-		@Override
-		public String legacyTypeName(XProperty xProperty) {
-			final MapKeyType legacyType = xProperty.getAnnotation( MapKeyType.class );
-			if ( legacyType == null ) {
-				return null;
-			}
-
-			return legacyType.value().type();
-		}
-
-		@Override
-		public Parameter[] legacyTypeParameters(XProperty xProperty) {
-			final MapKeyType legacyType = xProperty.getAnnotation( MapKeyType.class );
-			if ( legacyType == null ) {
-				return null;
-			}
-
-			return legacyType.value().parameters();
-		}
 	}
 
 	private static class CollectionIdMappingAccess implements BasicMappingAccess {
@@ -1413,16 +1298,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			}
 			return customType.parameters();
 		}
-
-		@Override
-		public String legacyTypeName(XProperty xProperty) {
-			return null;
-		}
-
-		@Override
-		public Parameter[] legacyTypeParameters(XProperty xProperty) {
-			return null;
-		}
 	}
 
 	private static class ListIndexMappingAccess implements BasicMappingAccess {
@@ -1462,16 +1337,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Parameter[] customTypeParameters(XProperty xProperty) {
-			return null;
-		}
-
-		@Override
-		public String legacyTypeName(XProperty xProperty) {
-			return null;
-		}
-
-		@Override
-		public Parameter[] legacyTypeParameters(XProperty xProperty) {
 			return null;
 		}
 	}

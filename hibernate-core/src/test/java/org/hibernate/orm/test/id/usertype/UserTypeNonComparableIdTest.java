@@ -10,14 +10,9 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
+import org.hibernate.annotations.CustomType;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.LongType;
 import org.hibernate.usertype.UserType;
@@ -27,6 +22,11 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 @DomainModel(
 		annotatedClasses = UserTypeNonComparableIdTest.SomeEntity.class
@@ -58,16 +58,12 @@ public class UserTypeNonComparableIdTest {
 		);
 	}
 
-	@TypeDef(
-			name = "customId",
-			typeClass = CustomIdType.class
-	)
 	@Entity
 	@Table(name = "some_entity")
 	public static class SomeEntity {
 
 		@Id
-		@Type(type = "customId")
+		@CustomType( CustomIdType.class )
 		@Column(name = "id")
 		private CustomId customId;
 
@@ -113,7 +109,7 @@ public class UserTypeNonComparableIdTest {
 		}
 	}
 
-	public static class CustomIdType implements UserType {
+	public static class CustomIdType implements UserType<CustomId> {
 
 		public static final LongType SQL_TYPE = LongType.INSTANCE;
 
@@ -123,7 +119,7 @@ public class UserTypeNonComparableIdTest {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
+		public CustomId nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner)
 				throws SQLException {
 			Long value = rs.getLong( position );
 
@@ -133,11 +129,9 @@ public class UserTypeNonComparableIdTest {
 		@Override
 		public void nullSafeSet(
 				PreparedStatement preparedStatement,
-				Object value,
+				CustomId customId,
 				int index,
 				SharedSessionContractImplementor sessionImplementor) throws HibernateException, SQLException {
-			CustomId customId = (CustomId) value;
-
 			if ( customId == null ) {
 				preparedStatement.setNull( index, SQL_TYPE.getJdbcTypeCode() );
 			}

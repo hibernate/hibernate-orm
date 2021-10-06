@@ -11,14 +11,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.TypeDef;
-
 /**
  * @author Vlad Mihalcea
  */
 @Entity(name = "Event")
 @Table(name = "event")
-@TypeDef(name = "ipv4", typeClass = InetType.class, defaultForType = Inet.class)
+//@TypeDef(name = "ipv4", typeClass = InetType.class, defaultForType = Inet.class)
 public class Event {
 
 	@Id

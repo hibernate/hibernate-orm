@@ -13,16 +13,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Query;
-import jakarta.persistence.Table;
-import jakarta.persistence.TypedQuery;
 
 import org.hibernate.HibernateException;
-import org.hibernate.annotations.Type;
-import org.hibernate.annotations.TypeDef;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.jpa.TypedParameterValue;
@@ -31,10 +23,16 @@ import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Query;
+import jakarta.persistence.Table;
+import jakarta.persistence.TypedQuery;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -111,13 +109,12 @@ public class TypedValueParametersTest {
 
 	@Entity( name = "Document" )
 	@Table( name = "Document" )
-	@TypeDef(name = "tagList", typeClass = TagUserType.class)
 	public static class Document {
 
 		@Id
 		private int id;
 
-		@Type(type = "tagList")
+		@org.hibernate.annotations.CustomType( TagUserType.class )
 		@Column(name = "tags")
 		private List<String> tags = new ArrayList<>();
 
@@ -138,19 +135,17 @@ public class TypedValueParametersTest {
 		}
 	}
 
-	public static class TagUserType implements UserType {
-
-		public static final UserType INSTANCE = new TagUserType();
+	public static class TagUserType implements UserType<List<String>> {
+		public static final TagUserType INSTANCE = new TagUserType();
 
 		private final int SQLTYPE = java.sql.Types.VARCHAR;
 
 		@Override
-		public void nullSafeSet(PreparedStatement statement, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-			if (value == null) {
+		public void nullSafeSet(PreparedStatement statement, List<String> list, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+			if ( list == null ) {
 				statement.setNull(index, SQLTYPE);
-			} else {
-				@SuppressWarnings("unchecked")
-				List<String> list = (List<String>) value;
+			}
+			else {
 				StringBuilder sb = new StringBuilder();
 
 				for (int i = 0; i < list.size(); i++) {
@@ -165,7 +160,7 @@ public class TypedValueParametersTest {
 		}
 
 		@Override
-		public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+		public List<String> nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 			String string = rs.getString( position );
 
 			if (rs.wasNull()) {
@@ -193,7 +188,7 @@ public class TypedValueParametersTest {
 
 		@Override
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public Class<List<?>> returnedClass() {
+		public Class<List<String>> returnedClass() {
 			return (Class) List.class;
 		}
 

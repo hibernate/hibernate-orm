@@ -6,15 +6,13 @@
  */
 package org.hibernate.orm.test.schemavalidation;
 
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Map;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -41,6 +39,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * @author Steve Ebersole
@@ -166,7 +168,7 @@ public class LongVarcharValidationTest implements ExecutionOptions {
 	public static class Translation {
 		@Id
 		public Integer id;
-		@Type(type = "text")
+		@JdbcTypeCode(Types.LONGVARCHAR)
 		String text;
 	}
 

@@ -55,6 +55,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
@@ -118,6 +119,11 @@ public class CustomPersister implements EntityPersister {
 
 	public String getEntityName() {
 		return Custom.class.getName();
+	}
+
+	@Override
+	public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
+		return null;
 	}
 
 	@Override

@@ -60,6 +60,7 @@ import org.hibernate.persister.walking.spi.CollectionElementDefinition;
 import org.hibernate.persister.walking.spi.CollectionIndexDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
+import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
@@ -135,6 +136,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public String getEntityName() {
+			return null;
+		}
+
+		@Override
+		public SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
 			return null;
 		}
 

@@ -15,7 +15,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -155,9 +154,7 @@ public interface EntityPersister
 	 * has multiple tables.  Returns {@code null} to indicate that the entity
 	 * does not define multiple tables
 	 */
-	default SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy() {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	SqmMultiTableMutationStrategy getSqmMultiTableMutationStrategy();
 
 	default SqmMultiTableInsertStrategy getSqmMultiTableInsertStrategy() {
 		throw new NotYetImplementedFor6Exception( getClass() );

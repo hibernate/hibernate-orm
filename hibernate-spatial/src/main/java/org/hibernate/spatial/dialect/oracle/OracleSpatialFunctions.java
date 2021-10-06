@@ -16,6 +16,7 @@ import org.hibernate.spatial.SpatialAnalysis;
 import org.hibernate.spatial.SpatialFunction;
 import org.hibernate.spatial.SpatialRelation;
 import org.hibernate.spatial.dialect.SpatialFunctionsRegistry;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -317,7 +318,7 @@ class OracleSpatialFunctions extends SpatialFunctionsRegistry {
 		private final int analysis;
 		private final boolean isOGCStrict;
 
-		private SpatialAnalysisFunction(String name, AllowableFunctionReturnType returnType, int analysis, boolean isOGCStrict) {
+		private SpatialAnalysisFunction(String name, BasicTypeReference<?> returnType, int analysis, boolean isOGCStrict) {
 			super( name, returnType );
 			this.analysis = analysis;
 			this.isOGCStrict = isOGCStrict;

@@ -25,8 +25,6 @@ public class InstantType
 	 */
 	public static final InstantType INSTANCE = new InstantType();
 
-	public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss.S 'Z'", Locale.ENGLISH );
-
 	public InstantType() {
 		super( TimestampJdbcTypeDescriptor.INSTANCE, InstantJavaTypeDescriptor.INSTANCE );
 	}

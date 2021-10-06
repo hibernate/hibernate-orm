@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.sql.Blob;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.BlobJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 
@@ -33,11 +32,6 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	@Override
 	protected boolean registerUnderJavaType() {
 		return true;
-	}
-
-	@Override
-	protected Blob getReplacement(Blob original, Blob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeBlob( original, target, session );
 	}
 
 }

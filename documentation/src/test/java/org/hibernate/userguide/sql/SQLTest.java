@@ -21,6 +21,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.loader.NonUniqueDiscoveredSqlAliasException;
 import org.hibernate.transform.Transformers;
 import org.hibernate.type.LongType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.StringType;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
@@ -215,8 +216,8 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::sql-hibernate-scalar-query-explicit-result-set-example[]
 			List<Object[]> persons = session.createNativeQuery(
 				"SELECT * FROM Person" )
-			.addScalar( "id", LongType.INSTANCE )
-			.addScalar( "name", StringType.INSTANCE )
+			.addScalar( "id", StandardBasicTypes.LONG )
+			.addScalar( "name", StandardBasicTypes.STRING )
 			.list();
 
 			for(Object[] person : persons) {
@@ -236,7 +237,7 @@ public class SQLTest extends BaseEntityManagerFunctionalTestCase {
 			//tag::sql-hibernate-scalar-query-partial-explicit-result-set-example[]
 			List<Object[]> persons = session.createNativeQuery(
 				"SELECT * FROM Person" )
-			.addScalar( "id", LongType.INSTANCE )
+			.addScalar( "id", StandardBasicTypes.LONG )
 			.addScalar( "name" )
 			.list();
 

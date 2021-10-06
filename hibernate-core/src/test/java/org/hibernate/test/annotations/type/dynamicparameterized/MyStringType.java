@@ -27,6 +27,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Properties;
 
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -107,7 +108,7 @@ public class MyStringType implements UserType, DynamicParameterizedType {
 
 	@Override
 	public int[] sqlTypes() {
-		return new int[] { StringType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode() };
+		return new int[] { Types.VARCHAR };
 	}
 
 	@Override

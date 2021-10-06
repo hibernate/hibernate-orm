@@ -16,9 +16,12 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.PostgresUUIDType;
-import org.hibernate.type.Type;
-import org.hibernate.type.UUIDBinaryType;
+import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -30,6 +33,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * @author Steve Ebersole
@@ -42,21 +46,21 @@ public class UUIDBasedIdInterpretationTest {
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( H2Dialect.class )
 	public void testH2(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, UUIDBinaryType.class );
+		checkUuidTypeUsed( scope, VarbinaryJdbcTypeDescriptor.class );
 	}
 
 	@Test
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( value = MySQLDialect.class, version = 500 )
 	public void testMySQL(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, UUIDBinaryType.class );
+		checkUuidTypeUsed( scope, VarbinaryJdbcTypeDescriptor.class );
 	}
 
 	@Test
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( value = PostgreSQLDialect.class, version = 940 )
 	public void testPostgreSQL(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, PostgresUUIDType.class );
+		checkUuidTypeUsed( scope, PostgresUUIDType.PostgresUUIDJdbcTypeDescriptor.class );
 	}
 
 	@Test
@@ -68,10 +72,11 @@ public class UUIDBasedIdInterpretationTest {
 		} );
 	}
 
-	private void checkUuidTypeUsed(DomainModelScope scope, Class<? extends Type> uuidTypeClass) {
+	private void checkUuidTypeUsed(DomainModelScope scope, Class<? extends JdbcTypeDescriptor> jdbcTypeDescriptor) {
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( UuidIdEntity.class.getName() );
-		final Type idPropertyType = entityBinding.getIdentifier().getType();
-		assertThat( idPropertyType, instanceOf( uuidTypeClass ) );
+		final BasicType<?> idPropertyType = (BasicType<?>) entityBinding.getIdentifier().getType();
+		assertSame( UUIDJavaTypeDescriptor.INSTANCE, idPropertyType.getJavaTypeDescriptor() );
+		assertThat( idPropertyType.getJdbcTypeDescriptor(), instanceOf( jdbcTypeDescriptor ) );
 	}
 
 	@Entity(name = "UuidIdEntity")

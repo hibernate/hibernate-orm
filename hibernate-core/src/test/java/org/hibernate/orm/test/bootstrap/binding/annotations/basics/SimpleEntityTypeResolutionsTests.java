@@ -16,19 +16,19 @@ import org.hibernate.SessionFactory;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
+import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -44,8 +44,8 @@ public class SimpleEntityTypeResolutionsTests {
 			final BasicValue identifier = (BasicValue) simpleEntityBinding.getIdentifier();
 			assertThat( identifier.isValid( scope.getDomainModel() ), is( true ) );
 			final BasicValue.Resolution<?> resolution = identifier.resolve();
-			assertThat( resolution.getLegacyResolvedBasicType(), is( IntegerType.INSTANCE ) );
-			assertThat( resolution.getLegacyResolvedBasicType().getJavaType(), sameInstance( Integer.class ) );
+			assertSame( IntegerJavaTypeDescriptor.INSTANCE, resolution.getDomainJavaDescriptor() );
+			assertSame( IntegerJdbcTypeDescriptor.INSTANCE, resolution.getJdbcTypeDescriptor() );
 			assertThat( resolution.getJdbcMapping(), sameInstance( resolution.getLegacyResolvedBasicType() ) );
 		}
 

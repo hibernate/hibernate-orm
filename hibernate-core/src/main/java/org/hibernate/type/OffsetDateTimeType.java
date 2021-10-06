@@ -36,9 +36,4 @@ public class OffsetDateTimeType
 	protected boolean registerUnderJavaType() {
 		return true;
 	}
-
-	@Override
-	public CastType getCastType() {
-		return CastType.OFFSET_TIMESTAMP;
-	}
 }

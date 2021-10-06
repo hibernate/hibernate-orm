@@ -33,11 +33,13 @@ public class TimestampdiffFunction
 
 	private final Dialect dialect;
 
-	public TimestampdiffFunction(Dialect dialect) {
+	public TimestampdiffFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"timestampdiff",
 				StandardArgumentsValidators.exactly( 3 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.LONG )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.LONG )
+				)
 		);
 		this.dialect = dialect;
 	}

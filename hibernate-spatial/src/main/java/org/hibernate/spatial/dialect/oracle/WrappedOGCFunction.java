@@ -13,6 +13,7 @@ import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.spatial.Spatial;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.Type;
 
 /**
@@ -31,7 +32,7 @@ class WrappedOGCFunction extends StandardSQLFunction {
 	 * @param geomArrays indicates which argument places are occupied by
 	 * sdo_geometries
 	 */
-	WrappedOGCFunction(final String name, final AllowableFunctionReturnType type, final boolean[] geomArrays) {
+	WrappedOGCFunction(final String name, final BasicTypeReference<?> type, final boolean[] geomArrays) {
 		super( name, type );
 		if ( isSpatial( type ) ) {
 			throw new IllegalArgumentException(
@@ -75,7 +76,7 @@ class WrappedOGCFunction extends StandardSQLFunction {
 				.append( ".geom" ).toString() : buf.toString();
 	}
 
-	private boolean isSpatial(AllowableFunctionReturnType type) {
+	private boolean isSpatial(BasicTypeReference<?> type) {
 		return Spatial.class.isAssignableFrom( type.getClass() );
 	}
 

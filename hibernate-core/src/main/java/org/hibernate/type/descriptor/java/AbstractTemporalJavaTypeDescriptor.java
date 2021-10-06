@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.util.Comparator;
+
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.type.spi.TypeConfiguration;
@@ -14,12 +16,20 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public abstract class AbstractTemporalJavaTypeDescriptor<T> extends AbstractClassJavaTypeDescriptor<T> implements TemporalJavaTypeDescriptor<T> {
+
 	protected AbstractTemporalJavaTypeDescriptor(Class<T> type) {
 		super( type );
 	}
 
 	protected AbstractTemporalJavaTypeDescriptor(Class<T> type, MutabilityPlan<T> mutabilityPlan) {
 		super( type, mutabilityPlan );
+	}
+
+	public AbstractTemporalJavaTypeDescriptor(
+			Class<T> type,
+			MutabilityPlan<T> mutabilityPlan,
+			Comparator<T> comparator) {
+		super( type, mutabilityPlan, comparator );
 	}
 
 	@Override

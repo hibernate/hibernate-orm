@@ -25,6 +25,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -51,7 +52,7 @@ public class LocalTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescrip
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return TimestampJdbcTypeDescriptor.INSTANCE;
+		return TimeJdbcTypeDescriptor.INSTANCE;
 	}
 
 	@Override

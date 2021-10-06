@@ -43,6 +43,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardIndexExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -234,6 +236,8 @@ public class TeradataDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
 
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
 		CommonFunctionFactory.octetLength( queryEngine );
@@ -246,7 +250,7 @@ public class TeradataDialect extends Dialect {
 		CommonFunctionFactory.bitLength_pattern( queryEngine, "octet_length(cast(?1 as char))*4" );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "mod", "(?1 mod ?2)" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.register();
 

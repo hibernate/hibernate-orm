@@ -53,6 +53,7 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableGroup;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 
@@ -74,6 +75,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	private final String[] subclassTableExpressions;
 	private final Object discriminatorValue;
 	private final String discriminatorSQLValue;
+	private final BasicType<?> discriminatorType;
 	private final Map<Object,String> subclassByDiscriminatorValue = new HashMap<>();
 
 	private final String[] constraintOrderedTableNames;
@@ -144,6 +146,9 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 		discriminatorValue = persistentClass.getSubclassId();
 		discriminatorSQLValue = String.valueOf( persistentClass.getSubclassId() );
+		discriminatorType = factory.getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( StandardBasicTypes.INTEGER );
 
 		// PROPERTIES
 
@@ -286,7 +291,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 
 	@Override
 	public Type getDiscriminatorType() {
-		return StandardBasicTypes.INTEGER;
+		return discriminatorType;
 	}
 
 	@Override

@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.query.TrimSpec;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -19,6 +20,7 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.Collections;
 import java.util.List;
@@ -28,13 +30,15 @@ import java.util.List;
  */
 public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	private Dialect dialect;
+	private final Dialect dialect;
 
-	public TrimFunction(Dialect dialect) {
+	public TrimFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"trim",
 				StandardArgumentsValidators.exactly( 3 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 		this.dialect = dialect;
 	}

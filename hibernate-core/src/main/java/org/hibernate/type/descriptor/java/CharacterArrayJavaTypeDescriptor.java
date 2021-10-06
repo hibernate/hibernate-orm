@@ -26,12 +26,14 @@ public class CharacterArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescr
 
 	@SuppressWarnings({ "unchecked" })
 	public CharacterArrayJavaTypeDescriptor() {
-		super( Character[].class, ArrayMutabilityPlan.INSTANCE );
+		super( Character[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
+
 	@Override
 	public String toString(Character[] value) {
 		return new String( unwrapChars( value ) );
 	}
+
 	@Override
 	public Character[] fromString(CharSequence string) {
 		return wrapChars( string.toString().toCharArray() );
@@ -50,12 +52,6 @@ public class CharacterArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescr
 			hashCode = 31 * hashCode + aChar;
 		}
 		return hashCode;
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<Character[]> getComparator() {
-		return IncomparableComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

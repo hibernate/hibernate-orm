@@ -103,12 +103,15 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 		super.initializeFunctionRegistry( queryEngine );
 
 		// full-text search functions
-		queryEngine.getSqmFunctionRegistry().registerNamed( "score", StandardBasicTypes.DOUBLE );
+		queryEngine.getSqmFunctionRegistry().registerNamed(
+				"score",
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
+		);
 		queryEngine.getSqmFunctionRegistry().registerNamed( "snippets" );
 		queryEngine.getSqmFunctionRegistry().registerNamed( "highlighted" );
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"contains",
-				StandardBasicTypes.BOOLEAN,
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN ),
 				"contains(?1,?2)",
 				"contains(?1,?2,?3)"
 		);

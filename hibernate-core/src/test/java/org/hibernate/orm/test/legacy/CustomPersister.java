@@ -59,14 +59,15 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.persister.walking.spi.EntityIdentifierDefinition;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.tuple.entity.BytecodeEnhancementMetadataNonPojoImpl;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 public class CustomPersister implements EntityPersister {
 
@@ -448,7 +449,11 @@ public class CustomPersister implements EntityPersister {
 
 	}
 
-	private static final Type[] TYPES = new Type[] { StandardBasicTypes.STRING };
+	private static final BasicType<String> STRING_TYPE = new BasicTypeImpl<>(
+			StringJavaTypeDescriptor.INSTANCE,
+			VarcharJdbcTypeDescriptor.INSTANCE
+	);
+	private static final Type[] TYPES = new Type[] { STRING_TYPE };
 	private static final String[] NAMES = new String[] { "name" };
 	private static final boolean[] MUTABILITY = new boolean[] { true };
 	private static final boolean[] GENERATION = new boolean[] { false };
@@ -478,7 +483,7 @@ public class CustomPersister implements EntityPersister {
 	 * @see EntityPersister#getIdentifierType()
 	 */
 	public Type getIdentifierType() {
-		return StandardBasicTypes.STRING;
+		return STRING_TYPE;
 	}
 
 	/**

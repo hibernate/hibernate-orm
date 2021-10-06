@@ -185,6 +185,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
 
@@ -2969,7 +2970,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmLiteral<byte[]> binaryLiteral(String text) {
 		return new SqmLiteral<>(
-				StandardBasicTypes.BINARY.fromStringValue( CharSequenceHelper.subSequence( text, 2, text.length() - 1 ) ),
+				PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.fromString(
+						CharSequenceHelper.subSequence( text, 2, text.length() - 1 )
+				),
 				resolveExpressableTypeBasic( byte[].class ),
 				creationContext.getNodeBuilder()
 		);
@@ -3688,7 +3691,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( collectionReferenceCtx == null ) {
 			final SqmLiteral<Integer> literal = new SqmLiteral<>(
 					1,
-					StandardBasicTypes.INTEGER,
+					creationContext.getNodeBuilder().getIntegerType(),
 					creationContext.getNodeBuilder()
 			);
 			subQuery.applyInferableType( literal.getNodeType() );

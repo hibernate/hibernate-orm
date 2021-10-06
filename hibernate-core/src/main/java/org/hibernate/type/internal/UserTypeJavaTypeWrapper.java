@@ -91,7 +91,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaTypeDescriptor<J> {
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		if ( sized != null ) {
 			return sized.defaultSizes()[0].getLength();
 		}

@@ -36,7 +36,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -177,8 +177,8 @@ public class SmokeTests {
 					assertThat( columnReference.renderSqlFragment( scope.getSessionFactory() ), is( "s1_0.gender" ) );
 
 					final JdbcMappingContainer selectedExpressable = selectedExpression.getExpressionType();
-					assertThat( selectedExpressable, instanceOf( StandardBasicTypeImpl.class ) );
-					final StandardBasicTypeImpl basicType = (StandardBasicTypeImpl) selectedExpressable;
+					assertThat( selectedExpressable, instanceOf( BasicTypeImpl.class ) );
+					final BasicTypeImpl basicType = (BasicTypeImpl) selectedExpressable;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
 					assertThat( basicType.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
 

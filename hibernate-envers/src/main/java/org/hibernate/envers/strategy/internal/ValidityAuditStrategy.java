@@ -48,6 +48,7 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.MapType;
 import org.hibernate.type.MaterializedClobType;
 import org.hibernate.type.MaterializedNClobType;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 
@@ -113,11 +114,11 @@ public class ValidityAuditStrategy implements AuditStrategy {
 
 		if ( mappingContext.getAuditEntityConfiguration().isRevisionEndTimestampEnabled() ) {
 			// add a column for the timestamp of the end revision
-			final String revisionInfoTimestampSqlType = TimestampType.INSTANCE.getName();
+			final String revisionInfoTimestampTypeName = StandardBasicTypes.TIMESTAMP.getName();
 			final Element timestampProperty = MetadataTools.addProperty(
 					mappingContext.getAuditEntityMapping(),
 					mappingContext.getAuditEntityConfiguration().getRevisionEndTimestampFieldName(),
-					revisionInfoTimestampSqlType,
+					revisionInfoTimestampTypeName,
 					true,
 					true,
 					false

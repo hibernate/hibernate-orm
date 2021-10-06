@@ -28,6 +28,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.DatabaseMetaData;
@@ -107,6 +109,9 @@ public class CockroachDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+
 		CommonFunctionFactory.ascii( queryEngine );
 		CommonFunctionFactory.char_chr( queryEngine );
 		CommonFunctionFactory.overlay( queryEngine );
@@ -129,7 +134,7 @@ public class CockroachDialect extends Dialect {
 		CommonFunctionFactory.trunc( queryEngine ); //TODO: emulate second arg
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "experimental_strftime")
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(datetime as pattern)")
 				.register();

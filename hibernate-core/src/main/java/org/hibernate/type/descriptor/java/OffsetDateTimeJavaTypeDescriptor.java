@@ -43,7 +43,7 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 
 	@SuppressWarnings("unchecked")
 	public OffsetDateTimeJavaTypeDescriptor() {
-		super( OffsetDateTime.class, ImmutableMutabilityPlan.INSTANCE );
+		super( OffsetDateTime.class, ImmutableMutabilityPlan.INSTANCE, OffsetDateTime.timeLineOrder() );
 	}
 
 	@Override
@@ -212,10 +212,5 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 	@Override
 	public OffsetDateTime next(OffsetDateTime current, SharedSessionContractImplementor session) {
 		return OffsetDateTime.now();
-	}
-
-	@Override
-	public Comparator<OffsetDateTime> getComparator() {
-		return OffsetDateTime.timeLineOrder();
 	}
 }

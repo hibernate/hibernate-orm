@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.time.YearMonth;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
@@ -107,7 +108,7 @@ public class AttributeOverrideEnhancedUserTypeTest {
 	public static class YearMonthUserType implements UserType, Serializable {
 		@Override
 		public int[] sqlTypes() {
-			int intType = IntegerType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode();
+			int intType = Types.INTEGER;
 			return new int[] { intType, intType };
 		}
 
@@ -152,14 +153,14 @@ public class AttributeOverrideEnhancedUserTypeTest {
 				final int index,
 				final SharedSessionContractImplementor session) throws HibernateException, SQLException {
 			if ( value == null ) {
-				IntegerType.INSTANCE.set( st, null, index, session );
-				IntegerType.INSTANCE.set( st, null, index + 1, session );
+				st.setNull( index, Types.INTEGER );
+				st.setNull( index + 1, Types.INTEGER );
 			}
 			else {
 				final YearMonth YearMonth = (YearMonth) value;
 
-				IntegerType.INSTANCE.set( st, YearMonth.getYear(), index, session );
-				IntegerType.INSTANCE.set( st, YearMonth.getMonthValue(), index + 1, session );
+				st.setInt( index, YearMonth.getYear() );
+				st.setInt( index + 1, YearMonth.getMonthValue() );
 			}
 		}
 

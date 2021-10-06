@@ -22,6 +22,7 @@ import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
 
@@ -57,6 +58,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 		return delegate.getBasicTypeRegistrations();
+	}
+
+	@Override
+	public TypeConfiguration getTypeConfiguration() {
+		return delegate.getTypeConfiguration();
 	}
 
 	@Override

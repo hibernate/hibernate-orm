@@ -19,6 +19,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -38,7 +39,7 @@ public class CalendarJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 	}
 
 	protected CalendarJavaTypeDescriptor() {
-		super( Calendar.class, CalendarMutabilityPlan.INSTANCE );
+		super( Calendar.class, CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class CalendarJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return TimeJdbcTypeDescriptor.INSTANCE;
+		return TimestampJdbcTypeDescriptor.INSTANCE;
 	}
 
 	@Override
@@ -108,11 +109,6 @@ public class CalendarJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		hashCode = 31 * hashCode + value.get(Calendar.MONTH);
 		hashCode = 31 * hashCode + value.get(Calendar.YEAR);
 		return hashCode;
-	}
-
-	@Override
-	public Comparator<Calendar> getComparator() {
-		return CalendarComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

@@ -28,7 +28,7 @@ public class TimeZoneJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 	}
 
 	public TimeZoneJavaTypeDescriptor() {
-		super( TimeZone.class );
+		super( TimeZone.class, ImmutableMutabilityPlan.INSTANCE, TimeZoneComparator.INSTANCE );
 	}
 
 	public String toString(TimeZone value) {
@@ -37,11 +37,6 @@ public class TimeZoneJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 
 	public TimeZone fromString(CharSequence string) {
 		return TimeZone.getTimeZone( string.toString() );
-	}
-
-	@Override
-	public Comparator<TimeZone> getComparator() {
-		return TimeZoneComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

@@ -28,12 +28,7 @@ public class LocaleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Lo
 	}
 
 	public LocaleJavaTypeDescriptor() {
-		super( Locale.class );
-	}
-
-	@Override
-	public Comparator<Locale> getComparator() {
-		return LocaleComparator.INSTANCE;
+		super( Locale.class, ImmutableMutabilityPlan.INSTANCE, LocaleComparator.INSTANCE );
 	}
 
 	public String toString(Locale value) {

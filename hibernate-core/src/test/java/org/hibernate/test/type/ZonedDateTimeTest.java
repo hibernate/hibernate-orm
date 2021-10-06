@@ -26,6 +26,7 @@ import org.hibernate.query.Query;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.ZonedDateTimeType;
 
 import org.hibernate.testing.TestForIssue;
@@ -215,7 +216,7 @@ public class ZonedDateTimeTest extends AbstractJavaTimeTypeTest<ZonedDateTime, Z
 			} );
 			Consumer<ZonedDateTime> checkOneMatch = expected -> inSession( s -> {
 				Query query = s.createQuery( "from " + ENTITY_NAME + " o where o.value = :date" );
-				query.setParameter( "date", expected, ZonedDateTimeType.INSTANCE );
+				query.setParameter( "date", expected, StandardBasicTypes.ZONED_DATE_TIME );
 				List<EntityWithZonedDateTime> list = query.list();
 				assertThat( list.size(), is( 1 ) );
 			} );

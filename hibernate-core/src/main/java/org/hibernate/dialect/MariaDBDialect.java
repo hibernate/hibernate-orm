@@ -77,7 +77,12 @@ public class MariaDBDialect extends MySQLDialect {
 		super.initializeFunctionRegistry(queryEngine);
 
 		if ( getVersion() >= 1020 ) {
-			queryEngine.getSqmFunctionRegistry().registerNamed("json_valid", StandardBasicTypes.NUMERIC_BOOLEAN);
+			queryEngine.getSqmFunctionRegistry().registerNamed(
+					"json_valid",
+					queryEngine.getTypeConfiguration()
+							.getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.BOOLEAN )
+			);
 		}
 	}
 

@@ -18,12 +18,14 @@ import org.hibernate.type.descriptor.WrapperOptions;
 public class ObjectArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Object[]> {
 
 	private final JavaTypeDescriptor<Object>[] components;
-	private final Comparator<Object[]> comparator;
 
 	public ObjectArrayJavaTypeDescriptor(JavaTypeDescriptor<?>[] components) {
-		super( Object[].class, ImmutableMutabilityPlan.INSTANCE );
+		super(
+				Object[].class,
+				ImmutableMutabilityPlan.INSTANCE,
+				new ComponentArrayComparator( (JavaTypeDescriptor<Object>[]) components )
+		);
 		this.components = (JavaTypeDescriptor<Object>[]) components;
-		this.comparator = new ComponentArrayComparator( this.components );
 	}
 
 	@Override
@@ -62,11 +64,6 @@ public class ObjectArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescript
 			hashCode = 31 * hashCode + components[i].extractHashCode( objects[i] );
 		}
 		return hashCode;
-	}
-
-	@Override
-	public Comparator<Object[]> getComparator() {
-		return comparator;
 	}
 
 	@SuppressWarnings({ "unchecked" })

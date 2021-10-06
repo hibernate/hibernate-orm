@@ -165,6 +165,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient Supplier<JpaMetamodel> domainModelAccess;
 	private final transient ServiceRegistry serviceRegistry;
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
+	private transient BasicType<Boolean> booleanType;
+	private transient BasicType<Integer> integerType;
 
 	public SqmCriteriaNodeBuilder(
 			String uuid,
@@ -184,6 +186,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public JpaMetamodel getDomainModel() {
 		return domainModelAccess.get();
+	}
+
+	@Override
+	public BasicType<Boolean> getBooleanType() {
+		final BasicType<Boolean> booleanType = this.booleanType;
+		if ( booleanType == null ) {
+			return this.booleanType = getTypeConfiguration().getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.BOOLEAN );
+		}
+		return booleanType;
+	}
+
+	@Override
+	public BasicType<Integer> getIntegerType() {
+		final BasicType<Integer> integerType = this.integerType;
+		if ( integerType == null ) {
+			return this.integerType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		}
+		return integerType;
 	}
 
 	@Override
@@ -987,14 +1008,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<String> concat(Expression<String> x, Expression<String> y) {
 		final SqmExpression<String> xSqmExpression = (SqmExpression<String>) x;
 		final SqmExpression<String> ySqmExpression = (SqmExpression<String>) y;
-		//noinspection unchecked
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
-				(AllowableFunctionReturnType<String>) highestPrecedenceType(
-						xSqmExpression.getNodeType(),
-						ySqmExpression.getNodeType(),
-						StandardBasicTypes.STRING
-				),
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1008,11 +1024,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
-				(AllowableFunctionReturnType<String>) highestPrecedenceType(
-						xSqmExpression.getNodeType(),
-						ySqmExpression.getNodeType(),
-						StandardBasicTypes.STRING
-				),
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1026,11 +1038,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
-				(AllowableFunctionReturnType<String>) highestPrecedenceType(
-						xSqmExpression.getNodeType(),
-						ySqmExpression.getNodeType(),
-						StandardBasicTypes.STRING
-				),
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1044,11 +1052,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 		return getFunctionDescriptor( "concat" ).generateSqmExpression(
 				asList( xSqmExpression, ySqmExpression ),
-				(AllowableFunctionReturnType<String>) highestPrecedenceType(
-						xSqmExpression.getNodeType(),
-						ySqmExpression.getNodeType(),
-						StandardBasicTypes.STRING
-				),
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1067,15 +1071,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			SqmExpression<String> source,
 			SqmExpression<Integer> from,
 			SqmExpression<Integer> len) {
-		//noinspection unchecked
-		final AllowableFunctionReturnType<String> resultType = (AllowableFunctionReturnType<String>) QueryHelper.highestPrecedenceType2(
-				source.getNodeType(),
-				StandardBasicTypes.STRING
-		);
-
 		return getFunctionDescriptor( "substring" ).generateSqmExpression(
-				len==null ? asList( source, from ) : asList( source, from, len ),
-				resultType,
+				len == null ? asList( source, from ) : asList( source, from, len ),
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1132,10 +1130,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		arguments.add( trimCharacter );
 		arguments.add( source );
 
-		//noinspection unchecked
 		return getFunctionDescriptor( "trim" ).generateSqmExpression(
 				arguments,
-				(AllowableFunctionReturnType<String>) QueryHelper.highestPrecedenceType2( source.getNodeType(), StandardBasicTypes.STRING ),
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1246,7 +1243,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 		return getFunctionDescriptor("locate").generateSqmExpression(
 				arguments,
-				StandardBasicTypes.INTEGER,
+				null,
 				getQueryEngine(),
 				getJpaMetamodel().getTypeConfiguration()
 		);
@@ -1281,10 +1278,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Date> currentDate() {
-		//noinspection unchecked
 		return getFunctionDescriptor("current_date")
 				.generateSqmExpression(
-						(AllowableFunctionReturnType<Date>) (AllowableFunctionReturnType<?>) StandardBasicTypes.DATE,
+						null,
 						queryEngine,
 						getJpaMetamodel().getTypeConfiguration()
 				);
@@ -1292,10 +1288,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Timestamp> currentTimestamp() {
-		//noinspection unchecked
 		return getFunctionDescriptor("current_timestamp")
 				.generateSqmExpression(
-						(AllowableFunctionReturnType<Timestamp>) (AllowableFunctionReturnType<?>) StandardBasicTypes.TIMESTAMP,
+						null,
 						queryEngine,
 						getJpaMetamodel().getTypeConfiguration()
 				);
@@ -1303,10 +1298,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmFunction<Time> currentTime() {
-		//noinspection unchecked
 		return getFunctionDescriptor("current_time")
 				.generateSqmExpression(
-						(AllowableFunctionReturnType<Time>) (AllowableFunctionReturnType<?>) StandardBasicTypes.TIME,
+						null,
 						queryEngine,
 						getJpaMetamodel().getTypeConfiguration()
 				);
@@ -1316,7 +1310,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmFunction<Instant> currentInstant() {
 		return getFunctionDescriptor("current_timestamp")
 				.generateSqmExpression(
-						StandardBasicTypes.INSTANT,
+						getJpaMetamodel().getTypeConfiguration()
+								.getBasicTypeRegistry()
+								.resolve( StandardBasicTypes.INSTANT ),
 						queryEngine,
 						getJpaMetamodel().getTypeConfiguration()
 				);
@@ -1471,7 +1467,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <C extends Collection<?>> SqmExpression<Integer> size(C collection) {
 		return new SqmLiteral<>(
 				collection.size(),
-				StandardBasicTypes.INTEGER,
+				getIntegerType(),
 				this
 		);
 	}
@@ -1551,7 +1547,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <M extends Map<?, ?>> SqmExpression<Integer> mapSize(M map) {
-		return new SqmLiteral<>( map.size(), StandardBasicTypes.INTEGER, this );
+		return new SqmLiteral<>( map.size(), getIntegerType(), this );
 	}
 
 
@@ -1616,9 +1612,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate conjunction() {
 		return new SqmComparisonPredicate(
-				new SqmLiteral<>( 1, StandardBasicTypes.INTEGER, this ),
+				new SqmLiteral<>( 1, getIntegerType(), this ),
 				ComparisonOperator.EQUAL,
-				new SqmLiteral<>( 1, StandardBasicTypes.INTEGER, this ),
+				new SqmLiteral<>( 1, getIntegerType(), this ),
 				this
 		);
 	}
@@ -1626,9 +1622,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate disjunction() {
 		return new SqmComparisonPredicate(
-				new SqmLiteral<>( 1, StandardBasicTypes.INTEGER, this ),
+				new SqmLiteral<>( 1, getIntegerType(), this ),
 				ComparisonOperator.NOT_EQUAL,
-				new SqmLiteral<>( 1, StandardBasicTypes.INTEGER, this ),
+				new SqmLiteral<>( 1, getIntegerType(), this ),
 				this
 		);
 	}

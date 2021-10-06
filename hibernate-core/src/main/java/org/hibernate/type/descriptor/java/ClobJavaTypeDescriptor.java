@@ -11,7 +11,6 @@ import java.io.Serializable;
 import java.sql.Clob;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;
@@ -21,6 +20,7 @@ import org.hibernate.engine.jdbc.ClobImplementer;
 import org.hibernate.engine.jdbc.ClobProxy;
 import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -38,7 +38,7 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 	public static final ClobJavaTypeDescriptor INSTANCE = new ClobJavaTypeDescriptor();
 
 	public ClobJavaTypeDescriptor() {
-		super( Clob.class, ClobMutabilityPlan.INSTANCE );
+		super( Clob.class, ClobMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
 
 	@Override
@@ -65,12 +65,6 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<Clob> getComparator() {
-		return IncomparableComparator.INSTANCE;
-	}
-
-	@Override
 	public int extractHashCode(Clob value) {
 		return System.identityHashCode( value );
 	}
@@ -78,6 +72,11 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 	@Override
 	public boolean areEqual(Clob one, Clob another) {
 		return one == another;
+	}
+
+	@Override
+	public Clob getReplacement(Clob original, Clob target, SharedSessionContractImplementor session) {
+		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeClob( original, target, session );
 	}
 
 	@SuppressWarnings({ "unchecked" })
@@ -156,7 +155,7 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return dialect.getDefaultLobLength();
 	}
 

@@ -20,10 +20,10 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Gunnar Morling
  */
 public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements DomainResultProducer<Integer> {
-	private final SqmPath pluralPath;
+	private final SqmPath<?> pluralPath;
 
 	public SqmCollectionSize(SqmPath<?> pluralPath, NodeBuilder nodeBuilder) {
-		this( pluralPath, StandardBasicTypes.INTEGER, nodeBuilder );
+		this( pluralPath, nodeBuilder.getIntegerType(), nodeBuilder );
 	}
 
 	public SqmCollectionSize(SqmPath<?> pluralPath, SqmExpressable<Integer> sizeType, NodeBuilder nodeBuilder) {
@@ -31,7 +31,7 @@ public class SqmCollectionSize extends AbstractSqmExpression<Integer> implements
 		this.pluralPath = pluralPath;
 	}
 
-	public SqmPath getPluralPath() {
+	public SqmPath<?> getPluralPath() {
 		return pluralPath;
 	}
 

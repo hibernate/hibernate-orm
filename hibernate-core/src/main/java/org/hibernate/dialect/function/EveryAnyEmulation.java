@@ -32,12 +32,14 @@ public class EveryAnyEmulation extends AbstractSqmSelfRenderingFunctionDescripto
 
 	private final boolean every;
 
-	public EveryAnyEmulation(boolean every) {
+	public EveryAnyEmulation(TypeConfiguration typeConfiguration, boolean every) {
 		super(
 				every ? "every" : "any",
 				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.BOOLEAN )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
+				)
 		);
 		this.every = every;
 	}

@@ -166,8 +166,6 @@ import static org.hibernate.sql.results.graph.DomainResultGraphPrinter.logDomain
  */
 public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implements SqlAstTranslator<T>, SqlAppender {
 
-	private static final QueryLiteral<Integer> ONE_LITERAL = new QueryLiteral<>( 1, IntegerType.INSTANCE );
-
 	// pre-req state
 	private final SessionFactoryImplementor sessionFactory;
 
@@ -197,6 +195,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	private int queryGroupAliasCounter;
 	private transient AbstractSqmSelfRenderingFunctionDescriptor castFunction;
 	private transient LazySessionWrapperOptions lazySessionWrapperOptions;
+	private transient BasicType<Integer> integerType;
 
 	private SqlAstNodeRenderingMode parameterRenderingMode = SqlAstNodeRenderingMode.DEFAULT;
 
@@ -238,6 +237,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			lazySessionWrapperOptions = new LazySessionWrapperOptions( sessionFactory );
 		}
 		return lazySessionWrapperOptions;
+	}
+
+	public BasicType<Integer> getIntegerType() {
+		if ( integerType == null ) {
+			integerType = sessionFactory.getTypeConfiguration()
+					.getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.INTEGER );
+		}
+		return integerType;
 	}
 
 	/**
@@ -517,10 +525,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected Object getParameterBindValue(JdbcParameter parameter) {
 		final JdbcParameterBinding binding;
 		if ( parameter == getOffsetParameter() ) {
-			binding = new JdbcParameterBindingImpl( IntegerType.INSTANCE, getLimit().getFirstRow() );
+			binding = new JdbcParameterBindingImpl( getIntegerType(), getLimit().getFirstRow() );
 		}
 		else if ( parameter == getLimitParameter() ) {
-			binding = new JdbcParameterBindingImpl( IntegerType.INSTANCE, getLimit().getMaxRows() );
+			binding = new JdbcParameterBindingImpl( getIntegerType(), getLimit().getMaxRows() );
 		}
 		else {
 			binding = jdbcParameterBindings.getBinding( parameter );
@@ -1431,7 +1439,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 											false,
 											null,
 											null,
-											StandardBasicTypes.INTEGER,
+											getIntegerType(),
 											null
 									)
 							)
@@ -4290,7 +4298,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					appendSql( i + 1 );
 					appendSql( order );
 				}
-				renderFetch( ONE_LITERAL, null, FetchClauseType.ROWS_ONLY );
+				renderFetch(
+						new QueryLiteral<>( 1, getIntegerType() ),
+						null,
+						FetchClauseType.ROWS_ONLY
+				);
 				appendSql( CLOSE_PARENTHESIS );
 			}
 			finally {

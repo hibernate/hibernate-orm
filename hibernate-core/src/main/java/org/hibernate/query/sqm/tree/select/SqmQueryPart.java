@@ -65,7 +65,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	public void setOffsetExpression(SqmExpression<?> offsetExpression) {
 		if ( offsetExpression != null ) {
-			offsetExpression.applyInferableType( StandardBasicTypes.INTEGER );
+			offsetExpression.applyInferableType( nodeBuilder.getIntegerType() );
 		}
 		this.offsetExpression = offsetExpression;
 	}
@@ -83,7 +83,7 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 			if ( fetchClauseType == null ) {
 				throw new IllegalArgumentException( "Fetch clause may not be null!" );
 			}
-			fetchExpression.applyInferableType( StandardBasicTypes.INTEGER );
+			fetchExpression.applyInferableType( nodeBuilder.getIntegerType() );
 			this.fetchExpression = fetchExpression;
 			this.fetchClauseType = fetchClauseType;
 		}

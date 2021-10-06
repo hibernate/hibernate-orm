@@ -167,7 +167,7 @@ public class InformixDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");

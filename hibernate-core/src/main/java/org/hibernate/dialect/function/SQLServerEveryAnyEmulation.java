@@ -17,6 +17,7 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Jan Schatteman
@@ -25,12 +26,14 @@ public class SQLServerEveryAnyEmulation extends AbstractSqmSelfRenderingFunction
 
 	private final boolean every;
 
-	public SQLServerEveryAnyEmulation(boolean every) {
+	public SQLServerEveryAnyEmulation(TypeConfiguration typeConfiguration, boolean every) {
 		super(
 				every ? "every" : "any",
 				FunctionKind.AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.BOOLEAN )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN )
+				)
 		);
 		this.every = every;
 	}

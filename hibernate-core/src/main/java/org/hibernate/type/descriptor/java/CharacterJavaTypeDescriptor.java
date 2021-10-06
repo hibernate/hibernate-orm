@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Descriptor for {@link Character} handling.
@@ -93,7 +94,7 @@ public class CharacterJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
 		return 1;
 	}
 

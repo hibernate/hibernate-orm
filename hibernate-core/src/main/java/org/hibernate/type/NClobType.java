@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.sql.NClob;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.NClobJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 
@@ -35,8 +34,4 @@ public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
 		return true;
 	}
 
-	@Override
-	protected NClob getReplacement(NClob original, NClob target, SharedSessionContractImplementor session) {
-		return session.getJdbcServices().getJdbcEnvironment().getDialect().getLobMergeStrategy().mergeNClob( original, target, session );
-	}
 }

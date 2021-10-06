@@ -15,9 +15,12 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.After;
@@ -74,8 +77,9 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 				.buildMetadata();
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity.class.getName() );
-		Type type = pc.getProperty( "it" ).getType();
-		assertTyping( StringType.class, type );
+		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
+		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
+		assertTyping( VarcharJdbcTypeDescriptor.class, type.getJdbcTypeDescriptor() );
 	}
 
 	/**
@@ -90,8 +94,9 @@ public class SimpleXmlOverriddenTest extends BaseUnitTestCase {
 				.buildMetadata();
 
 		PersistentClass pc = metadata.getEntityBinding( TheEntity2.class.getName() );
-		Type type = pc.getProperty( "it" ).getType();
-		assertTyping( StringType.class, type );
+		BasicType<?> type = (BasicType<?>) pc.getProperty( "it" ).getType();
+		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
+		assertTyping( VarcharJdbcTypeDescriptor.class, type.getJdbcTypeDescriptor() );
 	}
 
 	@Entity(name="TheEntity")

@@ -38,6 +38,7 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * Represents an HQL/JPQL query or a compiled Criteria query.  Also acts as the Hibernate
@@ -302,6 +303,29 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	Query<R> setParameter(int position, Object val, AllowableParameterType type);
 
 	/**
+	 * Bind a named query parameter using the supplied Type
+	 *
+	 * @param name the name of the parameter
+	 * @param val the possibly-null parameter value
+	 * @param type the Hibernate allowable parameter type
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameter(String name, Object val, BasicTypeReference<?> type);
+
+	/**
+	 * Bind a value to a JDBC-style query parameter.
+	 *
+	 * @param position the position of the parameter in the query
+	 * string, numbered from <tt>0</tt>.
+	 * @param val the possibly-null parameter value
+	 * @param type the Hibernate allowable parameter type
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	Query<R> setParameter(int position, Object val, BasicTypeReference<?> type);
+
+	/**
 	 * Bind a named query parameter as some form of date/time using
 	 * the indicated temporal-type.
 	 *
@@ -348,6 +372,17 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 * @return {@code this}, for method chaining
 	 */
 	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
+
+	/**
+	 * Bind a query parameter using the supplied Type
+	 *
+	 * @param parameter The query parameter memento
+	 * @param val the possibly-null parameter value
+	 * @param type the Hibernate allowable parameter type
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type);
 
 	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
 

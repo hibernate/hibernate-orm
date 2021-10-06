@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.source.internal.hbm;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -2019,14 +2020,22 @@ public class ModelBinder {
 
 	private static boolean isLob(Integer sqlType, String sqlTypeName) {
 		if ( sqlType != null ) {
-			return ClobType.INSTANCE.getJdbcTypeDescriptor().getJdbcTypeCode() == sqlType ||
-					BlobType.INSTANCE.getJdbcTypeDescriptor().getJdbcTypeCode() == sqlType ||
-					NClobType.INSTANCE.getJdbcTypeDescriptor().getJdbcTypeCode() == sqlType;
+			switch ( sqlType ) {
+				case Types.BLOB:
+				case Types.CLOB:
+				case Types.NCLOB:
+					return true;
+			}
+			return false;
 		}
 		else if ( sqlTypeName != null ) {
-			return ClobType.INSTANCE.getName().equalsIgnoreCase( sqlTypeName ) ||
-					BlobType.INSTANCE.getName().equalsIgnoreCase( sqlTypeName ) ||
-					NClobType.INSTANCE.getName().equalsIgnoreCase( sqlTypeName );
+			switch ( sqlTypeName.toLowerCase( Locale.ROOT ) ) {
+				case "blob":
+				case "clob":
+				case "nclob":
+					return true;
+			}
+			return false;
 		}
 		return false;
 	}
@@ -2405,8 +2414,9 @@ public class ModelBinder {
 			);
 		}
 		else {
-			discriminatorTypeName = StandardBasicTypes.STRING.getTypeName();
-			discriminatorType = StandardBasicTypes.STRING;
+			discriminatorTypeName = StandardBasicTypes.STRING.getName();
+			discriminatorType = metadataBuildingContext.getBootstrapContext().getTypeConfiguration().getBasicTypeRegistry()
+					.resolve( StandardBasicTypes.STRING );
 		}
 
 		anyBinding.setMetaType( discriminatorTypeName );

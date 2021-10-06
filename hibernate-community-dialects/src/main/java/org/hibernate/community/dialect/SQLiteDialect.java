@@ -48,6 +48,8 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
@@ -235,6 +237,10 @@ public class SQLiteDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<Integer> integerType = basicTypeRegistry.resolve( StandardBasicTypes.INTEGER );
+
 		CommonFunctionFactory.mod_operator( queryEngine );
 		CommonFunctionFactory.leftRight_substr( queryEngine );
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
@@ -252,25 +258,25 @@ public class SQLiteDialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				integerType,
 				"instr(?2,?1)",
 				"instr(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"lpad",
-				StandardBasicTypes.STRING,
+				stringType,
 				"(substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1))||?1)",
 				"(substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1))||?1)"
 		).setArgumentListSignature("(string, length[, padding])");
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"rpad",
-				StandardBasicTypes.STRING,
+				stringType,
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',' '),1,?2-length(?1)))",
 				"(?1||substr(replace(hex(zeroblob(?2)),'00',?3),1,?2-length(?1)))"
 		).setArgumentListSignature("(string, length[, padding])");
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder("format", "strftime")
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(datetime as pattern)")
 				.register();

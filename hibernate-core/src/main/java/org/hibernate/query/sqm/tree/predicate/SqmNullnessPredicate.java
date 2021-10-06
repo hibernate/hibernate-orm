@@ -20,12 +20,12 @@ public class SqmNullnessPredicate extends AbstractNegatableSqmPredicate {
 		this( expression, false, nodeBuilder );
 	}
 
-	public SqmNullnessPredicate(SqmExpression expression, boolean negated, NodeBuilder nodeBuilder) {
+	public SqmNullnessPredicate(SqmExpression<?> expression, boolean negated, NodeBuilder nodeBuilder) {
 		super( negated, nodeBuilder );
 		this.expression = expression;
 	}
 
-	public SqmExpression getExpression() {
+	public SqmExpression<?> getExpression() {
 		return expression;
 	}
 

@@ -17,9 +17,13 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BinaryType;
 import org.hibernate.type.RowVersionType;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.RowVersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
@@ -31,8 +35,15 @@ import static org.junit.Assert.fail;
  *
  * @author Steve Ebersole
  */
-@RequiresDialect( SybaseASE15Dialect.class )
+@RequiresDialect( SybaseASEDialect.class )
 public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
+
+	@Override
+	protected String getBaseForMappings() {
+		return "org/hibernate/orm/test/";
+	}
+
+	@Override
 	public String[] getMappings() {
 		return new String[] { "version/sybase/User.hbm.xml" };
 	}
@@ -145,7 +156,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertFalse(
-				"owner version not incremented", BinaryType.INSTANCE.isEqual(
+				"owner version not incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -160,7 +171,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertFalse(
-				"owner version not incremented", BinaryType.INSTANCE.isEqual(
+				"owner version not incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -197,7 +208,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", BinaryType.INSTANCE.isEqual(
+				"owner version was incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -210,7 +221,7 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 		s.close();
 
 		assertTrue(
-				"owner version was incremented", BinaryType.INSTANCE.isEqual(
+				"owner version was incremented", PrimitiveByteArrayJavaTypeDescriptor.INSTANCE.areEqual(
 				steveTimestamp, steve.getTimestamp()
 		)
 		);
@@ -228,7 +239,8 @@ public class SybaseTimestampVersioningTest extends BaseCoreFunctionalTestCase {
 	public void testComparableTimestamps() {
 		final BasicType<?> versionType =
 				sessionFactory().getEntityPersister( User.class.getName() ).getVersionType();
-		assertSame( RowVersionType.INSTANCE, versionType );
+		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaTypeDescriptor );
+		assertTrue( versionType.getJdbcTypeDescriptor() instanceof VarbinaryJdbcTypeDescriptor );
 
 		Session s = openSession();
 		s.getTransaction().begin();

@@ -18,7 +18,13 @@ import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.java.DateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.TestForIssue;
@@ -28,6 +34,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Testing of patched support for Informix boolean type; see HHH-9894, HHH-10800
@@ -85,9 +92,11 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 		SelfRenderingSqmFunction<Object> sqmExpression = functionDescriptor.generateSqmExpression(
 				null,
 				queryEngine,
-				null
+				new TypeConfiguration()
 		);
-		assertEquals( StandardBasicTypes.TIMESTAMP, sqmExpression.getNodeType() );
+		BasicType<?> basicType = (BasicType<?>) sqmExpression.getNodeType();
+		assertEquals( DateJavaTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+		assertEquals( TimestampJdbcTypeDescriptor.INSTANCE, basicType.getJdbcTypeDescriptor() );
 
 		SqlAppender appender = new StringBuilderSqlAppender();
 		sqmExpression.getRenderingSupport().render( appender, Collections.emptyList(), null );
@@ -102,9 +111,11 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 		SelfRenderingSqmFunction<Object> sqmExpression = functionDescriptor.generateSqmExpression(
 				null,
 				queryEngine,
-				null
+				new TypeConfiguration()
 		);
-		assertEquals( StandardBasicTypes.DATE, sqmExpression.getNodeType() );
+		BasicType<?> basicType = (BasicType<?>) sqmExpression.getNodeType();
+		assertEquals( DateJavaTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
+		assertEquals( DateJdbcTypeDescriptor.INSTANCE, basicType.getJdbcTypeDescriptor() );
 
 		SqlAppender appender = new StringBuilderSqlAppender();
 		sqmExpression.getRenderingSupport().render( appender, Collections.emptyList(), null );

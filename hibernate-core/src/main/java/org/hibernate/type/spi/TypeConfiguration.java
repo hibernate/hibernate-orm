@@ -60,7 +60,7 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -290,16 +290,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			case "zoneddatetime": return getBasicTypeForJavaType( ZonedDateTime.class );
 			case "biginteger": return getBasicTypeForJavaType( BigInteger.class );
 			case "bigdecimal": return getBasicTypeForJavaType( BigDecimal.class );
-			case "binary":
-				//TODO: why does this not work:
-//				standardExpressableTypeForJavaType( byte[].class );
-				return StandardBasicTypes.BINARY;
+			case "binary": return getBasicTypeForJavaType( byte[].class );
 			//this one is very fragile ... works well for BIT or BOOLEAN columns only
 			//works OK, I suppose, for integer columns, but not at all for char columns
 			case "boolean": return getBasicTypeForJavaType( Boolean.class );
-			case "truefalse": return StandardBasicTypes.TRUE_FALSE;
-			case "yesno": return StandardBasicTypes.YES_NO;
-			case "numericboolean": return StandardBasicTypes.NUMERIC_BOOLEAN;
+			case "truefalse": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.TRUE_FALSE.getName() );
+			case "yesno": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.YES_NO.getName() );
+			case "numericboolean": return basicTypeRegistry.getRegisteredType( StandardBasicTypes.NUMERIC_BOOLEAN.getName() );
 			default: {
 				final BasicType<Object> registeredBasicType = basicTypeRegistry.getRegisteredType( name );
 				if ( registeredBasicType != null ) {
@@ -633,10 +630,9 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return null;
 		}
 
-		//noinspection unchecked
 		return standardBasicTypeForJavaType(
 				javaType,
-				javaTypeDescriptor -> new StandardBasicTypeImpl<>(
+				javaTypeDescriptor -> new BasicTypeImpl<>(
 						javaTypeDescriptor,
 						javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
 				)

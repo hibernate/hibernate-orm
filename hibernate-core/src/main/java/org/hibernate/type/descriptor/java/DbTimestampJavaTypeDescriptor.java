@@ -165,8 +165,8 @@ public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaTypeDescript
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect) {
-		return delegate.getDefaultSqlLength( dialect );
+	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+		return delegate.getDefaultSqlLength( dialect, jdbcType );
 	}
 
 	@Override

@@ -839,7 +839,7 @@ public interface CoreMessageLogger extends BasicLogger {
 
 	@LogMessage(level = WARN)
 	@Message(value = "Type [%s] defined no registration keys; ignoring", id = 269)
-	void typeDefinedNoRegistrationKeys(BasicType type);
+	void typeDefinedNoRegistrationKeys(Object type);
 
 	@LogMessage(level = DEBUG)
 	@Message(value = "Type registration key [%s] overrode previous key : %s", id = 270)

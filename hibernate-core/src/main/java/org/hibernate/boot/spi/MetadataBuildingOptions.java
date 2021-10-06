@@ -25,6 +25,7 @@ import org.hibernate.collection.internal.StandardCollectionSemanticsResolver;
 import org.hibernate.collection.spi.CollectionSemanticsResolver;
 import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandard;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
 
@@ -181,6 +182,8 @@ public interface MetadataBuildingOptions {
 	MultiTenancyStrategy getMultiTenancyStrategy();
 
 	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
+
+	TypeConfiguration getTypeConfiguration();
 
 	/**
 	 * Access to all explicit cache region mappings.

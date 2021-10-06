@@ -30,7 +30,7 @@ public class CalendarTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDesc
 	public static final CalendarTimeJavaTypeDescriptor INSTANCE = new CalendarTimeJavaTypeDescriptor();
 
 	protected CalendarTimeJavaTypeDescriptor() {
-		super( Calendar.class, CalendarJavaTypeDescriptor.CalendarMutabilityPlan.INSTANCE );
+		super( Calendar.class, CalendarJavaTypeDescriptor.CalendarMutabilityPlan.INSTANCE, CalendarComparator.INSTANCE );
 	}
 
 	@Override
@@ -92,11 +92,6 @@ public class CalendarTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDesc
 		hashCode = 31 * hashCode + value.get(Calendar.MONTH);
 		hashCode = 31 * hashCode + value.get(Calendar.YEAR);
 		return hashCode;
-	}
-
-	@Override
-	public Comparator<Calendar> getComparator() {
-		return CalendarComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

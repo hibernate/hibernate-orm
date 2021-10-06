@@ -28,7 +28,7 @@ public class ByteArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor
 
 	@SuppressWarnings({ "unchecked" })
 	public ByteArrayJavaTypeDescriptor() {
-		super( Byte[].class, ArrayMutabilityPlan.INSTANCE );
+		super( Byte[].class, ArrayMutabilityPlan.INSTANCE, IncomparableComparator.INSTANCE );
 	}
 	@Override
 	public boolean areEqual(Byte[] one, Byte[] another) {
@@ -70,12 +70,6 @@ public class ByteArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor
 			bytes[i] = (byte) Integer.parseInt( hexStr, 16 );
 		}
 		return bytes;
-	}
-
-	@Override
-	@SuppressWarnings({ "unchecked" })
-	public Comparator<Byte[]> getComparator() {
-		return IncomparableComparator.INSTANCE;
 	}
 
 	@SuppressWarnings({ "unchecked" })

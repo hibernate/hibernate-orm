@@ -28,6 +28,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.community.dialect.sequence.SequenceInformationExtractorSAPDBDatabaseImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -131,20 +132,22 @@ public class MaxDBDialect extends Dialect {
 		CommonFunctionFactory.adddateSubdateAddtimeSubtime( queryEngine );
 		CommonFunctionFactory.addMonths( queryEngine );
 
-		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", StandardBasicTypes.INTEGER );
+		final BasicType<Integer> integerType = queryEngine.getTypeConfiguration().getBasicTypeRegistry()
+				.resolve( StandardBasicTypes.INTEGER );
+		queryEngine.getSqmFunctionRegistry().registerPattern( "extract", "?1(?2)", integerType );
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder( "nullif", "case ?1 when ?2 then null else ?1 end" )
 				.setExactArgumentCount(2)
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "index" )
-				.setInvariantType( StandardBasicTypes.INTEGER )
+				.setInvariantType( integerType )
 				.setArgumentCountBetween( 2, 4 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER, "index(?2,?1)", "index(?2,?1,?3)"
+				integerType, "index(?2,?1)", "index(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
 	}
 

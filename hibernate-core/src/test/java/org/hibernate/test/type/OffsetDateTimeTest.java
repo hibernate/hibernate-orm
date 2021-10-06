@@ -27,6 +27,7 @@ import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.OffsetDateTimeType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
@@ -200,7 +201,7 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 			} );
 			Consumer<OffsetDateTime> checkOneMatch = expected -> inSession( s -> {
 				Query query = s.createQuery( "from " + ENTITY_NAME + " o where o.value = :date" );
-				query.setParameter( "date", expected, OffsetDateTimeType.INSTANCE );
+				query.setParameter( "date", expected, StandardBasicTypes.OFFSET_DATE_TIME );
 				List<EntityWithOffsetDateTime> list = query.list();
 				assertThat( list.size(), is( 1 ) );
 			} );

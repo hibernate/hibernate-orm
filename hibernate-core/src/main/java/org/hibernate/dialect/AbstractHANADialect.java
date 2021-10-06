@@ -60,7 +60,7 @@ import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -823,7 +823,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		queryEngine.getSqmFunctionRegistry().registerBinaryTernaryPattern(
 				"locate",
-				StandardBasicTypes.INTEGER,
+				queryEngine.getTypeConfiguration().getBasicTypeRegistry().resolve( StandardBasicTypes.INTEGER ),
 				"locate(?2,?1)",
 				"locate(?2,?1,?3)"
 		).setArgumentListSignature("(pattern, string[, start])");
@@ -1477,7 +1477,7 @@ public abstract class AbstractHANADialect extends Dialect {
 			registerHibernateType( Types.DOUBLE, StandardBasicTypes.BIG_DECIMAL.getName() );
 			typeContributions.getTypeConfiguration().getBasicTypeRegistry()
 					.register(
-							new StandardBasicTypeImpl<>(
+							new BasicTypeImpl<>(
 									DoubleJavaTypeDescriptor.INSTANCE,
 									NumericJdbcTypeDescriptor.INSTANCE
 							),

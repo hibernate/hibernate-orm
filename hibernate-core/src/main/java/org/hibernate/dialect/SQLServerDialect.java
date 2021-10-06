@@ -44,6 +44,8 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -51,6 +53,7 @@ import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -167,6 +170,11 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry(queryEngine);
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+
 		// For SQL-Server we need to cast certain arguments to varchar(max) to be able to concat them
 		CommonFunctionFactory.aggregates( this, queryEngine, SqlAstNodeRenderingMode.DEFAULT, "+", "varchar(max)" );
 
@@ -181,7 +189,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		}
 
 		if ( getVersion() >= 11 ) {
-			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatEmulation( this ) );
+			queryEngine.getSqmFunctionRegistry().register( "format", new SQLServerFormatEmulation( this, queryEngine.getTypeConfiguration() ) );
 
 			//actually translate() was added in 2017 but
 			//it's not worth adding a new dialect for that!
@@ -190,27 +198,27 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			CommonFunctionFactory.median_percentileCont( queryEngine, true );
 
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
-					.setInvariantType( StandardBasicTypes.DATE )
+					.setInvariantType( dateType )
 					.setExactArgumentCount( 3 )
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
-					.setInvariantType( StandardBasicTypes.TIME )
+					.setInvariantType( timeType )
 					.setExactArgumentCount( 5 )
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
-					.setInvariantType( StandardBasicTypes.TIMESTAMP )
+					.setInvariantType( timestampType )
 					.setExactArgumentCount( 5 )
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
-					.setInvariantType( StandardBasicTypes.TIMESTAMP )
+					.setInvariantType( timestampType )
 					.setExactArgumentCount( 7 )
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
-					.setInvariantType( StandardBasicTypes.TIMESTAMP )
+					.setInvariantType( timestampType )
 					.setExactArgumentCount( 8 )
 					.register();
 			queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
-					.setInvariantType( StandardBasicTypes.TIMESTAMP )
+					.setInvariantType( timestampType )
 					.setExactArgumentCount( 10 )
 					.register();
 		}

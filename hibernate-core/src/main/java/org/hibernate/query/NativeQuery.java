@@ -31,6 +31,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.transform.ResultTransformer;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * Represents a native (SQL) query.
@@ -78,6 +79,20 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 * @return {@code this}, for method chaining
 	 */
 	NativeQuery<T> addScalar(String columnAlias);
+
+	/**
+	 * Declare a scalar query result.
+	 * <p/>
+	 * Functions like {@code <return-scalar/>} in {@code hbm.xml} or
+	 * {@link jakarta.persistence.ColumnResult} in annotations
+	 *
+	 * @param columnAlias The column alias in the result-set to be processed
+	 * 		as a scalar result
+	 * @param type The Hibernate type as which to treat the value.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	NativeQuery<T> addScalar(String columnAlias, BasicTypeReference<?> type);
 
 	/**
 	 * Declare a scalar query result.
@@ -676,6 +691,15 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 
 	@Override
 	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
+
+	@Override
+	NativeQuery<T> setParameter(String name, Object val, BasicTypeReference<?> type);
+
+	@Override
+	NativeQuery<T> setParameter(int position, Object val, BasicTypeReference<?> type);
+
+	@Override
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Collection values);

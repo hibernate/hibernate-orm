@@ -73,6 +73,8 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.*;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
@@ -89,6 +91,11 @@ import jakarta.persistence.TemporalType;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.*;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Date;
 import java.util.*;
@@ -188,43 +195,43 @@ public abstract class Dialect implements ConversionContext {
 		registerColumnType( Types.NCLOB, "nclob" );
 
 		// register hibernate types for default use in scalar sqlquery type auto detection
-		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getTypeName() );
+		registerHibernateType( Types.BOOLEAN, StandardBasicTypes.BOOLEAN.getName() );
 
-		registerHibernateType( Types.BIT, 64, StandardBasicTypes.LONG.getTypeName() );
-		registerHibernateType( Types.BIT, 32, StandardBasicTypes.INTEGER.getTypeName() );
-		registerHibernateType( Types.BIT, 16, StandardBasicTypes.SHORT.getTypeName() );
-		registerHibernateType( Types.BIT, 8, StandardBasicTypes.BYTE.getTypeName() );
-		registerHibernateType( Types.BIT, 1, StandardBasicTypes.BOOLEAN.getTypeName() );
+		registerHibernateType( Types.BIT, 64, StandardBasicTypes.LONG.getName() );
+		registerHibernateType( Types.BIT, 32, StandardBasicTypes.INTEGER.getName() );
+		registerHibernateType( Types.BIT, 16, StandardBasicTypes.SHORT.getName() );
+		registerHibernateType( Types.BIT, 8, StandardBasicTypes.BYTE.getName() );
+		registerHibernateType( Types.BIT, 1, StandardBasicTypes.BOOLEAN.getName() );
 
-		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getTypeName() );
-		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getTypeName() );
-		registerHibernateType( Types.FLOAT, StandardBasicTypes.DOUBLE.getTypeName() );
-		registerHibernateType( Types.NUMERIC, StandardBasicTypes.BIG_DECIMAL.getTypeName() );
-		registerHibernateType( Types.DECIMAL, StandardBasicTypes.BIG_DECIMAL.getTypeName() );
+		registerHibernateType( Types.REAL, StandardBasicTypes.FLOAT.getName() );
+		registerHibernateType( Types.DOUBLE, StandardBasicTypes.DOUBLE.getName() );
+		registerHibernateType( Types.FLOAT, StandardBasicTypes.DOUBLE.getName() );
+		registerHibernateType( Types.NUMERIC, StandardBasicTypes.BIG_DECIMAL.getName() );
+		registerHibernateType( Types.DECIMAL, StandardBasicTypes.BIG_DECIMAL.getName() );
 
-		registerHibernateType( Types.BIGINT, StandardBasicTypes.LONG.getTypeName() );
-		registerHibernateType( Types.INTEGER, StandardBasicTypes.INTEGER.getTypeName() );
-		registerHibernateType( Types.SMALLINT, StandardBasicTypes.SHORT.getTypeName() );
-		registerHibernateType( Types.TINYINT, StandardBasicTypes.BYTE.getTypeName() );
+		registerHibernateType( Types.BIGINT, StandardBasicTypes.LONG.getName() );
+		registerHibernateType( Types.INTEGER, StandardBasicTypes.INTEGER.getName() );
+		registerHibernateType( Types.SMALLINT, StandardBasicTypes.SHORT.getName() );
+		registerHibernateType( Types.TINYINT, StandardBasicTypes.BYTE.getName() );
 
-		registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getTypeName() );
-		registerHibernateType( Types.CHAR, StandardBasicTypes.STRING.getTypeName() );
-		registerHibernateType( Types.VARCHAR, 1, StandardBasicTypes.CHARACTER.getTypeName() );
-		registerHibernateType( Types.VARCHAR, StandardBasicTypes.STRING.getTypeName() );
-		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.NSTRING.getTypeName() );
-		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.TEXT.getTypeName() );
-		registerHibernateType( Types.LONGNVARCHAR, StandardBasicTypes.NTEXT.getTypeName() );
+		registerHibernateType( Types.CHAR, 1, StandardBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.CHAR, StandardBasicTypes.STRING.getName() );
+		registerHibernateType( Types.VARCHAR, 1, StandardBasicTypes.CHARACTER.getName() );
+		registerHibernateType( Types.VARCHAR, StandardBasicTypes.STRING.getName() );
+		registerHibernateType( Types.NVARCHAR, StandardBasicTypes.NSTRING.getName() );
+		registerHibernateType( Types.LONGVARCHAR, StandardBasicTypes.TEXT.getName() );
+		registerHibernateType( Types.LONGNVARCHAR, StandardBasicTypes.NTEXT.getName() );
 
-		registerHibernateType( Types.BINARY, StandardBasicTypes.BINARY.getTypeName() );
-		registerHibernateType( Types.VARBINARY, StandardBasicTypes.BINARY.getTypeName() );
-		registerHibernateType( Types.LONGVARBINARY, StandardBasicTypes.IMAGE.getTypeName() );
+		registerHibernateType( Types.BINARY, StandardBasicTypes.BINARY.getName() );
+		registerHibernateType( Types.VARBINARY, StandardBasicTypes.BINARY.getName() );
+		registerHibernateType( Types.LONGVARBINARY, StandardBasicTypes.IMAGE.getName() );
 
-		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getTypeName() );
-		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getTypeName() );
+		registerHibernateType( Types.BLOB, StandardBasicTypes.BLOB.getName() );
+		registerHibernateType( Types.CLOB, StandardBasicTypes.CLOB.getName() );
 
-		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getTypeName() );
-		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getTypeName() );
-		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getTypeName() );
+		registerHibernateType( Types.DATE, StandardBasicTypes.DATE.getName() );
+		registerHibernateType( Types.TIME, StandardBasicTypes.TIME.getName() );
+		registerHibernateType( Types.TIMESTAMP, StandardBasicTypes.TIMESTAMP.getName() );
 
 		if(supportsPartitionBy()) {
 			registerKeyword( "PARTITION" );
@@ -478,6 +485,15 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 */
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
+		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		final BasicType<Date> timeType = basicTypeRegistry.resolve( StandardBasicTypes.TIME );
+		final BasicType<Instant> instantType = basicTypeRegistry.resolve( StandardBasicTypes.INSTANT );
+		final BasicType<OffsetDateTime> offsetDateTimeType = basicTypeRegistry.resolve( StandardBasicTypes.OFFSET_DATE_TIME );
+		final BasicType<LocalDateTime> localDateTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE_TIME );
+		final BasicType<LocalTime> localTimeType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_TIME );
+		final BasicType<LocalDate> localDateType = basicTypeRegistry.resolve( StandardBasicTypes.LOCAL_DATE );
 
 		//aggregate functions, supported on every database
 
@@ -531,18 +547,18 @@ public abstract class Dialect implements ConversionContext {
 		//only some databases support the ANSI SQL-style position() function, so
 		//define it here as an alias for locate()
 
-		queryEngine.getSqmFunctionRegistry().register( "position", new LocatePositionEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "position", new LocatePositionEmulation( queryEngine.getTypeConfiguration() ) );
 
 		//very few databases support ANSI-style overlay() function, so emulate
 		//it here in terms of either insert() or concat()/substring()
 
-		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( false ) );
+		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), false ) );
 
 		//ANSI SQL trim() function is supported on almost all of the databases
 		//we care about, but on some it must be emulated using ltrim(), rtrim(),
 		//and replace()
 
-		queryEngine.getSqmFunctionRegistry().register( "trim", new TrimFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "trim", new TrimFunction( this, queryEngine.getTypeConfiguration() ) );
 
 		//ANSI SQL cast() function is supported on the databases we care most
 		//about but in certain cases it doesn't allow some useful typecasts,
@@ -580,12 +596,12 @@ public abstract class Dialect implements ConversionContext {
 
 		//pad() is a function we've designed to look like ANSI trim()
 
-		queryEngine.getSqmFunctionRegistry().register( "pad", new LpadRpadPadEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "pad", new LpadRpadPadEmulation( queryEngine.getTypeConfiguration() ) );
 
 		//legacy Hibernate convenience function for casting to string, defined
 		//here as an alias for cast(arg as String)
 
-		queryEngine.getSqmFunctionRegistry().register( "str", new CastStrEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "str", new CastStrEmulation( queryEngine.getTypeConfiguration() ) );
 
 		//format() function for datetimes, emulated on many databases using the
 		//Oracle-style to_char() function, and on others using their native
@@ -596,8 +612,8 @@ public abstract class Dialect implements ConversionContext {
 		//timestampadd()/timestampdiff() delegated back to the Dialect itself
 		//since there is a great variety of different ways to emulate them
 
-		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TimestampaddFunction( this ) );
-		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TimestampdiffFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampadd", new TimestampaddFunction( this, queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "timestampdiff", new TimestampdiffFunction( this, queryEngine.getTypeConfiguration() ) );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "dateadd", "timestampadd" );
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "datediff", "timestampdiff" );
 
@@ -609,7 +625,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"current_date",
 						currentDate(),
-						StandardBasicTypes.DATE
+						dateType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
@@ -617,7 +633,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"current_time",
 						currentTime(),
-						StandardBasicTypes.TIME
+						timeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
@@ -625,7 +641,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"current_timestamp",
 						currentTimestamp(),
-						StandardBasicTypes.TIMESTAMP
+						timestampType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current date", "current_date" );
@@ -638,7 +654,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"local_date",
 						currentDate(),
-						StandardBasicTypes.LOCAL_DATE
+						localDateType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
@@ -646,7 +662,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"local_time",
 						currentLocalTime(),
-						StandardBasicTypes.LOCAL_TIME
+						localTimeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
@@ -654,7 +670,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"local_datetime",
 						currentLocalTimestamp(),
-						StandardBasicTypes.LOCAL_DATE_TIME
+						localDateTimeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().register(
@@ -662,7 +678,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"offset_datetime",
 						currentTimestampWithTimeZone(),
-						StandardBasicTypes.OFFSET_DATE_TIME
+						offsetDateTimeType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "local date", "local_date" );
@@ -675,7 +691,7 @@ public abstract class Dialect implements ConversionContext {
 				new CurrentFunction(
 						"instant",
 						currentTimestamp(),
-						StandardBasicTypes.INSTANT
+						instantType
 				)
 		);
 		queryEngine.getSqmFunctionRegistry().registerAlternateKey( "current_instant", "instant" ); //deprecated legacy!
@@ -3458,7 +3474,8 @@ public abstract class Dialect implements ConversionContext {
 				JdbcTypeDescriptor jdbcType,
 				JavaTypeDescriptor<?> javaType,
 				Integer precision,
-				Integer scale, Long length);
+				Integer scale,
+				Long length);
 	}
 
 	public class SizeStrategyImpl implements SizeStrategy {
@@ -3478,25 +3495,27 @@ public abstract class Dialect implements ConversionContext {
 					if ( javaType.getJavaTypeClass() == Boolean.class && length != null && length == 255 ) {
 						length = null;
 					}
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
 				case Types.CHAR:
-					// Use the default length for char if we encounter the JPA default 255 instead
-					if ( javaType.getJavaTypeClass() == Character.class && length != null && length == 255 ) {
-						length = null;
-					}
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
-					break;
 				case Types.NCHAR:
-				case Types.BINARY:
+					// Use the default length for char and UUID if we encounter the JPA default 255 instead
+					if ( length != null && length == 255 ) {
+						if ( javaType.getJavaTypeClass() == Character.class || javaType.getJavaTypeClass() == UUID.class ) {
+							length = null;
+						}
+					}
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
+					break;
 				case Types.VARCHAR:
 				case Types.NVARCHAR:
+				case Types.BINARY:
 				case Types.VARBINARY:
 					// Use the default length for UUID if we encounter the JPA default 255 instead
 					if ( javaType.getJavaTypeClass() == UUID.class && length != null && length == 255 ) {
 						length = null;
 					}
-					size.setLength( javaType.getDefaultSqlLength( Dialect.this ) );
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
 				case Types.LONGVARCHAR:
 				case Types.LONGNVARCHAR:
@@ -3528,7 +3547,7 @@ public abstract class Dialect implements ConversionContext {
 					break;
 				case Types.CLOB:
 				case Types.BLOB:
-					size.setLength( javaType.getDefaultSqlLength(Dialect.this) );
+					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
 
 			}

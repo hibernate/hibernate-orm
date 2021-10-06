@@ -11,6 +11,7 @@ import java.util.List;
 import jakarta.persistence.criteria.Expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.type.StandardBasicTypes;
 
@@ -18,10 +19,9 @@ import org.hibernate.type.StandardBasicTypes;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmPredicate extends AbstractSqmExpression<Boolean> implements SqmPredicate {
-	@SuppressWarnings("WeakerAccess")
-	public AbstractSqmPredicate(NodeBuilder criteriaBuilder) {
-		//noinspection unchecked
-		super( StandardBasicTypes.BOOLEAN, criteriaBuilder );
+
+	public AbstractSqmPredicate(SqmExpressable<Boolean> type, NodeBuilder criteriaBuilder) {
+		super( type, criteriaBuilder );
 	}
 
 	@Override

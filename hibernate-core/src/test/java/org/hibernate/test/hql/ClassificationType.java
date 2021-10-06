@@ -61,14 +61,21 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 
 	@Override
 	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
-		Integer ordinal = StandardBasicTypes.INTEGER.getJdbcValueExtractor().extract( rs, position, session );
-		return Classification.valueOf( ordinal );
+		final int intValue = rs.getInt( position );
+		if ( rs.wasNull() ) {
+			return null;
+		}
+		return Classification.valueOf( intValue );
 	}
 
 	@Override
 	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		Integer ordinal = value == null ? null : new Integer( ( ( Classification ) value ).ordinal() );
-		StandardBasicTypes.INTEGER.nullSafeSet( st, ordinal, index, session );
+		if ( value == null ) {
+			st.setNull( index, Types.INTEGER );
+		}
+		else {
+			st.setInt( index, ( ( Classification ) value ).ordinal() );
+		}
 	}
 
 	@Override

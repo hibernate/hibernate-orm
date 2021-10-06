@@ -11,6 +11,8 @@ import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
+import java.time.ZonedDateTime;
 import java.util.Map;
 
 import org.hibernate.Hibernate;
@@ -22,9 +24,11 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -101,15 +105,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
 		return javaTypeDescriptor.getMutabilityPlan();
-	}
-
-	protected T getReplacement(T original, T target, SharedSessionContractImplementor session) {
-		if ( !isMutable() || ( target != null && isEqual( original, target ) ) ) {
-			return original;
-		}
-		else {
-			return deepCopy( original );
-		}
 	}
 
 	@Override
@@ -384,7 +379,7 @@ public abstract class AbstractStandardBasicType<T>
 			return null;
 		}
 
-		return getReplacement( (T) original, (T) target, session );
+		return javaTypeDescriptor.getReplacement( (T) original, (T) target, session );
 	}
 
 	@Override
@@ -397,7 +392,7 @@ public abstract class AbstractStandardBasicType<T>
 			Map copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 		return ForeignKeyDirection.FROM_PARENT == foreignKeyDirection
-				? getReplacement( (T) original, (T) target, session )
+				? javaTypeDescriptor.getReplacement( (T) original, (T) target, session )
 				: target;
 	}
 
@@ -452,5 +447,34 @@ public abstract class AbstractStandardBasicType<T>
 	@Override
 	public boolean canDoSetting() {
 		return true;
+	}
+
+	@Override
+	public CastType getCastType() {
+		final JdbcTypeDescriptor jdbcTypeDescriptor = getJdbcTypeDescriptor();
+		final int jdbcTypeCode = jdbcTypeDescriptor.getJdbcTypeCode();
+		switch ( jdbcTypeCode ) {
+			case Types.BIT:
+			case Types.SMALLINT:
+			case Types.TINYINT:
+			case Types.INTEGER:
+				if ( getJavaType() == Boolean.class ) {
+					return CastType.INTEGER_BOOLEAN;
+				}
+				break;
+			case Types.CHAR:
+				if ( getJavaType() == Boolean.class ) {
+					return (Boolean) getJavaTypeDescriptor().wrap( 'Y', null )
+							? CastType.YN_BOOLEAN
+							: CastType.TF_BOOLEAN;
+				}
+				break;
+			case Types.TIMESTAMP_WITH_TIMEZONE:
+				if ( getJavaType() == ZonedDateTime.class ) {
+					return CastType.ZONE_TIMESTAMP;
+				}
+				break;
+		}
+		return jdbcTypeDescriptor.getCastType();
 	}
 }

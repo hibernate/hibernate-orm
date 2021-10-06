@@ -53,6 +53,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorDerbyDatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcTypeDescriptor;
@@ -188,13 +190,16 @@ public class DerbyDialect extends Dialect {
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
 
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		CommonFunctionFactory.aggregates(
 				this,
 				queryEngine,
 				SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 				"||",
-				getCastTypeName( StandardBasicTypes.STRING, null, null, null )
+				getCastTypeName( stringType, null, null, null )
 		);
 
 		CommonFunctionFactory.concat_pipeOperator( queryEngine );
@@ -223,14 +228,14 @@ public class DerbyDialect extends Dialect {
 				.setExactArgumentCount( 2 )
 				.register();
 
-		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction( this ) );
+		queryEngine.getSqmFunctionRegistry().register( "concat", new DerbyConcatFunction( this, queryEngine.getTypeConfiguration() ) );
 
 		//no way I can see to pad with anything other than spaces
-		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation() );
-		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation() );
+		queryEngine.getSqmFunctionRegistry().register( "lpad", new DerbyLpadEmulation( queryEngine.getTypeConfiguration() ) );
+		queryEngine.getSqmFunctionRegistry().register( "rpad", new DerbyRpadEmulation( queryEngine.getTypeConfiguration() ) );
 		queryEngine.getSqmFunctionRegistry().register( "least", new CaseLeastGreatestEmulation( true ) );
 		queryEngine.getSqmFunctionRegistry().register( "greatest", new CaseLeastGreatestEmulation( false ) );
-		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( true ) );
+		queryEngine.getSqmFunctionRegistry().register( "overlay", new InsertSubstringOverlayEmulation( queryEngine.getTypeConfiguration(), true ) );
 	}
 
 	@Override

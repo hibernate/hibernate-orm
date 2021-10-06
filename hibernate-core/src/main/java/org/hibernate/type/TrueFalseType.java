@@ -24,7 +24,6 @@ public class TrueFalseType
 		implements ConvertedBasicType<Boolean> {
 
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
-	private static final TrueFalseConverter CONVERTER = new TrueFalseConverter();
 
 	public TrueFalseType() {
 		super( CharJdbcTypeDescriptor.INSTANCE, new BooleanJavaTypeDescriptor( 'T', 'F' ) );
@@ -36,63 +35,8 @@ public class TrueFalseType
 	}
 
 	@Override
-	public CastType getCastType() {
-		return CastType.TF_BOOLEAN;
-	}
-
-	@Override
 	public BasicValueConverter<Boolean, ?> getValueConverter() {
-		return CONVERTER;
+		return TrueFalseConverter.INSTANCE;
 	}
 
-	public static class TrueFalseConverter implements BasicValueConverter<Boolean, Character> {
-		/**
-		 * Singleton access
-		 */
-		public static final TrueFalseConverter INSTANCE = new TrueFalseConverter();
-
-		@Override
-		public Boolean toDomainValue(Character relationalForm) {
-			return toDomain( relationalForm );
-		}
-
-		public static Boolean toDomain(Character relationalForm) {
-			if ( relationalForm == null ) {
-				return null;
-			}
-
-			if ( 'T' == relationalForm ) {
-				return true;
-			}
-
-			if ( 'F' == relationalForm ) {
-				return false;
-			}
-
-			return null;
-		}
-
-		@Override
-		public Character toRelationalValue(Boolean domainForm) {
-			return toRelational( domainForm );
-		}
-
-		public static Character toRelational(Boolean domainForm) {
-			if ( domainForm == null ) {
-				return null;
-			}
-
-			return domainForm ? 'T' : 'F';
-		}
-
-		@Override
-		public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
-			return BooleanJavaTypeDescriptor.INSTANCE;
-		}
-
-		@Override
-		public JavaTypeDescriptor<Character> getRelationalJavaDescriptor() {
-			return CharacterJavaTypeDescriptor.INSTANCE;
-		}
-	}
 }

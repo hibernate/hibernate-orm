@@ -72,7 +72,14 @@ public class SequenceHiLoGeneratorNoIncrementTest {
 		);
 
 		generator = new SequenceHiLoGenerator();
-		generator.configure( StandardBasicTypes.LONG, properties, serviceRegistry );
+		generator.configure(
+				buildingContext.getBootstrapContext()
+						.getTypeConfiguration()
+						.getBasicTypeRegistry()
+						.resolve( StandardBasicTypes.LONG ),
+				properties,
+				serviceRegistry
+		);
 
 		final Metadata metadata = new MetadataSources( serviceRegistry ).buildMetadata();
 		generator.registerExportables( metadata.getDatabase() );

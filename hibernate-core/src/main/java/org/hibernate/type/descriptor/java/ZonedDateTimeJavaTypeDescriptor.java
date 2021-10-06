@@ -43,7 +43,7 @@ public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 
 	@SuppressWarnings("unchecked")
 	public ZonedDateTimeJavaTypeDescriptor() {
-		super( ZonedDateTime.class, ImmutableMutabilityPlan.INSTANCE );
+		super( ZonedDateTime.class, ImmutableMutabilityPlan.INSTANCE, ZonedDateTimeComparator.INSTANCE );
 	}
 
 	@Override
@@ -211,10 +211,5 @@ public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 	@Override
 	public ZonedDateTime next(ZonedDateTime current, SharedSessionContractImplementor session) {
 		return ZonedDateTime.now();
-	}
-
-	@Override
-	public Comparator<ZonedDateTime> getComparator() {
-		return ZonedDateTimeComparator.INSTANCE;
 	}
 }

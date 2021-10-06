@@ -29,11 +29,13 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class TransactSQLStrFunction extends CastStrEmulation implements FunctionRenderingSupport {
 
-	public TransactSQLStrFunction() {
+	public TransactSQLStrFunction(TypeConfiguration typeConfiguration) {
 		super(
 				"str",
 				StandardArgumentsValidators.between( 1, 3 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 	}
 

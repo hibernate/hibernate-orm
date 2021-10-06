@@ -22,26 +22,25 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.CharacterArrayType;
-import org.hibernate.type.CharacterNCharType;
-import org.hibernate.type.CharacterType;
-import org.hibernate.type.MaterializedClobType;
-import org.hibernate.type.MaterializedNClobType;
-import org.hibernate.type.NClobType;
-import org.hibernate.type.NTextType;
-import org.hibernate.type.StringNVarcharType;
-import org.hibernate.type.StringType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.NClobJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
-import org.hibernate.type.internal.StandardBasicTypeImpl;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -91,56 +90,77 @@ public class SimpleNationalizedTest {
 			assertNotNull( pc );
 
 			Property prop = pc.getProperty( "nvarcharAtt" );
+			BasicType<?> type = (BasicType<?>) prop.getType();
 			final Dialect dialect = metadata.getDatabase().getDialect();
+			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				// See issue HHH-10693
-				assertSame( StringType.INSTANCE, prop.getType() );
+				assertSame( VarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( StringNVarcharType.INSTANCE, prop.getType() );
+				assertSame( NVarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
 			}
 
 			prop = pc.getProperty( "materializedNclobAtt" );
+			type = (BasicType<?>) prop.getType();
+			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				// See issue HHH-10693
 				if ( dialect instanceof SybaseDialect ) {
-					assertThat( prop.getType(), instanceOf( StandardBasicTypeImpl.class ) );
-					final StandardBasicTypeImpl type = (StandardBasicTypeImpl) prop.getType();
-					assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 					assertSame( ClobJdbcTypeDescriptor.CLOB_BINDING, type.getJdbcTypeDescriptor() );
 				}
 				else {
-					assertSame( MaterializedClobType.INSTANCE, prop.getType() );
+					assertSame( ClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
 				}
-
 			}
 			else {
-				assertSame( MaterializedNClobType.INSTANCE, prop.getType() );
+				assertSame( NClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
 			}
 			prop = pc.getProperty( "nclobAtt" );
-			assertSame( NClobType.INSTANCE, prop.getType() );
+			type = (BasicType<?>) prop.getType();
+			assertSame( NClobJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
+			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
+				// See issue HHH-10693
+				if ( dialect instanceof SybaseDialect ) {
+					assertSame( ClobJdbcTypeDescriptor.CLOB_BINDING, type.getJdbcTypeDescriptor() );
+				}
+				else {
+					assertSame( ClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
+				}
+			}
+			else {
+				assertSame( NClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
+			}
 
 			prop = pc.getProperty( "nlongvarcharcharAtt" );
-			assertSame( NTextType.INSTANCE, prop.getType() );
+			type = (BasicType<?>) prop.getType();
+			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
+			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
+				assertSame( LongVarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+			}
+			else {
+				assertSame( LongNVarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+			}
 
 			prop = pc.getProperty( "ncharArrAtt" );
+			type = (BasicType<?>) prop.getType();
+			assertSame( CharacterArrayJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				// See issue HHH-10693
-				assertSame( CharacterArrayType.INSTANCE, prop.getType() );
+				assertSame( VarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertThat( prop.getType(), instanceOf( StandardBasicTypeImpl.class ) );
-				StandardBasicTypeImpl type = (StandardBasicTypeImpl) prop.getType();
-				assertThat( type.getJavaTypeDescriptor(), instanceOf( CharacterArrayJavaTypeDescriptor.class ) );
-				assertThat( type.getJdbcTypeDescriptor(), instanceOf( NVarcharJdbcTypeDescriptor.class ) );
+				assertSame( NVarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
 			}
 			prop = pc.getProperty( "ncharacterAtt" );
+			type = (BasicType<?>) prop.getType();
+			assertSame( CharacterJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
 				// See issue HHH-10693
-				assertSame( CharacterType.INSTANCE, prop.getType() );
+				assertSame( CharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( CharacterNCharType.INSTANCE, prop.getType() );
+				assertSame( NCharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
 			}
 		}
 		finally {

@@ -39,9 +39,12 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.tool.schema.spi.Exporter;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 
 import java.sql.Types;
+import java.util.Date;
 import java.util.Map;
 import jakarta.persistence.TemporalType;
 
@@ -108,6 +111,13 @@ public class SpannerDialect extends Dialect {
 	@Override
 	public void initializeFunctionRegistry(QueryEngine queryEngine) {
 		super.initializeFunctionRegistry( queryEngine );
+		final BasicTypeRegistry basicTypeRegistry = queryEngine.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicType<byte[]> byteArrayType = basicTypeRegistry.resolve( StandardBasicTypes.BINARY );
+		final BasicType<Long> longType = basicTypeRegistry.resolve( StandardBasicTypes.LONG );
+		final BasicType<Boolean> booleanType = basicTypeRegistry.resolve( StandardBasicTypes.BOOLEAN );
+		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
+		final BasicType<Date> dateType = basicTypeRegistry.resolve( StandardBasicTypes.DATE );
+		final BasicType<Date> timestampType = basicTypeRegistry.resolve( StandardBasicTypes.TIMESTAMP );
 
 		// Aggregate Functions
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "any_value" )
@@ -117,19 +127,19 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "countif" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "logical_and" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "logical_or" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedAggregateDescriptorBuilder( "string_agg" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 
@@ -146,19 +156,19 @@ public class SpannerDialect extends Dialect {
 		CommonFunctionFactory.bitandorxornot_bitAndOrXorNot( queryEngine );
 
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "is_inf" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "is_nan" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ieee_divide" )
-				.setInvariantType( StandardBasicTypes.DOUBLE )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "div" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
 				.register();
 
@@ -166,15 +176,15 @@ public class SpannerDialect extends Dialect {
 
 		// Hash Functions
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "farm_fingerprint" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sha256" )
-				.setInvariantType( StandardBasicTypes.BINARY )
+				.setInvariantType( byteArrayType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "sha512" )
-				.setInvariantType( StandardBasicTypes.BINARY )
+				.setInvariantType( byteArrayType )
 				.setExactArgumentCount( 1 )
 				.register();
 
@@ -186,34 +196,34 @@ public class SpannerDialect extends Dialect {
 		CommonFunctionFactory.substr( queryEngine );
 		CommonFunctionFactory.substring_substr( queryEngine );
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "byte_length" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "code_points_to_bytes" )
-				.setInvariantType( StandardBasicTypes.BINARY )
+				.setInvariantType( byteArrayType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "code_points_to_string" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "ends_with" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 2 )
 				.register();
 //		queryEngine.getSqmFunctionRegistry().namedTemplateBuilder( "format" )
 //				.setInvariantType( StandardBasicTypes.STRING )
 //				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "from_base64" )
-				.setInvariantType( StandardBasicTypes.BINARY )
+				.setInvariantType( byteArrayType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "from_hex" )
-				.setInvariantType( StandardBasicTypes.BINARY )
+				.setInvariantType( byteArrayType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "regexp_contains" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "regexp_extract" )
@@ -226,39 +236,39 @@ public class SpannerDialect extends Dialect {
 				.setExactArgumentCount( 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "safe_convert_bytes_to_string" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "split" )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "starts_with" )
-				.setInvariantType( StandardBasicTypes.BOOLEAN )
+				.setInvariantType( booleanType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "strpos" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_base64" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_code_points" )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "to_hex" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// JSON Functions
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "json_query" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "json_value" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.register();
 
@@ -269,11 +279,11 @@ public class SpannerDialect extends Dialect {
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "array_concat" )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "array_length" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "array_to_string" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "array_reverse" )
@@ -282,102 +292,102 @@ public class SpannerDialect extends Dialect {
 
 		// Date functions
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date" )
-				.setInvariantType( StandardBasicTypes.DATE )
+				.setInvariantType( dateType )
 				.setArgumentCountBetween( 1, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date_add" )
-				.setInvariantType( StandardBasicTypes.DATE )
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date_sub" )
-				.setInvariantType( StandardBasicTypes.DATE )
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date_diff" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date_trunc" )
-				.setInvariantType( StandardBasicTypes.DATE )
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "date_from_unix_date" )
-				.setInvariantType( StandardBasicTypes.DATE )
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format_date" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "parse_date" )
-				.setInvariantType( StandardBasicTypes.DATE )
+				.setInvariantType( dateType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "unix_date" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		// Timestamp functions
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "string" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setArgumentCountBetween( 1, 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_add" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_sub" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setExactArgumentCount( 2 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_diff" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_trunc" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "format_timestamp" )
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "parse_timestamp" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setArgumentCountBetween( 2, 3 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_seconds" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_millis" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "timestamp_micros" )
-				.setInvariantType( StandardBasicTypes.TIMESTAMP )
+				.setInvariantType( timestampType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "unix_seconds" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "unix_millis" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 		queryEngine.getSqmFunctionRegistry().namedDescriptorBuilder( "unix_micros" )
-				.setInvariantType( StandardBasicTypes.LONG )
+				.setInvariantType( longType )
 				.setExactArgumentCount( 1 )
 				.register();
 
 		queryEngine.getSqmFunctionRegistry().patternDescriptorBuilder("format", "format_timestamp(?2,?1)")
-				.setInvariantType( StandardBasicTypes.STRING )
+				.setInvariantType( stringType )
 				.setExactArgumentCount( 2 )
 				.setArgumentListSignature("(datetime as pattern)")
 				.register();

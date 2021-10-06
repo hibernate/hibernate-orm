@@ -12,8 +12,11 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -43,8 +46,9 @@ public class SimpleOverriddenConverterTest extends BaseNonConfigCoreFunctionalTe
 	public void testSimpleConvertOverrides() {
 		final EntityPersister ep = sessionFactory().getEntityPersister( Sub.class.getName() );
 
-		Type type = ep.getPropertyType( "it" );
-		assertTyping( StringType.class, type );
+		BasicType<?> type = (BasicType<?>) ep.getPropertyType( "it" );
+		assertTyping( StringJavaTypeDescriptor.class, type.getJavaTypeDescriptor() );
+		assertTyping( VarcharJdbcTypeDescriptor.class, type.getJdbcTypeDescriptor() );
 	}
 
 	@MappedSuperclass

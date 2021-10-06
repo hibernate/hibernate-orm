@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.CastType;
+import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -22,16 +23,19 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 
 public class SybaseConcatFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final Dialect dialect;
 
-	public SybaseConcatFunction(Dialect dialect) {
+	public SybaseConcatFunction(Dialect dialect, TypeConfiguration typeConfiguration) {
 		super(
 				"concat",
 				StandardArgumentsValidators.min( 1 ),
-				StandardFunctionReturnTypeResolvers.invariant( StandardBasicTypes.STRING )
+				StandardFunctionReturnTypeResolvers.invariant(
+						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING )
+				)
 		);
 		this.dialect = dialect;
 	}

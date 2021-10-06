@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.Incubating;
+import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -138,8 +139,24 @@ public class QueryEngine {
 			userDefinedRegistry.overlay( sqmFunctionRegistry );
 		}
 
+		final FunctionContributions functionContributions = new FunctionContributions() {
+			@Override
+			public TypeConfiguration getTypeConfiguration() {
+				return typeConfiguration;
+			}
+
+			@Override
+			public SqmFunctionRegistry getFunctionRegistry() {
+				return sqmFunctionRegistry;
+			}
+
+			@Override
+			public ServiceRegistry getServiceRegistry() {
+				return serviceRegistry;
+			}
+		};
 		for ( FunctionContributor contributor : sortedFunctionContributors( serviceRegistry ) ) {
-			contributor.contributeFunctions( sqmFunctionRegistry, serviceRegistry );
+			contributor.contributeFunctions( functionContributions );
 		}
 
 		final boolean showSQLFunctions = ConfigurationHelper.getBoolean(

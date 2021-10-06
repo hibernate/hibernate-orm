@@ -14,10 +14,11 @@ import org.hibernate.Session;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.MaterializedBlobType;
-import org.hibernate.type.Type;
 
-import static org.junit.Assert.assertEquals;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -33,8 +34,9 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 	@Test
 	public void testTypeSelection() {
 		int index = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getPropertyIndex( "theBytes" );
-		Type  type = sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
-		assertEquals( MaterializedBlobType.INSTANCE, type );
+		BasicType<?> type = (BasicType<?>) sessionFactory().getEntityPersister( MaterializedBlobEntity.class.getName() ).getEntityMetamodel().getProperties()[index].getType();
+		assertTrue( type.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaTypeDescriptor );
+		assertTrue( type.getJdbcTypeDescriptor() instanceof BlobJdbcTypeDescriptor );
 	}
 
 	@Test
@@ -50,7 +52,7 @@ public class MaterializedBlobTest extends BaseCoreFunctionalTestCase {
 
 		session = openSession();
 		session.beginTransaction();
-		entity = ( MaterializedBlobEntity ) session.get( MaterializedBlobEntity.class, entity.getId() );
+		entity = session.get( MaterializedBlobEntity.class, entity.getId() );
 		assertTrue( Arrays.equals( testData, entity.getTheBytes() ) );
 		session.delete( entity );
 		session.getTransaction().commit();

@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -294,5 +295,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			JdbcValuesConsumer valuesConsumer,
 			SharedSessionContractImplementor session) {
 		return versionBasicType.forEachDisassembledJdbcValue( value, clause, offset, valuesConsumer, session );
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

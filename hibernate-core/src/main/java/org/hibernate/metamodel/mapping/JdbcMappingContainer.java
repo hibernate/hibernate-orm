@@ -9,7 +9,6 @@ package org.hibernate.metamodel.mapping;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.mapping.IndexedConsumer;
 
 /**
@@ -44,7 +43,5 @@ public interface JdbcMappingContainer {
 	/**
 	 * Visit each JdbcMapping starting from the given offset
 	 */
-	default int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
-		throw new NotYetImplementedFor6Exception( getClass() );
-	}
+	int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action);
 }

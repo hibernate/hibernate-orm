@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.query.TrimSpec;
@@ -34,5 +35,11 @@ public class TrimSpecification implements SqlExpressable, SqlAstNode {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitTrimSpecification( this );
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlExpressable;
@@ -81,5 +82,11 @@ public class Collate implements Expression, SqlExpressable, SqlAstNode, DomainRe
 				resultVariable,
 				javaTypeDescriptor
 		);
+	}
+
+	@Override
+	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
+		action.accept( offset, getJdbcMapping() );
+		return getJdbcTypeCount();
 	}
 }

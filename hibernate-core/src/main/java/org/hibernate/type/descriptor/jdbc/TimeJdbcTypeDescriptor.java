@@ -51,11 +51,6 @@ public class TimeJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	@Override
 	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,

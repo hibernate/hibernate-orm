@@ -47,11 +47,6 @@ public class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 	}
 
 	@Override
-	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		return jdbcTypeDescriptor;
-	}
-
-	@Override
 	public TimeZone getJdbcTimeZone() {
 		return factory.getSessionFactoryOptions().getJdbcTimeZone();
 	}

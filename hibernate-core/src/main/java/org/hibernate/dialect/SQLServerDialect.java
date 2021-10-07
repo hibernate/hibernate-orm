@@ -8,6 +8,7 @@ package org.hibernate.dialect;
 
 import org.hibernate.*;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -35,6 +36,7 @@ import org.hibernate.query.CastType;
 import org.hibernate.query.FetchClauseType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -160,10 +162,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		return sqlCode == Types.TINYINT
-				? SmallIntJdbcTypeDescriptor.INSTANCE
-				: super.getSqlTypeDescriptorOverride( sqlCode );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+				Types.TINYINT,
+				SmallIntJdbcTypeDescriptor.INSTANCE
+		);
 	}
 
 	@Override

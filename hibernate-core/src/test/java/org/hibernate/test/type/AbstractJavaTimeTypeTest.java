@@ -20,10 +20,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
@@ -400,14 +403,15 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 		}
 
 		@Override
-		protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-			if ( overriddenSqlTypeCode == sqlCode ) {
-				return overriddenJdbcTypeDescriptor;
-			}
-			else {
-				return super.getSqlTypeDescriptorOverride( sqlCode );
-			}
+		public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+			super.contributeTypes( typeContributions, serviceRegistry );
+
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					overriddenSqlTypeCode,
+					overriddenJdbcTypeDescriptor
+			);
 		}
+
 	}
 
 }

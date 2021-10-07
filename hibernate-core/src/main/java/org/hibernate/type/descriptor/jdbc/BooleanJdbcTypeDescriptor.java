@@ -46,11 +46,6 @@ public class BooleanJdbcTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	@Override
 	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,

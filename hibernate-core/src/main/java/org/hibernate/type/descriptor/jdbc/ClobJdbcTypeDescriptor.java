@@ -44,11 +44,6 @@ public abstract class ClobJdbcTypeDescriptor implements AdjustableJdbcTypeDescri
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	@Override
 	public JdbcTypeDescriptor resolveIndicatedType(
 			JdbcTypeDescriptorIndicators indicators,
 			JavaTypeDescriptor<?> domainJtd) {

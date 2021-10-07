@@ -39,11 +39,6 @@ public abstract class AbstractDelegatingWrapperOptions implements WrapperOptions
 	}
 
 	@Override
-	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		return delegate().remapSqlTypeDescriptor( jdbcTypeDescriptor );
-	}
-
-	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate().getJdbcTimeZone();
 	}

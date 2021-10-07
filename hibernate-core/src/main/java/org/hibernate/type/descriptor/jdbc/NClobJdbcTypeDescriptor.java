@@ -42,11 +42,6 @@ public abstract class NClobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	@Override
 	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override

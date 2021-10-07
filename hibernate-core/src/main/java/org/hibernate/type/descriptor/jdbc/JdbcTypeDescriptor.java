@@ -55,16 +55,6 @@ public interface JdbcTypeDescriptor extends Serializable {
 		return getJdbcTypeCode();
 	}
 
-	/**
-	 * Is this descriptor available for remapping?
-	 *
-	 * @return {@code true} indicates this descriptor can be remapped; otherwise, {@code false}
-	 *
-	 * @see org.hibernate.type.descriptor.WrapperOptions#remapSqlTypeDescriptor
-	 * @see org.hibernate.dialect.Dialect#remapSqlTypeDescriptor
-	 */
-	boolean canBeRemapped();
-
 	default <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
 			Integer scale,

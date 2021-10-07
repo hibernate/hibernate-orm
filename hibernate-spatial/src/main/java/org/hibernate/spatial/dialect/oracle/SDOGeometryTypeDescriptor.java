@@ -40,11 +40,6 @@ public class SDOGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return false;
-	}
-
-	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return (ValueBinder<X>) new SDOGeometryValueBinder( javaTypeDescriptor, this, typeFactory );
 	}

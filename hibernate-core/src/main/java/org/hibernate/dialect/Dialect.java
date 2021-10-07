@@ -1004,6 +1004,13 @@ public abstract class Dialect implements ConversionContext {
 			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharJdbcTypeDescriptor.INSTANCE );
 			typeContributions.contributeJdbcTypeDescriptor( NClobJdbcTypeDescriptor.DEFAULT );
 		}
+
+		if ( useInputStreamToInsertBlob() ) {
+			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+					Types.CLOB,
+					ClobJdbcTypeDescriptor.STREAM_BINDING
+			);
+		}
 	}
 
 	/**
@@ -1154,58 +1161,6 @@ public abstract class Dialect implements ConversionContext {
 	 */
 	protected void registerColumnType(int code, String name) {
 		typeNames.put( code, name );
-	}
-
-	/**
-	 * Allows the dialect to override a {@link JdbcTypeDescriptor}.
-	 * <p/>
-	 * If the passed {@code sqlTypeDescriptor} allows itself to be remapped (per
-	 * {@link JdbcTypeDescriptor#canBeRemapped()}), then this method uses
-	 * {@link #getSqlTypeDescriptorOverride}  to get an optional override based on the SQL code returned by
-	 * {@link JdbcTypeDescriptor#getJdbcTypeCode()}.
-	 * <p/>
-	 * If this dialect does not provide an override or if the {@code sqlTypeDescriptor} does not allow itself to be
-	 * remapped, then this method simply returns the original passed {@code sqlTypeDescriptor}
-	 *
-	 * @param jdbcTypeDescriptor The {@link JdbcTypeDescriptor} to override
-	 * @return The {@link JdbcTypeDescriptor} that should be used for this dialect;
-	 *         if there is no override, then original {@code sqlTypeDescriptor} is returned.
-	 * @throws IllegalArgumentException if {@code sqlTypeDescriptor} is null.
-	 *
-	 * @see #getSqlTypeDescriptorOverride
-	 */
-	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		if ( jdbcTypeDescriptor == null ) {
-			throw new IllegalArgumentException( "sqlTypeDescriptor is null" );
-		}
-		if ( ! jdbcTypeDescriptor.canBeRemapped() ) {
-			return jdbcTypeDescriptor;
-		}
-
-		final JdbcTypeDescriptor overridden = getSqlTypeDescriptorOverride( jdbcTypeDescriptor.getJdbcTypeCode() );
-		return overridden == null ? jdbcTypeDescriptor : overridden;
-	}
-
-	/**
-	 * Returns the {@link JdbcTypeDescriptor} that should be used to handle the given JDBC type code.  Returns
-	 * {@code null} if there is no override.
-	 *
-	 * @param sqlCode A {@link Types} constant indicating the SQL column type
-	 * @return The {@link JdbcTypeDescriptor} to use as an override, or {@code null} if there is no override.
-	 */
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		JdbcTypeDescriptor descriptor;
-		switch ( sqlCode ) {
-			case Types.CLOB: {
-				descriptor = useInputStreamToInsertBlob() ? ClobJdbcTypeDescriptor.STREAM_BINDING : null;
-				break;
-			}
-			default: {
-				descriptor = null;
-				break;
-			}
-		}
-		return descriptor;
 	}
 
 	/**

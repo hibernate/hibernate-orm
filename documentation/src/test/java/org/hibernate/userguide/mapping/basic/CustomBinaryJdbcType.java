@@ -26,11 +26,6 @@ public class CustomBinaryJdbcType implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return false;
-	}
-
-	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return VarbinaryJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 	}

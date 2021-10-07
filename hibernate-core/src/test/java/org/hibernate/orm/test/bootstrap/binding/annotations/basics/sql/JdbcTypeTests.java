@@ -153,11 +153,6 @@ public class JdbcTypeTests {
 		}
 
 		@Override
-		public boolean canBeRemapped() {
-			return false;
-		}
-
-		@Override
 		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return TinyIntJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}

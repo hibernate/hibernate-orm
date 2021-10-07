@@ -2663,6 +2663,9 @@ public class SessionImpl
 		if ( EntityManager.class.isAssignableFrom( clazz ) ) {
 			return (T) this;
 		}
+		if ( PersistenceContext.class.isAssignableFrom( clazz ) ) {
+			return (T) this;
+		}
 
 		throw new PersistenceException( "Hibernate cannot unwrap " + clazz );
 	}

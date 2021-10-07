@@ -45,7 +45,7 @@ public class InheritanceDeleteBatchTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration configuration) {
 		configuration.setProperty(
-				AvailableSettings.HQL_BULK_ID_STRATEGY,
+				AvailableSettings.QUERY_MULTI_TABLE_MUTATION_STRATEGY,
 				InlineStrategy.class.getName()
 		);
 		configuration.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );

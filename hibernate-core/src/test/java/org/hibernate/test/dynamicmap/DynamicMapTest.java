@@ -24,7 +24,7 @@ public class DynamicMapTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected String[] getMappings() {
 		return new String[] {
-				"/dynamicmap/Test.hbm.xml"
+				"dynamicmap/Test.hbm.xml"
 		};
 	}
 

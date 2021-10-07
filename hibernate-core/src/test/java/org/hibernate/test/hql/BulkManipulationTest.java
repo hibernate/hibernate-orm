@@ -46,6 +46,8 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
+
+	@Override
 	public String[] getMappings() {
 		return new String[] {
 				"hql/Animal.hbm.xml",
@@ -53,7 +55,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 				"hql/KeyManyToOneEntity.hbm.xml",
 				"hql/Versions.hbm.xml",
 				"hql/FooBarCopy.hbm.xml",
-				"legacy/Multi.hbm.xml",
+				"/org/hibernate/orm/test/legacy/Multi.hbm.xml",
 				"hql/EntityWithCrazyCompositeKey.hbm.xml",
 				"hql/SimpleEntityWithAssociation.hbm.xml",
 				"hql/BooleanLiteralEntity.hbm.xml",

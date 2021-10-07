@@ -202,6 +202,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	protected boolean isCleanupTestDataRequired() {
 		return false;
 	}
+
 	@Override
 	public String[] getMappings() {
 		return new String[] {
@@ -219,8 +220,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 				"/org/hibernate/orm/test/cid/LineItem.hbm.xml",
 				"/org/hibernate/orm/test/cid/Product.hbm.xml",
 				"/org/hibernate/orm/test/any/hbm/Properties.hbm.xml",
-				"legacy/Commento.hbm.xml",
-				"legacy/Marelo.hbm.xml"
+				"/org/hibernate/orm/test/legacy/Commento.hbm.xml",
+				"/org/hibernate/orm/test/legacy/Marelo.hbm.xml"
 		};
 	}
 	@Override

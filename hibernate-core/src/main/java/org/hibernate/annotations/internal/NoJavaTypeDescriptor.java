@@ -18,11 +18,6 @@ public class NoJavaTypeDescriptor implements BasicJavaDescriptor<Void> {
 	}
 
 	@Override
-	public Void fromString(String string) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public <X> X unwrap(Void value, Class<X> type, WrapperOptions options) {
 		throw new UnsupportedOperationException();
 	}

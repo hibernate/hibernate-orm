@@ -238,9 +238,7 @@ provides 2 main approaches to influence this mapping resolution:
 These 2 approaches should be considered mutually exclusive.  A custom UserType will always
 take precedence over compositional annotations.
 
-See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
-
-See <<basic-bitset-java-type>> for examples of most of these approaches, mapping `BitSet` as a basic type.
+See <<basic-bitset>> for examples of most of these approaches, mapping `BitSet` as a basic type.
 
 
 [[basic-mapping-composition]]
@@ -264,6 +262,9 @@ individual, basic-valued parts of the model:
 
 When using the compositional approach, there are other ways to influence the resolution are covered
 in <<basic-enums>>, <<basic-temporal>>, <<basic-lob>> and <<basic-nationalized>>
+
+
+See <<basic-type-contributor>> for an alternative to `@JavaTypeRegistration` and `@JdbcTypeRegistration`.
 
 
 [[basic-mapping-custom]]

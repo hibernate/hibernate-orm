@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -57,7 +58,7 @@ public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<D
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return TimestampJdbcTypeDescriptor.INSTANCE;
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override

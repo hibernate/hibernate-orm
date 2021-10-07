@@ -17,6 +17,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -467,5 +468,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return delegate.getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Override
+	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return delegate.getDefaultTimeZoneStorageStrategy();
 	}
 }

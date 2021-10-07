@@ -7,8 +7,10 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Time;
+import java.sql.Types;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -69,7 +71,7 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return TimeJdbcTypeDescriptor.INSTANCE;
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TIME );
 	}
 
 	@Override
@@ -164,6 +166,11 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 		if ( Long.class.isAssignableFrom( type ) ) {
 			return (X) Long.valueOf( value.getTime() );
 		}
+		if ( LocalTime.class.isAssignableFrom( type ) ) {
+			if ( value instanceof Time ) {
+				return (X) ( (Time) value ).toLocalTime();
+			}
+		}
 		throw unknownUnwrap( type );
 	}
 	@Override
@@ -185,6 +192,10 @@ public class JdbcTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescript
 
 		if ( value instanceof Date ) {
 			return new Time( ( (Date) value ).getTime() );
+		}
+
+		if ( value instanceof LocalTime ) {
+			return Time.valueOf( (LocalTime) value );
 		}
 
 		throw unknownWrap( value.getClass() );

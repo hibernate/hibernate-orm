@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -23,7 +24,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -69,7 +69,7 @@ public class InstantJavaTypeDescriptor extends AbstractTemporalJavaTypeDescripto
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return TimestampJdbcTypeDescriptor.INSTANCE;
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TIMESTAMP );
 	}
 
 	@Override
@@ -94,8 +94,7 @@ public class InstantJavaTypeDescriptor extends AbstractTemporalJavaTypeDescripto
 		}
 
 		if ( Calendar.class.isAssignableFrom( type ) ) {
-			final ZoneId zoneId = ZoneId.ofOffset( "UTC", ZoneOffset.UTC );
-			return (X) GregorianCalendar.from( instant.atZone( zoneId ) );
+			return (X) GregorianCalendar.from( instant.atZone( ZoneOffset.UTC ) );
 		}
 
 		if ( Timestamp.class.isAssignableFrom( type ) ) {

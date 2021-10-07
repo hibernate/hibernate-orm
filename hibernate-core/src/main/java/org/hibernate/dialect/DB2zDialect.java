@@ -54,8 +54,8 @@ public class DB2zDialect extends DB2Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return getZVersion() > 1000;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return getZVersion() > 1000 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	int getZVersion() {

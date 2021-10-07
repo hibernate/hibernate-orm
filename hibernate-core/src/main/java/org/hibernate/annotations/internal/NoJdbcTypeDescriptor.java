@@ -18,11 +18,6 @@ public class NoJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		throw new UnsupportedOperationException();
 	}

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -22,11 +22,11 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.query.Query;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.type.OffsetDateTimeType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;
@@ -88,22 +88,32 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 								.add( 1900, 1, 1, 0, 9, 21, 0, "+00:09:21", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 32, 0, "+00:19:32", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 32, 0, "+00:19:32", ZONE_AMSTERDAM )
-								// Affected by HHH-13266 (JDK-8061577)
-								.add( 1892, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_OSLO )
 								.add( 1900, 1, 1, 0, 9, 20, 0, "+00:09:21", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 31, 0, "+00:19:32", ZONE_PARIS )
 								.add( 1900, 1, 1, 0, 19, 31, 0, "+00:19:32", ZONE_AMSTERDAM )
 				)
 				.skippedForDialects(
+						// MySQL/Mariadb cannot store values equal to epoch exactly, or less, in a timestamp.
+						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect
+								|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+						b -> b
+								// Affected by HHH-13266 (JDK-8061577)
+								.add( 1892, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_OSLO )
+				)
+				.skippedForDialects(
 						// MySQL/Mariadb/Sybase cannot store dates in 1600 in a timestamp.
-						Arrays.asList( MySQLDialect.class, MariaDBDialect.class, SybaseDialect.class ),
+						dialect -> dialect instanceof MySQLDialect || dialect instanceof MariaDBDialect || dialect instanceof SybaseDialect
+							|| dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
 						b -> b
 								.add( 1600, 1, 1, 0, 0, 0, 0, "+00:19:32", ZONE_AMSTERDAM )
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// => This used to work correctly in 5.4.1.Final and earlier
-				.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
-				.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
+				.skippedForDialects(
+						dialect -> dialect instanceof H2Dialect && ( (H2Dialect) dialect ).hasDstBug(),
+						b -> b.add( 2018, 10, 28, 2, 0, 0, 0, "+01:00", ZONE_PARIS )
+								.add( 2018, 4, 1, 2, 0, 0, 0, "+12:00", ZONE_AUCKLAND )
+				)
 				// => This has never worked correctly, unless the JDBC timezone was set to UTC
 				.withForcedJdbcTimezone( "UTC", b -> b
 						.add( 2018, 10, 28, 2, 0, 0, 0, "+02:00", ZONE_PARIS )

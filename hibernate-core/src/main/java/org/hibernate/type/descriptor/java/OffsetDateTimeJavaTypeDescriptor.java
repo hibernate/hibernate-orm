@@ -7,26 +7,25 @@
 package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -54,17 +53,20 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators stdIndicators) {
 		final TemporalType temporalPrecision = stdIndicators.getTemporalPrecision();
-
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = stdIndicators.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 		if ( temporalPrecision == null || temporalPrecision == TemporalType.TIMESTAMP ) {
-			return TimestampWithTimeZoneJdbcTypeDescriptor.INSTANCE;
+			return stdIndicators.getDefaultTimeZoneStorageStrategy() == TimeZoneStorageStrategy.NORMALIZE
+					? jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP )
+					: jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP_WITH_TIMEZONE );
 		}
 
 		switch ( temporalPrecision ) {
 			case TIME: {
-				return TimeJdbcTypeDescriptor.INSTANCE;
+				return jdbcTypeRegistry.getDescriptor( Types.TIME );
 			}
 			case DATE: {
-				return DateJdbcTypeDescriptor.INSTANCE;
+				return jdbcTypeRegistry.getDescriptor( Types.DATE );
 			}
 			default: {
 				throw new IllegalArgumentException( "Unexpected jakarta.persistence.TemporalType : " + temporalPrecision );

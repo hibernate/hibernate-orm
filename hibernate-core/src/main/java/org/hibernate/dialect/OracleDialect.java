@@ -567,8 +567,8 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return getVersion() >= 900;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return getVersion() >= 900 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	protected void registerBinaryTypeMappings() {

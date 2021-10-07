@@ -12,11 +12,13 @@ import java.util.function.Consumer;
 
 import org.hibernate.annotations.ListIndexJdbcType;
 import org.hibernate.annotations.ListIndexJdbcTypeCode;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -42,11 +44,17 @@ public class ListIndexJdbcTypeTests {
 
 	@Test
 	public void verifyResolutions(DomainModelScope scope) {
-		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( TheEntity.class.getName() );
+		final MetadataImplementor domainModel = scope.getDomainModel();
+		final PersistentClass entityBinding = domainModel.getEntityBinding( TheEntity.class.getName() );
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
 		verifyJdbcTypeCodes( entityBinding.getProperty( "listOfStrings" ), Types.TINYINT );
 
-		verifyJdbcTypeCodes( entityBinding.getProperty( "anotherListOfStrings" ), Types.TINYINT );
+		verifyJdbcTypeCodes(
+				entityBinding.getProperty( "anotherListOfStrings" ),
+				jdbcTypeRegistry.getDescriptor( Types.TINYINT ).getJdbcTypeCode()
+		);
 	}
 	private void verifyJdbcTypeCodes(Property property, int expectedCode) {
 		verifyJdbcTypeResolution(

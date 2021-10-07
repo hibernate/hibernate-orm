@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Date;
@@ -40,7 +41,7 @@ public class CalendarTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDesc
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return TimeJdbcTypeDescriptor.INSTANCE;
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.TIME );
 	}
 
 	@Override

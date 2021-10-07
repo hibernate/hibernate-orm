@@ -27,6 +27,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.MultiTenancyStrategy;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -219,6 +220,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean conventionalJavaConstants;
 	private final boolean omitJoinOfSuperclassTablesEnabled;
 	private final int preferredSqlTypeCodeForBoolean;
+	private final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 
 	// Caching
 	private boolean secondLevelCacheEnabled;
@@ -422,6 +424,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				CONVENTIONAL_JAVA_CONSTANTS, BOOLEAN, true );
 		this.omitJoinOfSuperclassTablesEnabled = cfgService.getSetting( OMIT_JOIN_OF_SUPERCLASS_TABLES, BOOLEAN, true );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
+		this.defaultTimeZoneStorageStrategy = context.getMetadataBuildingOptions().getDefaultTimeZoneStorage();
 
 		final RegionFactory regionFactory = serviceRegistry.getService( RegionFactory.class );
 		if ( !NoCachingRegionFactory.class.isInstance( regionFactory ) ) {
@@ -1181,6 +1184,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return preferredSqlTypeCodeForBoolean;
+	}
+
+	@Override
+	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return defaultTimeZoneStorageStrategy;
 	}
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access

@@ -9,6 +9,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.Ingres10IdentityColumnSupport;
@@ -318,8 +319,8 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return true;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -50,14 +50,14 @@ public class TimeAndTimestampTest extends BaseNonConfigCoreFunctionalTestCase {
 			Event event = new Event();
 			event.id = 1L;
 			event.timeValue = new Time( 1000 );
-			event.timestampValue = new Timestamp( 45678 );
+			event.timestampValue = new Timestamp( 45677 );
 
 			session.persist( event );
 		} );
 		doInHibernate( this::sessionFactory, session -> {
 			Event event = session.find( Event.class, 1L );
 			assertEquals(1000, event.timeValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
-			assertEquals(45678, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
+			assertEquals(45677, event.timestampValue.getTime() % TimeUnit.DAYS.toMillis( 1 ));
 		} );
 	}
 

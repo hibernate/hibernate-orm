@@ -149,8 +149,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return getVersion() >= 10;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return getVersion() >= 10 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override

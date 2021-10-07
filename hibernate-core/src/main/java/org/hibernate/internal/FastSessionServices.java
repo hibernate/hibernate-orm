@@ -17,6 +17,7 @@ import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockOptions;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
@@ -66,7 +67,6 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
@@ -147,6 +147,7 @@ public final class FastSessionServices {
 	final boolean disallowOutOfTransactionUpdateOperations;
 	final boolean useStreamForLobBinding;
 	final int preferredSqlTypeCodeForBoolean;
+	final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 	final boolean requiresMultiTenantConnectionProvider;
 	final ConnectionProvider connectionProvider;
 	final MultiTenantConnectionProvider multiTenantConnectionProvider;
@@ -216,6 +217,7 @@ public final class FastSessionServices {
 		this.disallowOutOfTransactionUpdateOperations = !sessionFactoryOptions.isAllowOutOfTransactionUpdateOperations();
 		this.useStreamForLobBinding = Environment.useStreamsForBinary() || dialect.useInputStreamToInsertBlob();
 		this.preferredSqlTypeCodeForBoolean = sessionFactoryOptions.getPreferredSqlTypeCodeForBoolean();
+		this.defaultTimeZoneStorageStrategy = sessionFactoryOptions.getDefaultTimeZoneStorageStrategy();
 		this.requiresMultiTenantConnectionProvider = sf.getSettings().getMultiTenancyStrategy().requiresMultiTenantConnectionProvider();
 
 		//Some "hot" services:
@@ -360,5 +362,9 @@ public final class FastSessionServices {
 
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return preferredSqlTypeCodeForBoolean;
+	}
+
+	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return defaultTimeZoneStorageStrategy;
 	}
 }

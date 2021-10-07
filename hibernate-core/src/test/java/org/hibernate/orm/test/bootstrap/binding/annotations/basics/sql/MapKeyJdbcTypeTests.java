@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.MapKeyJdbcType;
 import org.hibernate.annotations.MapKeyJdbcTypeCode;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.SybaseDialect;
@@ -21,6 +22,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -45,27 +47,30 @@ public class MapKeyJdbcTypeTests {
 
 	@Test
 	public void verifyResolutions(DomainModelScope scope) {
-		final Dialect dialect = scope.getDomainModel().getDatabase().getDialect();
+		final MetadataImplementor domainModel = scope.getDomainModel();
+		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
-		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( MyEntity.class.getName() );
+		final PersistentClass entityBinding = domainModel.getEntityBinding( MyEntity.class.getName() );
 
 		verifyJdbcTypeCodes(
 				entityBinding.getProperty( "baseMap" ),
-				Types.INTEGER,
-				Types.VARCHAR
+				jdbcTypeRegistry.getDescriptor( Types.INTEGER ).getJdbcTypeCode(),
+				jdbcTypeRegistry.getDescriptor( Types.VARCHAR ).getJdbcTypeCode()
 		);
 
 		verifyJdbcTypeCodes(
 				entityBinding.getProperty( "sqlTypeCodeMap" ),
-				Types.TINYINT,
-				nationalizationSupport.getVarcharVariantCode()
+				jdbcTypeRegistry.getDescriptor( Types.TINYINT ).getJdbcTypeCode(),
+				jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() ).getJdbcTypeCode()
 		);
 
 		verifyJdbcTypeCodes(
 				entityBinding.getProperty( "sqlTypeMap" ),
 				Types.TINYINT,
-				nationalizationSupport.getVarcharVariantCode()
+				jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() ).getJdbcTypeCode()
 		);
 
 	}

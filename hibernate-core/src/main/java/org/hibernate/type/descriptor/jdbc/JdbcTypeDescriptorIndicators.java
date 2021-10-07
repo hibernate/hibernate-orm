@@ -10,6 +10,7 @@ import java.sql.Types;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -74,6 +75,10 @@ public interface JdbcTypeDescriptorIndicators {
 	 */
 	default long getColumnLength() {
 		return NO_COLUMN_LENGTH;
+	}
+
+	default TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return getTypeConfiguration().getSessionFactory().getFastSessionServices().getDefaultTimeZoneStorageStrategy();
 	}
 
 	/**

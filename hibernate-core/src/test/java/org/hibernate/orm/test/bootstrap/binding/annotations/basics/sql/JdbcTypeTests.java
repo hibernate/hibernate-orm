@@ -19,6 +19,7 @@ import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.BasicValue;
@@ -30,6 +31,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -50,20 +52,42 @@ public class JdbcTypeTests {
 
 	@Test
 	public void verifyResolutions(DomainModelScope scope) {
-		final Dialect dialect = scope.getDomainModel()
-				.getDatabase()
-				.getDialect();
+		final MetadataImplementor domainModel = scope.getDomainModel();
+		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		final PersistentClass entityBinding = domainModel.getEntityBinding( SimpleEntity.class.getName() );
 
-		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( SimpleEntity.class.getName() );
+		verifyJdbcTypeCode(
+				entityBinding.getProperty( "materializedClob" ),
+				jdbcTypeRegistry.getDescriptor( Types.CLOB ).getJdbcTypeCode()
+		);
+		verifyJdbcTypeCode(
+				entityBinding.getProperty( "materializedNClob" ),
+				jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() )
+						.getJdbcTypeCode()
+		);
+		verifyJdbcTypeCode(
+				entityBinding.getProperty( "jpaMaterializedClob" ),
+				jdbcTypeRegistry.getDescriptor( Types.CLOB ).getJdbcTypeCode()
+		);
+		verifyJdbcTypeCode(
+				entityBinding.getProperty( "jpaMaterializedNClob" ),
+				jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() )
+						.getJdbcTypeCode()
+		);
 
-		verifyJdbcTypeCode( entityBinding.getProperty( "materializedClob" ), Types.CLOB );
-		verifyJdbcTypeCode( entityBinding.getProperty( "materializedNClob" ), nationalizationSupport.getClobVariantCode() );
-		verifyJdbcTypeCode( entityBinding.getProperty( "jpaMaterializedClob" ), Types.CLOB );
-		verifyJdbcTypeCode( entityBinding.getProperty( "jpaMaterializedNClob" ), nationalizationSupport.getClobVariantCode() );
-
-		verifyJdbcTypeCode( entityBinding.getProperty( "nationalizedString" ), nationalizationSupport.getVarcharVariantCode() );
-		verifyJdbcTypeCode( entityBinding.getProperty( "nationalizedClob" ), nationalizationSupport.getClobVariantCode() );
+		verifyJdbcTypeCode(
+				entityBinding.getProperty( "nationalizedString" ),
+				jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() )
+						.getJdbcTypeCode()
+		);
+		verifyJdbcTypeCode(
+				entityBinding.getProperty( "nationalizedClob" ),
+				jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() )
+						.getJdbcTypeCode()
+		);
 
 		verifyResolution( entityBinding.getProperty( "customType" ), CustomJdbcTypeDescriptor.class );
 		verifyResolution( entityBinding.getProperty( "customTypeRegistration" ), RegisteredCustomJdbcTypeDescriptor.class );

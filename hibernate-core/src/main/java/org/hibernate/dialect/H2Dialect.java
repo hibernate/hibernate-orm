@@ -52,6 +52,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+
 import org.jboss.logging.Logger;
 
 import static org.hibernate.query.TemporalUnit.SECOND;
@@ -145,6 +146,11 @@ public class H2Dialect extends Dialect {
 						+ info.getDatabaseMinorVersion() * 1000,
 				parseBuildId( info )
 		);
+	}
+
+	public boolean hasDstBug() {
+		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
+		return getVersion() == 104200;
 	}
 
 	@Override
@@ -265,8 +271,8 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return true;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override

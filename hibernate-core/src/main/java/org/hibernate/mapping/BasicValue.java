@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.MappingException;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -68,7 +69,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	private final TypeConfiguration typeConfiguration;
-	private final int preferredJdbcTypeCodeForBoolean;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// incoming "configuration" values
@@ -102,7 +102,6 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		super( buildingContext, table );
 
 		this.typeConfiguration = buildingContext.getBootstrapContext().getTypeConfiguration();
-		this.preferredJdbcTypeCodeForBoolean = buildingContext.getPreferredSqlTypeCodeForBoolean();
 
 		buildingContext.getMetadataCollector().registerValueMappingResolver( this::resolve );
 	}
@@ -600,7 +599,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
-		return preferredJdbcTypeCodeForBoolean;
+		return getBuildingContext().getPreferredSqlTypeCodeForBoolean();
+	}
+
+	@Override
+	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return getBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage();
 	}
 
 	@Override

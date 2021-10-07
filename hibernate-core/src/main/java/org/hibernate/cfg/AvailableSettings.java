@@ -2383,7 +2383,6 @@ public interface AvailableSettings {
 	 */
 	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
 
-
 	/**
 	 * Global setting identifying the preferred JDBC type code for storing
 	 * boolean values.  The fallback is to ask the Dialect
@@ -2391,6 +2390,21 @@ public interface AvailableSettings {
 	 * @since 6.0
 	 */
 	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.perferred_boolean_jdbc_type_code";
+
+	/**
+	 * Global setting for configuring the default storage for the time zone information for time zone based types.
+	 * </p>
+	 * Possible values are {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
+	 * {@link org.hibernate.annotations.TimeZoneStorageType#COLUMN},
+	 * {@link org.hibernate.annotations.TimeZoneStorageType#NATIVE}
+	 * and {@link org.hibernate.annotations.TimeZoneStorageType#AUTO}.
+	 * </p>
+	 * The default value is given by the {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
+	 * meaning that time zone information is not stored by default, but timestamps are normalized instead.
+	 *
+	 * @since 6.0
+	 */
+	String TIMEZONE_DEFAULT_STORAGE = "hibernate.timezone.default_storage";
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Java (javax) Persistence defined settings

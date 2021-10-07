@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,35 +17,34 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.SQLServer2008Dialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Andrea Boriero
  */
 @TestForIssue(jiraKey = "HHH-10529")
-@RequiresDialect(value = SQLServer2008Dialect.class)
-public class SQLServer2008NVarCharTypeTest extends BaseUnitTestCase {
+@RequiresDialect(value = SQLServerDialect.class, version = 10)
+public class SQLServer2008NVarCharTypeTest {
 	private StandardServiceRegistry ssr;
 	private MetadataImplementor metadata;
 	private SchemaExport schemaExport;
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		ssr = new StandardServiceRegistryBuilder().build();
 		schemaExport = createSchemaExport( new Class[] {MyEntity.class} );
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		schemaExport.drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		StandardServiceRegistryBuilder.destroy( ssr );

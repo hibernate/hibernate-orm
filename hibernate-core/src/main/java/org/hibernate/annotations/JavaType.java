@@ -34,10 +34,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *     <li>
  *         For other collection mappings, describes the elements
  *     </li>
- *     <li>
- *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
- *         value.
- *     </li>
  * </ul>
  *
  * Resolved as a {@link org.hibernate.resource.beans.spi.ManagedBean}

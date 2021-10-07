@@ -5,8 +5,17 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.orm.test.any.annotations;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import org.hibernate.annotations.Any;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
+import org.hibernate.annotations.ManyToAny;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,11 +24,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.Any;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.CascadeType;
-import org.hibernate.annotations.ManyToAny;
 
 @Entity
 @Table( name = "property_list" )
@@ -40,7 +44,13 @@ public class PropertyList<T extends Property> {
 		this.name = name;
 	}
 
-    @ManyToAny( metaDef = "Property", metaColumn = @Column(name = "property_type") )
+	@ManyToAny
+	@Column(name = "property_type")
+	@AnyKeyJavaClass( Integer.class )
+	@AnyDiscriminatorValue( discriminator = "C", entity = CharProperty.class )
+	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class)
+	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class)
+	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
     @Cascade( { CascadeType.ALL })
     @JoinTable(name = "list_properties",
 			joinColumns = @JoinColumn(name = "obj_id"),
@@ -73,7 +83,13 @@ public class PropertyList<T extends Property> {
 		this.name = name;
 	}
 
-    @Any( metaDef = "Property", metaColumn = @Column(name = "property_type") )
+    @Any
+	@Column(name = "property_type")
+	@AnyKeyJavaClass( Integer.class )
+	@AnyDiscriminatorValue( discriminator = "C", entity = CharProperty.class )
+	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class)
+	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class)
+	@AnyDiscriminatorValue( discriminator = "L", entity = LongProperty.class)
 	@Cascade( CascadeType.ALL )
 	@JoinColumn(name = "property_id")
 	public T getSomeProperty() {

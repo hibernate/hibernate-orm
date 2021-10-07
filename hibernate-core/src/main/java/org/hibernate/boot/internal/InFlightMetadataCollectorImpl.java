@@ -20,10 +20,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Entity;
-import jakarta.persistence.MapsId;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
@@ -31,7 +27,6 @@ import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.SessionFactoryBuilder;
@@ -111,6 +106,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MapsId;
+
 /**
  * The implementation of the in-flight Metadata collector contract.
  *
@@ -160,7 +160,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 	private final Set<String> defaultNamedNativeQueryNames = new HashSet<>();
 	private final Set<String> defaultSqlResultSetMappingNames = new HashSet<>();
 	private final Set<String> defaultNamedProcedureNames = new HashSet<>();
-	private Map<String, AnyMetaDef> anyMetaDefs;
 	private Map<Class, MappedSuperclass> mappedSuperClasses;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithMapsId;
 	private Map<XClass, Map<String, PropertyData>> propertiesAnnotatedWithIdAndToOne;
@@ -1132,28 +1131,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 		}
 		annotatedClassTypeMap.put( clazz.getName(), type );
 		return type;
-	}
-
-	@Override
-	public void addAnyMetaDef(AnyMetaDef defAnn) {
-		if ( anyMetaDefs == null ) {
-			anyMetaDefs = new HashMap<>();
-		}
-		else {
-			if ( anyMetaDefs.containsKey( defAnn.name() ) ) {
-				throw new AnnotationException( "Two @AnyMetaDef with the same name defined: " + defAnn.name() );
-			}
-		}
-
-		anyMetaDefs.put( defAnn.name(), defAnn );
-	}
-
-	@Override
-	public AnyMetaDef getAnyMetaDef(String name) {
-		if ( anyMetaDefs == null ) {
-			return null;
-		}
-		return anyMetaDefs.get( name );
 	}
 
 

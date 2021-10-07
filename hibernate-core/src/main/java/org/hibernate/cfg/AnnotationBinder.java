@@ -351,8 +351,6 @@ public final class AnnotationBinder {
 		bindGenericGenerators( pckg, context );
 		bindQueries( pckg, context );
 		bindFilterDefs( pckg, context );
-
-		BinderHelper.bindAnyMetaDefs( pckg, context );
 	}
 
 	private static void bindGenericGenerators(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
@@ -590,8 +588,6 @@ public final class AnnotationBinder {
 
 		bindQueries( clazzToProcess, context );
 		bindFilterDefs( clazzToProcess, context );
-
-		BinderHelper.bindAnyMetaDefs( clazzToProcess, context );
 
 		String schema = "";
 		String table = ""; //might be no @Table annotation on the annotated class
@@ -1895,11 +1891,14 @@ public final class AnnotationBinder {
 			else if ( property.isAnnotationPresent( org.hibernate.annotations.Any.class ) ) {
 
 				//check validity
-				if ( property.isAnnotationPresent( Column.class )
-						|| property.isAnnotationPresent( Columns.class ) ) {
+				if (  property.isAnnotationPresent( Columns.class ) ) {
 					throw new AnnotationException(
-							"@Column(s) not allowed on a @Any property: "
-									+ BinderHelper.getPath( propertyHolder, inferredData )
+							String.format(
+									Locale.ROOT,
+									"@Columns not allowed on a @Any property [%s]; @Column or @Formula is used to map the discriminator" +
+											"and only one is allowed",
+									BinderHelper.getPath( propertyHolder, inferredData )
+							)
 					);
 				}
 
@@ -3290,7 +3289,8 @@ public final class AnnotationBinder {
 			EntityBinder entityBinder,
 			boolean isIdentifierMapper,
 			MetadataBuildingContext buildingContext) {
-		org.hibernate.annotations.Any anyAnn = inferredData.getProperty()
+		org.hibernate.annotations.Any anyAnn = inferredData
+				.getProperty()
 				.getAnnotation( org.hibernate.annotations.Any.class );
 		if ( anyAnn == null ) {
 			throw new AssertionFailure(
@@ -3298,11 +3298,15 @@ public final class AnnotationBinder {
 							+ BinderHelper.getPath( propertyHolder, inferredData )
 			);
 		}
+
+		final Column discriminatorColumnAnn = inferredData.getProperty().getAnnotation( Column.class );
+		final Formula discriminatorFormulaAnn = inferredData.getProperty().getAnnotation( Formula.class );
+
 		boolean lazy = ( anyAnn.fetch() == FetchType.LAZY );
 		Any value = BinderHelper.buildAnyValue(
-				anyAnn.metaDef(),
+				discriminatorColumnAnn,
+				discriminatorFormulaAnn,
 				columns,
-				anyAnn.metaColumn(),
 				inferredData,
 				cascadeOnDelete,
 				lazy,

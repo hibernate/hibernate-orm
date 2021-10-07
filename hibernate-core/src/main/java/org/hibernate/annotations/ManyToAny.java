@@ -16,7 +16,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * This is the collection-valued form of @Any definitions.  Defines a ToMany-style association pointing
- * to one of several entity types depending on a local discriminator.  See {@link Any} for further information.
+ * to one of several entity types depending on a local discriminator.
  *
  * @see Any
  *
@@ -26,18 +26,6 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface ManyToAny {
-	/**
-	 * Metadata definition used.
-	 * If defined, should point to a @AnyMetaDef name
-	 * If not defined, the local (ie in the same field or property) @AnyMetaDef is used
-	 */
-	String metaDef() default "";
-
-	/**
-	 * Metadata discriminator column description, This column will hold the meta value corresponding to the
-	 * targeted entity.
-	 */
-	Column metaColumn();
 	/**
 	 * Defines whether the value of the field or property should be lazily loaded or must be
 	 * eagerly fetched. The EAGER strategy is a requirement on the persistence provider runtime

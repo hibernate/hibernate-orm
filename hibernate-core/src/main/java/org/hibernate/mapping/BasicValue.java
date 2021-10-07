@@ -389,7 +389,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		}
 
 		if ( jtd == null ) {
-			throw new MappingException( "Unable to determine JavaTypeDescriptor to use" );
+			throw new MappingException( "Unable to determine JavaTypeDescriptor to use : " + this );
 		}
 
 		final TypeDefinitionRegistry typeDefinitionRegistry = getBuildingContext().getTypeDefinitionRegistry();
@@ -697,6 +697,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			}
 
 			injectParameters( typeInstance, properties );
+			// envers - grr
+			setTypeParameters( properties );
 
 			final CustomType customType = new CustomType( typeInstance, typeConfiguration );
 			this.resolution = new UserTypeResolution( customType, null, properties );

@@ -9,12 +9,16 @@ package org.hibernate.userguide.associations.any;
 import java.util.ArrayList;
 import java.util.List;
 import jakarta.persistence.Column;
+import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.Table;
 
+import org.hibernate.annotations.AnyDiscriminator;
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.ManyToAny;
 
@@ -26,14 +30,16 @@ public class PropertyRepository {
     @Id
     private Long id;
 
-    @ManyToAny(
-        metaDef = "PropertyMetaDef",
-        metaColumn = @Column( name = "property_type" )
-    )
+    @ManyToAny
+    @AnyDiscriminator( DiscriminatorType.STRING )
+    @Column( name = "property_type" )
+    @AnyKeyJavaClass( Long.class )
+    @AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
+    @AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
     @Cascade( { org.hibernate.annotations.CascadeType.ALL })
     @JoinTable(name = "repository_properties",
-        joinColumns = @JoinColumn(name = "repository_id"),
-        inverseJoinColumns = @JoinColumn(name = "property_id")
+            joinColumns = @JoinColumn(name = "repository_id"),
+            inverseJoinColumns = @JoinColumn(name = "property_id")
     )
     private List<Property<?>> properties = new ArrayList<>(  );
 

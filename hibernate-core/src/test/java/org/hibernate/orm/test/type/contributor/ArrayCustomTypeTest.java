@@ -15,6 +15,7 @@ import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -77,6 +78,7 @@ public class ArrayCustomTypeTest extends BaseEntityManagerFunctionalTestCase {
 		@Id
 		private String userName;
 
+		@Basic
 		@CustomType( ArrayType.class )
 		private Array emailAddresses = new Array();
 

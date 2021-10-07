@@ -15,7 +15,6 @@ import java.util.function.Function;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.AnyMetaDef;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.internal.NamedProcedureCallDefinitionImpl;
@@ -285,9 +284,6 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void addDefaultResultSetMapping(NamedResultSetMappingDescriptor definition);
 
 	void addDefaultNamedProcedureCall(NamedProcedureCallDefinitionImpl procedureCallDefinition);
-
-	void addAnyMetaDef(AnyMetaDef defAnn);
-	AnyMetaDef getAnyMetaDef(String anyMetaDefName);
 
 	AnnotatedClassType addClassType(XClass clazz);
 	AnnotatedClassType getClassType(XClass clazz);

@@ -5,8 +5,15 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.orm.test.any.annotations;
+
 import java.util.HashMap;
 import java.util.Map;
+
+import org.hibernate.annotations.AnyDiscriminatorValue;
+import org.hibernate.annotations.AnyKeyJavaClass;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.ManyToAny;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,11 +22,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.Table;
-
-import org.hibernate.annotations.AnyMetaDef;
-import org.hibernate.annotations.Cascade;
-import org.hibernate.annotations.ManyToAny;
-import org.hibernate.annotations.MetaValue;
 
 @Entity
 @Table( name = "property_map" )
@@ -55,12 +57,11 @@ public class PropertyMap {
 		this.name = name;
 	}
 
-	@ManyToAny( metaColumn = @Column( name = "property_type" ) )
-	@AnyMetaDef(
-			idType = "integer", metaType = "string",
-			metaValues = {
-			@MetaValue( value = "S", targetEntity = StringProperty.class ),
-			@MetaValue( value = "I", targetEntity = IntegerProperty.class ) } )
+	@ManyToAny
+	@Column( name = "property_type" )
+	@AnyKeyJavaClass( Integer.class )
+	@AnyDiscriminatorValue( discriminator = "S", entity = StringProperty.class )
+	@AnyDiscriminatorValue( discriminator = "I", entity = IntegerProperty.class )
 	@Cascade( org.hibernate.annotations.CascadeType.ALL )
 	@JoinTable(
 			name = "map_properties",

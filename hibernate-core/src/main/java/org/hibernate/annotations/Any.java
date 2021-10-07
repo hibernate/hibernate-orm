@@ -20,28 +20,21 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * For example, if you consider an Order entity containing Payment information where Payment might be of type
  * CashPayment or CreditCardPayment the @Any approach would be to keep that discriminator and matching value on the
- * Order itself.  Thought of another way, the "foreign-key" really is made up of the value and discriminator
+ * Order itself.  Thought of another way, the "foreign-key" really is made up of the value and discriminator.
  *
- * @author Emmanuel Bernard
- * @author Steve Ebersole
+ * Use {@link Column} or {@link Formula} to define the "column" to which the discriminator is mapped.
  *
- * @see AnyMetaDef
+ * Use {@link jakarta.persistence.JoinColumn} to describe the key column
+ *
+ * Use {@link AnyDiscriminator}, {@link JdbcType} or {@link JdbcTypeCode} to describe the mapping for the discriminator
+ *
+ * Use {@link AnyKeyJavaType}, {@link AnyKeyJavaClass}, {@link AnyKeyJdbcType} or {@link AnyKeyJdbcTypeCode} to describe the mapping for the key
+ *
+ * Use {@link AnyDiscriminatorValues} to specify the discriminator {@code <->} entity mappings
  */
 @java.lang.annotation.Target({METHOD, FIELD})
 @Retention(RUNTIME)
 public @interface Any {
-	/**
-	 * Metadata definition used.
-	 * If defined, should point to a @AnyMetaDef name
-	 * If not defined, the local (ie in the same field or property) @AnyMetaDef is used
-	 */
-	String metaDef() default "";
-
-	/**
-	 * Identifies the discriminator column.  This column will hold the value that identifies the targeted entity.
-	 */
-	Column metaColumn();
-
 	/**
 	 * Defines whether the value of the field or property should be lazily loaded or must be
 	 * eagerly fetched. The EAGER strategy is a requirement on the persistence provider runtime
@@ -49,6 +42,7 @@ public @interface Any {
 	 * enhancement is used. If not specified, defaults to EAGER.
 	 */
 	FetchType fetch() default FetchType.EAGER;
+
 	/**
 	 * Whether the association is optional. If set to false then a non-null relationship must always exist.
 	 */

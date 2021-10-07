@@ -11,6 +11,8 @@ import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 
+import jakarta.persistence.MapKeyClass;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -18,6 +20,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Form of {@link JavaType} for describing the key of a Map
+ *
+ * @see MapKeyClass
  *
  * @since 6.0
  */

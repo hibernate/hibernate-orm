@@ -8,7 +8,6 @@ package org.hibernate.cfg.annotations;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
-import java.sql.Types;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -84,11 +83,12 @@ import org.hibernate.usertype.UserType;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.DiscriminatorType;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
+import jakarta.persistence.MapKeyClass;
 import jakarta.persistence.MapKeyEnumerated;
 import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.Temporal;
@@ -139,7 +139,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	private Map explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitJdbcTypeAccess;
-	private Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess;
+	private Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJavaTypeAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
@@ -390,7 +390,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		explicitBasicTypeName = null;
 		implicitJavaTypeAccess = (typeConfiguration) -> null;
 
-		explicitJtdAccess = (typeConfiguration) -> {
+		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final CollectionIdJavaType javaTypeAnn = modelXProperty.getAnnotation( CollectionIdJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
@@ -515,7 +515,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			return null;
 		};
 
-		explicitJtdAccess = typeConfiguration -> {
+		explicitJavaTypeAccess = typeConfiguration -> {
 			final MapKeyJavaType javaTypeAnn = mapAttribute.getAnnotation( MapKeyJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
@@ -523,6 +523,11 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 					final ManagedBean<? extends BasicJavaTypeDescriptor> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
 					return jdbcTypeBean.getBeanInstance();
 				}
+			}
+
+			final MapKeyClass mapKeyClassAnn = mapAttribute.getAnnotation( MapKeyClass.class );
+			if ( mapKeyClassAnn != null ) {
+				return (BasicJavaTypeDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( mapKeyClassAnn.value() );
 			}
 
 			return null;
@@ -575,7 +580,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
 
-		explicitJtdAccess = (typeConfiguration) -> {
+		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final ListIndexJavaType javaTypeAnn = listAttribute.getAnnotation( ListIndexJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
@@ -608,8 +613,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	}
 
 	private void prepareCollectionElement(XProperty attributeXProperty, XClass elementTypeXClass) {
-
-		// todo (6.0) : @SqlType / @SqlTypeDescriptor
 
 		Class<T> javaType;
 		//noinspection unchecked
@@ -659,6 +662,24 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		}
 
 		normalSupplementalDetails( attributeXProperty, buildingContext );
+
+		// layer in support for JPA's approach for specifying a specific Java type for the collection elements...
+		final ElementCollection elementCollectionAnn = attributeXProperty.getAnnotation( ElementCollection.class );
+		if ( elementCollectionAnn != null
+				&& elementCollectionAnn.targetClass() != null
+				&& elementCollectionAnn.targetClass() != void.class ) {
+			final Function<TypeConfiguration, BasicJavaTypeDescriptor> original = explicitJavaTypeAccess;
+			explicitJavaTypeAccess = (typeConfiguration) -> {
+				final BasicJavaTypeDescriptor originalResult = original.apply( typeConfiguration );
+				if ( originalResult != null ) {
+					return originalResult;
+				}
+
+				return (BasicJavaTypeDescriptor) typeConfiguration
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( elementCollectionAnn.targetClass() );
+			};
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -761,7 +782,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
 
-		explicitJtdAccess = (typeConfiguration) -> {
+		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final AnyKeyJavaType javaTypeAnn = modelXProperty.getAnnotation( AnyKeyJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
@@ -891,7 +912,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
 
-		explicitJtdAccess = typeConfiguration -> {
+		explicitJavaTypeAccess = typeConfiguration -> {
 			final JavaType javaTypeAnn = attributeXProperty.getAnnotation( JavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
@@ -1162,7 +1183,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		basicValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 
 		basicValue.setImplicitJavaTypeAccess( implicitJavaTypeAccess );
-		basicValue.setExplicitJavaTypeAccess( explicitJtdAccess );
+		basicValue.setExplicitJavaTypeAccess( explicitJavaTypeAccess );
 		basicValue.setExplicitJdbcTypeAccess( explicitJdbcTypeAccess );
 		basicValue.setExplicitMutabilityPlanAccess( explicitMutabilityAccess );
 

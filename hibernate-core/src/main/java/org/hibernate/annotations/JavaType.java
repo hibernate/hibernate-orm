@@ -44,6 +44,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * @see MapKeyJavaType
  * @see CollectionIdJavaType
  * @see ListIndexJavaType
+ * @see AnyKeyJavaType
  *
  * @since 6.0
  */

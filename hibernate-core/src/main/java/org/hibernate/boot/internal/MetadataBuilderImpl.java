@@ -16,7 +16,9 @@ import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.HibernateException;
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.MetadataBuilder;
@@ -58,8 +60,10 @@ import org.hibernate.cache.spi.RegionFactory;
 import org.hibernate.cache.spi.access.AccessType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.MetadataSourceType;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.log.DeprecationLogger;
@@ -533,6 +537,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			implements MetadataBuildingOptions, JpaOrmXmlPersistenceUnitDefaultAware {
 		private final StandardServiceRegistry serviceRegistry;
 		private final MappingDefaultsImpl mappingDefaults;
+		private final TimeZoneStorageStrategy defaultTimezoneStorage;
 		// todo (6.0) : remove bootstrapContext property along with the deprecated methods
 		private BootstrapContext bootstrapContext;
 
@@ -565,6 +570,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 
 			this.mappingDefaults = new MappingDefaultsImpl( serviceRegistry );
 
+			this.defaultTimezoneStorage = resolveTimeZoneStorageStrategy( serviceRegistry, configService );
 			this.multiTenancyStrategy =  MultiTenancyStrategy.determineMultiTenancyStrategy( configService.getSettings() );
 
 			this.xmlMappingEnabled = configService.getSetting(
@@ -745,6 +751,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
+		public TimeZoneStorageStrategy getDefaultTimeZoneStorage() {
+			return defaultTimezoneStorage;
+		}
+
+		@Override
 		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
 		}
@@ -895,5 +906,55 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		public void setBootstrapContext(BootstrapContext bootstrapContext) {
 			this.bootstrapContext = bootstrapContext;
 		}
+	}
+
+	private static TimeZoneStorageStrategy resolveTimeZoneStorageStrategy(
+			StandardServiceRegistry serviceRegistry,
+			ConfigurationService configService) {
+		final TimeZoneStorageType configuredTimeZoneStorageType = configService.getSetting(
+				AvailableSettings.TIMEZONE_DEFAULT_STORAGE,
+				TimeZoneStorageType.class,
+				null
+		);
+		final TimeZoneStorageStrategy resolvedTimezoneStorage;
+		// For now, we default to NORMALIZE as that is the Hibernate 5.x behavior
+		if ( configuredTimeZoneStorageType == null ) {
+			resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
+		}
+		else {
+			final TimeZoneSupport timeZoneSupport = serviceRegistry.getService( JdbcServices.class )
+					.getDialect()
+					.getTimeZoneSupport();
+			switch ( configuredTimeZoneStorageType ) {
+				case NATIVE:
+					if ( timeZoneSupport != TimeZoneSupport.NATIVE ) {
+						throw new HibernateException( "The configured time zone storage type NATIVE is not supported with the configured dialect" );
+					}
+					resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
+					break;
+				case COLUMN:
+					resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
+					break;
+				case NORMALIZE:
+					resolvedTimezoneStorage = TimeZoneStorageStrategy.NORMALIZE;
+					break;
+				case AUTO:
+					switch ( timeZoneSupport ) {
+						case NATIVE:
+							resolvedTimezoneStorage = TimeZoneStorageStrategy.NATIVE;
+							break;
+						case NORMALIZE:
+						case NONE:
+							resolvedTimezoneStorage = TimeZoneStorageStrategy.COLUMN;
+							break;
+						default:
+							throw new HibernateException( "Unsupported time zone support: " + timeZoneSupport );
+					}
+					break;
+				default:
+					throw new HibernateException( "Unsupported time zone storage type: " + configuredTimeZoneStorageType );
+			}
+		}
+		return resolvedTimezoneStorage;
 	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
+import java.sql.Types;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
@@ -18,6 +20,7 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,6 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 
 /**
  * Tests for mapping `double` values
@@ -42,6 +46,8 @@ public class StringNationalizedMappingTests {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfStrings.class );
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
@@ -50,14 +56,14 @@ public class StringNationalizedMappingTests {
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nstring" );
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( nationalizationSupport.getVarcharVariantCode() ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getVarcharVariantCode() ) ) );
 		}
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "nclobString" );
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), equalTo( nationalizationSupport.getClobVariantCode() ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( nationalizationSupport.getClobVariantCode() ) ) );
 		}
 
 

@@ -141,8 +141,8 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return true;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NORMALIZE;
 	}
 
 	@Override

@@ -50,33 +50,34 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testStandardBasicSqlTypeDescriptor() {
+		final Dialect dialect = getMetadata().getDatabase().getDialect();
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		// no override
 		assertSame( IntegerJdbcTypeDescriptor.INSTANCE, jdbcTypeRegistry.getDescriptor( Types.INTEGER ) );
 
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
-		if ( CockroachDialect.class.isInstance( getDialect() ) ) {
+		if ( CockroachDialect.class.isInstance( dialect ) ) {
 			assertSame(
 					VarbinaryJdbcTypeDescriptor.INSTANCE,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
-		else if ( PostgreSQLDialect.class.isInstance( getDialect() ) ) {
+		else if ( PostgreSQLDialect.class.isInstance( dialect ) ) {
 			assertSame(
 					BlobJdbcTypeDescriptor.BLOB_BINDING,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
-		else if ( SybaseDialect.class.isInstance( getDialect() ) ) {
+		else if ( SybaseDialect.class.isInstance( dialect ) ) {
 			assertSame(
 					BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
-		else if ( AbstractHANADialect.class.isInstance( getDialect() ) ) {
+		else if ( AbstractHANADialect.class.isInstance( dialect ) ) {
 			assertSame(
-					( (AbstractHANADialect) getDialect() ).getBlobTypeDescriptor(),
+					( (AbstractHANADialect) dialect ).getBlobTypeDescriptor(),
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}

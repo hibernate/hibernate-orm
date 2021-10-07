@@ -17,6 +17,7 @@ import java.util.function.Function;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.AnyDiscriminator;
 import org.hibernate.annotations.AnyKeyJavaClass;
 import org.hibernate.annotations.AnyKeyJavaType;
@@ -189,6 +190,10 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return buildingContext.getBootstrapContext().getTypeConfiguration();
+	}
+	@Override
+	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
 	}
 
 

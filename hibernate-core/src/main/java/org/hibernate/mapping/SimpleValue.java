@@ -20,6 +20,7 @@ import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -33,7 +34,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
@@ -53,6 +53,7 @@ import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeDescrip
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -668,7 +669,17 @@ public abstract class SimpleValue implements KeyValue {
 		// 		VARCHAR/CHAR
 		final JdbcTypeDescriptor recommendedJdbcType = jpaAttributeConverter.getRelationalJavaTypeDescriptor().getRecommendedJdbcType(
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
-				metadata::getTypeConfiguration
+				new JdbcTypeDescriptorIndicators() {
+					@Override
+					public TypeConfiguration getTypeConfiguration() {
+						return metadata.getTypeConfiguration();
+					}
+
+					@Override
+					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+						return buildingContext.getBuildingOptions().getDefaultTimeZoneStorage();
+					}
+				}
 		);
 		int jdbcTypeCode = recommendedJdbcType.getJdbcTypeCode();
 		if ( isLob() ) {

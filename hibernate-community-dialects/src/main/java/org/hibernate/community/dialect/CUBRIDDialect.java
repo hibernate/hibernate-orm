@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.community.dialect.identity.CUBRIDIdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -372,8 +373,8 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return true;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override

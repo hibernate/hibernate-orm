@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -22,10 +22,11 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQL5Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.dialect.SybaseASEDialect;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
@@ -37,11 +38,13 @@ import org.junit.runners.Parameterized;
 @TestForIssue(jiraKey = "HHH-10371")
 @SkipForDialect(value = AbstractHANADialect.class,
 		comment = "HANA systematically returns the wrong date when the JVM default timezone is not UTC")
-@SkipForDialect(value = MySQL5Dialect.class,
+@SkipForDialect(value = MySQLDialect.class,
 		comment = "HHH-13582: MySQL ConnectorJ 8.x returns the wrong date"
 				+ " when the JVM default timezone is different from the server timezone:"
 				+ " https://bugs.mysql.com/bug.php?id=91112"
 )
+@SkipForDialect(value = H2Dialect.class, comment = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
+@SkipForDialect(value = HSQLDialect.class, comment = "HSQL has problems with DST edges")
 public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDateTest.EntityWithLocalDate> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {
@@ -70,7 +73,11 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 								.add( 1892, 1, 1, ZONE_OSLO )
 								.add( 1900, 1, 1, ZONE_PARIS )
 								.add( 1900, 1, 1, ZONE_AMSTERDAM )
-								.add( 1600, 1, 1, ZONE_AMSTERDAM )
+				)
+				.skippedForDialects(
+						// No idea what Sybase is doing here exactly
+						dialect -> dialect instanceof SybaseASEDialect,
+						b -> b.add( 1600, 1, 1, ZONE_AMSTERDAM )
 				)
 				// HHH-13379: DST end (where Timestamp becomes ambiguous, see JDK-4312621)
 				// It doesn't seem that any date at midnight can be affected by HHH-13379, but we add some tests just in case
@@ -167,7 +174,7 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 
 	public static class DateAsTimestampRemappingH2Dialect extends AbstractRemappingH2Dialect {
 		public DateAsTimestampRemappingH2Dialect() {
-			super( Types.DATE, TimestampJdbcTypeDescriptor.INSTANCE );
+			super( Types.DATE, Types.TIMESTAMP );
 		}
 	}
 }

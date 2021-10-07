@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.type;
+package org.hibernate.orm.test.type;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,6 +20,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.AvailableSettings;
@@ -27,7 +28,6 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -47,7 +47,7 @@ import static org.junit.Assert.assertEquals;
  * @param <E> The entity type used in tests.
  */
 @RunWith(CustomParameterized.class)
-abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase {
+public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase {
 
 	private static Dialect determineDialect() {
 		try {
@@ -287,6 +287,13 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 			return thisAsS();
 		}
 
+		public S skippedForDialects(Predicate<Dialect> skipPredicate, Consumer<S> skippedIfDialectMatchesClasses) {
+			if ( !skipPredicate.test( dialect ) ) {
+				skippedIfDialectMatchesClasses.accept( thisAsS() );
+			}
+			return thisAsS();
+		}
+
 		public S withForcedJdbcTimezone(String zoneIdString, Consumer<S> contributor) {
 			ZoneId zoneId = ZoneId.of( zoneIdString );
 			this.forcedJdbcTimeZone = zoneId;
@@ -301,7 +308,7 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 		@SafeVarargs
 		public final S alsoTestRemappingsWithH2(Class<? extends AbstractRemappingH2Dialect> ... dialectClasses) {
-			if ( dialect instanceof H2Dialect ) {
+			if ( dialect instanceof H2Dialect && !( (H2Dialect) dialect ).hasDstBug() ) {
 				// Only test remappings with H2
 				Collections.addAll( remappingDialectClasses, dialectClasses );
 			}
@@ -395,11 +402,12 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 	protected static class AbstractRemappingH2Dialect extends H2Dialect {
 		private final int overriddenSqlTypeCode;
-		private final JdbcTypeDescriptor overriddenJdbcTypeDescriptor;
+		private final int overridingSqlTypeCode;
 
-		public AbstractRemappingH2Dialect(int overriddenSqlTypeCode, JdbcTypeDescriptor overriddenJdbcTypeDescriptor) {
+		public AbstractRemappingH2Dialect(int overriddenSqlTypeCode, int overridingSqlTypeCode) {
+			super( getDialect().getVersion() );
 			this.overriddenSqlTypeCode = overriddenSqlTypeCode;
-			this.overriddenJdbcTypeDescriptor = overriddenJdbcTypeDescriptor;
+			this.overridingSqlTypeCode = overridingSqlTypeCode;
 		}
 
 		@Override
@@ -408,7 +416,9 @@ abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalTestCase
 
 			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
 					overriddenSqlTypeCode,
-					overriddenJdbcTypeDescriptor
+					typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor(
+							overridingSqlTypeCode
+					)
 			);
 		}
 

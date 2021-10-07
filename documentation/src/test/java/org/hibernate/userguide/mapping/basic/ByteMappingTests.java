@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -43,6 +44,8 @@ public class ByteMappingTests {
 		// first, verify the type selections...
 		final MappingMetamodel domainModel = scope.getSessionFactory().getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( EntityOfBytes.class );
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = domainModel.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
 		{
 			final BasicAttributeMapping attribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "wrapper" );
@@ -50,7 +53,7 @@ public class ByteMappingTests {
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) ) );
 		}
 
 		{
@@ -59,7 +62,7 @@ public class ByteMappingTests {
 
 			final JdbcMapping jdbcMapping = attribute.getJdbcMapping();
 			assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Byte.class ) );
-			assertThat( jdbcMapping.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
+			assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) ) );
 		}
 
 

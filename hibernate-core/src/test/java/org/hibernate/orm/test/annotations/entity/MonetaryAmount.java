@@ -14,7 +14,7 @@ import java.util.Currency;
 /**
  * @author Emmanuel Bernard
  */
-public class MonetaryAmount implements Serializable {
+public class MonetaryAmount {
 
 	private BigDecimal amount;
 	private Currency currency;

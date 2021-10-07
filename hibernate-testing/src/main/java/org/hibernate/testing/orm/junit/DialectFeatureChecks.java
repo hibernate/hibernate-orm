@@ -17,6 +17,7 @@ import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.query.FetchClauseType;
 
 /**
@@ -269,7 +270,7 @@ abstract public class DialectFeatureChecks {
 
 	public static class SupportsTimezoneTypes implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
-			return dialect.supportsTimezoneTypes();
+			return dialect.getTimeZoneSupport() == TimeZoneSupport.NATIVE;
 		}
 	}
 

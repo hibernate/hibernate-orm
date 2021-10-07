@@ -9,6 +9,7 @@ package org.hibernate.boot.model.process.internal;
 import java.util.function.Function;
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -56,6 +57,11 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					public TemporalType getTemporalPrecision() {
 						// if it is a temporal version, it needs to be a TIMESTAMP
 						return TemporalType.TIMESTAMP;
+					}
+
+					@Override
+					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+						return context.getBuildingOptions().getDefaultTimeZoneStorage();
 					}
 				}
 		);

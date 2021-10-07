@@ -69,7 +69,6 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
@@ -287,8 +286,8 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return true;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NORMALIZE;
 	}
 
 	@Override

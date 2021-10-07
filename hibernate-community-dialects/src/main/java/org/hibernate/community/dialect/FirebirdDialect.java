@@ -10,6 +10,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -57,11 +58,9 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
@@ -170,8 +169,8 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return getVersion() >= 400;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return getVersion() >= 400 ? TimeZoneSupport.NATIVE : TimeZoneSupport.NONE;
 	}
 
 	@Override
@@ -315,7 +314,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String currentLocalTime() {
-		if ( supportsTimezoneTypes() ) {
+		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 			return "localtime";
 		}
 		else {
@@ -325,7 +324,7 @@ public class FirebirdDialect extends Dialect {
 
 	@Override
 	public String currentLocalTimestamp() {
-		if ( supportsTimezoneTypes() ) {
+		if ( getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 			return "localtimestamp";
 		}
 		else {

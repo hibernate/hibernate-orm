@@ -10,6 +10,7 @@ package org.hibernate.community.dialect;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.community.dialect.identity.SybaseAnywhereIdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
@@ -80,8 +81,8 @@ public class SybaseAnywhereDialect extends SybaseDialect {
 	}
 
 	@Override
-	public boolean supportsTimezoneTypes() {
-		return true;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NATIVE;
 	}
 
 	@Override

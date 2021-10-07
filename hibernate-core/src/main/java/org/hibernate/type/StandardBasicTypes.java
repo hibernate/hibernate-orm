@@ -388,7 +388,8 @@ public final class StandardBasicTypes {
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
+	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}
+	 * or {@link java.sql.Types#TIMESTAMP TIMESTAMP} depending on the {@link org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE} setting.
 	 */
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME = new BasicTypeReference<>(
 			"OffsetDateTime",
@@ -397,22 +398,58 @@ public final class StandardBasicTypes {
 	);
 
 	/**
+	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
+	 */
+	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
+			"OffsetDateTimeWithTimezone",
+			OffsetDateTime.class,
+			Types.TIMESTAMP_WITH_TIMEZONE
+	);
+	/**
+	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 */
+	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
+			"OffsetDateTimeWithoutTimezone",
+			OffsetDateTime.class,
+			Types.TIMESTAMP
+	);
+
+	/**
 	 * The standard Hibernate type for mapping {@link OffsetTime} to JDBC {@link java.sql.Types#TIME TIME}.
 	 */
 	public static final BasicTypeReference<OffsetTime> OFFSET_TIME = new BasicTypeReference<>(
-			"ZonedDateTime",
+			"OffsetTime",
 			OffsetTime.class,
 			// todo (6.0): why not TIME_WITH_TIMEZONE ?
 			Types.TIME
 	);
 
 	/**
-	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
+	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}
+	 * or {@link java.sql.Types#TIMESTAMP TIMESTAMP} depending on the {@link org.hibernate.cfg.AvailableSettings#TIMEZONE_DEFAULT_STORAGE} setting.
 	 */
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME = new BasicTypeReference<>(
 			"ZonedDateTime",
 			ZonedDateTime.class,
 			Types.TIMESTAMP_WITH_TIMEZONE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
+	 */
+	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
+			"ZonedDateTimeWithTimezone",
+			ZonedDateTime.class,
+			Types.TIMESTAMP_WITH_TIMEZONE
+	);
+
+	/**
+	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 */
+	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
+			"ZonedDateTimeWithoutTimezone",
+			ZonedDateTime.class,
+			Types.TIMESTAMP
 	);
 
 	/**

@@ -37,6 +37,8 @@ import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
@@ -88,6 +90,9 @@ public class SimpleNationalizedTest {
 			ms.addAnnotatedClass( NationalizedEntity.class );
 
 			final Metadata metadata = ms.buildMetadata();
+			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = metadata.getDatabase()
+					.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
 			PersistentClass pc = metadata.getEntityBinding( NationalizedEntity.class.getName() );
 			assertNotNull( pc );
 
@@ -96,77 +101,58 @@ public class SimpleNationalizedTest {
 			final Dialect dialect = metadata.getDatabase().getDialect();
 			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				// See issue HHH-10693
-				assertSame( VarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( NVarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.NVARCHAR ), type.getJdbcTypeDescriptor() );
 			}
 
 			prop = pc.getProperty( "materializedNclobAtt" );
 			type = (BasicType<?>) prop.getType();
 			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				// See issue HHH-10693
-				if ( dialect instanceof SybaseDialect ) {
-					assertSame( ClobJdbcTypeDescriptor.CLOB_BINDING, type.getJdbcTypeDescriptor() );
-				}
-				else {
-					assertSame( ClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
-				}
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.CLOB ), type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( NClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.NCLOB ), type.getJdbcTypeDescriptor() );
 			}
 			prop = pc.getProperty( "nclobAtt" );
 			type = (BasicType<?>) prop.getType();
 			assertSame( NClobJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				// See issue HHH-10693
-				if ( dialect instanceof SybaseDialect ) {
-					assertSame( ClobJdbcTypeDescriptor.CLOB_BINDING, type.getJdbcTypeDescriptor() );
-				}
-				else {
-					assertSame( ClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
-				}
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.CLOB ), type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( NClobJdbcTypeDescriptor.DEFAULT, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.NCLOB ), type.getJdbcTypeDescriptor() );
 			}
 
 			prop = pc.getProperty( "nlongvarcharcharAtt" );
-			{
-				final BasicValue.Resolution<?> resolution = ( (BasicValue) prop.getValue() ).resolve();
-
-				final int jdbcTypeExpected;
-				if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-					jdbcTypeExpected = Types.CLOB;
-				}
-				else {
-					jdbcTypeExpected = Types.NCLOB;
-				}
-				Assertions.assertThat( resolution.getJdbcTypeDescriptor().getJdbcTypeCode() ).isEqualTo( jdbcTypeExpected );
+			type = (BasicType<?>) prop.getType();
+			assertSame( StringJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
+			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.CLOB ), type.getJdbcTypeDescriptor() );
+			}
+			else {
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.NCLOB ), type.getJdbcTypeDescriptor() );
 			}
 
 			prop = pc.getProperty( "ncharArrAtt" );
 			type = (BasicType<?>) prop.getType();
 			assertSame( CharacterArrayJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				// See issue HHH-10693
-				assertSame( VarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ), type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( NVarcharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.NVARCHAR ), type.getJdbcTypeDescriptor() );
 			}
 			prop = pc.getProperty( "ncharacterAtt" );
 			type = (BasicType<?>) prop.getType();
 			assertSame( CharacterJavaTypeDescriptor.INSTANCE, type.getJavaTypeDescriptor() );
 			if ( dialect.getNationalizationSupport() != NationalizationSupport.EXPLICIT ) {
-				// See issue HHH-10693
-				assertSame( CharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.CHAR ), type.getJdbcTypeDescriptor() );
 			}
 			else {
-				assertSame( NCharJdbcTypeDescriptor.INSTANCE, type.getJdbcTypeDescriptor() );
+				assertSame( jdbcTypeRegistry.getDescriptor( Types.NCHAR ), type.getJdbcTypeDescriptor() );
 			}
 		}
 		finally {

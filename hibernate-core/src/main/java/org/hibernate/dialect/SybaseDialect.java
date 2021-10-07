@@ -45,7 +45,6 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
@@ -172,9 +171,10 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
 			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, NClobJdbcTypeDescriptor.NCLOB_BINDING );
-			// The jTDS driver doesn't support the JDBC4 setNString method
-			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, NClobJdbcTypeDescriptor.NCLOB_BINDING );
+
+			// The jTDS driver doesn't support nationalized types
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcTypeDescriptor.CLOB_BINDING );
 		}
 		else {
 			// Some Sybase drivers cannot support getClob.  See HHH-7889

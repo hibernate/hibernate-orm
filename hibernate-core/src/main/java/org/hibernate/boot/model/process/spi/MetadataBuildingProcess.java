@@ -6,11 +6,15 @@
  */
 package org.hibernate.boot.model.process.spi;
 
+import java.sql.Types;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
@@ -42,9 +46,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -420,5 +425,37 @@ public class MetadataBuildingProcess {
 		// add explicit application registered types
 		bootstrapContext.getTypeConfiguration()
 				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
+
+		// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
+		if ( options.getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.NORMALIZE ) {
+			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = bootstrapContext.getTypeConfiguration()
+					.getJdbcTypeDescriptorRegistry();
+			final JavaTypeDescriptorRegistry javaTypeRegistry = bootstrapContext.getTypeConfiguration()
+					.getJavaTypeDescriptorRegistry();
+			final JdbcTypeDescriptor timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+			final BasicTypeRegistry basicTypeRegistry = bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
+			final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
+					javaTypeRegistry.getDescriptor( OffsetDateTime.class ),
+					timestampDescriptor,
+					"OffsetDateTime"
+			);
+			final BasicType<?> zonedDateTimeType = new NamedBasicTypeImpl<>(
+					javaTypeRegistry.getDescriptor( ZonedDateTime.class ),
+					timestampDescriptor,
+					"ZonedDateTime"
+			);
+			basicTypeRegistry.register(
+					offsetDateTimeType,
+					"org.hibernate.type.OffsetDateTimeType",
+					OffsetDateTime.class.getSimpleName(),
+					OffsetDateTime.class.getName()
+			);
+			basicTypeRegistry.register(
+					zonedDateTimeType,
+					"org.hibernate.type.ZonedDateTimeType",
+					ZonedDateTime.class.getSimpleName(),
+					ZonedDateTime.class.getName()
+			);
+		}
 	}
 }

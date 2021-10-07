@@ -3726,10 +3726,10 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	/**
-	 * Whether the Dialect supports timezone types like {@link Types#TIMESTAMP_WITH_TIMEZONE}.
+	 * How the Dialect supports time zone types like {@link Types#TIMESTAMP_WITH_TIMEZONE}.
 	 */
-	public boolean supportsTimezoneTypes() {
-		return false;
+	public TimeZoneSupport getTimeZoneSupport() {
+		return TimeZoneSupport.NONE;
 	}
 
 	/**

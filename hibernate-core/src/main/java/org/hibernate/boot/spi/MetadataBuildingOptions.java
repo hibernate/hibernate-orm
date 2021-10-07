@@ -10,6 +10,7 @@ import java.util.List;
 import jakarta.persistence.SharedCacheMode;
 
 import org.hibernate.MultiTenancyStrategy;
+import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.archive.scan.spi.ScanEnvironment;
@@ -51,6 +52,8 @@ public interface MetadataBuildingOptions {
 	 * @return The mapping defaults
 	 */
 	MappingDefaults getMappingDefaults();
+
+	TimeZoneStorageStrategy getDefaultTimeZoneStorage();
 
 	default ManagedTypeRepresentationResolver getManagedTypeRepresentationResolver() {
 		// for now always return the standard one

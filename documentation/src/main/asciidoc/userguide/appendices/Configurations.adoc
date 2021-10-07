@@ -295,6 +295,20 @@ Assuming `hibernate.globally_quoted_identifiers` is `true`, this allows the glob
 `*hibernate.auto_quote_keyword*` (e.g. `true` or `false` (default value))::
 Specifies whether to automatically quote any names that are deemed keywords.
 
+==== Time zone storage
+`*hibernate.timezone.default_storage*` (e.g. `COLUMN`, `NATIVE`, `AUTO` or `NORMALIZE` (default value))::
+Global setting for configuring the default storage for the time zone information for time zone based types.
++
+`NORMALIZE`::: Does not store the time zone, and instead normalizes timestamps to UTC
+`COLUMN`::: Stores the time zone in a separate column; works in conjunction with `@TimeZoneColumn`
+`NATIVE`::: Stores the time zone by using the `with time zone` type. Error if `Dialect#getTimeZoneSupport()` is not `NATIVE`
+`AUTO`::: Stores the time zone either with `NATIVE` if `Dialect#getTimeZoneSupport()` is `NATIVE`, otherwise uses the `COLUMN` strategy.
++
+The default value is given by the {@link org.hibernate.annotations.TimeZoneStorageType#NORMALIZE},
+meaning that time zone information is not stored by default, but timestamps are normalized instead.
++
+See the discussion https://github.com/hibernate/hibernate-orm/discussions/4201[on GitHub] for additional background info.
+
 ==== Discriminator options
 `*hibernate.discriminator.implicit_for_joined*` (e.g. `true` or `false` (default value))::
 The legacy behavior of Hibernate is to not use discriminators for joined inheritance (Hibernate does not need the discriminator).

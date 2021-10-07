@@ -114,14 +114,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		if ( jtdsDriver && TinyIntJdbcTypeDescriptor.INSTANCE == jdbcTypeDescriptor ) {
-			return SmallIntJdbcTypeDescriptor.INSTANCE;
-		}
-		return super.remapSqlTypeDescriptor( jdbcTypeDescriptor );
-	}
-
-	@Override
 	public SqmTranslatorFactory getSqmTranslatorFactory() {
 		return new StandardSqmTranslatorFactory() {
 			@Override
@@ -173,18 +165,23 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
-
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 		if ( jtdsDriver ) {
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
-					Types.NCLOB,
-					ClobJdbcTypeDescriptor.CLOB_BINDING
-			);
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
-					Types.NVARCHAR,
-					ClobJdbcTypeDescriptor.CLOB_BINDING
-			);
-			typeContributions.contributeJdbcTypeDescriptor( ClobJdbcTypeDescriptor.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcTypeDescriptor.INSTANCE );
+
+			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
+			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, NClobJdbcTypeDescriptor.NCLOB_BINDING );
+			// The jTDS driver doesn't support the JDBC4 setNString method
+			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, NClobJdbcTypeDescriptor.NCLOB_BINDING );
 		}
+		else {
+			// Some Sybase drivers cannot support getClob.  See HHH-7889
+			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.STREAM_BINDING_EXTRACTING );
+		}
+
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE );
@@ -204,30 +201,6 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	public NationalizationSupport getNationalizationSupport() {
 		// At least the jTDS driver doesn't support this
 		return jtdsDriver ? NationalizationSupport.IMPLICIT : super.getNationalizationSupport();
-	}
-
-	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		switch (sqlCode) {
-		case Types.BLOB:
-			return BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
-		case Types.CLOB:
-			// Some Sybase drivers cannot support getClob.  See HHH-7889
-			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			return jtdsDriver ? ClobJdbcTypeDescriptor.CLOB_BINDING : ClobJdbcTypeDescriptor.STREAM_BINDING_EXTRACTING;
-		case Types.NCLOB:
-			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			if ( jtdsDriver ) {
-				return NClobJdbcTypeDescriptor.NCLOB_BINDING;
-			}
-		case Types.NVARCHAR:
-			// The jTDS driver doesn't support the JDBC4 setNString method
-			if ( jtdsDriver ) {
-				return NClobJdbcTypeDescriptor.NCLOB_BINDING;
-			}
-		default:
-			return super.getSqlTypeDescriptorOverride( sqlCode );
-		}
 	}
 
 	@Override

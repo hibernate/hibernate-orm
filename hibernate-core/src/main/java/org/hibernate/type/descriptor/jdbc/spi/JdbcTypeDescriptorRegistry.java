@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
 public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.BaselineTarget, Serializable {
 	private static final Logger log = Logger.getLogger( JdbcTypeDescriptorRegistry.class );
 
-	private ConcurrentHashMap<Integer, JdbcTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, JdbcTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 //		this.typeConfiguration = typeConfiguration;

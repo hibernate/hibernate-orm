@@ -46,6 +46,7 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
@@ -500,47 +501,35 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		final int version = getVersion();
-
-		if ( version < 1100 && sqlCode == Types.BOOLEAN ) {
-			return SmallIntJdbcTypeDescriptor.INSTANCE;
-		}
-		else if ( version < 1100 && sqlCode == Types.VARBINARY ) {
-			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
-			return VarbinaryJdbcTypeDescriptor.INSTANCE_WITHOUT_LITERALS;
-		}
-		else if ( version < 970 ) {
-			return sqlCode == Types.NUMERIC
-					? DecimalJdbcTypeDescriptor.INSTANCE
-					: super.getSqlTypeDescriptorOverride(sqlCode);
-		}
-		else {
-			// See HHH-12753
-			// It seems that DB2's JDBC 4.0 support as of 9.5 does not
-			// support the N-variant methods like NClob or NString.
-			// Therefore here we overwrite the sql type descriptors to
-			// use the non-N variants which are supported.
-			switch ( sqlCode ) {
-				case Types.NCHAR:
-					return CharJdbcTypeDescriptor.INSTANCE;
-				case Types.NCLOB:
-					return useInputStreamToInsertBlob()
-							? ClobJdbcTypeDescriptor.STREAM_BINDING
-							: ClobJdbcTypeDescriptor.CLOB_BINDING;
-				case Types.NVARCHAR:
-					return VarcharJdbcTypeDescriptor.INSTANCE;
-				case Types.NUMERIC:
-					return DecimalJdbcTypeDescriptor.INSTANCE;
-				default:
-					return super.getSqlTypeDescriptorOverride(sqlCode);
-			}
-		}
-	}
-
-	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final int version = getVersion();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+
+		if ( version < 1100 ) {
+			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcTypeDescriptor.INSTANCE );
+			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
+			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcTypeDescriptor.INSTANCE_WITHOUT_LITERALS );
+			if ( version < 970 ) {
+				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcTypeDescriptor.INSTANCE );
+			}
+		}
+		// See HHH-12753
+		// It seems that DB2's JDBC 4.0 support as of 9.5 does not
+		// support the N-variant methods like NClob or NString.
+		// Therefore here we overwrite the sql type descriptors to
+		// use the non-N variants which are supported.
+		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor(
+				Types.NCLOB,
+				useInputStreamToInsertBlob()
+						? ClobJdbcTypeDescriptor.STREAM_BINDING
+						: ClobJdbcTypeDescriptor.CLOB_BINDING
+		);
+		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcTypeDescriptor.INSTANCE );
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
 		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE );

@@ -36,11 +36,6 @@ public class HANAPointTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return false;
-	}
-
-	@Override
 	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 

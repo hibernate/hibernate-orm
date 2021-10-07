@@ -60,6 +60,7 @@ import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.*;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.*;
@@ -307,11 +308,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public int getJdbcTypeCode() {
 			return Types.BLOB;
-		}
-
-		@Override
-		public boolean canBeRemapped() {
-			return true;
 		}
 
 		@Override
@@ -602,11 +598,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		@Override
 		public String toString() {
 			return "HANABlobTypeDescriptor";
-		}
-
-		@Override
-		public boolean canBeRemapped() {
-			return true;
 		}
 
 		@Override
@@ -1025,29 +1016,6 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public SequenceInformationExtractor getSequenceInformationExtractor() {
 		return SequenceInformationExtractorHANADatabaseImpl.INSTANCE;
-	}
-
-	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(final int sqlCode) {
-		switch ( sqlCode ) {
-			case Types.CLOB:
-				return this.clobTypeDescriptor;
-			case Types.NCLOB:
-				return this.nClobTypeDescriptor;
-			case Types.BLOB:
-				return this.blobTypeDescriptor;
-			case Types.TINYINT:
-				// tinyint is unsigned on HANA
-				return SmallIntJdbcTypeDescriptor.INSTANCE;
-			case Types.VARCHAR:
-				return this.isUseUnicodeStringTypes() ? NVarcharJdbcTypeDescriptor.INSTANCE : VarcharJdbcTypeDescriptor.INSTANCE;
-			case Types.CHAR:
-				return this.isUseUnicodeStringTypes() ? NCharJdbcTypeDescriptor.INSTANCE : CharJdbcTypeDescriptor.INSTANCE;
-			case Types.DOUBLE:
-				return this.treatDoubleTypedFieldsAsDecimal ? DecimalJdbcTypeDescriptor.INSTANCE : DoubleJdbcTypeDescriptor.INSTANCE;
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
-		}
 	}
 
 	@Override
@@ -1471,6 +1439,8 @@ public abstract class AbstractHANADialect extends Dialect {
 		this.treatDoubleTypedFieldsAsDecimal = configurationService.getSetting( TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_PARAMETER_NAME, StandardConverters.BOOLEAN,
 				TREAT_DOUBLE_TYPED_FIELDS_AS_DECIMAL_DEFAULT_VALUE ).booleanValue();
 
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 		if ( this.treatDoubleTypedFieldsAsDecimal ) {
 			registerHibernateType( Types.FLOAT, StandardBasicTypes.BIG_DECIMAL.getName() );
 			registerHibernateType( Types.REAL, StandardBasicTypes.BIG_DECIMAL.getName() );
@@ -1501,18 +1471,31 @@ public abstract class AbstractHANADialect extends Dialect {
 			typeContributions.getTypeConfiguration().getJdbcToHibernateTypeContributionMap()
 					.get( Types.DOUBLE )
 					.add( StandardBasicTypes.BIG_DECIMAL.getName() );
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			jdbcTypeRegistry.addDescriptor(
 					Types.FLOAT,
 					NumericJdbcTypeDescriptor.INSTANCE
 			);
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			jdbcTypeRegistry.addDescriptor(
 					Types.REAL,
 					NumericJdbcTypeDescriptor.INSTANCE
 			);
-			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
+			jdbcTypeRegistry.addDescriptor(
 					Types.DOUBLE,
 					NumericJdbcTypeDescriptor.INSTANCE
 			);
+		}
+
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, this.clobTypeDescriptor );
+		jdbcTypeRegistry.addDescriptor( Types.NCLOB, this.nClobTypeDescriptor );
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, this.blobTypeDescriptor );
+		// tinyint is unsigned on HANA
+		jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcTypeDescriptor.INSTANCE );
+		if ( isUseUnicodeStringTypes() ) {
+			jdbcTypeRegistry.addDescriptor( Types.VARCHAR, NVarcharJdbcTypeDescriptor.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( Types.CHAR, NCharJdbcTypeDescriptor.INSTANCE );
+		}
+		if ( this.treatDoubleTypedFieldsAsDecimal ) {
+			jdbcTypeRegistry.addDescriptor( Types.DOUBLE, DecimalJdbcTypeDescriptor.INSTANCE );
 		}
 	}
 

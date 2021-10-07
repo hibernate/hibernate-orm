@@ -101,11 +101,6 @@ public class QueryParametersValidationArrayTest {
 		}
 
 		@Override
-		public boolean canBeRemapped() {
-			return true;
-		}
-
-		@Override
 		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this) {
 				@Override

@@ -15,6 +15,7 @@ import java.util.TimeZone;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.identity.SQLiteIdentityColumnSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.NationalizationSupport;
@@ -41,6 +42,7 @@ import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -54,6 +56,7 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.DAY;
@@ -322,15 +325,12 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		switch (sqlCode) {
-			case Types.BLOB:
-				return BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING;
-			case Types.CLOB:
-				return ClobJdbcTypeDescriptor.STRING_BINDING;
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
-		}
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.STRING_BINDING );
 	}
 
 	@Override

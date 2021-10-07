@@ -254,15 +254,6 @@ public final class FastSessionServices {
 		return elr.getEventListenerGroup( type );
 	}
 
-	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		if ( !jdbcTypeDescriptor.canBeRemapped() ) {
-			return jdbcTypeDescriptor;
-		}
-
-		final JdbcTypeDescriptor remapped = dialect.remapSqlTypeDescriptor( jdbcTypeDescriptor );
-		return remapped == null ? jdbcTypeDescriptor : remapped;
-	}
-
 	private static boolean isTransactionAccessible(SessionFactoryImpl sf, TransactionCoordinatorBuilder transactionCoordinatorBuilder) {
 		// JPA requires that access not be provided to the transaction when using JTA.
 		// This is overridden when SessionFactoryOptions isJtaTransactionAccessEnabled() is true.

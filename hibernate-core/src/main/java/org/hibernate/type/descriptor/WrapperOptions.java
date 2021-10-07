@@ -46,15 +46,6 @@ public interface WrapperOptions {
 	LobCreator getLobCreator();
 
 	/**
-	 * Allow remapping of descriptors for dealing with sql type.
-	 *
-	 * @param jdbcTypeDescriptor The known descriptor
-	 *
-	 * @return The remapped descriptor.  May be the same as the known descriptor indicating no remapping.
-	 */
-	JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor);
-
-	/**
 	 * The JDBC {@link TimeZone} used when persisting Timestamp and DateTime properties into the database.
 	 * This setting is used when storing timestamps using the {@link java.sql.PreparedStatement#setTimestamp(int, Timestamp, Calendar)} method.
 	 *

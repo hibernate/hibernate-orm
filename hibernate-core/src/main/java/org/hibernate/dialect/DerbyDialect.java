@@ -62,6 +62,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -497,23 +498,16 @@ public class DerbyDialect extends Dialect {
 		return false;
 	}
 
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		if ( getVersion() < 1070 && sqlCode == Types.BOOLEAN) {
-			return SmallIntJdbcTypeDescriptor.INSTANCE;
-		}
-		switch ( sqlCode ) {
-			case Types.NUMERIC:
-				return DecimalJdbcTypeDescriptor.INSTANCE;
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				return TimestampJdbcTypeDescriptor.INSTANCE;
-			default:
-				return super.getSqlTypeDescriptorOverride(sqlCode);
-		}
-	}
-
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		if ( getVersion() < 1070 ) {
+			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcTypeDescriptor.INSTANCE );
+		}
+		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcTypeDescriptor.INSTANCE );
 
 		// Derby requires a custom binder for binding untyped nulls that resolves the type through the statement
 		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE );

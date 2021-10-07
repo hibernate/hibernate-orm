@@ -71,11 +71,6 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		}
 
 		@Override
-		public boolean canBeRemapped() {
-			return true;
-		}
-
-		@Override
 		public <J> BasicJavaTypeDescriptor<J> getJdbcRecommendedJavaTypeMapping(
 				Integer length,
 				Integer scale,

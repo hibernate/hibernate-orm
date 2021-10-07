@@ -301,11 +301,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
-	}
-
-	protected JdbcTypeDescriptor remapSqlTypeDescriptor(WrapperOptions options) {
-		return options.remapSqlTypeDescriptor( jdbcTypeDescriptor );
+		jdbcTypeDescriptor.getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
 	}
 
 	public void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
@@ -408,7 +404,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SharedSessionContractImplementor session) throws SQLException {
-		return remapSqlTypeDescriptor( session ).getExtractor( javaTypeDescriptor ).extract(
+		return jdbcTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				startIndex,
 				session
@@ -417,7 +413,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, final SharedSessionContractImplementor session) throws SQLException {
-		return remapSqlTypeDescriptor( session ).getExtractor( javaTypeDescriptor ).extract(
+		return jdbcTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				paramName,
 				session
@@ -441,7 +437,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings("unchecked")
 	protected final void nullSafeSet(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
-		remapSqlTypeDescriptor( options ).getBinder( javaTypeDescriptor ).bind( st, (T) value, name, options );
+		jdbcTypeDescriptor.getBinder( javaTypeDescriptor ).bind( st, (T) value, name, options );
 	}
 
 	@Override

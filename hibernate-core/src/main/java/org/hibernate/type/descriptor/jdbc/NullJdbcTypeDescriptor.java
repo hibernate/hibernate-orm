@@ -33,11 +33,6 @@ public class NullJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return false;
-	}
-
-	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		return null;
 	}

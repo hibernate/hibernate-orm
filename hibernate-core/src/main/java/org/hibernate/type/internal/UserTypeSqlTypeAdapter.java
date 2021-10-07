@@ -52,11 +52,6 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return false;
-	}
-
-	@Override
 	@SuppressWarnings({ "unchecked" })
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		assert jtd.getJavaTypeClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() );

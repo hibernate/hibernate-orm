@@ -46,11 +46,6 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public boolean canBeRemapped() {
-		return true;
-	}
-
-	@Override
 	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );

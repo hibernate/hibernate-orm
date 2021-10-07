@@ -71,6 +71,7 @@ import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.TemporalUnit.*;
@@ -342,25 +343,6 @@ public class PostgreSQLDialect extends Dialect {
 
 		if ( getVersion() >= 940 ) {
 			CommonFunctionFactory.makeDateTimeTimestamp( queryEngine );
-		}
-	}
-
-	@Override
-	public JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
-		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
-		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
-		switch ( sqlCode ) {
-			case Types.BLOB:
-				// Force BLOB binding.  Otherwise, byte[] fields annotated
-				// with @Lob will attempt to use
-				// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
-				// dialect uses oid for Blobs, byte arrays cannot be used.
-				return BlobJdbcTypeDescriptor.BLOB_BINDING;
-			case Types.CLOB:
-				return ClobJdbcTypeDescriptor.CLOB_BINDING;
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
 		}
 	}
 
@@ -942,6 +924,19 @@ public class PostgreSQLDialect extends Dialect {
 	@Override
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes(typeContributions, serviceRegistry);
+
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		// For discussion of BLOB support in Postgres, as of 8.4, have a peek at
+		// <a href="http://jdbc.postgresql.org/documentation/84/binary-data.html">http://jdbc.postgresql.org/documentation/84/binary-data.html</a>.
+		// For the effects in regards to Hibernate see <a href="http://in.relation.to/15492.lace">http://in.relation.to/15492.lace</a>
+
+		// Force BLOB binding.  Otherwise, byte[] fields annotated
+		// with @Lob will attempt to use
+		// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
+		// dialect uses oid for Blobs, byte arrays cannot be used.
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcTypeDescriptor.BLOB_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
 
 		if ( getVersion() >= 820 ) {
 			// HHH-9562

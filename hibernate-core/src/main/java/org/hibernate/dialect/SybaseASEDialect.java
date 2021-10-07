@@ -15,6 +15,7 @@ import java.util.Map;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
 import org.hibernate.engine.jdbc.Size;
@@ -27,6 +28,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.TemporalUnit;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ForUpdateFragment;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -37,6 +39,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 
@@ -182,17 +185,15 @@ public class SybaseASEDialect extends SybaseDialect {
 	}
 
 	@Override
-	protected JdbcTypeDescriptor getSqlTypeDescriptorOverride(int sqlCode) {
-		switch ( sqlCode ) {
-			case Types.BOOLEAN:
-				return TinyIntJdbcTypeDescriptor.INSTANCE;
-			case Types.TIMESTAMP_WITH_TIMEZONE:
-				// At least the jTDS driver does not support this type code
-				if ( jtdsDriver ) {
-					return TimestampJdbcTypeDescriptor.INSTANCE;
-				}
-			default:
-				return super.getSqlTypeDescriptorOverride( sqlCode );
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcTypeDescriptor.INSTANCE );
+		// At least the jTDS driver does not support this type code
+		if ( jtdsDriver ) {
+			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcTypeDescriptor.INSTANCE );
 		}
 	}
 

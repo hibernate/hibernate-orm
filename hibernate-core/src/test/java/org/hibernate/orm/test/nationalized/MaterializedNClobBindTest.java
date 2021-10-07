@@ -112,11 +112,6 @@ public class MaterializedNClobBindTest {
 		}
 
 		@Override
-		public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-			return null;
-		}
-
-		@Override
 		public TimeZone getJdbcTimeZone() {
 			return null;
 		}

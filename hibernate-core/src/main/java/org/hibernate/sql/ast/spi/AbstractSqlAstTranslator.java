@@ -293,11 +293,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		@Override
-		public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-			return sessionFactory.getFastSessionServices().remapSqlTypeDescriptor( jdbcTypeDescriptor );
-		}
-
-		@Override
 		public TimeZone getJdbcTimeZone() {
 			return sessionFactory.getSessionFactoryOptions().getJdbcTimeZone();
 		}

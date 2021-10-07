@@ -695,17 +695,9 @@ public abstract class SimpleValue implements KeyValue {
 			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
-		// find the standard SqlTypeDescriptor for that JDBC type code (allow it to be remapped if needed!)
-		final JdbcTypeDescriptor jdbcTypeDescriptor = getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.getService( JdbcServices.class )
-				.getJdbcEnvironment()
-				.getDialect()
-				.remapSqlTypeDescriptor(
-						metadata.getTypeConfiguration()
+		final JdbcTypeDescriptor jdbcTypeDescriptor = metadata.getTypeConfiguration()
 								.getJdbcTypeDescriptorRegistry()
-								.getDescriptor( jdbcTypeCode ) );
+								.getDescriptor( jdbcTypeCode );
 
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...

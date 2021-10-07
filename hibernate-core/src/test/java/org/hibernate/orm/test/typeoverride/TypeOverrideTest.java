@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.typeoverride;
 
+import java.sql.Types;
+
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -18,6 +20,8 @@ import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -46,71 +50,42 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testStandardBasicSqlTypeDescriptor() {
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 		// no override
-		assertSame( IntegerJdbcTypeDescriptor.INSTANCE, remapSqlTypeDescriptor( IntegerJdbcTypeDescriptor.INSTANCE ) );
+		assertSame( IntegerJdbcTypeDescriptor.INSTANCE, jdbcTypeRegistry.getDescriptor( Types.INTEGER ) );
 
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
 		if ( CockroachDialect.class.isInstance( getDialect() ) ) {
 			assertSame(
 					VarbinaryJdbcTypeDescriptor.INSTANCE,
-					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
-		else if ( PostgreSQL81Dialect.class.isInstance( getDialect() ) || PostgreSQLDialect.class.isInstance( getDialect() ) ) {
+		else if ( PostgreSQLDialect.class.isInstance( getDialect() ) ) {
 			assertSame(
 					BlobJdbcTypeDescriptor.BLOB_BINDING,
-					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
 		else if ( SybaseDialect.class.isInstance( getDialect() ) ) {
 			assertSame(
 					BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
-					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
 		else if ( AbstractHANADialect.class.isInstance( getDialect() ) ) {
 			assertSame(
 					( (AbstractHANADialect) getDialect() ).getBlobTypeDescriptor(),
-					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
 		else {
 			assertSame(
 					BlobJdbcTypeDescriptor.DEFAULT,
-					getDialect().remapSqlTypeDescriptor( BlobJdbcTypeDescriptor.DEFAULT )
+					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
-	}
-
-	@Test
-	public void testNonStandardSqlTypeDescriptor() {
-		// no override
-		JdbcTypeDescriptor jdbcTypeDescriptor = new IntegerJdbcTypeDescriptor() {
-			@Override
-			public boolean canBeRemapped() {
-				return false;
-			}
-		};
-		assertSame( jdbcTypeDescriptor, remapSqlTypeDescriptor( jdbcTypeDescriptor ) );
-	}
-
-	@Test
-	public void testDialectWithNonStandardSqlTypeDescriptor() {
-		assertNotSame( VarcharJdbcTypeDescriptor.INSTANCE, StoredPrefixedStringType.INSTANCE.getJdbcTypeDescriptor() );
-		final Dialect dialect = new H2DialectOverridePrefixedVarcharSqlTypeDesc();
-		final JdbcTypeDescriptor remapped = remapSqlTypeDescriptor(
-				dialect,
-				StoredPrefixedStringType.PREFIXED_VARCHAR_TYPE_DESCRIPTOR
-		);
-		assertSame( VarcharJdbcTypeDescriptor.INSTANCE, remapped );
-	}
-
-	private JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		return remapSqlTypeDescriptor( sessionFactory().getDialect(), jdbcTypeDescriptor );
-	}
-
-	private JdbcTypeDescriptor remapSqlTypeDescriptor(Dialect dialect, JdbcTypeDescriptor jdbcTypeDescriptor) {
-		return dialect.remapSqlTypeDescriptor( jdbcTypeDescriptor );
 	}
 
 	@AfterEach

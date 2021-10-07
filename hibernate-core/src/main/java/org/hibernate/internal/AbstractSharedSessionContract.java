@@ -584,11 +584,6 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	}
 
 	@Override
-	public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		return fastSessionServices.remapSqlTypeDescriptor( jdbcTypeDescriptor );
-	}
-
-	@Override
 	public TimeZone getJdbcTimeZone() {
 		return jdbcTimeZone;
 	}

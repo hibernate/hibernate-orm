@@ -21,9 +21,6 @@ configurations {
     tests {
         description = 'Configuration for the produced test jar'
     }
-    implementation {
-        extendsFrom antlr
-    }
 }
 
 
@@ -39,6 +36,8 @@ dependencies {
     implementation libraries.jakarta_jaxb_api
     implementation libraries.jakarta_jaxb_runtime
     implementation libraries.jakarta_inject
+
+    runtimeOnly libraries.antlr4_runtime
 
     compileOnly libraries.jakarta_jacc
     compileOnly libraries.jakarta_validation

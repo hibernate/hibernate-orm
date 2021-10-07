@@ -14,14 +14,16 @@ import java.util.Optional;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
+import org.hibernate.boot.internal.MetadataBuilderImpl;
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.internal.util.JavaHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BlobType;
 import org.hibernate.type.ClobType;
 import org.hibernate.type.NClobType;
@@ -88,6 +90,7 @@ public class DomainModelExtension
 				final DomainModel domainModelAnnotation = domainModelAnnotationWrapper.get();
 
 				final MetadataSources metadataSources = new MetadataSources( serviceRegistry );
+				final ManagedBeanRegistry managedBeanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
 
 				for ( String annotatedPackageName : domainModelAnnotation.annotatedPackageNames() ) {
 					metadataSources.addPackage( annotatedPackageName );
@@ -127,12 +130,20 @@ public class DomainModelExtension
 					metadataSources.addQueryImport( importedClass.getSimpleName(), importedClass );
 				}
 
-				MetadataImplementor metadataImplementor = (MetadataImplementor) metadataSources.buildMetadata();
+				final MetadataBuilderImpl metadataBuilder = (MetadataBuilderImpl) metadataSources.getMetadataBuilder();
+
+				for ( Class<? extends TypeContributor> contributorType : domainModelAnnotation.typeContributors() ) {
+					final TypeContributor contributor = managedBeanRegistry.getBean( contributorType ).getBeanInstance();
+					contributor.contribute( metadataBuilder, serviceRegistry );
+				}
+
+				MetadataImplementor metadataImplementor = metadataBuilder.build();
 				applyCacheSettings(
 						metadataImplementor,
 						domainModelAnnotation.overrideCacheStrategy(),
 						domainModelAnnotation.concurrencyStrategy()
 				);
+
 				return metadataImplementor;
 			};
 		}

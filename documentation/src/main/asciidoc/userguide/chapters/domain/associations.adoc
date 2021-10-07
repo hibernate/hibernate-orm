@@ -501,12 +501,51 @@ a metadata information for the associated entity type.
 This is not the usual way of mapping polymorphic associations and you should use this only in special cases (e.g. audit logs, user session data, etc).
 ====
 
-The `@Any` annotation describes the column holding the metadata information.
-To link the value of the metadata information and an actual entity type, the `@AnyDef` and `@AnyDefs` annotations are used.
-The `metaType` attribute allows the application to specify a custom type that maps database column values to persistent classes that have identifier properties of the type specified by `idType`.
-You must specify the mapping from values of the `metaType` to class names.
+To map such an association, Hibernate needs to understand 3 things:
 
-For the next examples, consider the following `Property` class hierarchy:
+1. The column and mapping for the discriminator
+2. The column and mapping for the key
+3. The mapping between discriminator values and entity classes
+
+
+[[associations-any-discriminator]]
+===== The discriminator
+
+The discriminator of an any-style association holds the value that indicates which entity is
+referred to by a row.
+
+Its "column" can be specified with either `@Column` or `@Formula`.  The mapping type can be influenced by any of:
+
+1. `@AnyDiscriminator` allows re-using the `DiscriminatorType` simplified mappings from Jakarta Persistence for the common cases
+2. `@JavaType`
+3. `@JdbcType`
+4. `@JdbcTypeCode`
+
+
+[[associations-any-key]]
+===== The key
+
+The key of an any-style association holds the matching key for the row
+
+Its "column" can be specified with either `@JoinColumn` (`@JoinFormula` not supported).  The mapping
+type can be influenced by any of:
+
+1. `@AnyKeyJavaClass`
+2. `@AnyKeyJavaType`
+3. `@AnyKeyJdbcType`
+4. `@AnyKeyJdbcTypeCode`
+
+
+[[associations-any-values]]
+===== The discriminator value mappings
+
+`@AnyDiscriminatorValue` is used to map the discriminator values to the corresponding entity classes
+
+
+[[associations-any-property]]
+==== Example using @Any mapping
+
+For this example, consider the following `Property` class hierarchy:
 
 [[associations-any-property-example]]
 .`Property` class hierarchy
@@ -521,7 +560,7 @@ include::{sourcedir}/any/StringProperty.java[tags=associations-any-property-exam
 ----
 ====
 
-A `PropertyHolder` can reference any such property, and, because each `Property` belongs to a separate table, the `@Any` annotation is, therefore, required.
+A `PropertyHolder` entity defines an attribute of type `Property`:
 
 [[associations-any-example]]
 .`@Any` mapping usage
@@ -537,27 +576,12 @@ include::{extrasdir}/associations-any-example.sql[]
 ----
 ====
 
+`PropertyHolder#property` can refer to either `StringProperty` or `IntegerProperty` references, as indicated
+by the associated discriminator according to the `@DiscriminatorValue` annotations.
+
 As you can see, there are two columns used to reference a `Property` instance: `property_id` and `property_type`.
 The `property_id` is used to match the `id` column of either the `string_property` or `integer_property` tables,
 while the `property_type` is used to match the `string_property` or the `integer_property` table.
-
-The table resolving mapping is defined by the `metaDef` attribute which references an `@AnyMetaDef` mapping.
-
-The `package-info.java` contains the `@AnyMetaDef` mapping:
-
-[[associations-any-meta-def-example]]
-.`@AnyMetaDef` mapping usage
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/any/package-info.java[tags=associations-any-meta-def-example]
-----
-====
-
-[NOTE]
-====
-Although the `@AnyMetaDef` mapping could be set right next to the `@Any` annotation, it is good practice to configure it at the class or package level, especially if you  need to reuse it for multiple `@Any` mappings.
-====
 
 To see the `@Any` annotation in action, consider the next examples.
 
@@ -596,11 +620,44 @@ include::{extrasdir}/associations-any-query-example.sql[]
 ----
 ====
 
+
+[[associations-any-meta-annotations]]
+===== Using meta-annotations
+
+As mentioned in <<basic-mapping>>, Hibernate's ANY-related annotations can be composed using meta-annotations
+to re-use ANY mapping details.
+
+Looking back at <<associations-any-example>>, we can see how cumbersome it would be to duplicate that
+information every time `Property` is mapped in the domain model.  This description can also be moved
+into a single annotation that we can apply in each usage.
+
+
+[[associations-any-composed-example]]
+.`@Any` mapping usage
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/any/PropertyHolder2.java[tags=associations-any-def-example]
+----
+====
+
+Though the mapping has been "simplified", the mapping works exactly as shown in <<associations-any-example>>.
+
+
+
+
 [[associations-many-to-any]]
 ===== `@ManyToAny` mapping
 
 While the `@Any` mapping is useful to emulate a `@ManyToOne` association when there can be multiple target entities,
 to emulate a `@OneToMany` association, the `@ManyToAny` annotation must be used.
+
+The mapping details are the same between `@Any` and `@ManyToAny` except for:
+
+1. The use of `@ManyToAny` instead of `@Any`
+2. The use of `@JoinTable`, `@JoinTable#joinColumns` and `@JoinTable#inverseJoinColumns` instead
+    of just `@JoinColumn`
+
 
 In the following example, the `PropertyRepository` entity has a collection of `Property` entities.
 
@@ -656,6 +713,8 @@ include::{sourcedir}/any/ManyToAnyTest.java[tags=associations-many-to-any-query-
 include::{extrasdir}/associations-many-to-any-query-example.sql[]
 ----
 ====
+
+
 
 [[associations-JoinFormula]]
 ==== `@JoinFormula` mapping

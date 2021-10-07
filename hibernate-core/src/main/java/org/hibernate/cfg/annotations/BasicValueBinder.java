@@ -44,6 +44,7 @@ import org.hibernate.annotations.MapKeyMutability;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.annotations.Target;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.internal.NoJavaTypeDescriptor;
@@ -94,6 +95,8 @@ import jakarta.persistence.MapKeyTemporal;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Version;
+
+import static org.hibernate.cfg.annotations.HCANNHelper.findAnnotation;
 
 /**
  * @author Steve Ebersole
@@ -391,7 +394,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		implicitJavaTypeAccess = (typeConfiguration) -> null;
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
-			final CollectionIdJavaType javaTypeAnn = modelXProperty.getAnnotation( CollectionIdJavaType.class );
+			final CollectionIdJavaType javaTypeAnn = findAnnotation( modelXProperty, CollectionIdJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 				if ( javaType != null ) {
@@ -404,7 +407,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
-			final CollectionIdJdbcType jdbcTypeAnn = modelXProperty.getAnnotation( CollectionIdJdbcType.class );
+			final CollectionIdJdbcType jdbcTypeAnn = findAnnotation( modelXProperty, CollectionIdJdbcType.class );
 			if ( jdbcTypeAnn != null ) {
 				final Class<? extends JdbcTypeDescriptor> jdbcType = normalizeJdbcType( jdbcTypeAnn.value() );
 				if ( jdbcType != null ) {
@@ -413,7 +416,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			final CollectionIdJdbcTypeCode jdbcTypeCodeAnn = modelXProperty.getAnnotation( CollectionIdJdbcTypeCode.class );
+			final CollectionIdJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( modelXProperty, CollectionIdJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
 					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
@@ -424,12 +427,11 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		};
 
 		explicitMutabilityAccess = (typeConfiguration) -> {
-			final CollectionIdMutability mutabilityAnn = modelXProperty.getAnnotation( CollectionIdMutability.class );
+			final CollectionIdMutability mutabilityAnn = findAnnotation( modelXProperty, CollectionIdMutability.class );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
 				if ( mutability != null ) {
-					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = beanRegistry
-							.getBean( mutability );
+					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = beanRegistry.getBean( mutability );
 					return jtdBean.getBeanInstance();
 				}
 			}
@@ -444,8 +446,14 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			// if the value is converted, see if the converter Class is annotated `@Immutable`
+			// if there is a converter, check it for mutability-related annotations
 			if ( converterDescriptor != null ) {
+				final Mutability converterMutabilityAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Mutability.class );
+				if ( converterMutabilityAnn != null ) {
+					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = beanRegistry.getBean( converterMutabilityAnn.value() );
+					return jtdBean.getBeanInstance();
+				}
+
 				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
 					return ImmutableMutabilityPlan.instance();
 				}
@@ -495,7 +503,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getService( ManagedBeanRegistry.class );
 
 		explicitJdbcTypeAccess = typeConfiguration -> {
-			final MapKeyJdbcType jdbcTypeAnn = mapAttribute.getAnnotation( MapKeyJdbcType.class );
+			final MapKeyJdbcType jdbcTypeAnn = findAnnotation( mapAttribute, MapKeyJdbcType.class );
 			if ( jdbcTypeAnn != null ) {
 				final Class<? extends JdbcTypeDescriptor> jdbcTypeImpl = normalizeJdbcType( jdbcTypeAnn.value() );
 				if ( jdbcTypeImpl != null ) {
@@ -504,7 +512,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			final MapKeyJdbcTypeCode jdbcTypeCodeAnn = mapAttribute.getAnnotation( MapKeyJdbcTypeCode.class );
+			final MapKeyJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( mapAttribute, MapKeyJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
@@ -516,7 +524,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		};
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final MapKeyJavaType javaTypeAnn = mapAttribute.getAnnotation( MapKeyJavaType.class );
+			final MapKeyJavaType javaTypeAnn = findAnnotation( mapAttribute, MapKeyJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
 				if ( jdbcTypeImpl != null ) {
@@ -534,7 +542,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		};
 
 		explicitMutabilityAccess = typeConfiguration -> {
-			final MapKeyMutability mutabilityAnn = mapAttribute.getAnnotation( MapKeyMutability.class );
+			final MapKeyMutability mutabilityAnn = findAnnotation( mapAttribute, MapKeyMutability.class );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
 				if ( mutability != null ) {
@@ -555,6 +563,12 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 			// if the value is converted, see if the converter Class is annotated `@Immutable`
 			if ( converterDescriptor != null ) {
+				final Mutability converterMutabilityAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Mutability.class );
+				if ( converterMutabilityAnn != null ) {
+					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = managedBeanRegistry.getBean( converterMutabilityAnn.value() );
+					return jtdBean.getBeanInstance();
+				}
+
 				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
 					return ImmutableMutabilityPlan.instance();
 				}
@@ -581,7 +595,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
-			final ListIndexJavaType javaTypeAnn = listAttribute.getAnnotation( ListIndexJavaType.class );
+			final ListIndexJavaType javaTypeAnn = findAnnotation( listAttribute, ListIndexJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 				if ( javaType != null ) {
@@ -594,7 +608,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
-			final ListIndexJdbcType jdbcTypeAnn = listAttribute.getAnnotation( ListIndexJdbcType.class );
+			final ListIndexJdbcType jdbcTypeAnn = findAnnotation( listAttribute, ListIndexJdbcType.class );
 			if ( jdbcTypeAnn != null ) {
 				final Class<? extends JdbcTypeDescriptor> jdbcType = normalizeJdbcType( jdbcTypeAnn.value() );
 				if ( jdbcType != null ) {
@@ -603,7 +617,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			final ListIndexJdbcTypeCode jdbcTypeCodeAnn = listAttribute.getAnnotation( ListIndexJdbcTypeCode.class );
+			final ListIndexJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( listAttribute, ListIndexJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
 			}
@@ -736,7 +750,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	}
 
 	private void prepareAnyDiscriminator(XProperty modelXProperty) {
-		final AnyDiscriminator anyDiscriminatorAnn = modelXProperty.getAnnotation( AnyDiscriminator.class );
+		final AnyDiscriminator anyDiscriminatorAnn = findAnnotation( modelXProperty, AnyDiscriminator.class );
 
 		implicitJavaTypeAccess = (typeConfiguration) -> {
 			if ( anyDiscriminatorAnn != null ) {
@@ -783,7 +797,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = (typeConfiguration) -> {
-			final AnyKeyJavaType javaTypeAnn = modelXProperty.getAnnotation( AnyKeyJavaType.class );
+			final AnyKeyJavaType javaTypeAnn = findAnnotation( modelXProperty, AnyKeyJavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 
@@ -793,7 +807,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			final AnyKeyJavaClass javaClassAnn = modelXProperty.getAnnotation( AnyKeyJavaClass.class );
+			final AnyKeyJavaClass javaClassAnn = findAnnotation( modelXProperty, AnyKeyJavaClass.class );
 			if ( javaClassAnn != null ) {
 				//noinspection rawtypes
 				return (BasicJavaTypeDescriptor) typeConfiguration
@@ -805,7 +819,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
-			final AnyKeyJdbcType jdbcTypeAnn = modelXProperty.getAnnotation( AnyKeyJdbcType.class );
+			final AnyKeyJdbcType jdbcTypeAnn = findAnnotation( modelXProperty, AnyKeyJdbcType.class );
 			if ( jdbcTypeAnn != null ) {
 				final Class<? extends JdbcTypeDescriptor> jdbcType = normalizeJdbcType( jdbcTypeAnn.value() );
 				if ( jdbcType != null ) {
@@ -814,7 +828,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			final AnyKeyJdbcTypeCode jdbcTypeCodeAnn = modelXProperty.getAnnotation( AnyKeyJdbcTypeCode.class );
+			final AnyKeyJdbcTypeCode jdbcTypeCodeAnn = findAnnotation( modelXProperty, AnyKeyJdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				if ( jdbcTypeCodeAnn.value() != Integer.MIN_VALUE ) {
 					return typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcTypeCodeAnn.value() );
@@ -833,7 +847,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 					.getServiceRegistry()
 					.getService( ManagedBeanRegistry.class );
 
-			final JdbcType jdbcTypeAnn = attributeXProperty.getAnnotation( JdbcType.class );
+			final JdbcType jdbcTypeAnn = findAnnotation( attributeXProperty, JdbcType.class );
 			if ( jdbcTypeAnn != null ) {
 				final Class<? extends JdbcTypeDescriptor> jdbcType = normalizeJdbcType( jdbcTypeAnn.value() );
 				if ( jdbcType != null ) {
@@ -842,7 +856,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				}
 			}
 
-			final JdbcTypeCode jdbcTypeCodeAnn = attributeXProperty.getAnnotation( JdbcTypeCode.class );
+			final JdbcTypeCode jdbcTypeCodeAnn = findAnnotation( attributeXProperty, JdbcTypeCode.class );
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
@@ -862,7 +876,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getService( ManagedBeanRegistry.class );
 
 		explicitMutabilityAccess = typeConfiguration -> {
-			final Mutability mutabilityAnn = attributeXProperty.getAnnotation( Mutability.class );
+			final Mutability mutabilityAnn = findAnnotation( attributeXProperty, Mutability.class );
 			if ( mutabilityAnn != null ) {
 				final Class<? extends MutabilityPlan<?>> mutability = normalizeMutability( mutabilityAnn.value() );
 				if ( mutability != null ) {
@@ -888,6 +902,12 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 			// if the value is converted, see if the converter Class is annotated `@Immutable`
 			if ( converterDescriptor != null ) {
+				final Mutability converterMutabilityAnn = converterDescriptor.getAttributeConverterClass().getAnnotation( Mutability.class );
+				if ( converterMutabilityAnn != null ) {
+					final ManagedBean<? extends MutabilityPlan<?>> jtdBean = managedBeanRegistry.getBean( converterMutabilityAnn.value() );
+					return jtdBean.getBeanInstance();
+				}
+
 				if ( converterDescriptor.getAttributeConverterClass().isAnnotationPresent( Immutable.class ) ) {
 					return ImmutableMutabilityPlan.instance();
 				}
@@ -913,7 +933,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final JavaType javaTypeAnn = attributeXProperty.getAnnotation( JavaType.class );
+			final JavaType javaTypeAnn = findAnnotation( attributeXProperty, JavaType.class );
 			if ( javaTypeAnn != null ) {
 				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 
@@ -921,6 +941,13 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 					final ManagedBean<? extends BasicJavaTypeDescriptor<?>> jtdBean = managedBeanRegistry.getBean( javaType );
 					return jtdBean.getBeanInstance();
 				}
+			}
+
+			final Target targetAnn = findAnnotation( attributeXProperty, Target.class );
+			if ( targetAnn != null ) {
+				return (BasicJavaTypeDescriptor) typeConfiguration
+						.getJavaTypeDescriptorRegistry()
+						.getDescriptor( targetAnn.value() );
 			}
 
 			return null;
@@ -1094,10 +1121,6 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		if ( temporalPrecision != null ) {
 			basicValue.setTemporalPrecision( temporalPrecision );
 		}
-
-		// todo (6.0) : explicit SqlTypeDescriptor / JDBC type-code
-		// todo (6.0) : explicit mutability / immutable
-		// todo (6.0) : explicit Comparator
 
 		linkWithValue();
 
@@ -1285,7 +1308,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final CustomType customType = xProperty.getAnnotation( CustomType.class );
+			final CustomType customType = findAnnotation( xProperty, CustomType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1295,7 +1318,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final CustomType customType = xProperty.getAnnotation( CustomType.class );
+			final CustomType customType = findAnnotation( xProperty, CustomType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1340,7 +1363,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final MapKeyCustomType customType = xProperty.getAnnotation( MapKeyCustomType.class );
+			final MapKeyCustomType customType = findAnnotation( xProperty, MapKeyCustomType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1350,7 +1373,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final MapKeyCustomType customType = xProperty.getAnnotation( MapKeyCustomType.class );
+			final MapKeyCustomType customType = findAnnotation( xProperty, MapKeyCustomType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1363,7 +1386,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Class<? extends UserType<?>> customType(XProperty xProperty) {
-			final CollectionIdCustomType customType = xProperty.getAnnotation( CollectionIdCustomType.class );
+			final CollectionIdCustomType customType = findAnnotation( xProperty, CollectionIdCustomType.class );
 			if ( customType == null ) {
 				return null;
 			}
@@ -1373,7 +1396,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 
 		@Override
 		public Parameter[] customTypeParameters(XProperty xProperty) {
-			final CollectionIdCustomType customType = xProperty.getAnnotation( CollectionIdCustomType.class );
+			final CollectionIdCustomType customType = findAnnotation( xProperty, CollectionIdCustomType.class );
 			if ( customType == null ) {
 				return null;
 			}

@@ -201,7 +201,7 @@ First, we need to extend the `AbstractSingleColumnStandardBasicType` like this:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/BitSetType.java[tags=basic-custom-type-BitSetType-example]
+include::{sourcedir}/basic/bitset/BitSetType.java[tags=basic-custom-type-BitSetType-example]
 ----
 ====
 
@@ -214,7 +214,7 @@ On the Java side, we need to use a `BitSetJavaType` instance which can be implem
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/BitSetTypeDescriptor.java[tags=basic-custom-type-BitSetTypeDescriptor-example]
+include::{sourcedir}/basic/bitset/BitSetTypeDescriptor.java[tags=basic-custom-type-BitSetTypeDescriptor-example]
 ----
 ====
 
@@ -227,7 +227,7 @@ The `BasicType` must be registered, and this can be done at bootstrapping time:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-register-BasicType-example]
+include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-register-BasicType-example]
 ----
 
 or using the `MetadataBuilder`
@@ -245,7 +245,7 @@ With the new `BitSetType` being registered as `bitset`, the entity mapping looks
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-mapping-example]
+include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-mapping-example]
 ----
 ====
 
@@ -256,7 +256,7 @@ Alternatively, you can use the `@TypeDef` and skip the registration phase:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/BitSetTypeDefTest.java[tags=basic-custom-type-BitSetTypeDef-mapping-example]
+include::{sourcedir}/basic/bitset/BitSetTypeDefTest.java[tags=basic-custom-type-BitSetTypeDef-mapping-example]
 ----
 ====
 
@@ -267,7 +267,7 @@ To validate this new `BasicType` implementation, we can test it as follows:
 ====
 [source, JAVA, indent=0]
 ----
-include::{sourcedir}/basic/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-persistence-example]
+include::{sourcedir}/basic/bitset/BitSetTypeTest.java[tags=basic-custom-type-BitSetType-persistence-example]
 ----
 ====
 
@@ -335,7 +335,7 @@ Without registering a name, the `UserType` mapping requires the fully qualified 
 
 [source, JAVA, indent=0]
 ----
-@Type( type = "org.hibernate.userguide.mapping.basic.BitSetUserType" )
+@Type( type = "org.hibernate.userguide.mapping.basic.bitset.BitSetUserType" )
 ----
 ====
 

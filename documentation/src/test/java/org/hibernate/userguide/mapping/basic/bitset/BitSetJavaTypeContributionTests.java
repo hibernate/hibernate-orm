@@ -4,13 +4,9 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.util.BitSet;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -21,15 +17,22 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BitSetJavaTypeRegistrationTests.Product.class )
+@DomainModel(
+		annotatedClasses = BitSetJavaTypeContributionTests.Product.class,
+		typeContributors = BitSetJavaTypeContributor.class
+)
 @SessionFactory
-public class BitSetJavaTypeRegistrationTests {
+public class BitSetJavaTypeContributionTests {
 
 	@Test
 	public void testResolution(SessionFactoryScope scope) {
@@ -44,9 +47,8 @@ public class BitSetJavaTypeRegistrationTests {
 
 
 	@Table(name = "Product")
-	//tag::basic-bitset-example-java-type-global[]
+	//tag::basic-bitset-example-java-type-contrib[]
 	@Entity(name = "Product")
-	@JavaTypeRegistration( javaType = BitSet.class, descriptorClass = BitSetJavaType.class )
 	public static class Product {
 		@Id
 		private Integer id;
@@ -54,7 +56,7 @@ public class BitSetJavaTypeRegistrationTests {
 		private BitSet bitSet;
 
 		//Constructors, getters, and setters are omitted for brevity
-		//end::basic-bitset-example-java-type-global[]
+		//end::basic-bitset-example-java-type-contrib[]
 		public Product() {
 		}
 
@@ -78,7 +80,7 @@ public class BitSetJavaTypeRegistrationTests {
 		public void setBitSet(BitSet bitSet) {
 			this.bitSet = bitSet;
 		}
-		//tag::basic-bitset-example-java-type-global[]
+		//tag::basic-bitset-example-java-type-contrib[]
 	}
-	//end::basic-bitset-example-java-type-global[]
+	//end::basic-bitset-example-java-type-contrib[]
 }

@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.io.Serializable;
 import java.util.BitSet;
@@ -13,7 +13,7 @@ import org.hibernate.SharedSessionContract;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
- * @author Steve Ebersole
+ * A BitSet's internal state is mutable, so handle that
  */
 public class BitSetMutabilityPlan implements MutabilityPlan<BitSet> {
 	/**

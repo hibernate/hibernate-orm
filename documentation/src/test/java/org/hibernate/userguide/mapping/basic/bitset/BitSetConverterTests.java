@@ -4,39 +4,40 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.sql.Types;
 import java.util.BitSet;
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import org.assertj.core.api.Assertions;
 
-import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.isOneOf;
 
 /**
- * Tests for {@link JdbcTypeCode}
- *
- * @author Steve Ebersole
+ * Test using a converter to map the BitSet
  */
-@DomainModel( annotatedClasses = BitSetJdbcTypeCodeTests.Product.class )
+@DomainModel( annotatedClasses = BitSetConverterTests.Product.class )
 @SessionFactory
-public class BitSetJdbcTypeCodeTests {
+public class BitSetConverterTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
@@ -48,56 +49,32 @@ public class BitSetJdbcTypeCodeTests {
 
 		assertThat( attributeMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
 
-		assertThat( attributeMapping.getValueConverter(), nullValue() );
+		assertThat( attributeMapping.getValueConverter(), instanceOf( JpaAttributeConverter.class ) );
+		final JpaAttributeConverter converter = (JpaAttributeConverter) attributeMapping.getValueConverter();
+		assertThat( converter.getConverterBean().getBeanClass(), equalTo( BitSetConverter.class ) );
+
+		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan() ).isNotInstanceOf( BitSetMutabilityPlan.class );
 
 		assertThat(
 				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
-				is( Types.VARBINARY )
+				isOneOf( Types.VARCHAR, Types.NVARCHAR )
 		);
 
-		assertThat( attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo( BitSet.class ) );
-
-		scope.inTransaction(
-				(session) -> {
-					session.persist( new Product( 1, BitSet.valueOf( BitSetHelper.BYTES ) ) );
-				}
-		);
-
-		scope.inSession(
-				(session) -> {
-					final Product product = session.get( Product.class, 1 );
-					assertThat( product.getBitSet(), equalTo( BitSet.valueOf( BitSetHelper.BYTES ) ) );
-				}
-		);
+		assertThat( attributeMapping.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 	}
 
-	@AfterEach
-	public void dropData(SessionFactoryScope scope) {
-		scope.inTransaction(
-				(session) -> session.createQuery( "delete Product" ).executeUpdate()
-		);
-	}
-
-
-	@Table(name = "Product")
-	//tag::basic-bitset-example-jdbc-type-code[]
+	@Table(name = "products")
+	//tag::basic-bitset-example-convert[]
 	@Entity(name = "Product")
 	public static class Product {
 		@Id
 		private Integer id;
 
-		@JdbcTypeCode( Types.VARBINARY )
+		@Convert( converter = BitSetConverter.class )
 		private BitSet bitSet;
 
-		//Constructors, getters, and setters are omitted for brevity
-		//end::basic-bitset-example-jdbc-type-code[]
-		public Product() {
-		}
-
-		public Product(Number id, BitSet bitSet) {
-			this.id = id.intValue();
-			this.bitSet = bitSet;
-		}
+		//Getters and setters are omitted for brevity
+		//end::basic-bitset-example-convert[]
 
 		public Integer getId() {
 			return id;
@@ -114,7 +91,23 @@ public class BitSetJdbcTypeCodeTests {
 		public void setBitSet(BitSet bitSet) {
 			this.bitSet = bitSet;
 		}
-		//tag::basic-bitset-example-jdbc-type-code[]
+		//tag::basic-bitset-example-convert[]
 	}
-	//end::basic-bitset-example-jdbc-type-code[]
+	//end::basic-bitset-example-convert[]
+
+
+	//tag::basic-bitset-example-converter[]
+	@Converter( autoApply = true )
+	public static class BitSetConverter implements AttributeConverter<BitSet,String> {
+		@Override
+		public String convertToDatabaseColumn(BitSet attribute) {
+			return BitSetHelper.bitSetToString( attribute );
+		}
+
+		@Override
+		public BitSet convertToEntityAttribute(String dbData) {
+			return BitSetHelper.stringToBitSet( dbData );
+		}
+	}
+	//end::basic-bitset-example-converter[]
 }

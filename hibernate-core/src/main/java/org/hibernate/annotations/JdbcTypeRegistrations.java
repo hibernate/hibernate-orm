@@ -9,7 +9,6 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.PACKAGE;
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -17,11 +16,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Grouping of {@link JdbcTypeRegistration}
  *
- * @author Steve Ebersole
+ * See notes on {@link JdbcTypeRegistration} about using on packages
+ * versus use on classes
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({PACKAGE, TYPE, ANNOTATION_TYPE})
+@java.lang.annotation.Target({PACKAGE, TYPE})
 @Inherited
 @Retention(RUNTIME)
 public @interface JdbcTypeRegistrations {

@@ -6,8 +6,11 @@
  */
 package org.hibernate.cfg.annotations;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Member;
 
+import org.hibernate.Internal;
+import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.annotations.common.reflection.java.JavaXMember;
 
@@ -16,6 +19,7 @@ import org.hibernate.annotations.common.reflection.java.JavaXMember;
  *
  * @author Steve Ebersole
  */
+@Internal
 public final class HCANNHelper {
 
 	/**
@@ -46,5 +50,36 @@ public final class HCANNHelper {
 
 	public static Member getUnderlyingMember(final JavaXMember jxProperty) {
 		return jxProperty.getMember();
+	}
+
+	/**
+	 * Locate an annotation on an annotated member, allowing for composed annotations (meta-annotations).
+	 *
+	 * @implNote Searches only one level deep
+	 */
+	static <T extends Annotation> T findAnnotation(XAnnotatedElement xAnnotatedElement, Class<T> annotationType) {
+		// first, see if we can find it directly...
+		final T direct = xAnnotatedElement.getAnnotation( annotationType );
+		if ( direct != null ) {
+			return direct;
+		}
+
+		// or as composed...
+		for ( int i = 0; i < xAnnotatedElement.getAnnotations().length; i++ ) {
+			final Annotation annotation = xAnnotatedElement.getAnnotations()[ i ];
+			if ( annotationType.equals( annotation.getClass() ) ) {
+				// we would have found this on the direct search, so no need
+				// to check its meta-annotations
+				continue;
+			}
+
+			// we only check one level deep
+			final T metaAnn = annotation.annotationType().getAnnotation( annotationType );
+			if ( metaAnn != null ) {
+				return metaAnn;
+			}
+		}
+
+		return null;
 	}
 }

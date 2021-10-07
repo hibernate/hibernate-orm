@@ -43,7 +43,7 @@ import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
-import org.hibernate.userguide.mapping.basic.BitSetUserType;
+import org.hibernate.userguide.mapping.basic.bitset.BitSetUserType;
 
 import org.junit.Test;
 

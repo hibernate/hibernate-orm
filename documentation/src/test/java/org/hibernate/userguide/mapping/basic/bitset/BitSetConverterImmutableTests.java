@@ -4,28 +4,32 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.sql.Types;
 import java.util.BitSet;
+
+import org.hibernate.annotations.Immutable;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.MappingMetamodel;
+import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
+import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
+import org.hibernate.type.descriptor.java.MutabilityPlan;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Converter;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
-import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
-import org.hibernate.persister.entity.EntityPersister;
-
-import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
-import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.junit.jupiter.api.Test;
+import org.assertj.core.api.Assertions;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -33,11 +37,11 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.isOneOf;
 
 /**
- * @author Steve Ebersole
+ * Test using a converter to map the BitSet
  */
-@DomainModel( annotatedClasses = BitSetConverterTests.Product.class )
+@DomainModel( annotatedClasses = BitSetConverterImmutableTests.Product.class )
 @SessionFactory
-public class BitSetConverterTests {
+public class BitSetConverterImmutableTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
@@ -52,6 +56,13 @@ public class BitSetConverterTests {
 		assertThat( attributeMapping.getValueConverter(), instanceOf( JpaAttributeConverter.class ) );
 		final JpaAttributeConverter converter = (JpaAttributeConverter) attributeMapping.getValueConverter();
 		assertThat( converter.getConverterBean().getBeanClass(), equalTo( BitSetConverter.class ) );
+
+		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan() ).isNotInstanceOf( BitSetMutabilityPlan.class );
+		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan() ).isInstanceOf( ImmutableMutabilityPlan.class );
+		Assertions.assertThat( attributeMapping.getExposedMutabilityPlan().isMutable() ).isFalse();
+
+		final BitSet sample = new BitSet();
+		Assertions.assertThat( ( (MutabilityPlan) attributeMapping.getExposedMutabilityPlan() ).deepCopy( sample ) ).isSameAs( sample );
 
 		assertThat(
 				attributeMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(),
@@ -95,6 +106,7 @@ public class BitSetConverterTests {
 
 
 	//tag::basic-bitset-example-converter[]
+	@Immutable
 	@Converter( autoApply = true )
 	public static class BitSetConverter implements AttributeConverter<BitSet,String> {
 		@Override

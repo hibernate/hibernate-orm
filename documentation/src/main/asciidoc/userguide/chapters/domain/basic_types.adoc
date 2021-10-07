@@ -63,7 +63,7 @@ Generally, the `@Basic` annotation can be ignored as it is assumed by default.  
 examples are ultimately the same.
 
 [[basic-annotation-explicit-example]]
-.`@Basic` declared explicitly
+.`@Basic` explicit
 ====
 [source, JAVA, indent=0]
 ----
@@ -163,7 +163,7 @@ include::{extrasdir}/basic/mapping-column-formula-persistence-example.sql[]
 
 [NOTE]
 ====
-The SQL fragment defined by the `@Formula` annotation can be as complex as you want, and it can even include subselects.
+The SQL fragment defined by the `@Formula` annotation can be as complex as you want, and it can even include sub-selects.
 ====
 
 
@@ -204,6 +204,12 @@ This includes removal of the following deprecated legacy annotations:
 * `@AnyMetaDef#idType`
 
 See the 6.0 migration guide for discussions about migrating uses of these annotations
+====
+
+[NOTE]
+====
+The new annotations added as part of 6.0 support composing mappings in annotations
+through "meta-annotations".
 ====
 
 
@@ -1555,160 +1561,6 @@ a Java service (see `java.util.ServiceLoader`).
 
 
 
-
-[[basic-bitset]]
-==== Case Study : BitSet
-
-We've covered many ways to specify basic value mappings so far.  This section will look at mapping the
-`java.util.BitSet` type by applying the different techniques covered so far.
-
-[[basic-bitset-example-implicit]]
-.Implicit BitSet mapping
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetImplicitTests.java[tags=basic-bitset-example-implicit]
-----
-====
-
-As mentioned previously, the worst-case fallback for Hibernate mapping a basic type
-which implements `Serializable` is to simply serialize it to the database.  BitSet
-does implement `Serializable`, so by default Hibernate would handle this mapping by serialization.
-
-That is not an ideal mapping.  In the following sections we will look at approaches to change
-various aspects of how the BitSet gets mapped to the database.
-
-
-[[basic-bitset-converter]]
-===== Using `AttributeConverter`
-
-We've seen uses of `AttributeConverter` previously.
-
-This works well in most cases and is portable across Jakarta Persistence providers.
-
-[[basic-bitset-example-converter]]
-.BitSet AttributeConverter
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetConverterTests.java[tags=basic-bitset-example-convert]
-
-include::{sourcedir}/basic/BitSetConverterTests.java[tags=basic-bitset-example-converter]
-----
-====
-
-The `@Convert` annotation was used for illustration.  Generally such a converter would be auto-applied instead
-
-See <<basic-jpa-convert>> for details.
-
-[NOTE]
-====
-The use of `AttributeConverter` can have drawbacks related to Hibernate being able
-to appropriately handle the mutability aspects of the converted values. `AttributeConverter`
-does not indicate whether the converted values are mutable or not, so Hibernate has to assume
-they are (the safer assumption) which can lead to excessive conversions back and forth as part
-of dirty-checking as well as second-level caching.
-
-See <<basic-jpa-convert-mutability>> for additional details.
-====
-
-
-[[basic-bitset-java-type]]
-===== Using a custom `JavaTypeDescriptor`
-
-As covered in <<basic-mapping-explicit>>, we will define a `JavaTypeDescriptor`
-for `BitSet` that maps values to `VARCHAR` for storage by default.
-
-[[basic-bitset-example-java-type]]
-.BitSet JavaTypeDescriptor
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetJavaType.java[tags=basic-bitset-example-java-type]
-----
-====
-
-
-We can either apply that type locally using `@JavaType`
-
-[[basic-bitset-example-java-type-local]]
-.@JavaType
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetJavaTypeTests.java[tags=basic-bitset-example-java-type-local,indent=0]
-----
-====
-
-Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaTypeDescriptor`
-to be used as the default whenever we encounter the `BitSet` type
-
-[[basic-bitset-example-java-type-global]]
-.@JavaTypeRegistration
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetJavaTypeRegistrationTests.java[tags=basic-bitset-example-java-type-global,indent=0]
-----
-====
-
-
-[[basic-bitset-jdbc-type]]
-===== Selecting different `JdbcTypeDescriptor`
-
-Our custom `BitSetJavaType` maps `BitSet` values to `VARCHAR` by default.  That was a better option
-than direct serialization.  But as `BitSet` is ultimately binary data we would probably really want to
-map this to `VARBINARY` type instead.  One way to do that would be to change `BitSetJavaType#getRecommendedJdbcType`
-to instead return `VARBINARY` descriptor.  Another option would be to use a local `@JdbcType` or `@JdbcTypeCode`.
-
-The following examples for specifying the `JdbcTypeDescriptor` assume our `BitSetJavaType`
-is globally registered.
-
-We will again store the values as `VARBINARY` in the database.  The difference now however is that
-the coercion methods `#wrap` and `#unwrap` will be used to prepare the value rather than relying on
-serialization.
-
-
-[[basic-bitset-example-jdbc-type-code]]
-.@JdbcTypeCode
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetJdbcTypeCodeTests.java[tags=basic-bitset-example-jdbc-type-code,indent=0]
-----
-====
-
-In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcTypeDescriptor` registered for JDBC's
-`VARBINARY` type should be used.
-
-
-[[basic-bitset-example-jdbc-type-local]]
-.@JdbcType
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetJdbcTypeTests.java[tags=basic-bitset-example-jdbc-type-local,indent=0]
-----
-====
-
-In this example, `@JdbcType` has been used to specify our custom `BitSetJdbcType` descriptor locally for
-this attribute.
-
-We could instead replace how Hibernate deals with all `VARBINARY` handling with our custom impl using
-`@JdbcTypeRegistration`
-
-[[basic-bitset-example-jdbc-type-global]]
-.@JdbcType
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/basic/BitSetJdbcTypeRegistrationTests.java[tags=basic-bitset-example-jdbc-type-global,indent=0]
-----
-====
-
-
-
-
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 [[basic-jpa-convert]]
@@ -1953,7 +1805,156 @@ By passing the associated Hibernate `Type`, you can use the `Caption` object whe
 
 
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+[[basic-bitset]]
+==== Case Study : BitSet
+
+We've covered many ways to specify basic value mappings so far.  This section will look at mapping the
+`java.util.BitSet` type by applying the different techniques covered so far.
+
+[[basic-bitset-example-implicit]]
+.Implicit BitSet mapping
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetImplicitTests.java[tags=basic-bitset-example-implicit]
+----
+====
+
+As mentioned previously, the worst-case fallback for Hibernate mapping a basic type
+which implements `Serializable` is to simply serialize it to the database.  BitSet
+does implement `Serializable`, so by default Hibernate would handle this mapping by serialization.
+
+That is not an ideal mapping.  In the following sections we will look at approaches to change
+various aspects of how the BitSet gets mapped to the database.
+
+
+[[basic-bitset-converter]]
+===== Using `AttributeConverter`
+
+We've seen uses of `AttributeConverter` previously.
+
+This works well in most cases and is portable across Jakarta Persistence providers.
+
+[[basic-bitset-example-converter]]
+.BitSet AttributeConverter
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetConverterTests.java[tags=basic-bitset-example-convert]
+
+include::{sourcedir}/basic/bitset/BitSetConverterTests.java[tags=basic-bitset-example-converter]
+----
+====
+
+[NOTE]
+====
+The `@Convert` annotation was used for illustration.  Generally such a converter would be auto-applied instead
+
+See <<basic-jpa-convert>> for details.
+====
+
+This greatly improves the reading and writing performance of dealing with these
+BitSet values because the `AttributeConverter` does that more efficiently using
+a simple externalizable form of the BitSet rather than serializing and deserializing
+the values.
+
+See also <<basic-jpa-convert-mutability>>.
+
+
+[[basic-bitset-java-type]]
+===== Using a custom `JavaTypeDescriptor`
+
+As covered in <<basic-mapping-explicit>>, we will define a `JavaTypeDescriptor`
+for `BitSet` that maps values to `VARCHAR` for storage by default.
+
+[[basic-bitset-example-java-type]]
+.BitSet JavaTypeDescriptor
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetJavaType.java[tags=basic-bitset-example-java-type]
+----
+====
+
+
+We can either apply that type locally using `@JavaType`
+
+[[basic-bitset-example-java-type-local]]
+.@JavaType
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetJavaTypeTests.java[tags=basic-bitset-example-java-type-local,indent=0]
+----
+====
+
+Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaTypeDescriptor`
+to be used as the default whenever we encounter the `BitSet` type
+
+[[basic-bitset-example-java-type-global]]
+.@JavaTypeRegistration
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetJavaTypeRegistrationTests.java[tags=basic-bitset-example-java-type-global,indent=0]
+----
+====
+
+
+[[basic-bitset-jdbc-type]]
+===== Selecting different `JdbcTypeDescriptor`
+
+Our custom `BitSetJavaType` maps `BitSet` values to `VARCHAR` by default.  That was a better option
+than direct serialization.  But as `BitSet` is ultimately binary data we would probably really want to
+map this to `VARBINARY` type instead.  One way to do that would be to change `BitSetJavaType#getRecommendedJdbcType`
+to instead return `VARBINARY` descriptor.  Another option would be to use a local `@JdbcType` or `@JdbcTypeCode`.
+
+The following examples for specifying the `JdbcTypeDescriptor` assume our `BitSetJavaType`
+is globally registered.
+
+We will again store the values as `VARBINARY` in the database.  The difference now however is that
+the coercion methods `#wrap` and `#unwrap` will be used to prepare the value rather than relying on
+serialization.
+
+
+[[basic-bitset-example-jdbc-type-code]]
+.@JdbcTypeCode
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetJdbcTypeCodeTests.java[tags=basic-bitset-example-jdbc-type-code,indent=0]
+----
+====
+
+In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcTypeDescriptor` registered for JDBC's
+`VARBINARY` type should be used.
+
+
+[[basic-bitset-example-jdbc-type-local]]
+.@JdbcType
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetJdbcTypeTests.java[tags=basic-bitset-example-jdbc-type-local,indent=0]
+----
+====
+
+In this example, `@JdbcType` has been used to specify our custom `BitSetJdbcType` descriptor locally for
+this attribute.
+
+We could instead replace how Hibernate deals with all `VARBINARY` handling with our custom impl using
+`@JdbcTypeRegistration`
+
+[[basic-bitset-example-jdbc-type-global]]
+.@JdbcType
+====
+[source, JAVA, indent=0]
+----
+include::{sourcedir}/basic/bitset/BitSetJdbcTypeRegistrationTests.java[tags=basic-bitset-example-jdbc-type-global,indent=0]
+----
+====
 
 
 

@@ -25,7 +25,6 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static com.ibm.icu.impl.ValidIdentifiers.Datatype.u;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
@@ -34,7 +33,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 /**
  * @author Gavin King
@@ -353,7 +351,7 @@ public class MutableNaturalIdTest {
 							.using( "name", "steve" )
 							.using( "org", "hb" )
 							.load();
-					assertNotNull( u );
+					assertNotNull( beforeEvict );
 					assertEquals( statistics.getPrepareStatementCount(), 1 );
 
 					session.evict( beforeEvict );

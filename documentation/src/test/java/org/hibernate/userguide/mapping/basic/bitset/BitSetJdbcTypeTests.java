@@ -4,26 +4,26 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.userguide.mapping.basic;
+package org.hibernate.userguide.mapping.basic.bitset;
 
 import java.sql.Types;
 import java.util.BitSet;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-import org.hibernate.annotations.JdbcTypeRegistration;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.userguide.mapping.basic.CustomBinaryJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -33,9 +33,9 @@ import static org.hamcrest.Matchers.nullValue;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = BitSetJdbcTypeRegistrationTests.Product.class )
+@DomainModel( annotatedClasses = BitSetJdbcTypeTests.Product.class )
 @SessionFactory
-public class BitSetJdbcTypeRegistrationTests {
+public class BitSetJdbcTypeTests {
 
 	@Test
 	public void verifyMappings(SessionFactoryScope scope) {
@@ -79,17 +79,17 @@ public class BitSetJdbcTypeRegistrationTests {
 
 
 	@Table(name = "Product")
-	//tag::basic-bitset-example-jdbc-type-global[]
+	//tag::basic-bitset-example-jdbc-type-local[]
 	@Entity(name = "Product")
-	@JdbcTypeRegistration( CustomBinaryJdbcType.class )
 	public static class Product {
 		@Id
 		private Integer id;
 
+		@JdbcType( CustomBinaryJdbcType.class )
 		private BitSet bitSet;
 
 		//Constructors, getters, and setters are omitted for brevity
-		//end::basic-bitset-example-jdbc-type-global[]
+		//end::basic-bitset-example-jdbc-type-local[]
 		public Product() {
 		}
 
@@ -113,7 +113,8 @@ public class BitSetJdbcTypeRegistrationTests {
 		public void setBitSet(BitSet bitSet) {
 			this.bitSet = bitSet;
 		}
-		//tag::basic-bitset-example-jdbc-type-global[]
+		//tag::basic-bitset-example-jdbc-type-local[]
 	}
-	//end::basic-bitset-example-jdbc-type-global[]
+	//end::basic-bitset-example-jdbc-type-local[]
+
 }

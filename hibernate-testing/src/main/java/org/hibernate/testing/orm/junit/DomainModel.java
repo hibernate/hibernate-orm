@@ -14,6 +14,7 @@ import java.lang.annotation.Target;
 
 import jakarta.persistence.SharedCacheMode;
 
+import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.cache.spi.access.AccessType;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
@@ -107,6 +108,8 @@ public @interface DomainModel {
 	String concurrencyStrategy() default "";
 
 	AccessType accessType() default AccessType.READ_WRITE;
+
+	Class<? extends TypeContributor>[] typeContributors() default {};
 
 	@interface ExtraQueryImport {
 		String name();

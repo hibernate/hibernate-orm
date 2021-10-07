@@ -17,7 +17,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Grouping of {@link JavaTypeRegistration}
  *
- * @author Steve Ebersole
+ * See notes on {@link JavaTypeRegistration} about using on packages
+ * versus use on classes
  *
  * @since 6.0
  */

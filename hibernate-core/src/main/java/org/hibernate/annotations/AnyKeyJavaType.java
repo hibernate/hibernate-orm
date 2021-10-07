@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 
 import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
 
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
@@ -22,7 +23,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @since 6.0
  */
-@java.lang.annotation.Target({METHOD, FIELD})
+@java.lang.annotation.Target({METHOD, FIELD,ANNOTATION_TYPE})
 @Retention( RUNTIME )
 public @interface AnyKeyJavaType {
 	/**

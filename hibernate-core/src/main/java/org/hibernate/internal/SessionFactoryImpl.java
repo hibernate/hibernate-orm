@@ -23,6 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
+
+import jakarta.persistence.Cache;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceContextType;
@@ -95,6 +97,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metadata.CollectionMetadata;
+import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.RuntimeMetamodels;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
@@ -932,6 +935,30 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		if ( type.isAssignableFrom( EntityManagerFactory.class ) ) {
 			return type.cast( this );
+		}
+
+		if ( type.isAssignableFrom( SessionFactoryServiceRegistry.class ) ) {
+			return type.cast( serviceRegistry );
+		}
+
+		if ( type.isAssignableFrom( JdbcServices.class ) ) {
+			return type.cast( jdbcServices );
+		}
+
+		if ( type.isAssignableFrom( Cache.class ) || type.isAssignableFrom( org.hibernate.Cache.class ) ) {
+			return type.cast( cacheAccess );
+		}
+
+		if ( type.isAssignableFrom( JpaMetamodel.class ) ) {
+			return type.cast( runtimeMetamodels.getJpaMetamodel() );
+		}
+
+		if ( type.isAssignableFrom( MetamodelImplementor.class ) || type.isAssignableFrom( MetadataImplementor.class ) ) {
+			return type.cast( runtimeMetamodels.getMappingMetamodel() );
+		}
+
+		if ( type.isAssignableFrom( QueryEngine.class ) ) {
+			return type.cast( queryEngine );
 		}
 
 		throw new PersistenceException( "Hibernate cannot unwrap EntityManagerFactory as '" + type.getName() + "'" );

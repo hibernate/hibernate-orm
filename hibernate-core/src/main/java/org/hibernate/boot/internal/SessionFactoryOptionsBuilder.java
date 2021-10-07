@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.internal;
 
+import java.lang.reflect.Constructor;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,6 +32,7 @@ import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -41,6 +43,7 @@ import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.BaselineSessionEventsListenerBuilder;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.config.internal.ConfigurationServiceImpl;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData;
@@ -597,16 +600,42 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			return null;
 		}
 
-		//noinspection Convert2Lambda
-		return strategySelector.resolveDefaultableStrategy(
+		return strategySelector.resolveStrategy(
 				SqmMultiTableMutationStrategy.class,
 				strategyName,
-				new Callable<SqmMultiTableMutationStrategy>() {
-					@Override
-					public SqmMultiTableMutationStrategy call() throws Exception {
-						final ClassLoaderService classLoaderService = serviceRegistry.getService( ClassLoaderService.class );
-						return (SqmMultiTableMutationStrategy) classLoaderService.classForName( strategyName ).newInstance();
+				(SqmMultiTableMutationStrategy) null,
+				strategyClass -> {
+					Constructor<SqmMultiTableMutationStrategy> dialectConstructor = null;
+					Constructor<SqmMultiTableMutationStrategy> emptyConstructor = null;
+					// todo (6.0) : formalize the allowed constructor parameterizations
+					for ( Constructor<?> declaredConstructor : strategyClass.getDeclaredConstructors() ) {
+						final Class<?>[] parameterTypes = declaredConstructor.getParameterTypes();
+						if ( parameterTypes.length == 1 && parameterTypes[0] == Dialect.class ) {
+							dialectConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+							break;
+						}
+						else if ( parameterTypes.length == 0 ) {
+							emptyConstructor = (Constructor<SqmMultiTableMutationStrategy>) declaredConstructor;
+						}
 					}
+
+					try {
+						if ( dialectConstructor != null ) {
+							return dialectConstructor.newInstance(
+									serviceRegistry.getService( JdbcServices.class ).getDialect()
+							);
+						}
+						else if ( emptyConstructor != null ) {
+							return emptyConstructor.newInstance();
+						}
+					}
+					catch (Exception e) {
+						throw new StrategySelectionException(
+								String.format( "Could not instantiate named strategy class [%s]", strategyClass.getName() ),
+								e
+						);
+					}
+					throw new IllegalArgumentException( "Cannot instantiate the class [" + strategyClass.getName() + "] because it does not have a constructor that accepts a dialect or an empty constructor!" );
 				}
 		);
 	}

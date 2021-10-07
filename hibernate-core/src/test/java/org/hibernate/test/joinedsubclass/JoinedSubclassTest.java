@@ -75,7 +75,7 @@ public class JoinedSubclassTest {
 			s.save( mark );
 			s.save( joe );
 
-			assertEquals( s.createQuery( "from java.io.Serializable" ).list().size(), 0 );
+			assertEquals( s.createQuery( "from java.lang.Object" ).list().size(), 0 );
 
 			assertEquals( s.createQuery( "from Person" ).list().size(), 3 );
 			assertEquals( s.createQuery( "from Person p where p.class = Customer" ).list().size(), 1 );

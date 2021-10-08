@@ -214,7 +214,7 @@ include::{extrasdir}/entity/mapping-post-table-schema-postgresql-example.sql[]
 
 Now, to map the `Book` entity to the `book` table in the `library` schema we can use the `schema` attribute of the `@Table` Jakarta Persistence annotation.
 
-[[mapping-entity-table-catalog-mysql-example]]
+[[mapping-entity-table-catalog-postgresql-example]]
 .Specifying the database schema using the `@Table` annotation
 ====
 [source,java]

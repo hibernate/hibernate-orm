@@ -28,6 +28,13 @@ public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements
 	private TypeConfiguration typeConfiguration;
 	private String hbmStyleTypeName;
 
+	public UserTypeLegacyBridge() {
+	}
+
+	public UserTypeLegacyBridge(String hbmStyleTypeName) {
+		this.hbmStyleTypeName = hbmStyleTypeName;
+	}
+
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return typeConfiguration;
@@ -40,6 +47,11 @@ public class UserTypeLegacyBridge extends BaseUserTypeSupport<Object> implements
 
 	@Override
 	public void setParameterValues(Properties parameters) {
+		if ( hbmStyleTypeName != null ) {
+			// assume it was ctor-injected
+			return;
+		}
+
 		hbmStyleTypeName = parameters.getProperty( TYPE_NAME_PARAM_KEY );
 		if ( hbmStyleTypeName == null ) {
 			throw new MappingException( "Missing `@Parameter` for `" + TYPE_NAME_PARAM_KEY + "`" );

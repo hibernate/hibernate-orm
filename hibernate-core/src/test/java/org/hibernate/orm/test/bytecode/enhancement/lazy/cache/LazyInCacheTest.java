@@ -13,9 +13,11 @@ import java.util.List;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CustomType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.usertype.UserTypeLegacyBridge;
 
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
@@ -95,7 +97,8 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
         List<Tag> tags = new ArrayList<>();
 
         @Basic( fetch = FetchType.LAZY )
-        @JdbcTypeCode(Types.LONGVARBINARY)
+        @CustomType( BinaryCustomType.class )
+//        @JdbcTypeCode(Types.LONGVARBINARY)
         byte[] data;
     }
 
@@ -119,5 +122,11 @@ public class LazyInCacheTest extends BaseCoreFunctionalTestCase {
         Long id;
 
         String name;
+    }
+
+    public static class BinaryCustomType extends UserTypeLegacyBridge {
+        public BinaryCustomType() {
+            super( "binary" );
+        }
     }
 }

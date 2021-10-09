@@ -138,6 +138,9 @@ public class QueryHints {
 
 	public static final String HINT_PASS_DISTINCT_THROUGH = PASS_DISTINCT_THROUGH;
 
+	/**
+	 * See {@link org.hibernate.annotations.QueryHints#NATIVE_SPACES}
+	 */
 	public static final String HINT_NATIVE_SPACES = NATIVE_SPACES;
 
 

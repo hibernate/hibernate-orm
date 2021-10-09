@@ -18,7 +18,10 @@ import java.util.Collection;
  * In a similar manner, these query spaces also affect how query result caching can recognize
  * invalidated results.
  *
- * @author Steve Ebersole
+ * @implSpec Note that any String can be used and need not actually occur in the query or
+ * even be a mapped table.  This fact can be used to completely circumvent auto-flush checking
+ * and possible large-scale cache invalidation.  Note that this approach also circumvents
+ * "correctness" of the results if there are any pending changes to the tables being queried.
  */
 @SuppressWarnings( { "unused", "UnusedReturnValue", "RedundantSuppression" } )
 public interface SynchronizeableQuery<T> {

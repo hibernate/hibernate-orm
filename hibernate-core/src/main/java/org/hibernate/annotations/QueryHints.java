@@ -6,6 +6,8 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.FlushMode;
+
 /**
  * Consolidation of hints available to Hibernate JPA queries.  Mainly used to define features available on
  * Hibernate queries that have no corollary in JPA queries.
@@ -130,10 +132,17 @@ public class QueryHints {
 	 * Passed value can be any of:<ul>
 	 *     <li>List of the spaces</li>
 	 *     <li>array of the spaces</li>
-	 *     <li>String "whitespace"-separated list of the spaces</li>
+	 *     <li>String as "whitespace"-separated list of the spaces</li>
 	 * </ul>
 	 *
+	 * Note that the passed space need not match to any real spaces/tables in
+	 * the underlying query.  This can be used to completely circumvent
+	 * the auto-flush checks as well as any cache invalidation that might
+	 * occur as part of a flush.  See the documentation on SynchronizeableQuery
+	 * for details.  See also {@link FlushMode#MANUAL}
+	 *
 	 * @see org.hibernate.SynchronizeableQuery
+	 * @see #FLUSH_MODE
 	 */
 	public static final String NATIVE_SPACES = "org.hibernate.query.native.spaces";
 

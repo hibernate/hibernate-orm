@@ -17,8 +17,8 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 /**
  * A custom SqlTypeDescriptor.  For example, this might be used to provide support
@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
  *
  * @author Steve Ebersole
  */
-public class PayloadWrapperJdbcType implements JdbcTypeDescriptor {
+public class PayloadWrapperJdbcType implements JdbcType {
 	/**
 	 * Singleton access
 	 */
@@ -74,6 +74,6 @@ public class PayloadWrapperJdbcType implements JdbcTypeDescriptor {
 
 	@Override
 	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-		return VarcharJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
+		return VarcharJdbcType.INSTANCE.getExtractor( javaTypeDescriptor );
 	}
 }

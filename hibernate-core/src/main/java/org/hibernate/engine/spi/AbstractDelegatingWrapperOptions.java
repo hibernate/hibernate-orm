@@ -10,7 +10,6 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Christian Beikov

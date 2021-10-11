@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and @link Integer}
@@ -20,7 +20,7 @@ public class IntegerType extends AbstractSingleColumnStandardBasicType<Integer> 
 	public static final IntegerType INSTANCE = new IntegerType();
 
 	public IntegerType() {
-		super( IntegerJdbcTypeDescriptor.INSTANCE, IntegerJavaTypeDescriptor.INSTANCE );
+		super( IntegerJdbcType.INSTANCE, IntegerJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

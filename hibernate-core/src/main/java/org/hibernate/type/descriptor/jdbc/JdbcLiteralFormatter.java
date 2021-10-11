@@ -13,7 +13,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 /**
  * A formatter object for creating JDBC literals of a given type.
  * <p/>
- * Generally this is obtained from the {@link JdbcTypeDescriptor#getJdbcLiteralFormatter} method
+ * Generally this is obtained from the {@link JdbcType#getJdbcLiteralFormatter} method
  * and would be specific to that Java and SQL type.
  * <p/>
  * Performs a similar function as the legacy LiteralType, except continuing the paradigm

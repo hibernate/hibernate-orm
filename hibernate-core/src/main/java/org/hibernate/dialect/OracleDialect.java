@@ -60,10 +60,10 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.NullJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
@@ -601,7 +601,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
@@ -665,21 +665,21 @@ public class OracleDialect extends Dialect {
 					false
 			);
 
-			BlobJdbcTypeDescriptor descriptor = preferLong ?
-					BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING :
-					BlobJdbcTypeDescriptor.DEFAULT;
+			BlobJdbcType descriptor = preferLong ?
+					BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
+					BlobJdbcType.DEFAULT;
 
 			typeContributions.contributeJdbcTypeDescriptor( descriptor );
 		}
 
 		// Oracle requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( NullJdbcTypeDescriptor.INSTANCE );
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( NullJdbcType.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new NullType(
-						NullJdbcTypeDescriptor.INSTANCE,
+						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )
@@ -687,7 +687,7 @@ public class OracleDialect extends Dialect {
 		);
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE,
+						ObjectNullAsNullTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )

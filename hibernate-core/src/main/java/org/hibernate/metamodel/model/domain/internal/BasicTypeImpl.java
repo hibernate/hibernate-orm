@@ -14,7 +14,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Emmanuel Bernard
@@ -45,7 +45,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 	}
 
 	@Override
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+	public JdbcType getJdbcTypeDescriptor() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

@@ -16,7 +16,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -38,7 +38,7 @@ public class CalendarDateJavaTypeDescriptor extends AbstractTemporalJavaTypeDesc
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.DATE );
 	}
 

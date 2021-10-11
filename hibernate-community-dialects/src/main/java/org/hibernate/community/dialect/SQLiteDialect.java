@@ -53,9 +53,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -329,8 +328,8 @@ public class SQLiteDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING );
-		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.STRING_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.STRING_BINDING );
 	}
 
 	@Override

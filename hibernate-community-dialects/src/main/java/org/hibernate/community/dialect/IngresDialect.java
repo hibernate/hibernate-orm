@@ -52,7 +52,7 @@ import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.Types;
@@ -176,7 +176,7 @@ public class IngresDialect extends Dialect {
 	}
 
 	@Override
-	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,

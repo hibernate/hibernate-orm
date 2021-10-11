@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.LocalTime;
 
 import org.hibernate.type.descriptor.java.LocalTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -24,7 +24,7 @@ public class LocalTimeType
 	public static final LocalTimeType INSTANCE = new LocalTimeType();
 
 	public LocalTimeType() {
-		super( TimeJdbcTypeDescriptor.INSTANCE, LocalTimeJavaTypeDescriptor.INSTANCE );
+		super( TimeJdbcType.INSTANCE, LocalTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

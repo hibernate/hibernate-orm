@@ -13,7 +13,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Descriptor for {@link Short} handling.
@@ -105,7 +105,7 @@ public class ShortJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Sho
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return getDefaultSqlPrecision(dialect)+1;
 	}
 

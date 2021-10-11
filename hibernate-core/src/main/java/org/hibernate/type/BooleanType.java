@@ -11,8 +11,8 @@ import java.sql.Types;
 import org.hibernate.Incubating;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.BooleanJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BooleanJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * A type that maps between {@link Types#BOOLEAN BOOLEAN} and {@link Boolean}
@@ -26,16 +26,16 @@ public class BooleanType
 	public static final BooleanType INSTANCE = new BooleanType();
 
 	public BooleanType() {
-		this( BooleanJdbcTypeDescriptor.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
+		this( BooleanJdbcType.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
 	}
 
-	protected BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, BooleanJavaTypeDescriptor javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	protected BooleanType(JdbcType jdbcType, BooleanJavaTypeDescriptor javaTypeDescriptor) {
+		super( jdbcType, javaTypeDescriptor );
 	}
 
 	@Incubating
-	public BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Boolean> javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	public BooleanType(JdbcType jdbcType, JavaType<Boolean> javaTypeDescriptor) {
+		super( jdbcType, javaTypeDescriptor );
 	}
 
 	@Override

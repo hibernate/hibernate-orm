@@ -13,7 +13,7 @@ public class JsonType extends AbstractSingleColumnStandardBasicType<Json> {
 	public static final JsonType INSTANCE = new JsonType();
 
 	public JsonType() {
-		super( JsonJdbcTypeDescriptor.INSTANCE, JsonJavaTypeDescriptor.INSTANCE );
+		super( JsonJdbcType.INSTANCE, JsonJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

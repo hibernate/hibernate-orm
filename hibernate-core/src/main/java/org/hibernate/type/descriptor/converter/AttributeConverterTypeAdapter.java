@@ -19,7 +19,7 @@ import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.jboss.logging.Logger;
 
@@ -48,7 +48,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			String name,
 			String description,
 			JpaAttributeConverter<? extends T,?> attributeConverter,
-			JdbcTypeDescriptor std,
+			JdbcType std,
 			JavaType<?> relationalJtd,
 			JavaType<T> domainJtd,
 			MutabilityPlan<T> mutabilityPlan) {

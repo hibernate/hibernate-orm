@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Christian Beikov
@@ -19,7 +19,7 @@ public class ImmutableConvertedBasicTypeImpl<J> extends ConvertedBasicTypeImpl<J
 
 	public ImmutableConvertedBasicTypeImpl(
 			JavaType<J> jtd,
-			JdbcTypeDescriptor std,
+			JdbcType std,
 			String name,
 			BasicValueConverter<J, ?> converter) {
 		super( jtd, std, name, converter );

@@ -13,7 +13,7 @@ public class InetType extends AbstractSingleColumnStandardBasicType<Inet> {
 	public static final InetType INSTANCE = new InetType();
 
 	public InetType() {
-		super( InetJdbcTypeDescriptor.INSTANCE, InetJavaTypeDescriptor.INSTANCE );
+		super( InetJdbcType.INSTANCE, InetJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

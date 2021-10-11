@@ -21,7 +21,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 
 import org.hibernate.testing.TestForIssue;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
  * @author Gail Badner
  */
 public class MaterializedNClobBindTest {
-	private static final ValueBinder<String> binder = NClobJdbcTypeDescriptor.DEFAULT.getBinder(
+	private static final ValueBinder<String> binder = NClobJdbcType.DEFAULT.getBinder(
 			StringJavaTypeDescriptor.INSTANCE
 	);
 

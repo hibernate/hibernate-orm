@@ -11,7 +11,7 @@ import org.hibernate.type.StandardBasicTypeTemplate;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
@@ -30,20 +30,20 @@ public interface TypeContributions {
 	void contributeJavaTypeDescriptor(JavaType descriptor);
 
 	/**
-	 * Add the JdbcTypeDescriptor to the {@link TypeConfiguration}'s
+	 * Add the JdbcType to the {@link TypeConfiguration}'s
 	 * {@link JdbcTypeDescriptorRegistry}
 	 */
-	void contributeJdbcTypeDescriptor(JdbcTypeDescriptor descriptor);
+	void contributeJdbcTypeDescriptor(JdbcType descriptor);
 
 	void contributeType(BasicType type);
 
 	/**
 	 * @deprecated (since 5.3) Use {@link #contributeType(BasicType)} instead.  Basic
 	 * types will be defined and handled much differently in 6.0 based on a combination
-	 * of {@link JavaType}, {@link JdbcTypeDescriptor} and a concept of a "value
+	 * of {@link JavaType}, {@link JdbcType} and a concept of a "value
 	 * converter" (a JPA AttributeConverter, an enum value resolver, etc).  To get as
 	 * close as possible in 5.3 use existing {@link JavaType} and
-	 * {@link JdbcTypeDescriptor} implementations (or write your own for custom types)
+	 * {@link JdbcType} implementations (or write your own for custom types)
 	 * and use {@link StandardBasicTypeTemplate} to combine those with
 	 * registration keys and call {@link #contributeType(BasicType)} instead
 	 */
@@ -55,7 +55,7 @@ public interface TypeContributions {
 	 * {@link UserType}, as currently defined, will be done very differently in 6.0.
 	 * In most cases a {@link UserType} can be simply replaced with proper
 	 * {@link JavaType}.  To get as close as possible to 6.0 in 5.3 use
-	 * existing {@link JavaType} and {@link JdbcTypeDescriptor}
+	 * existing {@link JavaType} and {@link JdbcType}
 	 * implementations (or write your own for custom impls) and use
 	 * {@link StandardBasicTypeTemplate} to combine those with registration keys
 	 * and call {@link #contributeType(BasicType)} instead

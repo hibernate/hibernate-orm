@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -80,7 +80,7 @@ public class EnumType<T extends Enum<T>>
 	private Class<T> enumClass;
 
 	private EnumValueConverter<T,Object> enumValueConverter;
-	private JdbcTypeDescriptor jdbcTypeDescriptor;
+	private JdbcType jdbcType;
 	private ValueExtractor<T> jdbcValueExtractor;
 	private ValueBinder<T> jdbcValueBinder;
 
@@ -97,9 +97,9 @@ public class EnumType<T extends Enum<T>>
 		this.typeConfiguration = typeConfiguration;
 
 		this.enumValueConverter = enumValueConverter;
-		this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
-		this.jdbcValueExtractor = jdbcTypeDescriptor.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
-		this.jdbcValueBinder = jdbcTypeDescriptor.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
+		this.jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
+		this.jdbcValueExtractor = jdbcType.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
+		this.jdbcValueBinder = jdbcType.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
 	}
 
 	public EnumValueConverter getEnumValueConverter() {
@@ -152,23 +152,23 @@ public class EnumType<T extends Enum<T>>
 					enumJavaDescriptor
 			);
 
-			final JdbcTypeDescriptor jdbcTypeDescriptor = relationalJtd.getRecommendedJdbcType( indicators );
+			final JdbcType jdbcType = relationalJtd.getRecommendedJdbcType( indicators );
 
 			if ( isOrdinal ) {
 				this.enumValueConverter = new OrdinalEnumValueConverter(
 						enumJavaDescriptor,
-						jdbcTypeDescriptor,
+						jdbcType,
 						relationalJtd
 				);
 			}
 			else {
 				this.enumValueConverter = new NamedEnumValueConverter(
 						enumJavaDescriptor,
-						jdbcTypeDescriptor,
+						jdbcType,
 						relationalJtd
 				);
 			}
-			this.jdbcTypeDescriptor = jdbcTypeDescriptor;
+			this.jdbcType = jdbcType;
 		}
 		else {
 			final String enumClassName = (String) parameters.get( ENUM );
@@ -180,10 +180,10 @@ public class EnumType<T extends Enum<T>>
 			}
 
 			this.enumValueConverter = interpretParameters( parameters );
-			this.jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
+			this.jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( enumValueConverter.getJdbcTypeCode() );
 		}
-		this.jdbcValueExtractor = (ValueExtractor) jdbcTypeDescriptor.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
-		this.jdbcValueBinder = (ValueBinder) jdbcTypeDescriptor.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
+		this.jdbcValueExtractor = (ValueExtractor) jdbcType.getExtractor( enumValueConverter.getRelationalJavaDescriptor() );
+		this.jdbcValueBinder = (ValueBinder) jdbcType.getBinder( enumValueConverter.getRelationalJavaDescriptor() );
 
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf(

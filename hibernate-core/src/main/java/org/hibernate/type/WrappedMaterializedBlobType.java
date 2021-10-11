@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 import org.hibernate.type.descriptor.java.ByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#BLOB BLOB} and {@code Byte[]}.
@@ -18,7 +18,7 @@ public class WrappedMaterializedBlobType extends AbstractSingleColumnStandardBas
 	public static final WrappedMaterializedBlobType INSTANCE = new WrappedMaterializedBlobType();
 
 	public WrappedMaterializedBlobType() {
-		super( BlobJdbcTypeDescriptor.DEFAULT, ByteArrayJavaTypeDescriptor.INSTANCE );
+		super( BlobJdbcType.DEFAULT, ByteArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

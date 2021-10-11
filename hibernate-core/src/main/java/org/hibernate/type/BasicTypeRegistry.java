@@ -18,7 +18,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ImmutableConvertedBasicTypeImpl;
 import org.hibernate.type.internal.ImmutableNamedBasicTypeImpl;
@@ -37,7 +37,7 @@ public class BasicTypeRegistry implements Serializable {
 
 	private final TypeConfiguration typeConfiguration;
 
-	private final Map<JdbcTypeDescriptor, Map<JavaType<?>, BasicType<?>>> registryValues = new ConcurrentHashMap<>();
+	private final Map<JdbcType, Map<JavaType<?>, BasicType<?>>> registryValues = new ConcurrentHashMap<>();
 	private boolean primed;
 
 	private final Map<String, BasicType<?>> typesByName = new ConcurrentHashMap<>();
@@ -73,7 +73,7 @@ public class BasicTypeRegistry implements Serializable {
 		final JavaType<Object> javaTypeDescriptor = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				typeReference.getJavaType()
 		);
-		final JdbcTypeDescriptor jdbcTypeDescriptor = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor(
+		final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor(
 				typeReference.getSqlTypeCode()
 		);
 		final BasicType<?> type;
@@ -81,14 +81,14 @@ public class BasicTypeRegistry implements Serializable {
 			if ( typeReference.isForceImmutable() ) {
 				type = new ImmutableNamedBasicTypeImpl<>(
 						javaTypeDescriptor,
-						jdbcTypeDescriptor,
+						jdbcType,
 						typeReference.getName()
 				);
 			}
 			else {
 				type = new NamedBasicTypeImpl<>(
 						javaTypeDescriptor,
-						jdbcTypeDescriptor,
+						jdbcType,
 						typeReference.getName()
 				);
 			}
@@ -98,7 +98,7 @@ public class BasicTypeRegistry implements Serializable {
 				//noinspection unchecked
 				type = new ImmutableConvertedBasicTypeImpl<>(
 						javaTypeDescriptor,
-						jdbcTypeDescriptor,
+						jdbcType,
 						typeReference.getName(),
 						(BasicValueConverter<Object, ?>) typeReference.getConverter()
 				);
@@ -107,7 +107,7 @@ public class BasicTypeRegistry implements Serializable {
 				//noinspection unchecked
 				type = new ConvertedBasicTypeImpl<>(
 						javaTypeDescriptor,
-						jdbcTypeDescriptor,
+						jdbcType,
 						typeReference.getName(),
 						(BasicValueConverter<Object, ?>) typeReference.getConverter()
 				);
@@ -155,7 +155,7 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcTypeDescriptor stdToUse) {
+	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse) {
 		return resolve(
 				jtdToUse,
 				stdToUse,
@@ -163,7 +163,7 @@ public class BasicTypeRegistry implements Serializable {
 		);
 	}
 
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcTypeDescriptor stdToUse, String baseTypeName) {
+	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse, String baseTypeName) {
 		return resolve(
 				jtdToUse,
 				stdToUse,
@@ -175,7 +175,7 @@ public class BasicTypeRegistry implements Serializable {
 	 * Find an existing BasicType registration for the given JavaTypeDescriptor and
 	 * SqlTypeDescriptor combo or create (and register) one.
 	 */
-	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcTypeDescriptor stdToUse, Supplier<BasicType<J>> creator) {
+	public <J> BasicType<J> resolve(JavaType<J> jtdToUse, JdbcType stdToUse, Supplier<BasicType<J>> creator) {
 		final Map<JavaType<?>, BasicType<?>> typeByJtdForStd = registryValues.computeIfAbsent(
 				stdToUse,
 				sqlTypeDescriptor -> new ConcurrentHashMap<>()

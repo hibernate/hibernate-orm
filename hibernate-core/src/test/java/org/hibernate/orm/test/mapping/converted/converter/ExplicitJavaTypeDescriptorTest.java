@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 import org.hibernate.testing.TestForIssue;
@@ -325,7 +325,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		}
 
 		@Override
-		public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 			return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARCHAR );
 		}
 

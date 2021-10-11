@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.RowVersionJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 /**
  * A type that maps between a {@link java.sql.Types#VARBINARY VARBINARY} and {@code byte[]}
@@ -27,7 +27,7 @@ public class RowVersionType
 	}
 
 	public RowVersionType() {
-		super( VarbinaryJdbcTypeDescriptor.INSTANCE, RowVersionJavaTypeDescriptor.INSTANCE );
+		super( VarbinaryJdbcType.INSTANCE, RowVersionJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

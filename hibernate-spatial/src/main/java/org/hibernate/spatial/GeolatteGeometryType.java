@@ -8,7 +8,7 @@
 package org.hibernate.spatial;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.geolatte.geom.Geometry;
 import org.geolatte.geom.GeometryCollection;
@@ -44,7 +44,7 @@ public class GeolatteGeometryType extends AbstractSingleColumnStandardBasicType<
 	 *
 	 * @param sqlTypeDescriptor The Descriptor for the type used by the database for geometries.
 	 */
-	public GeolatteGeometryType(JdbcTypeDescriptor sqlTypeDescriptor) {
+	public GeolatteGeometryType(JdbcType sqlTypeDescriptor) {
 		super( sqlTypeDescriptor, GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 	}
 

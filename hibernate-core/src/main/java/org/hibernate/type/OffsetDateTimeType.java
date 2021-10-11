@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.OffsetDateTime;
 
 import org.hibernate.type.descriptor.java.OffsetDateTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public class OffsetDateTimeType
 	public static final OffsetDateTimeType INSTANCE = new OffsetDateTimeType();
 
 	public OffsetDateTimeType() {
-		super( TimestampWithTimeZoneJdbcTypeDescriptor.INSTANCE, OffsetDateTimeJavaTypeDescriptor.INSTANCE );
+		super( TimestampWithTimeZoneJdbcType.INSTANCE, OffsetDateTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

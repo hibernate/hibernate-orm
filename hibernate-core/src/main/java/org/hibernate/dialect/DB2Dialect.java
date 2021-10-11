@@ -509,11 +509,11 @@ public class DB2Dialect extends Dialect {
 				.getJdbcTypeDescriptorRegistry();
 
 		if ( version < 1100 ) {
-			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcTypeDescriptor.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 			// Binary literals were only added in 11. See https://www.ibm.com/support/knowledgecenter/SSEPGG_11.1.0/com.ibm.db2.luw.sql.ref.doc/doc/r0000731.html#d79816e393
-			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcTypeDescriptor.INSTANCE_WITHOUT_LITERALS );
+			jdbcTypeRegistry.addDescriptor( Types.VARBINARY, VarbinaryJdbcType.INSTANCE_WITHOUT_LITERALS );
 			if ( version < 970 ) {
-				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcTypeDescriptor.INSTANCE );
+				jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 			}
 		}
 		// See HHH-12753
@@ -521,23 +521,23 @@ public class DB2Dialect extends Dialect {
 		// support the N-variant methods like NClob or NString.
 		// Therefore here we overwrite the sql type descriptors to
 		// use the non-N variants which are supported.
-		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.NCHAR, CharJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor(
 				Types.NCLOB,
 				useInputStreamToInsertBlob()
-						? ClobJdbcTypeDescriptor.STREAM_BINDING
-						: ClobJdbcTypeDescriptor.CLOB_BINDING
+						? ClobJdbcType.STREAM_BINDING
+						: ClobJdbcType.CLOB_BINDING
 		);
-		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcTypeDescriptor.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, VarcharJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
 
 		// DB2 requires a custom binder for binding untyped nulls that resolves the type through the statement
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullResolvingJdbcTypeDescriptor.INSTANCE,
+						ObjectNullResolvingJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )

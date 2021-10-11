@@ -9,7 +9,7 @@ import java.io.Serializable;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarbinaryJdbcType;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#LONGVARBINARY LONGVARBINARY} and {@link Serializable}.
@@ -22,7 +22,7 @@ public class SerializableToImageType extends AbstractSingleColumnStandardBasicTy
 	public static final PrimitiveCharacterArrayTextType INSTANCE = new PrimitiveCharacterArrayTextType();
 
 	public SerializableToImageType() {
-		super( LongVarbinaryJdbcTypeDescriptor.INSTANCE, new SerializableJavaTypeDescriptor<Serializable>( Serializable.class ) );
+		super( LongVarbinaryJdbcType.INSTANCE, new SerializableJavaTypeDescriptor<Serializable>( Serializable.class ) );
 	}
 
 	public String getName() {

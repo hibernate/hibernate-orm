@@ -49,10 +49,10 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeDescriptorAdapter;
+import org.hibernate.type.descriptor.converter.AttributeConverterJdbcTypeAdapter;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.LobTypeMappings;
 import org.hibernate.type.descriptor.jdbc.NationalizedTypeMappings;
@@ -667,7 +667,7 @@ public abstract class SimpleValue implements KeyValue {
 		//		corresponding to the AttributeConverter's declared "databaseColumnJavaType" (how we read that value out
 		// 		of ResultSets).  See JdbcTypeJavaClassMappings for details.  Again, given example, this should return
 		// 		VARCHAR/CHAR
-		final JdbcTypeDescriptor recommendedJdbcType = jpaAttributeConverter.getRelationalJavaTypeDescriptor().getRecommendedJdbcType(
+		final JdbcType recommendedJdbcType = jpaAttributeConverter.getRelationalJavaTypeDescriptor().getRecommendedJdbcType(
 				// todo (6.0) : handle the other JdbcRecommendedSqlTypeMappingContext methods
 				new JdbcTypeDescriptorIndicators() {
 					@Override
@@ -706,15 +706,15 @@ public abstract class SimpleValue implements KeyValue {
 			jdbcTypeCode = NationalizedTypeMappings.toNationalizedTypeCode( jdbcTypeCode );
 		}
 
-		final JdbcTypeDescriptor jdbcTypeDescriptor = metadata.getTypeConfiguration()
+		final JdbcType jdbcType = metadata.getTypeConfiguration()
 								.getJdbcTypeDescriptorRegistry()
 								.getDescriptor( jdbcTypeCode );
 
 		// and finally construct the adapter, which injects the AttributeConverter calls into the binding/extraction
 		// 		process...
-		final JdbcTypeDescriptor jdbcTypeDescriptorAdapter = new AttributeConverterJdbcTypeDescriptorAdapter(
+		final JdbcType jdbcTypeAdapter = new AttributeConverterJdbcTypeAdapter(
 				jpaAttributeConverter,
-				jdbcTypeDescriptor,
+				jdbcType,
 				jpaAttributeConverter.getRelationalJavaTypeDescriptor()
 		);
 
@@ -730,7 +730,7 @@ public abstract class SimpleValue implements KeyValue {
 				name,
 				description,
 				jpaAttributeConverter,
-				jdbcTypeDescriptorAdapter,
+				jdbcTypeAdapter,
 				jpaAttributeConverter.getRelationalJavaTypeDescriptor(),
 				jpaAttributeConverter.getDomainJavaTypeDescriptor(),
 				null

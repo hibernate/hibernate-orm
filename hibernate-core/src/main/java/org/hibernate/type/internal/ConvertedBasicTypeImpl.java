@@ -9,7 +9,7 @@ package org.hibernate.type.internal;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Christian Beikov
@@ -20,7 +20,7 @@ public class ConvertedBasicTypeImpl<J> extends NamedBasicTypeImpl<J> implements 
 
 	public ConvertedBasicTypeImpl(
 			JavaType<J> jtd,
-			JdbcTypeDescriptor std,
+			JdbcType std,
 			String name,
 			BasicValueConverter<J, ?> converter) {
 		super( jtd, std, name );

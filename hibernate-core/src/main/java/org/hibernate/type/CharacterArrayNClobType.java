@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 
 /**
  * A type that maps between {@link Types#NCLOB NCLOB} and {@link Character Character[]}
@@ -25,7 +25,7 @@ public class CharacterArrayNClobType
 	public static final CharacterArrayNClobType INSTANCE = new CharacterArrayNClobType();
 
 	public CharacterArrayNClobType() {
-		super( NClobJdbcTypeDescriptor.DEFAULT, CharacterArrayJavaTypeDescriptor.INSTANCE );
+		super( NClobJdbcType.DEFAULT, CharacterArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

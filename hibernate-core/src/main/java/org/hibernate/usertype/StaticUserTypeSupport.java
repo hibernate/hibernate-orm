@@ -18,14 +18,14 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Steve Ebersole
  */
 public class StaticUserTypeSupport<T> implements UserType<T> {
 	private final BasicJavaType javaType;
-	private final JdbcTypeDescriptor jdbcType;
+	private final JdbcType jdbcType;
 	private final MutabilityPlan mutabilityPlan;
 	private final BasicValueConverter valueConverter;
 
@@ -33,25 +33,25 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	private ValueExtractor jdbcValueExtractor;
 	private ValueBinder jdbcValueBinder;
 
-	public StaticUserTypeSupport(BasicJavaType javaType, JdbcTypeDescriptor jdbcType) {
+	public StaticUserTypeSupport(BasicJavaType javaType, JdbcType jdbcType) {
 		this( javaType, jdbcType, javaType.getMutabilityPlan() );
 	}
 
 	public StaticUserTypeSupport(
 			BasicJavaType javaType,
-			JdbcTypeDescriptor jdbcType,
+			JdbcType jdbcType,
 			MutabilityPlan mutabilityPlan) {
 		this( javaType, jdbcType, mutabilityPlan, null );
 	}
 
 	public StaticUserTypeSupport(
 			BasicJavaType javaType,
-			JdbcTypeDescriptor jdbcType,
+			JdbcType jdbcType,
 			BasicValueConverter valueConverter) {
 		this( javaType, jdbcType, javaType.getMutabilityPlan(), valueConverter );
 	}
 
-	public StaticUserTypeSupport(BasicJavaType javaType, JdbcTypeDescriptor jdbcType, MutabilityPlan mutabilityPlan, BasicValueConverter valueConverter) {
+	public StaticUserTypeSupport(BasicJavaType javaType, JdbcType jdbcType, MutabilityPlan mutabilityPlan, BasicValueConverter valueConverter) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
 		this.mutabilityPlan = mutabilityPlan;
@@ -67,7 +67,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 		return javaType;
 	}
 
-	public JdbcTypeDescriptor getJdbcType() {
+	public JdbcType getJdbcType() {
 		return jdbcType;
 	}
 

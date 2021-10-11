@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java.spi;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -28,9 +28,9 @@ public class JavaTypeDescriptorBasicAdaptor<T> extends AbstractClassJavaTypeDesc
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		throw new JdbcTypeRecommendationException(
-				"Could not determine recommended JdbcTypeDescriptor for `" + getJavaType().getTypeName() + "`"
+				"Could not determine recommended JdbcType for `" + getJavaType().getTypeName() + "`"
 		);
 	}
 

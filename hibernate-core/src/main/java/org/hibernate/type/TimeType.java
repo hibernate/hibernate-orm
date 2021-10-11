@@ -10,7 +10,7 @@ import java.sql.Time;
 import java.util.Date;
 
 import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIME TIME} and {@link Time}
@@ -24,7 +24,7 @@ public class TimeType
 	public static final TimeType INSTANCE = new TimeType();
 
 	public TimeType() {
-		super( TimeJdbcTypeDescriptor.INSTANCE, JdbcTimeJavaTypeDescriptor.INSTANCE );
+		super( TimeJdbcType.INSTANCE, JdbcTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

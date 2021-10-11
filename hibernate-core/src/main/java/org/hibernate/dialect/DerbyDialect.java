@@ -57,11 +57,10 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.jdbc.DecimalJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
@@ -504,18 +503,18 @@ public class DerbyDialect extends Dialect {
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( getVersion() < 1070 ) {
-			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcTypeDescriptor.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, SmallIntJdbcType.INSTANCE );
 		}
-		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcTypeDescriptor.INSTANCE );
-		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.NUMERIC, DecimalJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 
 		// Derby requires a custom binder for binding untyped nulls that resolves the type through the statement
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullResolvingJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullResolvingJdbcTypeDescriptor.INSTANCE,
+						ObjectNullResolvingJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )

@@ -36,9 +36,9 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -108,7 +108,7 @@ public class SybaseASEDialect extends SybaseDialect {
 		sizeStrategy = new SizeStrategyImpl() {
 			@Override
 			public Size resolveSize(
-					JdbcTypeDescriptor jdbcType,
+					JdbcType jdbcType,
 					JavaType<?> javaType,
 					Integer precision,
 					Integer scale,
@@ -190,10 +190,10 @@ public class SybaseASEDialect extends SybaseDialect {
 
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
-		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcTypeDescriptor.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( Types.BOOLEAN, TinyIntJdbcType.INSTANCE );
 		// At least the jTDS driver does not support this type code
 		if ( jtdsDriver ) {
-			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcTypeDescriptor.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( Types.TIMESTAMP_WITH_TIMEZONE, TimestampJdbcType.INSTANCE );
 		}
 	}
 

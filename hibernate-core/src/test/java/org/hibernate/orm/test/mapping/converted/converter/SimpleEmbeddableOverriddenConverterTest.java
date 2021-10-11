@@ -17,7 +17,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class SimpleEmbeddableOverriddenConverterTest extends BaseNonConfigCoreFu
 		CompositeType homeAddressType = assertTyping( CompositeType.class, ep.getPropertyType( "homeAddress" ) );
 		BasicType<?> homeAddressCityType = (BasicType<?>) findCompositeAttributeType( homeAddressType, "city" );
 		assertTyping( StringJavaTypeDescriptor.class, homeAddressCityType.getJavaTypeDescriptor() );
-		assertTyping( VarcharJdbcTypeDescriptor.class, homeAddressCityType.getJdbcTypeDescriptor() );
+		assertTyping( VarcharJdbcType.class, homeAddressCityType.getJdbcTypeDescriptor() );
 	}
 
 	public Type findCompositeAttributeType(CompositeType compositeType, String attributeName) {

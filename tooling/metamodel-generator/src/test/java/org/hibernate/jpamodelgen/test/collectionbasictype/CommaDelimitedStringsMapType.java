@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.usertype.StaticUserTypeSupport;
 
 /**
@@ -21,7 +21,7 @@ public class CommaDelimitedStringsMapType extends StaticUserTypeSupport {
     public CommaDelimitedStringsMapType() {
         super(
                 new CommaDelimitedStringMapJavaTypeDescriptor(),
-                VarcharJdbcTypeDescriptor.INSTANCE
+                VarcharJdbcType.INSTANCE
         );
     }
 

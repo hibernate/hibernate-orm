@@ -10,7 +10,7 @@ import java.sql.SQLException;
 import java.util.Map;
 
 import org.hibernate.NotYetImplementedFor6Exception;
-import org.hibernate.spatial.dialect.db2.DB2GeometryTypeDescriptor;
+import org.hibernate.spatial.dialect.db2.DB2GeometryType;
 import org.hibernate.spatial.testing.AbstractExpectationsFactory;
 import org.hibernate.spatial.testing.NativeSQLStatement;
 
@@ -27,7 +27,7 @@ import org.locationtech.jts.geom.Point;
  */
 public class DB2ExpectationsFactory extends AbstractExpectationsFactory {
 
-	private final DB2GeometryTypeDescriptor desc = new DB2GeometryTypeDescriptor( 4326 );
+	private final DB2GeometryType desc = new DB2GeometryType( 4326 );
 
 	public DB2ExpectationsFactory() {
 		super();

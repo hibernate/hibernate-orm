@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -90,7 +90,7 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 					scale,
 					displaySize
 			);
-			final JdbcTypeDescriptor resolvedJdbcTypeDescriptor = dialect
+			final JdbcType resolvedJdbcType = dialect
 					.resolveSqlTypeDescriptor(
 							columnTypeName,
 							columnType,
@@ -99,11 +99,11 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 							typeConfiguration.getJdbcTypeDescriptorRegistry()
 					);
 			final JavaType<J> javaTypeDescriptor;
-			final JdbcTypeDescriptor jdbcTypeDescriptor;
+			final JdbcType jdbcType;
 			// If there is an explicit JavaTypeDescriptor, then prefer its recommended JDBC type
 			if ( explicitJavaTypeDescriptor != null ) {
 				javaTypeDescriptor = explicitJavaTypeDescriptor;
-				jdbcTypeDescriptor = explicitJavaTypeDescriptor.getRecommendedJdbcType(
+				jdbcType = explicitJavaTypeDescriptor.getRecommendedJdbcType(
 						new JdbcTypeDescriptorIndicators() {
 							@Override
 							public TypeConfiguration getTypeConfiguration() {
@@ -117,20 +117,20 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 
 							@Override
 							public EnumType getEnumeratedType() {
-								return resolvedJdbcTypeDescriptor.isNumber() ? EnumType.ORDINAL : EnumType.STRING;
+								return resolvedJdbcType.isNumber() ? EnumType.ORDINAL : EnumType.STRING;
 							}
 						}
 				);
 			}
 			else {
-				jdbcTypeDescriptor = resolvedJdbcTypeDescriptor;
-				javaTypeDescriptor = jdbcTypeDescriptor.getJdbcRecommendedJavaTypeMapping(
+				jdbcType = resolvedJdbcType;
+				javaTypeDescriptor = jdbcType.getJdbcRecommendedJavaTypeMapping(
 						length,
 						scale,
 						typeConfiguration
 				);
 			}
-			return typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, jdbcTypeDescriptor );
+			return typeConfiguration.getBasicTypeRegistry().resolve( javaTypeDescriptor, jdbcType );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(

@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * TODO : javadoc
@@ -23,8 +23,8 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 		extends AbstractStandardBasicType<T>
 		implements SingleColumnType<T> {
 
-	public AbstractSingleColumnStandardBasicType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<T> javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	public AbstractSingleColumnStandardBasicType(JdbcType jdbcType, JavaType<T> javaTypeDescriptor) {
+		super( jdbcType, javaTypeDescriptor );
 	}
 
 	@Override

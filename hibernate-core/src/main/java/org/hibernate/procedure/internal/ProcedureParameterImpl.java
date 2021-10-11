@@ -25,7 +25,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ProcedureParameterNamedBinder;
 import org.hibernate.type.descriptor.ValueBinder;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -168,7 +168,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			// This will cause a failure if there are other parameters bound by
 			// name and the dialect does not support "mixed" named/positional parameters;
 			// e.g., Oracle.
-			final JdbcTypeDescriptor recommendedJdbcType = typeToUse.getExpressableJavaTypeDescriptor()
+			final JdbcType recommendedJdbcType = typeToUse.getExpressableJavaTypeDescriptor()
 					.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 
 			if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED &&

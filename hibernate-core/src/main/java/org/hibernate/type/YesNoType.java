@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'Y' and 'N')
@@ -23,7 +23,7 @@ public class YesNoType
 	public static final YesNoType INSTANCE = new YesNoType();
 
 	public YesNoType() {
-		super( CharJdbcTypeDescriptor.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
+		super( CharJdbcType.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

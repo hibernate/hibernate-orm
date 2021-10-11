@@ -54,7 +54,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 	}
 
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		final SDOGeometryTypeDescriptor sdoGeometryTypeDescriptor = mkSdoGeometryTypeDescriptor( serviceRegistry );
+		final SDOGeometryType sdoGeometryTypeDescriptor = mkSdoGeometryTypeDescriptor( serviceRegistry );
 		typeContributions.contributeType( new GeolatteGeometryType( sdoGeometryTypeDescriptor ) );
 		typeContributions.contributeType( new JTSGeometryType( sdoGeometryTypeDescriptor ) );
 
@@ -62,7 +62,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
-	private SDOGeometryTypeDescriptor mkSdoGeometryTypeDescriptor(ServiceRegistry serviceRegistry) {
+	private SDOGeometryType mkSdoGeometryTypeDescriptor(ServiceRegistry serviceRegistry) {
 		final ConfigurationService cfgService = serviceRegistry.getService( ConfigurationService.class );
 		final StrategySelector strategySelector = serviceRegistry.getService( StrategySelector.class );
 
@@ -77,7 +77,7 @@ class OracleSDOSupport implements SpatialDialect, Serializable, WithCustomJPAFil
 
 		log.connectionFinder( connectionFinder.getClass().getCanonicalName() );
 
-		return new SDOGeometryTypeDescriptor(
+		return new SDOGeometryType(
 				new OracleJDBCTypeFactory(
 						connectionFinder
 				)

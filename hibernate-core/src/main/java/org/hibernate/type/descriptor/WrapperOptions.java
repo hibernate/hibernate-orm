@@ -12,7 +12,6 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * Gives binding (nullSafeSet) and extracting (nullSafeGet) code access to options.

@@ -39,12 +39,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
@@ -86,7 +85,7 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
@@ -167,29 +166,29 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		if ( jtdsDriver ) {
-			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcTypeDescriptor.INSTANCE );
+			jdbcTypeRegistry.addDescriptor( Types.TINYINT, SmallIntJdbcType.INSTANCE );
 
 			// The jTDS driver doesn't support the JDBC4 signatures using 'long length' for stream bindings
-			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
 
 			// The jTDS driver doesn't support nationalized types
-			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
-			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcTypeDescriptor.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NCLOB, ClobJdbcType.CLOB_BINDING );
+			jdbcTypeRegistry.addDescriptor( Types.NVARCHAR, ClobJdbcType.CLOB_BINDING );
 		}
 		else {
 			// Some Sybase drivers cannot support getClob.  See HHH-7889
-			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.STREAM_BINDING_EXTRACTING );
+			jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.STREAM_BINDING_EXTRACTING );
 		}
 
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.PRIMITIVE_ARRAY_BINDING );
 
 		// Sybase requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsNullTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullAsNullTypeJdbcTypeDescriptor.INSTANCE,
+						ObjectNullAsNullTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )

@@ -18,7 +18,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -145,7 +145,7 @@ public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaType<T>, Tem
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
 		return delegate.getRecommendedJdbcType( indicators );
 	}
 
@@ -165,7 +165,7 @@ public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaType<T>, Tem
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return delegate.getDefaultSqlLength( dialect, jdbcType );
 	}
 
@@ -230,7 +230,7 @@ public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaType<T>, Tem
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcTypeDescriptor sqlType, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType sqlType, Dialect dialect) {
 		return delegate.getCheckCondition( columnName, sqlType, dialect );
 	}
 

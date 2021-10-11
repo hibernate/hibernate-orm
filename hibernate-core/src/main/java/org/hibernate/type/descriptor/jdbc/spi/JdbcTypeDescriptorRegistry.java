@@ -10,16 +10,16 @@ import java.io.Serializable;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
-import org.hibernate.type.descriptor.jdbc.ObjectJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeDescriptorBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from JDBC type code (int) -> {@link JdbcTypeDescriptor}
+ * Basically a map from JDBC type code (int) -> {@link JdbcType}
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
@@ -29,7 +29,7 @@ import org.jboss.logging.Logger;
 public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.BaselineTarget, Serializable {
 	private static final Logger log = Logger.getLogger( JdbcTypeDescriptorRegistry.class );
 
-	private final ConcurrentHashMap<Integer, JdbcTypeDescriptor> descriptorMap = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 //		this.typeConfiguration = typeConfiguration;
@@ -40,22 +40,22 @@ public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.Ba
 	// baseline descriptors
 
 	@Override
-	public void addDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		final JdbcTypeDescriptor previous = descriptorMap.put( jdbcTypeDescriptor.getJdbcTypeCode(), jdbcTypeDescriptor );
-		if ( previous != null && previous != jdbcTypeDescriptor ) {
-			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", jdbcTypeDescriptor, previous );
+	public void addDescriptor(JdbcType jdbcType) {
+		final JdbcType previous = descriptorMap.put( jdbcType.getJdbcTypeCode(), jdbcType );
+		if ( previous != null && previous != jdbcType ) {
+			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
 		}
 	}
 
-	public void addDescriptor(int typeCode, JdbcTypeDescriptor jdbcTypeDescriptor) {
-		final JdbcTypeDescriptor previous = descriptorMap.put( typeCode, jdbcTypeDescriptor );
-		if ( previous != null && previous != jdbcTypeDescriptor ) {
-			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcTypeDescriptor, previous );
+	public void addDescriptor(int typeCode, JdbcType jdbcType) {
+		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
+		if ( previous != null && previous != jdbcType ) {
+			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
 		}
 	}
 
-	public JdbcTypeDescriptor getDescriptor(int jdbcTypeCode) {
-		JdbcTypeDescriptor descriptor = descriptorMap.get( jdbcTypeCode );
+	public JdbcType getDescriptor(int jdbcTypeCode) {
+		JdbcType descriptor = descriptorMap.get( jdbcTypeCode );
 		if ( descriptor != null ) {
 			return descriptor;
 		}
@@ -72,7 +72,7 @@ public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.Ba
 		if ( family != null ) {
 			for ( int potentialAlternateTypeCode : family.getTypeCodes() ) {
 				if ( potentialAlternateTypeCode != jdbcTypeCode ) {
-					final JdbcTypeDescriptor potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
+					final JdbcType potentialAlternateDescriptor = descriptorMap.get( potentialAlternateTypeCode );
 					if ( potentialAlternateDescriptor != null ) {
 						// todo (6.0) : add a SqlTypeDescriptor#canBeAssignedFrom method ?
 						return potentialAlternateDescriptor;
@@ -89,7 +89,7 @@ public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.Ba
 		}
 
 		// finally, create a new descriptor mapping to getObject/setObject for this type code...
-		final ObjectJdbcTypeDescriptor fallBackDescriptor = new ObjectJdbcTypeDescriptor( jdbcTypeCode );
+		final ObjectJdbcType fallBackDescriptor = new ObjectJdbcType( jdbcTypeCode );
 		addDescriptor( fallBackDescriptor );
 		return fallBackDescriptor;
 	}

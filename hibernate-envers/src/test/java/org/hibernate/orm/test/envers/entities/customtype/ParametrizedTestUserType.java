@@ -16,7 +16,7 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
 
@@ -56,7 +56,7 @@ public class ParametrizedTestUserType implements UserType, ParameterizedType {
 			}
 			value = v;
 		}
-		VarcharJdbcTypeDescriptor.INSTANCE.getBinder( StringJavaTypeDescriptor.INSTANCE )
+		VarcharJdbcType.INSTANCE.getBinder( StringJavaTypeDescriptor.INSTANCE )
 				.bind( st, (String) value, index, session );
 	}
 

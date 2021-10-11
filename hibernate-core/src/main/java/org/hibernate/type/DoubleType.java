@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DoubleJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#DOUBLE DOUBLE} and {@link Double}
@@ -20,7 +20,7 @@ public class DoubleType
 	public static final DoubleType INSTANCE = new DoubleType();
 
 	public DoubleType() {
-		super( DoubleJdbcTypeDescriptor.INSTANCE, DoubleJavaTypeDescriptor.INSTANCE );
+		super( DoubleJdbcType.INSTANCE, DoubleJavaTypeDescriptor.INSTANCE );
 	}
 	@Override
 	public String getName() {

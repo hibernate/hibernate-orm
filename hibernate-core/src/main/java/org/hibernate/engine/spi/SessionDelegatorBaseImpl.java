@@ -58,7 +58,6 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * This class is meant to be extended.

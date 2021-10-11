@@ -79,12 +79,12 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
+import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -241,7 +241,7 @@ public abstract class Dialect implements ConversionContext {
 		sizeStrategy = new SizeStrategyImpl();
 	}
 
-	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
@@ -999,16 +999,16 @@ public abstract class Dialect implements ConversionContext {
 
 		final NationalizationSupport nationalizationSupport = getNationalizationSupport();
 		if ( nationalizationSupport == NationalizationSupport.EXPLICIT ) {
-			typeContributions.contributeJdbcTypeDescriptor( NCharJdbcTypeDescriptor.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NVarcharJdbcTypeDescriptor.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharJdbcTypeDescriptor.INSTANCE );
-			typeContributions.contributeJdbcTypeDescriptor( NClobJdbcTypeDescriptor.DEFAULT );
+			typeContributions.contributeJdbcTypeDescriptor( NCharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( NVarcharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( LongNVarcharJdbcType.INSTANCE );
+			typeContributions.contributeJdbcTypeDescriptor( NClobJdbcType.DEFAULT );
 		}
 
 		if ( useInputStreamToInsertBlob() ) {
 			typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
 					Types.CLOB,
-					ClobJdbcTypeDescriptor.STREAM_BINDING
+					ClobJdbcType.STREAM_BINDING
 			);
 		}
 	}
@@ -1032,12 +1032,12 @@ public abstract class Dialect implements ConversionContext {
 		return paren>0 ? result.substring(0, paren) : result;
 	}
 
-	public String getRawTypeName(JdbcTypeDescriptor jdbcTypeDescriptor) throws HibernateException {
-		return getRawTypeName( jdbcTypeDescriptor.getJdbcTypeCode() );
+	public String getRawTypeName(JdbcType jdbcType) throws HibernateException {
+		return getRawTypeName( jdbcType.getJdbcTypeCode() );
 	}
 
-	public String getTypeName(JdbcTypeDescriptor jdbcTypeDescriptor) throws HibernateException {
-		return getTypeName( jdbcTypeDescriptor.getDefaultSqlTypeCode() );
+	public String getTypeName(JdbcType jdbcType) throws HibernateException {
+		return getTypeName( jdbcType.getDefaultSqlTypeCode() );
 	}
 
 	public String getTypeName(int code) throws HibernateException {
@@ -1095,14 +1095,14 @@ public abstract class Dialect implements ConversionContext {
 	 * Get the name of the database type associated with the given
 	 * <tt>SqlTypeDescriptor</tt>.
 	 *
-	 * @param jdbcTypeDescriptor the SQL type
+	 * @param jdbcType the SQL type
 	 * @param size the length, precision, scale of the column
 	 *
 	 * @return the database type name
 	 *
 	 */
-	public String getTypeName(JdbcTypeDescriptor jdbcTypeDescriptor, Size size) {
-		return getTypeName( jdbcTypeDescriptor.getJdbcTypeCode(), size );
+	public String getTypeName(JdbcType jdbcType, Size size) {
+		return getTypeName( jdbcType.getJdbcTypeCode(), size );
 	}
 
 	/**
@@ -3421,12 +3421,12 @@ public abstract class Dialect implements ConversionContext {
 	public interface SizeStrategy {
 		/**
 		 * Resolve the {@link Size} to use for columns of the given
-		 * {@link JdbcTypeDescriptor SQL type} and {@link JavaType Java type}.
+		 * {@link JdbcType SQL type} and {@link JavaType Java type}.
 		 *
 		 * @return a non-null {@link Size}
 		 */
 		Size resolveSize(
-				JdbcTypeDescriptor jdbcType,
+				JdbcType jdbcType,
 				JavaType<?> javaType,
 				Integer precision,
 				Integer scale,
@@ -3436,7 +3436,7 @@ public abstract class Dialect implements ConversionContext {
 	public class SizeStrategyImpl implements SizeStrategy {
 		@Override
 		public Size resolveSize(
-				JdbcTypeDescriptor jdbcType,
+				JdbcType jdbcType,
 				JavaType<?> javaType,
 				Integer precision,
 				Integer scale,

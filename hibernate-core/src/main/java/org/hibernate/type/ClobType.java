@@ -10,7 +10,7 @@ import java.sql.Clob;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.ClobJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 
 /**
  * A type that maps between {@link Types#CLOB CLOB} and {@link Clob}
@@ -22,7 +22,7 @@ public class ClobType extends AbstractSingleColumnStandardBasicType<Clob> implem
 	public static final ClobType INSTANCE = new ClobType();
 
 	public ClobType() {
-		super( ClobJdbcTypeDescriptor.DEFAULT, ClobJavaTypeDescriptor.INSTANCE );
+		super( ClobJdbcType.DEFAULT, ClobJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

@@ -12,8 +12,8 @@ import java.util.UUID;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.BytesHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -29,8 +29,8 @@ public class UUIDJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<UUID
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return BinaryJdbcTypeDescriptor.INSTANCE;
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+		return BinaryJdbcType.INSTANCE;
 	}
 
 	public String toString(UUID value) {
@@ -42,7 +42,7 @@ public class UUIDJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<UUID
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		if ( jdbcType.isString() ) {
 			return 36L;
 		}

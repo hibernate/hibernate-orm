@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.net.URL;
 
 import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link URL}
@@ -20,7 +20,7 @@ public class UrlType extends AbstractSingleColumnStandardBasicType<URL> {
 	public static final UrlType INSTANCE = new UrlType();
 
 	public UrlType() {
-		super( VarcharJdbcTypeDescriptor.INSTANCE, UrlJavaTypeDescriptor.INSTANCE );
+		super( VarcharJdbcType.INSTANCE, UrlJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

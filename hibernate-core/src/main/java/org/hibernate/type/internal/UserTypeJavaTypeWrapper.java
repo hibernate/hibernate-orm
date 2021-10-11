@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.usertype.Sized;
 import org.hibernate.usertype.UserType;
@@ -86,12 +86,12 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( userType.sqlTypes()[0] );
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		if ( sized != null ) {
 			return sized.defaultSizes()[0].getLength();
 		}

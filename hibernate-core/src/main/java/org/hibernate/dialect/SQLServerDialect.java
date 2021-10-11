@@ -50,7 +50,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -165,7 +165,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 		typeContributions.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor(
 				Types.TINYINT,
-				SmallIntJdbcTypeDescriptor.INSTANCE
+				SmallIntJdbcType.INSTANCE
 		);
 	}
 

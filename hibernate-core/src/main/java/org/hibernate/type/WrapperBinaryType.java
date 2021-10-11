@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.ByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 /**
  * A type mapping {@link Types#VARBINARY VARBINARY} and {@link Byte Byte[]}
@@ -21,7 +21,7 @@ public class WrapperBinaryType extends AbstractSingleColumnStandardBasicType<Byt
 	public static final WrapperBinaryType INSTANCE = new WrapperBinaryType();
 
 	public WrapperBinaryType() {
-		super( VarbinaryJdbcTypeDescriptor.INSTANCE, ByteArrayJavaTypeDescriptor.INSTANCE );
+		super( VarbinaryJdbcType.INSTANCE, ByteArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

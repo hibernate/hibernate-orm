@@ -22,7 +22,7 @@ import org.hibernate.engine.jdbc.WrappedClob;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
@@ -42,7 +42,7 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
 		if ( indicators.isNationalized() ) {
 			final JdbcTypeDescriptorRegistry stdRegistry = indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 			return stdRegistry.getDescriptor( Types.NCLOB );
@@ -155,7 +155,7 @@ public class ClobJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Clob
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultLobLength();
 	}
 

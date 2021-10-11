@@ -12,7 +12,7 @@ import java.util.Properties;
 import org.hibernate.MappingException;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.usertype.DynamicParameterizedType;
 
 /**
@@ -25,7 +25,7 @@ public class SerializableToBlobType<T extends Serializable> extends AbstractSing
 	private static final long serialVersionUID = 1L;
 
 	public SerializableToBlobType() {
-		super( BlobJdbcTypeDescriptor.DEFAULT, new SerializableJavaTypeDescriptor( Serializable.class ) );
+		super( BlobJdbcType.DEFAULT, new SerializableJavaTypeDescriptor( Serializable.class ) );
 	}
 
 	@Override

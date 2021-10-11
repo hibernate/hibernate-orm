@@ -13,8 +13,8 @@ import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
@@ -34,7 +34,7 @@ public class TestEnumTypeSerialization {
 
 		final OrdinalEnumValueConverter valueConverter = new OrdinalEnumValueConverter(
 				enumJtd,
-				IntegerJdbcTypeDescriptor.INSTANCE,
+				IntegerJdbcType.INSTANCE,
 				IntegerJavaTypeDescriptor.INSTANCE
 		);
 
@@ -56,7 +56,7 @@ public class TestEnumTypeSerialization {
 
 		final NamedEnumValueConverter valueConverter = new NamedEnumValueConverter(
 				enumJtd,
-				VarcharJdbcTypeDescriptor.INSTANCE,
+				VarcharJdbcType.INSTANCE,
 				StringJavaTypeDescriptor.INSTANCE
 		);
 

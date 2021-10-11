@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.LongJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BigIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BigIntJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#BIGINT BIGINT} and {@link Long}
@@ -21,7 +21,7 @@ public class LongType
 	public static final LongType INSTANCE = new LongType();
 
 	public LongType() {
-		super( BigIntJdbcTypeDescriptor.INSTANCE, LongJavaTypeDescriptor.INSTANCE );
+		super( BigIntJdbcType.INSTANCE, LongJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

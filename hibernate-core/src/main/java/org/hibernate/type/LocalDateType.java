@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.LocalDate;
 
 import org.hibernate.type.descriptor.java.LocalDateJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public class LocalDateType
 	public static final LocalDateType INSTANCE = new LocalDateType();
 
 	public LocalDateType() {
-		super( DateJdbcTypeDescriptor.INSTANCE, LocalDateJavaTypeDescriptor.INSTANCE );
+		super( DateJdbcType.INSTANCE, LocalDateJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

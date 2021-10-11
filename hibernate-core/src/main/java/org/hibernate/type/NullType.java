@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
 
 /**
  * @author Christian Beikov
@@ -21,11 +21,11 @@ public class NullType extends JavaObjectType {
 	public static final NullType INSTANCE = new NullType();
 
 	public NullType() {
-		super( ObjectNullResolvingJdbcTypeDescriptor.INSTANCE, ObjectJavaTypeDescriptor.INSTANCE );
+		super( ObjectNullResolvingJdbcType.INSTANCE, ObjectJavaTypeDescriptor.INSTANCE );
 	}
 
-	public NullType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Object> javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	public NullType(JdbcType jdbcType, JavaType<Object> javaTypeDescriptor) {
+		super( jdbcType, javaTypeDescriptor );
 	}
 
 	@Override

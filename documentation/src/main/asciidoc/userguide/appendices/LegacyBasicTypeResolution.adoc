@@ -5,7 +5,7 @@
 [[basic-legacy]]
 == Legacy BasicType resolution
 
-Versions prior to 6.0 statically combined the `JavaType`, `JdbcTypeDescriptor`, `BasicValueConverter` and
+Versions prior to 6.0 statically combined the `JavaType`, `JdbcType`, `BasicValueConverter` and
 `MutabilityPlan` aspects within the `org.hibernate.type.BasicType` contract.   Hibernate's legacy strategy for resolving
 a basic type is based on finding the implementation of `org.hibernate.type.BasicType` to use.
 
@@ -205,8 +205,8 @@ include::{sourcedir}/basic/bitset/BitSetType.java[tags=basic-custom-type-BitSetT
 ----
 ====
 
-The `AbstractSingleColumnStandardBasicType` requires an `jdbcTypeDescriptor` and a `javaTypeDescriptor`.
-The `jdbcTypeDescriptor` is `VarcharTypeDescriptor.INSTANCE` because the database column is a VARCHAR.
+The `AbstractSingleColumnStandardBasicType` requires an `jdbcType` and a `javaTypeDescriptor`.
+The `jdbcType` is `VarcharTypeDescriptor.INSTANCE` because the database column is a VARCHAR.
 On the Java side, we need to use a `BitSetJavaType` instance which can be implemented like this:
 
 [[basic-custom-type-BitSetTypeDescriptor-example]]

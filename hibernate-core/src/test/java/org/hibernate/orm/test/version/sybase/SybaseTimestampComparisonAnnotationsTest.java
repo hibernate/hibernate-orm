@@ -25,7 +25,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -42,7 +42,7 @@ public class SybaseTimestampComparisonAnnotationsTest extends BaseCoreFunctional
 		final BasicType<?> versionType =
 				sessionFactory().getEntityPersister( Thing.class.getName() ).getVersionType();
 		assertTrue( versionType.getJavaTypeDescriptor() instanceof PrimitiveByteArrayJavaTypeDescriptor );
-		assertTrue( versionType.getJdbcTypeDescriptor() instanceof VarbinaryJdbcTypeDescriptor );
+		assertTrue( versionType.getJdbcTypeDescriptor() instanceof VarbinaryJdbcType );
 
 		Session s = openSession();
 		s.getTransaction().begin();

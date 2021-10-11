@@ -16,8 +16,8 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -68,7 +68,7 @@ public class ListIndexJdbcTypeTests {
 	}
 	private void verifyJdbcTypeResolution(
 			Property property,
-			Consumer<JdbcTypeDescriptor> typeVerifier) {
+			Consumer<JdbcType> typeVerifier) {
 		assertThat( property.getValue(), instanceOf( org.hibernate.mapping.List.class ) );
 		final org.hibernate.mapping.List listValue = (org.hibernate.mapping.List) property.getValue();
 
@@ -86,7 +86,7 @@ public class ListIndexJdbcTypeTests {
 		private String name;
 		@ElementCollection
 		@OrderColumn
-		@ListIndexJdbcType( TinyIntJdbcTypeDescriptor.class )
+		@ListIndexJdbcType( TinyIntJdbcType.class )
 		private List<String> listOfStrings;
 		@ElementCollection
 		@OrderColumn

@@ -32,7 +32,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
@@ -212,7 +212,7 @@ public class TypeDefinition implements Serializable {
 					}
 
 					@Override
-					public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+					public JdbcType getJdbcTypeDescriptor() {
 						return resolvedBasicType.getJdbcTypeDescriptor();
 					}
 
@@ -238,7 +238,7 @@ public class TypeDefinition implements Serializable {
 			final JavaType<Serializable> jtd = typeConfiguration
 					.getJavaTypeDescriptorRegistry()
 					.resolveDescriptor( typeImplementorClass );
-			final JdbcTypeDescriptor jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
+			final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
 			final BasicType<Serializable> resolved = typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
 			final SerializableType legacyType = new SerializableType( typeImplementorClass );
 
@@ -264,7 +264,7 @@ public class TypeDefinition implements Serializable {
 				}
 
 				@Override
-				public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+				public JdbcType getJdbcTypeDescriptor() {
 					return resolved.getJdbcTypeDescriptor();
 				}
 

@@ -10,7 +10,6 @@ import java.util.Date;
 
 import org.hibernate.Hibernate;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.type.DateType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;

@@ -8,7 +8,7 @@ package org.hibernate.test.lob;
 
 /**
  * Tests eager materialization and mutation of data mapped by
- * {@link org.hibernate.type.ImageType}.
+ * {@link org.hibernate.type.StandardBasicTypes#IMAGE}.
  *
  * @author Gail Badner
  */

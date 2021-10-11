@@ -12,6 +12,7 @@ import static org.hibernate.envers.internal.entities.mapper.relation.query.Query
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -43,13 +44,11 @@ import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Update;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.MapType;
-import org.hibernate.type.MaterializedClobType;
-import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.TimestampType;
 import org.hibernate.type.Type;
 
 /**
@@ -488,10 +487,21 @@ public class ValidityAuditStrategy implements AuditStrategy {
 				// required for Embeddables
 				return true;
 			}
-			else if ( collectionElementType instanceof MaterializedClobType || collectionElementType instanceof MaterializedNClobType ) {
+			else if ( isMaterializedClob( collectionElementType ) ) {
 				// for Map<> using @Lob annotations
 				return collectionType instanceof MapType;
 			}
+		}
+		return false;
+	}
+
+	private boolean isMaterializedClob(Type collectionElementType) {
+		if ( collectionElementType instanceof BasicType<?> ) {
+			final BasicType<?> basicType = (BasicType<?>) collectionElementType;
+			return basicType.getJavaType() == String.class && (
+					basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.CLOB
+							|| basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.NCLOB
+			);
 		}
 		return false;
 	}

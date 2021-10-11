@@ -23,7 +23,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
-import org.hibernate.type.StringType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -353,7 +353,7 @@ public class MySQLStoredProcedureTest {
 		scope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, null );
 
@@ -365,7 +365,7 @@ public class MySQLStoredProcedureTest {
 		scope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, "test" );
 
@@ -382,7 +382,7 @@ public class MySQLStoredProcedureTest {
 		scope.inTransaction( entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, null );
 
@@ -400,7 +400,7 @@ public class MySQLStoredProcedureTest {
 			try {
 				ProcedureCall procedureCall = entityManager.unwrap( Session.class ).createStoredProcedureCall(
 						"sp_is_null" );
-				procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
+				procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
 				procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 
 				procedureCall.getOutputParameterValue( 2 );

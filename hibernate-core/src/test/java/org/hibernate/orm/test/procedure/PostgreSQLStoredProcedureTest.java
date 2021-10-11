@@ -22,7 +22,7 @@ import org.hibernate.Session;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.type.StringType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
@@ -366,7 +366,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, null );
 
@@ -378,7 +378,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
 			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( 1, "test" );
 
@@ -395,7 +395,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
-			procedureCall.registerParameter( "param", StringType.class, ParameterMode.IN );
+			procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
 			procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
 			procedureCall.setParameter( "param", null );
 
@@ -410,7 +410,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 			try {
 				ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 						.createStoredProcedureCall( "sp_is_null" );
-				procedureCall.registerParameter( "param", StringType.class, ParameterMode.IN );
+				procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
 				procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
 
 				procedureCall.getOutputParameterValue( "result" );

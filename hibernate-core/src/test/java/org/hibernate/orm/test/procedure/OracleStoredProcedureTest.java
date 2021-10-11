@@ -23,8 +23,8 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.YesNoType;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -493,7 +493,7 @@ public class OracleStoredProcedureTest {
 		scope.inTransaction(
 				entityManager -> {
 					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phone_validity" )
-							.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
+							.registerStoredProcedureParameter( 1, NumericBooleanConverter.class, ParameterMode.IN )
 							.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
 							.setParameter( 1, true );
 
@@ -521,7 +521,7 @@ public class OracleStoredProcedureTest {
 		scope.inTransaction(
 				entityManager -> {
 					StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_votes" )
-							.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
+							.registerStoredProcedureParameter( 1, YesNoConverter.class, ParameterMode.IN )
 							.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
 							.setParameter( 1, true );
 

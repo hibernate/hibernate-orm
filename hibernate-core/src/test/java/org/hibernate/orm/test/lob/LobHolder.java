@@ -13,11 +13,11 @@ import java.sql.Clob;
  * <p/>
  * {@link #clobLocator} is used to hold CLOB data that is materialized lazily
  * via a JDBC CLOB locator; it is mapped via the
- * {@link org.hibernate.type.ClobType}
+ * {@link org.hibernate.type.StandardBasicTypes#CLOB}
  * <p/>
  * {@link #blobLocator} is used to hold BLOB data that is materialized lazily
  * via a JDBC BLOB locator; it is mapped via the
- * {@link org.hibernate.type.BlobType}
+ * {@link org.hibernate.type.StandardBasicTypes#BLOB}
  * 
  *
  * @author Steve Ebersole

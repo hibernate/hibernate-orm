@@ -65,6 +65,7 @@ import org.hibernate.result.UpdateCountOutput;
 import org.hibernate.result.spi.ResultContext;
 import org.hibernate.sql.exec.spi.JdbcCall;
 import org.hibernate.sql.results.NoMoreOutputsException;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
 
 import org.jboss.logging.Logger;
@@ -358,23 +359,77 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
+			int position,
+			BasicTypeReference<?> type,
+			ParameterMode mode) {
+		getSession().checkOpen( true );
+
+		try {
+			registerParameter( position, type, mode );
+		}
+		catch (HibernateException he) {
+			throw getSession().getExceptionConverter().convert( he );
+		}
+		catch (RuntimeException e) {
+			getSession().markForRollbackOnly();
+			throw e;
+		}
+
+		return this;
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> registerStoredProcedureParameter(
+			String parameterName,
+			BasicTypeReference<?> type,
+			ParameterMode mode) {
+		getSession().checkOpen( true );
+		try {
+			registerParameter( parameterName, type, mode );
+		}
+		catch (HibernateException he) {
+			throw getSession().getExceptionConverter().convert( he );
+		}
+		catch (RuntimeException e) {
+			getSession().markForRollbackOnly();
+			throw e;
+		}
+
+		return this;
+	}
+
+	@Override
 	public <T> ProcedureParameter<T> registerParameter(int position, Class<T> javaType, ParameterMode mode) {
-		final ProcedureParameterImpl procedureParameter = new ProcedureParameterImpl(
+		final AllowableParameterType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
+				javaType
+		);
+		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				javaType,
-				getSessionFactory().getDomainModel().resolveQueryParameterType( javaType )
+				parameterType.getJavaType(),
+				parameterType
 		);
 		registerParameter( procedureParameter );
 		return procedureParameter;
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public ProcedureCall registerParameter0(int position, Class type, ParameterMode mode) {
-		registerParameter( position, type, mode );
-		return this;
+	public <T> ProcedureParameter<T> registerParameter(
+			int position,
+			BasicTypeReference<T> typeReference,
+			ParameterMode mode) {
+		final BasicType<T> basicType = getSessionFactory().getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( typeReference );
+		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
+				position,
+				mode,
+				basicType.getJavaType(),
+				basicType
+		);
+		registerParameter( procedureParameter );
+		return procedureParameter;
 	}
 
 	private void registerParameter(ProcedureParameterImplementor parameter) {
@@ -389,11 +444,14 @@ public class ProcedureCallImpl<R>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> ProcedureParameterImplementor<T> registerParameter(String name, Class<T> javaType, ParameterMode mode) {
+		final AllowableParameterType<T> parameterType = getSessionFactory().getDomainModel().resolveQueryParameterType(
+				javaType
+		);
 		final ProcedureParameterImpl parameter = new ProcedureParameterImpl(
 				name,
 				mode,
-				javaType,
-				getSessionFactory().getDomainModel().resolveQueryParameterType( javaType )
+				parameterType.getJavaType(),
+				parameterType
 		);
 
 		registerParameter( parameter );
@@ -403,9 +461,23 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public ProcedureCall registerParameter0(String name, Class type, ParameterMode mode) {
-		registerParameter( name, type, mode );
-		return this;
+	public <T> ProcedureParameterImplementor<T> registerParameter(
+			String name,
+			BasicTypeReference<T> typeReference,
+			ParameterMode mode) {
+		final BasicType<T> basicType = getSessionFactory().getTypeConfiguration()
+				.getBasicTypeRegistry()
+				.resolve( typeReference );
+		final ProcedureParameterImpl parameter = new ProcedureParameterImpl(
+				name,
+				mode,
+				basicType.getJavaType(),
+				basicType
+		);
+
+		registerParameter( parameter );
+
+		return parameter;
 	}
 
 	@Override

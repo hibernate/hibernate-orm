@@ -16,6 +16,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * @author Steve Ebersole
@@ -32,6 +33,12 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 	default R getSingleResult() {
 		return uniqueResult();
 	}
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, BasicTypeReference<?> type, ParameterMode mode);
+
+	@Override
+	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, BasicTypeReference<?> type, ParameterMode mode);
 
 	@Override
 	ProcedureCallImplementor<R> setHint(String hintName, Object value);
@@ -71,4 +78,5 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	@Override
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode);
+
 }

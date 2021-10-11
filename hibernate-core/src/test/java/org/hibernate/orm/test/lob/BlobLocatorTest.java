@@ -25,7 +25,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests lazy materialization of data mapped by
- * {@link org.hibernate.type.BlobType}, as well as bounded and unbounded
+ * {@link org.hibernate.type.StandardBasicTypes#BLOB}, as well as bounded and unbounded
  * materialization and mutation.
  *
  * @author Steve Ebersole

@@ -31,11 +31,7 @@ import org.hibernate.query.Query;
 import org.hibernate.transform.BasicTransformerAdapter;
 import org.hibernate.transform.DistinctRootEntityResultTransformer;
 import org.hibernate.transform.Transformers;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.LongType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TimestampType;
 
 import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.RequiresDialect;

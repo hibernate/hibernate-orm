@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal.metadata;
 
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,12 +80,11 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.BagType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.ListType;
 import org.hibernate.type.ManyToOneType;
 import org.hibernate.type.MapType;
-import org.hibernate.type.MaterializedClobType;
-import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.SetType;
 import org.hibernate.type.SortedMapType;
 import org.hibernate.type.SortedSetType;
@@ -1103,8 +1103,12 @@ public final class CollectionMetadataGenerator {
 	private boolean isKeyRevisionTypeInId() {
 		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
 			final Type type = propertyValue.getKey().getType();
-			if ( !type.isComponentType() && !type.isAssociationType() ) {
-				return ( type instanceof MaterializedClobType ) || ( type instanceof MaterializedNClobType );
+			if ( !type.isComponentType() && !type.isAssociationType() && type instanceof BasicType<?> ) {
+				final BasicType<?> basicType = (BasicType<?>) type;
+				return basicType.getJavaType() == String.class && (
+						basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.CLOB
+								|| basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.NCLOB
+				);
 			}
 		}
 		return false;
@@ -1119,8 +1123,12 @@ public final class CollectionMetadataGenerator {
 		if ( propertyValue instanceof org.hibernate.mapping.Map ) {
 			final Type type = propertyValue.getElement().getType();
 			// we're only interested in basic types
-			if ( !type.isComponentType() && !type.isAssociationType() ) {
-				return ( type instanceof MaterializedClobType ) || ( type instanceof MaterializedNClobType );
+			if ( !type.isComponentType() && !type.isAssociationType() && type instanceof BasicType<?> ) {
+				final BasicType<?> basicType = (BasicType<?>) type;
+				return basicType.getJavaType() == String.class && (
+						basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.CLOB
+								|| basicType.getJdbcTypeDescriptor().getJdbcTypeCode() == Types.NCLOB
+				);
 			}
 		}
 		return false;

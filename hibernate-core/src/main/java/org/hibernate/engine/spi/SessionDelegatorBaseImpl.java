@@ -519,22 +519,22 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+	public ProcedureCall createNamedStoredProcedureQuery(String name) {
 		return delegate.createNamedStoredProcedureQuery( name );
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName) {
 		return delegate.createStoredProcedureQuery( procedureName );
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		return delegate.createStoredProcedureQuery( procedureName, resultClasses );
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		return delegate.createStoredProcedureQuery( procedureName, resultSetMappings );
 	}
 

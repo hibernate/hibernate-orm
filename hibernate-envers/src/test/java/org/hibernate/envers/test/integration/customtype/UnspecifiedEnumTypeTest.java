@@ -15,7 +15,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.envers.BaseEnversFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.customtype.UnspecifiedEnumTypeEntity;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.junit.Assert;

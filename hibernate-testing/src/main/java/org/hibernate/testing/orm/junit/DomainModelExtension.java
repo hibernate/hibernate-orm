@@ -6,10 +6,8 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.Optional;
 
 import org.hibernate.boot.Metadata;
@@ -18,15 +16,13 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.ClobType;
-import org.hibernate.type.NClobType;
 
 import org.hibernate.testing.orm.domain.DomainModelDescriptor;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
@@ -179,7 +175,7 @@ public class DomainModelExtension
 			while ( props.hasNext() ) {
 				final Property prop = (Property) props.next();
 				if ( prop.getValue().isSimpleValue() ) {
-					if ( isLob( ( (SimpleValue) prop.getValue() ).getTypeName() ) ) {
+					if ( isLob( (SimpleValue) prop.getValue() ) ) {
 						hasLob = true;
 						break;
 					}
@@ -196,7 +192,7 @@ public class DomainModelExtension
 			boolean isLob = false;
 
 			if ( collectionBinding.getElement().isSimpleValue() ) {
-				isLob = isLob( ( (SimpleValue) collectionBinding.getElement() ).getTypeName() );
+				isLob = isLob( (SimpleValue) collectionBinding.getElement() );
 			}
 
 			if ( !isLob ) {
@@ -205,16 +201,22 @@ public class DomainModelExtension
 		}
 	}
 
-	private static boolean isLob(String typeName) {
-		return "blob".equals( typeName )
-				|| "clob".equals( typeName )
-				|| "nclob".equals( typeName )
-				|| Blob.class.getName().equals( typeName )
-				|| Clob.class.getName().equals( typeName )
-				|| NClob.class.getName().equals( typeName )
-				|| BlobType.class.getName().equals( typeName )
-				|| ClobType.class.getName().equals( typeName )
-				|| NClobType.class.getName().equals( typeName );
+	private static boolean isLob(SimpleValue value) {
+		final String typeName = value.getTypeName();
+		if ( typeName != null ) {
+			String significantTypeNamePart = typeName.substring( typeName.lastIndexOf( '.' ) + 1 )
+					.toLowerCase( Locale.ROOT );
+			switch ( significantTypeNamePart ) {
+				case "blob":
+				case "blobtype":
+				case "clob":
+				case "clobtype":
+				case "nclob":
+				case "nclobtype":
+					return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

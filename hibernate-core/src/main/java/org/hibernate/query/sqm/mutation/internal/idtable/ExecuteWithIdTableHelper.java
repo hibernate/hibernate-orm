@@ -39,8 +39,6 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.UUIDCharType;
 
 /**
  * @author Steve Ebersole

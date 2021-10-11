@@ -8,10 +8,8 @@ package org.hibernate.testing.orm.junit;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Blob;
-import java.sql.Clob;
-import java.sql.NClob;
 import java.util.Iterator;
+import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -32,9 +30,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.ClobType;
-import org.hibernate.type.NClobType;
 
 import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.jupiter.api.AfterEach;
@@ -127,7 +122,7 @@ public abstract class BaseSessionFactoryFunctionalTest
 			while ( props.hasNext() ) {
 				final Property prop = (Property) props.next();
 				if ( prop.getValue().isSimpleValue() ) {
-					if ( isLob( ( (SimpleValue) prop.getValue() ).getTypeName() ) ) {
+					if ( isLob( (SimpleValue) prop.getValue() ) ) {
 						hasLob = true;
 						break;
 					}
@@ -144,7 +139,7 @@ public abstract class BaseSessionFactoryFunctionalTest
 			boolean isLob = false;
 
 			if ( collectionBinding.getElement().isSimpleValue() ) {
-				isLob = isLob( ( (SimpleValue) collectionBinding.getElement() ).getTypeName() );
+				isLob = isLob( (SimpleValue) collectionBinding.getElement() );
 			}
 
 			if ( !isLob ) {
@@ -277,16 +272,22 @@ public abstract class BaseSessionFactoryFunctionalTest
 		return DialectContext.getDialect();
 	}
 
-	private boolean isLob(String typeName) {
-		return "blob".equals( typeName )
-				|| "clob".equals( typeName )
-				|| "nclob".equals( typeName )
-				|| Blob.class.getName().equals( typeName )
-				|| Clob.class.getName().equals( typeName )
-				|| NClob.class.getName().equals( typeName )
-				|| BlobType.class.getName().equals( typeName )
-				|| ClobType.class.getName().equals( typeName )
-				|| NClobType.class.getName().equals( typeName );
+	private static boolean isLob(SimpleValue value) {
+		final String typeName = value.getTypeName();
+		if ( typeName != null ) {
+			String significantTypeNamePart = typeName.substring( typeName.lastIndexOf( '.' ) + 1 )
+					.toLowerCase( Locale.ROOT );
+			switch ( significantTypeNamePart ) {
+				case "blob":
+				case "blobtype":
+				case "clob":
+				case "clobtype":
+				case "nclob":
+				case "nclobtype":
+					return true;
+			}
+		}
+		return false;
 	}
 
 }

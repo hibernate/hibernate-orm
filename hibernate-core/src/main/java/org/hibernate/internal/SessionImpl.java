@@ -2563,7 +2563,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createNamedStoredProcedureQuery(String name) {
+	public ProcedureCall createNamedStoredProcedureQuery(String name) {
 		checkOpen();
 		try {
 			final NamedCallableQueryMemento memento = getFactory().getQueryEngine()
@@ -2580,7 +2580,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName) {
 		try {
 			return createStoredProcedureCall( procedureName );
 		}
@@ -2590,7 +2590,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
 		try {
 			return createStoredProcedureCall( procedureName, resultClasses );
 		}
@@ -2600,7 +2600,7 @@ public class SessionImpl
 	}
 
 	@Override
-	public StoredProcedureQuery createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
+	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
 		try {
 			try {

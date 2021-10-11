@@ -8,6 +8,7 @@ package org.hibernate;
 
 import java.io.Serializable;
 
+import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -17,6 +18,7 @@ import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.QueryProducer;
+import org.hibernate.query.UnknownSqlResultSetMappingException;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 
 /**
@@ -121,6 +123,47 @@ public interface SharedSessionContract extends QueryProducer, Serializable {
 	 * @return The representation of the procedure call.
 	 */
 	ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings);
+
+	/**
+	 * Gets a ProcedureCall based on a named template
+	 *
+	 * @param name The name given to the template
+	 *
+	 * @return The ProcedureCall
+	 *
+	 * @see jakarta.persistence.NamedStoredProcedureQuery
+	 */
+	ProcedureCall createNamedStoredProcedureQuery(String name);
+
+	/**
+	 * Creates a call to a stored procedure.
+	 *
+	 * @param procedureName The name of the procedure.
+	 *
+	 * @return The representation of the procedure call.
+	 */
+	ProcedureCall createStoredProcedureQuery(String procedureName);
+
+	/**
+	 * Creates a call to a stored procedure with specific result set entity mappings.  Each class named
+	 * is considered a "root return".
+	 *
+	 * @param procedureName The name of the procedure.
+	 * @param resultClasses The entity(s) to map the result on to.
+	 *
+	 * @return The representation of the procedure call.
+	 */
+	ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses);
+
+	/**
+	 * Creates a call to a stored procedure with specific result set entity mappings.
+	 *
+	 * @param procedureName The name of the procedure.
+	 * @param resultSetMappings The explicit result set mapping(s) to use for mapping the results
+	 *
+	 * @return The representation of the procedure call.
+	 */
+	ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings);
 
 	/**
 	 * Get the Session-level JDBC batch size for the current Session.

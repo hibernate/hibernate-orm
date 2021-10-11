@@ -26,7 +26,6 @@ import org.hibernate.envers.AuditMappedBy;
 import org.hibernate.envers.Audited;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;

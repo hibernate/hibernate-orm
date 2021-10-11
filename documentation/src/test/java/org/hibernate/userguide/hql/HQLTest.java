@@ -33,7 +33,6 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringType;
 import org.hibernate.userguide.model.AddressType;
 import org.hibernate.userguide.model.Call;
 import org.hibernate.userguide.model.CreditCardPayment;

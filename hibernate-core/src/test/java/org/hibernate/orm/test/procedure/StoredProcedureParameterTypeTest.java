@@ -30,36 +30,10 @@ import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.type.BigDecimalType;
-import org.hibernate.type.BigIntegerType;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.BlobType;
-import org.hibernate.type.BooleanType;
-import org.hibernate.type.ByteType;
-import org.hibernate.type.CalendarType;
-import org.hibernate.type.CharArrayType;
-import org.hibernate.type.CharacterType;
-import org.hibernate.type.ClassType;
-import org.hibernate.type.ClobType;
-import org.hibernate.type.CurrencyType;
-import org.hibernate.type.DateType;
-import org.hibernate.type.DoubleType;
-import org.hibernate.type.FloatType;
-import org.hibernate.type.IntegerType;
-import org.hibernate.type.LocaleType;
-import org.hibernate.type.LongType;
-import org.hibernate.type.MaterializedClobType;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.ShortType;
-import org.hibernate.type.StringType;
-import org.hibernate.type.TextType;
-import org.hibernate.type.TimeType;
-import org.hibernate.type.TimeZoneType;
-import org.hibernate.type.TimestampType;
-import org.hibernate.type.TrueFalseType;
-import org.hibernate.type.UUIDBinaryType;
-import org.hibernate.type.UrlType;
-import org.hibernate.type.YesNoType;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.TrueFalseConverter;
+import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -86,9 +60,20 @@ public class StoredProcedureParameterTypeTest {
 	public void testNumericBooleanTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery( "test" )
-							.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.NUMERIC_BOOLEAN, ParameterMode.IN )
 							.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
 							.setParameter( 1, false )
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
+	public void testNumericBooleanTypeConverterInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery( "test" )
+						.registerStoredProcedureParameter( 1, NumericBooleanConverter.class, ParameterMode.IN )
+						.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
+						.setParameter( 1, false )
 		);
 	}
 
@@ -97,9 +82,40 @@ public class StoredProcedureParameterTypeTest {
 	public void testYesNoTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery( "test" )
-							.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
+						.registerStoredProcedureParameter( 1, StandardBasicTypes.YES_NO, ParameterMode.IN )
+						.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
+						.setParameter( 1, false )
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
+	public void testYesNoTypeConverterInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery( "test" )
+							.registerStoredProcedureParameter( 1, YesNoConverter.class, ParameterMode.IN )
 							.registerStoredProcedureParameter( 2, String.class, ParameterMode.OUT )
 							.setParameter( 1, false )
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
+	public void testTrueFalseTypeInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery("test")
+						.registerStoredProcedureParameter( 1, StandardBasicTypes.TRUE_FALSE, ParameterMode.IN)
+						.setParameter(1, false)
+		);
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-12661" )
+	public void testTrueFalseTypeConverterInParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> session.createStoredProcedureQuery("test")
+						.registerStoredProcedureParameter( 1, TrueFalseConverter.class, ParameterMode.IN)
+						.setParameter(1, false)
 		);
 	}
 
@@ -108,7 +124,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testStringTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, StringType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN)
 							.setParameter(1, TEST_STRING)
 		);
 	}
@@ -118,7 +134,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testMaterializedClobTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, MaterializedClobType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.MATERIALIZED_CLOB, ParameterMode.IN)
 							.setParameter(1, TEST_STRING)
 		);
 	}
@@ -128,7 +144,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testTextTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, TextType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.TEXT, ParameterMode.IN)
 							.setParameter(1, TEST_STRING)
 		);
 	}
@@ -138,18 +154,8 @@ public class StoredProcedureParameterTypeTest {
 	public void testCharacterTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, CharacterType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.CHARACTER, ParameterMode.IN)
 							.setParameter(1, 'a')
-		);
-	}
-
-	@Test
-	@TestForIssue( jiraKey = "HHH-12661" )
-	public void testTrueFalseTypeInParameter(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, TrueFalseType.class, ParameterMode.IN)
-							.setParameter(1, false)
 		);
 	}
 
@@ -158,7 +164,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testBooleanTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, BooleanType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.BOOLEAN, ParameterMode.IN)
 							.setParameter(1, false)
 		);
 	}
@@ -168,7 +174,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testByteTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, ByteType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.BYTE, ParameterMode.IN)
 							.setParameter(1, (byte) 'a')
 		);
 	}
@@ -178,7 +184,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testShortTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, ShortType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.SHORT, ParameterMode.IN)
 							.setParameter(1, (short) 2)
 		);
 	}
@@ -188,7 +194,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testIntegerTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, IntegerType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.INTEGER, ParameterMode.IN)
 							.setParameter(1, 2)
 		);
 	}
@@ -198,7 +204,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testLongTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, LongType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.LONG, ParameterMode.IN)
 							.setParameter(1, 2L)
 		);
 	}
@@ -207,7 +213,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testFloatTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, FloatType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.FLOAT, ParameterMode.IN)
 							.setParameter(1, 2.0F)
 		);
 	}
@@ -217,7 +223,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testDoubleTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, DoubleType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.DOUBLE, ParameterMode.IN)
 							.setParameter(1, 2.0D)
 		);
 	}
@@ -227,7 +233,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testBigIntegerTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, BigIntegerType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.BIG_INTEGER, ParameterMode.IN)
 							.setParameter( 1, BigInteger.ONE)
 		);
 	}
@@ -237,7 +243,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testBigDecimalTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, BigDecimalType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.BIG_DECIMAL, ParameterMode.IN)
 							.setParameter( 1, BigDecimal.ONE)
 		);
 	}
@@ -247,7 +253,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testTimestampTypeDateInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, TimestampType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.TIMESTAMP, ParameterMode.IN)
 							.setParameter(1, new Date())
 		);
 	}
@@ -257,7 +263,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testTimestampTypeTimestampInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter(1, TimestampType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter(1, StandardBasicTypes.TIMESTAMP, ParameterMode.IN)
 							.setParameter( 1, Timestamp.valueOf( LocalDateTime.now()))
 		);
 	}
@@ -267,7 +273,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testTimeTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, TimeType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.TIME, ParameterMode.IN)
 							.setParameter( 1, Time.valueOf( LocalTime.now()))
 		);
 	}
@@ -277,7 +283,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testDateTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, DateType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.DATE, ParameterMode.IN)
 							.setParameter(1, java.sql.Date.valueOf( LocalDate.now()))
 		);
 	}
@@ -287,7 +293,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testCalendarTypeCalendarInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, CalendarType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.CALENDAR, ParameterMode.IN)
 							.setParameter( 1, Calendar.getInstance())
 		);
 	}
@@ -297,7 +303,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testCurrencyTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, CurrencyType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.CURRENCY, ParameterMode.IN)
 							.setParameter( 1, Currency.getAvailableCurrencies().iterator().next())
 		);
 	}
@@ -307,7 +313,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testLocaleTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, LocaleType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.LOCALE, ParameterMode.IN)
 							.setParameter( 1, Locale.ENGLISH)
 		);
 	}
@@ -317,7 +323,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testTimeZoneTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, TimeZoneType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.TIMEZONE, ParameterMode.IN)
 							.setParameter( 1, TimeZone.getTimeZone( ZoneId.systemDefault()))
 		);
 	}
@@ -328,7 +334,7 @@ public class StoredProcedureParameterTypeTest {
 		final URL url = new URL( "http://example.com");
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, UrlType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.URL, ParameterMode.IN)
 							.setParameter(1, url)
 		);
 	}
@@ -338,7 +344,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testClassTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, ClassType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.CLASS, ParameterMode.IN)
 							.setParameter(1, Class.class)
 		);
 	}
@@ -349,7 +355,7 @@ public class StoredProcedureParameterTypeTest {
 		final Blob blob = new SerialBlob( TEST_BYTE_ARRAY);
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, BlobType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.BLOB, ParameterMode.IN)
 							.setParameter(1, blob)
 		);
 	}
@@ -360,7 +366,7 @@ public class StoredProcedureParameterTypeTest {
 		final Clob clob = new SerialClob( TEST_CHAR_ARRAY);
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, ClobType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.CLOB, ParameterMode.IN)
 							.setParameter(1, clob)
 		);
 	}
@@ -370,7 +376,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testBinaryTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, BinaryType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.BINARY, ParameterMode.IN)
 							.setParameter(1, TEST_BYTE_ARRAY)
 		);
 	}
@@ -380,7 +386,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testCharArrayTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, CharArrayType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.CHAR_ARRAY, ParameterMode.IN)
 							.setParameter(1, TEST_CHAR_ARRAY)
 		);
 	}
@@ -390,7 +396,7 @@ public class StoredProcedureParameterTypeTest {
 	public void testUUIDBinaryTypeInParameter(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
-							.registerStoredProcedureParameter( 1, UUIDBinaryType.class, ParameterMode.IN)
+							.registerStoredProcedureParameter( 1, StandardBasicTypes.UUID_BINARY, ParameterMode.IN)
 							.setParameter( 1, UUID.randomUUID())
 		);
 	}
@@ -401,7 +407,7 @@ public class StoredProcedureParameterTypeTest {
 		scope.inTransaction(
 				session -> {
 					ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
-					procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN ).enablePassingNulls( true );
+					procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN ).enablePassingNulls( true );
 					procedureCall.setParameter( 1, null );
 				}
 		);
@@ -413,7 +419,7 @@ public class StoredProcedureParameterTypeTest {
 		scope.inTransaction(
 				session -> {
 						ProcedureCall procedureCall = session.createStoredProcedureCall( "test" );
-						procedureCall.registerParameter( 1, StringType.class, ParameterMode.IN );
+						procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
 						procedureCall.setParameter( 1, null );
 				}
 		);

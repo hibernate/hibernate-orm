@@ -15,7 +15,6 @@ import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.StringType;
 
 /**
  * @author Sharath Reddy

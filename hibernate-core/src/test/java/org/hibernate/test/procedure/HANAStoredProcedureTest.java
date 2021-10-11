@@ -38,8 +38,9 @@ import org.hibernate.result.Output;
 import org.hibernate.result.ResultSetOutput;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.type.NumericBooleanType;
-import org.hibernate.type.YesNoType;
+
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -508,7 +509,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phone_validity" )
-					.registerStoredProcedureParameter( 1, NumericBooleanType.class, ParameterMode.IN )
+					.registerStoredProcedureParameter( 1, NumericBooleanConverter.class, ParameterMode.IN )
 					.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
 					.setParameter( 1, true );
 
@@ -534,7 +535,7 @@ public class HANAStoredProcedureTest extends BaseEntityManagerFunctionalTestCase
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_votes" )
-					.registerStoredProcedureParameter( 1, YesNoType.class, ParameterMode.IN )
+					.registerStoredProcedureParameter( 1, YesNoConverter.class, ParameterMode.IN )
 					.registerStoredProcedureParameter( 2, Class.class, ParameterMode.REF_CURSOR )
 					.setParameter( 1, true );
 

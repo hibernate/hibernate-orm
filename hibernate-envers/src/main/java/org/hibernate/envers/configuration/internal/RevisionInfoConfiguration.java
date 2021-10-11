@@ -36,8 +36,6 @@ import org.hibernate.envers.internal.revisioninfo.RevisionInfoNumberReader;
 import org.hibernate.envers.internal.revisioninfo.RevisionInfoQueryCreator;
 import org.hibernate.envers.internal.tools.MutableBoolean;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.type.LongType;
-import org.hibernate.type.Type;
 
 import org.dom4j.Document;
 import org.dom4j.Element;
@@ -51,7 +49,7 @@ public class RevisionInfoConfiguration {
 	private PropertyData revisionInfoIdData;
 	private PropertyData revisionInfoTimestampData;
 	private PropertyData modifiedEntityNamesData;
-	private Type revisionInfoTimestampType;
+	private String revisionInfoTimestampTypeName;
 	private GlobalConfiguration globalCfg;
 
 	private XMLHelper xmlHelper;
@@ -70,7 +68,7 @@ public class RevisionInfoConfiguration {
 		revisionInfoIdData = new PropertyData( "id", "id", "field", null );
 		revisionInfoTimestampData = new PropertyData( "timestamp", "timestamp", "field", null );
 		modifiedEntityNamesData = new PropertyData( "modifiedEntityNames", "modifiedEntityNames", "field", null );
-		revisionInfoTimestampType = new LongType();
+		revisionInfoTimestampTypeName = "long";
 
 		revisionPropType = "integer";
 	}
@@ -99,7 +97,7 @@ public class RevisionInfoConfiguration {
 		final Element timestampProperty = MetadataTools.addProperty(
 				classMapping,
 				revisionInfoTimestampData.getName(),
-				revisionInfoTimestampType.getName(),
+				revisionInfoTimestampTypeName,
 				true,
 				false
 		);
@@ -352,7 +350,7 @@ public class RevisionInfoConfiguration {
 					revisionInfoEntityName = persistentClass.getEntityName();
 					revisionInfoClass = persistentClass.getMappedClass();
 					final Class<? extends RevisionListener> revisionListenerClass = getRevisionListenerClass( revisionEntity.value() );
-					revisionInfoTimestampType = persistentClass.getProperty( revisionInfoTimestampData.getName() ).getType();
+					revisionInfoTimestampTypeName = persistentClass.getProperty( revisionInfoTimestampData.getName() ).getType().getName();
 					if ( globalCfg.isTrackEntitiesChangedInRevision()
 							|| ( globalCfg.isUseRevisionEntityWithNativeId() && DefaultTrackingModifiedEntitiesRevisionEntity.class
 							.isAssignableFrom( revisionInfoClass ) )
@@ -447,7 +445,7 @@ public class RevisionInfoConfiguration {
 	}
 
 	private boolean isTimestampAsDate() {
-		final String typename = revisionInfoTimestampType.getName();
+		final String typename = revisionInfoTimestampTypeName;
 		return "date".equals( typename ) || "time".equals( typename ) || "timestamp".equals( typename );
 	}
 

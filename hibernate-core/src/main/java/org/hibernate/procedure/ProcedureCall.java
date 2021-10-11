@@ -6,9 +6,15 @@
  */
 package org.hibernate.procedure;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
 import jakarta.persistence.StoredProcedureQuery;
+import jakarta.persistence.TemporalType;
 
 import org.hibernate.MappingException;
 import org.hibernate.SynchronizeableQuery;
@@ -16,6 +22,7 @@ import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.query.CommonQueryContract;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.named.NameableQuery;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * Defines support for executing database stored procedures and functions.
@@ -100,15 +107,22 @@ public interface ProcedureCall
 	<T> ProcedureParameter<T> registerParameter(int position, Class<T> type, ParameterMode mode);
 
 	/**
-	 * Chained form of {@link #registerParameter(int, Class, jakarta.persistence.ParameterMode)}
+	 * Basic form for registering a positional parameter.
 	 *
 	 * @param position The position
-	 * @param type The Java type of the parameter
+	 * @param type The type reference of the parameter type
 	 * @param mode The parameter mode (in, out, inout)
+	 * @param <T> The parameterized Java type of the parameter.
 	 *
-	 * @return {@code this}, for method chaining
+	 * @return The parameter registration memento
 	 */
-	<T> ProcedureCall registerParameter0(int position, Class<T> type, ParameterMode mode);
+	<T> ProcedureParameter<T> registerParameter(int position, BasicTypeReference<T> type, ParameterMode mode);
+
+	/**
+	 * Like {@link #registerStoredProcedureParameter(int, Class, ParameterMode)} but a basic type reference is given
+	 * instead of a class for the parameter type.
+	 */
+	ProcedureCall registerStoredProcedureParameter(int position, BasicTypeReference<?> type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the position under which it was registered.
@@ -139,19 +153,26 @@ public interface ProcedureCall
 			throws NamedParametersNotSupportedException;
 
 	/**
-	 * Chained form of {@link #registerParameter(String, Class, jakarta.persistence.ParameterMode)}
+	 * Basic form for registering a named parameter.
 	 *
 	 * @param parameterName The parameter name
-	 * @param type The Java type of the parameter
+	 * @param type The type reference of the parameter type
 	 * @param mode The parameter mode (in, out, inout)
+	 * @param <T> The parameterized Java type of the parameter.
 	 *
 	 * @return The parameter registration memento
 	 *
 	 * @throws NamedParametersNotSupportedException When the underlying database is known to not support
 	 * named procedure parameters.
 	 */
-	ProcedureCall registerParameter0(String parameterName, Class type, ParameterMode mode)
+	<T> ProcedureParameter<T> registerParameter(String parameterName, BasicTypeReference<T> type, ParameterMode mode)
 			throws NamedParametersNotSupportedException;
+
+	/**
+	 * Like {@link #registerStoredProcedureParameter(String, Class, ParameterMode)} but a basic type reference is given
+	 * instead of a class for the parameter type.
+	 */
+	ProcedureCall registerStoredProcedureParameter(String parameterName, BasicTypeReference<?> type, ParameterMode mode);
 
 	/**
 	 * Retrieve a previously registered parameter memento by the name under which it was registered.
@@ -191,6 +212,10 @@ public interface ProcedureCall
 		getOutputs().release();
 	}
 
+	/*
+	Covariant overrides
+	 */
+
 	@Override
 	ProcedureCall addSynchronizedQuerySpace(String querySpace);
 
@@ -202,4 +227,43 @@ public interface ProcedureCall
 
 	@Override
 	NamedCallableQueryMemento toMemento(String name);
+
+	@Override
+	ProcedureCall setHint(String hintName, Object value);
+
+	@Override
+	<T> ProcedureCall setParameter( Parameter<T> param, T value);
+
+	@Override
+	ProcedureCall setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType);
+
+	@Override
+	ProcedureCall setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
+
+	@Override
+	ProcedureCall setParameter(String name, Object value);
+
+	@Override
+	ProcedureCall setParameter(String name, Calendar value, TemporalType temporalType);
+
+	@Override
+	ProcedureCall setParameter(String name, Date value, TemporalType temporalType);
+
+	@Override
+	ProcedureCall setParameter(int position, Object value);
+
+	@Override
+	ProcedureCall setParameter(int position, Calendar value, TemporalType temporalType);
+
+	@Override
+	ProcedureCall setParameter(int position, Date value, TemporalType temporalType);
+
+	@Override
+	ProcedureCall setFlushMode(FlushModeType flushMode);
+
+	@Override
+	ProcedureCall registerStoredProcedureParameter(int position, Class type, ParameterMode mode);
+
+	@Override
+	ProcedureCall registerStoredProcedureParameter(String parameterName, Class type, ParameterMode mode);
 }

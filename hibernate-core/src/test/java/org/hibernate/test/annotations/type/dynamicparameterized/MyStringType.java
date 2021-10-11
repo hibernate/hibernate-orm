@@ -32,7 +32,6 @@ import java.util.Properties;
 
 import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.StringType;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 

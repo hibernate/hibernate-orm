@@ -50,9 +50,8 @@ public class InstantJavaTypeDescriptor extends AbstractTemporalJavaTypeDescripto
 
 	@Override
 	protected <X> TemporalJavaTypeDescriptor<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		// todo (6.0) : resolve against the type registry instead?
 		//noinspection unchecked
-		return (TemporalJavaTypeDescriptor<X>) JdbcDateJavaTypeDescriptor.INSTANCE;
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override
@@ -64,7 +63,7 @@ public class InstantJavaTypeDescriptor extends AbstractTemporalJavaTypeDescripto
 	@Override
 	protected <X> TemporalJavaTypeDescriptor<X> forTimePrecision(TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
-		return (TemporalJavaTypeDescriptor<X>) JdbcTimeJavaTypeDescriptor.INSTANCE;
+		return (TemporalJavaTypeDescriptor<X>) this;
 	}
 
 	@Override
@@ -118,11 +117,11 @@ public class InstantJavaTypeDescriptor extends AbstractTemporalJavaTypeDescripto
 		}
 
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Date.from( instant );
+			return (X) new java.sql.Date( instant.toEpochMilli() );
 		}
 
 		if ( java.sql.Time.class.isAssignableFrom( type ) ) {
-			return (X) java.sql.Time.from( instant );
+			return (X) new java.sql.Time( instant.toEpochMilli() );
 		}
 
 		if ( Date.class.isAssignableFrom( type ) ) {

@@ -11,7 +11,7 @@ import org.hibernate.testing.RequiresDialectFeature;
 
 /**
  * Tests eager materialization and mutation of data mapped by
- * {@link org.hibernate.type.MaterializedClobType}.
+ * {@link org.hibernate.type.StandardBasicTypes#MATERIALIZED_CLOB}.
  *
  * @author Gail Badner
  */

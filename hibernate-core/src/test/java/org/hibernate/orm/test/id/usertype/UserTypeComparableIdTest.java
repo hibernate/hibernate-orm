@@ -17,7 +17,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.annotations.CustomType;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.LongType;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.TestForIssue;

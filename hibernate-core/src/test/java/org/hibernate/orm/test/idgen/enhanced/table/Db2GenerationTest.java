@@ -17,7 +17,6 @@ import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.id.MultipleHiLoPerTableGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.mapping.Table;
-import org.hibernate.type.IntegerType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.TestForIssue;

@@ -883,6 +883,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return procedureCall;
 	}
 
+	@Override
+	public ProcedureCall createNamedStoredProcedureQuery(String name) {
+		return getNamedProcedureCall( name );
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// dynamic ProcedureCall support
@@ -908,6 +913,33 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	@SuppressWarnings("UnnecessaryLocalVariable")
 	public ProcedureCall createStoredProcedureCall(String procedureName, String... resultSetMappings) {
+		checkOpen();
+		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
+//		call.setComment( "Dynamic stored procedure call" );
+		return procedureCall;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public ProcedureCall createStoredProcedureQuery(String procedureName) {
+		checkOpen();
+		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName );
+//		call.setComment( "Dynamic stored procedure call" );
+		return procedureCall;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public ProcedureCall createStoredProcedureQuery(String procedureName, Class... resultClasses) {
+		checkOpen();
+		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultClasses );
+//		call.setComment( "Dynamic stored procedure call" );
+		return procedureCall;
+	}
+
+	@Override
+	@SuppressWarnings("UnnecessaryLocalVariable")
+	public ProcedureCall createStoredProcedureQuery(String procedureName, String... resultSetMappings) {
 		checkOpen();
 		final ProcedureCall procedureCall = new ProcedureCallImpl( this, procedureName, resultSetMappings );
 //		call.setComment( "Dynamic stored procedure call" );

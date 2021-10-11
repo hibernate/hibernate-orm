@@ -83,7 +83,14 @@ public interface JdbcParameterBindings {
 				(selectionIndex, jdbcValue, type) -> {
 					addBinding(
 						jdbcParameters.get( selectionIndex ),
-						new JdbcParameterBindingImpl( BindingTypeHelper.INSTANCE.resolveBindType( jdbcValue, type ), jdbcValue )
+						new JdbcParameterBindingImpl(
+								BindingTypeHelper.INSTANCE.resolveBindType(
+										jdbcValue,
+										type,
+										session.getTypeConfiguration()
+								),
+								jdbcValue
+						)
 					);
 				}
 				,

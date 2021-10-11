@@ -17,7 +17,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.TrimSpec;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslator;
@@ -26,7 +25,9 @@ import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingExpression;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.CharacterType;
+import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.FailureExpected;
@@ -129,7 +130,7 @@ public class AnsiTrimEmulationFunctionTest  {
 		);
 		List<SqlAstNode> sqlAstArguments = new ArrayList<>();
 		sqlAstArguments.add( new TrimSpecification( trimSpec ) );
-		sqlAstArguments.add( new QueryLiteral<>( trimCharacter, new CharacterType() ) );
+		sqlAstArguments.add( new QueryLiteral<>( trimCharacter, new BasicTypeImpl<>( CharacterJavaTypeDescriptor.INSTANCE, CharJdbcType.INSTANCE ) ) );
 		sqlAstArguments.add( new SelfRenderingExpression() {
 			@Override
 			public void renderToSql(

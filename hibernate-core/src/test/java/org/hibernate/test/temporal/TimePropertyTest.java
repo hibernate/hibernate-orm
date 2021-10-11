@@ -22,7 +22,6 @@ import org.hibernate.query.Query;
 import org.hibernate.Session;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.TimeType;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 

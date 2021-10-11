@@ -25,7 +25,6 @@ import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.stat.Statistics;
-import org.hibernate.type.DateType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.SkipForDialect;

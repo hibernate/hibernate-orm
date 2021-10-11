@@ -22,7 +22,6 @@ import org.hibernate.annotations.Generated;
 import org.hibernate.annotations.GenerationTime;
 import org.hibernate.dialect.MySQL57Dialect;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.TimestampType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;

@@ -35,7 +35,6 @@ import org.hibernate.id.IntegralDataTypeHolder;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.mapping.Table;
-import org.hibernate.type.LongType;
 import org.hibernate.type.StandardBasicTypes;
 
 import org.jboss.logging.Logger;

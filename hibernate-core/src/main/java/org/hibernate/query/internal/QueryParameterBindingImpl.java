@@ -20,6 +20,7 @@ import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -232,15 +233,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		bindValue( value );
-
-		if ( bindType != null ) {
-			bindType = (AllowableParameterType) BindingTypeHelper.INSTANCE.resolveDateTemporalTypeVariant(
-					bindType.getExpressableJavaTypeDescriptor().getJavaTypeClass(),
-					bindType
-			);
-		}
-
-		this.explicitTemporalPrecision = temporalTypePrecision;
+		setExplicitTemporalPrecision( temporalTypePrecision );
 	}
 
 
@@ -291,12 +284,18 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			TemporalType temporalTypePrecision,
 			TypeConfiguration typeConfiguration) {
 		setBindValues( values );
+		setExplicitTemporalPrecision( temporalTypePrecision );
+	}
 
-		this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
-				temporalTypePrecision,
-				bindType,
-				getTypeConfiguration()
-		);
+	private void setExplicitTemporalPrecision(TemporalType temporalTypePrecision) {
+		// todo (6.0): what to do with converted attributes?
+		if ( bindType == null || bindType.getExpressableJavaTypeDescriptor() instanceof TemporalJavaTypeDescriptor<?> ) {
+			this.bindType = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
+					temporalTypePrecision,
+					bindType,
+					getTypeConfiguration()
+			);
+		}
 
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}

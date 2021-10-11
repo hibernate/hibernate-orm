@@ -399,6 +399,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
 	 */
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"OffsetDateTimeWithTimezone",
@@ -407,6 +408,7 @@ public final class StandardBasicTypes {
 	);
 	/**
 	 * The standard Hibernate type for mapping {@link OffsetDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE}.
 	 */
 	public static final BasicTypeReference<OffsetDateTime> OFFSET_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
 			"OffsetDateTimeWithoutTimezone",
@@ -436,6 +438,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP_WITH_TIMEZONE TIMESTAMP_WITH_TIMEZONE}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NATIVE}.
 	 */
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITH_TIMEZONE = new BasicTypeReference<>(
 			"ZonedDateTimeWithTimezone",
@@ -445,6 +448,7 @@ public final class StandardBasicTypes {
 
 	/**
 	 * The standard Hibernate type for mapping {@link ZonedDateTime} to JDBC {@link java.sql.Types#TIMESTAMP TIMESTAMP}.
+	 * This maps to {@link org.hibernate.TimeZoneStorageStrategy#NORMALIZE}.
 	 */
 	public static final BasicTypeReference<ZonedDateTime> ZONED_DATE_TIME_WITHOUT_TIMEZONE = new BasicTypeReference<>(
 			"ZonedDateTimeWithoutTimezone",
@@ -721,21 +725,21 @@ public final class StandardBasicTypes {
 				NUMERIC_BOOLEAN,
 				"org.hibernate.type.NumericBooleanType",
 				basicTypeRegistry,
-				"numeric_boolean"
+				"numeric_boolean", NumericBooleanConverter.class.getName()
 		);
 
 		handle(
 				TRUE_FALSE,
 				"org.hibernate.type.TrueFalseType",
 				basicTypeRegistry,
-				"true_false"
+				"true_false", TrueFalseConverter.class.getName()
 		);
 
 		handle(
 				YES_NO,
 				"org.hibernate.type.YesNoType",
 				basicTypeRegistry,
-				"yes_no"
+				"yes_no", YesNoConverter.class.getName()
 		);
 
 
@@ -1053,7 +1057,7 @@ public final class StandardBasicTypes {
 				CALENDAR_TIME,
 				"org.hibernate.type.CalendarTimeType",
 				basicTypeRegistry,
-				"calendar_date"
+				"calendar_time"
 		);
 
 		handle(

@@ -3,6 +3,21 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.6.0.Final (October 11, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/31985
+
+** Bug
+    * [HHH-13295] - @EmbeddedId + @MapsId targeting a derived entity giving an error on bootstraping
+
+** Deprecation
+    * [HHH-14857] - Some more APIs marked as deprecated in preparation for v. 6
+
+** Improvement
+    * [HHH-14868] - Upgrade to ByteBuddy 1.11.20
+
+
 Changes in 5.6.0.CR1 (September 29, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

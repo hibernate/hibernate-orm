@@ -34,6 +34,7 @@ import org.hibernate.query.internal.QueryInterpretationCacheDisabledImpl;
 import org.hibernate.query.internal.QueryInterpretationCacheStandardImpl;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.internal.SqmCreationOptionsStandard;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
@@ -72,6 +73,20 @@ public class QueryEngine {
 		);
 
 		final SqmTranslatorFactory sqmTranslatorFactory = resolveSqmTranslatorFactory( queryEngineOptions, dialect );
+		final SqmFunctionRegistry customSqmFunctionRegistry;
+		if ( queryEngineOptions.getCustomSqmFunctionRegistry() == null ) {
+			final Map<String, SqmFunctionDescriptor> customSqlFunctionMap = queryEngineOptions.getCustomSqlFunctionMap();
+			if ( customSqlFunctionMap == null || customSqlFunctionMap.isEmpty() ) {
+				customSqmFunctionRegistry = null;
+			}
+			else {
+				customSqmFunctionRegistry = new SqmFunctionRegistry();
+				customSqlFunctionMap.forEach( customSqmFunctionRegistry::register );
+			}
+		}
+		else {
+			customSqmFunctionRegistry = queryEngineOptions.getCustomSqmFunctionRegistry();
+		}
 
 		return new QueryEngine(
 				sessionFactory.getUuid(),
@@ -86,7 +101,7 @@ public class QueryEngine {
 				buildInterpretationCache( sessionFactory::getStatistics, sessionFactory.getProperties() ),
 				metadata.getTypeConfiguration(),
 				dialect,
-				queryEngineOptions.getCustomSqmFunctionRegistry(),
+				customSqmFunctionRegistry,
 				sessionFactory.getServiceRegistry()
 		);
 	}

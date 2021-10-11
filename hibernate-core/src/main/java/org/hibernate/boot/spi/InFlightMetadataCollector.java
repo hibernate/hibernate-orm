@@ -50,7 +50,7 @@ import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Table;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -317,7 +317,7 @@ public interface InFlightMetadataCollector extends Mapping, MetadataImplementor 
 	void registerValueMappingResolver(Function<MetadataBuildingContext,Boolean> resolver);
 
 	void addJavaTypeRegistration(Class<?> javaType, JavaType<?> jtd);
-	void addJdbcTypeRegistration(int typeCode, JdbcTypeDescriptor jdbcTypeDescriptor);
+	void addJdbcTypeRegistration(int typeCode, JdbcType jdbcType);
 
 	interface DelayedPropertyReferenceHandler extends Serializable {
 		void process(InFlightMetadataCollector metadataCollector);

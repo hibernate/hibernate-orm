@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.util.Calendar;
 
 import org.hibernate.type.descriptor.java.CalendarDateJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 
 /**
  * A type mapping {@link java.sql.Types#DATE DATE} and {@link Calendar}
@@ -22,7 +22,7 @@ public class CalendarDateType
 	public static final CalendarDateType INSTANCE = new CalendarDateType();
 
 	public CalendarDateType() {
-		super( DateJdbcTypeDescriptor.INSTANCE, CalendarDateJavaTypeDescriptor.INSTANCE );
+		super( DateJdbcType.INSTANCE, CalendarDateJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

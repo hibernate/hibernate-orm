@@ -20,8 +20,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 /**
  *
@@ -32,8 +32,8 @@ public class StoredPrefixedStringType
 
 	public static final String PREFIX = "PRE:";
 
-	public static final JdbcTypeDescriptor PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
-			new VarcharJdbcTypeDescriptor() {
+	public static final JdbcType PREFIXED_VARCHAR_TYPE_DESCRIPTOR =
+			new VarcharJdbcType() {
 				public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 					return new BasicBinder<X>( javaTypeDescriptor, this ) {
 						@Override

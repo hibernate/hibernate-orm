@@ -67,9 +67,9 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -934,8 +934,8 @@ public class PostgreSQLDialect extends Dialect {
 		// with @Lob will attempt to use
 		// BlobTypeDescriptor.PRIMITIVE_ARRAY_BINDING.  Since the
 		// dialect uses oid for Blobs, byte arrays cannot be used.
-		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcTypeDescriptor.BLOB_BINDING );
-		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcTypeDescriptor.CLOB_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
+		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
 
 		if ( getVersion() >= 820 ) {
 			// HHH-9562
@@ -943,12 +943,12 @@ public class PostgreSQLDialect extends Dialect {
 		}
 
 		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY
-		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsBinaryTypeJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( ObjectNullAsBinaryTypeJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new JavaObjectType(
-						ObjectNullAsBinaryTypeJdbcTypeDescriptor.INSTANCE,
+						ObjectNullAsBinaryTypeJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )

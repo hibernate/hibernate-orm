@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.ShortJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.SmallIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#SMALLINT SMALLINT} and {@link Short}
@@ -23,7 +23,7 @@ public class ShortType
 	private static final Short ZERO = (short) 0;
 
 	public ShortType() {
-		super( SmallIntJdbcTypeDescriptor.INSTANCE, ShortJavaTypeDescriptor.INSTANCE );
+		super( SmallIntJdbcType.INSTANCE, ShortJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

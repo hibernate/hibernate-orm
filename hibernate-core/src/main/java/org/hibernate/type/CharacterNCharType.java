@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#NCHAR NCHAR(1)} and {@link Character}
@@ -21,7 +21,7 @@ public class CharacterNCharType
 	public static final CharacterNCharType INSTANCE = new CharacterNCharType();
 
 	public CharacterNCharType() {
-		super( NCharJdbcTypeDescriptor.INSTANCE, CharacterJavaTypeDescriptor.INSTANCE );
+		super( NCharJdbcType.INSTANCE, CharacterJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

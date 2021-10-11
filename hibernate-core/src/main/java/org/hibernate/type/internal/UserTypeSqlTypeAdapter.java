@@ -17,16 +17,16 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 /**
- * Adapts UserType to the JdbcTypeDescriptor contract
+ * Adapts UserType to the JdbcType contract
  *
  * @author Steve Ebersole
  */
-public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
+public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 	private final UserType<J> userType;
 	private final BasicJavaType<J> jtd;
 

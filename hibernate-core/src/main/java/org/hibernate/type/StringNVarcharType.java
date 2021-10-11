@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NVarcharJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link String}
@@ -21,7 +21,7 @@ public class StringNVarcharType
 	public static final StringNVarcharType INSTANCE = new StringNVarcharType();
 
 	public StringNVarcharType() {
-		super( NVarcharJdbcTypeDescriptor.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
+		super( NVarcharJdbcType.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

@@ -8,8 +8,8 @@ package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.ObjectJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ObjectJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 
 /**
  * @author Steve Ebersole
@@ -21,11 +21,11 @@ public class JavaObjectType extends AbstractSingleColumnStandardBasicType<Object
 	public static final JavaObjectType INSTANCE = new JavaObjectType();
 
 	public JavaObjectType() {
-		super( ObjectJdbcTypeDescriptor.INSTANCE, ObjectJavaTypeDescriptor.INSTANCE );
+		super( ObjectJdbcType.INSTANCE, ObjectJavaTypeDescriptor.INSTANCE );
 	}
 
-	public JavaObjectType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Object> javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	public JavaObjectType(JdbcType jdbcType, JavaType<Object> javaTypeDescriptor) {
+		super( jdbcType, javaTypeDescriptor );
 	}
 
 	@Override

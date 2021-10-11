@@ -66,7 +66,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 public class CustomPersister implements EntityPersister {
@@ -451,7 +451,7 @@ public class CustomPersister implements EntityPersister {
 
 	private static final BasicType<String> STRING_TYPE = new BasicTypeImpl<>(
 			StringJavaTypeDescriptor.INSTANCE,
-			VarcharJdbcTypeDescriptor.INSTANCE
+			VarcharJdbcType.INSTANCE
 	);
 	private static final Type[] TYPES = new Type[] { STRING_TYPE };
 	private static final String[] NAMES = new String[] { "name" };

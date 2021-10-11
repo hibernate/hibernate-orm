@@ -11,8 +11,8 @@ import java.util.Date;
 
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}
@@ -26,11 +26,11 @@ public class TimestampType
 	public static final TimestampType INSTANCE = new TimestampType();
 
 	public TimestampType() {
-		super( TimestampJdbcTypeDescriptor.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
+		super( TimestampJdbcType.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
 	}
 
-	protected TimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Date> javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, javaTypeDescriptor );
+	protected TimestampType(JdbcType jdbcType, JavaType<Date> javaTypeDescriptor) {
+		super( jdbcType, javaTypeDescriptor );
 	}
 
 	@Override

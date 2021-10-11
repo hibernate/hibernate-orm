@@ -35,7 +35,7 @@ public class GeolatteGeometryJavaTypeDescriptor extends AbstractJavaTypeDescript
 	}
 
 
-//	public JdbcTypeDescriptor getJdbcRecommendedSqlType(JdbcTypeDescriptorIndicators context) {
+//	public JdbcType getJdbcRecommendedSqlType(JdbcTypeDescriptorIndicators context) {
 //		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( Types.ARRAY );
 //	}
 

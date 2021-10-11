@@ -10,7 +10,7 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static java.lang.annotation.ElementType.PACKAGE;
@@ -41,13 +41,13 @@ public @interface JdbcTypeRegistration {
 	/**
 	 * The descriptor to register
 	 */
-	Class<? extends JdbcTypeDescriptor> value();
+	Class<? extends JdbcType> value();
 
 	/**
 	 * The type-code under which to register this descriptor.  Can either add a new descriptor
 	 * or override an existing one.
 	 *
-	 * By default we will use {@link JdbcTypeDescriptor#getJdbcTypeCode}
+	 * By default we will use {@link JdbcType#getJdbcTypeCode}
 	 */
 	int registrationCode() default Integer.MIN_VALUE;
 }

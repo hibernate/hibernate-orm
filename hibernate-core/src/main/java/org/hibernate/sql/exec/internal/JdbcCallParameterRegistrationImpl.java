@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.sql.exec.spi.JdbcCallParameterExtractor;
 import org.hibernate.sql.exec.spi.JdbcCallParameterRegistration;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Steve Ebersole
@@ -115,7 +115,7 @@ public class JdbcCallParameterRegistrationImpl implements JdbcCallParameterRegis
 	private void registerOutputParameter(
 			CallableStatement callableStatement,
 			SharedSessionContractImplementor session) {
-		final JdbcTypeDescriptor sqlTypeDescriptor = ( (BasicDomainType) ormType ).getJdbcTypeDescriptor();
+		final JdbcType sqlTypeDescriptor = ( (BasicDomainType) ormType ).getJdbcTypeDescriptor();
 		try {
 			if ( name != null ) {
 				callableStatement.registerOutParameter( name, sqlTypeDescriptor.getJdbcTypeCode() );

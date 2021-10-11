@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  */
 public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,String>, Serializable {
 	private final EnumJavaTypeDescriptor<E> domainTypeDescriptor;
-	private final JdbcTypeDescriptor jdbcTypeDescriptor;
+	private final JdbcType jdbcType;
 	private final JavaType<String> relationalTypeDescriptor;
 
 	private transient ValueExtractor<String> valueExtractor;
@@ -37,14 +37,14 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	public NamedEnumValueConverter(
 			EnumJavaTypeDescriptor<E> domainTypeDescriptor,
-			JdbcTypeDescriptor jdbcTypeDescriptor,
+			JdbcType jdbcType,
 			JavaType<String> relationalTypeDescriptor) {
 		this.domainTypeDescriptor = domainTypeDescriptor;
-		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
+		this.jdbcType = jdbcType;
 		this.relationalTypeDescriptor = relationalTypeDescriptor;
 
-		this.valueExtractor = jdbcTypeDescriptor.getExtractor( relationalTypeDescriptor );
-		this.valueBinder = jdbcTypeDescriptor.getBinder( relationalTypeDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
+		this.valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override
@@ -69,7 +69,7 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 
 	@Override
 	public int getJdbcTypeCode() {
-		return jdbcTypeDescriptor.getJdbcTypeCode();
+		return jdbcType.getJdbcTypeCode();
 	}
 
 	@Override
@@ -81,8 +81,8 @@ public class NamedEnumValueConverter<E extends Enum<E>> implements EnumValueConv
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
 
-		this.valueExtractor = jdbcTypeDescriptor.getExtractor( relationalTypeDescriptor );
-		this.valueBinder = jdbcTypeDescriptor.getBinder( relationalTypeDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( relationalTypeDescriptor );
+		this.valueBinder = jdbcType.getBinder( relationalTypeDescriptor );
 	}
 
 	@Override

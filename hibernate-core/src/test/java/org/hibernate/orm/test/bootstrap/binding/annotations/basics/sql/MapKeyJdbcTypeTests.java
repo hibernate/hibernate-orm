@@ -20,8 +20,8 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -93,8 +93,8 @@ public class MapKeyJdbcTypeTests {
 
 	private void verifyJdbcTypeResolution(
 			Property property,
-			Consumer<JdbcTypeDescriptor> keyTypeVerifier,
-			Consumer<JdbcTypeDescriptor> valueTypeVerifier) {
+			Consumer<JdbcType> keyTypeVerifier,
+			Consumer<JdbcType> valueTypeVerifier) {
 		assertThat( property.getValue(), instanceOf( org.hibernate.mapping.Map.class ) );
 		final org.hibernate.mapping.Map mapValue = (org.hibernate.mapping.Map) property.getValue();
 
@@ -125,7 +125,7 @@ public class MapKeyJdbcTypeTests {
 
 		@ElementCollection
 		@JdbcTypeCode( Types.NVARCHAR )
-		@MapKeyJdbcType( TinyIntJdbcTypeDescriptor.class )
+		@MapKeyJdbcType( TinyIntJdbcType.class )
 		private Map<Integer,String> sqlTypeMap;
 	}
 }

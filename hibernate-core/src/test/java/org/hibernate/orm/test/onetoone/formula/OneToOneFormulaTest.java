@@ -19,7 +19,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
@@ -44,7 +44,7 @@ public class OneToOneFormulaTest extends BaseSessionFactoryFunctionalTest {
 		public final static TextAsMaterializedClobType INSTANCE = new TextAsMaterializedClobType();
 
 		public TextAsMaterializedClobType() {
-			super( ClobJdbcTypeDescriptor.DEFAULT, StringJavaTypeDescriptor.INSTANCE );
+			super( ClobJdbcType.DEFAULT, StringJavaTypeDescriptor.INSTANCE );
 		}
 
 		public String getName() {

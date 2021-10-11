@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#CHAR CHAR(1)} and {@link Boolean} (using 'T' and 'F')
@@ -23,7 +23,7 @@ public class TrueFalseType
 	public static final TrueFalseType INSTANCE = new TrueFalseType();
 
 	public TrueFalseType() {
-		super( CharJdbcTypeDescriptor.INSTANCE, new BooleanJavaTypeDescriptor( 'T', 'F' ) );
+		super( CharJdbcType.INSTANCE, new BooleanJavaTypeDescriptor( 'T', 'F' ) );
 	}
 
 	@Override

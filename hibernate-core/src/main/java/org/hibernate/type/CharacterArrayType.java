@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.CharacterArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 /**
  * A type that maps between {@link Types#VARCHAR VARCHAR} and {@link Character Character[]}
@@ -23,7 +23,7 @@ public class CharacterArrayType
 	public static final CharacterArrayType INSTANCE = new CharacterArrayType();
 
 	public CharacterArrayType() {
-		super( VarcharJdbcTypeDescriptor.INSTANCE, CharacterArrayJavaTypeDescriptor.INSTANCE );
+		super( VarcharJdbcType.INSTANCE, CharacterArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

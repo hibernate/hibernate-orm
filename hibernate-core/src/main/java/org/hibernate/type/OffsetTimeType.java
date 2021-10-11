@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.OffsetTime;
 
 import org.hibernate.type.descriptor.java.OffsetTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimeJdbcType;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public class OffsetTimeType
 	public static final OffsetTimeType INSTANCE = new OffsetTimeType();
 
 	public OffsetTimeType() {
-		super( TimeJdbcTypeDescriptor.INSTANCE, OffsetTimeJavaTypeDescriptor.INSTANCE );
+		super( TimeJdbcType.INSTANCE, OffsetTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

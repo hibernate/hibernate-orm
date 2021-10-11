@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.NClob;
 
 import org.hibernate.type.descriptor.java.NClobJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#NCLOB NCLOB} and {@link NClob}
@@ -21,7 +21,7 @@ public class NClobType extends AbstractSingleColumnStandardBasicType<NClob> {
 	public static final NClobType INSTANCE = new NClobType();
 
 	public NClobType() {
-		super( NClobJdbcTypeDescriptor.DEFAULT, NClobJavaTypeDescriptor.INSTANCE );
+		super( NClobJdbcType.DEFAULT, NClobJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

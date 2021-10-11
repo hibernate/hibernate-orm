@@ -11,7 +11,7 @@ import java.net.URL;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypeTemplate;
 import org.hibernate.type.descriptor.java.UrlJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -36,7 +36,7 @@ public class StandardBasicTypeTemplateTest extends BaseUnitTestCase {
 		typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( ValidatingUrlJavaJavaTypeDescriptor.INSTANCE );
 		typeConfiguration.getBasicTypeRegistry().register(
 				new StandardBasicTypeTemplate<>(
-						VarcharJdbcTypeDescriptor.INSTANCE,
+						VarcharJdbcType.INSTANCE,
 						ValidatingUrlJavaJavaTypeDescriptor.INSTANCE,
 						REG_KEY
 				)

@@ -15,7 +15,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Steve Ebersole
@@ -52,7 +52,7 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+	public JdbcType getJdbcTypeDescriptor() {
 		return userTypeAdapter.getJdbcTypeDescriptor();
 	}
 

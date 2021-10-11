@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Convenience base class for {@link BasicType} implementations
@@ -46,7 +46,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	// Don't use final here.  Need to initialize after-the-fact
 	// by DynamicParameterizedTypes.
-	private JdbcTypeDescriptor jdbcTypeDescriptor;
+	private JdbcType jdbcType;
 	private JavaType<T> javaTypeDescriptor;
 	// sqlTypes need always to be in sync with sqlTypeDescriptor
 	private int[] sqlTypes;
@@ -54,13 +54,13 @@ public abstract class AbstractStandardBasicType<T>
 	private ValueBinder<T> jdbcValueBinder;
 	private ValueExtractor<T> jdbcValueExtractor;
 
-	public AbstractStandardBasicType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<T> javaTypeDescriptor) {
-		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
-		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
+	public AbstractStandardBasicType(JdbcType jdbcType, JavaType<T> javaTypeDescriptor) {
+		this.jdbcType = jdbcType;
+		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
 		this.javaTypeDescriptor = javaTypeDescriptor;
 
-		this.jdbcValueBinder = jdbcTypeDescriptor.getBinder( javaTypeDescriptor );
-		this.jdbcValueExtractor = jdbcTypeDescriptor.getExtractor( javaTypeDescriptor );
+		this.jdbcValueBinder = jdbcType.getBinder( javaTypeDescriptor );
+		this.jdbcValueExtractor = jdbcType.getExtractor( javaTypeDescriptor );
 	}
 
 	@Override
@@ -143,13 +143,13 @@ public abstract class AbstractStandardBasicType<T>
 		this.jdbcValueExtractor = getJdbcTypeDescriptor().getExtractor( javaTypeDescriptor );
 	}
 
-	public final JdbcTypeDescriptor getJdbcTypeDescriptor() {
-		return jdbcTypeDescriptor;
+	public final JdbcType getJdbcTypeDescriptor() {
+		return jdbcType;
 	}
 
-	public final void setSqlTypeDescriptor(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
-		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
+	public final void setSqlTypeDescriptor(JdbcType jdbcType) {
+		this.jdbcType = jdbcType;
+		this.sqlTypes = new int[] { jdbcType.getDefaultSqlTypeCode() };
 
 		this.jdbcValueBinder = getJdbcTypeDescriptor().getBinder( javaTypeDescriptor );
 		this.jdbcValueExtractor = getJdbcTypeDescriptor().getExtractor( javaTypeDescriptor );
@@ -300,7 +300,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings({ "unchecked" })
 	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		jdbcTypeDescriptor.getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
+		jdbcType.getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
 	}
 
 	public void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
@@ -403,7 +403,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, int startIndex, final SharedSessionContractImplementor session) throws SQLException {
-		return jdbcTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
+		return jdbcType.getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				startIndex,
 				session
@@ -412,7 +412,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public T extract(CallableStatement statement, String paramName, final SharedSessionContractImplementor session) throws SQLException {
-		return jdbcTypeDescriptor.getExtractor( javaTypeDescriptor ).extract(
+		return jdbcType.getExtractor( javaTypeDescriptor ).extract(
 				statement,
 				paramName,
 				session
@@ -436,7 +436,7 @@ public abstract class AbstractStandardBasicType<T>
 
 	@SuppressWarnings("unchecked")
 	protected final void nullSafeSet(CallableStatement st, Object value, String name, WrapperOptions options) throws SQLException {
-		jdbcTypeDescriptor.getBinder( javaTypeDescriptor ).bind( st, (T) value, name, options );
+		jdbcType.getBinder( javaTypeDescriptor ).bind( st, (T) value, name, options );
 	}
 
 	@Override
@@ -446,8 +446,8 @@ public abstract class AbstractStandardBasicType<T>
 
 	@Override
 	public CastType getCastType() {
-		final JdbcTypeDescriptor jdbcTypeDescriptor = getJdbcTypeDescriptor();
-		final int jdbcTypeCode = jdbcTypeDescriptor.getJdbcTypeCode();
+		final JdbcType jdbcType = getJdbcTypeDescriptor();
+		final int jdbcTypeCode = jdbcType.getJdbcTypeCode();
 		switch ( jdbcTypeCode ) {
 			case Types.BIT:
 			case Types.SMALLINT:
@@ -470,6 +470,6 @@ public abstract class AbstractStandardBasicType<T>
 				}
 				break;
 		}
-		return jdbcTypeDescriptor.getCastType();
+		return jdbcType.getCastType();
 	}
 }

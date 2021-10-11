@@ -13,7 +13,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -58,7 +58,7 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+	public JdbcType getJdbcTypeDescriptor() {
 		return adapted.getJdbcTypeDescriptor();
 	}
 

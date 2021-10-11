@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
 import org.hibernate.type.internal.UserTypeSqlTypeAdapter;
 import org.hibernate.type.internal.UserTypeVersionJavaTypeWrapper;
@@ -60,7 +60,7 @@ public class CustomType
 	private final String name;
 
 	private final BasicJavaType<Object> mappedJavaTypeDescriptor;
-	private final JdbcTypeDescriptor jdbcTypeDescriptor;
+	private final JdbcType jdbcType;
 
 	private final ValueExtractor<Object> valueExtractor;
 	private final ValueBinder<Object> valueBinder;
@@ -91,11 +91,11 @@ public class CustomType
 			this.mappedJavaTypeDescriptor = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
-		// create a JdbcTypeDescriptor adapter that uses the UserType binde/extract handling
-		this.jdbcTypeDescriptor = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor );
+		// create a JdbcType adapter that uses the UserType binde/extract handling
+		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor );
 
-		this.valueExtractor = jdbcTypeDescriptor.getExtractor( mappedJavaTypeDescriptor );
-		this.valueBinder = jdbcTypeDescriptor.getBinder( mappedJavaTypeDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( mappedJavaTypeDescriptor );
+		this.valueBinder = jdbcType.getBinder( mappedJavaTypeDescriptor );
 
 		if ( userType instanceof Sized ) {
 			final Sized sized = (Sized) userType;
@@ -125,13 +125,13 @@ public class CustomType
 	}
 
 	@Override
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
-		return jdbcTypeDescriptor;
+	public JdbcType getJdbcTypeDescriptor() {
+		return jdbcType;
 	}
 
 	@Override
 	public int[] getSqlTypeCodes(Mapping pi) {
-		return new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
+		return new int[] { jdbcType.getDefaultSqlTypeCode() };
 	}
 
 	@Override

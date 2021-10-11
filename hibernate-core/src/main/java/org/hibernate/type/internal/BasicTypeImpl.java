@@ -10,7 +10,7 @@ import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * @author Steve Ebersole
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 public class BasicTypeImpl<J> extends AbstractSingleColumnStandardBasicType<J> implements AdjustableBasicType<J> {
 	public static final String[] NO_REG_KEYS = ArrayHelper.EMPTY_STRING_ARRAY;
 
-	public BasicTypeImpl(JavaType<J> jtd, JdbcTypeDescriptor std) {
+	public BasicTypeImpl(JavaType<J> jtd, JdbcType std) {
 		super( std, jtd );
 	}
 

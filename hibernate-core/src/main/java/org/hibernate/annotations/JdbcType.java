@@ -9,15 +9,13 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Specifies an explicit {@link JdbcTypeDescriptor} to use for a particular column mapping.<ul>
+ * Specifies an explicit {@link org.hibernate.type.descriptor.jdbc.JdbcType} to use for a particular column mapping.<ul>
  *     <li>
  *         When applied to a Map-valued attribute, describes the Map value. Use
  *         {@link MapKeyJdbcType} to describe the key instead
@@ -55,7 +53,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface JdbcType {
 	/**
-	 * The {@link JdbcTypeDescriptor} to use for the mapped column
+	 * The {@link org.hibernate.type.descriptor.jdbc.JdbcType} to use for the mapped column
 	 */
-	Class<? extends JdbcTypeDescriptor> value();
+	Class<? extends org.hibernate.type.descriptor.jdbc.JdbcType> value();
 }

@@ -13,8 +13,7 @@ import java.util.Map;
 
 import org.hibernate.spatial.CommonSpatialFunction;
 import org.hibernate.spatial.GeomCodec;
-import org.hibernate.spatial.dialect.postgis.PGGeometryTypeDescriptor;
-import org.hibernate.spatial.testing.AbstractExpectationsFactory;
+import org.hibernate.spatial.dialect.postgis.PGGeometryType;
 import org.hibernate.spatial.testing.datareader.TestData;
 import org.hibernate.spatial.testing.datareader.TestSupport;
 import org.hibernate.spatial.testing.dialects.NativeSQLTemplates;
@@ -61,7 +60,7 @@ public class PostgisTestSupport extends TestSupport {
 		return new GeomCodec() {
 			@Override
 			public Geometry<?> toGeometry(Object in) {
-				return PGGeometryTypeDescriptor.INSTANCE_WKB_2.toGeometry( in );
+				return PGGeometryType.INSTANCE_WKB_2.toGeometry( in );
 			}
 
 			@Override

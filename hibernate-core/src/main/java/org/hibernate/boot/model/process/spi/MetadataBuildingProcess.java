@@ -47,7 +47,7 @@ import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -398,7 +398,7 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeJdbcTypeDescriptor(JdbcTypeDescriptor descriptor) {
+			public void contributeJdbcTypeDescriptor(JdbcType descriptor) {
 				bootstrapContext.getTypeConfiguration().getJdbcTypeDescriptorRegistry().addDescriptor( descriptor );
 			}
 
@@ -432,7 +432,7 @@ public class MetadataBuildingProcess {
 					.getJdbcTypeDescriptorRegistry();
 			final JavaTypeDescriptorRegistry javaTypeRegistry = bootstrapContext.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry();
-			final JdbcTypeDescriptor timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
+			final JdbcType timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
 			final BasicTypeRegistry basicTypeRegistry = bootstrapContext.getTypeConfiguration().getBasicTypeRegistry();
 			final BasicType<?> offsetDateTimeType = new NamedBasicTypeImpl<>(
 					javaTypeRegistry.getDescriptor( OffsetDateTime.class ),

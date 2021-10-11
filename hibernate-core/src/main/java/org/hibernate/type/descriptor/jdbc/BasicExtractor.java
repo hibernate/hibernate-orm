@@ -24,19 +24,19 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializable {
 	private final JavaType<J> javaTypeDescriptor;
-	private final JdbcTypeDescriptor jdbcTypeDescriptor;
+	private final JdbcType jdbcType;
 
-	public BasicExtractor(JavaType<J> javaTypeDescriptor, JdbcTypeDescriptor jdbcTypeDescriptor) {
+	public BasicExtractor(JavaType<J> javaTypeDescriptor, JdbcType jdbcType) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
-		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
+		this.jdbcType = jdbcType;
 	}
 
 	public JavaType<J> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
-		return jdbcTypeDescriptor;
+	public JdbcType getJdbcTypeDescriptor() {
+		return jdbcType;
 	}
 
 	@Override

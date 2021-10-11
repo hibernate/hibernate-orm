@@ -12,16 +12,12 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.PostgreSQL81Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -54,24 +50,24 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = getMetadata().getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		// no override
-		assertSame( IntegerJdbcTypeDescriptor.INSTANCE, jdbcTypeRegistry.getDescriptor( Types.INTEGER ) );
+		assertSame( IntegerJdbcType.INSTANCE, jdbcTypeRegistry.getDescriptor( Types.INTEGER ) );
 
 		// A few dialects explicitly override BlobTypeDescriptor.DEFAULT
 		if ( CockroachDialect.class.isInstance( dialect ) ) {
 			assertSame(
-					VarbinaryJdbcTypeDescriptor.INSTANCE,
+					VarbinaryJdbcType.INSTANCE,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
 		else if ( PostgreSQLDialect.class.isInstance( dialect ) ) {
 			assertSame(
-					BlobJdbcTypeDescriptor.BLOB_BINDING,
+					BlobJdbcType.BLOB_BINDING,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
 		else if ( SybaseDialect.class.isInstance( dialect ) ) {
 			assertSame(
-					BlobJdbcTypeDescriptor.PRIMITIVE_ARRAY_BINDING,
+					BlobJdbcType.PRIMITIVE_ARRAY_BINDING,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}
@@ -83,7 +79,7 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 		}
 		else {
 			assertSame(
-					BlobJdbcTypeDescriptor.DEFAULT,
+					BlobJdbcType.DEFAULT,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}

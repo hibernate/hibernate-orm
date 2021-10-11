@@ -10,7 +10,7 @@ import java.util.Map;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -27,7 +27,7 @@ public class MapEntryJavaDescriptor extends AbstractClassJavaTypeDescriptor<Map.
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException( "Unsupported attempt to resolve JDBC type for Map.Entry" );
 	}
 

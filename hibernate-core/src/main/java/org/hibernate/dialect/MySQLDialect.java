@@ -57,8 +57,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.CallableStatement;
@@ -191,7 +191,7 @@ public class MySQLDialect extends Dialect {
 		sizeStrategy = new SizeStrategyImpl() {
 			@Override
 			public Size resolveSize(
-					JdbcTypeDescriptor jdbcType,
+					JdbcType jdbcType,
 					JavaType<?> javaType,
 					Integer precision,
 					Integer scale,
@@ -298,7 +298,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public JdbcTypeDescriptor resolveSqlTypeDescriptor(
+	public JdbcType resolveSqlTypeDescriptor(
 			String columnTypeName,
 			int jdbcTypeCode,
 			int precision,
@@ -401,12 +401,12 @@ public class MySQLDialect extends Dialect {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
-		typeContributions.contributeJdbcTypeDescriptor( NullJdbcTypeDescriptor.INSTANCE );
+		typeContributions.contributeJdbcTypeDescriptor( NullJdbcType.INSTANCE );
 
 		// Until we remove StandardBasicTypes, we have to keep this
 		typeContributions.contributeType(
 				new NullType(
-						NullJdbcTypeDescriptor.INSTANCE,
+						NullJdbcType.INSTANCE,
 						typeContributions.getTypeConfiguration()
 								.getJavaTypeDescriptorRegistry()
 								.getDescriptor( Object.class )

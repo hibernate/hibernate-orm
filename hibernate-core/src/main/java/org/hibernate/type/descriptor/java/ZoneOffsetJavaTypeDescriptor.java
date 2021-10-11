@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 import java.time.ZoneOffset;
@@ -43,7 +43,7 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		return StringJavaTypeDescriptor.INSTANCE.getRecommendedJdbcType( context );
 	}
 
@@ -71,7 +71,7 @@ public class ZoneOffsetJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return 6;
 	}
 }

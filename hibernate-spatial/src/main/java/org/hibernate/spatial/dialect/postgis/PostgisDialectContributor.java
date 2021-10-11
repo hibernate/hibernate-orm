@@ -26,8 +26,8 @@ public class PostgisDialectContributor implements ContributorImplementor {
 
 	public void contributeTypes(TypeContributions typeContributions) {
 		HSMessageLogger.LOGGER.typeContributions( this.getClass().getCanonicalName() );
-		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_2 ) );
-		typeContributions.contributeType( new JTSGeometryType( PGGeometryTypeDescriptor.INSTANCE_WKB_2 ) );
+		typeContributions.contributeType( new GeolatteGeometryType( PGGeometryType.INSTANCE_WKB_2 ) );
+		typeContributions.contributeType( new JTSGeometryType( PGGeometryType.INSTANCE_WKB_2 ) );
 	}
 
 	@Override

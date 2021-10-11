@@ -20,8 +20,8 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.DateJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.TestForIssue;
@@ -93,7 +93,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 		);
 		BasicType<?> basicType = (BasicType<?>) sqmExpression.getNodeType();
 		assertEquals( DateJavaTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-		assertEquals( TimestampJdbcTypeDescriptor.INSTANCE, basicType.getJdbcTypeDescriptor() );
+		assertEquals( TimestampJdbcType.INSTANCE, basicType.getJdbcTypeDescriptor() );
 
 		SqlAppender appender = new StringBuilderSqlAppender();
 		sqmExpression.getRenderingSupport().render( appender, Collections.emptyList(), null );
@@ -112,7 +112,7 @@ public class InformixDialectTestCase extends BaseUnitTestCase {
 		);
 		BasicType<?> basicType = (BasicType<?>) sqmExpression.getNodeType();
 		assertEquals( DateJavaTypeDescriptor.INSTANCE, basicType.getJavaTypeDescriptor() );
-		assertEquals( DateJdbcTypeDescriptor.INSTANCE, basicType.getJdbcTypeDescriptor() );
+		assertEquals( DateJdbcType.INSTANCE, basicType.getJdbcTypeDescriptor() );
 
 		SqlAppender appender = new StringBuilderSqlAppender();
 		sqmExpression.getRenderingSupport().render( appender, Collections.emptyList(), null );

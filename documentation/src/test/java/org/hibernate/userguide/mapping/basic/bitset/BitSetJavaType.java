@@ -12,7 +12,7 @@ import java.util.BitSet;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -32,7 +32,7 @@ public class BitSetJavaType extends AbstractClassJavaTypeDescriptor<BitSet> {
     }
 
     @Override
-    public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+    public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
         return indicators.getTypeConfiguration()
                 .getJdbcTypeDescriptorRegistry()
                 .getDescriptor( Types.VARCHAR );

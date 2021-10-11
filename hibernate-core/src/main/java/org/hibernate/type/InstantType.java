@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.Instant;
 
 import org.hibernate.type.descriptor.java.InstantJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link java.time.LocalDateTime}.
@@ -24,7 +24,7 @@ public class InstantType
 	public static final InstantType INSTANCE = new InstantType();
 
 	public InstantType() {
-		super( TimestampJdbcTypeDescriptor.INSTANCE, InstantJavaTypeDescriptor.INSTANCE );
+		super( TimestampJdbcType.INSTANCE, InstantJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

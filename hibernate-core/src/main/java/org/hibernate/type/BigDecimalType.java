@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.math.BigDecimal;
 
 import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NumericJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 
 /**
  * A type that maps between a {@link java.sql.Types#NUMERIC NUMERIC} and {@link BigDecimal}.
@@ -21,7 +21,7 @@ public class BigDecimalType extends AbstractSingleColumnStandardBasicType<BigDec
 	public static final BigDecimalType INSTANCE = new BigDecimalType();
 
 	public BigDecimalType() {
-		super( NumericJdbcTypeDescriptor.INSTANCE, BigDecimalJavaTypeDescriptor.INSTANCE );
+		super( NumericJdbcType.INSTANCE, BigDecimalJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

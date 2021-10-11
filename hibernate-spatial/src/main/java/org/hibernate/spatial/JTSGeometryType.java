@@ -7,7 +7,7 @@
 package org.hibernate.spatial;
 
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.locationtech.jts.geom.Geometry;
 
@@ -21,10 +21,10 @@ public class JTSGeometryType extends AbstractSingleColumnStandardBasicType<Geome
 	/**
 	 * Constructs an instance with the specified {@code SqlTypeDescriptor}
 	 *
-	 * @param jdbcTypeDescriptor The descriptor for the type used by the database for geometries.
+	 * @param jdbcType The descriptor for the type used by the database for geometries.
 	 */
-	public JTSGeometryType(JdbcTypeDescriptor jdbcTypeDescriptor) {
-		super( jdbcTypeDescriptor, JTSGeometryJavaTypeDescriptor.INSTANCE );
+	public JTSGeometryType(JdbcType jdbcType) {
+		super( jdbcType, JTSGeometryJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

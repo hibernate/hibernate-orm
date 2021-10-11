@@ -13,8 +13,8 @@ import org.hibernate.type.descriptor.java.DbTimestampJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 
 import org.jboss.logging.Logger;
 
@@ -38,11 +38,11 @@ public class DbTimestampType extends TimestampType {
 	);
 
 	public DbTimestampType() {
-		this( TimestampJdbcTypeDescriptor.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
+		this( TimestampJdbcType.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
 	}
 
-	public DbTimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Date> javaTypeDescriptor) {
-		super( jdbcTypeDescriptor, new DbTimestampJavaTypeDescriptor<>( (TemporalJavaTypeDescriptor<Date>) javaTypeDescriptor ) );
+	public DbTimestampType(JdbcType jdbcType, JavaType<Date> javaTypeDescriptor) {
+		super( jdbcType, new DbTimestampJavaTypeDescriptor<>( (TemporalJavaTypeDescriptor<Date>) javaTypeDescriptor ) );
 	}
 
 	@Override

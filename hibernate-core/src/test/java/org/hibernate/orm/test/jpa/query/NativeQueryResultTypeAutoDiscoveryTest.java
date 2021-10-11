@@ -44,10 +44,10 @@ import org.hibernate.type.descriptor.java.BigDecimalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NumericJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.RealJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
+import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
+import org.hibernate.type.descriptor.jdbc.RealJdbcType;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.SkipForDialect;
@@ -577,7 +577,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "float_as_real";
 
 		public FloatAsRealType() {
-			super( RealJdbcTypeDescriptor.INSTANCE, FloatTypeDescriptor.INSTANCE );
+			super( RealJdbcType.INSTANCE, FloatTypeDescriptor.INSTANCE );
 		}
 
 		@Override
@@ -590,7 +590,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "big_decimal_as_decimal";
 
 		public BigDecimalAsDecimalType() {
-			super( NumericJdbcTypeDescriptor.INSTANCE, BigDecimalJavaTypeDescriptor.INSTANCE );
+			super( NumericJdbcType.INSTANCE, BigDecimalJavaTypeDescriptor.INSTANCE );
 		}
 
 		@Override
@@ -603,7 +603,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "string_as_nonvar_char_array";
 
 		public StringAsNonVarCharType() {
-			super( CharJdbcTypeDescriptor.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
+			super( CharJdbcType.INSTANCE, StringJavaTypeDescriptor.INSTANCE );
 		}
 
 		@Override
@@ -616,7 +616,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 		public static final String NAME = "byte_array_as_nonvar_binary";
 
 		public ByteArrayAsNonVarBinaryType() {
-			super( BinaryJdbcTypeDescriptor.INSTANCE, PrimitiveByteArrayJavaTypeDescriptor.INSTANCE );
+			super( BinaryJdbcType.INSTANCE, PrimitiveByteArrayJavaTypeDescriptor.INSTANCE );
 		}
 
 		@Override

@@ -10,7 +10,7 @@ import java.sql.CallableStatement;
 import java.sql.SQLException;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Specialization of DomainType for types that can be used as a
@@ -31,7 +31,7 @@ public interface AllowableOutputParameterType<J> extends AllowableParameterType<
 	/**
 	 * Descriptor for the SQL type mapped by this type.
 	 */
-	JdbcTypeDescriptor getJdbcTypeDescriptor();
+	JdbcType getJdbcTypeDescriptor();
 
 	/**
 	 * Perform the extraction

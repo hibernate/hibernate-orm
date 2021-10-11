@@ -29,7 +29,7 @@ import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -78,7 +78,7 @@ public class QueryParametersValidationArrayTest {
 		public static final StringArrayType INSTANCE = new StringArrayType ();
 
 		public StringArrayType() {
-			super( StringArrayJdbcTypeDescriptor.INSTANCE, StringArrayTypeDescriptor.INSTANCE);
+			super( StringArrayJdbcType.INSTANCE, StringArrayTypeDescriptor.INSTANCE);
 		}
 
 		public String getName() {
@@ -91,9 +91,9 @@ public class QueryParametersValidationArrayTest {
 		}
 	}
 
-	public static class StringArrayJdbcTypeDescriptor implements JdbcTypeDescriptor {
+	public static class StringArrayJdbcType implements JdbcType {
 
-		public static final StringArrayJdbcTypeDescriptor INSTANCE = new StringArrayJdbcTypeDescriptor();
+		public static final StringArrayJdbcType INSTANCE = new StringArrayJdbcType();
 
 		@Override
 		public int getJdbcTypeCode() {

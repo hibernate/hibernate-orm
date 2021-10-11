@@ -19,8 +19,8 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
@@ -45,21 +45,21 @@ public class UUIDBasedIdInterpretationTest {
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( H2Dialect.class )
 	public void testH2(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, VarbinaryJdbcTypeDescriptor.class );
+		checkUuidTypeUsed( scope, VarbinaryJdbcType.class );
 	}
 
 	@Test
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( value = MySQLDialect.class, version = 500 )
 	public void testMySQL(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, VarbinaryJdbcTypeDescriptor.class );
+		checkUuidTypeUsed( scope, VarbinaryJdbcType.class );
 	}
 
 	@Test
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( value = PostgreSQLDialect.class, version = 940 )
 	public void testPostgreSQL(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, PostgresUUIDType.PostgresUUIDJdbcTypeDescriptor.class );
+		checkUuidTypeUsed( scope, PostgresUUIDType.PostgresUUIDJdbcType.class );
 	}
 
 	@Test
@@ -71,7 +71,7 @@ public class UUIDBasedIdInterpretationTest {
 		} );
 	}
 
-	private void checkUuidTypeUsed(DomainModelScope scope, Class<? extends JdbcTypeDescriptor> jdbcTypeDescriptor) {
+	private void checkUuidTypeUsed(DomainModelScope scope, Class<? extends JdbcType> jdbcTypeDescriptor) {
 		final PersistentClass entityBinding = scope.getDomainModel().getEntityBinding( UuidIdEntity.class.getName() );
 		final BasicType<?> idPropertyType = (BasicType<?>) entityBinding.getIdentifier().getType();
 		assertSame( UUIDJavaTypeDescriptor.INSTANCE, idPropertyType.getJavaTypeDescriptor() );

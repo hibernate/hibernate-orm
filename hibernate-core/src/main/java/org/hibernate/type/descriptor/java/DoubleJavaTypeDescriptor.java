@@ -13,8 +13,8 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
-import org.hibernate.type.descriptor.jdbc.DoubleJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DoubleJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -31,8 +31,8 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
-		return DoubleJdbcTypeDescriptor.INSTANCE;
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+		return DoubleJdbcType.INSTANCE;
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		//this is the number of decimal digits
 		// + sign + decimal point
 		// + space for "E+nnn"

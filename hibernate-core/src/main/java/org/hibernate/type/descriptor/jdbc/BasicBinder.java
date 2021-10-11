@@ -27,19 +27,19 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
 
 	private final JavaType<J> javaDescriptor;
-	private final JdbcTypeDescriptor jdbcTypeDescriptor;
+	private final JdbcType jdbcType;
 
 	public JavaType<J> getJavaTypeDescriptor() {
 		return javaDescriptor;
 	}
 
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
-		return jdbcTypeDescriptor;
+	public JdbcType getJdbcTypeDescriptor() {
+		return jdbcType;
 	}
 
-	public BasicBinder(JavaType<J> javaDescriptor, JdbcTypeDescriptor jdbcTypeDescriptor) {
+	public BasicBinder(JavaType<J> javaDescriptor, JdbcType jdbcType) {
 		this.javaDescriptor = javaDescriptor;
-		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
+		this.jdbcType = jdbcType;
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( jdbcTypeDescriptor.getJdbcTypeCode() ),
+								JdbcTypeNameMapper.getTypeName( jdbcType.getJdbcTypeCode() ),
 								getJavaTypeDescriptor().extractLoggableRepresentation( value )
 						)
 				);
@@ -91,7 +91,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( jdbcTypeDescriptor.getJdbcTypeCode() ),
+								JdbcTypeNameMapper.getTypeName( jdbcType.getJdbcTypeCode() ),
 								getJavaTypeDescriptor().extractLoggableRepresentation( value )
 						)
 				);
@@ -110,7 +110,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	 * @throws SQLException Indicates a problem binding to the prepared statement.
 	 */
 	protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
-		st.setNull( index, jdbcTypeDescriptor.getJdbcTypeCode() );
+		st.setNull( index, jdbcType.getJdbcTypeCode() );
 	}
 
 	/**
@@ -123,7 +123,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	 * @throws SQLException Indicates a problem binding to the callable statement.
 	 */
 	protected void doBindNull(CallableStatement st, String name, WrapperOptions options) throws SQLException {
-		st.setNull( name, jdbcTypeDescriptor.getJdbcTypeCode() );
+		st.setNull( name, jdbcType.getJdbcTypeCode() );
 	}
 
 	/**

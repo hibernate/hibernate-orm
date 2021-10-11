@@ -11,7 +11,7 @@ import jakarta.persistence.EnumType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -26,7 +26,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassJava
 	}
 
 	@Override
-	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		if ( context.getEnumeratedType() != null && context.getEnumeratedType() == EnumType.STRING ) {
 			if ( context.getColumnLength() == 1 ) {
 				return context.isNationalized()
@@ -214,7 +214,7 @@ public class EnumJavaTypeDescriptor<T extends Enum<T>> extends AbstractClassJava
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcTypeDescriptor jdbcType, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType jdbcType, Dialect dialect) {
 		return dialect.getEnumCheckCondition( columnName, jdbcType.getJdbcTypeCode(), getJavaTypeClass() );
 	}
 }

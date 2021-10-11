@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.util.Date;
 
 import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.DateJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.DateJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#DATE DATE} and {@link java.sql.Date}
@@ -23,7 +23,7 @@ public class DateType
 	public static final DateType INSTANCE = new DateType();
 
 	public DateType() {
-		super( DateJdbcTypeDescriptor.INSTANCE, JdbcDateJavaTypeDescriptor.INSTANCE );
+		super( DateJdbcType.INSTANCE, JdbcDateJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

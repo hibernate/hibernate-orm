@@ -7,7 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.type.descriptor.java.ByteJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#TINYINT TINYINT} and {@link Byte}
@@ -21,7 +21,7 @@ public class ByteType
 	public static final ByteType INSTANCE = new ByteType();
 
 	public ByteType() {
-		super( TinyIntJdbcTypeDescriptor.INSTANCE, ByteJavaTypeDescriptor.INSTANCE );
+		super( TinyIntJdbcType.INSTANCE, ByteJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

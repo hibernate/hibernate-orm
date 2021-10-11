@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * BasicValueConverter handling the conversion of an enum based on
@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueConverter<E,Integer>, Serializable {
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
-	private final JdbcTypeDescriptor jdbcTypeDescriptor;
+	private final JdbcType jdbcType;
 	private final JavaType<Integer> relationalJavaDescriptor;
 
 	private transient ValueExtractor<Integer> valueExtractor;
@@ -38,14 +38,14 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 
 	public OrdinalEnumValueConverter(
 			EnumJavaTypeDescriptor<E> enumJavaDescriptor,
-			JdbcTypeDescriptor jdbcTypeDescriptor,
+			JdbcType jdbcType,
 			JavaType<Integer> relationalJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
-		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
+		this.jdbcType = jdbcType;
 		this.relationalJavaDescriptor = relationalJavaDescriptor;
 
-		this.valueExtractor = jdbcTypeDescriptor.getExtractor( relationalJavaDescriptor );
-		this.valueBinder = jdbcTypeDescriptor.getBinder( relationalJavaDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( relationalJavaDescriptor );
+		this.valueBinder = jdbcType.getBinder( relationalJavaDescriptor );
 	}
 
 	@Override
@@ -85,8 +85,8 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	private void readObject(ObjectInputStream stream) throws ClassNotFoundException, IOException {
 		stream.defaultReadObject();
 
-		this.valueExtractor = jdbcTypeDescriptor.getExtractor( relationalJavaDescriptor );
-		this.valueBinder = jdbcTypeDescriptor.getBinder( relationalJavaDescriptor );
+		this.valueExtractor = jdbcType.getExtractor( relationalJavaDescriptor );
+		this.valueBinder = jdbcType.getBinder( relationalJavaDescriptor );
 	}
 
 	@Override

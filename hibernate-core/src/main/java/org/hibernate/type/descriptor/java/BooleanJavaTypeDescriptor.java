@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Descriptor for {@link Boolean} handling.
@@ -153,7 +153,7 @@ public class BooleanJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<B
 	}
 
 	@Override
-	public long getDefaultSqlLength(Dialect dialect, JdbcTypeDescriptor jdbcType) {
+	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return 1;
 	}
 
@@ -168,7 +168,7 @@ public class BooleanJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<B
 	}
 
 	@Override
-	public String getCheckCondition(String columnName, JdbcTypeDescriptor sqlTypeDescriptor, Dialect dialect) {
+	public String getCheckCondition(String columnName, JdbcType sqlTypeDescriptor, Dialect dialect) {
 		return dialect.getBooleanCheckCondition(
 				columnName,
 				sqlTypeDescriptor.getJdbcTypeCode(),

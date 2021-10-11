@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -37,7 +37,7 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 	public static final PostgresUUIDType INSTANCE = new PostgresUUIDType();
 
 	public PostgresUUIDType() {
-		super( PostgresUUIDJdbcTypeDescriptor.INSTANCE, UUIDJavaTypeDescriptor.INSTANCE );
+		super( PostgresUUIDJdbcType.INSTANCE, UUIDJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {
@@ -50,11 +50,11 @@ public class PostgresUUIDType extends AbstractSingleColumnStandardBasicType<UUID
 		return true;
 	}
 
-	public static class PostgresUUIDJdbcTypeDescriptor implements JdbcTypeDescriptor {
+	public static class PostgresUUIDJdbcType implements JdbcType {
 		/**
 		 * Singleton access
 		 */
-		public static final PostgresUUIDJdbcTypeDescriptor INSTANCE = new PostgresUUIDJdbcTypeDescriptor();
+		public static final PostgresUUIDJdbcType INSTANCE = new PostgresUUIDJdbcType();
 
 		/**
 		 * Postgres reports its UUID type as {@link Types#OTHER}.  Unfortunately

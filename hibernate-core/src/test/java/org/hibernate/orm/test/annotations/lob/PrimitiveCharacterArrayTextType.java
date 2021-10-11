@@ -10,7 +10,7 @@
 package org.hibernate.orm.test.annotations.lob;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.java.PrimitiveCharacterArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.LongVarcharJdbcType;
 
 /**
  * A type that maps JDBC {@link java.sql.Types#LONGVARCHAR LONGVARCHAR} and {@code char[]}.
@@ -21,7 +21,7 @@ public class PrimitiveCharacterArrayTextType extends AbstractSingleColumnStandar
 	public static final PrimitiveCharacterArrayTextType INSTANCE = new PrimitiveCharacterArrayTextType();
 
 	public PrimitiveCharacterArrayTextType() {
-		super( LongVarcharJdbcTypeDescriptor.INSTANCE, PrimitiveCharacterArrayJavaTypeDescriptor.INSTANCE );
+		super( LongVarcharJdbcType.INSTANCE, PrimitiveCharacterArrayJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

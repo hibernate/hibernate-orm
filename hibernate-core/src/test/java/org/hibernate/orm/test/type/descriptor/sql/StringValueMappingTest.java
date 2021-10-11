@@ -19,9 +19,9 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 
@@ -37,8 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 public class StringValueMappingTest {
 	private final StringJavaTypeDescriptor stringJavaDescriptor = new StringJavaTypeDescriptor();
 
-	private final VarcharJdbcTypeDescriptor varcharSqlDescriptor = new VarcharJdbcTypeDescriptor();
-	private final ClobJdbcTypeDescriptor clobSqlDescriptor = ClobJdbcTypeDescriptor.DEFAULT;
+	private final VarcharJdbcType varcharSqlDescriptor = new VarcharJdbcType();
+	private final ClobJdbcType clobSqlDescriptor = ClobJdbcType.DEFAULT;
 
 	private final WrapperOptions wrapperOptions = new WrapperOptions() {
 		@Override
@@ -59,7 +59,7 @@ public class StringValueMappingTest {
 			return NonContextualLobCreator.INSTANCE;
 		}
 
-		public JdbcTypeDescriptor remapSqlTypeDescriptor(JdbcTypeDescriptor sqlTypeDescriptor) {
+		public JdbcType remapSqlTypeDescriptor(JdbcType sqlTypeDescriptor) {
 			return sqlTypeDescriptor;
 		}
 

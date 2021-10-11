@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Blob;
 
 import org.hibernate.type.descriptor.java.BlobJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BlobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#BLOB BLOB} and {@link Blob}
@@ -21,7 +21,7 @@ public class BlobType extends AbstractSingleColumnStandardBasicType<Blob> {
 	public static final BlobType INSTANCE = new BlobType();
 
 	public BlobType() {
-		super( BlobJdbcTypeDescriptor.DEFAULT, BlobJavaTypeDescriptor.INSTANCE );
+		super( BlobJdbcType.DEFAULT, BlobJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

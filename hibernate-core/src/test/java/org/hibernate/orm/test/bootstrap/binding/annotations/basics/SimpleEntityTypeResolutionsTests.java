@@ -17,7 +17,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -45,7 +45,7 @@ public class SimpleEntityTypeResolutionsTests {
 			assertThat( identifier.isValid( scope.getDomainModel() ), is( true ) );
 			final BasicValue.Resolution<?> resolution = identifier.resolve();
 			assertSame( IntegerJavaTypeDescriptor.INSTANCE, resolution.getDomainJavaDescriptor() );
-			assertSame( IntegerJdbcTypeDescriptor.INSTANCE, resolution.getJdbcTypeDescriptor() );
+			assertSame( IntegerJdbcType.INSTANCE, resolution.getJdbcTypeDescriptor() );
 			assertThat( resolution.getJdbcMapping(), sameInstance( resolution.getLegacyResolvedBasicType() ) );
 		}
 

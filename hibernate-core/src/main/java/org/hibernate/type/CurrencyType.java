@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.util.Currency;
 
 import org.hibernate.type.descriptor.java.CurrencyJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#VARCHAR VARCHAR} and {@link Currency}
@@ -23,7 +23,7 @@ public class CurrencyType
 	public static final CurrencyType INSTANCE = new CurrencyType();
 
 	public CurrencyType() {
-		super( VarcharJdbcTypeDescriptor.INSTANCE, CurrencyJavaTypeDescriptor.INSTANCE );
+		super( VarcharJdbcType.INSTANCE, CurrencyJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.time.ZonedDateTime;
 
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +23,7 @@ public class ZonedDateTimeType
 	public static final ZonedDateTimeType INSTANCE = new ZonedDateTimeType();
 
 	public ZonedDateTimeType() {
-		super( TimestampWithTimeZoneJdbcTypeDescriptor.INSTANCE, ZonedDateTimeJavaTypeDescriptor.INSTANCE );
+		super( TimestampWithTimeZoneJdbcType.INSTANCE, ZonedDateTimeJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

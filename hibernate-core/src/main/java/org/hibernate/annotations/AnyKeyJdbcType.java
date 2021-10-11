@@ -8,7 +8,7 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -16,7 +16,7 @@ import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Form of {@link JdbcType} used to describe the foreign-key part of an ANY mapping.
+ * Form of {@link org.hibernate.annotations.JdbcType} used to describe the foreign-key part of an ANY mapping.
  *
  * @see Any
  * @see AnyKeyJdbcTypeCode
@@ -29,7 +29,7 @@ public @interface AnyKeyJdbcType {
 	/**
 	 * The descriptor to use for the key column
 	 *
-	 * @see JdbcType#value
+	 * @see org.hibernate.annotations.JdbcType#value
 	 */
-	Class<? extends JdbcTypeDescriptor> value();
+	Class<? extends JdbcType> value();
 }

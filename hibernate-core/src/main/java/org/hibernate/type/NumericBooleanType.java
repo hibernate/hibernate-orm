@@ -8,7 +8,7 @@ package org.hibernate.type;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.IntegerJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.IntegerJdbcType;
 
 /**
  * A type that maps between {@link java.sql.Types#INTEGER INTEGER} and {@link Boolean} (using 1 and 0)
@@ -22,7 +22,7 @@ public class NumericBooleanType
 	public static final NumericBooleanType INSTANCE = new NumericBooleanType();
 
 	public NumericBooleanType() {
-		super( IntegerJdbcTypeDescriptor.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
+		super( IntegerJdbcType.INSTANCE, BooleanJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override

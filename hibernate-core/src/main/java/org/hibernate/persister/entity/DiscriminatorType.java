@@ -30,7 +30,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * TODO : javadoc
@@ -248,7 +248,7 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public JdbcTypeDescriptor getJdbcTypeDescriptor() {
+	public JdbcType getJdbcTypeDescriptor() {
 		return underlyingType.getJdbcTypeDescriptor();
 	}
 

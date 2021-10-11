@@ -1557,7 +1557,7 @@ There are many ways to integrate a `TypeContributor`.  The most common is to def
 a Java service (see `java.util.ServiceLoader`).
 
 `TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaType`,
-`JdbcTypeDescriptor` and `BasicType` references.
+`JdbcType` and `BasicType` references.
 
 
 
@@ -1912,7 +1912,7 @@ than direct serialization.  But as `BitSet` is ultimately binary data we would p
 map this to `VARBINARY` type instead.  One way to do that would be to change `BitSetJavaType#getRecommendedJdbcType`
 to instead return `VARBINARY` descriptor.  Another option would be to use a local `@JdbcType` or `@JdbcTypeCode`.
 
-The following examples for specifying the `JdbcTypeDescriptor` assume our `BitSetJavaType`
+The following examples for specifying the `JdbcType` assume our `BitSetJavaType`
 is globally registered.
 
 We will again store the values as `VARBINARY` in the database.  The difference now however is that
@@ -1929,7 +1929,7 @@ include::{sourcedir}/basic/bitset/BitSetJdbcTypeCodeTests.java[tags=basic-bitset
 ----
 ====
 
-In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcTypeDescriptor` registered for JDBC's
+In this example, `@JdbcTypeCode` has been used to indicate that the `JdbcType` registered for JDBC's
 `VARBINARY` type should be used.
 
 

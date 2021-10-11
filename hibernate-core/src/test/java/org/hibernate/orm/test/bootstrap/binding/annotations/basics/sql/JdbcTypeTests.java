@@ -16,7 +16,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 
 import org.hibernate.annotations.Nationalized;
-import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.JdbcTypeRegistration;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -29,8 +28,8 @@ import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -89,11 +88,11 @@ public class JdbcTypeTests {
 						.getJdbcTypeCode()
 		);
 
-		verifyResolution( entityBinding.getProperty( "customType" ), CustomJdbcTypeDescriptor.class );
-		verifyResolution( entityBinding.getProperty( "customTypeRegistration" ), RegisteredCustomJdbcTypeDescriptor.class );
+		verifyResolution( entityBinding.getProperty( "customType" ), CustomJdbcType.class );
+		verifyResolution( entityBinding.getProperty( "customTypeRegistration" ), RegisteredCustomJdbcType.class );
 	}
 
-	private void verifyResolution(Property property, Class<? extends JdbcTypeDescriptor> expectedSqlTypeDescriptor) {
+	private void verifyResolution(Property property, Class<? extends JdbcType> expectedSqlTypeDescriptor) {
 		verifyResolution(
 				property,
 				sqlTypeDescriptor -> {
@@ -115,7 +114,7 @@ public class JdbcTypeTests {
 
 	private void verifyJdbcTypeResolution(
 			Property property,
-			BiConsumer<Property, JdbcTypeDescriptor> verifier) {
+			BiConsumer<Property, JdbcType> verifier) {
 		final Value value = property.getValue();
 		assertThat( value, instanceOf( BasicValue.class ) );
 		final BasicValue basicValue = (BasicValue) value;
@@ -127,7 +126,7 @@ public class JdbcTypeTests {
 
 	private void verifyResolution(
 			Property property,
-			Consumer<JdbcTypeDescriptor> stdVerifier) {
+			Consumer<JdbcType> stdVerifier) {
 		final Value value = property.getValue();
 		assertThat( value, instanceOf( BasicValue.class ) );
 		final BasicValue basicValue = (BasicValue) value;
@@ -138,7 +137,7 @@ public class JdbcTypeTests {
 
 	@Entity( name = "SimpleEntity" )
 	@Table( name = "simple_entity" )
-	@JdbcTypeRegistration( value = RegisteredCustomJdbcTypeDescriptor.class, registrationCode = Integer.MAX_VALUE - 1 )
+	@JdbcTypeRegistration( value = RegisteredCustomJdbcType.class, registrationCode = Integer.MAX_VALUE - 1 )
 	@SuppressWarnings("unused")
 	public static class SimpleEntity {
 		@Id
@@ -163,14 +162,14 @@ public class JdbcTypeTests {
 		@Nationalized
 		private Clob nationalizedClob;
 
-		@JdbcType( CustomJdbcTypeDescriptor.class )
+		@org.hibernate.annotations.JdbcType( CustomJdbcType.class )
 		private Integer customType;
 
 		@JdbcTypeCode( Integer.MAX_VALUE - 1 )
 		private Integer customTypeRegistration;
 	}
 
-	public static class CustomJdbcTypeDescriptor implements JdbcTypeDescriptor {
+	public static class CustomJdbcType implements JdbcType {
 		@Override
 		public int getJdbcTypeCode() {
 			return Types.TINYINT;
@@ -178,15 +177,15 @@ public class JdbcTypeTests {
 
 		@Override
 		public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
-			return TinyIntJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
+			return TinyIntJdbcType.INSTANCE.getBinder( javaTypeDescriptor );
 		}
 
 		@Override
 		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
-			return TinyIntJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
+			return TinyIntJdbcType.INSTANCE.getExtractor( javaTypeDescriptor );
 		}
 	}
 
-	public static class RegisteredCustomJdbcTypeDescriptor extends CustomJdbcTypeDescriptor {
+	public static class RegisteredCustomJdbcType extends CustomJdbcType {
 	}
 }

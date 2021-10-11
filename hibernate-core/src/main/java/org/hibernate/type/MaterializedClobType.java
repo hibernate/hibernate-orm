@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 
 /**
  * A type that maps between {@link Types#CLOB CLOB} and {@link String}
@@ -24,7 +24,7 @@ public class MaterializedClobType
 	public static final MaterializedClobType INSTANCE = new MaterializedClobType();
 
 	public MaterializedClobType() {
-		super( ClobJdbcTypeDescriptor.DEFAULT, StringJavaTypeDescriptor.INSTANCE );
+		super( ClobJdbcType.DEFAULT, StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

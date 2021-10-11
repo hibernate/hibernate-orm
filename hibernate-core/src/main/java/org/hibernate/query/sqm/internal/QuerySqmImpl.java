@@ -81,7 +81,7 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -359,20 +359,20 @@ public class QuerySqmImpl<R>
 		final Class<?> javaTypeClass = sqmExpressable.getExpressableJavaTypeDescriptor().getJavaTypeClass();
 		if ( ! resultClass.isAssignableFrom( javaTypeClass ) ) {
 			// Special case for date because we always report java.util.Date as expression type
-			// But the expected resultClass could be a subtype of that, so we need to check the JdbcTypeDescriptor
+			// But the expected resultClass could be a subtype of that, so we need to check the JdbcType
 			if ( javaTypeClass == Date.class ) {
-				JdbcTypeDescriptor jdbcTypeDescriptor = null;
+				JdbcType jdbcType = null;
 				if ( sqmExpressable instanceof BasicDomainType<?> ) {
-					jdbcTypeDescriptor = ( (BasicDomainType<?>) sqmExpressable ).getJdbcTypeDescriptor();
+					jdbcType = ( (BasicDomainType<?>) sqmExpressable ).getJdbcTypeDescriptor();
 				}
 				else if ( sqmExpressable instanceof SqmPathSource<?> ) {
 					final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressable ).getSqmPathType();
 					if ( domainType instanceof BasicDomainType<?> ) {
-						jdbcTypeDescriptor = ( (BasicDomainType<?>) domainType ).getJdbcTypeDescriptor();
+						jdbcType = ( (BasicDomainType<?>) domainType ).getJdbcTypeDescriptor();
 					}
 				}
-				if ( jdbcTypeDescriptor != null ) {
-					switch ( jdbcTypeDescriptor.getJdbcTypeCode() ) {
+				if ( jdbcType != null ) {
+					switch ( jdbcType.getJdbcTypeCode() ) {
 						case Types.DATE:
 							if ( resultClass.isAssignableFrom( java.sql.Date.class ) ) {
 								return;

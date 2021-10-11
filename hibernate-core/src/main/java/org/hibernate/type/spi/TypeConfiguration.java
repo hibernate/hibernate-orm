@@ -57,7 +57,7 @@ import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -308,7 +308,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					final Class<?> javaTypeClass = cls.classForName( name );
 
 					final JavaType<?> jtd = javaTypeDescriptorRegistry.resolveDescriptor( javaTypeClass );
-					final JdbcTypeDescriptor jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
+					final JdbcType jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
 				}
 				catch (Exception ignore) {
@@ -688,7 +688,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		return null;
 	}
 
-	public static TemporalType getSqlTemporalType(JdbcTypeDescriptor descriptor) {
+	public static TemporalType getSqlTemporalType(JdbcType descriptor) {
 		return getSqlTemporalType( descriptor.getJdbcTypeCode() );
 	}
 

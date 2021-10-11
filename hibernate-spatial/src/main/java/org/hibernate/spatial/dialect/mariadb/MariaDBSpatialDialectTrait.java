@@ -24,8 +24,8 @@ public interface MariaDBSpatialDialectTrait extends SpatialDialect {
 
 
 	default void delegateContributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
-		typeContributions.contributeType( new GeolatteGeometryType( MariaDBGeometryTypeDescriptor.INSTANCE ) );
-		typeContributions.contributeType( new JTSGeometryType( MariaDBGeometryTypeDescriptor.INSTANCE ) );
+		typeContributions.contributeType( new GeolatteGeometryType( MariaDBGeometryType.INSTANCE ) );
+		typeContributions.contributeType( new JTSGeometryType( MariaDBGeometryType.INSTANCE ) );
 
 		typeContributions.contributeJavaTypeDescriptor( GeolatteGeometryJavaTypeDescriptor.INSTANCE );
 		typeContributions.contributeJavaTypeDescriptor( JTSGeometryJavaTypeDescriptor.INSTANCE );

@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
+import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 
 /**
  * A type that maps between {@link Types#CHAR CHAR(1)} and {@link Character}
@@ -24,7 +24,7 @@ public class CharacterType
 	public static final CharacterType INSTANCE = new CharacterType();
 
 	public CharacterType() {
-		super( CharJdbcTypeDescriptor.INSTANCE, CharacterJavaTypeDescriptor.INSTANCE );
+		super( CharJdbcType.INSTANCE, CharacterJavaTypeDescriptor.INSTANCE );
 	}
 
 	public String getName() {

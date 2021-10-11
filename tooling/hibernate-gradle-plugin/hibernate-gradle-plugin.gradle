@@ -9,7 +9,7 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
 	id 'java-gradle-plugin'
-	id 'com.gradle.plugin-publish' version '0.14.0'
+	id 'com.gradle.plugin-publish' version '0.16.0'
 
 	id 'com.github.sebersole.testkit-junit5' version '1.2.0'
 }

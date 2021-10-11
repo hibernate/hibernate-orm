@@ -107,3 +107,17 @@ task ciBuild( dependsOn: [test, publish] )
 task release(dependsOn: [test, publishToSonatype])
 publishToSonatype.mustRunAfter test
 
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Ancillary tasks
+
+task showPublications {
+	doFirst {
+		project.publishing.publications.each { publication ->
+			println "Publication (${publication.name}): ${publication.groupId}:${publication.artifactId}:${publication.version}"
+			publication.artifacts.each { artifact ->
+				println "    > ${artifact}"
+			}
+		}
+	}
+}

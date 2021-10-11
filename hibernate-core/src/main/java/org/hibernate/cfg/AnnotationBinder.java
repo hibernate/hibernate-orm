@@ -152,6 +152,8 @@ import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.jpa.event.internal.CallbackDefinitionResolverLegacyImpl;
+import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.loader.PropertyPath;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Component;
@@ -837,6 +839,8 @@ public final class AnnotationBinder {
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Table.class ) );
 		entityBinder.processComplementaryTableDefinitions( clazzToProcess.getAnnotation( org.hibernate.annotations.Tables.class ) );
 		entityBinder.processComplementaryTableDefinitions( tabAnn );
+
+		bindCallbacks( clazzToProcess, persistentClass, context );
 	}
 
 	/**
@@ -1420,6 +1424,32 @@ public final class AnnotationBinder {
 
 	}
 
+	private static void bindCallbacks(XClass entityClass, PersistentClass persistentClass,
+			MetadataBuildingContext context) {
+		ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
+
+		for ( CallbackType callbackType : CallbackType.values() ) {
+			persistentClass.addCallbackDefinitions( CallbackDefinitionResolverLegacyImpl.resolveEntityCallbacks(
+					reflectionManager, entityClass, callbackType ) );
+		}
+
+		context.getMetadataCollector().addSecondPass( new SecondPass() {
+			@Override
+			public void doSecondPass(Map persistentClasses) throws MappingException {
+				for ( @SuppressWarnings("unchecked") Iterator<Property> propertyIterator = persistentClass.getDeclaredPropertyIterator();
+						propertyIterator.hasNext(); ) {
+					Property property = propertyIterator.next();
+					if ( property.isComposite() ) {
+						for ( CallbackType callbackType : CallbackType.values() ) {
+							property.addCallbackDefinitions( CallbackDefinitionResolverLegacyImpl.resolveEmbeddableCallbacks(
+									reflectionManager, persistentClass.getMappedClass(), property, callbackType ) );
+						}
+					}
+				}
+			}
+		} );
+	}
+
 	public static void bindFetchProfilesForClass(XClass clazzToProcess, MetadataBuildingContext context) {
 		bindFetchProfiles( clazzToProcess, context );
 	}
@@ -1463,7 +1493,6 @@ public final class AnnotationBinder {
 			);
 		}
 	}
-
 
 	private static void bindDiscriminatorColumnToRootPersistentClass(
 			RootClass rootClass,

@@ -19,7 +19,7 @@ import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
 import org.hibernate.query.spi.QueryParameterBindingValidator;
 import org.hibernate.type.descriptor.java.CoercionException;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -27,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaTypeDescriptor.CoercionContext {
+public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, JavaType.CoercionContext {
 	private final QueryParameter<T> queryParameter;
 	private final QueryParameterBindingTypeResolver typeResolver;
 	private final boolean isBindingValidationRequired;

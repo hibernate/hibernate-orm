@@ -25,10 +25,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NCharJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.NVarcharJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.TestForIssue;

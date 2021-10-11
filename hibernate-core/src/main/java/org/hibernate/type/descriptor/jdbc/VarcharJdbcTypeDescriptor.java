@@ -15,8 +15,8 @@ import java.sql.Types;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -48,18 +48,18 @@ public class VarcharJdbcTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		if ( length != null && length == 1 ) {
-			return (BasicJavaTypeDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Character.class );
+			return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Character.class );
 		}
-		return (BasicJavaTypeDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 	}
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return new JdbcLiteralFormatterCharacterData( javaTypeDescriptor );
 	}
@@ -67,7 +67,7 @@ public class VarcharJdbcTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	@Override
 	public JdbcTypeDescriptor resolveIndicatedType(
 			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<?> domainJtd) {
+			JavaType<?> domainJtd) {
 		assert domainJtd != null;
 
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
@@ -85,7 +85,7 @@ public class VarcharJdbcTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
@@ -101,7 +101,7 @@ public class VarcharJdbcTypeDescriptor implements AdjustableJdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {

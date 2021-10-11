@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.jdbc.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
@@ -22,11 +22,11 @@ public class JdbcLiteralFormatterCharacterData extends BasicJdbcLiteralFormatter
 
 	private final boolean isNationalized;
 
-	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor<?> javaTypeDescriptor) {
+	public JdbcLiteralFormatterCharacterData(JavaType<?> javaTypeDescriptor) {
 		this( javaTypeDescriptor, false );
 	}
 
-	public JdbcLiteralFormatterCharacterData(JavaTypeDescriptor<?> javaTypeDescriptor, boolean isNationalized) {
+	public JdbcLiteralFormatterCharacterData(JavaType<?> javaTypeDescriptor, boolean isNationalized) {
 		super( javaTypeDescriptor );
 		this.isNationalized = isNationalized;
 	}

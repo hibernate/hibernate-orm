@@ -12,8 +12,8 @@ import java.sql.Types;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -55,12 +55,12 @@ public interface JdbcTypeDescriptor extends Serializable {
 		return getJdbcTypeCode();
 	}
 
-	default <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	default <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
-		return (BasicJavaTypeDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
 				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getJdbcTypeCode() )
 		);
 	}
@@ -68,7 +68,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	/**
 	 * todo (6.0) : move to {@link org.hibernate.metamodel.mapping.JdbcMapping}?
 	 */
-	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+	default <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
 		return (appender, value, dialect, wrapperOptions) -> appender.appendSql( value.toString() );
 	}
 
@@ -80,7 +80,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	 *
 	 * @return The appropriate binder.
 	 */
-	<X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
+	<X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor);
 
 	/**
 	 * Get the extractor (pulling out-going values from JDBC objects) capable of handling values of the type described
@@ -90,7 +90,7 @@ public interface JdbcTypeDescriptor extends Serializable {
 	 *
 	 * @return The appropriate extractor
 	 */
-	<X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor);
+	<X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor);
 
 	default boolean isInteger() {
 		switch ( getJdbcTypeCode() ) {

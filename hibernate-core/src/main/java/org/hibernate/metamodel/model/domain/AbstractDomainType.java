@@ -6,17 +6,17 @@
  */
 package org.hibernate.metamodel.model.domain;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
 	private final JpaMetamodel domainMetamodel;
-	private final JavaTypeDescriptor<J> javaTypeDescriptor;
+	private final JavaType<J> javaTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
-	public AbstractDomainType(JavaTypeDescriptor<J> javaTypeDescriptor, JpaMetamodel domainMetamodel) {
+	public AbstractDomainType(JavaType<J> javaTypeDescriptor, JpaMetamodel domainMetamodel) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.domainMetamodel = domainMetamodel;
 	}
@@ -26,7 +26,7 @@ public abstract class AbstractDomainType<J> implements SimpleDomainType<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
+	public JavaType<J> getExpressableJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

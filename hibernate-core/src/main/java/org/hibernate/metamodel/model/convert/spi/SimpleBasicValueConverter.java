@@ -8,21 +8,21 @@ package org.hibernate.metamodel.model.convert.spi;
 
 import java.util.function.Function;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class SimpleBasicValueConverter<D,R> implements BasicValueConverter<D,R> {
-	private final JavaTypeDescriptor<D> domainJtd;
-	private final JavaTypeDescriptor<R> relationalJtd;
+	private final JavaType<D> domainJtd;
+	private final JavaType<R> relationalJtd;
 
 	private final Function<R,D> toDomainHandler;
 	private final Function<D,R> toRelationalHandler;
 
 	public SimpleBasicValueConverter(
-			JavaTypeDescriptor<D> domainJtd,
-			JavaTypeDescriptor<R> relationalJtd,
+			JavaType<D> domainJtd,
+			JavaType<R> relationalJtd,
 			Function<R,D> toDomainHandler,
 			Function<D,R> toRelationalHandler) {
 		this.domainJtd = domainJtd;
@@ -42,12 +42,12 @@ public class SimpleBasicValueConverter<D,R> implements BasicValueConverter<D,R> 
 	}
 
 	@Override
-	public JavaTypeDescriptor<D> getDomainJavaDescriptor() {
+	public JavaType<D> getDomainJavaDescriptor() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<R> getRelationalJavaDescriptor() {
+	public JavaType<R> getRelationalJavaDescriptor() {
 		return relationalJtd;
 	}
 }

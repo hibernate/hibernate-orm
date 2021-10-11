@@ -16,7 +16,6 @@ import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.ParsingException;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -26,7 +25,7 @@ import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
@@ -233,7 +232,7 @@ public class BasicDotIdentifierConsumer implements DotIdentifierConsumer {
 						try {
 							final Field referencedField = namedClass.getDeclaredField( terminal );
 							if ( referencedField != null ) {
-								final JavaTypeDescriptor<?> fieldJtd = javaTypeDescriptorRegistry
+								final JavaType<?> fieldJtd = javaTypeDescriptorRegistry
 										.getDescriptor( referencedField.getType() );
 								//noinspection unchecked
 								return new SqmFieldLiteral( referencedField, fieldJtd, creationContext.getNodeBuilder() );

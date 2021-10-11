@@ -14,7 +14,7 @@ import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -50,7 +50,7 @@ public class SqlSelectionImpl implements SqlSelection, Expression, SqlExpression
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
 		return this;
 	}

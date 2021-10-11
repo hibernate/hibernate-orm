@@ -73,7 +73,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Handles splitting queries containing unmapped polymorphic references.
@@ -467,14 +467,14 @@ public class QuerySplitter {
 			switch ( instantiationTarget.getNature() ) {
 				case MAP: {
 					copy = SqmDynamicInstantiation.forMapInstantiation(
-							(JavaTypeDescriptor<Map<?, ?>>) instantiationTarget.getTargetTypeDescriptor(),
+							(JavaType<Map<?, ?>>) instantiationTarget.getTargetTypeDescriptor(),
 							getCreationContext().getNodeBuilder()
 					);
 					break;
 				}
 				case LIST: {
 					copy = SqmDynamicInstantiation.forListInstantiation(
-							(JavaTypeDescriptor<List<?>>) instantiationTarget.getTargetTypeDescriptor(),
+							(JavaType<List<?>>) instantiationTarget.getTargetTypeDescriptor(),
 							getCreationContext().getNodeBuilder()
 					);
 					break;

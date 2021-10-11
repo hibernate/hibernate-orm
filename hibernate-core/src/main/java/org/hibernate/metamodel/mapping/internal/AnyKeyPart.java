@@ -35,7 +35,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Acts as a ModelPart for the key portion of an any-valued mapping
@@ -97,7 +97,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return jdbcMapping.getMappedJavaTypeDescriptor();
 	}
 

@@ -62,7 +62,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * The default implementation of the <tt>EntityPersister</tt> interface.
@@ -340,7 +340,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 				discriminatorInsertable = persistentClass.isDiscriminatorInsertable() && !discrimValue.hasFormula();
 				try {
 					discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-					discriminatorSQLValue = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaTypeDescriptor) discriminatorType.getJavaTypeDescriptor() )
+					discriminatorSQLValue = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
 							.toJdbcLiteral(
 									discriminatorValue,
 									factory.getJdbcServices().getDialect(),

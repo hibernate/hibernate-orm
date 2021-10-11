@@ -24,7 +24,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -53,7 +53,7 @@ public abstract class AbstractJdbcParameter
 	public SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
 		// todo (6.0) : investigate "virtual" or "static" selections
 		//		- anything that is the same for each row always - parameter, literal, etc;

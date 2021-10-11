@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,7 +36,7 @@ public class CharJdbcTypeDescriptor extends VarcharJdbcTypeDescriptor {
 	@Override
 	public JdbcTypeDescriptor resolveIndicatedType(
 			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<?> domainJtd) {
+			JavaType<?> domainJtd) {
 		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
 		return indicators.isNationalized()

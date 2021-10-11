@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.hibernate.boot.model.TypeContributions;
 
-import org.hibernate.dialect.function.StandardSQLFunction;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;

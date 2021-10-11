@@ -13,7 +13,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -22,14 +22,14 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 	private final DomainResult<K> keyResult;
 	private final DomainResult<V> valueResult;
 
-	private final JavaTypeDescriptor<R> javaTypeDescriptor;
+	private final JavaType<R> javaTypeDescriptor;
 	private final String alias;
 
 	public SqmMapEntryResult(
 			DomainResult<K> keyResult,
 			DomainResult<V> valueResult,
 			String alias,
-			JavaTypeDescriptor<R> javaTypeDescriptor) {
+			JavaType<R> javaTypeDescriptor) {
 		this.alias = alias;
 		this.keyResult = keyResult;
 		this.valueResult = valueResult;
@@ -56,14 +56,14 @@ public class SqmMapEntryResult<K, V, R extends Map.Entry<K, V>> implements Domai
 			}
 
 			@Override
-			public JavaTypeDescriptor<R> getAssembledJavaTypeDescriptor() {
+			public JavaType<R> getAssembledJavaTypeDescriptor() {
 				return javaTypeDescriptor;
 			}
 		};
 	}
 
 	@Override
-	public JavaTypeDescriptor<R> getResultJavaTypeDescriptor() {
+	public JavaType<R> getResultJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

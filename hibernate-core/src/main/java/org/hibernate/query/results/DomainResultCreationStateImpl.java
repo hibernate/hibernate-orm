@@ -48,7 +48,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.results.ResultsHelper.attributeName;
@@ -286,7 +286,7 @@ public class DomainResultCreationStateImpl
 	@Override
 	public SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			TypeConfiguration typeConfiguration) {
 		if ( expression == null ) {
 			throw new IllegalArgumentException( "Expression cannot be null" );

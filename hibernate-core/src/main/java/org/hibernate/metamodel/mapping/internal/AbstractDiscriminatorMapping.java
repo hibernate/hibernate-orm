@@ -35,7 +35,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -120,7 +120,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return getJdbcMapping().getJavaTypeDescriptor();
 	}
 
@@ -283,15 +283,15 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		 */
 		private final Function<Object, R> toRelationalConverter;
 
-		private final JavaTypeDescriptor<Object> domainJtd;
-		private final JavaTypeDescriptor<R> relationalJtd;
+		private final JavaType<Object> domainJtd;
+		private final JavaType<R> relationalJtd;
 
 		public DomainResultConverter(
 				Function<R,String> subtypeResolver,
 				Function<String,Object> entityNameHandler,
 				Function<Object,R> toRelationalConverter,
-				JavaTypeDescriptor<Object> domainJtd,
-				JavaTypeDescriptor<R> relationalJtd) {
+				JavaType<Object> domainJtd,
+				JavaType<R> relationalJtd) {
 			this.subtypeResolver = subtypeResolver;
 			this.entityNameHandler = entityNameHandler;
 			this.toRelationalConverter = toRelationalConverter;
@@ -307,7 +307,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 			final TypeConfiguration typeConfiguration = sessionFactory.getDomainModel().getTypeConfiguration();
 			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 
-			final JavaTypeDescriptor<Object> domainJtd;
+			final JavaType<Object> domainJtd;
 			final Function<String,Object> entityNameHandler;
 			final Function<Object,Object> toRelationalConverter;
 
@@ -384,12 +384,12 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		}
 
 		@Override
-		public JavaTypeDescriptor<Object> getDomainJavaDescriptor() {
+		public JavaType<Object> getDomainJavaDescriptor() {
 			return domainJtd;
 		}
 
 		@Override
-		public JavaTypeDescriptor<R> getRelationalJavaDescriptor() {
+		public JavaType<R> getRelationalJavaDescriptor() {
 			return relationalJtd;
 		}
 	}

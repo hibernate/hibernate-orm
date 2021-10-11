@@ -56,7 +56,7 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.NullType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NullJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -192,7 +192,7 @@ public class MySQLDialect extends Dialect {
 			@Override
 			public Size resolveSize(
 					JdbcTypeDescriptor jdbcType,
-					JavaTypeDescriptor<?> javaType,
+					JavaType<?> javaType,
 					Integer precision,
 					Integer scale,
 					Long length) {

@@ -33,7 +33,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -103,7 +103,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 
@@ -220,7 +220,7 @@ public class CollectionIdentifierDescriptorImpl implements CollectionIdentifierD
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				null,
-				(JavaTypeDescriptor<Object>) type.getJavaTypeDescriptor(),
+				(JavaType<Object>) type.getJavaTypeDescriptor(),
 				collectionPath
 		);
 	}

@@ -9,15 +9,10 @@ package org.hibernate.jpamodelgen.test.collectionbasictype;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Types;
-import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.usertype.StaticUserTypeSupport;
-import org.hibernate.usertype.UserTypeSupport;
 
 /**
  * @author Vlad Mihalcea

@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.jdbc.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
  * @author Gavin King
  */
 public class JdbcLiteralFormatterBinary extends BasicJdbcLiteralFormatter {
-	public JdbcLiteralFormatterBinary(JavaTypeDescriptor<?> javaTypeDescriptor) {
+	public JdbcLiteralFormatterBinary(JavaType<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor );
 	}
 

@@ -11,7 +11,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -48,12 +48,12 @@ public class ConvertedBasicTypeResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getDomainJavaDescriptor() {
+	public JavaType<J> getDomainJavaDescriptor() {
 		return basicType.getValueConverter().getDomainJavaDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return basicType.getValueConverter().getRelationalJavaDescriptor();
 	}
 

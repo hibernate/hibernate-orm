@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * A grouped list of queries connected through a certain set operator.
@@ -131,7 +131,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 				}
 				for ( int j = 0; j < firstSelectionSize; j++ ) {
 					final SqmSelection<?> firstSqmSelection = firstSelections.get( j );
-					final JavaTypeDescriptor<?> firstJavaTypeDescriptor = firstSqmSelection.getNodeJavaTypeDescriptor();
+					final JavaType<?> firstJavaTypeDescriptor = firstSqmSelection.getNodeJavaTypeDescriptor();
 					if ( firstJavaTypeDescriptor != selections.get( j ).getNodeJavaTypeDescriptor() ) {
 						throw new SemanticException(
 								"Select items of the same index must have the same java type across all query parts!"

@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java;
 import org.hibernate.HibernateException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class CharacterJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Character> implements
-		PrimitiveJavaTypeDescriptor<Character> {
+		PrimitiveJavaType<Character> {
 	public static final CharacterJavaTypeDescriptor INSTANCE = new CharacterJavaTypeDescriptor();
 
 	public CharacterJavaTypeDescriptor() {

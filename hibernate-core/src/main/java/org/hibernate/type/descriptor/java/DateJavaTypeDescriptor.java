@@ -22,7 +22,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -30,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> implements VersionJavaTypeDescriptor<Date> {
+public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> implements VersionJavaType<Date> {
 	public static final DateJavaTypeDescriptor INSTANCE = new DateJavaTypeDescriptor();
 	public static final String DATE_FORMAT = "dd MMMM yyyy";
 

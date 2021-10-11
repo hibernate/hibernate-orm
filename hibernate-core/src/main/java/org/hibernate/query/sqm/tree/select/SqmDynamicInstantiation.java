@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -42,7 +42,7 @@ public class SqmDynamicInstantiation<T>
 	private static final Logger log = Logger.getLogger( SqmDynamicInstantiation.class );
 
 	public static <R> SqmDynamicInstantiation<R> forClassInstantiation(
-			JavaTypeDescriptor<R> targetJavaType,
+			JavaType<R> targetJavaType,
 			NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( CLASS, targetJavaType ),
@@ -60,7 +60,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	public static <M extends Map<?, ?>> SqmDynamicInstantiation<M> forMapInstantiation(
-			JavaTypeDescriptor<M> mapJavaTypeDescriptor,
+			JavaType<M> mapJavaTypeDescriptor,
 			NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( MAP, mapJavaTypeDescriptor ),
@@ -77,7 +77,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	public static <L extends List<?>> SqmDynamicInstantiation<L> forListInstantiation(
-			JavaTypeDescriptor<L> listJavaTypeDescriptor,
+			JavaType<L> listJavaTypeDescriptor,
 			NodeBuilder nodeBuilder) {
 		return new SqmDynamicInstantiation<>(
 				new DynamicInstantiationTargetImpl<>( LIST, listJavaTypeDescriptor ),
@@ -112,7 +112,7 @@ public class SqmDynamicInstantiation<T>
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	public JavaType<T> getJavaTypeDescriptor() {
 		return getInstantiationTarget().getTargetTypeDescriptor();
 	}
 
@@ -200,10 +200,10 @@ public class SqmDynamicInstantiation<T>
 
 	private static class DynamicInstantiationTargetImpl<T> implements SqmDynamicInstantiationTarget<T> {
 		private final DynamicInstantiationNature nature;
-		private final JavaTypeDescriptor<T> javaTypeDescriptor;
+		private final JavaType<T> javaTypeDescriptor;
 
 
-		private DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, JavaTypeDescriptor<T> javaTypeDescriptor) {
+		private DynamicInstantiationTargetImpl(DynamicInstantiationNature nature, JavaType<T> javaTypeDescriptor) {
 			this.nature = nature;
 			this.javaTypeDescriptor = javaTypeDescriptor;
 		}
@@ -214,12 +214,12 @@ public class SqmDynamicInstantiation<T>
 		}
 
 		@Override
-		public JavaTypeDescriptor<T> getTargetTypeDescriptor() {
+		public JavaType<T> getTargetTypeDescriptor() {
 			return javaTypeDescriptor;
 		}
 
 		@Override
-		public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+		public JavaType<T> getExpressableJavaTypeDescriptor() {
 			return getTargetTypeDescriptor();
 		}
 	}

@@ -16,8 +16,8 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -68,8 +68,8 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public BasicJavaTypeDescriptor<T> getJavaTypeDescriptor() {
-		return (BasicJavaTypeDescriptor<T>) super.getJavaTypeDescriptor();
+	public BasicJavaType<T> getJavaTypeDescriptor() {
+		return (BasicJavaType<T>) super.getJavaTypeDescriptor();
 	}
 
 	@Override
@@ -83,7 +83,7 @@ public class SqmBasicValuedSimplePath<T>
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 

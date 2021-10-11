@@ -13,14 +13,14 @@ import jakarta.persistence.Converter;
  * @author Steve Ebersole
  */
 @Converter( autoApply = true )
-public class MyCustomConverter implements AttributeConverter<MyCustomJavaType, String> {
+public class PayloadWrapperConverter implements AttributeConverter<PayloadWrapper, String> {
 	@Override
-	public String convertToDatabaseColumn(MyCustomJavaType attribute) {
+	public String convertToDatabaseColumn(PayloadWrapper attribute) {
 		return null;
 	}
 
 	@Override
-	public MyCustomJavaType convertToEntityAttribute(String dbData) {
+	public PayloadWrapper convertToEntityAttribute(String dbData) {
 		return null;
 	}
 }

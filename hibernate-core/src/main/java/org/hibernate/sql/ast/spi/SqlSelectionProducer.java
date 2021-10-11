@@ -7,7 +7,7 @@
 package org.hibernate.sql.ast.spi;
 
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -25,6 +25,6 @@ public interface SqlSelectionProducer {
 	SqlSelection createSqlSelection(
 			int jdbcPosition,
 			int valuesArrayPosition,
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			TypeConfiguration typeConfiguration);
 }

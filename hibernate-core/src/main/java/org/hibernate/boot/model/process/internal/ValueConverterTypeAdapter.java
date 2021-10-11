@@ -15,7 +15,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
@@ -36,7 +36,7 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 			JdbcTypeDescriptorIndicators indicators) {
 		super(
 				converter.getRelationalJavaDescriptor().getRecommendedJdbcType( indicators ),
-				(JavaTypeDescriptor) converter.getRelationalJavaDescriptor()
+				(JavaType) converter.getRelationalJavaDescriptor()
 		);
 
 		this.description = description;
@@ -76,7 +76,7 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	@Override
 	public boolean isEqual(Object one, Object another) {
 		//noinspection unchecked
-		return ( (JavaTypeDescriptor<Object>) converter.getDomainJavaDescriptor() ).areEqual( one, another );
+		return ( (JavaType<Object>) converter.getDomainJavaDescriptor() ).areEqual( one, another );
 	}
 
 	@Override

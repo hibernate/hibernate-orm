@@ -25,14 +25,14 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, SqmSelectableNode<T>, SemanticPathPart {
 	private final T value;
-	private final JavaTypeDescriptor<T> fieldJavaTypeDescriptor;
+	private final JavaType<T> fieldJavaTypeDescriptor;
 	private final String fieldName;
 	private final NodeBuilder nodeBuilder;
 
@@ -40,7 +40,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	public SqmFieldLiteral(
 			Field field,
-			JavaTypeDescriptor<T> fieldJavaTypeDescriptor,
+			JavaType<T> fieldJavaTypeDescriptor,
 			NodeBuilder nodeBuilder){
 		this(
 				extractValue( field ),
@@ -62,7 +62,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 
 	public SqmFieldLiteral(
 			T value,
-			JavaTypeDescriptor<T> fieldJavaTypeDescriptor,
+			JavaType<T> fieldJavaTypeDescriptor,
 			String fieldName,
 			NodeBuilder nodeBuilder) {
 		this.value = value;
@@ -77,7 +77,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 		return value;
 	}
 
-	public JavaTypeDescriptor<T> getFieldJavaTypeDescriptor() {
+	public JavaType<T> getFieldJavaTypeDescriptor() {
 		return fieldJavaTypeDescriptor;
 	}
 
@@ -101,7 +101,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		if ( expressable == this ) {
 			return fieldJavaTypeDescriptor;
 		}
@@ -110,7 +110,7 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressable<T>, 
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	public JavaType<T> getJavaTypeDescriptor() {
 		return getExpressableJavaTypeDescriptor();
 	}
 

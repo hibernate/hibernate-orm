@@ -13,7 +13,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -22,7 +22,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
-	private final JavaTypeDescriptor<J> domainJtd;
+	private final JavaType<J> domainJtd;
 
 	private final BasicType basicType;
 
@@ -30,7 +30,7 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	private final MutabilityPlan<J> mutabilityPlan;
 
 	public NamedBasicTypeResolution(
-			JavaTypeDescriptor<J> domainJtd,
+			JavaType<J> domainJtd,
 			BasicType basicType,
 			BasicValueConverter valueConverter,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
@@ -63,12 +63,12 @@ public class NamedBasicTypeResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getDomainJavaDescriptor() {
+	public JavaType<J> getDomainJavaDescriptor() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return valueConverter == null
 				? basicType.getJavaTypeDescriptor()
 				: valueConverter.getRelationalJavaDescriptor();

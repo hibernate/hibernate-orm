@@ -40,7 +40,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.tuple.ValueGeneration;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -60,7 +60,7 @@ public class BasicAttributeMapping
 	private final JdbcMapping jdbcMapping;
 	private final BasicValueConverter<Object, ?> valueConverter;
 
-	private final JavaTypeDescriptor domainTypeDescriptor;
+	private final JavaType domainTypeDescriptor;
 
 	@SuppressWarnings("WeakerAccess")
 	public BasicAttributeMapping(
@@ -162,7 +162,7 @@ public class BasicAttributeMapping
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return domainTypeDescriptor;
 	}
 

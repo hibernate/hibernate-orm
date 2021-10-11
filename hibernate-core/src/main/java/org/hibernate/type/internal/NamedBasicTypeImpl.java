@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.internal;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -16,7 +16,7 @@ public class NamedBasicTypeImpl<J> extends BasicTypeImpl<J> {
 
 	private final String name;
 
-	public NamedBasicTypeImpl(JavaTypeDescriptor<J> jtd, JdbcTypeDescriptor std, String name) {
+	public NamedBasicTypeImpl(JavaType<J> jtd, JdbcTypeDescriptor std, String name) {
 		super( jtd, std );
 		this.name = name;
 	}

@@ -6,7 +6,7 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Parts of the ModelPart hierarchy that are type descriptors, as opposed to attributes e.g.
@@ -14,5 +14,5 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface MappingType {
-	JavaTypeDescriptor<?> getMappedJavaTypeDescriptor();
+	JavaType<?> getMappedJavaTypeDescriptor();
 }

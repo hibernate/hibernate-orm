@@ -47,7 +47,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -356,7 +356,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return targetSide.getModelPart().getJdbcMapping().getJavaTypeDescriptor();
 	}
 

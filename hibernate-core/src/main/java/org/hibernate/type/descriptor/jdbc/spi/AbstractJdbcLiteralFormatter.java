@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.jdbc.spi;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 
 /**
@@ -15,13 +15,13 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
  * @author Steve Ebersole
  */
 public abstract class AbstractJdbcLiteralFormatter implements JdbcLiteralFormatter {
-	private final JavaTypeDescriptor javaTypeDescriptor;
+	private final JavaType javaTypeDescriptor;
 
-	public AbstractJdbcLiteralFormatter(JavaTypeDescriptor javaTypeDescriptor) {
+	public AbstractJdbcLiteralFormatter(JavaType javaTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
-	protected JavaTypeDescriptor getJavaTypeDescriptor() {
+	protected JavaType getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 }

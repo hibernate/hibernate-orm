@@ -95,7 +95,7 @@ import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -1422,7 +1422,7 @@ public class MappingModelCreationHelper {
 			final SessionFactoryImplementor sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 			final TypeConfiguration typeConfiguration = sessionFactory.getTypeConfiguration();
 			final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
-			final JavaTypeDescriptor<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
+			final JavaType<Object> baseJtd = jtdRegistry.getDescriptor(Object.class);
 
 			return new DiscriminatedCollectionPart(
 					CollectionPart.Nature.ELEMENT,
@@ -1478,12 +1478,12 @@ public class MappingModelCreationHelper {
 
 	@SuppressWarnings("rawtypes")
 	private static class CollectionMappingTypeImpl implements CollectionMappingType {
-		private final JavaTypeDescriptor collectionJtd;
+		private final JavaType collectionJtd;
 		private final CollectionSemantics semantics;
 
 		@SuppressWarnings("WeakerAccess")
 		public CollectionMappingTypeImpl(
-				JavaTypeDescriptor collectionJtd,
+				JavaType collectionJtd,
 				CollectionSemantics semantics) {
 			this.collectionJtd = collectionJtd;
 			this.semantics = semantics;
@@ -1495,7 +1495,7 @@ public class MappingModelCreationHelper {
 		}
 
 		@Override
-		public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+		public JavaType getMappedJavaTypeDescriptor() {
 			return collectionJtd;
 		}
 	}

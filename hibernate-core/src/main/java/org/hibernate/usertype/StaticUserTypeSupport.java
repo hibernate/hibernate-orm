@@ -16,7 +16,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -24,7 +24,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class StaticUserTypeSupport<T> implements UserType<T> {
-	private final BasicJavaTypeDescriptor javaType;
+	private final BasicJavaType javaType;
 	private final JdbcTypeDescriptor jdbcType;
 	private final MutabilityPlan mutabilityPlan;
 	private final BasicValueConverter valueConverter;
@@ -33,25 +33,25 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 	private ValueExtractor jdbcValueExtractor;
 	private ValueBinder jdbcValueBinder;
 
-	public StaticUserTypeSupport(BasicJavaTypeDescriptor javaType, JdbcTypeDescriptor jdbcType) {
+	public StaticUserTypeSupport(BasicJavaType javaType, JdbcTypeDescriptor jdbcType) {
 		this( javaType, jdbcType, javaType.getMutabilityPlan() );
 	}
 
 	public StaticUserTypeSupport(
-			BasicJavaTypeDescriptor javaType,
+			BasicJavaType javaType,
 			JdbcTypeDescriptor jdbcType,
 			MutabilityPlan mutabilityPlan) {
 		this( javaType, jdbcType, mutabilityPlan, null );
 	}
 
 	public StaticUserTypeSupport(
-			BasicJavaTypeDescriptor javaType,
+			BasicJavaType javaType,
 			JdbcTypeDescriptor jdbcType,
 			BasicValueConverter valueConverter) {
 		this( javaType, jdbcType, javaType.getMutabilityPlan(), valueConverter );
 	}
 
-	public StaticUserTypeSupport(BasicJavaTypeDescriptor javaType, JdbcTypeDescriptor jdbcType, MutabilityPlan mutabilityPlan, BasicValueConverter valueConverter) {
+	public StaticUserTypeSupport(BasicJavaType javaType, JdbcTypeDescriptor jdbcType, MutabilityPlan mutabilityPlan, BasicValueConverter valueConverter) {
 		this.javaType = javaType;
 		this.jdbcType = jdbcType;
 		this.mutabilityPlan = mutabilityPlan;
@@ -63,7 +63,7 @@ public class StaticUserTypeSupport<T> implements UserType<T> {
 		this.jdbcValueBinder = jdbcType.getBinder( javaType );
 	}
 
-	public BasicJavaTypeDescriptor getJavaType() {
+	public BasicJavaType getJavaType() {
 		return javaType;
 	}
 

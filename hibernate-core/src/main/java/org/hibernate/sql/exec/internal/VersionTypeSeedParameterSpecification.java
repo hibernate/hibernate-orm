@@ -12,7 +12,7 @@ import java.sql.SQLException;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
-import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
  * Parameter bind specification used for optimistic lock version seeding (from insert statements).
@@ -20,14 +20,14 @@ import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class VersionTypeSeedParameterSpecification extends JdbcParameterImpl {
-	private final VersionJavaTypeDescriptor<?> type;
+	private final VersionJavaType<?> type;
 
 	/**
 	 * Constructs a version seed parameter bind specification.
 	 *
 	 * @param type The version type.
 	 */
-	public VersionTypeSeedParameterSpecification(JdbcMapping jdbcMapping, VersionJavaTypeDescriptor<?> type) {
+	public VersionTypeSeedParameterSpecification(JdbcMapping jdbcMapping, VersionJavaType<?> type) {
 		super( jdbcMapping );
 		this.type = type;
 	}

@@ -33,7 +33,7 @@ import org.hibernate.tuple.StandardProperty;
 import org.hibernate.tuple.ValueGeneration;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.tuple.component.ComponentTuplizer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -858,7 +858,7 @@ public class ComponentType extends AbstractType implements CompositeType, Proced
 	}
 
 	@Override
-	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+	public JavaType getExpressableJavaTypeDescriptor() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 

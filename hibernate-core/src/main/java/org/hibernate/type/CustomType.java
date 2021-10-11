@@ -23,8 +23,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.internal.UserTypeJavaTypeWrapper;
@@ -59,7 +59,7 @@ public class CustomType
 
 	private final String name;
 
-	private final BasicJavaTypeDescriptor<Object> mappedJavaTypeDescriptor;
+	private final BasicJavaType<Object> mappedJavaTypeDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private final ValueExtractor<Object> valueExtractor;
@@ -76,13 +76,13 @@ public class CustomType
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 
-		if ( userType instanceof BasicJavaTypeDescriptor ) {
+		if ( userType instanceof BasicJavaType ) {
 			//noinspection rawtypes
-			this.mappedJavaTypeDescriptor = ( (BasicJavaTypeDescriptor) userType );
+			this.mappedJavaTypeDescriptor = ( (BasicJavaType) userType );
 		}
 		else if ( userType instanceof JavaTypedExpressable ) {
 			//noinspection rawtypes
-			this.mappedJavaTypeDescriptor = (BasicJavaTypeDescriptor) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
+			this.mappedJavaTypeDescriptor = (BasicJavaType) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
 		}
 		else if ( userType instanceof UserVersionType ) {
 			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType) userType );
@@ -383,17 +383,17 @@ public class CustomType
 	}
 
 	@Override
-	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	public JavaType getMappedJavaTypeDescriptor() {
 		return mappedJavaTypeDescriptor;
 	}
 
 	@Override
-	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+	public JavaType getExpressableJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor getJavaTypeDescriptor() {
+	public JavaType getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 }

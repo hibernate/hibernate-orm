@@ -18,11 +18,9 @@ import java.util.TimeZone;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.MaterializedNClobType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcTypeDescriptor;
 
 import org.hibernate.testing.TestForIssue;

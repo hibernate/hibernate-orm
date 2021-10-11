@@ -6,13 +6,12 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Commonality in regards to the mapping type system for all managed domain
@@ -22,7 +21,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public interface ManagedMappingType extends MappingType, FetchableContainer {
 	@Override
-	default JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	default JavaType<?> getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 

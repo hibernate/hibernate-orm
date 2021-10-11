@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.JdbcExtractingLogging;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Convenience base implementation of {@link ValueExtractor}
@@ -23,15 +23,15 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class BasicExtractor<J> implements ValueExtractor<J>, Serializable {
-	private final JavaTypeDescriptor<J> javaTypeDescriptor;
+	private final JavaType<J> javaTypeDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
-	public BasicExtractor(JavaTypeDescriptor<J> javaTypeDescriptor, JdbcTypeDescriptor jdbcTypeDescriptor) {
+	public BasicExtractor(JavaType<J> javaTypeDescriptor, JdbcTypeDescriptor jdbcTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 	}
 
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public JavaType<J> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

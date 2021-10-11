@@ -26,7 +26,6 @@ import org.hibernate.procedure.internal.ProcedureCallImpl;
 import org.hibernate.procedure.internal.ScalarDomainResultBuilder;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -45,7 +44,7 @@ import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateSt
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.spi.RowReader;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 import org.jboss.logging.Logger;
@@ -166,7 +165,7 @@ public class OutputsImpl implements Outputs {
 				(parameterImplementor, queryParameterBinding) -> {
 					ProcedureParameter parameter = (ProcedureParameter) parameterImplementor;
 					if ( parameter.getMode() == ParameterMode.INOUT ) {
-						final JavaTypeDescriptor<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
+						final JavaType<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
 								parameterImplementor.getParameterType() );
 						if ( basicType != null ) {
 							resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );

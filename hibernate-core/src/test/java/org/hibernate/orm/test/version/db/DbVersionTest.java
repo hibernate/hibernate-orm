@@ -13,7 +13,7 @@ import org.junit.Test;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.StandardBasicTypes;
+
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
 
 import static org.junit.Assert.assertFalse;

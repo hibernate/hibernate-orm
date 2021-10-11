@@ -11,7 +11,7 @@ import org.hibernate.sql.results.graph.DomainResultGraphNode;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Represents a reference to an entity either as a return, fetch, or collection element or index.
@@ -30,7 +30,7 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 	}
 
 	@Override
-	default JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	default JavaType<?> getResultJavaTypeDescriptor() {
 		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
 	}
 

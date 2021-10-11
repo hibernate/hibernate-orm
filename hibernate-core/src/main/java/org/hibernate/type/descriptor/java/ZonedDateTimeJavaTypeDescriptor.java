@@ -34,7 +34,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<ZonedDateTime> implements VersionJavaTypeDescriptor<ZonedDateTime> {
+public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<ZonedDateTime> implements VersionJavaType<ZonedDateTime> {
 	/**
 	 * Singleton access
 	 */

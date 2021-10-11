@@ -7,8 +7,6 @@
 package org.hibernate.type;
 
 import java.time.Instant;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 import org.hibernate.type.descriptor.java.InstantJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;

@@ -35,7 +35,7 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
@@ -109,7 +109,7 @@ public class SybaseASEDialect extends SybaseDialect {
 			@Override
 			public Size resolveSize(
 					JdbcTypeDescriptor jdbcType,
-					JavaTypeDescriptor<?> javaType,
+					JavaType<?> javaType,
 					Integer precision,
 					Integer scale,
 					Long length) {

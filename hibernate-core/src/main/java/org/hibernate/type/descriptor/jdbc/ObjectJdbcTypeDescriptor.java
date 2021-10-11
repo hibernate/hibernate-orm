@@ -16,7 +16,7 @@ import java.sql.Types;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Descriptor for binding objects
@@ -46,7 +46,7 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}
@@ -68,7 +68,7 @@ public class ObjectJdbcTypeDescriptor implements JdbcTypeDescriptor {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 		}

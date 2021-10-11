@@ -14,7 +14,7 @@ import java.sql.Types;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Descriptor for binding objects, but binding nulls with the resolved parameter type
@@ -32,7 +32,7 @@ public class ObjectNullResolvingJdbcTypeDescriptor extends ObjectJdbcTypeDescrip
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 		if ( Serializable.class.isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() ) ) {
 			return VarbinaryJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}

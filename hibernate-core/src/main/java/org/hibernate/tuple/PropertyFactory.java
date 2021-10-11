@@ -36,7 +36,7 @@ import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
  * Responsible for generation of runtime metamodel {@link Property} representations.
@@ -112,7 +112,7 @@ public final class PropertyFactory {
 		VersionValue unsavedValue = UnsavedValueFactory.getUnsavedVersionValue(
 				mappedUnsavedValue,
 				getGetter( property ),
-				( VersionJavaTypeDescriptor<Object>) ((BasicType<?>) property.getType()).getJavaTypeDescriptor(),
+				(VersionJavaType<Object>) ((BasicType<?>) property.getType()).getJavaTypeDescriptor(),
 				getConstructor( property.getPersistentClass() )
 		);
 

@@ -11,8 +11,6 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.MappingException;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.type.spi.TypeConfigurationAware;
 

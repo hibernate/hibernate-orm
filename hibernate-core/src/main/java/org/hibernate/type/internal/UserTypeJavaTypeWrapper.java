@@ -14,7 +14,7 @@ import org.hibernate.annotations.Immutable;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutabilityPlanExposer;
@@ -27,7 +27,7 @@ import org.hibernate.usertype.UserType;
  *
  * @author Steve Ebersole
  */
-public class UserTypeJavaTypeWrapper<J> implements BasicJavaTypeDescriptor<J> {
+public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	protected final UserType<J> userType;
 	private final MutabilityPlan<J> mutabilityPlan;
 

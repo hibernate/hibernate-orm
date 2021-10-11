@@ -28,7 +28,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TinyIntJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -177,12 +177,12 @@ public class JdbcTypeTests {
 		}
 
 		@Override
-		public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 			return TinyIntJdbcTypeDescriptor.INSTANCE.getBinder( javaTypeDescriptor );
 		}
 
 		@Override
-		public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
 			return TinyIntJdbcTypeDescriptor.INSTANCE.getExtractor( javaTypeDescriptor );
 		}
 	}

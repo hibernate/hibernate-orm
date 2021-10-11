@@ -41,7 +41,6 @@ import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.grammars.hql.HqlParserBaseVisitor;
 import org.hibernate.internal.util.CharSequenceHelper;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.metamodel.CollectionClassification;
@@ -183,8 +182,7 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -280,8 +278,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	private final Stack<SqmCreationProcessingState> processingStateStack = new StandardStack<>();
 
 	private final BasicDomainType<Integer> integerDomainType;
-	private final JavaTypeDescriptor<List<?>> listJavaTypeDescriptor;
-	private final JavaTypeDescriptor<Map<?,?>> mapJavaTypeDescriptor;
+	private final JavaType<List<?>> listJavaTypeDescriptor;
+	private final JavaType<Map<?,?>> mapJavaTypeDescriptor;
 
 	private ParameterCollector parameterCollector;
 
@@ -1007,7 +1005,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( instantiationTarget instanceof HqlParser.DotIdentifierSequenceContext ) {
 			final String className = instantiationTarget.getText();
 			try {
-				final JavaTypeDescriptor<?> jtd = resolveInstantiationTargetJtd( className );
+				final JavaType<?> jtd = resolveInstantiationTargetJtd( className );
 				dynamicInstantiation = SqmDynamicInstantiation.forClassInstantiation(
 						jtd,
 						creationContext.getNodeBuilder()
@@ -1044,7 +1042,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		return dynamicInstantiation;
 	}
 
-	private JavaTypeDescriptor<?> resolveInstantiationTargetJtd(String className) {
+	private JavaType<?> resolveInstantiationTargetJtd(String className) {
 		final Class<?> targetJavaType = classForName( creationContext.getJpaMetamodel().qualifyImportableName( className ) );
 		return creationContext.getJpaMetamodel()
 				.getTypeConfiguration()

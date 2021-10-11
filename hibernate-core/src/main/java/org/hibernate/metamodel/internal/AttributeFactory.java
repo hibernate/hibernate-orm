@@ -48,10 +48,9 @@ import org.hibernate.property.access.internal.PropertyAccessMapImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
@@ -223,7 +222,7 @@ public class AttributeFactory {
 
 				assert type instanceof AnyType;
 				final AnyType anyType = (AnyType) type;
-				final JavaTypeDescriptor<Object> baseJtd = context.getTypeConfiguration()
+				final JavaType<Object> baseJtd = context.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.resolveDescriptor( anyType.getReturnedClass() );
 				return new AnyMappingDomainTypeImpl<>( anyType, baseJtd );
@@ -239,7 +238,7 @@ public class AttributeFactory {
 						.resolveStrategy( component, context.getRuntimeModelCreationContext() );
 
 				if ( component.isDynamic() ) {
-					final JavaTypeDescriptor javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
+					final JavaType javaTypeDescriptor = context.getJavaTypeDescriptorRegistry().getDescriptor( Map.class );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,
@@ -260,7 +259,7 @@ public class AttributeFactory {
 
 					final JavaTypeDescriptorRegistry registry = context.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry();
-					final JavaTypeDescriptor<Y> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( embeddableClass );
+					final JavaType<Y> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( embeddableClass );
 
 					embeddableType = new EmbeddableTypeImpl<>(
 							javaTypeDescriptor,

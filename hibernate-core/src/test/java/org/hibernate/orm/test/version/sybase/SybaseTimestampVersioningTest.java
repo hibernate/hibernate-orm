@@ -12,17 +12,14 @@ import org.junit.Test;
 
 import org.hibernate.Session;
 import org.hibernate.Transaction;
-import org.hibernate.dialect.SybaseASE15Dialect;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.BinaryType;
-import org.hibernate.type.RowVersionType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.RowVersionJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 
 import static org.junit.Assert.assertFalse;

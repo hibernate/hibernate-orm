@@ -13,7 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  *
  * @author Christian Beikov
  */
-public interface VersionJavaTypeDescriptor<T> extends JavaTypeDescriptor<T> {
+public interface VersionJavaType<T> extends JavaType<T> {
 	/**
 	 * Generate an initial version.
 	 *

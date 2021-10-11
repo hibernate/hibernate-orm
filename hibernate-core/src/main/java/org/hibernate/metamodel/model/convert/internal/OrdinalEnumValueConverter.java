@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -31,7 +31,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 
 	private final EnumJavaTypeDescriptor<E> enumJavaDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
-	private final JavaTypeDescriptor<Integer> relationalJavaDescriptor;
+	private final JavaType<Integer> relationalJavaDescriptor;
 
 	private transient ValueExtractor<Integer> valueExtractor;
 	private transient ValueBinder<Integer> valueBinder;
@@ -39,7 +39,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	public OrdinalEnumValueConverter(
 			EnumJavaTypeDescriptor<E> enumJavaDescriptor,
 			JdbcTypeDescriptor jdbcTypeDescriptor,
-			JavaTypeDescriptor<Integer> relationalJavaDescriptor) {
+			JavaType<Integer> relationalJavaDescriptor) {
 		this.enumJavaDescriptor = enumJavaDescriptor;
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.relationalJavaDescriptor = relationalJavaDescriptor;
@@ -72,7 +72,7 @@ public class OrdinalEnumValueConverter<E extends Enum<E>> implements EnumValueCo
 	}
 
 	@Override
-	public JavaTypeDescriptor<Integer> getRelationalJavaDescriptor() {
+	public JavaType<Integer> getRelationalJavaDescriptor() {
 		return relationalJavaDescriptor;
 	}
 

@@ -26,7 +26,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Emmanuel Bernard
@@ -80,7 +80,7 @@ public class SingularAttributeImpl<D,J>
 		return getName();
 	}
 
-	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
+	public JavaType<J> getExpressableJavaTypeDescriptor() {
 		return sqmPathSource.getExpressableJavaTypeDescriptor();
 	}
 

@@ -9,7 +9,7 @@ package org.hibernate.engine.internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 
 import org.jboss.logging.Logger;
 
@@ -31,21 +31,21 @@ public final class Versioning {
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link VersionJavaTypeDescriptor}
+	 * Create an initial optimistic locking value according the {@link VersionJavaType}
 	 * contract for the version property.
 	 *
 	 * @param versionType The version type.
 	 * @param session The originating session
 	 * @return The initial optimistic locking value
 	 */
-	private static Object seed(VersionJavaTypeDescriptor<Object> versionType, SharedSessionContractImplementor session) {
+	private static Object seed(VersionJavaType<Object> versionType, SharedSessionContractImplementor session) {
 		final Object seed = versionType.seed( session );
 		LOG.tracef( "Seeding: %s", seed );
 		return seed;
 	}
 
 	/**
-	 * Create an initial optimistic locking value according the {@link VersionJavaTypeDescriptor}
+	 * Create an initial optimistic locking value according the {@link VersionJavaType}
 	 * contract for the version property <b>if required</b> and inject it into
 	 * the snapshot state.
 	 *
@@ -59,7 +59,7 @@ public final class Versioning {
 	public static boolean seedVersion(
 			Object[] fields,
 			int versionProperty,
-			VersionJavaTypeDescriptor<Object> versionType,
+			VersionJavaType<Object> versionType,
 			SharedSessionContractImplementor session) {
 		final Object initialVersion = fields[versionProperty];
 		if (
@@ -80,14 +80,14 @@ public final class Versioning {
 
 	/**
 	 * Generate the next increment in the optimistic locking value according
-	 * the {@link VersionJavaTypeDescriptor} contract for the version property.
+	 * the {@link VersionJavaType} contract for the version property.
 	 *
 	 * @param version The current version
 	 * @param versionType The version type
 	 * @param session The originating session
 	 * @return The incremented optimistic locking value.
 	 */
-	public static Object increment(Object version, VersionJavaTypeDescriptor<Object> versionType, SharedSessionContractImplementor session) {
+	public static Object increment(Object version, VersionJavaType<Object> versionType, SharedSessionContractImplementor session) {
 		final Object next = versionType.next( version, session );
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracef(

@@ -8,6 +8,8 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 
+import org.hibernate.type.descriptor.java.BasicJavaType;
+
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
@@ -16,7 +18,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * Specifies the Java Class to use for the foreign-key handling related to an ANY mapping.
  *
- * The specified class is resolved to a {@link org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor}
+ * The specified class is resolved to a {@link BasicJavaType}
  * via the {@link org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry}
  *
  * @see Any

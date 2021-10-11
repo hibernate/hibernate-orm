@@ -13,7 +13,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class IntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Integer>
-		implements PrimitiveJavaTypeDescriptor<Integer>, VersionJavaTypeDescriptor<Integer> {
+		implements PrimitiveJavaType<Integer>, VersionJavaType<Integer> {
 
 	public static final Integer ZERO = 0;
 	public static final IntegerJavaTypeDescriptor INSTANCE = new IntegerJavaTypeDescriptor();

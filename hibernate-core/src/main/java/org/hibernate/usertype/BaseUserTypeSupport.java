@@ -16,14 +16,14 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class BaseUserTypeSupport<T> implements UserType<T> {
-	private BasicJavaTypeDescriptor<T> javaType;
+	private BasicJavaType<T> javaType;
 	private JdbcTypeDescriptor jdbcType;
 
 	private boolean resolved;
@@ -34,7 +34,7 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 	private ValueExtractor<T> jdbcValueExtractor;
 	private ValueBinder<T> jdbcValueBinder;
 
-	protected abstract void resolve(BiConsumer<BasicJavaTypeDescriptor<T>,JdbcTypeDescriptor> resolutionConsumer);
+	protected abstract void resolve(BiConsumer<BasicJavaType<T>,JdbcTypeDescriptor> resolutionConsumer);
 
 	private void ensureResolved() {
 		if ( resolved ) {
@@ -59,7 +59,7 @@ public abstract class BaseUserTypeSupport<T> implements UserType<T> {
 		return jdbcType;
 	}
 
-	protected BasicJavaTypeDescriptor<T> javaType() {
+	protected BasicJavaType<T> javaType() {
 		ensureResolved();
 		return javaType;
 	}

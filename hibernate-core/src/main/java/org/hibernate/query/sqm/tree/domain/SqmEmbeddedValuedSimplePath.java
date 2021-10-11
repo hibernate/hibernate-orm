@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -75,7 +75,7 @@ public class SqmEmbeddedValuedSimplePath<T> extends AbstractSqmSimplePath<T> imp
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 

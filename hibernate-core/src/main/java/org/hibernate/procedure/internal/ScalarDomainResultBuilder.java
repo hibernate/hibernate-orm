@@ -14,15 +14,15 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class ScalarDomainResultBuilder<T> implements ResultBuilder {
-	private final JavaTypeDescriptor<T> typeDescriptor;
+	private final JavaType<T> typeDescriptor;
 
-	public ScalarDomainResultBuilder(JavaTypeDescriptor<T> typeDescriptor) {
+	public ScalarDomainResultBuilder(JavaType<T> typeDescriptor) {
 		this.typeDescriptor = typeDescriptor;
 	}
 

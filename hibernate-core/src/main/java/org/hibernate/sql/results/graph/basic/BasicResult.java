@@ -12,14 +12,14 @@ import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> {
 	private final String resultVariable;
-	private final JavaTypeDescriptor<T> javaTypeDescriptor;
+	private final JavaType<T> javaTypeDescriptor;
 
 	private final NavigablePath navigablePath;
 
@@ -28,14 +28,14 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
-			JavaTypeDescriptor<T> javaTypeDescriptor) {
+			JavaType<T> javaTypeDescriptor) {
 		this( jdbcValuesArrayPosition, resultVariable, javaTypeDescriptor, (NavigablePath) null );
 	}
 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
 			String resultVariable,
-			JavaTypeDescriptor<T> javaTypeDescriptor,
+			JavaType<T> javaTypeDescriptor,
 			NavigablePath navigablePath) {
 		this.resultVariable = resultVariable;
 		this.javaTypeDescriptor = javaTypeDescriptor;
@@ -48,7 +48,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public BasicResult(
 			int valuesArrayPosition,
 			String resultVariable,
-			JavaTypeDescriptor<T> javaTypeDescriptor,
+			JavaType<T> javaTypeDescriptor,
 			BasicValueConverter<T,?> valueConverter) {
 		this( valuesArrayPosition, resultVariable, javaTypeDescriptor, valueConverter, null );
 	}
@@ -56,7 +56,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public BasicResult(
 			int valuesArrayPosition,
 			String resultVariable,
-			JavaTypeDescriptor<T> javaTypeDescriptor,
+			JavaType<T> javaTypeDescriptor,
 			BasicValueConverter<T,?> valueConverter,
 			NavigablePath navigablePath) {
 		this.resultVariable = resultVariable;
@@ -72,7 +72,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getResultJavaTypeDescriptor() {
+	public JavaType<T> getResultJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

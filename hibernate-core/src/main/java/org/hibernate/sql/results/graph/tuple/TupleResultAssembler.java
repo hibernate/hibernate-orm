@@ -10,7 +10,7 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Christian Beikov
@@ -18,11 +18,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 
 	private final int[] valuesArrayPositions;
-	private final JavaTypeDescriptor<J> assembledJavaTypeDescriptor;
+	private final JavaType<J> assembledJavaTypeDescriptor;
 
 	public TupleResultAssembler(
 			int[] valuesArrayPositions,
-			JavaTypeDescriptor<J> assembledJavaTypeDescriptor) {
+			JavaType<J> assembledJavaTypeDescriptor) {
 		this.valuesArrayPositions = valuesArrayPositions;
 		this.assembledJavaTypeDescriptor = assembledJavaTypeDescriptor;
 	}
@@ -59,7 +59,7 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor() {
+	public JavaType<J> getAssembledJavaTypeDescriptor() {
 		return assembledJavaTypeDescriptor;
 	}
 

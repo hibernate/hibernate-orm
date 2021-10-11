@@ -47,7 +47,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.collection.internal.EntityCollectionPartTableGroup;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -81,7 +81,7 @@ public class Builders {
 			String resultAlias,
 			Class<?> javaType,
 			SessionFactoryImplementor factory) {
-		final JavaTypeDescriptor<?> javaTypeDescriptor = factory.getTypeConfiguration()
+		final JavaType<?> javaTypeDescriptor = factory.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( javaType );
 
@@ -133,7 +133,7 @@ public class Builders {
 	}
 
 	public static <J> DynamicResultBuilderInstantiation<J> instantiation(Class<J> targetJavaType, SessionFactoryImplementor factory) {
-		final JavaTypeDescriptor<J> targetJtd = factory.getTypeConfiguration()
+		final JavaType<J> targetJtd = factory.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( targetJavaType );
 		return new DynamicResultBuilderInstantiation<>( targetJtd );

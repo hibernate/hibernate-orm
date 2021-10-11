@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.expression;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -151,8 +151,8 @@ public class Compatibility {
 	}
 
 	public static boolean areAssignmentCompatible(
-			JavaTypeDescriptor to,
-			JavaTypeDescriptor from) {
+			JavaType to,
+			JavaType from) {
 
 		// todo (6.0) - base this in the descriptor.
 		// 		`JavaTypeDescriptor#assignableFrom` ?

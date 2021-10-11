@@ -9,7 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 
 import jakarta.persistence.MapKeyClass;
 
@@ -34,5 +34,5 @@ public @interface MapKeyJavaType {
 	 *
 	 * @see JavaType#value
 	 */
-	Class<? extends BasicJavaTypeDescriptor<?>> value();
+	Class<? extends BasicJavaType<?>> value();
 }

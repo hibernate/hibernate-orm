@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.jdbc.internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
@@ -19,7 +19,7 @@ public class JdbcLiteralFormatterNumericData extends BasicJdbcLiteralFormatter {
 	private final Class<? extends Number> unwrapJavaType;
 
 	public JdbcLiteralFormatterNumericData(
-			JavaTypeDescriptor<?> javaTypeDescriptor,
+			JavaType<?> javaTypeDescriptor,
 			Class<? extends Number> unwrapJavaType) {
 		super( javaTypeDescriptor );
 		this.unwrapJavaType = unwrapJavaType;

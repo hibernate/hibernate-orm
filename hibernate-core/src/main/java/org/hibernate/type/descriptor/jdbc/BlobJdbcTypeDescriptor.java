@@ -16,8 +16,8 @@ import java.sql.Types;
 import org.hibernate.engine.jdbc.BinaryStream;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -48,15 +48,15 @@ public abstract class BlobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaTypeDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Blob.class );
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -76,10 +76,10 @@ public abstract class BlobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		};
 	}
 
-	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor);
+	protected abstract <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor);
 
 	@Override
-	public <X> BasicBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> BasicBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		return getBlobBinder( javaTypeDescriptor );
 	}
 
@@ -90,7 +90,7 @@ public abstract class BlobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -130,7 +130,7 @@ public abstract class BlobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				public void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -154,7 +154,7 @@ public abstract class BlobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -178,7 +178,7 @@ public abstract class BlobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getBlobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getBlobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)

@@ -7,7 +7,7 @@
 package org.hibernate.sql.results.graph;
 
 import org.hibernate.query.NavigablePath;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Marker for all object types that can be part of a ResultSetMapping.
@@ -26,7 +26,7 @@ public interface DomainResultGraphNode {
 
 	// todo (6.0) : result variable (selection alias)?  - even fetches can have alias
 
-	JavaTypeDescriptor<?> getResultJavaTypeDescriptor();
+	JavaType<?> getResultJavaTypeDescriptor();
 
 	/**
 	 * The NavigablePath for this node (if one!).  Certain nodes will not

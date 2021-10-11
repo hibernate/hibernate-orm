@@ -44,7 +44,7 @@ import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -219,7 +219,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			);
 
 			final SessionFactoryImplementor sessionFactory = resolutionContext.getSessionFactory();
-			final JavaTypeDescriptor<?> targetJtd = sessionFactory.getTypeConfiguration()
+			final JavaType<?> targetJtd = sessionFactory.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( targetJavaType );
 

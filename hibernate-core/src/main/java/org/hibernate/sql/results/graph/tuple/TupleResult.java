@@ -12,14 +12,14 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResultGraphNode;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Christian Beikov
  */
 public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> {
 	private final String resultVariable;
-	private final JavaTypeDescriptor<T> javaTypeDescriptor;
+	private final JavaType<T> javaTypeDescriptor;
 
 	private final NavigablePath navigablePath;
 
@@ -28,14 +28,14 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	public TupleResult(
 			int[] jdbcValuesArrayPositions,
 			String resultVariable,
-			JavaTypeDescriptor<T> javaTypeDescriptor) {
+			JavaType<T> javaTypeDescriptor) {
 		this( jdbcValuesArrayPositions, resultVariable, javaTypeDescriptor, (NavigablePath) null );
 	}
 
 	public TupleResult(
 			int[] jdbcValuesArrayPositions,
 			String resultVariable,
-			JavaTypeDescriptor<T> javaTypeDescriptor,
+			JavaType<T> javaTypeDescriptor,
 			NavigablePath navigablePath) {
 		this.resultVariable = resultVariable;
 		this.javaTypeDescriptor = javaTypeDescriptor;
@@ -51,7 +51,7 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getResultJavaTypeDescriptor() {
+	public JavaType<T> getResultJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

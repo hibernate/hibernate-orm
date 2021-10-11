@@ -30,7 +30,7 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -147,7 +147,7 @@ public class EnumType<T extends Enum<T>>
 					reader
 			);
 
-			final BasicJavaTypeDescriptor<?> relationalJtd = resolveRelationalJavaTypeDescriptor(
+			final BasicJavaType<?> relationalJtd = resolveRelationalJavaTypeDescriptor(
 					indicators,
 					enumJavaDescriptor
 			);
@@ -194,7 +194,7 @@ public class EnumType<T extends Enum<T>>
 		}
 	}
 
-	private BasicJavaTypeDescriptor<?> resolveRelationalJavaTypeDescriptor(
+	private BasicJavaType<?> resolveRelationalJavaTypeDescriptor(
 			LocalJdbcTypeDescriptorIndicators indicators,
 			EnumJavaTypeDescriptor<?> enumJavaDescriptor) {
 		return enumJavaDescriptor.getRecommendedJdbcType( indicators ).getJdbcRecommendedJavaTypeMapping(
@@ -253,8 +253,8 @@ public class EnumType<T extends Enum<T>>
 				-1L,
 				null
 		);
-		final BasicJavaTypeDescriptor<?> stringJavaDescriptor = (BasicJavaTypeDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
-		final BasicJavaTypeDescriptor<?> integerJavaDescriptor = (BasicJavaTypeDescriptor<?>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
+		final BasicJavaType<?> stringJavaDescriptor = (BasicJavaType<?>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
+		final BasicJavaType<?> integerJavaDescriptor = (BasicJavaType<?>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
 
 		if ( parameters.containsKey( NAMED ) ) {
 			final boolean useNamed = ConfigurationHelper.getBoolean( NAMED, parameters );

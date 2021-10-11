@@ -9,7 +9,7 @@ package org.hibernate.type.descriptor.java.spi;
 import java.util.Map;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class DynamicModelJtd implements JavaTypeDescriptor<Map<?,?>> {
+public class DynamicModelJtd implements JavaType<Map<?,?>> {
 
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {

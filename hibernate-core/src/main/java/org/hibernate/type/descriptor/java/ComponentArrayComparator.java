@@ -15,9 +15,9 @@ import java.util.Comparator;
  */
 public class ComponentArrayComparator implements Comparator<Object[]> {
 
-	private final JavaTypeDescriptor<Object>[] components;
+	private final JavaType<Object>[] components;
 
-	public ComponentArrayComparator(JavaTypeDescriptor<Object>[] components) {
+	public ComponentArrayComparator(JavaType<Object>[] components) {
 		this.components = components;
 	}
 

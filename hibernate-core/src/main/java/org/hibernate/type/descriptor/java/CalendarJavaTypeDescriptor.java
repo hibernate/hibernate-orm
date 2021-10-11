@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.GregorianCalendar;
 
 import jakarta.persistence.TemporalType;
@@ -19,8 +18,6 @@ import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -28,7 +25,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class CalendarJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Calendar> implements VersionJavaTypeDescriptor<Calendar> {
+public class CalendarJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Calendar> implements VersionJavaType<Calendar> {
 	public static final CalendarJavaTypeDescriptor INSTANCE = new CalendarJavaTypeDescriptor();
 
 	public static class CalendarMutabilityPlan extends MutableMutabilityPlan<Calendar> {

@@ -11,7 +11,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Defines a singular extension point for capabilities pertaining to
@@ -36,7 +36,7 @@ public interface ManagedTypeRepresentationStrategy {
 	 * The Java type descriptor for the concrete type.  For dynamic-map models
 	 * this will return the JTD for java.util.Map
 	 */
-	JavaTypeDescriptor<?> getMappedJavaTypeDescriptor();
+	JavaType<?> getMappedJavaTypeDescriptor();
 
 	/**
 	 * Create the property accessor object for the specified attribute

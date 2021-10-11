@@ -38,7 +38,7 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Andrea Boriero
@@ -88,7 +88,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return fetchable.getJavaTypeDescriptor();
 	}
 
@@ -139,7 +139,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return fetchable.getJavaTypeDescriptor();
 	}
 
@@ -176,13 +176,13 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 
 	private static class CircularFetchAssembler implements DomainResultAssembler {
 		private final NavigablePath circularPath;
-		private final JavaTypeDescriptor javaTypeDescriptor;
+		private final JavaType javaTypeDescriptor;
 		private final ToOneAttributeMapping fetchable;
 
 		public CircularFetchAssembler(
 				ToOneAttributeMapping fetchable,
 				NavigablePath circularPath,
-				JavaTypeDescriptor javaTypeDescriptor) {
+				JavaType javaTypeDescriptor) {
 			this.fetchable = fetchable;
 			this.circularPath = circularPath;
 			this.javaTypeDescriptor = javaTypeDescriptor;
@@ -296,7 +296,7 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch, Assoc
 		}
 
 		@Override
-		public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
+		public JavaType getAssembledJavaTypeDescriptor() {
 			return javaTypeDescriptor;
 		}
 	}

@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Steve Ebersole
  */
 public class PrimitiveByteArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<byte[]>
-		implements VersionJavaTypeDescriptor<byte[]> {
+		implements VersionJavaType<byte[]> {
 	public static final PrimitiveByteArrayJavaTypeDescriptor INSTANCE = new PrimitiveByteArrayJavaTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

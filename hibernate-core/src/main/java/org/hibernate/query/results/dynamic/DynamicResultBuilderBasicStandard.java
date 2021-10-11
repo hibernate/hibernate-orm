@@ -19,7 +19,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Standard DynamicResultBuilder for basic values.
@@ -34,7 +34,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 	private final String resultAlias;
 
 	private final BasicType<?> explicitType;
-	private final JavaTypeDescriptor<?> explicitJavaTypeDescriptor;
+	private final JavaType<?> explicitJavaTypeDescriptor;
 
 	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias) {
 		assert columnName != null;
@@ -56,7 +56,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 		this.explicitJavaTypeDescriptor = null;
 	}
 
-	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias, JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
+	public DynamicResultBuilderBasicStandard(String columnName, String resultAlias, JavaType<?> explicitJavaTypeDescriptor) {
 		assert columnName != null;
 		this.columnName = columnName;
 		this.columnPosition = 0;
@@ -142,7 +142,7 @@ public class DynamicResultBuilderBasicStandard implements DynamicResultBuilderBa
 				}
 		);
 
-		final JavaTypeDescriptor<?> javaTypeDescriptor;
+		final JavaType<?> javaTypeDescriptor;
 
 		if ( explicitJavaTypeDescriptor != null ) {
 			javaTypeDescriptor = explicitJavaTypeDescriptor;

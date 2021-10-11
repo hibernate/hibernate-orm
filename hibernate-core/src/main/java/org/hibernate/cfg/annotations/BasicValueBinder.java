@@ -33,7 +33,6 @@ import org.hibernate.annotations.CollectionIdJdbcTypeCode;
 import org.hibernate.annotations.CollectionIdMutability;
 import org.hibernate.annotations.CustomType;
 import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.JavaType;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ListIndexJavaType;
@@ -54,7 +53,7 @@ import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.TimeZoneType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.internal.NoJavaTypeDescriptor;
+import org.hibernate.annotations.internal.NoJavaType;
 import org.hibernate.annotations.internal.NoJdbcTypeDescriptor;
 import org.hibernate.annotations.internal.NoMutabilityPlan;
 import org.hibernate.annotations.internal.NoUserType;
@@ -80,9 +79,9 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableToBlobType;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -151,7 +150,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 	private Map explicitLocalTypeParams;
 
 	private Function<TypeConfiguration, JdbcTypeDescriptor> explicitJdbcTypeAccess;
-	private Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJavaTypeAccess;
+	private Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess;
 	private Function<TypeConfiguration, MutabilityPlan> explicitMutabilityAccess;
 	private Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess;
 
@@ -420,9 +419,9 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final CollectionIdJavaType javaTypeAnn = findAnnotation( modelXProperty, CollectionIdJavaType.class );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 				if ( javaType != null ) {
-					final ManagedBean<? extends BasicJavaTypeDescriptor<?>> bean = beanRegistry.getBean( javaType );
+					final ManagedBean<? extends BasicJavaType<?>> bean = beanRegistry.getBean( javaType );
 					return bean.getBeanInstance();
 				}
 			}
@@ -550,16 +549,16 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		explicitJavaTypeAccess = typeConfiguration -> {
 			final MapKeyJavaType javaTypeAnn = findAnnotation( mapAttribute, MapKeyJavaType.class );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaTypeDescriptor<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> jdbcTypeImpl = normalizeJavaType( javaTypeAnn.value() );
 				if ( jdbcTypeImpl != null ) {
-					final ManagedBean<? extends BasicJavaTypeDescriptor> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
+					final ManagedBean<? extends BasicJavaType> jdbcTypeBean = managedBeanRegistry.getBean( jdbcTypeImpl );
 					return jdbcTypeBean.getBeanInstance();
 				}
 			}
 
 			final MapKeyClass mapKeyClassAnn = mapAttribute.getAnnotation( MapKeyClass.class );
 			if ( mapKeyClassAnn != null ) {
-				return (BasicJavaTypeDescriptor) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( mapKeyClassAnn.value() );
+				return (BasicJavaType) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( mapKeyClassAnn.value() );
 			}
 
 			return null;
@@ -621,9 +620,9 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final ListIndexJavaType javaTypeAnn = findAnnotation( listAttribute, ListIndexJavaType.class );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 				if ( javaType != null ) {
-					final ManagedBean<? extends BasicJavaTypeDescriptor<?>> bean = beanRegistry.getBean( javaType );
+					final ManagedBean<? extends BasicJavaType<?>> bean = beanRegistry.getBean( javaType );
 					return bean.getBeanInstance();
 				}
 			}
@@ -809,14 +808,14 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		if ( elementCollectionAnn != null
 				&& elementCollectionAnn.targetClass() != null
 				&& elementCollectionAnn.targetClass() != void.class ) {
-			final Function<TypeConfiguration, BasicJavaTypeDescriptor> original = explicitJavaTypeAccess;
+			final Function<TypeConfiguration, BasicJavaType> original = explicitJavaTypeAccess;
 			explicitJavaTypeAccess = (typeConfiguration) -> {
-				final BasicJavaTypeDescriptor originalResult = original.apply( typeConfiguration );
+				final BasicJavaType originalResult = original.apply( typeConfiguration );
 				if ( originalResult != null ) {
 					return originalResult;
 				}
 
-				return (BasicJavaTypeDescriptor) typeConfiguration
+				return (BasicJavaType) typeConfiguration
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( elementCollectionAnn.targetClass() );
 			};
@@ -909,7 +908,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			}
 
 			final Class<?> hintedJavaType = (Class<?>) implicitJavaTypeAccess.apply( typeConfiguration );
-			final JavaTypeDescriptor<Object> hintedDescriptor = typeConfiguration
+			final JavaType<Object> hintedDescriptor = typeConfiguration
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( hintedJavaType );
 			return hintedDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
@@ -926,10 +925,10 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		explicitJavaTypeAccess = (typeConfiguration) -> {
 			final AnyKeyJavaType javaTypeAnn = findAnnotation( modelXProperty, AnyKeyJavaType.class );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 
 				if ( javaType != null ) {
-					final ManagedBean<? extends BasicJavaTypeDescriptor<?>> jtdBean = managedBeanRegistry.getBean( javaType );
+					final ManagedBean<? extends BasicJavaType<?>> jtdBean = managedBeanRegistry.getBean( javaType );
 					return jtdBean.getBeanInstance();
 				}
 			}
@@ -937,7 +936,7 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			final AnyKeyJavaClass javaClassAnn = findAnnotation( modelXProperty, AnyKeyJavaClass.class );
 			if ( javaClassAnn != null ) {
 				//noinspection rawtypes
-				return (BasicJavaTypeDescriptor) typeConfiguration
+				return (BasicJavaType) typeConfiguration
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( javaClassAnn.value() );
 			}
@@ -1060,19 +1059,19 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 				.getService( ManagedBeanRegistry.class );
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final JavaType javaTypeAnn = findAnnotation( attributeXProperty, JavaType.class );
+			final org.hibernate.annotations.JavaType javaTypeAnn = findAnnotation( attributeXProperty, org.hibernate.annotations.JavaType.class );
 			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaTypeDescriptor<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
+				final Class<? extends BasicJavaType<?>> javaType = normalizeJavaType( javaTypeAnn.value() );
 
 				if ( javaType != null ) {
-					final ManagedBean<? extends BasicJavaTypeDescriptor<?>> jtdBean = managedBeanRegistry.getBean( javaType );
+					final ManagedBean<? extends BasicJavaType<?>> jtdBean = managedBeanRegistry.getBean( javaType );
 					return jtdBean.getBeanInstance();
 				}
 			}
 
 			final Target targetAnn = findAnnotation( attributeXProperty, Target.class );
 			if ( targetAnn != null ) {
-				return (BasicJavaTypeDescriptor) typeConfiguration
+				return (BasicJavaType) typeConfiguration
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( targetAnn.value() );
 			}
@@ -1118,12 +1117,12 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 		return jdbcType;
 	}
 
-	private static Class<? extends BasicJavaTypeDescriptor<?>> normalizeJavaType(Class<? extends BasicJavaTypeDescriptor<?>> javaType) {
+	private static Class<? extends BasicJavaType<?>> normalizeJavaType(Class<? extends BasicJavaType<?>> javaType) {
 		if ( javaType == null ) {
 			return null;
 		}
 
-		if ( NoJavaTypeDescriptor.class.isAssignableFrom( javaType ) ) {
+		if ( NoJavaType.class.isAssignableFrom( javaType ) ) {
 			return null;
 		}
 

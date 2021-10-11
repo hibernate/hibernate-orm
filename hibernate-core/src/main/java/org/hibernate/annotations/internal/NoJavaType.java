@@ -7,11 +7,11 @@
 package org.hibernate.annotations.internal;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
-public class NoJavaTypeDescriptor implements BasicJavaTypeDescriptor<Void> {
+public class NoJavaType implements BasicJavaType<Void> {
 	@Override
 	public JdbcTypeDescriptor getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
 		throw new UnsupportedOperationException();

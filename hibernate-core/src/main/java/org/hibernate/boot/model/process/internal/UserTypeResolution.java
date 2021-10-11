@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -42,12 +42,12 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getDomainJavaDescriptor() {
+	public JavaType<?> getDomainJavaDescriptor() {
 		return userTypeAdapter.getJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return userTypeAdapter.getJavaTypeDescriptor();
 	}
 

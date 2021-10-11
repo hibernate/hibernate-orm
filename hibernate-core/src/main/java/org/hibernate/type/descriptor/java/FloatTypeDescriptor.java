@@ -12,7 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.FloatJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  *
  * @author Steve Ebersole
  */
-public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> implements PrimitiveJavaTypeDescriptor<Float> {
+public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> implements PrimitiveJavaType<Float> {
 	public static final FloatTypeDescriptor INSTANCE = new FloatTypeDescriptor();
 
 	public FloatTypeDescriptor() {

@@ -27,7 +27,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -190,7 +190,7 @@ public class EagerCollectionFetch extends CollectionFetch implements FetchParent
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return getFetchedMapping().getJavaTypeDescriptor();
 	}
 }

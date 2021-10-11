@@ -10,7 +10,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.sql.Clob;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.engine.jdbc.internal.CharacterStreamImpl;

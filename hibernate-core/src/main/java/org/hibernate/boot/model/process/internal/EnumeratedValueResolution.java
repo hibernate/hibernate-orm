@@ -12,7 +12,7 @@ import org.hibernate.metamodel.model.convert.spi.EnumValueConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -21,15 +21,15 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  */
 public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.Resolution<E> {
 	private final CustomType enumTypeMapping;
-	private final JavaTypeDescriptor<E> domainJtd;
-	private final JavaTypeDescriptor<?> jdbcJtd;
+	private final JavaType<E> domainJtd;
+	private final JavaType<?> jdbcJtd;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 	private final EnumValueConverter<E,?> valueConverter;
 
 	public EnumeratedValueResolution(
 			CustomType enumTypeMapping,
-			JavaTypeDescriptor<E> domainJtd,
-			JavaTypeDescriptor<?> jdbcJtd,
+			JavaType<E> domainJtd,
+			JavaType<?> jdbcJtd,
 			JdbcTypeDescriptor jdbcTypeDescriptor,
 			EnumValueConverter<E, ?> valueConverter) {
 		this.enumTypeMapping = enumTypeMapping;
@@ -50,12 +50,12 @@ public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.
 	}
 
 	@Override
-	public JavaTypeDescriptor<E> getDomainJavaDescriptor() {
+	public JavaType<E> getDomainJavaDescriptor() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return jdbcJtd;
 	}
 

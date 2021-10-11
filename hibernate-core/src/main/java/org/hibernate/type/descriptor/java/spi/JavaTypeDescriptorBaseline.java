@@ -48,8 +48,8 @@ import org.hibernate.type.descriptor.java.DurationJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
 import org.hibernate.type.descriptor.java.InstantJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcDateJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
@@ -77,8 +77,8 @@ import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
  */
 public class JavaTypeDescriptorBaseline {
 	public interface BaselineTarget {
-		void addBaselineDescriptor(JavaTypeDescriptor<?> descriptor);
-		void addBaselineDescriptor(Type describedJavaType, JavaTypeDescriptor<?> descriptor);
+		void addBaselineDescriptor(JavaType<?> descriptor);
+		void addBaselineDescriptor(Type describedJavaType, JavaType<?> descriptor);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -150,8 +150,8 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( MapEntryJavaDescriptor.INSTANCE );
 	}
 
-	private static void primePrimitive(BaselineTarget target, JavaTypeDescriptor descriptor) {
+	private static void primePrimitive(BaselineTarget target, JavaType descriptor) {
 		target.addBaselineDescriptor( descriptor );
-		target.addBaselineDescriptor( ( (PrimitiveJavaTypeDescriptor) descriptor ).getPrimitiveClass(), descriptor );
+		target.addBaselineDescriptor( ( (PrimitiveJavaType) descriptor ).getPrimitiveClass(), descriptor );
 	}
 }

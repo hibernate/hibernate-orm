@@ -22,7 +22,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -67,7 +67,7 @@ public abstract class AbstractSqmAttributeJoin<O,T>
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getNodeJavaTypeDescriptor() {
+	public JavaType<T> getNodeJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 

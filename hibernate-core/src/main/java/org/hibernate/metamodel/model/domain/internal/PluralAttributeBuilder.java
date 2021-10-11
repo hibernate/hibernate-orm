@@ -21,7 +21,7 @@ import org.hibernate.metamodel.internal.PluralAttributeMetadata;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleType;
 
@@ -29,7 +29,7 @@ import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleT
  * A "parameter object" for creating a plural attribute
  */
 public class PluralAttributeBuilder<D, C, E, K> {
-	private final JavaTypeDescriptor<C> collectionJtd;
+	private final JavaType<C> collectionJtd;
 
 	private final AttributeClassification attributeClassification;
 	private final CollectionClassification collectionClassification;
@@ -43,7 +43,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 	private final Member member;
 
 	public PluralAttributeBuilder(
-			JavaTypeDescriptor<C> collectionJtd,
+			JavaType<C> collectionJtd,
 			AttributeClassification attributeClassification,
 			CollectionClassification collectionClassification,
 			SimpleDomainType<E> elementType,
@@ -65,7 +65,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 			PluralAttributeMetadata<?,Y,?> attributeMetadata,
 			MetadataContext metadataContext) {
 
-		final JavaTypeDescriptor<Y> attributeJtd = metadataContext.getTypeConfiguration()
+		final JavaType<Y> attributeJtd = metadataContext.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( attributeMetadata.getJavaType() );
 
@@ -158,7 +158,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 		return listIndexOrMapKeyType;
 	}
 
-	public JavaTypeDescriptor<C> getCollectionJavaTypeDescriptor() {
+	public JavaType<C> getCollectionJavaTypeDescriptor() {
 		return collectionJtd;
 	}
 

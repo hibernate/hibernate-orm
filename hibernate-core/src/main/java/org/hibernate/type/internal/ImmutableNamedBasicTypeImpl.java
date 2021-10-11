@@ -7,7 +7,7 @@
 package org.hibernate.type.internal;
 
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 public class ImmutableNamedBasicTypeImpl<J> extends NamedBasicTypeImpl<J> {
 
 	public ImmutableNamedBasicTypeImpl(
-			JavaTypeDescriptor<J> jtd,
+			JavaType<J> jtd,
 			JdbcTypeDescriptor std,
 			String name) {
 		super( jtd, std, name );

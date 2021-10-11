@@ -11,7 +11,7 @@ import java.util.Locale;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.geolatte.geom.jts.JTSUtils;
 import org.locationtech.jts.geom.Geometry;
@@ -30,7 +30,7 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Ge
 	/**
 	 * An instance of this descriptor
 	 */
-	public static final JavaTypeDescriptor<Geometry> INSTANCE = new JTSGeometryJavaTypeDescriptor();
+	public static final JavaType<Geometry> INSTANCE = new JTSGeometryJavaTypeDescriptor();
 
 	/**
 	 * Initialize a type descriptor for the geolatte-geom {@code Geometry} type.

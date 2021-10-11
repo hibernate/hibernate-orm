@@ -36,7 +36,7 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Defines the default load event listeners used by hibernate for loading entities
@@ -133,7 +133,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 				if ( singleIdAttribute.getMappedType() instanceof EntityMappingType ) {
 					final EntityMappingType dependentIdTargetMapping = (EntityMappingType) singleIdAttribute.getMappedType();
 					final EntityIdentifierMapping dependentIdTargetIdMapping = dependentIdTargetMapping.getIdentifierMapping();
-					final JavaTypeDescriptor dependentParentIdJtd = dependentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
+					final JavaType dependentParentIdJtd = dependentIdTargetIdMapping.getMappedType().getMappedJavaTypeDescriptor();
 					if ( dependentParentIdJtd.getJavaTypeClass().isInstance( event.getEntityId() ) ) {
 						// yep that's what we have...
 						loadByDerivedIdentitySimplePkValue(

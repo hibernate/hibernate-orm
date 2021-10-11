@@ -8,7 +8,7 @@ package org.hibernate.query.criteria;
 
 import jakarta.persistence.TupleElement;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * API extension to the JPA {@link TupleElement} contract
@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface JpaTupleElement<T> extends TupleElement<T>, JpaCriteriaNode {
-	JavaTypeDescriptor<T> getJavaTypeDescriptor();
+	JavaType<T> getJavaTypeDescriptor();
 
 	@Override
 	default Class<? extends T> getJavaType() {

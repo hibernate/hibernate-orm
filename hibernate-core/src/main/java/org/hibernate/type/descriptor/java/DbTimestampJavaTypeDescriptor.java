@@ -31,7 +31,7 @@ import jakarta.persistence.TemporalType;
  *
  * @author Christian Beikov
  */
-public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaTypeDescriptor<T>, TemporalJavaTypeDescriptor<T> {
+public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaType<T>, TemporalJavaTypeDescriptor<T> {
 
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
 			CoreMessageLogger.class,
@@ -54,11 +54,11 @@ public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaTypeDescript
 	public T seed(SharedSessionContractImplementor session) {
 		if ( session == null ) {
 			LOG.trace( "Incoming session was null; using current jvm time" );
-			return ((VersionJavaTypeDescriptor<T>) delegate).seed( null );
+			return ((VersionJavaType<T>) delegate).seed( null );
 		}
 		else if ( !session.getJdbcServices().getJdbcEnvironment().getDialect().supportsCurrentTimestampSelection() ) {
 			LOG.debug( "Falling back to vm-based timestamp, as dialect does not support current timestamp selection" );
-			return ((VersionJavaTypeDescriptor<T>) delegate).seed( session );
+			return ((VersionJavaType<T>) delegate).seed( session );
 		}
 		else {
 			return getCurrentTimestamp( session );

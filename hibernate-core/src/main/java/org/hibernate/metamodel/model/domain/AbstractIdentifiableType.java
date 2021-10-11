@@ -16,12 +16,11 @@ import jakarta.persistence.metamodel.IdentifiableType;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.NonAggregatedCompositeSqmPathSource;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -55,7 +54,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	public AbstractIdentifiableType(
 			String typeName,
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			JavaType<J> javaTypeDescriptor,
 			IdentifiableDomainType<? super J> superType,
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,

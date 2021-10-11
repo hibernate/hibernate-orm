@@ -18,7 +18,7 @@ import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext
 import org.hibernate.metamodel.model.convert.internal.JpaAttributeConverterImpl;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import com.fasterxml.classmate.ResolvedType;
 
@@ -104,7 +104,7 @@ public abstract class AbstractConverterDescriptor implements ConverterDescriptor
 	@Override
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public JpaAttributeConverter createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
-		final JavaTypeDescriptor<Object> converterJtd = context
+		final JavaType<Object> converterJtd = context
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( getAttributeConverterClass() );
 

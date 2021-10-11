@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.AdjustableJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -20,7 +20,7 @@ public interface AdjustableBasicType<J> extends BasicType<J> {
 	/**
 	 * Perform the adjustment
 	 */
-	default <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<X> domainJtd) {
+	default <X> BasicType<X> resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaType<X> domainJtd) {
 		final JdbcTypeDescriptor jdbcTypeDescriptor = getJdbcTypeDescriptor();
 		if ( jdbcTypeDescriptor instanceof AdjustableJdbcTypeDescriptor ) {
 			final JdbcTypeDescriptor resolvedJdbcTypeDescriptor = ( (AdjustableJdbcTypeDescriptor) jdbcTypeDescriptor ).resolveIndicatedType(

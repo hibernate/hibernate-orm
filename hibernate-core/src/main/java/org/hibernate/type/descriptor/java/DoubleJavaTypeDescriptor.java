@@ -12,7 +12,7 @@ import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.DoubleJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -23,7 +23,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  * @author Steve Ebersole
  */
 public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Double> implements
-		PrimitiveJavaTypeDescriptor<Double> {
+		PrimitiveJavaType<Double> {
 	public static final DoubleJavaTypeDescriptor INSTANCE = new DoubleJavaTypeDescriptor();
 
 	public DoubleJavaTypeDescriptor() {

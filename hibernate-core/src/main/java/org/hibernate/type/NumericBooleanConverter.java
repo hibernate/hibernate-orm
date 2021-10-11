@@ -9,7 +9,7 @@ package org.hibernate.type;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
@@ -64,12 +64,12 @@ public class NumericBooleanConverter implements AttributeConverter<Boolean, Inte
 	}
 
 	@Override
-	public JavaTypeDescriptor<Boolean> getDomainJavaDescriptor() {
+	public JavaType<Boolean> getDomainJavaDescriptor() {
 		return BooleanJavaTypeDescriptor.INSTANCE;
 	}
 
 	@Override
-	public JavaTypeDescriptor<Integer> getRelationalJavaDescriptor() {
+	public JavaType<Integer> getRelationalJavaDescriptor() {
 		return IntegerJavaTypeDescriptor.INSTANCE;
 	}
 }

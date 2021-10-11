@@ -8,13 +8,11 @@ package org.hibernate.metamodel.model.convert.internal;
 
 import jakarta.persistence.AttributeConverter;
 
-import org.hibernate.annotations.Immutable;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
-import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
@@ -26,15 +24,15 @@ import org.hibernate.type.descriptor.java.spi.RegistryHelper;
  */
 public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R> {
 	private final ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean;
-	private final JavaTypeDescriptor<? extends AttributeConverter<O, R>> converterJtd;
-	private final JavaTypeDescriptor<O> domainJtd;
-	private final JavaTypeDescriptor<R> jdbcJtd;
+	private final JavaType<? extends AttributeConverter<O, R>> converterJtd;
+	private final JavaType<O> domainJtd;
+	private final JavaType<R> jdbcJtd;
 
 	public JpaAttributeConverterImpl(
 			ManagedBean<? extends AttributeConverter<O, R>> attributeConverterBean,
-			JavaTypeDescriptor<? extends AttributeConverter<O,R>> converterJtd,
-			JavaTypeDescriptor<O> domainJtd,
-			JavaTypeDescriptor<R> jdbcJtd) {
+			JavaType<? extends AttributeConverter<O,R>> converterJtd,
+			JavaType<O> domainJtd,
+			JavaType<R> jdbcJtd) {
 		this.attributeConverterBean = attributeConverterBean;
 		this.converterJtd = converterJtd;
 		this.domainJtd = domainJtd;
@@ -43,7 +41,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 
 	public JpaAttributeConverterImpl(
 			ManagedBean<? extends AttributeConverter<O,R>> attributeConverterBean,
-			JavaTypeDescriptor<? extends AttributeConverter<O,R>> converterJtd,
+			JavaType<? extends AttributeConverter<O,R>> converterJtd,
 			Class<O> domainJavaType,
 			Class<R> jdbcJavaType,
 			JpaAttributeConverterCreationContext context) {
@@ -54,7 +52,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 
 		jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
 		//noinspection unchecked
-		domainJtd = (JavaTypeDescriptor<O>) jtdRegistry.resolveDescriptor(
+		domainJtd = (JavaType<O>) jtdRegistry.resolveDescriptor(
 				domainJavaType,
 				() -> RegistryHelper.INSTANCE.createTypeDescriptor(
 						domainJavaType,
@@ -92,27 +90,27 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 	}
 
 	@Override
-	public JavaTypeDescriptor<? extends AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
+	public JavaType<? extends AttributeConverter<O, R>> getConverterJavaTypeDescriptor() {
 		return converterJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<O> getDomainJavaDescriptor() {
+	public JavaType<O> getDomainJavaDescriptor() {
 		return getDomainJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor<R> getRelationalJavaDescriptor() {
+	public JavaType<R> getRelationalJavaDescriptor() {
 		return getRelationalJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor<O> getDomainJavaTypeDescriptor() {
+	public JavaType<O> getDomainJavaTypeDescriptor() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<R> getRelationalJavaTypeDescriptor() {
+	public JavaType<R> getRelationalJavaTypeDescriptor() {
 		return jdbcJtd;
 	}
 }

@@ -31,7 +31,7 @@ import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 
@@ -77,7 +77,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	default JavaType<?> getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 
@@ -354,7 +354,7 @@ public interface EntityMappingType extends ManagedMappingType, EntityValuedModel
 	}
 
 	@Override
-	default JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	default JavaType getMappedJavaTypeDescriptor() {
 		return getEntityPersister().getMappedJavaTypeDescriptor();
 	}
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate.type;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -23,7 +23,7 @@ public class StandardBasicTypeTemplate<J> extends AbstractSingleColumnStandardBa
 
 	public StandardBasicTypeTemplate(
 			JdbcTypeDescriptor jdbcTypeDescriptor,
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			JavaType<J> javaTypeDescriptor,
 			String... registrationKeys) {
 		super( jdbcTypeDescriptor, javaTypeDescriptor );
 		this.registrationKeys = registrationKeys;

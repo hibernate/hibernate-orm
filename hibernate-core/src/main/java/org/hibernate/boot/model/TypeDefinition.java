@@ -30,7 +30,7 @@ import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -202,12 +202,12 @@ public class TypeDefinition implements Serializable {
 					}
 
 					@Override
-					public JavaTypeDescriptor<Object> getDomainJavaDescriptor() {
+					public JavaType<Object> getDomainJavaDescriptor() {
 						return resolvedBasicType.getMappedJavaTypeDescriptor();
 					}
 
 					@Override
-					public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+					public JavaType<?> getRelationalJavaDescriptor() {
 						return resolvedBasicType.getMappedJavaTypeDescriptor();
 					}
 
@@ -235,7 +235,7 @@ public class TypeDefinition implements Serializable {
 		// Series of backward compatible special cases
 
 		if ( Serializable.class.isAssignableFrom( typeImplementorClass ) ) {
-			final JavaTypeDescriptor<Serializable> jtd = typeConfiguration
+			final JavaType<Serializable> jtd = typeConfiguration
 					.getJavaTypeDescriptorRegistry()
 					.resolveDescriptor( typeImplementorClass );
 			final JdbcTypeDescriptor jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( Types.VARBINARY );
@@ -254,12 +254,12 @@ public class TypeDefinition implements Serializable {
 				}
 
 				@Override
-				public JavaTypeDescriptor<Object> getDomainJavaDescriptor() {
-					return (JavaTypeDescriptor) resolved.getMappedJavaTypeDescriptor();
+				public JavaType<Object> getDomainJavaDescriptor() {
+					return (JavaType) resolved.getMappedJavaTypeDescriptor();
 				}
 
 				@Override
-				public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+				public JavaType<?> getRelationalJavaDescriptor() {
 					return resolved.getMappedJavaTypeDescriptor();
 				}
 

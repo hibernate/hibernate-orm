@@ -19,7 +19,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiationResultImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * ResultBuilder for dynamic instantiation results ({@link jakarta.persistence.ConstructorResult}
@@ -29,11 +29,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class CompleteResultBuilderInstantiation
 		implements CompleteResultBuilder, ResultBuilderInstantiationValued {
 
-	private final JavaTypeDescriptor<?> javaTypeDescriptor;
+	private final JavaType<?> javaTypeDescriptor;
 	private final List<ResultBuilder> argumentResultBuilders;
 
 	public CompleteResultBuilderInstantiation(
-			JavaTypeDescriptor<?> javaTypeDescriptor,
+			JavaType<?> javaTypeDescriptor,
 			List<ResultBuilder> argumentResultBuilders) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.argumentResultBuilders = argumentResultBuilders;

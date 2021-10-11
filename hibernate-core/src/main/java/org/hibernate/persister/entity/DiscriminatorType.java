@@ -28,7 +28,7 @@ import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ClassJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -231,19 +231,19 @@ public class DiscriminatorType<T> extends AbstractType implements BasicType<T>, 
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
-		return (JavaTypeDescriptor<T>) ( EntityMode.POJO == persister.getEntityMode() ?
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
+		return (JavaType<T>) ( EntityMode.POJO == persister.getEntityMode() ?
 				ClassJavaTypeDescriptor.INSTANCE :
 				StringJavaTypeDescriptor.INSTANCE );
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	public JavaType<T> getJavaTypeDescriptor() {
 		return getExpressableJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getMappedJavaTypeDescriptor() {
+	public JavaType<T> getMappedJavaTypeDescriptor() {
 		return getExpressableJavaTypeDescriptor();
 	}
 

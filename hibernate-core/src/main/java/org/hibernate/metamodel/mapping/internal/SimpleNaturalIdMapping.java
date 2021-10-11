@@ -32,13 +32,13 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Single-attribute NaturalIdMapping implementation
  */
-public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaTypeDescriptor.CoercionContext {
+public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements JavaType.CoercionContext {
 	private final SingularAttributeMapping attribute;
 	private final TypeConfiguration typeConfiguration;
 
@@ -134,7 +134,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public int calculateHashCode(Object value, SharedSessionContractImplementor session) {
 		//noinspection unchecked
-		return value == null ? 0 : ( (JavaTypeDescriptor<Object>) getJavaTypeDescriptor() ).extractHashCode( value );
+		return value == null ? 0 : ( (JavaType<Object>) getJavaTypeDescriptor() ).extractHashCode( value );
 	}
 
 	@Override
@@ -181,7 +181,7 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return attribute.getJavaTypeDescriptor();
 	}
 

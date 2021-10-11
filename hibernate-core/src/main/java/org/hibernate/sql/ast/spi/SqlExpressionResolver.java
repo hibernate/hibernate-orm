@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -65,6 +65,6 @@ public interface SqlExpressionResolver {
 	 */
 	SqlSelection resolveSqlSelection(
 			Expression expression,
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			TypeConfiguration typeConfiguration);
 }

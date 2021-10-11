@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.CoercionHelper;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -55,10 +55,10 @@ public class CoercionTests {
 		final TypeConfiguration typeConfiguration = scope.getSessionFactory().getTypeConfiguration();
 		final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
 
-		final JavaTypeDescriptor<Integer> integerType = jtdRegistry.resolveDescriptor( Integer.class );
-		final JavaTypeDescriptor<Long> longType = jtdRegistry.resolveDescriptor( Long.class );
-		final JavaTypeDescriptor<Double> doubleType = jtdRegistry.resolveDescriptor( Double.class );
-		final JavaTypeDescriptor<Float> floatType = jtdRegistry.resolveDescriptor( Float.class );
+		final JavaType<Integer> integerType = jtdRegistry.resolveDescriptor( Integer.class );
+		final JavaType<Long> longType = jtdRegistry.resolveDescriptor( Long.class );
+		final JavaType<Double> doubleType = jtdRegistry.resolveDescriptor( Double.class );
+		final JavaType<Float> floatType = jtdRegistry.resolveDescriptor( Float.class );
 
 		scope.inTransaction(
 				(session) -> {
@@ -70,7 +70,7 @@ public class CoercionTests {
 		);
 	}
 
-	private void checkDoubleConversions(JavaTypeDescriptor<Double> doubleType, SessionImplementor session) {
+	private void checkDoubleConversions(JavaType<Double> doubleType, SessionImplementor session) {
 		assertThat( doubleType.coerce( (double) 1, session ), Matchers.is( 1.0 ) );
 		assertThat( doubleType.coerce( 1F, session ), Matchers.is( 1.0 ) );
 		assertThat( doubleType.coerce( doubleValue, session ), Matchers.is( doubleValue ) );
@@ -88,7 +88,7 @@ public class CoercionTests {
 		// negative checks
 	}
 
-	private void checkIntegerConversions(JavaTypeDescriptor<Integer> integerType, SessionImplementor session) {
+	private void checkIntegerConversions(JavaType<Integer> integerType, SessionImplementor session) {
 		assertThat( integerType.coerce( intValue, session ), Matchers.is( intValue) );
 
 		assertThat( integerType.coerce( shortValue, session ), Matchers.is( intValue) );
@@ -109,7 +109,7 @@ public class CoercionTests {
 		checkDisallowedConversion( () -> integerType.coerce( floatValue, session ) );
 	}
 
-	private void checkLongConversions(JavaTypeDescriptor<Long> longType, SessionImplementor session) {
+	private void checkLongConversions(JavaType<Long> longType, SessionImplementor session) {
 		assertThat( longType.coerce( longValue, session ), Matchers.is( longValue ) );
 		assertThat( longType.coerce( largeLongValue, session ), Matchers.is( largeLongValue ) );
 

@@ -18,9 +18,9 @@ import org.hibernate.SharedSessionContract;
  */
 public class ComponentArrayMutabilityPlan implements MutabilityPlan<Object[]> {
 
-	private final JavaTypeDescriptor<Object>[] components;
+	private final JavaType<Object>[] components;
 
-	public ComponentArrayMutabilityPlan(JavaTypeDescriptor<Object>[] components) {
+	public ComponentArrayMutabilityPlan(JavaType<Object>[] components) {
 		this.components = components;
 	}
 

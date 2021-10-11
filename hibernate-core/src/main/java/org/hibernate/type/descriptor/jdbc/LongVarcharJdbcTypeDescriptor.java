@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 /**
@@ -35,7 +35,7 @@ public class LongVarcharJdbcTypeDescriptor extends VarcharJdbcTypeDescriptor {
 	@Override
 	public JdbcTypeDescriptor resolveIndicatedType(
 			JdbcTypeDescriptorIndicators indicators,
-			JavaTypeDescriptor<?> domainJtd) {
+			JavaType<?> domainJtd) {
 		final JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry = indicators.getTypeConfiguration()
 				.getJdbcTypeDescriptorRegistry();
 		return indicators.isNationalized()

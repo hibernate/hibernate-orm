@@ -25,7 +25,7 @@ import org.hibernate.sql.ast.tree.predicate.PredicateContainer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -155,7 +155,7 @@ public class QuerySpec extends QueryPart implements SqlAstNode, PredicateContain
 		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
 		if ( selectClause.getSqlSelections().size() == 1 ) {
 			SqlSelection first = selectClause.getSqlSelections().get( 0 );
-			JavaTypeDescriptor descriptor = first.getExpressionType()
+			JavaType descriptor = first.getExpressionType()
 					.getJdbcMappings()
 					.get( 0 )
 					.getJavaTypeDescriptor();

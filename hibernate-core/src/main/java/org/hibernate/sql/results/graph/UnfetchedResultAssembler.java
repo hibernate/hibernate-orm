@@ -9,16 +9,16 @@ package org.hibernate.sql.results.graph;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Christian Beikov
  */
 public class UnfetchedResultAssembler<J>  implements DomainResultAssembler<J> {
 
-	private final JavaTypeDescriptor<J> javaTypeDescriptor;
+	private final JavaType<J> javaTypeDescriptor;
 
-	public UnfetchedResultAssembler(JavaTypeDescriptor<J> javaTypeDescriptor) {
+	public UnfetchedResultAssembler(JavaType<J> javaTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
@@ -28,7 +28,7 @@ public class UnfetchedResultAssembler<J>  implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor() {
+	public JavaType<J> getAssembledJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 }

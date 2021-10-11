@@ -7,10 +7,10 @@
 package org.hibernate.type.descriptor.java.spi;
 
 import org.hibernate.HibernateException;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Exception indicating {@link JavaTypeDescriptor#getRecommendedJdbcType} could not
+ * Exception indicating {@link JavaType#getRecommendedJdbcType} could not
  * determine a recommended JDBC type descriptor
  *
  * @author Steve Ebersole

@@ -65,7 +65,7 @@ import org.hibernate.query.internal.ScrollableResultsIterator;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.LockMode.UPGRADE;
 import static org.hibernate.LockOptions.NONE;
@@ -1143,7 +1143,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(String name, Collection values, Class javaType) {
-		final JavaTypeDescriptor javaDescriptor = getSession().getFactory()
+		final JavaType javaDescriptor = getSession().getFactory()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( javaType );
@@ -1178,7 +1178,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameterList(int position, Collection values, Class javaType) {
-		final JavaTypeDescriptor javaDescriptor = getSession().getFactory()
+		final JavaType javaDescriptor = getSession().getFactory()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( javaType );

@@ -26,7 +26,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.map.MapProxyFactory;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -34,7 +34,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public class EntityRepresentationStrategyMap implements EntityRepresentationStrategy {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyMap.class );
 
-	private final JavaTypeDescriptor<Map> mapJtd;
+	private final JavaType<Map> mapJtd;
 
 	private final ProxyFactory proxyFactory;
 	private final EntityInstantiatorDynamicMap instantiator;
@@ -120,12 +120,12 @@ public class EntityRepresentationStrategyMap implements EntityRepresentationStra
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return mapJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getProxyJavaTypeDescriptor() {
+	public JavaType<?> getProxyJavaTypeDescriptor() {
 		return null;
 	}
 

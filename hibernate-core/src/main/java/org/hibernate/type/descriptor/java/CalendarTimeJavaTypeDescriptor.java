@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
@@ -19,7 +18,6 @@ import org.hibernate.internal.util.compare.CalendarComparator;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimeJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**

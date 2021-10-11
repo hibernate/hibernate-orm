@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.sql;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -314,7 +313,7 @@ import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.internal.StandardEntityGraphTraversalStateImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
@@ -1116,7 +1115,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public DynamicInstantiation<?> visitDynamicInstantiation(SqmDynamicInstantiation<?> sqmDynamicInstantiation) {
 		final SqmDynamicInstantiationTarget<?> instantiationTarget = sqmDynamicInstantiation.getInstantiationTarget();
 		final DynamicInstantiationNature instantiationNature = instantiationTarget.getNature();
-		final JavaTypeDescriptor<Object> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
+		final JavaType<Object> targetTypeDescriptor = interpretInstantiationTarget( instantiationTarget );
 
 		final DynamicInstantiation<?> dynamicInstantiation = new DynamicInstantiation<>(
 				instantiationNature,
@@ -1135,7 +1134,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@SuppressWarnings("unchecked")
-	private <X> JavaTypeDescriptor<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
+	private <X> JavaType<X> interpretInstantiationTarget(SqmDynamicInstantiationTarget<?> instantiationTarget) {
 		final Class<X> targetJavaType;
 
 		if ( instantiationTarget.getNature() == DynamicInstantiationNature.LIST ) {
@@ -2759,7 +2758,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						.getEntityDescriptor( (Class<?>) literalValue );
 			}
 			else {
-				final JavaTypeDescriptor<?> javaTypeDescriptor = discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor();
+				final JavaType<?> javaTypeDescriptor = discriminatorMapping.getJdbcMapping().getJavaTypeDescriptor();
 				final Object discriminatorValue;
 				if ( javaTypeDescriptor.getJavaTypeClass().isInstance( literalValue ) ) {
 					discriminatorValue = literalValue;
@@ -3436,7 +3435,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			public DomainResult<Map.Entry<Object, Object>> createDomainResult(
 					String resultVariable,
 					DomainResultCreationState creationState) {
-				final JavaTypeDescriptor<Map.Entry<Object, Object>> mapEntryDescriptor = getTypeConfiguration()
+				final JavaType<Map.Entry<Object, Object>> mapEntryDescriptor = getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.resolveDescriptor( Map.Entry.class );
 				return new SqmMapEntryResult<>( indexResult, valueResult, resultVariable, mapEntryDescriptor );
@@ -5557,7 +5556,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		@Override
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
-				JavaTypeDescriptor javaTypeDescriptor,
+				JavaType javaTypeDescriptor,
 				TypeConfiguration typeConfiguration) {
 			return delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
 		}
@@ -5613,7 +5612,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		@Override
 		public SqlSelection resolveSqlSelection(
 				Expression expression,
-				JavaTypeDescriptor javaTypeDescriptor,
+				JavaType javaTypeDescriptor,
 				TypeConfiguration typeConfiguration) {
 			SqlSelection selection = delegate.resolveSqlSelection( expression, javaTypeDescriptor, typeConfiguration );
 			List<SqlSelection> sqlSelectionList = sqlSelectionsForSqmSelection[index];

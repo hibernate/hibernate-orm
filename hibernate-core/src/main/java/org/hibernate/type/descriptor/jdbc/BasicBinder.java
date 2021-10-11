@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.JdbcBindingLogging;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Convenience base implementation of {@link ValueBinder}
@@ -26,10 +26,10 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 	private static final String BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [%s]";
 	private static final String NULL_BIND_MSG_TEMPLATE = "binding parameter [%s] as [%s] - [null]";
 
-	private final JavaTypeDescriptor<J> javaDescriptor;
+	private final JavaType<J> javaDescriptor;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
-	public JavaTypeDescriptor<J> getJavaTypeDescriptor() {
+	public JavaType<J> getJavaTypeDescriptor() {
 		return javaDescriptor;
 	}
 
@@ -37,7 +37,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 		return jdbcTypeDescriptor;
 	}
 
-	public BasicBinder(JavaTypeDescriptor<J> javaDescriptor, JdbcTypeDescriptor jdbcTypeDescriptor) {
+	public BasicBinder(JavaType<J> javaDescriptor, JdbcTypeDescriptor jdbcTypeDescriptor) {
 		this.javaDescriptor = javaDescriptor;
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 	}

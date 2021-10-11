@@ -50,7 +50,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 
 /**
  * Contract describing mapping information and persistence logic for a particular strategy of entity mapping.  A given
@@ -367,12 +367,12 @@ public interface EntityPersister
 	 */
 	BasicType<?> getVersionType();
 
-	default VersionJavaTypeDescriptor<Object> getVersionJavaTypeDescriptor() {
+	default VersionJavaType<Object> getVersionJavaTypeDescriptor() {
 		final BasicType<?> versionType = getVersionType();
 		//noinspection unchecked
 		return versionType == null
 				? null
-				: (VersionJavaTypeDescriptor<Object>) versionType.getJavaTypeDescriptor();
+				: (VersionJavaType<Object>) versionType.getJavaTypeDescriptor();
 	}
 
 	/**

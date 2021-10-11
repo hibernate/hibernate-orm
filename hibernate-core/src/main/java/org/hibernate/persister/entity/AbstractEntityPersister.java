@@ -153,7 +153,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.AttributeMetadataAccess;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -258,7 +257,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeHelper;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -4885,7 +4884,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	public Class<?> getConcreteProxyClass() {
-		final JavaTypeDescriptor<?> proxyJavaTypeDescriptor = getRepresentationStrategy().getProxyJavaTypeDescriptor();
+		final JavaType<?> proxyJavaTypeDescriptor = getRepresentationStrategy().getProxyJavaTypeDescriptor();
 		return proxyJavaTypeDescriptor != null ? proxyJavaTypeDescriptor.getJavaTypeClass() : javaTypeDescriptor.getJavaTypeClass();
 	}
 
@@ -5439,7 +5438,7 @@ public abstract class AbstractEntityPersister
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// org.hibernate.metamodel.mapping.EntityMappingType
 
-	private final JavaTypeDescriptor<?> javaTypeDescriptor;
+	private final JavaType<?> javaTypeDescriptor;
 	private final EntityRepresentationStrategy representationStrategy;
 
 	private EntityMappingType superMappingType;
@@ -6017,7 +6016,7 @@ public abstract class AbstractEntityPersister
 			);
 		}
 		else if ( attrType instanceof AnyType ) {
-			final JavaTypeDescriptor<Object> baseAssociationJtd = sessionFactory
+			final JavaType<Object> baseAssociationJtd = sessionFactory
 					.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry()
 					.getDescriptor( Object.class );
@@ -6128,7 +6127,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

@@ -15,7 +15,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Andrea Boriero
@@ -42,7 +42,7 @@ public abstract class AbstractCollectionAssembler implements DomainResultAssembl
 	}
 
 	@Override
-	public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
+	public JavaType getAssembledJavaTypeDescriptor() {
 		return fetchedMapping.getJavaTypeDescriptor();
 	}
 }

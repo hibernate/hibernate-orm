@@ -6,7 +6,7 @@
  */
 package org.hibernate.type.descriptor.jdbc;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Extension contract for JdbcTypeDescriptor implementations that understand how to
@@ -20,5 +20,5 @@ public interface AdjustableJdbcTypeDescriptor extends JdbcTypeDescriptor {
 	/**
 	 * Perform the adjustment
 	 */
-	JdbcTypeDescriptor resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaTypeDescriptor<?> domainJtd);
+	JdbcTypeDescriptor resolveIndicatedType(JdbcTypeDescriptorIndicators indicators, JavaType<?> domainJtd);
 }

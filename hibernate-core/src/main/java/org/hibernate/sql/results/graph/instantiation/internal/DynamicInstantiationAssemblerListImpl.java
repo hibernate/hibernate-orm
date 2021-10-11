@@ -12,7 +12,7 @@ import java.util.List;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * A QueryResultAssembler implementation representing handling for dynamic-
@@ -23,18 +23,18 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DynamicInstantiationAssemblerListImpl implements DomainResultAssembler<List<?>> {
-	private final JavaTypeDescriptor<List<?>> listJavaDescriptor;
+	private final JavaType<List<?>> listJavaDescriptor;
 	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerListImpl(
-			JavaTypeDescriptor<List<?>> listJavaDescriptor,
+			JavaType<List<?>> listJavaDescriptor,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.listJavaDescriptor = listJavaDescriptor;
 		this.argumentReaders = argumentReaders;
 	}
 
 	@Override
-	public JavaTypeDescriptor<List<?>> getAssembledJavaTypeDescriptor() {
+	public JavaType<List<?>> getAssembledJavaTypeDescriptor() {
 		return listJavaDescriptor;
 	}
 

@@ -18,7 +18,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -36,7 +36,7 @@ public class RegistryHelper {
 	private RegistryHelper() {
 	}
 
-	public <J> JavaTypeDescriptor<J> createTypeDescriptor(
+	public <J> JavaType<J> createTypeDescriptor(
 			Type javaType,
 			Supplier<MutabilityPlan<J>> fallbackMutabilityPlanResolver,
 			TypeConfiguration typeConfiguration) {
@@ -86,7 +86,7 @@ public class RegistryHelper {
 	}
 
 	@SuppressWarnings("unchecked")
-	private  <J> JavaTypeDescriptor<J> createTypeDescriptor(
+	private  <J> JavaType<J> createTypeDescriptor(
 			Type javaType,
 			Function<Class<J>,MutabilityPlan<J>> mutabilityPlanResolver) {
 		final Class<J> javaTypeClass = determineJavaTypeClass( javaType );

@@ -62,7 +62,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -134,7 +134,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 		return mappingType;
 	}
 
-	private final JavaTypeDescriptor<?> embeddableJtd;
+	private final JavaType<?> embeddableJtd;
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	private final SessionFactoryImplementor sessionFactory;
@@ -526,7 +526,7 @@ public class EmbeddableMappingType implements ManagedMappingType, SelectableMapp
 	}
 
 	@Override
-	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	public JavaType getMappedJavaTypeDescriptor() {
 		return embeddableJtd;
 	}
 

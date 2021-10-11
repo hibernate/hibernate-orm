@@ -8,7 +8,7 @@ package org.hibernate.annotations.internal;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 public class NoJdbcTypeDescriptor implements JdbcTypeDescriptor {
@@ -18,12 +18,12 @@ public class NoJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
 		throw new UnsupportedOperationException();
 	}
 }

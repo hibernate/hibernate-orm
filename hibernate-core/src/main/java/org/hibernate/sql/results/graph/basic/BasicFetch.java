@@ -21,7 +21,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -74,7 +74,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 		this.fetchParent = fetchParent;
 		this.valuedMapping = valuedMapping;
 		this.fetchTiming = fetchTiming;
-		@SuppressWarnings("unchecked") final JavaTypeDescriptor<T> javaTypeDescriptor = (JavaTypeDescriptor<T>) valuedMapping.getJavaTypeDescriptor();
+		@SuppressWarnings("unchecked") final JavaType<T> javaTypeDescriptor = (JavaType<T>) valuedMapping.getJavaTypeDescriptor();
 		// lazy basic attribute
 		if ( fetchTiming == FetchTiming.DELAYED && valuesArrayPosition == -1 ) {
 			if ( canBasicPartFetchBeDelayed ) {
@@ -126,7 +126,7 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return null;
 	}
 

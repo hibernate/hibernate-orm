@@ -29,7 +29,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -44,7 +44,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	public DiscriminatedCollectionPart(
 			Nature nature,
 			CollectionPersister collectionDescriptor,
-			JavaTypeDescriptor<Object> baseAssociationJtd,
+			JavaType<Object> baseAssociationJtd,
 			Any bootValueMapping,
 			AnyType anyType,
 			MappingModelCreationProcess creationProcess) {
@@ -140,7 +140,7 @@ public class DiscriminatedCollectionPart implements DiscriminatedAssociationMode
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return discriminatorMapping.getJavaTypeDescriptor();
 	}
 

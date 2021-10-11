@@ -1556,7 +1556,7 @@ system.
 There are many ways to integrate a `TypeContributor`.  The most common is to define the `TypeContributor` as
 a Java service (see `java.util.ServiceLoader`).
 
-`TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaTypeDescriptor`,
+`TypeContributor` is passed a `TypeContributions` reference, which allows registration of custom `JavaType`,
 `JdbcTypeDescriptor` and `BasicType` references.
 
 
@@ -1618,7 +1618,7 @@ If the Java type is not known to Hibernate, you will encounter the following mes
 > Consider registering a custom JavaTypeDescriptor or at least implementing equals/hashCode.
 
 A Java type is "known" if it has an entry in the `JavaTypeDescriptorRegistry`.  While Hibernate does load many JDK types into
-the `JavaTypeDescriptorRegistry`, an application can also expand the `JavaTypeDescriptorRegistry` by adding new `JavaTypeDescriptor`
+the `JavaTypeDescriptorRegistry`, an application can also expand the `JavaTypeDescriptorRegistry` by adding new `JavaType`
 entries.  This way, Hibernate will also know how to handle a specific Java Object type at the JDBC level.
 
 
@@ -1867,7 +1867,7 @@ See also <<basic-jpa-convert-mutability>>.
 [[basic-bitset-java-type]]
 ===== Using a custom `JavaTypeDescriptor`
 
-As covered in <<basic-mapping-explicit>>, we will define a `JavaTypeDescriptor`
+As covered in <<basic-mapping-explicit>>, we will define a `JavaType`
 for `BitSet` that maps values to `VARCHAR` for storage by default.
 
 [[basic-bitset-example-java-type]]
@@ -1891,7 +1891,7 @@ include::{sourcedir}/basic/bitset/BitSetJavaTypeTests.java[tags=basic-bitset-exa
 ----
 ====
 
-Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaTypeDescriptor`
+Or we can apply it globally using `@JavaTypeRegistration`.  This allows the registered `JavaType`
 to be used as the default whenever we encounter the `BitSet` type
 
 [[basic-bitset-example-java-type-global]]

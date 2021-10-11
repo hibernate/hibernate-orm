@@ -14,7 +14,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Base support for instantiating entity values as POJO representation
@@ -29,7 +29,7 @@ public abstract class AbstractEntityInstantiatorPojo extends AbstractPojoInstant
 	public AbstractEntityInstantiatorPojo(
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
-			JavaTypeDescriptor<?> javaTypeDescriptor) {
+			JavaType<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
 
 		this.entityMetamodel = entityMetamodel;

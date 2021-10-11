@@ -7,14 +7,14 @@
 package org.hibernate.metamodel.model.domain;
 
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Describes any type that occurs in the application's domain model.
  *
  * The base for Hibernate's extension of the JPA type system.
  *
- * Encapsulates a {@link JavaTypeDescriptor} describing the more rudimentary
+ * Encapsulates a {@link JavaType} describing the more rudimentary
  * aspects of the Java type.  The DomainType is a higher-level construct
  * incorporating information such as bean properties, constructors, etc
  *
@@ -44,5 +44,5 @@ public interface DomainType<J> extends SqmExpressable<J> {
 	 *
 	 * @see #getTypeName
 	 */
-	JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor();
+	JavaType<J> getExpressableJavaTypeDescriptor();
 }

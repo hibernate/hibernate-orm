@@ -20,7 +20,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for instantiating entity values as POJO representation
@@ -37,7 +37,7 @@ public class EntityInstantiatorPojoStandard extends AbstractEntityInstantiatorPo
 	public EntityInstantiatorPojoStandard(
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
-			JavaTypeDescriptor<?> javaTypeDescriptor) {
+			JavaType<?> javaTypeDescriptor) {
 		super( entityMetamodel, persistentClass, javaTypeDescriptor );
 
 		this.entityMetamodel = entityMetamodel;

@@ -17,7 +17,7 @@ import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -50,7 +50,7 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	public static final PGGeometryTypeDescriptor INSTANCE_WKB_2 = new PGGeometryTypeDescriptor( Wkb.Dialect.POSTGIS_EWKB_2 );
 
 	@Override
-	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaTypeDescriptor<T> javaTypeDescriptor) {
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
 		if ( javaTypeDescriptor instanceof GeolatteGeometryJavaTypeDescriptor ) {
 			return (appender, value, dialect, wrapperOptions) -> {
 				appender.appendSql( "ST_GeomFromEWKT('" );
@@ -112,7 +112,7 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueBinder<X> getBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
 		return new BasicBinder<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -142,7 +142,7 @@ public class PGGeometryTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 
 

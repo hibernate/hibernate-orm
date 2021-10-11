@@ -77,7 +77,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -3421,13 +3421,13 @@ public abstract class Dialect implements ConversionContext {
 	public interface SizeStrategy {
 		/**
 		 * Resolve the {@link Size} to use for columns of the given
-		 * {@link JdbcTypeDescriptor SQL type} and {@link JavaTypeDescriptor Java type}.
+		 * {@link JdbcTypeDescriptor SQL type} and {@link JavaType Java type}.
 		 *
 		 * @return a non-null {@link Size}
 		 */
 		Size resolveSize(
 				JdbcTypeDescriptor jdbcType,
-				JavaTypeDescriptor<?> javaType,
+				JavaType<?> javaType,
 				Integer precision,
 				Integer scale,
 				Long length);
@@ -3437,7 +3437,7 @@ public abstract class Dialect implements ConversionContext {
 		@Override
 		public Size resolveSize(
 				JdbcTypeDescriptor jdbcType,
-				JavaTypeDescriptor<?> javaType,
+				JavaType<?> javaType,
 				Integer precision,
 				Integer scale,
 				Long length) {

@@ -40,7 +40,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.type.AnyType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 
 /**
@@ -58,7 +58,7 @@ public class DiscriminatedAssociationAttributeMapping
 
 	public DiscriminatedAssociationAttributeMapping(
 			NavigableRole attributeRole,
-			JavaTypeDescriptor<?> baseAssociationJtd,
+			JavaType<?> baseAssociationJtd,
 			ManagedMappingType declaringType,
 			int stateArrayPosition,
 			StateArrayContributorMetadataAccess attributeMetadataAccess,

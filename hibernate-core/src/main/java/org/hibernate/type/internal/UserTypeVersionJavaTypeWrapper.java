@@ -7,14 +7,14 @@
 package org.hibernate.type.internal;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.VersionJavaType;
 import org.hibernate.usertype.UserVersionType;
 
 /**
  *
  * @author Christian Beikov
  */
-public class UserTypeVersionJavaTypeWrapper<J> extends UserTypeJavaTypeWrapper<J> implements VersionJavaTypeDescriptor<J> {
+public class UserTypeVersionJavaTypeWrapper<J> extends UserTypeJavaTypeWrapper<J> implements VersionJavaType<J> {
 
 	public UserTypeVersionJavaTypeWrapper(UserVersionType<J> userType) {
 		super( userType );

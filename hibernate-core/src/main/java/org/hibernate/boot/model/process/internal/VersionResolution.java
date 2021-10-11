@@ -10,6 +10,7 @@ import java.util.function.Function;
 import jakarta.persistence.TemporalType;
 
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -37,6 +38,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
 			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
+			TimeZoneStorageType timeZoneStorageType,
 			TypeConfiguration typeConfiguration,
 			@SuppressWarnings("unused") MetadataBuildingContext context) {
 
@@ -61,6 +63,16 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 					@Override
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+						if ( timeZoneStorageType != null ) {
+							switch ( timeZoneStorageType ) {
+								case COLUMN:
+									return TimeZoneStorageStrategy.COLUMN;
+								case NATIVE:
+									return TimeZoneStorageStrategy.NATIVE;
+								case NORMALIZE:
+									return TimeZoneStorageStrategy.NORMALIZE;
+							}
+						}
 						return context.getBuildingOptions().getDefaultTimeZoneStorage();
 					}
 				}

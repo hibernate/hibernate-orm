@@ -3,6 +3,53 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.0.0.Beta1 (October 11, 2021)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/27100
+
+** Bug
+    * [HHH-14820] - type-defs with "global" parameters not working
+    * [HHH-14814] - Inconsistent rendering of table alias in delete queries
+    * [HHH-14772] - Session.find does not respect enabled filters
+    * [HHH-14764] - Testsuite: AssertionErrors must not be caught
+    * [HHH-14763] - Avoid supress exceptions in try/finally
+    * [HHH-14762] - Testsuite: Assert.notNull must not be used on primitive types
+    * [HHH-13140] - Criteria API multiselect aliases are not passed through to the JPQL query and they are not available in ResultTransformer
+    * [HHH-11280] - Proxy Narrowing (HHH-9071) breaks polymorphic query
+    * [HHH-10504] - SQLQuery with join returns the joined entity instead of the root one
+    * [HHH-7525] - @Formula annotation with native query returning entity value causes NullPointerException
+
+** Improvement
+    * [HHH-14865] - Re-work @Any and @ManyToAny support
+    * [HHH-14864] - Drop legacy Type-based annotations
+    * [HHH-14863] - Compositional definition of basic value mappings
+    * [HHH-14856] - Introduce @CustomType
+    * [HHH-14777] - Support LockOptions.SKIP_LOCKED for MariaDB 10.6+
+    * [HHH-14642] - verify/test Criteria in v6
+    * [HHH-14484] - Improve support for Firebird 4
+    * [HHH-14452] - Support set operations in JPA Criteria API
+    * [HHH-13717] - Implement HQL/Criteria TREAT support using SQM
+    * [HHH-12623] - Improve Javadoc comments for QueryHints.html#NATIVE_SPACES
+    * [HHH-11042] - Cannot count distinct on SQL Server on embedded ids
+    * [HHH-10825] - Improve concurrency design of ServiceBinding
+
+** New Feature
+    * [HHH-14188] - Enumerated "short name" handling in HQL
+    * [HHH-8172] - New matches query operator
+
+** Remove Feature
+    * [HHH-14870] - Rename {Xyz}TypeDescriptor as {Xyz}Type
+    * [HHH-14846] - Drop JMX integration
+    * [HHH-14844] - Drop JACC integration
+
+** Task
+    * [HHH-14871] - Temporarily disable hibernate-gradle-plugin
+    * [HHH-14848] - Move Ant tasks + support from hibernate-core into tooling/hibernate-ant
+    * [HHH-14837] - Migrate to Jakarta EE 
+    * [HHH-11755] - Drop "Serializable" from the Event Listener interfaces
+
+
 Changes in 6.0.0.Alpha9 (August 4, 2021)
 ------------------------------------------------------------------------------------------------------------------------
 

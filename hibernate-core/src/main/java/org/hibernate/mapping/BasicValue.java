@@ -13,6 +13,7 @@ import java.util.function.Function;
 
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -83,6 +84,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 	private EnumType enumerationStyle;
 	private TemporalType temporalPrecision;
+	private TimeZoneStorageType timeZoneStorageType;
 
 	private java.lang.reflect.Type resolvedJavaType;
 
@@ -131,6 +133,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 		return enumerationStyle;
 	}
 
+	public TimeZoneStorageType getTimeZoneStorageType() {
+		return timeZoneStorageType;
+	}
+
+	public void setTimeZoneStorageType(TimeZoneStorageType timeZoneStorageType) {
+		this.timeZoneStorageType = timeZoneStorageType;
+	}
 
 	public void setJpaAttributeConverterDescriptor(ConverterDescriptor descriptor) {
 		setAttributeConverterDescriptor( descriptor );
@@ -316,6 +325,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 					implicitJavaTypeAccess,
 					explicitJavaTypeAccess,
 					explicitJdbcTypeAccess,
+					timeZoneStorageType,
 					typeConfiguration,
 					getBuildingContext()
 			);
@@ -604,6 +614,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
+		if ( timeZoneStorageType != null ) {
+			switch ( timeZoneStorageType ) {
+				case COLUMN:
+					return TimeZoneStorageStrategy.COLUMN;
+				case NATIVE:
+					return TimeZoneStorageStrategy.NATIVE;
+				case NORMALIZE:
+					return TimeZoneStorageStrategy.NORMALIZE;
+			}
+		}
 		return getBuildingContext().getBuildingOptions().getDefaultTimeZoneStorage();
 	}
 

@@ -8,13 +8,13 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 public class UnfetchedBasicPartResultAssembler<J>  implements DomainResultAssembler<J> {
 
-	private final JavaTypeDescriptor<J> javaTypeDescriptor;
+	private final JavaType<J> javaTypeDescriptor;
 
-	public UnfetchedBasicPartResultAssembler(JavaTypeDescriptor<J> javaTypeDescriptor) {
+	public UnfetchedBasicPartResultAssembler(JavaType<J> javaTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
@@ -24,7 +24,7 @@ public class UnfetchedBasicPartResultAssembler<J>  implements DomainResultAssemb
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor() {
+	public JavaType<J> getAssembledJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 }

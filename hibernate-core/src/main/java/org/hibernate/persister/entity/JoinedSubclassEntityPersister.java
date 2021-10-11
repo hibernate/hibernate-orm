@@ -68,7 +68,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -194,7 +194,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				else {
 					try {
 						discriminatorValue = discriminatorType.getJavaTypeDescriptor().fromString( persistentClass.getDiscriminatorValue() );
-						discriminatorSQLString = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaTypeDescriptor) discriminatorType.getJavaTypeDescriptor() )
+						discriminatorSQLString = discriminatorType.getJdbcTypeDescriptor().getJdbcLiteralFormatter( (JavaType) discriminatorType.getJavaTypeDescriptor() )
 								.toJdbcLiteral(
 										discriminatorValue,
 										factory.getJdbcServices().getDialect(),

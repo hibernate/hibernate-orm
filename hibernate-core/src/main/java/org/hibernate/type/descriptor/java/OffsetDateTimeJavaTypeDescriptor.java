@@ -34,7 +34,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<OffsetDateTime>
-		implements VersionJavaTypeDescriptor<OffsetDateTime> {
+		implements VersionJavaType<OffsetDateTime> {
 	/**
 	 * Singleton access
 	 */

@@ -13,16 +13,16 @@ import java.sql.SQLException;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
  * @author Emmanuel Bernard
  */
 public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
-	private final JavaTypeDescriptor<J> javaTypeDescriptor;
+	private final JavaType<J> javaTypeDescriptor;
 
-	public BasicTypeImpl(JavaTypeDescriptor<J> javaTypeDescriptor) {
+	public BasicTypeImpl(JavaType<J> javaTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 
@@ -31,7 +31,7 @@ public class BasicTypeImpl<J> implements BasicDomainType<J>, Serializable {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
+	public JavaType<J> getExpressableJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

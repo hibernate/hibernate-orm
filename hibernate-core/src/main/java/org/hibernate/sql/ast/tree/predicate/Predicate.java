@@ -11,13 +11,11 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
-import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Models a predicate in the SQL AST
@@ -38,7 +36,7 @@ public interface Predicate extends Expression, DomainResultProducer<Boolean> {
 	default DomainResult<Boolean> createDomainResult(String resultVariable, DomainResultCreationState creationState) {
 		final SqlAstCreationState sqlAstCreationState = creationState.getSqlAstCreationState();
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
-		final JavaTypeDescriptor javaTypeDescriptor = getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
+		final JavaType javaTypeDescriptor = getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
 		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
 				this,
 				javaTypeDescriptor,

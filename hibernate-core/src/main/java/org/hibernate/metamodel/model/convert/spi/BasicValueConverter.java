@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.model.convert.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for basic-value conversions.
@@ -40,10 +40,10 @@ public interface BasicValueConverter<D,R> {
 	/**
 	 * Descriptor for the Java type for the domain portion of this converter
 	 */
-	JavaTypeDescriptor<D> getDomainJavaDescriptor();
+	JavaType<D> getDomainJavaDescriptor();
 
 	/**
 	 * Descriptor for the Java type for the relational portion of this converter
 	 */
-	JavaTypeDescriptor<R> getRelationalJavaDescriptor();
+	JavaType<R> getRelationalJavaDescriptor();
 }

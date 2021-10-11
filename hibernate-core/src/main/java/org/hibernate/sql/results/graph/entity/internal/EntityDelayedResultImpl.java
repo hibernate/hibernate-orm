@@ -16,7 +16,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Selects just the FK and builds a proxy
@@ -44,7 +44,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return entityValuedModelPart.getAssociatedEntityMappingType().getMappedJavaTypeDescriptor();
 	}
 

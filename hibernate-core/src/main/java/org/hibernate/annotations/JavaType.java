@@ -9,7 +9,7 @@ package org.hibernate.annotations;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -53,7 +53,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Retention(RUNTIME)
 public @interface JavaType {
 	/**
-	 * The {@link BasicJavaTypeDescriptor} to use for the mapped column
+	 * The {@link BasicJavaType} to use for the mapped column
 	 */
-	Class<? extends BasicJavaTypeDescriptor<?>> value();
+	Class<? extends BasicJavaType<?>> value();
 }

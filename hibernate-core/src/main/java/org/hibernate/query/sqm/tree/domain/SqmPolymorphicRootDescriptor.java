@@ -34,7 +34,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Acts as the EntityValuedNavigable for a "polymorphic query" grouping
@@ -45,10 +45,10 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	private final Set<EntityDomainType<?>> implementors;
 	private final Map<String, PersistentAttribute> commonAttributes;
 
-	private final JavaTypeDescriptor<T> polymorphicJavaDescriptor;
+	private final JavaType<T> polymorphicJavaDescriptor;
 
 	public SqmPolymorphicRootDescriptor(
-			JavaTypeDescriptor<T> polymorphicJavaDescriptor,
+			JavaType<T> polymorphicJavaDescriptor,
 			Set<EntityDomainType<?>> implementors) {
 		this.polymorphicJavaDescriptor = polymorphicJavaDescriptor;
 
@@ -145,7 +145,7 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return polymorphicJavaDescriptor;
 	}
 

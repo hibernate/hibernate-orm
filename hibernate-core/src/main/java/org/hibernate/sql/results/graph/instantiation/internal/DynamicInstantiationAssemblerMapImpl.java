@@ -16,7 +16,7 @@ import java.util.Set;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * A QueryResultAssembler implementation representing handling for dynamic-
@@ -25,11 +25,11 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembler<Map<?,?>> {
-	private final JavaTypeDescriptor<Map<?,?>> mapJavaDescriptor;
+	private final JavaType<Map<?,?>> mapJavaDescriptor;
 	private final List<ArgumentReader<?>> argumentReaders;
 
 	public DynamicInstantiationAssemblerMapImpl(
-			JavaTypeDescriptor<Map<?,?>> mapJavaDescriptor,
+			JavaType<Map<?,?>> mapJavaDescriptor,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.mapJavaDescriptor = mapJavaDescriptor;
 		this.argumentReaders = argumentReaders;
@@ -48,7 +48,7 @@ public class DynamicInstantiationAssemblerMapImpl implements DomainResultAssembl
 	}
 
 	@Override
-	public JavaTypeDescriptor<Map<?,?>> getAssembledJavaTypeDescriptor() {
+	public JavaType<Map<?,?>> getAssembledJavaTypeDescriptor() {
 		return mapJavaDescriptor;
 	}
 

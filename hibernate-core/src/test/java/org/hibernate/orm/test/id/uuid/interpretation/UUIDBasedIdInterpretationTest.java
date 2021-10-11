@@ -19,7 +19,6 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
-import org.hibernate.type.descriptor.jdbc.BinaryJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcTypeDescriptor;
 

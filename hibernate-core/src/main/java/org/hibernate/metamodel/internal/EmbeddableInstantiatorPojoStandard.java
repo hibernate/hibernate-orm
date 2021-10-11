@@ -17,7 +17,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for instantiating embeddables as POJO representation
@@ -31,7 +31,7 @@ public class EmbeddableInstantiatorPojoStandard extends AbstractPojoInstantiator
 
 	public EmbeddableInstantiatorPojoStandard(
 			@SuppressWarnings("unused") Component bootDescriptor,
-			JavaTypeDescriptor<?> javaTypeDescriptor) {
+			JavaType<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
 
 		constructor = resolveConstructor( javaTypeDescriptor.getJavaTypeClass() );

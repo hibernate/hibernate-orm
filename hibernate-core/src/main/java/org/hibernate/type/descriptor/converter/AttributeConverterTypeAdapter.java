@@ -17,7 +17,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -37,8 +37,8 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	private final String name;
 	private final String description;
 
-	private final JavaTypeDescriptor<T> domainJtd;
-	private final JavaTypeDescriptor<?> relationalJtd;
+	private final JavaType<T> domainJtd;
+	private final JavaType<?> relationalJtd;
 	private final JpaAttributeConverter<? extends T,?> attributeConverter;
 
 	private final MutabilityPlan<T> mutabilityPlan;
@@ -49,11 +49,11 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 			String description,
 			JpaAttributeConverter<? extends T,?> attributeConverter,
 			JdbcTypeDescriptor std,
-			JavaTypeDescriptor<?> relationalJtd,
-			JavaTypeDescriptor<T> domainJtd,
+			JavaType<?> relationalJtd,
+			JavaType<T> domainJtd,
 			MutabilityPlan<T> mutabilityPlan) {
 		//noinspection rawtypes
-		super( std, (JavaTypeDescriptor) relationalJtd );
+		super( std, (JavaType) relationalJtd );
 		this.name = name;
 		this.description = description;
 		this.domainJtd = domainJtd;
@@ -77,11 +77,11 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		return name;
 	}
 
-	public JavaTypeDescriptor<T> getDomainJtd() {
+	public JavaType<T> getDomainJtd() {
 		return domainJtd;
 	}
 
-	public JavaTypeDescriptor<?> getRelationalJtd() {
+	public JavaType<?> getRelationalJtd() {
 		return relationalJtd;
 	}
 
@@ -118,7 +118,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	@Override
 	public boolean isEqual(Object one, Object another) {
 		//noinspection unchecked
-		return ( (JavaTypeDescriptor<Object>) getDomainJtd() ).areEqual( one, another );
+		return ( (JavaType<Object>) getDomainJtd() ).areEqual( one, another );
 	}
 
 	@Override

@@ -18,12 +18,12 @@ import jakarta.persistence.Table;
 @Table( name = "CUST_TYPE_CONV_ENTITY")
 public class MyEntity {
 	private Integer id;
-	private MyCustomJavaType customType;
+	private PayloadWrapper customType;
 
 	public MyEntity() {
 	}
 
-	public MyEntity(Integer id, MyCustomJavaType customType) {
+	public MyEntity(Integer id, PayloadWrapper customType) {
 		this.id = id;
 		this.customType = customType;
 	}
@@ -40,11 +40,11 @@ public class MyEntity {
 	// NOTE : this AttributeConverter should be auto-applied here
 
 	@Basic
-	public MyCustomJavaType getCustomType() {
+	public PayloadWrapper getCustomType() {
 		return customType;
 	}
 
-	public void setCustomType(MyCustomJavaType customType) {
+	public void setCustomType(PayloadWrapper customType) {
 		this.customType = customType;
 	}
 }

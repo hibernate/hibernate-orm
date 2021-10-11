@@ -10,7 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 
@@ -24,7 +24,7 @@ public class EmbeddableInstantiatorPojoOptimized extends AbstractPojoInstantiato
 	private final InstantiationOptimizer instantiationOptimizer;
 
 	public EmbeddableInstantiatorPojoOptimized(
-			JavaTypeDescriptor<?> javaTypeDescriptor,
+			JavaType<?> javaTypeDescriptor,
 			InstantiationOptimizer instantiationOptimizer) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
 		this.instantiationOptimizer = instantiationOptimizer;

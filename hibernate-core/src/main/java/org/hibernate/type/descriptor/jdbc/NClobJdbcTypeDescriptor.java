@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.CharacterStream;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Descriptor for {@link Types#NCLOB NCLOB} handling.
@@ -42,7 +42,7 @@ public abstract class NClobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 	}
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(final JavaType<X> javaTypeDescriptor) {
 		return new BasicExtractor<X>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
@@ -63,10 +63,10 @@ public abstract class NClobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		};
 	}
 
-	protected abstract <X> BasicBinder<X> getNClobBinder(JavaTypeDescriptor<X> javaTypeDescriptor);
+	protected abstract <X> BasicBinder<X> getNClobBinder(JavaType<X> javaTypeDescriptor);
 
 	@Override
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 		return getNClobBinder( javaTypeDescriptor );
 	}
 
@@ -78,7 +78,7 @@ public abstract class NClobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -112,7 +112,7 @@ public abstract class NClobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
@@ -136,7 +136,7 @@ public abstract class NClobJdbcTypeDescriptor implements JdbcTypeDescriptor {
 		}
 
 		@Override
-		public <X> BasicBinder<X> getNClobBinder(final JavaTypeDescriptor<X> javaTypeDescriptor) {
+		public <X> BasicBinder<X> getNClobBinder(final JavaType<X> javaTypeDescriptor) {
 			return new BasicBinder<X>( javaTypeDescriptor, this ) {
 				@Override
 				protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)

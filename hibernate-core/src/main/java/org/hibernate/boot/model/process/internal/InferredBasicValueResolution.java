@@ -10,7 +10,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -18,8 +18,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J> {
-	private JavaTypeDescriptor<J> domainJtd;
-	private JavaTypeDescriptor<J> relationalJtd;
+	private JavaType<J> domainJtd;
+	private JavaType<J> relationalJtd;
 	private JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private MutabilityPlan mutabilityPlan;
@@ -31,8 +31,8 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 
 	public InferredBasicValueResolution(
 			JdbcMapping jdbcMapping,
-			JavaTypeDescriptor<J> domainJtd,
-			JavaTypeDescriptor<J> relationalJtd,
+			JavaType<J> domainJtd,
+			JavaType<J> relationalJtd,
 			JdbcTypeDescriptor jdbcTypeDescriptor,
 			BasicValueConverter valueConverter,
 			BasicType<J> legacyType,
@@ -57,12 +57,12 @@ public class InferredBasicValueResolution<J> implements BasicValue.Resolution<J>
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getDomainJavaDescriptor() {
+	public JavaType<J> getDomainJavaDescriptor() {
 		return domainJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return relationalJtd;
 	}
 

@@ -7,10 +7,7 @@
 package org.hibernate.type;
 
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
-import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.CharacterJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.CharJdbcTypeDescriptor;
 
 /**

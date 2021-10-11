@@ -7,7 +7,6 @@
 package org.hibernate.type.descriptor.java;
 
 import java.io.Serializable;
-import java.sql.Types;
 import java.util.UUID;
 
 import org.hibernate.dialect.Dialect;

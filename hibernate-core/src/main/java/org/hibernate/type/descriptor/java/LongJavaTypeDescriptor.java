@@ -13,7 +13,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class LongJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Long>
-		implements PrimitiveJavaTypeDescriptor<Long>, VersionJavaTypeDescriptor<Long> {
+		implements PrimitiveJavaType<Long>, VersionJavaType<Long> {
 
 	private static final Long ZERO = (long) 0;
 	public static final LongJavaTypeDescriptor INSTANCE = new LongJavaTypeDescriptor();

@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -41,10 +41,10 @@ public class RealJdbcTypeDescriptor extends FloatJdbcTypeDescriptor {
 	}
 
 	@Override
-	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
-		return (BasicJavaTypeDescriptor<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Float.class );
+		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Float.class );
 	}
 }

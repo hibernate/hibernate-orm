@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -17,7 +17,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class BooleanJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Boolean> implements
-		PrimitiveJavaTypeDescriptor<Boolean> {
+		PrimitiveJavaType<Boolean> {
 	public static final BooleanJavaTypeDescriptor INSTANCE = new BooleanJavaTypeDescriptor();
 
 	private final char characterValueTrue;

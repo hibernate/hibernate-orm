@@ -13,7 +13,7 @@ import org.hibernate.mapping.IndexedConsumer;
 import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -26,7 +26,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	 * The descriptor for the Java type represented by this
 	 * expressable type
 	 */
-	JavaTypeDescriptor getJavaTypeDescriptor();
+	JavaType getJavaTypeDescriptor();
 
 	/**
 	 * The descriptor for the SQL type represented by this
@@ -51,7 +51,7 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	ValueBinder getJdbcValueBinder();
 
 	@Override
-	default JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	default JavaType getMappedJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 

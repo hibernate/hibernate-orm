@@ -23,7 +23,7 @@ import org.hibernate.internal.util.compare.ComparableComparator;
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaTypeDescriptor<T>, Serializable {
+public abstract class AbstractClassJavaTypeDescriptor<T> implements BasicJavaType<T>, Serializable {
 	private final Class<T> type;
 	private final MutabilityPlan<T> mutabilityPlan;
 	private final Comparator<T> comparator;

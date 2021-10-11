@@ -26,7 +26,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.type.AbstractStandardBasicType;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
@@ -77,7 +77,7 @@ public class Java8DateTimeTests extends BaseNonConfigCoreFunctionalTestCase {
 		final Iterator propertyBindingIterator = entityBinding.getPropertyClosureIterator();
 		while ( propertyBindingIterator.hasNext() ) {
 			final Property propertyBinding = (Property) propertyBindingIterator.next();
-			final JavaTypeDescriptor javaTypeDescriptor = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
+			final JavaType javaTypeDescriptor = ( (AbstractStandardBasicType) propertyBinding.getType() ).getJavaTypeDescriptor();
 
 			System.out.println(
 					String.format(

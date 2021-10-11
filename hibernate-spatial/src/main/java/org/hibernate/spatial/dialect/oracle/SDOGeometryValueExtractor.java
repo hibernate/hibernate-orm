@@ -13,7 +13,7 @@ import java.sql.SQLException;
 import java.sql.Struct;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -38,7 +38,7 @@ public class SDOGeometryValueExtractor<X> extends BasicExtractor<X> {
 	 * @param javaDescriptor the {@code JavaTypeDescriptor} to use
 	 * @param sqlTypeDescriptor the {@code SqlTypeDescriptor} to use
 	 */
-	public SDOGeometryValueExtractor(JavaTypeDescriptor<X> javaDescriptor, JdbcTypeDescriptor sqlTypeDescriptor) {
+	public SDOGeometryValueExtractor(JavaType<X> javaDescriptor, JdbcTypeDescriptor sqlTypeDescriptor) {
 		super( javaDescriptor, sqlTypeDescriptor );
 	}
 

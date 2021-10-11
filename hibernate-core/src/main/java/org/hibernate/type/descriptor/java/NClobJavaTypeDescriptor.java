@@ -10,7 +10,6 @@ import java.io.Reader;
 import java.io.Serializable;
 import java.sql.NClob;
 import java.sql.SQLException;
-import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.SharedSessionContract;

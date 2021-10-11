@@ -8,7 +8,7 @@ package org.hibernate.type.descriptor.jdbc.spi;
 
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for JdbcLiteralFormatter implementations with a basic implementation of an unwrap method
@@ -16,7 +16,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public abstract class BasicJdbcLiteralFormatter extends AbstractJdbcLiteralFormatter {
-	public BasicJdbcLiteralFormatter(JavaTypeDescriptor<?> javaTypeDescriptor) {
+	public BasicJdbcLiteralFormatter(JavaType<?> javaTypeDescriptor) {
 		super( javaTypeDescriptor );
 	}
 

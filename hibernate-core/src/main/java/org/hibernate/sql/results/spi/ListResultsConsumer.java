@@ -17,7 +17,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -81,9 +81,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			if ( uniqueRows ) {
-				final List<JavaTypeDescriptor> resultJavaTypeDescriptors = rowReader.getResultJavaTypeDescriptors();
+				final List<JavaType> resultJavaTypeDescriptors = rowReader.getResultJavaTypeDescriptors();
 				assert resultJavaTypeDescriptors.size() == 1;
-				final JavaTypeDescriptor<R> resultJavaTypeDescriptor = resultJavaTypeDescriptors.get( 0 );
+				final JavaType<R> resultJavaTypeDescriptor = resultJavaTypeDescriptors.get( 0 );
 				while ( rowProcessingState.next() ) {
 					final R row = rowReader.readRow( rowProcessingState, processingOptions );
 					boolean add = true;

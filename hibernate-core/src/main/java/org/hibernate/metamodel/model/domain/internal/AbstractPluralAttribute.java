@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @param <D> The (D)eclaring type
@@ -88,7 +88,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	}
 
 	@Override
-	public JavaTypeDescriptor<E> getExpressableJavaTypeDescriptor() {
+	public JavaType<E> getExpressableJavaTypeDescriptor() {
 		return getElementType().getExpressableJavaTypeDescriptor();
 	}
 

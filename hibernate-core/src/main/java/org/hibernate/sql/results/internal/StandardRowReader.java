@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.query.named.RowReaderMemento;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.LoadingLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Initializer;
@@ -23,7 +22,7 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
 import org.hibernate.sql.results.spi.RowTransformer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -74,8 +73,8 @@ public class StandardRowReader<T> implements RowReader<T> {
 	}
 
 	@Override
-	public List<JavaTypeDescriptor> getResultJavaTypeDescriptors() {
-		List<JavaTypeDescriptor> javaTypeDescriptors = new ArrayList<>( resultAssemblers.size() );
+	public List<JavaType> getResultJavaTypeDescriptors() {
+		List<JavaType> javaTypeDescriptors = new ArrayList<>( resultAssemblers.size() );
 		for ( DomainResultAssembler resultAssembler : resultAssemblers ) {
 			javaTypeDescriptors.add( resultAssembler.getAssembledJavaTypeDescriptor() );
 		}

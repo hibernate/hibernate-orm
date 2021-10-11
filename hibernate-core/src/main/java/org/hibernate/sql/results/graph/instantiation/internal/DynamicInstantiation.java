@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.sql.ConversionException;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -29,7 +29,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	private static final Logger log = Logger.getLogger( DynamicInstantiation.class );
 
 	private final DynamicInstantiationNature nature;
-	private final JavaTypeDescriptor<T> targetJavaTypeDescriptor;
+	private final JavaType<T> targetJavaTypeDescriptor;
 	private List<DynamicInstantiationArgument> arguments;
 
 	private boolean argumentAdditionsComplete = false;
@@ -37,7 +37,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	@SuppressWarnings("WeakerAccess")
 	public DynamicInstantiation(
 			DynamicInstantiationNature nature,
-			JavaTypeDescriptor<T> targetJavaTypeDescriptor) {
+			JavaType<T> targetJavaTypeDescriptor) {
 		this.nature = nature;
 		this.targetJavaTypeDescriptor = targetJavaTypeDescriptor;
 	}
@@ -47,7 +47,7 @@ public class DynamicInstantiation<T> implements DomainResultProducer {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	public JavaTypeDescriptor<T> getTargetJavaTypeDescriptor() {
+	public JavaType<T> getTargetJavaTypeDescriptor() {
 		return targetJavaTypeDescriptor;
 	}
 

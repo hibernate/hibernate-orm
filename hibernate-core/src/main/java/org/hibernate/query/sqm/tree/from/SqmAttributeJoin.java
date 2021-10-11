@@ -12,7 +12,7 @@ import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Models a join based on a mapped attribute reference.
@@ -27,7 +27,7 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	SqmPathSource<T> getReferencedPathSource();
 
 	@Override
-	JavaTypeDescriptor<T> getJavaTypeDescriptor();
+	JavaType<T> getJavaTypeDescriptor();
 
 	boolean isFetched();
 

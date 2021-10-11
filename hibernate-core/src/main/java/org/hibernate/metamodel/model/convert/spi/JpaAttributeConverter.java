@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.convert.spi;
 import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * BasicValueConverter extension for AttributeConverter-specific support
@@ -17,10 +17,10 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  * @author Steve Ebersole
  */
 public interface JpaAttributeConverter<O,R> extends BasicValueConverter<O,R> {
-	JavaTypeDescriptor<? extends AttributeConverter<O,R>> getConverterJavaTypeDescriptor();
+	JavaType<? extends AttributeConverter<O,R>> getConverterJavaTypeDescriptor();
 
 	ManagedBean<? extends AttributeConverter<O,R>> getConverterBean();
 
-	JavaTypeDescriptor<O> getDomainJavaTypeDescriptor();
-	JavaTypeDescriptor<R> getRelationalJavaTypeDescriptor();
+	JavaType<O> getDomainJavaTypeDescriptor();
+	JavaType<R> getRelationalJavaTypeDescriptor();
 }

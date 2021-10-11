@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Specialized QueryResultAssembler for use as a "reader" for dynamic-
@@ -36,7 +36,7 @@ public class ArgumentReader<A> implements DomainResultAssembler<A> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<A> getAssembledJavaTypeDescriptor() {
+	public JavaType<A> getAssembledJavaTypeDescriptor() {
 		return delegateAssembler.getAssembledJavaTypeDescriptor();
 	}
 }

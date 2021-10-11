@@ -20,7 +20,7 @@ import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.instantiation.DynamicInstantiationResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -33,13 +33,13 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	private final String resultVariable;
 
 	private final DynamicInstantiationNature nature;
-	private final JavaTypeDescriptor<R> javaTypeDescriptor;
+	private final JavaType<R> javaTypeDescriptor;
 	private final List<ArgumentDomainResult<?>> argumentResults;
 
 	public DynamicInstantiationResultImpl(
 			String resultVariable,
 			DynamicInstantiationNature nature,
-			JavaTypeDescriptor<R> javaTypeDescriptor,
+			JavaType<R> javaTypeDescriptor,
 			List<ArgumentDomainResult<?>> argumentResults) {
 		this.resultVariable = resultVariable;
 		this.nature = nature;
@@ -48,7 +48,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 	}
 
 	@Override
-	public JavaTypeDescriptor<R> getResultJavaTypeDescriptor() {
+	public JavaType<R> getResultJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
@@ -122,7 +122,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				log.debug( "One or more arguments for List dynamic instantiation (`new list(...)`) specified an alias; ignoring" );
 			}
 			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerListImpl(
-					(JavaTypeDescriptor<List<?>>) javaTypeDescriptor,
+					(JavaType<List<?>>) javaTypeDescriptor,
 					argumentReaders
 			);
 		}
@@ -136,7 +136,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 				);
 			}
 			return (DomainResultAssembler<R>) new DynamicInstantiationAssemblerMapImpl(
-					(JavaTypeDescriptor<Map<?,?>>) javaTypeDescriptor,
+					(JavaType<Map<?,?>>) javaTypeDescriptor,
 					argumentReaders
 			);
 		}
@@ -151,7 +151,7 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 
 				for ( int i = 0; i < argumentReaders.size(); i++ ) {
 					final ArgumentReader<?> argumentReader = argumentReaders.get( i );
-					final JavaTypeDescriptor<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
+					final JavaType<?> argumentTypeDescriptor = creationState.getSqlAstCreationContext()
 							.getDomainModel()
 							.getTypeConfiguration()
 							.getJavaTypeDescriptorRegistry()

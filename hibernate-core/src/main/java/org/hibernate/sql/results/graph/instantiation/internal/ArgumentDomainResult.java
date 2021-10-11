@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -32,7 +32,7 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 
 	@Override
 	@SuppressWarnings("rawtypes")
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return realDomainResult.getResultJavaTypeDescriptor();
 	}
 

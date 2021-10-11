@@ -7,7 +7,7 @@
 package org.hibernate.query.sqm.tree;
 
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Optional contract for SqmNode implementations which are
@@ -19,7 +19,7 @@ public interface SqmTypedNode<T> extends SqmNode, SqmExpressableAccessor<T> {
 	/**
 	 * The Java type descriptor for this node.
 	 */
-	default JavaTypeDescriptor<T> getNodeJavaTypeDescriptor() {
+	default JavaType<T> getNodeJavaTypeDescriptor() {
 		final SqmExpressable<T> nodeType = getNodeType();
 		return nodeType != null ? nodeType.getExpressableJavaTypeDescriptor() : null;
 	}

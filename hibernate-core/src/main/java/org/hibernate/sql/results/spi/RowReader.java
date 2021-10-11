@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.results.spi;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -15,7 +14,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.query.named.RowReaderMemento;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Coordinates the process of reading a single result values row
@@ -33,7 +32,7 @@ public interface RowReader<R> {
 	/**
 	 *  The JavaTypeDescriptors of the result
 	 */
-	List<JavaTypeDescriptor> getResultJavaTypeDescriptors();
+	List<JavaType> getResultJavaTypeDescriptors();
 
 	/**
 	 * The initializers associated with this reader

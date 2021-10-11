@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 
 /**
@@ -35,7 +35,7 @@ public class SqmMapEntryReference<K,V>
 	private final SqmPath<?> mapPath;
 	private final NodeBuilder nodeBuilder;
 
-	private final JavaTypeDescriptor<Map.Entry<K,V>> mapEntryTypeDescriptor;
+	private final JavaType<Map.Entry<K,V>> mapEntryTypeDescriptor;
 
 	private String explicitAlias;
 
@@ -46,7 +46,7 @@ public class SqmMapEntryReference<K,V>
 		this.nodeBuilder = nodeBuilder;
 
 		//noinspection unchecked
-		this.mapEntryTypeDescriptor = (JavaTypeDescriptor) nodeBuilder.getDomainModel()
+		this.mapEntryTypeDescriptor = (JavaType) nodeBuilder.getDomainModel()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( Map.Entry.class );
@@ -68,17 +68,17 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
-	public JavaTypeDescriptor<Map.Entry<K, V>> getJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getJavaTypeDescriptor() {
 		return mapEntryTypeDescriptor;
 	}
 
 	@Override
-	public JavaTypeDescriptor<Map.Entry<K, V>> getNodeJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getNodeJavaTypeDescriptor() {
 		return mapEntryTypeDescriptor;
 	}
 
 	@Override
-	public JavaTypeDescriptor<Map.Entry<K, V>> getExpressableJavaTypeDescriptor() {
+	public JavaType<Map.Entry<K, V>> getExpressableJavaTypeDescriptor() {
 		return mapEntryTypeDescriptor;
 	}
 

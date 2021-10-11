@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.tuple.TupleResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -62,7 +62,7 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaTypeDescriptor javaTypeDescriptor = ( (SqmExpressable<?>) valueMapping ).getExpressableJavaTypeDescriptor();
+		final JavaType javaTypeDescriptor = ( (SqmExpressable<?>) valueMapping ).getExpressableJavaTypeDescriptor();
 		final int[] valuesArrayPositions = new int[expressions.size()];
 		for ( int i = 0; i < expressions.size(); i++ ) {
 			valuesArrayPositions[i] = creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(

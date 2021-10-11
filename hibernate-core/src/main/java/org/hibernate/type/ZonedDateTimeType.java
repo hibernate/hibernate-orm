@@ -8,7 +8,6 @@ package org.hibernate.type;
 
 import java.time.ZonedDateTime;
 
-import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.java.ZonedDateTimeJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcTypeDescriptor;
 

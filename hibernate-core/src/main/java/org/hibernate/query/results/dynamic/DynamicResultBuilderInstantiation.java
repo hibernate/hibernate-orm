@@ -19,7 +19,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.instantiation.internal.ArgumentDomainResult;
 import org.hibernate.sql.results.graph.instantiation.internal.DynamicInstantiationResultImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -37,10 +37,10 @@ public class DynamicResultBuilderInstantiation<J>
 		}
 	}
 
-	private final JavaTypeDescriptor<J> javaTypeDescriptor;
+	private final JavaType<J> javaTypeDescriptor;
 	private final List<InstantiationArgument> argumentResultBuilders = new ArrayList<>();
 
-	public DynamicResultBuilderInstantiation(JavaTypeDescriptor<J> javaTypeDescriptor) {
+	public DynamicResultBuilderInstantiation(JavaType<J> javaTypeDescriptor) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 	}
 

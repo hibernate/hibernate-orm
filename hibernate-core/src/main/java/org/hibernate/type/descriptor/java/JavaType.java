@@ -27,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public interface JavaTypeDescriptor<T> extends Serializable {
+public interface JavaType<T> extends Serializable {
 	/**
 	 * Get the Java type described
 	 */

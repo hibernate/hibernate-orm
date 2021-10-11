@@ -25,10 +25,10 @@ import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.SerializableJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -47,10 +47,10 @@ public class InferredBasicValueResolver {
 	 */
 	@SuppressWarnings({"unchecked", "rawtypes"})
 	public static BasicValue.Resolution from(
-			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJavaTypeAccess,
+			Function<TypeConfiguration, BasicJavaType> explicitJavaTypeAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitSqlTypeAccess,
 			Type resolvedJavaType,
-			Supplier<JavaTypeDescriptor> reflectedJtdResolver,
+			Supplier<JavaType> reflectedJtdResolver,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			Table table,
 			Selectable selectable,
@@ -58,10 +58,10 @@ public class InferredBasicValueResolver {
 			String propertyName,
 			TypeConfiguration typeConfiguration) {
 
-		final BasicJavaTypeDescriptor explicitJavaType = explicitJavaTypeAccess != null ? explicitJavaTypeAccess.apply( typeConfiguration ) : null;
+		final BasicJavaType explicitJavaType = explicitJavaTypeAccess != null ? explicitJavaTypeAccess.apply( typeConfiguration ) : null;
 		final JdbcTypeDescriptor explicitJdbcType = explicitSqlTypeAccess != null ? explicitSqlTypeAccess.apply( typeConfiguration ) : null;
 
-		final BasicJavaTypeDescriptor reflectedJtd = (BasicJavaTypeDescriptor) reflectedJtdResolver.get();
+		final BasicJavaType reflectedJtd = (BasicJavaType) reflectedJtdResolver.get();
 
 		// NOTE : the distinction that is made below wrt `explicitJavaType` and `reflectedJtd` is
 		//		needed temporarily to trigger "legacy resolution" versus "ORM6 resolution.  Yes, it
@@ -204,7 +204,7 @@ public class InferredBasicValueResolver {
 						}
 					}
 				}
-				final BasicJavaTypeDescriptor recommendedJtd = explicitJdbcType.getJdbcRecommendedJavaTypeMapping(
+				final BasicJavaType recommendedJtd = explicitJdbcType.getJdbcRecommendedJavaTypeMapping(
 						length,
 						scale,
 						typeConfiguration
@@ -254,7 +254,7 @@ public class InferredBasicValueResolver {
 	public static BasicType<?> resolveSqlTypeIndicators(
 			JdbcTypeDescriptorIndicators stdIndicators,
 			BasicType<?> resolved,
-			JavaTypeDescriptor<?> domainJtd) {
+			JavaType<?> domainJtd) {
 		if ( resolved instanceof AdjustableBasicType ) {
 			final AdjustableBasicType indicatorCapable = (AdjustableBasicType) resolved;
 			final BasicType indicatedType = indicatorCapable.resolveIndicatedType( stdIndicators, domainJtd );
@@ -268,7 +268,7 @@ public class InferredBasicValueResolver {
 	@SuppressWarnings("rawtypes")
 	public static InferredBasicValueResolution fromEnum(
 			EnumJavaTypeDescriptor enumJavaDescriptor,
-			BasicJavaTypeDescriptor explicitJavaType,
+			BasicJavaType explicitJavaType,
 			JdbcTypeDescriptor explicitJdbcType,
 			JdbcTypeDescriptorIndicators stdIndicators,
 			TypeConfiguration typeConfiguration) {
@@ -278,7 +278,7 @@ public class InferredBasicValueResolver {
 
 		switch ( enumStyle ) {
 			case STRING: {
-				final JavaTypeDescriptor<?> relationalJtd;
+				final JavaType<?> relationalJtd;
 				if ( explicitJavaType != null ) {
 					if ( ! String.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
 						throw new MappingException(
@@ -327,7 +327,7 @@ public class InferredBasicValueResolver {
 				);
 			}
 			case ORDINAL: {
-				final JavaTypeDescriptor<Integer> relationalJtd;
+				final JavaType<Integer> relationalJtd;
 				if ( explicitJavaType != null ) {
 					if ( ! Integer.class.isAssignableFrom( explicitJavaType.getJavaTypeClass() ) ) {
 						throw new MappingException(
@@ -383,7 +383,7 @@ public class InferredBasicValueResolver {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static InferredBasicValueResolution fromTemporal(
 			TemporalJavaTypeDescriptor reflectedJtd,
-			BasicJavaTypeDescriptor explicitJavaType,
+			BasicJavaType explicitJavaType,
 			JdbcTypeDescriptor explicitJdbcType,
 			Type resolvedJavaType,
 			JdbcTypeDescriptorIndicators stdIndicators,

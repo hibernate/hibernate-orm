@@ -13,7 +13,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 
 /**
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
 public class JdbcLiteralFormatterTemporal extends BasicJdbcLiteralFormatter {
 	private final TemporalType precision;
 
-	public JdbcLiteralFormatterTemporal(JavaTypeDescriptor<?> javaTypeDescriptor, TemporalType precision) {
+	public JdbcLiteralFormatterTemporal(JavaType<?> javaTypeDescriptor, TemporalType precision) {
 		super( javaTypeDescriptor );
 		this.precision = precision;
 	}

@@ -55,7 +55,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.SingleColumnType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -307,7 +307,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
 					final Class<?> javaTypeClass = cls.classForName( name );
 
-					final JavaTypeDescriptor<?> jtd = javaTypeDescriptorRegistry.resolveDescriptor( javaTypeClass );
+					final JavaType<?> jtd = javaTypeDescriptorRegistry.resolveDescriptor( javaTypeClass );
 					final JdbcTypeDescriptor jdbcType = jtd.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() );
 					return basicTypeRegistry.resolve( jtd, jdbcType );
 				}
@@ -641,7 +641,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(
 			Class<J> javaType,
-			Function<JavaTypeDescriptor<J>, BasicType<J>> creator) {
+			Function<JavaType<J>, BasicType<J>> creator) {
 		if ( javaType == null ) {
 			return null;
 		}
@@ -656,7 +656,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 					}
 
 					// otherwise, apply the creator
-					final JavaTypeDescriptor<J> javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
+					final JavaType<J> javaTypeDescriptor = javaTypeDescriptorRegistry.resolveDescriptor( javaType );
 					return creator.apply( javaTypeDescriptor );
 				}
 		);

@@ -11,7 +11,7 @@ import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.hibernate.type.BinaryType;
+
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 
 import static org.junit.Assert.assertNotNull;

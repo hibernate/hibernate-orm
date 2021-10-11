@@ -15,9 +15,9 @@ import org.hibernate.engine.spi.VersionValue;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.VersionJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.VersionJavaType;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 /**
  * Helper for dealing with unsaved value handling
@@ -68,9 +68,9 @@ public class UnsavedValueFactory {
 				final Object defaultValue = identifierGetter.get( instantiate( constructor ) );
 				return new IdentifierValue( defaultValue );
 			}
-			final JavaTypeDescriptor<?> jtd;
-			if ( identifierGetter != null && ( identifierType instanceof BasicType<?> ) && ( jtd = ( (BasicType<?>) identifierType ).getJavaTypeDescriptor() ) instanceof PrimitiveJavaTypeDescriptor ) {
-				final Object defaultValue = ( (PrimitiveJavaTypeDescriptor<?>) jtd ).getDefaultValue();
+			final JavaType<?> jtd;
+			if ( identifierGetter != null && ( identifierType instanceof BasicType<?> ) && ( jtd = ( (BasicType<?>) identifierType ).getJavaTypeDescriptor() ) instanceof PrimitiveJavaType ) {
+				final Object defaultValue = ( (PrimitiveJavaType<?>) jtd ).getDefaultValue();
 				return new IdentifierValue( defaultValue );
 			}
 			else {
@@ -118,7 +118,7 @@ public class UnsavedValueFactory {
 	public static <X> VersionValue getUnsavedVersionValue(
 			String versionUnsavedValue,
 			Getter versionGetter,
-			VersionJavaTypeDescriptor<X> versionType,
+			VersionJavaType<X> versionType,
 			Constructor constructor) {
 		
 		if ( versionUnsavedValue == null ) {

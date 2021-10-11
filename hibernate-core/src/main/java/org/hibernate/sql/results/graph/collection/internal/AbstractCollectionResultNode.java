@@ -9,7 +9,7 @@ package org.hibernate.sql.results.graph.collection.internal;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -42,7 +42,7 @@ public abstract class AbstractCollectionResultNode implements CollectionResultGr
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return attributeMapping.getJavaTypeDescriptor();
 	}
 

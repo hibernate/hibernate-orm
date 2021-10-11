@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -21,7 +21,7 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 import org.jboss.logging.Logger;
 
 /**
- * Basically a map from {@link Class} -> {@link JavaTypeDescriptor}
+ * Basically a map from {@link Class} -> {@link JavaType}
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
@@ -32,7 +32,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	private static final Logger log = Logger.getLogger( JavaTypeDescriptorRegistry.class );
 
 	private final TypeConfiguration typeConfiguration;
-	private final ConcurrentHashMap<Type, JavaTypeDescriptor<?>> descriptorsByType = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Type, JavaType<?>> descriptorsByType = new ConcurrentHashMap<>();
 
 	public JavaTypeDescriptorRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -44,7 +44,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	// baseline descriptors
 
 	@Override
-	public void addBaselineDescriptor(JavaTypeDescriptor<?> descriptor) {
+	public void addBaselineDescriptor(JavaType<?> descriptor) {
 		if ( descriptor.getJavaType() == null ) {
 			throw new IllegalStateException( "Illegal to add BasicJavaTypeDescriptor with null Java type" );
 		}
@@ -52,12 +52,12 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	}
 
 	@Override
-	public void addBaselineDescriptor(Type describedJavaType, JavaTypeDescriptor<?> descriptor) {
+	public void addBaselineDescriptor(Type describedJavaType, JavaType<?> descriptor) {
 		performInjections( descriptor );
 		descriptorsByType.put( describedJavaType, descriptor );
 	}
 
-	private void performInjections(JavaTypeDescriptor<?> descriptor) {
+	private void performInjections(JavaType<?> descriptor) {
 		if ( descriptor instanceof TypeConfigurationAware ) {
 			// would be nice to make the JavaTypeDescriptor for an entity, e.g., aware of the the TypeConfiguration
 			( (TypeConfigurationAware) descriptor ).setTypeConfiguration( typeConfiguration );
@@ -68,7 +68,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// descriptor access
 
-	public <T> JavaTypeDescriptor<T> getDescriptor(Type javaType) {
+	public <T> JavaType<T> getDescriptor(Type javaType) {
 		return resolveDescriptor( javaType );
 //		return RegistryHelper.INSTANCE.resolveDescriptor(
 //				descriptorsByClass,
@@ -99,8 +99,8 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 //		);
 	}
 
-	public void addDescriptor(JavaTypeDescriptor<?> descriptor) {
-		JavaTypeDescriptor<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
+	public void addDescriptor(JavaType<?> descriptor) {
+		JavaType<?> old = descriptorsByType.put( descriptor.getJavaType(), descriptor );
 		if ( old != null ) {
 			log.debugf(
 					"JavaTypeDescriptorRegistry entry replaced : %s -> %s (was %s)",
@@ -112,19 +112,19 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		performInjections( descriptor );
 	}
 
-	public <J> JavaTypeDescriptor<J> resolveDescriptor(Type javaType, Supplier<JavaTypeDescriptor<J>> creator) {
-		final JavaTypeDescriptor<?> cached = descriptorsByType.get( javaType );
+	public <J> JavaType<J> resolveDescriptor(Type javaType, Supplier<JavaType<J>> creator) {
+		final JavaType<?> cached = descriptorsByType.get( javaType );
 		if ( cached != null ) {
 			//noinspection unchecked
-			return (JavaTypeDescriptor<J>) cached;
+			return (JavaType<J>) cached;
 		}
 
-		final JavaTypeDescriptor<J> created = creator.get();
+		final JavaType<J> created = creator.get();
 		descriptorsByType.put( javaType, created );
 		return created;
 	}
 
-	public <J> JavaTypeDescriptor<J> resolveDescriptor(Type javaType) {
+	public <J> JavaType<J> resolveDescriptor(Type javaType) {
 		return resolveDescriptor(
 				javaType,
 				() -> {
@@ -160,7 +160,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 	}
 
 	@SuppressWarnings("unchecked")
-	public <J> JavaTypeDescriptor<J> resolveManagedTypeDescriptor(Type javaType) {
+	public <J> JavaType<J> resolveManagedTypeDescriptor(Type javaType) {
 		return resolveDescriptor(
 				javaType,
 				() -> {
@@ -193,7 +193,7 @@ public class JavaTypeDescriptorRegistry implements JavaTypeDescriptorBaseline.Ba
 		);
 	}
 
-	public JavaTypeDescriptor<?> resolveDynamicEntityDescriptor(String typeName) {
+	public JavaType<?> resolveDynamicEntityDescriptor(String typeName) {
 		return new DynamicModelJtd();
 	}
 

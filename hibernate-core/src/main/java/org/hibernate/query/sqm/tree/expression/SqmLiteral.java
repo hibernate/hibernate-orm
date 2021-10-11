@@ -11,7 +11,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Represents a literal value in the sqm, e.g.<ul>
@@ -58,7 +58,7 @@ public class SqmLiteral<T>
 		appendHqlString( sb, getJavaTypeDescriptor(), value );
 	}
 
-	public static <T> void appendHqlString(StringBuilder sb, JavaTypeDescriptor<T> javaTypeDescriptor, T value) {
+	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaTypeDescriptor, T value) {
 		final String string = javaTypeDescriptor.toString( value );
 		if ( javaTypeDescriptor.getJavaTypeClass() == String.class ) {
 			QueryLiteralHelper.appendStringLiteral( sb, string );

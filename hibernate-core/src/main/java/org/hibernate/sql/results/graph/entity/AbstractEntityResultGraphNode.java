@@ -24,7 +24,7 @@ import org.hibernate.sql.results.graph.AbstractFetchParent;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.query.results.ResultsHelper.attributeName;
 
@@ -167,7 +167,7 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+	public JavaType<?> getResultJavaTypeDescriptor() {
 		return getEntityValuedModelPart().getEntityMappingType().getMappedJavaTypeDescriptor();
 	}
 

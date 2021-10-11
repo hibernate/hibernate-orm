@@ -19,7 +19,7 @@ import jakarta.persistence.TemporalType;
  * @author Steve Ebersole
  */
 @Incubating
-public interface TemporalJavaTypeDescriptor<T> extends BasicJavaTypeDescriptor<T> {
+public interface TemporalJavaTypeDescriptor<T> extends BasicJavaType<T> {
 
 	static int resolveJdbcTypeCode(TemporalType requestedTemporalPrecision) {
 		switch ( requestedTemporalPrecision ) {

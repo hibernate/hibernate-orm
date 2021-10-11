@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.query.results.ResultsHelper.impl;
 
@@ -35,12 +35,12 @@ public class CompleteResultBuilderBasicValuedStandard implements CompleteResultB
 	private final String explicitColumnName;
 
 	private final BasicValuedMapping explicitType;
-	private final JavaTypeDescriptor<?> explicitJavaTypeDescriptor;
+	private final JavaType<?> explicitJavaTypeDescriptor;
 
 	public CompleteResultBuilderBasicValuedStandard(
 			String explicitColumnName,
 			BasicValuedMapping explicitType,
-			JavaTypeDescriptor<?> explicitJavaTypeDescriptor) {
+			JavaType<?> explicitJavaTypeDescriptor) {
 		assert explicitType == null || explicitType.getJdbcMapping()
 				.getJavaTypeDescriptor()
 				.getJavaTypeClass()

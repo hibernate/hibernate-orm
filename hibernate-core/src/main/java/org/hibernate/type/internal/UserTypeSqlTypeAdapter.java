@@ -15,8 +15,8 @@ import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -28,12 +28,12 @@ import org.hibernate.usertype.UserType;
  */
 public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 	private final UserType<J> userType;
-	private final BasicJavaTypeDescriptor<J> jtd;
+	private final BasicJavaType<J> jtd;
 
 	private final ValueExtractor<J> valueExtractor;
 	private final ValueBinder<J> valueBinder;
 
-	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaTypeDescriptor<J> jtd) {
+	public UserTypeSqlTypeAdapter(UserType<J> userType, BasicJavaType<J> jtd) {
 		this.userType = userType;
 		this.jtd = jtd;
 
@@ -53,25 +53,25 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcTypeDescriptor {
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 		assert jtd.getJavaTypeClass().isAssignableFrom( javaTypeDescriptor.getJavaTypeClass() );
 		return (ValueBinder<X>) valueBinder;
 	}
 
 	@Override
 	@SuppressWarnings({ "unchecked" })
-	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
 		assert javaTypeDescriptor.getJavaTypeClass().isAssignableFrom( jtd.getJavaTypeClass() );
 		return (ValueExtractor<X>) valueExtractor;
 	}
 
 	@Override
-	public <T> BasicJavaTypeDescriptor<T> getJdbcRecommendedJavaTypeMapping(
+	public <T> BasicJavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
-		return (BasicJavaTypeDescriptor<T>) jtd;
+		return (BasicJavaType<T>) jtd;
 	}
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {

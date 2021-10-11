@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.Clob;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,9 +35,9 @@ public abstract class AbstractDescriptorTest<T> extends BaseUnitTestCase {
 		}
 	}
 
-	private final JavaTypeDescriptor<T> typeDescriptor;
+	private final JavaType<T> typeDescriptor;
 
-	public AbstractDescriptorTest(JavaTypeDescriptor<T> typeDescriptor) {
+	public AbstractDescriptorTest(JavaType<T> typeDescriptor) {
 		this.typeDescriptor = typeDescriptor;
 	}
 

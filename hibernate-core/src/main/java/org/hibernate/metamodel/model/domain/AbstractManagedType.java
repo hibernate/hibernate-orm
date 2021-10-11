@@ -33,7 +33,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.model.domain.internal.AttributeContainer;
 import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Commonality for Hibernate's implementations of the JPA {@link ManagedType}
@@ -55,7 +55,7 @@ public abstract class AbstractManagedType<J>
 
 	protected AbstractManagedType(
 			String hibernateTypeName,
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			JavaType<J> javaTypeDescriptor,
 			ManagedDomainType<? super J> superType,
 			JpaMetamodel domainMetamodel) {
 		super( javaTypeDescriptor, domainMetamodel );

@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.Incubating;
 import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.BooleanJdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -34,7 +34,7 @@ public class BooleanType
 	}
 
 	@Incubating
-	public BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Boolean> javaTypeDescriptor) {
+	public BooleanType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Boolean> javaTypeDescriptor) {
 		super( jdbcTypeDescriptor, javaTypeDescriptor );
 	}
 

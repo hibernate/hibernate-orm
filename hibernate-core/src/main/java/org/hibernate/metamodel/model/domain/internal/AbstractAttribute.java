@@ -6,23 +6,18 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.lang.reflect.Member;
-import java.lang.reflect.Method;
+
 import jakarta.persistence.metamodel.Attribute;
 
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Models the commonality of the JPA {@link Attribute} hierarchy.
@@ -35,7 +30,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,J>, Serializable {
 	private final ManagedDomainType<D> declaringType;
 	private final String name;
-	private final JavaTypeDescriptor<J> attributeJtd;
+	private final JavaType<J> attributeJtd;
 
 	private final AttributeClassification attributeClassification;
 
@@ -46,7 +41,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	protected AbstractAttribute(
 			ManagedDomainType<D> declaringType,
 			String name,
-			JavaTypeDescriptor<J> attributeJtd,
+			JavaType<J> attributeJtd,
 			AttributeClassification attributeClassification,
 			SimpleDomainType<B> valueType,
 			Member member,
@@ -74,7 +69,7 @@ public abstract class AbstractAttribute<D,J,B> implements PersistentAttribute<D,
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getAttributeJavaTypeDescriptor() {
+	public JavaType<J> getAttributeJavaTypeDescriptor() {
 		return attributeJtd;
 	}
 

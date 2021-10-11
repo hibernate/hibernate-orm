@@ -10,16 +10,16 @@ import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	private final AnyType anyType;
-	private final JavaTypeDescriptor<T> baseJtd;
+	private final JavaType<T> baseJtd;
 
-	public AnyMappingDomainTypeImpl(AnyType anyType, JavaTypeDescriptor baseJtd) {
+	public AnyMappingDomainTypeImpl(AnyType anyType, JavaType baseJtd) {
 		this.anyType = anyType;
 		this.baseJtd = baseJtd;
 	}
@@ -35,7 +35,7 @@ public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return baseJtd;
 	}
 

@@ -15,8 +15,7 @@ import org.hibernate.collection.spi.CollectionSemantics;
 import org.hibernate.type.ArrayType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 /**
  * An array mapping has a primary key consisting of the key columns + index column.
@@ -34,7 +33,7 @@ public class Array extends List {
 		if ( elementClassName == null ) {
 			final org.hibernate.type.Type elementType = getElement().getType();
 			if ( isPrimitiveArray() ) {
-				return ( (PrimitiveJavaTypeDescriptor<?>) ( (BasicType<?>) elementType ).getJavaTypeDescriptor() ).getPrimitiveClass();
+				return ( (PrimitiveJavaType<?>) ( (BasicType<?>) elementType ).getJavaTypeDescriptor() ).getPrimitiveClass();
 			}
 			return elementType.getReturnedClass();
 		}

@@ -47,7 +47,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.MetaType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Represents the "type" of an any-valued mapping
@@ -58,7 +58,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 	public static DiscriminatedAssociationMapping from(
 			NavigableRole containerRole,
-			JavaTypeDescriptor<?> baseAssociationJtd,
+			JavaType<?> baseAssociationJtd,
 			DiscriminatedAssociationModelPart declaringModelPart,
 			AnyType anyType,
 			Any bootValueMapping,
@@ -119,7 +119,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 	private final AnyDiscriminatorPart discriminatorPart;
 	private final BasicValuedModelPart keyPart;
 
-	private final JavaTypeDescriptor<?> baseAssociationJtd;
+	private final JavaType<?> baseAssociationJtd;
 
 	private final FetchTiming fetchTiming;
 
@@ -139,7 +139,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			DiscriminatedAssociationModelPart modelPart,
 			AnyDiscriminatorPart discriminatorPart,
 			BasicValuedModelPart keyPart,
-			JavaTypeDescriptor<?> baseAssociationJtd,
+			JavaType<?> baseAssociationJtd,
 			FetchTiming fetchTiming,
 			Map<Object,String> discriminatorValueMappings,
 			SessionFactoryImplementor sessionFactory) {
@@ -289,12 +289,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		return this;
 	}
 
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		return baseAssociationJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return baseAssociationJtd;
 	}
 
@@ -342,7 +342,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		private final NavigablePath navigablePath;
 
 		private final DiscriminatedAssociationModelPart graphedPart;
-		private final JavaTypeDescriptor<?> baseAssociationJtd;
+		private final JavaType<?> baseAssociationJtd;
 
 		private Fetch discriminatorValueFetch;
 		private Fetch keyValueFetch;
@@ -350,7 +350,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		public AnyValuedResultGraphNode(
 				NavigablePath navigablePath,
 				DiscriminatedAssociationModelPart graphedPart,
-				JavaTypeDescriptor<?> baseAssociationJtd) {
+				JavaType<?> baseAssociationJtd) {
 			this.navigablePath = navigablePath;
 			this.graphedPart = graphedPart;
 			this.baseAssociationJtd = baseAssociationJtd;
@@ -372,7 +372,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 			return keyValueFetch;
 		}
 
-		public JavaTypeDescriptor<?> getBaseAssociationJtd() {
+		public JavaType<?> getBaseAssociationJtd() {
 			return baseAssociationJtd;
 		}
 
@@ -382,7 +382,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		@Override
-		public JavaTypeDescriptor<?> getResultJavaTypeDescriptor() {
+		public JavaType<?> getResultJavaTypeDescriptor() {
 			return baseAssociationJtd;
 		}
 
@@ -428,7 +428,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		public AnyValuedResult(
 				NavigablePath navigablePath,
-				JavaTypeDescriptor<?> baseAssociationJtd,
+				JavaType<?> baseAssociationJtd,
 				DiscriminatedAssociationModelPart fetchedPart,
 				String resultVariable) {
 			super( navigablePath, fetchedPart, baseAssociationJtd );
@@ -458,7 +458,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 
 		public AnyValuedFetch(
 				NavigablePath navigablePath,
-				JavaTypeDescriptor<?> baseAssociationJtd,
+				JavaType<?> baseAssociationJtd,
 				DiscriminatedAssociationModelPart fetchedPart,
 				FetchTiming fetchTiming,
 				FetchParent fetchParent,
@@ -563,9 +563,9 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		}
 
 		@Override
-		public JavaTypeDescriptor<T> getAssembledJavaTypeDescriptor() {
+		public JavaType<T> getAssembledJavaTypeDescriptor() {
 			//noinspection unchecked
-			return (JavaTypeDescriptor<T>) fetchedPart.getJavaTypeDescriptor();
+			return (JavaType<T>) fetchedPart.getJavaTypeDescriptor();
 		}
 
 		@Override

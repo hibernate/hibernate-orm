@@ -16,29 +16,29 @@ import org.hibernate.sql.results.ResultsLogger;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
-	public static <X> BasicResultAssembler<X> from(SqlSelection selection, JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public static <X> BasicResultAssembler<X> from(SqlSelection selection, JavaType<X> javaTypeDescriptor) {
 		return new BasicResultAssembler<>( selection.getValuesArrayPosition(), javaTypeDescriptor );
 	}
 
 	private final int valuesArrayPosition;
-	private final JavaTypeDescriptor<J> assembledJavaTypeDescriptor;
+	private final JavaType<J> assembledJavaTypeDescriptor;
 	private final BasicValueConverter<J,?> valueConverter;
 
 	public BasicResultAssembler(
 			int valuesArrayPosition,
-			JavaTypeDescriptor<J> assembledJavaTypeDescriptor) {
+			JavaType<J> assembledJavaTypeDescriptor) {
 		this( valuesArrayPosition, assembledJavaTypeDescriptor, null );
 	}
 
 	public BasicResultAssembler(
 			int valuesArrayPosition,
-			JavaTypeDescriptor<J> assembledJavaTypeDescriptor,
+			JavaType<J> assembledJavaTypeDescriptor,
 			BasicValueConverter<J, ?> valueConverter) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.assembledJavaTypeDescriptor = assembledJavaTypeDescriptor;
@@ -85,7 +85,7 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor() {
+	public JavaType<J> getAssembledJavaTypeDescriptor() {
 		return assembledJavaTypeDescriptor;
 	}
 

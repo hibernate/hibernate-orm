@@ -19,7 +19,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -28,7 +27,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Models a reference to a part of the application's domain model as part of an SQM tree.
@@ -110,7 +109,7 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	}
 
 	@Override
-	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	default JavaType<T> getJavaTypeDescriptor() {
 		return getNodeType().getExpressableJavaTypeDescriptor();
 	}
 

@@ -6,8 +6,6 @@
  */
 package org.hibernate.type.descriptor.java;
 
-import java.util.Comparator;
-
 import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
@@ -17,15 +15,15 @@ import org.hibernate.type.descriptor.WrapperOptions;
  */
 public class ObjectArrayJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Object[]> {
 
-	private final JavaTypeDescriptor<Object>[] components;
+	private final JavaType<Object>[] components;
 
-	public ObjectArrayJavaTypeDescriptor(JavaTypeDescriptor<?>[] components) {
+	public ObjectArrayJavaTypeDescriptor(JavaType<?>[] components) {
 		super(
 				Object[].class,
 				ImmutableMutabilityPlan.INSTANCE,
-				new ComponentArrayComparator( (JavaTypeDescriptor<Object>[]) components )
+				new ComponentArrayComparator( (JavaType<Object>[]) components )
 		);
-		this.components = (JavaTypeDescriptor<Object>[]) components;
+		this.components = (JavaType<Object>[]) components;
 	}
 
 	@Override

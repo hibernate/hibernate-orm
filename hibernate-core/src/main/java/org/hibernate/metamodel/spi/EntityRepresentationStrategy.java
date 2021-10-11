@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.EntityNameResolver;
 import org.hibernate.proxy.ProxyFactory;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Specialization of ManagedTypeRepresentationStrategy for an entity type
@@ -37,12 +37,12 @@ public interface EntityRepresentationStrategy extends ManagedTypeRepresentationS
 		return false;
 	}
 
-	JavaTypeDescriptor<?> getProxyJavaTypeDescriptor();
+	JavaType<?> getProxyJavaTypeDescriptor();
 
 	/**
 	 * The Java type descriptor for the type returned when the entity is loaded
 	 */
-	default JavaTypeDescriptor<?> getLoadJavaTypeDescriptor() {
+	default JavaType<?> getLoadJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 

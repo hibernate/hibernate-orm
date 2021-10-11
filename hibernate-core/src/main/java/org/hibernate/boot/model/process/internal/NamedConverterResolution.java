@@ -21,9 +21,9 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.converter.AttributeConverterMutabilityPlanImpl;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -37,7 +37,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 	public static NamedConverterResolution from(
 			ConverterDescriptor converterDescriptor,
-			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeDescriptorIndicators sqlTypeIndicators,
@@ -55,7 +55,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 	public static NamedConverterResolution from(
 			String name,
-			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JdbcTypeDescriptorIndicators sqlTypeIndicators,
@@ -84,18 +84,18 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	private static NamedConverterResolution fromInternal(
-			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			Function<TypeConfiguration, MutabilityPlan> explicitMutabilityPlanAccess,
 			JpaAttributeConverter converter, JdbcTypeDescriptorIndicators sqlTypeIndicators,
 			MetadataBuildingContext context) {
 		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
 
-		final JavaTypeDescriptor explicitJtd = explicitJtdAccess != null
+		final JavaType explicitJtd = explicitJtdAccess != null
 				? explicitJtdAccess.apply( typeConfiguration )
 				: null;
 
-		final JavaTypeDescriptor domainJtd = explicitJtd != null
+		final JavaType domainJtd = explicitJtd != null
 				? explicitJtd
 				: converter.getDomainJavaDescriptor();
 
@@ -103,7 +103,7 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 				? explicitStdAccess.apply( typeConfiguration )
 				: null;
 
-		final JavaTypeDescriptor relationalJtd = converter.getRelationalJavaDescriptor();
+		final JavaType relationalJtd = converter.getRelationalJavaDescriptor();
 
 		final JdbcTypeDescriptor jdbcType = explicitJdbcType != null
 				? explicitJdbcType
@@ -136,8 +136,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 
-	private final JavaTypeDescriptor domainJtd;
-	private final JavaTypeDescriptor relationalJtd;
+	private final JavaType domainJtd;
+	private final JavaType relationalJtd;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private final JpaAttributeConverter valueConverter;
@@ -149,8 +149,8 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 
 	@SuppressWarnings("unchecked")
 	public NamedConverterResolution(
-			JavaTypeDescriptor domainJtd,
-			JavaTypeDescriptor relationalJtd,
+			JavaType domainJtd,
+			JavaType relationalJtd,
 			JdbcTypeDescriptor jdbcTypeDescriptor,
 			JpaAttributeConverter valueConverter,
 			MutabilityPlan mutabilityPlan,
@@ -230,13 +230,13 @@ public class NamedConverterResolution<J> implements BasicValue.Resolution<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getDomainJavaDescriptor() {
+	public JavaType<J> getDomainJavaDescriptor() {
 		//noinspection unchecked
 		return domainJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return relationalJtd;
 	}
 

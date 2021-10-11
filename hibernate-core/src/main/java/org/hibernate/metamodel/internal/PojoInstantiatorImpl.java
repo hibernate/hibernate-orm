@@ -8,13 +8,11 @@ package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Constructor;
 
-import org.hibernate.InstantiationException;
 import org.hibernate.PropertyNotFoundException;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -25,7 +23,7 @@ public class PojoInstantiatorImpl<J> extends AbstractPojoInstantiator {
 	private final Constructor constructor;
 
 	@SuppressWarnings("WeakerAccess")
-	public PojoInstantiatorImpl(JavaTypeDescriptor javaTypeDescriptor) {
+	public PojoInstantiatorImpl(JavaType javaTypeDescriptor) {
 		super( javaTypeDescriptor.getJavaTypeClass() );
 
 		this.constructor = isAbstract()

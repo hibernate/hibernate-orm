@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.usertype.UserType;
@@ -19,11 +19,11 @@ import org.hibernate.usertype.UserType;
 public class ArrayType implements UserType<Array>, AllowableParameterType<Array> {
     public static final ArrayType INSTANCE = new ArrayType();
 
-    private final BasicJavaTypeDescriptor<Array> javaType = ArrayTypeDescriptor.INSTANCE;
+    private final BasicJavaType<Array> javaType = ArrayTypeDescriptor.INSTANCE;
     private final JdbcTypeDescriptor jdbcType = VarcharJdbcTypeDescriptor.INSTANCE;
 
     @Override
-    public BasicJavaTypeDescriptor<Array> getExpressableJavaTypeDescriptor() {
+    public BasicJavaType<Array> getExpressableJavaTypeDescriptor() {
         return javaType;
     }
 

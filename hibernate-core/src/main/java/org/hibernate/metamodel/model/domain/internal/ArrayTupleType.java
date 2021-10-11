@@ -14,7 +14,7 @@ import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectArrayJavaTypeDescriptor;
 
 /**
@@ -31,8 +31,8 @@ public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterTy
 		this.javaTypeDescriptor = new ObjectArrayJavaTypeDescriptor( getTypeDescriptors( components ) );
 	}
 
-	private static JavaTypeDescriptor<?>[] getTypeDescriptors(SqmExpressable<?>[] components) {
-		final JavaTypeDescriptor<?>[] typeDescriptors = new JavaTypeDescriptor<?>[components.length];
+	private static JavaType<?>[] getTypeDescriptors(SqmExpressable<?>[] components) {
+		final JavaType<?>[] typeDescriptors = new JavaType<?>[components.length];
 		for ( int i = 0; i < components.length; i++ ) {
 			typeDescriptors[i] = components[i].getExpressableJavaTypeDescriptor();
 		}
@@ -65,7 +65,7 @@ public class ArrayTupleType implements TupleType<Object[]>, AllowableParameterTy
 	}
 
 	@Override
-	public JavaTypeDescriptor<Object[]> getExpressableJavaTypeDescriptor() {
+	public JavaType<Object[]> getExpressableJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

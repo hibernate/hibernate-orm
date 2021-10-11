@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import org.jboss.logging.Logger;
@@ -39,12 +39,12 @@ public class AttributeConverterJdbcTypeDescriptorAdapter implements JdbcTypeDesc
 
 	private final JpaAttributeConverter converter;
 	private final JdbcTypeDescriptor delegate;
-	private final JavaTypeDescriptor intermediateJavaTypeDescriptor;
+	private final JavaType intermediateJavaTypeDescriptor;
 
 	public AttributeConverterJdbcTypeDescriptorAdapter(
 			JpaAttributeConverter converter,
 			JdbcTypeDescriptor delegate,
-			JavaTypeDescriptor intermediateJavaTypeDescriptor) {
+			JavaType intermediateJavaTypeDescriptor) {
 		this.converter = converter;
 		this.delegate = delegate;
 		this.intermediateJavaTypeDescriptor = intermediateJavaTypeDescriptor;
@@ -65,7 +65,7 @@ public class AttributeConverterJdbcTypeDescriptorAdapter implements JdbcTypeDesc
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <X> ValueBinder<X> getBinder(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueBinder<X> getBinder(JavaType<X> javaTypeDescriptor) {
 		// Get the binder for the intermediate type representation
 		final ValueBinder realBinder = delegate.getBinder( intermediateJavaTypeDescriptor );
 
@@ -110,7 +110,7 @@ public class AttributeConverterJdbcTypeDescriptorAdapter implements JdbcTypeDesc
 	// Extraction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override
-	public <X> ValueExtractor<X> getExtractor(JavaTypeDescriptor<X> javaTypeDescriptor) {
+	public <X> ValueExtractor<X> getExtractor(JavaType<X> javaTypeDescriptor) {
 		// Get the extractor for the intermediate type representation
 		final ValueExtractor realExtractor = delegate.getExtractor( intermediateJavaTypeDescriptor );
 

@@ -17,7 +17,7 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Standard Hibernate implementation of JPA's {@link jakarta.persistence.metamodel.EmbeddableType}
@@ -34,7 +34,7 @@ public class EmbeddableTypeImpl<J>
 	private final EmbeddableRepresentationStrategy representationStrategy;
 
 	public EmbeddableTypeImpl(
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			JavaType<J> javaTypeDescriptor,
 			EmbeddableRepresentationStrategy representationStrategy,
 			boolean isDynamic,
 			JpaMetamodel domainMetamodel) {
@@ -49,7 +49,7 @@ public class EmbeddableTypeImpl<J>
 		//noinspection unchecked
 		super(
 				name,
-				(JavaTypeDescriptor) domainMetamodel.getTypeConfiguration()
+				(JavaType) domainMetamodel.getTypeConfiguration()
 						.getJavaTypeDescriptorRegistry()
 						.getDescriptor( Map.class ),
 				null,

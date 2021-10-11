@@ -8,7 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmPathSource;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -43,7 +43,7 @@ public abstract class AbstractSqmPathSource<J> implements SqmPathSource<J> {
 	}
 
 	@Override
-	public JavaTypeDescriptor<J> getExpressableJavaTypeDescriptor() {
+	public JavaType<J> getExpressableJavaTypeDescriptor() {
 		return domainType.getExpressableJavaTypeDescriptor();
 	}
 

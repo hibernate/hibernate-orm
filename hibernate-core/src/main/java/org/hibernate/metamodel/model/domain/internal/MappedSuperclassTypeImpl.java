@@ -13,7 +13,7 @@ import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Emmanuel Bernard
@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
  */
 public class MappedSuperclassTypeImpl<X> extends AbstractIdentifiableType<X> implements MappedSuperclassDomainType<X> {
 	public MappedSuperclassTypeImpl(
-			JavaTypeDescriptor<X> javaTypeDescriptor,
+			JavaType<X> javaTypeDescriptor,
 			MappedSuperclass mappedSuperclass,
 			IdentifiableDomainType<? super X> superType,
 			JpaMetamodel jpaMetamodel) {

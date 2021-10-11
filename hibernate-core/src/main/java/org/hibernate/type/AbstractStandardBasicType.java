@@ -28,8 +28,7 @@ import org.hibernate.query.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BooleanJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
@@ -48,14 +47,14 @@ public abstract class AbstractStandardBasicType<T>
 	// Don't use final here.  Need to initialize after-the-fact
 	// by DynamicParameterizedTypes.
 	private JdbcTypeDescriptor jdbcTypeDescriptor;
-	private JavaTypeDescriptor<T> javaTypeDescriptor;
+	private JavaType<T> javaTypeDescriptor;
 	// sqlTypes need always to be in sync with sqlTypeDescriptor
 	private int[] sqlTypes;
 
 	private ValueBinder<T> jdbcValueBinder;
 	private ValueExtractor<T> jdbcValueExtractor;
 
-	public AbstractStandardBasicType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<T> javaTypeDescriptor) {
+	public AbstractStandardBasicType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<T> javaTypeDescriptor) {
 		this.jdbcTypeDescriptor = jdbcTypeDescriptor;
 		this.sqlTypes = new int[] { jdbcTypeDescriptor.getDefaultSqlTypeCode() };
 		this.javaTypeDescriptor = javaTypeDescriptor;
@@ -65,12 +64,12 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	public JavaType getMappedJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -133,11 +132,11 @@ public abstract class AbstractStandardBasicType<T>
 
 	// final implementations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	public final JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	public final JavaType<T> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
-	public final void setJavaTypeDescriptor( JavaTypeDescriptor<T> javaTypeDescriptor ) {
+	public final void setJavaTypeDescriptor( JavaType<T> javaTypeDescriptor ) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 
 		this.jdbcValueBinder = getJdbcTypeDescriptor().getBinder( javaTypeDescriptor );

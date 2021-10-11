@@ -22,7 +22,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 
 /**
@@ -124,7 +124,7 @@ public class EntityTypeLiteral implements Expression, MappingModelExpressable, D
 	}
 
 	@Override
-	public JavaTypeDescriptor getExpressableJavaTypeDescriptor() {
+	public JavaType getExpressableJavaTypeDescriptor() {
 		return discriminatorType.getExpressableJavaTypeDescriptor();
 	}
 }

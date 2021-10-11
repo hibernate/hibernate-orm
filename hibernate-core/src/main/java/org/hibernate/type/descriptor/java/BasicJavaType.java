@@ -18,7 +18,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeJavaClassMappings;
  *
  * @author Steve Ebersole
  */
-public interface BasicJavaTypeDescriptor<T> extends JavaTypeDescriptor<T> {
+public interface BasicJavaType<T> extends JavaType<T> {
 	/**
 	 * Obtain the "recommended" SQL type descriptor for this Java type.  The recommended
 	 * aspect comes from the JDBC spec (mostly).

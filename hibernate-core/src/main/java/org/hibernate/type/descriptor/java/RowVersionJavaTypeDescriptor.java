@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.sql.Blob;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Comparator;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.BinaryStream;
@@ -27,7 +26,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
  * @author Gail Badner
  */
 public class RowVersionJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<byte[]>
-		implements VersionJavaTypeDescriptor<byte[]> {
+		implements VersionJavaType<byte[]> {
 	public static final RowVersionJavaTypeDescriptor INSTANCE = new RowVersionJavaTypeDescriptor();
 
 	@SuppressWarnings({ "unchecked" })

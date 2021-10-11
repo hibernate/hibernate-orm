@@ -9,7 +9,7 @@ package org.hibernate.orm.test.mapping.type.java;
 import java.util.Comparator;
 
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -32,7 +32,7 @@ public class JavaTypeDescriptorRegistryTest {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		final JavaTypeDescriptorRegistry registry = new JavaTypeDescriptorRegistry( typeConfiguration );
 
-		final JavaTypeDescriptor<String> descriptor = registry.getDescriptor( String.class );
+		final JavaType<String> descriptor = registry.getDescriptor( String.class );
 
 		assertThat( descriptor, instanceOf( StringJavaTypeDescriptor.class ) );
 	}
@@ -42,16 +42,16 @@ public class JavaTypeDescriptorRegistryTest {
 		final TypeConfiguration typeConfiguration = new TypeConfiguration();
 		final JavaTypeDescriptorRegistry registry = new JavaTypeDescriptorRegistry( typeConfiguration );
 
-		registry.addDescriptor( new CustomJavaTypeDescriptor() );
+		registry.addDescriptor( new CustomJavaType() );
 
-		final JavaTypeDescriptor<?> descriptor = registry.getDescriptor( CustomType.class );
+		final JavaType<?> descriptor = registry.getDescriptor( CustomType.class );
 
-		assertThat( descriptor, instanceOf( CustomJavaTypeDescriptor.class ) );
+		assertThat( descriptor, instanceOf( CustomJavaType.class ) );
 	}
 
 	public static class CustomType {}
 
-	public static class CustomJavaTypeDescriptor implements JavaTypeDescriptor<CustomType> {
+	public static class CustomJavaType implements JavaType<CustomType> {
 		@Override
 		public Class<CustomType> getJavaTypeClass() {
 			return CustomType.class;

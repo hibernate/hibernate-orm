@@ -26,7 +26,6 @@ import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ManagedType;
 
-import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -55,7 +54,7 @@ import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.DynamicModelJtd;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -585,7 +584,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 		}
 
 		final Class<?> javaType = persistentClass.getMappedClass();
-		final JavaTypeDescriptor<?> javaTypeDescriptor;
+		final JavaType<?> javaTypeDescriptor;
 		if ( javaType == null || Map.class.isAssignableFrom( javaType ) ) {
 			// dynamic map
 			javaTypeDescriptor = new DynamicModelJtd();
@@ -646,7 +645,7 @@ public class JpaMetamodelImpl implements JpaMetamodel, Serializable {
 					? null
 					: locateOrBuildEntityType( superPersistentClass, context, typeConfiguration );
 		}
-		final JavaTypeDescriptor<?> javaTypeDescriptor = context.getTypeConfiguration()
+		final JavaType<?> javaTypeDescriptor = context.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.resolveManagedTypeDescriptor( mappedSuperclass.getMappedClass() );
 		final MappedSuperclassTypeImpl<?> mappedSuperclassType = new MappedSuperclassTypeImpl(

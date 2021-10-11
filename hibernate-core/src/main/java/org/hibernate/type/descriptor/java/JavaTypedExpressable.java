@@ -10,5 +10,5 @@ package org.hibernate.type.descriptor.java;
  * Contract for something that has an associated JavaTypeDescriptor
  */
 public interface JavaTypedExpressable<T> {
-	JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor();
+	JavaType<T> getExpressableJavaTypeDescriptor();
 }

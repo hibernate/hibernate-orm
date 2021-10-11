@@ -8,7 +8,7 @@ package org.hibernate.sql.results.graph;
 
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Responsible for "assembling" a result for inclusion in the domain query
@@ -35,5 +35,5 @@ public interface DomainResultAssembler<J> {
 	 * The JavaTypeDescriptor describing the Java type that this assembler
 	 * assembles.
 	 */
-	JavaTypeDescriptor<J> getAssembledJavaTypeDescriptor();
+	JavaType<J> getAssembledJavaTypeDescriptor();
 }

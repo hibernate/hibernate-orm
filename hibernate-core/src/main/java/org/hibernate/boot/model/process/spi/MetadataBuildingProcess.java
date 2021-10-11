@@ -45,7 +45,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
@@ -364,7 +364,7 @@ public class MetadataBuildingProcess {
 			public void contributeType(BasicType type) {
 				getBasicTypeRegistry().register( type );
 
-				final JavaTypeDescriptor<?> jtd;
+				final JavaType<?> jtd;
 				if ( type instanceof CustomType ) {
 					final CustomType customType = (CustomType) type;
 					jtd = customType.getJavaTypeDescriptor();
@@ -376,7 +376,7 @@ public class MetadataBuildingProcess {
 				conditionallyRegisterJtd( jtd );
 			}
 
-			private void conditionallyRegisterJtd(JavaTypeDescriptor jtd) {
+			private void conditionallyRegisterJtd(JavaType jtd) {
 				final JavaTypeDescriptorRegistry jtdRegistry = getTypeConfiguration().getJavaTypeDescriptorRegistry();
 				jtdRegistry.resolveDescriptor( jtd.getJavaTypeClass(), () -> jtd );
 			}
@@ -393,7 +393,7 @@ public class MetadataBuildingProcess {
 			}
 
 			@Override
-			public void contributeJavaTypeDescriptor(JavaTypeDescriptor descriptor) {
+			public void contributeJavaTypeDescriptor(JavaType descriptor) {
 				bootstrapContext.getTypeConfiguration().getJavaTypeDescriptorRegistry().addDescriptor( descriptor );
 			}
 

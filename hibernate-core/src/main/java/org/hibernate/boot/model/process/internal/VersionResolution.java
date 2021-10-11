@@ -16,9 +16,9 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -36,7 +36,7 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 	@SuppressWarnings({"rawtypes", "unchecked"})
 	public static <E> VersionResolution<E> from(
 			Function<TypeConfiguration, java.lang.reflect.Type> implicitJavaTypeAccess,
-			Function<TypeConfiguration, BasicJavaTypeDescriptor> explicitJtdAccess,
+			Function<TypeConfiguration, BasicJavaType> explicitJtdAccess,
 			Function<TypeConfiguration, JdbcTypeDescriptor> explicitStdAccess,
 			TimeZoneStorageType timeZoneStorageType,
 			TypeConfiguration typeConfiguration,
@@ -45,8 +45,8 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		// todo (6.0) : add support for Dialect-specific interpretation?
 
 		final java.lang.reflect.Type implicitJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
-		final JavaTypeDescriptor registered = typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( implicitJavaType );
-		final BasicJavaTypeDescriptor jtd = (BasicJavaTypeDescriptor) registered;
+		final JavaType registered = typeConfiguration.getJavaTypeDescriptorRegistry().resolveDescriptor( implicitJavaType );
+		final BasicJavaType jtd = (BasicJavaType) registered;
 
 		final JdbcTypeDescriptor recommendedJdbcType = jtd.getRecommendedJdbcType(
 				new JdbcTypeDescriptorIndicators() {
@@ -86,14 +86,14 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 		return new VersionResolution<>( jtd, recommendedJdbcType, basicType, legacyType );
 	}
 
-	private final JavaTypeDescriptor jtd;
+	private final JavaType jtd;
 	private final JdbcTypeDescriptor jdbcTypeDescriptor;
 
 	private final JdbcMapping jdbcMapping;
 	private final BasicType legacyType;
 
 	public VersionResolution(
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			JdbcTypeDescriptor jdbcTypeDescriptor,
 			JdbcMapping jdbcMapping,
 			BasicType legacyType) {
@@ -116,12 +116,12 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public JavaTypeDescriptor<E> getDomainJavaDescriptor() {
+	public JavaType<E> getDomainJavaDescriptor() {
 		return jtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getRelationalJavaDescriptor() {
+	public JavaType<?> getRelationalJavaDescriptor() {
 		return jtd;
 	}
 

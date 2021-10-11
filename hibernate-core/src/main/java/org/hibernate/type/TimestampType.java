@@ -9,7 +9,7 @@ package org.hibernate.type;
 import java.sql.Timestamp;
 import java.util.Date;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
@@ -29,7 +29,7 @@ public class TimestampType
 		super( TimestampJdbcTypeDescriptor.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
 	}
 
-	protected TimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Date> javaTypeDescriptor) {
+	protected TimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Date> javaTypeDescriptor) {
 		super( jdbcTypeDescriptor, javaTypeDescriptor );
 	}
 

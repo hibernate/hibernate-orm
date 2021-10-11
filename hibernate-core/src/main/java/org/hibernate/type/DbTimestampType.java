@@ -10,7 +10,7 @@ import java.util.Date;
 
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.type.descriptor.java.DbTimestampJavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
@@ -41,7 +41,7 @@ public class DbTimestampType extends TimestampType {
 		this( TimestampJdbcTypeDescriptor.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
 	}
 
-	public DbTimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaTypeDescriptor<Date> javaTypeDescriptor) {
+	public DbTimestampType(JdbcTypeDescriptor jdbcTypeDescriptor, JavaType<Date> javaTypeDescriptor) {
 		super( jdbcTypeDescriptor, new DbTimestampJavaTypeDescriptor<>( (TemporalJavaTypeDescriptor<Date>) javaTypeDescriptor ) );
 	}
 

@@ -66,7 +66,6 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaParameterExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.ValueHandlingMode;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressable;
@@ -128,8 +127,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
-import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
@@ -939,7 +937,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	class MultiValueParameterType<T> implements AllowableParameterType<T> {
-		private final JavaTypeDescriptor<T> javaTypeDescriptor;
+		private final JavaType<T> javaTypeDescriptor;
 
 		public MultiValueParameterType(Class<T> type) {
 			this.javaTypeDescriptor = domainModelAccess.get()
@@ -949,7 +947,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		}
 
 		@Override
-		public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+		public JavaType<T> getExpressableJavaTypeDescriptor() {
 			return javaTypeDescriptor;
 		}
 

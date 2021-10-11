@@ -5,7 +5,7 @@
 [[basic-legacy]]
 == Legacy BasicType resolution
 
-Versions prior to 6.0 statically combined the `JavaTypeDescriptor`, `JdbcTypeDescriptor`, `BasicValueConverter` and
+Versions prior to 6.0 statically combined the `JavaType`, `JdbcTypeDescriptor`, `BasicValueConverter` and
 `MutabilityPlan` aspects within the `org.hibernate.type.BasicType` contract.   Hibernate's legacy strategy for resolving
 a basic type is based on finding the implementation of `org.hibernate.type.BasicType` to use.
 

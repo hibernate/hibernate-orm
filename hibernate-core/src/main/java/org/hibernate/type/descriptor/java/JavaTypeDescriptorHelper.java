@@ -12,13 +12,13 @@ import org.hibernate.HibernateException;
  * @author Steve Ebersole
  */
 public class JavaTypeDescriptorHelper {
-	protected static <T extends JavaTypeDescriptor<?>> HibernateException unknownUnwrap(Class<?> sourceType, Class<?> targetType, T jtd) {
+	protected static <T extends JavaType<?>> HibernateException unknownUnwrap(Class<?> sourceType, Class<?> targetType, T jtd) {
 		throw new HibernateException(
 				"Unknown unwrap conversion requested: " + sourceType.getName() + " to " + targetType.getName() + " : `" + jtd.getClass().getName() + "` (" + jtd.getJavaTypeClass().getName() + ")"
 		);
 	}
 
-	protected static <T extends JavaTypeDescriptor<?>> HibernateException unknownWrap(Class<?> valueType, Class<?> sourceType, T jtd) {
+	protected static <T extends JavaType<?>> HibernateException unknownWrap(Class<?> valueType, Class<?> sourceType, T jtd) {
 		throw new HibernateException(
 				"Unknown wrap conversion requested: " + valueType.getName() + " to " + sourceType.getName() + " : `" + jtd.getClass().getName() + "` (" + jtd.getJavaTypeClass().getName() + ")"
 		);

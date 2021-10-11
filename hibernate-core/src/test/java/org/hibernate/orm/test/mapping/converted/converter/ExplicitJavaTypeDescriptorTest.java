@@ -24,7 +24,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
@@ -95,7 +95,7 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 
 	@Override
 	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		( (TypeContributions) metadataBuilder ).contributeJavaTypeDescriptor( PseudoMutableStateJavaTypeDescriptor.INSTANCE );
+		( (TypeContributions) metadataBuilder ).contributeJavaTypeDescriptor( PseudoMutableStateJavaType.INSTANCE );
 	}
 
 	@Override
@@ -307,11 +307,11 @@ public class ExplicitJavaTypeDescriptorTest extends BaseNonConfigCoreFunctionalT
 		}
 	}
 
-	public static class PseudoMutableStateJavaTypeDescriptor implements JavaTypeDescriptor<PseudoMutableState> {
+	public static class PseudoMutableStateJavaType implements JavaType<PseudoMutableState> {
 		/**
 		 * Singleton access
 		 */
-		public static final PseudoMutableStateJavaTypeDescriptor INSTANCE = new PseudoMutableStateJavaTypeDescriptor();
+		public static final PseudoMutableStateJavaType INSTANCE = new PseudoMutableStateJavaType();
 
 		@Override
 		public Class<PseudoMutableState> getJavaTypeClass() {

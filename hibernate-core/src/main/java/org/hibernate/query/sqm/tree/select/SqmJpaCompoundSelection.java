@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @asciidoctor
@@ -57,11 +57,11 @@ public class SqmJpaCompoundSelection<T>
 	//			whether `SqmJpaCompoundSelection` or `SqmTuple` is used based on `JpaCompliance#isJpaQueryComplianceEnabled`
 
 	private final List<SqmSelectableNode<?>> selectableNodes;
-	private final JavaTypeDescriptor<T> javaTypeDescriptor;
+	private final JavaType<T> javaTypeDescriptor;
 
 	public SqmJpaCompoundSelection(
 			List<SqmSelectableNode<?>> selectableNodes,
-			JavaTypeDescriptor<T> javaTypeDescriptor,
+			JavaType<T> javaTypeDescriptor,
 			NodeBuilder criteriaBuilder) {
 		super( null, criteriaBuilder );
 		this.selectableNodes = selectableNodes;
@@ -71,12 +71,12 @@ public class SqmJpaCompoundSelection<T>
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	public JavaType<T> getJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	public JavaType<T> getExpressableJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 

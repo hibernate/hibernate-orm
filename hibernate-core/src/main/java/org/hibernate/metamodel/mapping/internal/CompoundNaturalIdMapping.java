@@ -49,7 +49,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Multi-attribute NaturalIdMapping implementation
@@ -59,7 +59,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	// todo (6.0) : create a composite MappingType for this descriptor's Object[]?
 
 	private final List<SingularAttributeMapping> attributes;
-	private final JavaTypeDescriptor<?> jtd;
+	private final JavaType<?> jtd;
 
 	private List<JdbcMapping> jdbcMappings;
 
@@ -257,12 +257,12 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getJavaTypeDescriptor() {
+	public JavaType<?> getJavaTypeDescriptor() {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -276,7 +276,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 
 		final SessionFactoryImplementor sessionFactory = creationState.getSqlAstCreationState().getCreationContext().getSessionFactory();
 
-		final JavaTypeDescriptor<Object[]> jtd = sessionFactory
+		final JavaType<Object[]> jtd = sessionFactory
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( Object[].class );
@@ -451,7 +451,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	public static class DomainResultImpl implements DomainResult<Object[]>, FetchParent {
 		private final NavigablePath navigablePath;
 		private final CompoundNaturalIdMapping naturalIdMapping;
-		private final JavaTypeDescriptor<Object[]> arrayJtd;
+		private final JavaType<Object[]> arrayJtd;
 
 		private final List<Fetch> fetches;
 
@@ -460,7 +460,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		public DomainResultImpl(
 				NavigablePath navigablePath,
 				CompoundNaturalIdMapping naturalIdMapping,
-				JavaTypeDescriptor<Object[]> arrayJtd,
+				JavaType<Object[]> arrayJtd,
 				String resultVariable,
 				DomainResultCreationState creationState) {
 			this.navigablePath = navigablePath;
@@ -491,7 +491,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public JavaTypeDescriptor<Object[]> getResultJavaTypeDescriptor() {
+		public JavaType<Object[]> getResultJavaTypeDescriptor() {
 			return arrayJtd;
 		}
 
@@ -537,7 +537,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 	private static class AssemblerImpl implements DomainResultAssembler<Object[]> {
 		private final NavigablePath navigablePath;
 		private final CompoundNaturalIdMapping naturalIdMapping;
-		private final JavaTypeDescriptor<Object[]> jtd;
+		private final JavaType<Object[]> jtd;
 
 		private final List<DomainResultAssembler<?>> subAssemblers;
 
@@ -545,7 +545,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				List<Fetch> fetches,
 				NavigablePath navigablePath,
 				CompoundNaturalIdMapping naturalIdMapping,
-				JavaTypeDescriptor<Object[]> jtd,
+				JavaType<Object[]> jtd,
 				AssemblerCreationState creationState) {
 			this.navigablePath = navigablePath;
 			this.naturalIdMapping = naturalIdMapping;
@@ -575,7 +575,7 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
-		public JavaTypeDescriptor<Object[]> getAssembledJavaTypeDescriptor() {
+		public JavaType<Object[]> getAssembledJavaTypeDescriptor() {
 			return jtd;
 		}
 	}

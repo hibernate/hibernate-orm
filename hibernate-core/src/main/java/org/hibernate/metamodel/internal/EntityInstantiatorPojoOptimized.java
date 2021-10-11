@@ -10,7 +10,7 @@ import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.tuple.entity.EntityMetamodel;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Support for instantiating entity values as POJO representation using
@@ -24,7 +24,7 @@ public class EntityInstantiatorPojoOptimized extends AbstractEntityInstantiatorP
 	public EntityInstantiatorPojoOptimized(
 			EntityMetamodel entityMetamodel,
 			PersistentClass persistentClass,
-			JavaTypeDescriptor<?> javaTypeDescriptor,
+			JavaType<?> javaTypeDescriptor,
 			InstantiationOptimizer instantiationOptimizer) {
 		super( entityMetamodel, persistentClass, javaTypeDescriptor );
 		this.instantiationOptimizer = instantiationOptimizer;

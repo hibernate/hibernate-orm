@@ -9,7 +9,6 @@ package org.hibernate.metamodel.model.domain;
 import java.util.List;
 
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * Describes any structural type without a direct java type representation.

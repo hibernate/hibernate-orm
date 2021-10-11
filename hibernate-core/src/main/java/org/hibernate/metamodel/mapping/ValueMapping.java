@@ -8,7 +8,7 @@ package org.hibernate.metamodel.mapping;
 
 import java.util.Locale;
 
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 
 /**
@@ -28,7 +28,7 @@ public interface ValueMapping extends MappingModelExpressable, JavaTypedExpressa
 	MappingType getMappedType();
 
 	@Override
-	default JavaTypeDescriptor<?> getExpressableJavaTypeDescriptor() {
+	default JavaType<?> getExpressableJavaTypeDescriptor() {
 		return getMappedType().getMappedJavaTypeDescriptor();
 	}
 

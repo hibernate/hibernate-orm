@@ -32,7 +32,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class InstantJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Instant>
-		implements VersionJavaTypeDescriptor<Instant> {
+		implements VersionJavaType<Instant> {
 	/**
 	 * Singleton access
 	 */

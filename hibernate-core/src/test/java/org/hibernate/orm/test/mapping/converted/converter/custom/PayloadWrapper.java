@@ -9,14 +9,14 @@ package org.hibernate.orm.test.mapping.converted.converter.custom;
 /**
  * @author Steve Ebersole
  */
-public class MyCustomJavaType implements Comparable<MyCustomJavaType> {
+public class PayloadWrapper implements Comparable<PayloadWrapper> {
 	private String payload;
 
-	public MyCustomJavaType() {
+	public PayloadWrapper() {
 		this( null );
 	}
 
-	public MyCustomJavaType(String payload) {
+	public PayloadWrapper(String payload) {
 		this.payload = payload;
 	}
 
@@ -29,7 +29,7 @@ public class MyCustomJavaType implements Comparable<MyCustomJavaType> {
 	}
 
 	@Override
-	public int compareTo(MyCustomJavaType other) {
+	public int compareTo(PayloadWrapper other) {
 		if ( getPayload() == null ) {
 			return -1;
 		}

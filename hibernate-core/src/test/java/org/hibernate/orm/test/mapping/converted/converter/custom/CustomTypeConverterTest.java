@@ -33,16 +33,16 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.build() ) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
-					.addAnnotatedClass( MyCustomConverter.class )
+					.addAnnotatedClass( PayloadWrapperConverter.class )
 					.addAnnotatedClass( MyEntity.class );
 			final MetadataBuilderImplementor metadataBuilder = (MetadataBuilderImplementor) metadataSources.getMetadataBuilder();
 
 			// now the new scoped way
 			final TypeConfiguration bootTypeConfiguration = metadataBuilder.getBootstrapContext().getTypeConfiguration();
 			bootTypeConfiguration.getJavaTypeDescriptorRegistry()
-					.addDescriptor( MyCustomJavaTypeDescriptor.INSTANCE );
+					.addDescriptor( PayloadWrapperJavaType.INSTANCE );
 			bootTypeConfiguration.getJdbcTypeDescriptorRegistry()
-					.addDescriptor( MyCustomJdbcTypeDescriptor.INSTANCE );
+					.addDescriptor( PayloadWrapperJdbcType.INSTANCE );
 
 			performAssertions( metadataBuilder, bootTypeConfiguration );
 		}
@@ -58,13 +58,13 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 			);
 
 			assertThat(
-					bootTypeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( MyCustomJavaType.class ),
-					sameInstance( MyCustomJavaTypeDescriptor.INSTANCE )
+					bootTypeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( PayloadWrapper.class ),
+					sameInstance( PayloadWrapperJavaType.INSTANCE )
 			);
 
 			assertThat(
-					bootTypeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( MyCustomJdbcTypeDescriptor.INSTANCE.getJdbcTypeCode() ),
-					sameInstance( MyCustomJdbcTypeDescriptor.INSTANCE )
+					bootTypeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( PayloadWrapperJdbcType.INSTANCE.getJdbcTypeCode() ),
+					sameInstance( PayloadWrapperJdbcType.INSTANCE )
 			);
 
 			final EntityPersister entityPersister = sessionFactory.getMetamodel().entityPersister( MyEntity.class );

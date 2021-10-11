@@ -8,7 +8,6 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -27,7 +26,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -35,7 +33,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> implements VersionJavaTypeDescriptor<Date> {
+public class JdbcTimestampJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<Date> implements VersionJavaType<Date> {
 	public static final JdbcTimestampJavaTypeDescriptor INSTANCE = new JdbcTimestampJavaTypeDescriptor();
 
 	@SuppressWarnings("WeakerAccess")

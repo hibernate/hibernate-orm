@@ -13,18 +13,18 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.query.named.ResultMementoInstantiation;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.complete.CompleteResultBuilderInstantiation;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class ResultMementoInstantiationStandard implements ResultMementoInstantiation {
 
-	private final JavaTypeDescriptor<?> instantiatedJtd;
+	private final JavaType<?> instantiatedJtd;
 	private final List<ArgumentMemento> argumentMementos;
 
 	public ResultMementoInstantiationStandard(
-			JavaTypeDescriptor<?> instantiatedJtd,
+			JavaType<?> instantiatedJtd,
 			List<ArgumentMemento> argumentMementos) {
 		this.instantiatedJtd = instantiatedJtd;
 		this.argumentMementos = argumentMementos;

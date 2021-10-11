@@ -15,7 +15,7 @@ import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 import org.jboss.logging.Logger;
@@ -85,7 +85,7 @@ public class Util {
 				}
 			}
 			else {
-				final JavaTypeDescriptor<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
+				final JavaType<?> basicType = javaTypeDescriptorRegistry.getDescriptor(
 						resultSetMappingClass );
 				if ( basicType != null ) {
 					resultSetMapping.addResultBuilder( new ScalarDomainResultBuilder<>( basicType ) );

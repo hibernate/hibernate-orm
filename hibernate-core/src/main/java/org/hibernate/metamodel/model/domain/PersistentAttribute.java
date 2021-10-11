@@ -9,7 +9,7 @@ package org.hibernate.metamodel.model.domain;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.AttributeClassification;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Hibernate extension to the JPA {@link Attribute} contract
@@ -20,7 +20,7 @@ public interface PersistentAttribute<D,J> extends Attribute<D,J> {
 	@Override
 	ManagedDomainType<D> getDeclaringType();
 
-	JavaTypeDescriptor<J> getAttributeJavaTypeDescriptor();
+	JavaType<J> getAttributeJavaTypeDescriptor();
 
 	/**
 	 * The classification of the attribute (is it a basic type, entity, etc)

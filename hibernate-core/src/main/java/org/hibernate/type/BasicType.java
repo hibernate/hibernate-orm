@@ -18,7 +18,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Marker interface for basic types.
@@ -39,12 +39,12 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default JavaTypeDescriptor<T> getJavaTypeDescriptor() {
+	default JavaType<T> getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 
 	@Override
-	default JavaTypeDescriptor<T> getExpressableJavaTypeDescriptor() {
+	default JavaType<T> getExpressableJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 
@@ -72,7 +72,7 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	}
 
 	@Override
-	default JavaTypeDescriptor<T> getMappedJavaTypeDescriptor() {
+	default JavaType<T> getMappedJavaTypeDescriptor() {
 		return getJavaTypeDescriptor();
 	}
 

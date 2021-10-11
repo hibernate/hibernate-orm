@@ -17,7 +17,7 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
@@ -54,7 +54,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 	public final String explicitColumnName;
 
 	private final BasicType<?> explicitType;
-	private final JavaTypeDescriptor<?> explicitJavaTypeDescriptor;
+	private final JavaType<?> explicitJavaTypeDescriptor;
 
 	/**
 	 * Creation of ScalarResultMappingMemento for JPA descriptor
@@ -82,7 +82,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			}
 			else {
 				final JavaTypeDescriptorRegistry jtdRegistry = typeConfiguration.getJavaTypeDescriptorRegistry();
-				final JavaTypeDescriptor<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
+				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
 				final ManagedBeanRegistry beanRegistry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 					final ManagedBean<BasicType<?>> typeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );

@@ -8,7 +8,7 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
 import static java.lang.annotation.ElementType.FIELD;
@@ -31,5 +31,5 @@ public @interface AnyKeyJavaType {
 	 *
 	 * @see JavaType#value
 	 */
-	Class<? extends BasicJavaTypeDescriptor<?>> value();
+	Class<? extends BasicJavaType<?>> value();
 }

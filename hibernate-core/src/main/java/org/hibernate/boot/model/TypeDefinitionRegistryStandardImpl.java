@@ -11,7 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 
 import org.jboss.logging.Logger;
 
@@ -47,7 +47,7 @@ public class TypeDefinitionRegistryStandardImpl implements TypeDefinitionRegistr
 	}
 
 	@Override
-	public TypeDefinition resolveAutoApplied(BasicJavaTypeDescriptor<?> jtd) {
+	public TypeDefinition resolveAutoApplied(BasicJavaType<?> jtd) {
 		// For now, check the definition map for a entry keyed by the JTD name.
 		// Ultimately should maybe have TypeDefinition or the registry keep explicit track of
 		// auto-applied defs

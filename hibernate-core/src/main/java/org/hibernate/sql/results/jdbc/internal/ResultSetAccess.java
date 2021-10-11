@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -72,7 +72,7 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 	}
 
 	@Override
-	default <J> BasicType<J> resolveType(int position, JavaTypeDescriptor<J> explicitJavaTypeDescriptor) {
+	default <J> BasicType<J> resolveType(int position, JavaType<J> explicitJavaTypeDescriptor) {
 		final TypeConfiguration typeConfiguration = getFactory().getTypeConfiguration();
 		final JdbcServices jdbcServices = getFactory().getJdbcServices();
 		try {
@@ -98,7 +98,7 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 							scale,
 							typeConfiguration.getJdbcTypeDescriptorRegistry()
 					);
-			final JavaTypeDescriptor<J> javaTypeDescriptor;
+			final JavaType<J> javaTypeDescriptor;
 			final JdbcTypeDescriptor jdbcTypeDescriptor;
 			// If there is an explicit JavaTypeDescriptor, then prefer its recommended JDBC type
 			if ( explicitJavaTypeDescriptor != null ) {

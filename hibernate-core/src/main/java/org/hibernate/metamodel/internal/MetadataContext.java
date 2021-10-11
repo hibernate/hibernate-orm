@@ -8,7 +8,6 @@ package org.hibernate.metamodel.internal;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +25,6 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
-import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Component;
@@ -52,7 +50,7 @@ import org.hibernate.metamodel.model.domain.internal.MappedSuperclassTypeImpl;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -428,7 +426,7 @@ public class MetadataContext {
 		final JavaTypeDescriptorRegistry registry = getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry();
 		final Class<?> componentClass = identifier.getComponentClass();
-		final JavaTypeDescriptor<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
+		final JavaType<?> javaTypeDescriptor = registry.resolveManagedTypeDescriptor( componentClass );
 
 		final EmbeddableRepresentationStrategy representationStrategy = getTypeConfiguration()
 				.getMetadataBuildingContext()

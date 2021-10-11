@@ -29,7 +29,7 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 
 /**
  * Utility class for various reflection operations.
@@ -340,8 +340,8 @@ public final class ReflectHelper {
 				boolean found = true;
 				for ( int j = 0; j < params.length; j++ ) {
 					final boolean ok = types[j] == null || params[j].isAssignableFrom( types[j].getReturnedClass() ) || (
-							types[j] instanceof BasicType<?> && ( (BasicType<?>) types[j] ).getJavaTypeDescriptor() instanceof PrimitiveJavaTypeDescriptor
-									&& params[j] == ( (PrimitiveJavaTypeDescriptor<?>) ( ( (BasicType<?>) types[j] ).getJavaTypeDescriptor() ) ).getPrimitiveClass()
+							types[j] instanceof BasicType<?> && ( (BasicType<?>) types[j] ).getJavaTypeDescriptor() instanceof PrimitiveJavaType
+									&& params[j] == ( (PrimitiveJavaType<?>) ( ( (BasicType<?>) types[j] ).getJavaTypeDescriptor() ) ).getPrimitiveClass()
 					);
 					if ( !ok ) {
 						found = false;

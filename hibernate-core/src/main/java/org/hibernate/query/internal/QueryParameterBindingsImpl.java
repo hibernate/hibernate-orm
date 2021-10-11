@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 import org.hibernate.Incubating;
 import org.hibernate.QueryException;
@@ -22,14 +21,12 @@ import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
-import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypedExpressable;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -244,7 +241,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 
 		if ( binding.getBindType() instanceof JavaTypedExpressable ) {
 			final JavaTypedExpressable javaTypedExpressable = (JavaTypedExpressable) binding.getBindType();
-			final JavaTypeDescriptor jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
+			final JavaType jtd = javaTypedExpressable.getExpressableJavaTypeDescriptor();
 			if ( jtd.getJavaTypeClass() != null ) {
 				// avoid dynamic models
 				return typeConfiguration.getBasicTypeForJavaType( jtd.getJavaTypeClass() );

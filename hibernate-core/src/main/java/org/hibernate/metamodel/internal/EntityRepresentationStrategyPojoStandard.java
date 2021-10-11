@@ -53,7 +53,7 @@ import org.hibernate.proxy.ProxyFactory;
 import org.hibernate.proxy.pojo.ProxyFactoryHelper;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.CompositeType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 
 /**
@@ -62,8 +62,8 @@ import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 public class EntityRepresentationStrategyPojoStandard implements EntityRepresentationStrategy {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( EntityRepresentationStrategyPojoStandard.class );
 
-	private final JavaTypeDescriptor<?> mappedJtd;
-	private final JavaTypeDescriptor<?> proxyJtd;
+	private final JavaType<?> mappedJtd;
+	private final JavaType<?> proxyJtd;
 
 	private final boolean isBytecodeEnhanced;
 	private final boolean lifecycleImplementor;
@@ -422,12 +422,12 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return mappedJtd;
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getProxyJavaTypeDescriptor() {
+	public JavaType<?> getProxyJavaTypeDescriptor() {
 		return proxyJtd;
 	}
 

@@ -17,18 +17,18 @@ import org.hibernate.query.sqm.tree.expression.Compatibility;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResultAssembler<T> {
-	private final JavaTypeDescriptor<T> target;
+	private final JavaType<T> target;
 	private final List<BeanInjection> beanInjections = new ArrayList<>();
 
 	@SuppressWarnings("WeakerAccess")
 	public DynamicInstantiationAssemblerInjectionImpl(
-			JavaTypeDescriptor<T> target,
+			JavaType<T> target,
 			List<ArgumentReader<?>> argumentReaders) {
 		this.target = target;
 		final Class targetJavaType = target.getJavaTypeClass();
@@ -108,7 +108,7 @@ public class DynamicInstantiationAssemblerInjectionImpl<T> implements DomainResu
 	}
 
 	@Override
-	public JavaTypeDescriptor<T> getAssembledJavaTypeDescriptor() {
+	public JavaType<T> getAssembledJavaTypeDescriptor() {
 		return target;
 	}
 

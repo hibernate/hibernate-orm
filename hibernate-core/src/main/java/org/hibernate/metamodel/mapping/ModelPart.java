@@ -18,7 +18,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Describes a mapping related to any part of the app's domain model - e.g.
@@ -32,7 +32,7 @@ import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 public interface ModelPart extends MappingModelExpressable {
 	MappingType getPartMappingType();
 
-	JavaTypeDescriptor<?> getJavaTypeDescriptor();
+	JavaType<?> getJavaTypeDescriptor();
 
 	String getPartName();
 

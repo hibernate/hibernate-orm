@@ -23,7 +23,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.TimestampJdbcTypeDescriptor;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -32,7 +31,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public class LocalDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<LocalDateTime>
-		implements VersionJavaTypeDescriptor<LocalDateTime> {
+		implements VersionJavaType<LocalDateTime> {
 	/**
 	 * Singleton access
 	 */

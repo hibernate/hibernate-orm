@@ -10,25 +10,25 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class EntityAssembler implements DomainResultAssembler {
-	private final JavaTypeDescriptor javaTypeDescriptor;
+	private final JavaType javaTypeDescriptor;
 	private final EntityInitializer initializer;
 	private EntityInitializer replacedInitializer;
 
 	public EntityAssembler(
-			JavaTypeDescriptor javaTypeDescriptor,
+			JavaType javaTypeDescriptor,
 			EntityInitializer initializer) {
 		this.javaTypeDescriptor = javaTypeDescriptor;
 		this.initializer = initializer;
 	}
 
 	@Override
-	public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
+	public JavaType getAssembledJavaTypeDescriptor() {
 		return javaTypeDescriptor;
 	}
 

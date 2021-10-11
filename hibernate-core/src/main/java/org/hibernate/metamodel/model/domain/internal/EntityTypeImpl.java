@@ -27,7 +27,7 @@ import org.hibernate.persister.entity.Queryable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.type.StandardBasicTypes;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Defines the Hibernate implementation of the JPA {@link EntityType} contract.
@@ -42,7 +42,7 @@ public class EntityTypeImpl<J>
 	private final SqmPathSource<?> discriminatorPathSource;
 
 	public EntityTypeImpl(
-			JavaTypeDescriptor<J> javaTypeDescriptor,
+			JavaType<J> javaTypeDescriptor,
 			IdentifiableDomainType<? super J> superType,
 			PersistentClass persistentClass,
 			JpaMetamodel jpaMetamodel) {

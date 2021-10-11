@@ -24,7 +24,7 @@ import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -36,8 +36,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBuilderBasic {
 	private final String columnAlias;
 
-	private final JavaTypeDescriptor<O> domainJtd;
-	private final JavaTypeDescriptor<R> jdbcJtd;
+	private final JavaType<O> domainJtd;
+	private final JavaType<R> jdbcJtd;
 
 	private final BasicValueConverter<O,R> basicValueConverter;
 
@@ -55,7 +55,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		this.jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
 
 
-		final JavaTypeDescriptor<? extends AttributeConverter> converterJtd = jtdRegistry.getDescriptor( converter.getClass() );
+		final JavaType<? extends AttributeConverter> converterJtd = jtdRegistry.getDescriptor( converter.getClass() );
 		final ManagedBean<? extends AttributeConverter<O,R>> bean = new ProvidedInstanceManagedBeanImpl<>( converter );
 
 		this.basicValueConverter = new JpaAttributeConverterImpl(
@@ -81,7 +81,7 @@ public class DynamicResultBuilderBasicConverted<O,R> implements DynamicResultBui
 		this.jdbcJtd = jtdRegistry.getDescriptor( jdbcJavaType );
 
 
-		final JavaTypeDescriptor<? extends AttributeConverter<O,R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
+		final JavaType<? extends AttributeConverter<O,R>> converterJtd = jtdRegistry.getDescriptor( converterJavaType );
 		final ManagedBean<? extends AttributeConverter<O,R>> bean = beans.getBean( converterJavaType );
 
 		this.basicValueConverter = new JpaAttributeConverterImpl(

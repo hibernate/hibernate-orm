@@ -64,7 +64,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -725,7 +725,7 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+		public JavaType getMappedJavaTypeDescriptor() {
 			return null;
 		}
 	}

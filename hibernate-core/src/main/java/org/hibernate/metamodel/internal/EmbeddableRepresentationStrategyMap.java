@@ -17,13 +17,13 @@ import org.hibernate.metamodel.spi.EmbeddableRepresentationStrategy;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
  */
 public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresentationStrategy {
-	private final JavaTypeDescriptor<?> mapJtd;
+	private final JavaType<?> mapJtd;
 	private final EmbeddableInstantiator instantiator;
 
 	public EmbeddableRepresentationStrategyMap(
@@ -44,7 +44,7 @@ public class EmbeddableRepresentationStrategyMap implements EmbeddableRepresenta
 	}
 
 	@Override
-	public JavaTypeDescriptor<?> getMappedJavaTypeDescriptor() {
+	public JavaType<?> getMappedJavaTypeDescriptor() {
 		return mapJtd;
 	}
 

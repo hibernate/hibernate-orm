@@ -55,7 +55,7 @@ import org.hibernate.mapping.SyntheticProperty;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -985,7 +985,7 @@ public class BinderHelper {
 		discriminatorValueBinder.fillSimpleValue();
 		discriminatorColumns[0].linkWithValue( discriminatorDescriptor );
 
-		final JavaTypeDescriptor<?> discriminatorJavaType = discriminatorDescriptor
+		final JavaType<?> discriminatorJavaType = discriminatorDescriptor
 				.resolve()
 				.getRelationalJavaDescriptor();
 

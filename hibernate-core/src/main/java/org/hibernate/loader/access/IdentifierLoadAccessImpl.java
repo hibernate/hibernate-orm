@@ -28,13 +28,13 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * @author Steve Ebersole
  */
-public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, JavaTypeDescriptor.CoercionContext {
+public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, JavaType.CoercionContext {
 	private final LoadAccessContext context;
 	private final EntityPersister entityPersister;
 

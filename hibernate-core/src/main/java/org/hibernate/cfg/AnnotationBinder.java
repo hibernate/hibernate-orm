@@ -119,7 +119,7 @@ import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
-import org.hibernate.type.descriptor.java.BasicJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 import jakarta.persistence.AttributeOverride;
@@ -900,8 +900,8 @@ public final class AnnotationBinder {
 			MetadataBuildingContext context,
 			ManagedBeanRegistry managedBeanRegistry,
 			JavaTypeRegistration annotation) {
-		final Class<? extends BasicJavaTypeDescriptor<?>> jtdClass = annotation.descriptorClass();
-		final BasicJavaTypeDescriptor<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
+		final Class<? extends BasicJavaType<?>> jtdClass = annotation.descriptorClass();
+		final BasicJavaType<?> jtd = managedBeanRegistry.getBean( jtdClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), jtd );
 	}
 

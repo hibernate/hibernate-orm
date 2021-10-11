@@ -6,12 +6,11 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Steve Ebersole
@@ -24,7 +23,7 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 	}
 
 	@Override
-	public JavaTypeDescriptor getAssembledJavaTypeDescriptor() {
+	public JavaType getAssembledJavaTypeDescriptor() {
 		return initializer.getInitializedPart().getJavaTypeDescriptor();
 	}
 

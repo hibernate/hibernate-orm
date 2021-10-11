@@ -12,7 +12,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Steve Ebersole
  */
 public class ShortJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Short>
-		implements PrimitiveJavaTypeDescriptor<Short>, VersionJavaTypeDescriptor<Short> {
+		implements PrimitiveJavaType<Short>, VersionJavaType<Short> {
 
 	private static final Short ZERO = (short) 0;
 	public static final ShortJavaTypeDescriptor INSTANCE = new ShortJavaTypeDescriptor();

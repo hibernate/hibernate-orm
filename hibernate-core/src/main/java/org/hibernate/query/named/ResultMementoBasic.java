@@ -10,8 +10,6 @@ import java.util.function.Consumer;
 
 import org.hibernate.query.internal.ResultSetMappingResolutionContext;
 import org.hibernate.query.results.ResultBuilderBasicValued;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
 
 /**
  * @author Steve Ebersole

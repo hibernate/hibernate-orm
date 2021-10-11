@@ -9,7 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 
 import org.hibernate.query.DynamicInstantiationNature;
 import org.hibernate.query.sqm.SqmExpressable;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Represents the thing-to-be-instantiated in a dynamic instantiation expression.  Hibernate
@@ -26,7 +26,7 @@ public interface SqmDynamicInstantiationTarget<T> extends SqmExpressable<T> {
 	 */
 	DynamicInstantiationNature getNature();
 
-	JavaTypeDescriptor<T> getTargetTypeDescriptor();
+	JavaType<T> getTargetTypeDescriptor();
 
 	/**
 	 * For {@link DynamicInstantiationNature#CLASS} this will return the Class to be instantiated.  For

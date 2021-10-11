@@ -12,7 +12,7 @@ import java.util.Locale;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.spi.PrimitiveJavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
 
 /**
@@ -22,7 +22,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptor;
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
 public class ByteJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Byte>
-		implements PrimitiveJavaTypeDescriptor<Byte>, VersionJavaTypeDescriptor<Byte>{
+		implements PrimitiveJavaType<Byte>, VersionJavaType<Byte> {
 
 	private static final Byte ZERO = (byte) 0;
 	public static final ByteJavaTypeDescriptor INSTANCE = new ByteJavaTypeDescriptor();

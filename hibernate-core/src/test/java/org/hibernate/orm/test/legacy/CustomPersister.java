@@ -64,7 +64,7 @@ import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcTypeDescriptor;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -829,7 +829,7 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
-	public JavaTypeDescriptor getMappedJavaTypeDescriptor() {
+	public JavaType getMappedJavaTypeDescriptor() {
 		return null;
 	}
 }

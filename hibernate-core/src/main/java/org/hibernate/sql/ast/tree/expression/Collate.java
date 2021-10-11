@@ -15,7 +15,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * @author Christian Beikov
@@ -71,7 +71,7 @@ public class Collate implements Expression, SqlExpressable, SqlAstNode, DomainRe
 	public DomainResult createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final JavaTypeDescriptor javaTypeDescriptor = expression.getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
+		final JavaType javaTypeDescriptor = expression.getExpressionType().getJdbcMappings().get( 0 ).getJavaTypeDescriptor();
 		return new BasicResult(
 				creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 						this,

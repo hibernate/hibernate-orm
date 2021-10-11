@@ -15,7 +15,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.type.descriptor.java.JavaTypeDescriptor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * The semantic select clause.  Defined as a list of individual selections.
@@ -132,7 +132,7 @@ public class SqmSelectClause extends AbstractSqmNode implements SqmAliasedExpres
 	}
 
 	@Override
-	public JavaTypeDescriptor<Object> getJavaTypeDescriptor() {
+	public JavaType<Object> getJavaTypeDescriptor() {
 		return null;
 	}
 

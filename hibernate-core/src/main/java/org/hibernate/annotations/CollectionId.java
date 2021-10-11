@@ -9,7 +9,6 @@ package org.hibernate.annotations;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
-import org.hibernate.annotations.internal.NoIdentifierGenerator;
 import org.hibernate.id.IdentifierGenerator;
 
 import jakarta.persistence.Column;
@@ -38,12 +37,12 @@ public @interface CollectionId {
 	 *
 	 * @apiNote Mutually exclusive with {@link #generator()}
 	 */
-	Class<? extends IdentifierGenerator> generatorImplementation() default NoIdentifierGenerator.class;
+	Class<? extends IdentifierGenerator> generatorImplementation() default IdentifierGenerator.class;
 
 	/**
 	 * The generator name.
 	 *
-	 * Can specify either a built-in strategy ("sequence", e.g.) or a named generator
+	 * Can specify either a built-in strategy ("sequence", e.g.) or a named generatorIdentifierGenerator
 	 * ({@link jakarta.persistence.SequenceGenerator}, e.g.)
 	 *
 	 * @apiNote Mutually exclusive with {@link #generatorImplementation()} ()}

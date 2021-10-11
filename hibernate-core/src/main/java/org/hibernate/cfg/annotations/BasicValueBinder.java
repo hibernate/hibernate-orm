@@ -54,10 +54,6 @@ import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.annotations.TimeZoneType;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XProperty;
-import org.hibernate.annotations.internal.NoJavaTypeDescriptor;
-import org.hibernate.annotations.internal.NoJdbcTypeDescriptor;
-import org.hibernate.annotations.internal.NoMutabilityPlan;
-import org.hibernate.annotations.internal.NoUserType;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
@@ -1099,19 +1095,11 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			return null;
 		}
 
-		if ( NoUserType.class.isAssignableFrom( userType ) ) {
-			return null;
-		}
-
 		return userType;
 	}
 
 	private Class<? extends JdbcTypeDescriptor> normalizeJdbcType(Class<? extends JdbcTypeDescriptor> jdbcType) {
 		if ( jdbcType == null ) {
-			return null;
-		}
-
-		if ( NoJdbcTypeDescriptor.class.isAssignableFrom( jdbcType ) ) {
 			return null;
 		}
 
@@ -1123,19 +1111,11 @@ public class BasicValueBinder<T> implements JdbcTypeDescriptorIndicators {
 			return null;
 		}
 
-		if ( NoJavaTypeDescriptor.class.isAssignableFrom( javaType ) ) {
-			return null;
-		}
-
 		return javaType;
 	}
 
 	private Class<? extends MutabilityPlan<?>> normalizeMutability(Class<? extends MutabilityPlan<?>> mutability) {
 		if ( mutability == null ) {
-			return null;
-		}
-
-		if ( NoMutabilityPlan.class.isAssignableFrom( mutability ) ) {
 			return null;
 		}
 

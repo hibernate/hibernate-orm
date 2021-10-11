@@ -6,8 +6,17 @@
  */
 package org.hibernate.dialect.function;
 
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.model.domain.AllowableFunctionReturnType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
+import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
+import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.BasicTypeReference;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Simplified API allowing users to contribute
@@ -28,7 +37,20 @@ public class StandardSQLFunction extends NamedSqmFunctionDescriptor {
 	}
 
 	public StandardSQLFunction(String name, boolean useParentheses, BasicTypeReference<?> type) {
-		super( name, useParentheses, null, null );
+		super( name, useParentheses, null, new FunctionReturnTypeResolver() {
+			@Override
+			public AllowableFunctionReturnType<?> resolveFunctionReturnType(
+					AllowableFunctionReturnType<?> impliedType,
+					List<? extends SqmTypedNode<?>> arguments,
+					TypeConfiguration typeConfiguration) {
+				return type == null ? null : typeConfiguration.getBasicTypeRegistry().resolve( type );
+			}
+
+			@Override
+			public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+				return type == null || impliedTypeAccess == null ? null : impliedTypeAccess.get();
+			}
+		} );
 		this.type = type;
 	}
 

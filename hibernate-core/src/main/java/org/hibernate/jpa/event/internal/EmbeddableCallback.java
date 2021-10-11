@@ -9,8 +9,11 @@ package org.hibernate.jpa.event.internal;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import org.hibernate.jpa.event.spi.Callback;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.property.access.spi.Getter;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 /**
  * Represents a JPA callback on the embeddable type
@@ -19,10 +22,27 @@ import org.hibernate.property.access.spi.Getter;
  */
 final class EmbeddableCallback extends AbstractCallback {
 
+	public static class Definition implements CallbackDefinition {
+		private final Getter embeddableGetter;
+		private final Method callbackMethod;
+		private final CallbackType callbackType;
+
+		public Definition(Getter embeddableGetter, Method callbackMethod, CallbackType callbackType) {
+			this.embeddableGetter = embeddableGetter;
+			this.callbackMethod = callbackMethod;
+			this.callbackType = callbackType;
+		}
+
+		@Override
+		public Callback createCallback(ManagedBeanRegistry beanRegistry) {
+			return new EmbeddableCallback( embeddableGetter, callbackMethod, callbackType );
+		}
+	}
+
 	private final Getter embeddableGetter;
 	private final Method callbackMethod;
 
-	EmbeddableCallback(Getter embeddableGetter, Method callbackMethod, CallbackType callbackType) {
+	private EmbeddableCallback(Getter embeddableGetter, Method callbackMethod, CallbackType callbackType) {
 		super( callbackType );
 		this.embeddableGetter = embeddableGetter;
 		this.callbackMethod = callbackMethod;

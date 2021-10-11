@@ -19,88 +19,39 @@ import javax.persistence.ExcludeSuperclassListeners;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PersistenceException;
 
-import org.hibernate.MappingException;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.annotations.common.reflection.XMethod;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.jpa.event.spi.Callback;
-import org.hibernate.jpa.event.spi.CallbackBuilder;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.jpa.event.spi.CallbackType;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.property.access.spi.Getter;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.jboss.logging.Logger;
 
 /**
- * EntityCallbackBuilder implementation using HCANN ReflectionManager.  "legacy" in that
- * we want to move to Jandex instead.
+ * Resolves JPA callback definitions using a HCANN ReflectionManager.
+ * <p>
+ * "legacy" in that we want to move to Jandex instead.
  *
  * @author Steve Ebersole
  */
-final class CallbackBuilderLegacyImpl implements CallbackBuilder {
-	private static final Logger log = Logger.getLogger( CallbackBuilderLegacyImpl.class );
-
-	private final ManagedBeanRegistry managedBeanRegistry;
-	private final ReflectionManager reflectionManager;
-
-	CallbackBuilderLegacyImpl(ManagedBeanRegistry managedBeanRegistry, ReflectionManager reflectionManager) {
-		this.managedBeanRegistry = managedBeanRegistry;
-		this.reflectionManager = reflectionManager;
-	}
-
-	@Override
-	public void buildCallbacksForEntity(Class entityClass, CallbackRegistrar callbackRegistrar) {
-		for ( CallbackType callbackType : CallbackType.values() ) {
-			if ( callbackRegistrar.hasRegisteredCallbacks( entityClass, callbackType ) ) {
-				// this most likely means we have a class mapped multiple times using the hbm.xml
-				// "entity name" feature
-				if ( log.isDebugEnabled() ) {
-					log.debugf(
-							"CallbackRegistry reported that Class [%s] already had %s callbacks registered; " +
-									"assuming this means the class was mapped twice " +
-									"(using hbm.xml entity-name support) - skipping subsequent registrations",
-							entityClass.getName(),
-							callbackType.getCallbackAnnotation().getSimpleName()
-					);
-				}
-				continue;
-			}
-			final Callback[] callbacks = resolveEntityCallbacks( entityClass, callbackType, reflectionManager );
-			callbackRegistrar.registerCallbacks( entityClass, callbacks );
-		}
-	}
-
-	@Override
-	public void buildCallbacksForEmbeddable(
-			Property embeddableProperty, Class entityClass, CallbackRegistrar callbackRegistrar) {
-		for ( CallbackType callbackType : CallbackType.values() ) {
-			final Callback[] callbacks = resolveEmbeddableCallbacks(
-					entityClass,
-					embeddableProperty,
-					callbackType,
-					reflectionManager
-			);
-			callbackRegistrar.registerCallbacks( entityClass, callbacks );
-		}
-	}
-
-	@Override
-	public void release() {
-		// nothing to do
-	}
+public final class CallbackDefinitionResolverLegacyImpl {
+	private static final Logger log = Logger.getLogger( CallbackDefinitionResolverLegacyImpl.class );
 
 	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	public Callback[] resolveEntityCallbacks(Class entityClass, CallbackType callbackType, ReflectionManager reflectionManager) {
-		List<Callback> callbacks = new ArrayList<>();
+	public static List<CallbackDefinition> resolveEntityCallbacks(ReflectionManager reflectionManager,
+			XClass entityClass, CallbackType callbackType) {
+		List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		List<String> callbacksMethodNames = new ArrayList<>();
 		List<Class> orderedListeners = new ArrayList<>();
-		XClass currentClazz = reflectionManager.toXClass( entityClass );
+		XClass currentClazz = entityClass;
 		boolean stopListeners = false;
 		boolean stopDefaultListeners = false;
 		do {
-			Callback callback = null;
+			CallbackDefinition callbackDefinition = null;
 			List<XMethod> methods = currentClazz.getDeclaredMethods();
 			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
@@ -108,8 +59,8 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 					final String methodName = method.getName();
 					if ( !callbacksMethodNames.contains( methodName ) ) {
 						//overridden method, remove the superclass overridden method
-						if ( callback == null ) {
-							callback = new EntityCallback( method, callbackType );
+						if ( callbackDefinition == null ) {
+							callbackDefinition = new EntityCallback.Definition( method, callbackType );
 							Class returnType = method.getReturnType();
 							Class[] args = method.getParameterTypes();
 							if ( returnType != Void.TYPE || args.length != 0 ) {
@@ -127,7 +78,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 										entityClass.getName()
 								);
 							}
-							callbacks.add( 0, callback ); //superclass first
+							callbackDefinitions.add( 0, callbackDefinition ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
 						else {
@@ -168,7 +119,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		}
 
 		for ( Class listener : orderedListeners ) {
-			Callback callback = null;
+			CallbackDefinition callbackDefinition = null;
 			if ( listener != null ) {
 				XClass xListener = reflectionManager.toXClass( listener );
 				callbacksMethodNames = new ArrayList<>();
@@ -179,12 +130,8 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 						final String methodName = method.getName();
 						if ( !callbacksMethodNames.contains( methodName ) ) {
 							//overridden method, remove the superclass overridden method
-							if ( callback == null ) {
-								callback = new ListenerCallback(
-										managedBeanRegistry.getBean( listener ),
-										method,
-										callbackType
-								);
+							if ( callbackDefinition == null ) {
+								callbackDefinition = new ListenerCallback.Definition( listener, method, callbackType );
 
 								Class returnType = method.getReturnType();
 								Class[] args = method.getParameterTypes();
@@ -203,7 +150,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 											entityClass.getName()
 										);
 								}
-								callbacks.add( 0, callback ); // listeners first
+								callbackDefinitions.add( 0, callbackDefinition ); // listeners first
 							}
 							else {
 								throw new PersistenceException(
@@ -218,20 +165,20 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 				}
 			}
 		}
-		return callbacks.toArray( new Callback[callbacks.size()] );
+		return callbackDefinitions;
 	}
 
-	@SuppressWarnings({"unchecked", "WeakerAccess"})
-	public Callback[] resolveEmbeddableCallbacks(Class entityClass, Property embeddableProperty, CallbackType callbackType, ReflectionManager reflectionManager) {
-
+	public static List<CallbackDefinition> resolveEmbeddableCallbacks(ReflectionManager reflectionManager,
+			Class<?> entityClass, Property embeddableProperty,
+			CallbackType callbackType) {
 		final Class embeddableClass = embeddableProperty.getType().getReturnedClass();
 		final XClass embeddableXClass = reflectionManager.toXClass( embeddableClass );
 		final Getter embeddableGetter = embeddableProperty.getGetter( entityClass );
-		final List<Callback> callbacks = new ArrayList<>();
+		final List<CallbackDefinition> callbackDefinitions = new ArrayList<>();
 		final List<String> callbacksMethodNames = new ArrayList<>();
 		XClass currentClazz = embeddableXClass;
 		do {
-			Callback callback = null;
+			CallbackDefinition callbackDefinition = null;
 			List<XMethod> methods = currentClazz.getDeclaredMethods();
 			for ( final XMethod xMethod : methods ) {
 				if ( xMethod.isAnnotationPresent( callbackType.getCallbackAnnotation() ) ) {
@@ -239,8 +186,8 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 					final String methodName = method.getName();
 					if ( !callbacksMethodNames.contains( methodName ) ) {
 						//overridden method, remove the superclass overridden method
-						if ( callback == null ) {
-							callback = new EmbeddableCallback( embeddableGetter, method, callbackType );
+						if ( callbackDefinition == null ) {
+							callbackDefinition = new EmbeddableCallback.Definition( embeddableGetter, method, callbackType );
 							Class returnType = method.getReturnType();
 							Class[] args = method.getParameterTypes();
 							if ( returnType != Void.TYPE || args.length != 0 ) {
@@ -258,7 +205,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 										embeddableXClass.getName()
 								);
 							}
-							callbacks.add( 0, callback ); //superclass first
+							callbackDefinitions.add( 0, callbackDefinition ); //superclass first
 							callbacksMethodNames.add( 0, methodName );
 						}
 						else {
@@ -278,7 +225,7 @@ final class CallbackBuilderLegacyImpl implements CallbackBuilder {
 		}
 		while ( currentClazz != null );
 
-		return callbacks.toArray( new Callback[callbacks.size()] );
+		return callbackDefinitions;
 	}
 
 	private static boolean useAnnotationAnnotatedByListener;

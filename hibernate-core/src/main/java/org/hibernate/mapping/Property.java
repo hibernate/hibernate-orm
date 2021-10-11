@@ -7,6 +7,8 @@
 package org.hibernate.mapping;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.StringTokenizer;
 
@@ -19,6 +21,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
@@ -50,6 +53,7 @@ public class Property implements Serializable, MetaAttributable {
 	private PersistentClass persistentClass;
 	private boolean naturalIdentifier;
 	private boolean lob;
+	private java.util.List<CallbackDefinition> callbackDefinitions;
 
 	public boolean isBackRef() {
 		return false;
@@ -363,6 +367,23 @@ public class Property implements Serializable, MetaAttributable {
 
 	public void setLob(boolean lob) {
 		this.lob = lob;
+	}
+
+	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
+		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
+			return;
+		}
+		if ( this.callbackDefinitions == null ) {
+			this.callbackDefinitions = new ArrayList<>();
+		}
+		this.callbackDefinitions.addAll( callbackDefinitions );
+	}
+
+	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
+		if ( callbackDefinitions == null ) {
+			return Collections.emptyList();
+		}
+		return Collections.unmodifiableList( callbackDefinitions );
 	}
 
 }

@@ -27,6 +27,7 @@ import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.SingletonIterator;
+import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.Alias;
 
@@ -73,6 +74,7 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 	private Boolean isAbstract;
 	private boolean hasSubselectLoadableCollections;
 	private Component identifierMapper;
+	private java.util.List<CallbackDefinition> callbackDefinitions;
 
 	// Custom SQL
 	private String customSQLInsert;
@@ -976,6 +978,23 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 
 	public boolean hasIdentifierMapper() {
 		return identifierMapper != null;
+	}
+
+	public void addCallbackDefinitions(java.util.List<CallbackDefinition> callbackDefinitions) {
+		if ( callbackDefinitions == null || callbackDefinitions.isEmpty() ) {
+			return;
+		}
+		if ( this.callbackDefinitions == null ) {
+			this.callbackDefinitions = new ArrayList<>();
+		}
+		this.callbackDefinitions.addAll( callbackDefinitions );
+	}
+
+	public java.util.List<CallbackDefinition> getCallbackDefinitions() {
+		if ( callbackDefinitions == null ) {
+			return Collections.emptyList();
+		}
+		return Collections.unmodifiableList( callbackDefinitions );
 	}
 
 	public void setIdentifierMapper(Component handle) {

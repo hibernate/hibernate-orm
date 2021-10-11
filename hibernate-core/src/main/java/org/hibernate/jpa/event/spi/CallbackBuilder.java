@@ -12,20 +12,18 @@ import org.hibernate.mapping.Property;
  * Contract for walking an entity hierarchy and building a list of JPA callbacks
  *
  * @author Steve Ebersole
+ *
+ * @deprecated This SPI has never been functional and is no longer used. It will eventually be removed.
  */
+@Deprecated
 public interface CallbackBuilder {
 	/**
 	 * Represents the target of JPA callback registrations as part the EntityCallbackBuilder
+	 *
+	 * @deprecated Use {@link org.hibernate.jpa.event.spi.CallbackRegistrar} instead.
 	 */
-	interface CallbackRegistrar extends CallbackRegistry {
-
-		/**
-		 * Register the callback against the given entity.
-		 *
-		 * @param entityClass The entity Class to register the Callbacks against
-		 * @param callbacks The Callbacks to register against the given entity Class
-		 */
-		void registerCallbacks(Class entityClass, Callback[] callbacks);
+	@Deprecated
+	interface CallbackRegistrar extends org.hibernate.jpa.event.spi.CallbackRegistrar  {
 	}
 
 	void buildCallbacksForEntity(Class entityClass, CallbackRegistrar callbackRegistrar);

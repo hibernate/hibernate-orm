@@ -40,12 +40,12 @@ public final class LockModeTypeHelper {
 		}
 		else if ( String.class.isInstance( value ) ) {
 			// first try LockMode name
-			LockMode lockMode = LockMode.valueOf( (String) value );
+			LockMode lockMode = LockMode.fromExternalForm( (String) value );
 			if ( lockMode == null ) {
 				try {
 					lockMode = getLockMode( LockModeType.valueOf( (String) value ) );
 				}
-				catch ( Exception ignore ) {
+				catch (Exception ignore) {
 				}
 			}
 			if ( lockMode != null ) {

@@ -4,30 +4,33 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.test.ecid;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.test.util.SchemaUtil.getColumnNames;
+package org.hibernate.orm.test.ecid;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import javax.persistence.Column;
-import javax.persistence.Embeddable;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.Inheritance;
-import javax.persistence.InheritanceType;
-import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Inheritance;
+import jakarta.persistence.InheritanceType;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.orm.test.util.SchemaUtil.getColumnNames;
 
 /**
  * Test that bootstrap doesn't throw an exception
@@ -55,16 +58,21 @@ import org.junit.Test;
  * at org.hibernate.testing.junit4.TestClassMetadata.performCallbackInvocation(TestClassMetadata.java:205)
  */
 @TestForIssue(jiraKey = "HHH-13295")
-public class EmbeddedIdWithMapsIdTargetingDerivedEntityTest extends BaseNonConfigCoreFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Attendance.class, AttendanceId.class, Lecture.class, Student.class, User.class };
-	}
+@DomainModel(
+		annotatedClasses = {
+				EmbeddedIdWithMapsIdTargetingDerivedEntityTest.Attendance.class,
+				EmbeddedIdWithMapsIdTargetingDerivedEntityTest.AttendanceId.class,
+				EmbeddedIdWithMapsIdTargetingDerivedEntityTest.Lecture.class,
+				EmbeddedIdWithMapsIdTargetingDerivedEntityTest.Student.class,
+				EmbeddedIdWithMapsIdTargetingDerivedEntityTest.User.class
+		}
+)
+@SessionFactory
+public class EmbeddedIdWithMapsIdTargetingDerivedEntityTest {
 
 	@Test
-	public void metadataTest() {
-		assertThat( getColumnNames( "attendance", metadata() ) )
+	public void metadataTest(SessionFactoryScope scope) {
+		assertThat( getColumnNames( "attendance", scope.getMetadataImplementor() ) )
 				// Just check we're using @MapsId; otherwise the test wouldn't be able to reproduce HHH-13295.
 				.containsExactlyInAnyOrder( "student_id", "lecture_id" );
 	}
@@ -73,8 +81,8 @@ public class EmbeddedIdWithMapsIdTargetingDerivedEntityTest extends BaseNonConfi
 	// but it feels wrong to have a test class with just an empty test method,
 	// so just check that persisting/loading works correctly.
 	@Test
-	public void smokeTest() {
-		inTransaction( s -> {
+	public void smokeTest(SessionFactoryScope scope) {
+		scope.inTransaction( s -> {
 			Lecture lecture = new Lecture( 1L );
 			s.persist( lecture );
 			Student student = new Student( 2L );
@@ -85,7 +93,7 @@ public class EmbeddedIdWithMapsIdTargetingDerivedEntityTest extends BaseNonConfi
 			s.persist( attendance );
 		} );
 
-		inTransaction( s -> {
+		scope.inTransaction( s -> {
 			Attendance attendance = s.get( Attendance.class, new AttendanceId( 1L, 2L ) );
 			assertThat( attendance.getId() )
 					.extracting( AttendanceId::getLectureId )

@@ -10,14 +10,15 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.LockModeType;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Query;
 
+import org.hibernate.LockMode;
 import org.hibernate.Session;
+import org.hibernate.jpa.QueryHints;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
@@ -183,7 +184,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11413")
-	public void testNamedNativeQueryExceptionNoResultDefined() {
+	public void testNamedNativeQueryExceptionNoRedultDefined() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			assertThrows(
 					"Named query exists but its result type is not compatible",
@@ -194,20 +195,19 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-14816")
-	public void testQueryHintLockType() {
+	public void testQueryHintLockMode() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 					 Query query = entityManager.createNamedQuery( "NamedNativeQuery" );
-					 query.setHint( org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE, "none" );
+					 query.setHint( QueryHints.HINT_NATIVE_LOCKMODE, "none" );
 					 query.setParameter( 1, GAME_TITLES[0] );
-					 assertEquals( LockModeType.NONE, query.getLockMode() );
+					 assertEquals( LockMode.NONE, query.getHints().get( QueryHints.HINT_NATIVE_LOCKMODE ) );
 				 }
 		);
 	}
 
 	@Entity(name = "Game")
 	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"))
-	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select g from Game g where title = ?1"))
+	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"))
 	public static class Game {
 		private Long id;
 		private String title;

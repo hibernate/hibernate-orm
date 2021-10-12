@@ -97,28 +97,6 @@ Or, the `Interceptor#onLoad()` is called by the `DefaultPreLoadEventListener`.
 When doing this, you should probably extend the default listeners because otherwise, you'd have to take care of all the low-level entity state transition logic.
 For example, if you replace the `DefaultPreLoadEventListener` with your own implementation, then, only if you call the `Interceptor#onLoad()` method explicitly, you can mix the custom load event listener with a custom Hibernate interceptor.
 
-[[events-declarative-security]]
-=== Hibernate declarative security
-
-Usually, declarative security in Hibernate applications is managed in a session facade layer.
-Hibernate allows certain actions to be authorized via JACC and JAAS.
-This is an optional functionality that is built on top of the event architecture.
-
-First, you must configure the appropriate event listeners, to enable the use of JACC authorization.
-Again, see <<chapters/bootstrap/Bootstrap.adoc#bootstrap-event-listener-registration,Event Listener Registration>> for the details.
-
-Below is an example of an appropriate `org.hibernate.integrator.spi.Integrator` implementation for this purpose.
-
-[[events-declarative-security-jacc-example]]
-.JACC listener registration example
-====
-[source, JAVA, indent=0]
-----
-include::{sourcedir}/ListenerTest.java[tags=events-declarative-security-jacc-example]
-----
-====
-
-You must also decide how to configure your JACC provider. Consult your JACC provider documentation.
 
 [[events-jpa-callbacks]]
 === Jakarta Persistence Callbacks

@@ -1103,7 +1103,27 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			return Collections.emptyIterator();
 		}
 		else {
-			return entitiesByKey.values().iterator();
+			return new Iterator() {
+				private Iterator copyIterator;
+
+				@Override
+				public boolean hasNext() {
+					checkCopyExists();
+					return copyIterator.hasNext();
+				}
+
+				@Override
+				public Object next() {
+					checkCopyExists();
+					return copyIterator.next();
+				}
+
+				private void checkCopyExists() {
+					if (copyIterator == null) {
+						copyIterator = new ArrayList(entitiesByKey.values()).iterator();
+					}
+				}
+			};
 		}
 	}
 

@@ -5,14 +5,6 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.test.interceptor;
-import javax.persistence.PersistenceException;
-import java.io.Serializable;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Queue;
-
-import org.junit.Test;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.EmptyInterceptor;
@@ -23,23 +15,61 @@ import org.hibernate.TransactionException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
+import org.junit.Test;
+
+import javax.persistence.PersistenceException;
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
+import java.util.Set;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author Gavin King
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
  */
+@SuppressWarnings("rawtypes")
 public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
-		return new String[] { "interceptor/User.hbm.xml", "interceptor/Image.hbm.xml" };
+		return new String[] { "interceptor/User.hbm.xml", "interceptor/Image.hbm.xml", "interceptor/Team.hbm.xml" };
+	}
+
+	@Test
+	@TestForIssue(jiraKey = {"HHH-14873"})
+	public void testFlushIntercept() {
+
+		//create entities
+
+		Session s = openSession();
+		Transaction t = s.beginTransaction();
+		User u = new User("The leader", "redael ehT");
+		s.persist(u);
+		User m1 = new User("A member", "rebmem A");
+		User m2 = new User("Another member", "rebmem rehtonA");
+		Set<User> members = new HashSet<>();
+		members.add(m1);
+		members.add(m2);
+		Team team = new Team("The team", u, members);
+		s.persist(team);
+		s.persist(m1);
+		s.persist(m2);
+		t.commit();
+		s.close();
+
+		//load team and flush to trigger FlushInterceptor code that lazy-loads entities
+
+		s = openSession( new FlushInterceptor() );
+		t = s.beginTransaction();
+		s.get(Team.class, "The team");
+		s.flush();
+		t.commit();
+		s.close();
 	}
 
 	@Test
@@ -54,7 +84,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get(User.class, "Gavin");
+		u = s.get(User.class, "Gavin");
 		assertEquals( 2, u.getActions().size() );
 		s.delete(u);
 		t.commit();
@@ -73,7 +103,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get(User.class, "Gavin");
+		u = s.get(User.class, "Gavin");
 		assertNotNull( u.getCreated() );
 		assertNotNull( u.getLastUpdated() );
 		s.delete(u);
@@ -105,14 +135,14 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 		t = s.beginTransaction();
-		u = ( User ) s.get( User.class, u.getName() );
+		u = s.get( User.class, u.getName() );
 		u.setPassword( "nottest" );
 		t.commit();
 		s.close();
 
 		s = openSession();
 		t = s.beginTransaction();
-		u = (User) s.get(User.class, "Josh");
+		u = s.get(User.class, "Josh");
 		assertEquals("test", u.getPassword());
 		s.delete(u);
 		t.commit();
@@ -181,7 +211,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		s.beginTransaction();
-		i = ( Image ) s.get( Image.class, i.getId() );
+		i = s.get( Image.class, i.getId() );
 		assertNotNull( i.getDetails() );
 		assertEquals( checkPerm, i.getDetails().getPerm1() );
 		assertEquals( checkComment, i.getDetails().getComment() );
@@ -205,6 +235,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		s = openSession();
 		t = s.beginTransaction();
+		@SuppressWarnings("deprecation")
 		List logs = s.createCriteria(Log.class).list();
 		assertEquals( 2, logs.size() );
 		s.delete(u);
@@ -238,7 +269,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 
 		merged.setInjectedString( null );
 
-		User loaded = ( User ) s.load(User.class, merged.getName());
+		User loaded = s.load(User.class, merged.getName());
 		// the session-bound instance was not instantiated by the interceptor, load simply returns it
 		assertSame( merged, loaded );
 		assertNull( merged.getInjectedString() );
@@ -247,7 +278,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 		s.flush();
 		s.evict( merged );
 
-		User reloaded = ( User ) s.load( User.class, merged.getName() );
+		User reloaded = s.load( User.class, merged.getName() );
 		// Interceptor IS called for instantiating the persistent instance associated to the session when using load
 		assertEquals( injectedString, reloaded.getInjectedString() );
 		assertEquals( u.getName(), reloaded.getName() );
@@ -261,7 +292,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-6594" )
 	public void testPrepareStatementIntercept() {
-		final Queue<String> expectedSQLs = new LinkedList<String>();
+		final Queue<String> expectedSQLs = new LinkedList<>();
 		// Transaction 1
 		expectedSQLs.add( "insert" );
 		// Transaction 2
@@ -279,6 +310,7 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			@Override
 			public String onPrepareStatement(String sql) {
 				assertNotNull( sql );
+				@SuppressWarnings("ConstantConditions")
 				String expectedSql = expectedSQLs.poll().toLowerCase(Locale.ROOT);
 				assertTrue("sql:\n " + sql.toLowerCase(Locale.ROOT) +"\n doesn't start with \n"+expectedSql+"\n", sql.toLowerCase(Locale.ROOT).startsWith( expectedSql ) );
 				return sql;
@@ -323,17 +355,14 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 			}
 		};
 
-		Session s = openSession( interceptor );
-		try {
+		try (Session s = openSession(interceptor)) {
 
 			Transaction t = s.beginTransaction();
-			User u = new User( "Kinga", "Mroz" );
-			s.persist( u );
+			User u = new User("Kinga", "Mroz");
+			s.persist(u);
 			t.commit();
-		}catch (TransactionException e){
-			assertTrue( e.getCause() instanceof AssertionFailure );
-		}finally {
-			s.close();
+		} catch (TransactionException e) {
+			assertTrue(e.getCause() instanceof AssertionFailure);
 		}
 	}
 }

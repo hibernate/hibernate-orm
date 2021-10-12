@@ -61,5 +61,13 @@ several requirements have to be fulfilled:
 In case the responsible employee is unreachable for a longer period or issues with the dialect are not attended to in a timely manner,
 the Hibernate team will move the dialect back to the `hibernate-community-dialects` artifact.
 
+The requirements for the database server are:
+
+* JDK 8 installed through e.g. `sudo yum install -y java-1.8.0-openjdk-devel`
+* JDK 11 installed through e.g. `sudo yum install -y java-11-openjdk-devel`
+* Git installed through e.g. `sudo yum install -y git`
+* Access to the database through non-confidential credentials
+* Access via SSH through confidential credentials
+
 Get in touch with the Hibernate team on https://hibernate.zulipchat.com/#narrow/stream/132096-hibernate-user[Zulip]
 if you want to request the move of your dialect to hibernate-core.

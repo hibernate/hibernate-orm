@@ -43,6 +43,7 @@ stage('Configure') {
 // 		buildEnv('8', 'mssql'),
 // 		buildEnv('8', 'sybase'),
 		buildEnv('8', 'hana', 'HANA'),
+		buildEnv('8', 's390x', 's390x'),
 		// Disable EDB for now as the image is not available anymore
 // 		buildEnv('8', 'edb')
 	];
@@ -148,55 +149,37 @@ stage('Build') {
 						}
 					}
 					stage('Test') {
-						// Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
-						boolean clean = true;
-						String goal;
-						String lockableResource;
 						switch (buildEnv.dbName) {
 							case "h2":
 							case "derby":
 							case "hsqldb":
-								goal = "-Pdb=${buildEnv.dbName}"
+								runTest("-Pdb=${buildEnv.dbName}")
 								break;
 							case "mysql8":
-								goal = "-Pdb=mysql_ci"
+								runTest("-Pdb=mysql_ci")
 								break;
 							case "postgresql_9_5":
 							case "postgresql_13":
-								goal = "-Pdb=pgsql_ci"
+								runTest("-Pdb=pgsql_ci")
 								break;
 							case "oracle":
-								goal = "-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
+								runTest("-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*")
 								break;
 							case "oracle_ee":
-								goal = "-Pdb=oracle_jenkins"
-								lockableResource = 'ORACLE_RDS'
+								runTest("-Pdb=oracle_jenkins", 'ORACLE_RDS')
 								break;
 							case "hana":
-								// For HANA we have to also clean because this is a shared VM and the compile cache can become a problem
-								clean = true;
-								goal = "-Pdb=hana_jenkins"
+								runTest("-Pdb=hana_jenkins", 'HANA')
 								break;
 							case "edb":
-								goal = "-Pdb=edb_ci -DdbHost=localhost:5433"
+								runTest("-Pdb=edb_ci -DdbHost=localhost:5433")
+								break;
+							case "s390x":
+								runTest("-Pdb=h2")
 								break;
 							default:
-								goal = "-Pdb=${buildEnv.dbName}_ci"
+								runTest("-Pdb=${buildEnv.dbName}_ci")
 								break;
-						}
-						String cmd = "./gradlew" + (clean ? " clean" : "") + " check ${goal} -Plog-test-progress=true --stacktrace";
-						try {
-							if (lockableResource == null) {
-								sh cmd
-							}
-							else {
-								lock(lockableResource) {
-									sh cmd
-								}
-							}
-						}
-						finally {
-							junit '**/target/test-results/test/*.xml'
 						}
 					}
 				}
@@ -270,10 +253,27 @@ void runBuildOnNode(String label, Closure body) {
 	}
 }
 void pruneDockerContainers() {
-	if ( !sh( script: 'which docker', returnStdout: true ).trim().isEmpty() ) {
+	if ( !sh( script: 'command -v docker || true', returnStdout: true ).trim().isEmpty() ) {
 		sh 'docker container prune -f || true'
 		sh 'docker image prune -f || true'
 		sh 'docker network prune -f || true'
 		sh 'docker volume prune -f || true'
+	}
+}
+// Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
+void runTest(String goal, String lockableResource = null, boolean clean = true) {
+	String cmd = "./gradlew" + (clean ? " clean" : "") + " check ${goal} -Plog-test-progress=true --stacktrace";
+	try {
+		if (lockableResource == null) {
+			sh cmd
+		}
+		else {
+			lock(lockableResource) {
+				sh cmd
+			}
+		}
+	}
+	finally {
+		junit '**/target/test-results/test/*.xml'
 	}
 }

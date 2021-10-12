@@ -7,7 +7,7 @@
 
 //$Id: $
 
-package org.hibernate.test.lob;
+package org.hibernate.orm.test.lob;
 import java.io.Serializable;
 
 /**

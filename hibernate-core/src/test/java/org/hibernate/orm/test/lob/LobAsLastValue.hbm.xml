@@ -9,7 +9,7 @@
         "-//Hibernate/Hibernate Mapping DTD 2.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.lob">
+<hibernate-mapping package="org.hibernate.orm.test.lob">
 
     <class name="LobAsLastValueEntity">
         <id name="id" type="integer">

@@ -9,16 +9,14 @@
 	"-//Hibernate/Hibernate Mapping DTD 2.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.lob">
+<hibernate-mapping package="org.hibernate.orm.test.lob">
 
-    <!-- HHH-7734: Don't use LOB_ENTITY as the table name.  Others use it
-    and there were some odd locking issue with 1 version of Oracle. -->
-	<class name="SerializableHolder" table="SerializableHolder">
+	<class name="LongByteArrayHolder" table="LOB_ENTITY_IMAGE">
 		<id name="id" type="long" column="ID">
 			<generator class="increment"/>
 		</id>
 
-		<property name="serialData" column="SER_DATA" type="serializable"/>
+		<property name="longByteArray" column="LONG_BYTE_ARRAY" type="image" length="15000"/>
     </class>
 
 </hibernate-mapping>

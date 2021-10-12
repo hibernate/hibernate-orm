@@ -9,17 +9,19 @@ package org.hibernate.orm.test.lob;
 import java.sql.Clob;
 
 import org.hibernate.LockOptions;
-import org.hibernate.Session;
 import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.type.descriptor.java.DataHelper;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Tests lazy materialization of data mapped by
@@ -29,133 +31,176 @@ import static org.junit.Assert.assertNotNull;
  * @author Steve Ebersole
  */
 @RequiresDialectFeature(
-		value = { DialectChecks.SupportsExpectedLobUsagePattern.class, DialectChecks.SupportsUnboundedLobLocatorMaterializationCheck.class },
+		feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class,
 		comment = "database/driver does not support expected LOB usage pattern"
 )
-public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
+@RequiresDialectFeature(
+		feature = DialectFeatureChecks.SupportsUnboundedLobLocatorMaterializationCheck.class,
+		comment = "database/driver does not support expected LOB usage pattern"
+)
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/lob/LobMappings.hbm.xml"
+)
+@SessionFactory
+public class ClobLocatorTest {
 	private static final int CLOB_SIZE = 10000;
 
-	@Override
-	protected String getBaseForMappings() {
-		return "org/hibernate/orm/test/";
-	}
 
 	public String[] getMappings() {
-		return new String[] { "lob/LobMappings.hbm.xml" };
+		return new String[] { "" };
 	}
 
 	@Test
-	public void testBoundedClobLocatorAccess() throws Throwable {
+	public void testBoundedClobLocatorAccess(SessionFactoryScope scope) throws Throwable {
 		String original = buildString( CLOB_SIZE, 'x' );
 		String changed = buildString( CLOB_SIZE, 'y' );
 		String empty = "";
 
-		Session s = openSession();
-		s.beginTransaction();
-		LobHolder entity = new LobHolder();
-		entity.setClobLocator( s.getLobHelper().createClob( original ) );
-		s.save( entity );
-		s.getTransaction().commit();
-		s.close();
+		Long id = scope.fromTransaction(
+				session -> {
+					LobHolder entity = new LobHolder();
+					entity.setClobLocator( session.getLobHelper().createClob( original ) );
+					session.save( entity );
+					return entity.getId();
+				}
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		entity = s.get( LobHolder.class, entity.getId() );
-		assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
-		assertEquals( original, extractData( entity.getClobLocator() ) );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					try {
+						LobHolder entity = session.get( LobHolder.class, id );
+						assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
+						assertEquals( original, extractData( entity.getClobLocator() ) );
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+				}
+		);
 
 		// test mutation via setting the new clob data...
-		if ( getDialect().supportsLobValueChangePropagation() ) {
-			s = openSession();
-			s.beginTransaction();
-			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
-			entity.getClobLocator().truncate( 1 );
-			entity.getClobLocator().setString( 1, changed );
-			s.getTransaction().commit();
-			s.close();
+		if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsLobValueChangePropagation() ) {
+			scope.inTransaction(
+					session -> {
+						try {
+							LobHolder entity = session.byId( LobHolder.class )
+									.with( LockOptions.UPGRADE )
+									.load( id );
+							entity.getClobLocator().truncate( 1 );
+							entity.getClobLocator().setString( 1, changed );
+						}
+						catch (Exception e) {
+							fail( e );
+						}
+					}
+			);
 
-			s = openSession();
-			s.beginTransaction();
-			entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
-			assertNotNull( entity.getClobLocator() );
-			assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
-			assertEquals( changed, extractData( entity.getClobLocator() ) );
-			entity.getClobLocator().truncate( 1 );
-			entity.getClobLocator().setString( 1, original );
-			s.getTransaction().commit();
-			s.close();
+			scope.inTransaction(
+					session -> {
+						try {
+							LobHolder entity = session.byId( LobHolder.class )
+									.with( LockOptions.UPGRADE )
+									.load( id );
+							assertNotNull( entity.getClobLocator() );
+
+							assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
+
+							assertEquals( changed, extractData( entity.getClobLocator() ) );
+							entity.getClobLocator().truncate( 1 );
+							entity.getClobLocator().setString( 1, original );
+						}
+						catch (Exception e) {
+							fail( e );
+						}
+					}
+			);
 		}
 
 		// test mutation via supplying a new clob locator instance...
-		s = openSession();
-		s.beginTransaction();
-		entity = ( LobHolder ) s.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( entity.getId() );
-		assertNotNull( entity.getClobLocator() );
-		assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
-		assertEquals( original, extractData( entity.getClobLocator() ) );
-		entity.setClobLocator( s.getLobHelper().createClob( changed ) );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					try {
+						LobHolder entity = session.byId( LobHolder.class ).with( LockOptions.UPGRADE ).load( id );
+						assertNotNull( entity.getClobLocator() );
+						assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
+						assertEquals( original, extractData( entity.getClobLocator() ) );
+						entity.setClobLocator( session.getLobHelper().createClob( changed ) );
+					}
+					catch (Exception e) {
+						fail( e );
+					}
+				}
+		);
 
 		// test empty clob
-		if ( !(getDialect() instanceof SybaseASEDialect ) ) { // Skip for Sybase. HHH-6425
-			s = openSession();
-			s.beginTransaction();
-			entity = s.get( LobHolder.class, entity.getId() );
-			assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
-			assertEquals( changed, extractData( entity.getClobLocator() ) );
-			entity.setClobLocator( s.getLobHelper().createClob( empty ) );
-			s.getTransaction().commit();
-			s.close();
+		if ( !( scope.getSessionFactory()
+				.getJdbcServices()
+				.getDialect() instanceof SybaseASEDialect ) ) { // Skip for Sybase. HHH-6425
+			scope.inTransaction(
+					session -> {
+						try {
+							LobHolder entity = session.get( LobHolder.class, id );
+							assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
+							assertEquals( changed, extractData( entity.getClobLocator() ) );
+							entity.setClobLocator( session.getLobHelper().createClob( empty ) );
+						}
+						catch (Exception e) {
+							fail( e );
+						}
+					}
+			);
 
-			s = openSession();
-			s.beginTransaction();
-			entity = s.get( LobHolder.class, entity.getId() );
-			if ( entity.getClobLocator() != null) {
-				assertEquals( empty.length(), entity.getClobLocator().length() );
-				assertEquals( empty, extractData( entity.getClobLocator() ) );
-			}
-			s.delete( entity );
-			s.getTransaction().commit();
-			s.close();
+			scope.inTransaction(
+					session -> {
+						try {
+							LobHolder entity = session.get( LobHolder.class, id );
+							if ( entity.getClobLocator() != null ) {
+								assertEquals( empty.length(), entity.getClobLocator().length() );
+								assertEquals( empty, extractData( entity.getClobLocator() ) );
+							}
+							session.delete( entity );
+						}
+						catch (Exception e) {
+							fail( e );
+						}
+					}
+			);
 		}
 
 	}
 
 	@Test
-	public void testUnboundedClobLocatorAccess() throws Throwable {
+	public void testUnboundedClobLocatorAccess(SessionFactoryScope scope) throws Throwable {
 		// Note: unbounded mutation of the underlying lob data is completely
 		// unsupported; most databases would not allow such a construct anyway.
 		// Thus here we are only testing materialization...
 
 		String original = buildString( CLOB_SIZE, 'x' );
 
-		Session s = openSession();
-		s.beginTransaction();
-		LobHolder entity = new LobHolder();
-		entity.setClobLocator( s.getLobHelper().createClob( original ) );
-		s.save( entity );
-		s.getTransaction().commit();
-		s.close();
+		Long id = scope.fromTransaction(
+				session -> {
+					LobHolder entity = new LobHolder();
+					entity.setClobLocator( session.getLobHelper().createClob( original ) );
+					session.save( entity );
+					return entity.getId();
+				}
+		);
 
 		// load the entity with the clob locator, and close the session/transaction;
 		// at that point it is unbounded...
-		s = openSession();
-		s.beginTransaction();
-		entity = s.get( LobHolder.class, entity.getId() );
-		s.getTransaction().commit();
-		s.close();
+		LobHolder lobHolder = scope.fromTransaction(
+				session ->
+						session.get( LobHolder.class, id )
 
-		assertEquals( CLOB_SIZE, entity.getClobLocator().length() );
-		assertEquals( original, extractData( entity.getClobLocator() ) );
+		);
 
-		s = openSession();
-		s.beginTransaction();
-		s.delete( entity );
-		s.getTransaction().commit();
-		s.close();
+		assertEquals( CLOB_SIZE, lobHolder.getClobLocator().length() );
+		assertEquals( original, extractData( lobHolder.getClobLocator() ) );
+
+		scope.inTransaction(
+				session ->
+						session.delete( lobHolder )
+		);
 	}
 
 	public static String extractData(Clob clob) throws Exception {
@@ -164,7 +209,7 @@ public class ClobLocatorTest extends BaseCoreFunctionalTestCase {
 
 	public static String buildString(int size, char baseChar) {
 		StringBuilder buff = new StringBuilder();
-		for( int i = 0; i < size; i++ ) {
+		for ( int i = 0; i < size; i++ ) {
 			buff.append( baseChar );
 		}
 		return buff.toString();

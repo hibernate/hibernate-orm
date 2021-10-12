@@ -368,4 +368,10 @@ abstract public class DialectFeatureChecks {
 			return dialect.currentTimestamp().startsWith( "current_timestamp" );
 		}
 	}
+
+	public static class ForceLobAsLastValue implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.forceLobAsLastValue();
+		}
+	}
 }

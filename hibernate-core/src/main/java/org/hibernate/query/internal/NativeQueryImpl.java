@@ -47,6 +47,7 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
+import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.Query;
@@ -145,7 +146,9 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	public NativeQuery setResultSetMapping(String name) {
-		ResultSetMappingDefinition mapping = getProducer().getFactory().getNamedQueryRepository().getResultSetMappingDefinition( name );
+		ResultSetMappingDefinition mapping = getProducer().getFactory()
+				.getNamedQueryRepository()
+				.getResultSetMappingDefinition( name );
 		if ( mapping == null ) {
 			throw new MappingException( "Unknown SqlResultSetMapping [" + name + "]" );
 		}
@@ -193,7 +196,7 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		queryParameters.setCallable( callable );
 		queryParameters.setAutoDiscoverScalarTypes( autoDiscoverTypes );
 		if ( collectionKey != null ) {
-			queryParameters.setCollectionKeys( new Serializable[] {collectionKey} );
+			queryParameters.setCollectionKeys( new Serializable[] { collectionKey } );
 		}
 		return queryParameters;
 	}
@@ -378,7 +381,11 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	public FetchReturn addFetch(String tableAlias, String ownerTableAlias, String joinPropertyName) {
-		NativeQueryReturnBuilderFetchImpl builder = new NativeQueryReturnBuilderFetchImpl( tableAlias, ownerTableAlias, joinPropertyName );
+		NativeQueryReturnBuilderFetchImpl builder = new NativeQueryReturnBuilderFetchImpl(
+				tableAlias,
+				ownerTableAlias,
+				joinPropertyName
+		);
 		addReturnBuilder( builder );
 		return builder;
 	}
@@ -476,7 +483,10 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 
 	@Override
 	public NativeQueryImplementor<T> addSynchronizedEntityClass(Class entityClass) throws MappingException {
-		addQuerySpaces( getProducer().getFactory().getMetamodel().entityPersister( entityClass.getName() ).getQuerySpaces() );
+		addQuerySpaces( getProducer().getFactory()
+								.getMetamodel()
+								.entityPersister( entityClass.getName() )
+								.getQuerySpaces() );
 		return this;
 	}
 
@@ -613,6 +623,9 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 		else if ( LockModeType.class.isInstance( value ) ) {
 			applyLockModeTypeHint( (LockModeType) value );
 		}
+		else if ( String.class.isInstance( value ) ) {
+			applyHibernateLockModeHint( LockModeTypeHelper.interpretLockMode( value ) );
+		}
 		else {
 			throw new IllegalArgumentException(
 					String.format(
@@ -697,19 +710,28 @@ public class NativeQueryImpl<T> extends AbstractProducedQuery<T> implements Nati
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<LocalDateTime> param, LocalDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<T> setParameter(
+			Parameter<LocalDateTime> param,
+			LocalDateTime value,
+			TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<ZonedDateTime> param, ZonedDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<T> setParameter(
+			Parameter<ZonedDateTime> param,
+			ZonedDateTime value,
+			TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}
 
 	@Override
-	public NativeQueryImplementor<T> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType) {
+	public NativeQueryImplementor<T> setParameter(
+			Parameter<OffsetDateTime> param,
+			OffsetDateTime value,
+			TemporalType temporalType) {
 		super.setParameter( param, value, temporalType );
 		return this;
 	}

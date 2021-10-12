@@ -10,12 +10,15 @@ import java.util.List;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
+import javax.persistence.LockModeType;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Query;
+import javax.persistence.QueryHint;
 
+import org.hibernate.LockMode;
 import org.hibernate.Session;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
@@ -182,7 +185,7 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-11413")
-	public void testNamedNativeQueryExceptionNoRedultDefined() {
+	public void testNamedNativeQueryExceptionNoResultDefined() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			assertThrows(
 					"Named query exists but its result type is not compatible",
@@ -192,9 +195,23 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-14816")
+	public void testQueryHintLockType() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+					 Query query = entityManager.createNamedQuery( "QueryTestHint" );
+					 query.setParameter( 1, GAME_TITLES[0] );
+					 assertEquals( LockModeType.NONE, query.getLockMode() );
+				 }
+		);
+	}
+
 	@Entity(name = "Game")
 	@NamedQueries(@NamedQuery(name = "NamedQuery", query = "select g from Game g where title = ?1"))
-	@NamedNativeQueries(@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"))
+	@NamedNativeQueries({
+			@NamedNativeQuery(name = "NamedNativeQuery", query = "select * from Game g where title = ?"),
+			@NamedNativeQuery(name = "QueryTestHint", query = "select id from Game g where title = ?1", hints = { @QueryHint(name = org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE, value = "none") })
+	})
 	public static class Game {
 		private Long id;
 		private String title;

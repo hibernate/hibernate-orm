@@ -4,91 +4,95 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.joinedsubclassbatch;
+package org.hibernate.orm.test.joinedsubclassbatch;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import org.hibernate.ScrollMode;
+import org.hibernate.ScrollableResults;
+import org.hibernate.cfg.Environment;
+
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.ManyToOne;
 
-import org.hibernate.ScrollMode;
-import org.hibernate.ScrollableResults;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
-
-import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
-
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Test batching of insert,update,delete on joined subclasses
+ * Test batching of insert,update,delete on joined subclasses using SEQUENCE
  *
- * @author dcebotarenco
+ * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-2558")
-public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
+@TestForIssue(jiraKey = "HHH-12968\n")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
+@DomainModel(
+		annotatedClasses = {
+				SequenceJoinedSubclassBatchingTest.Person.class,
+				SequenceJoinedSubclassBatchingTest.Employee.class,
+				SequenceJoinedSubclassBatchingTest.Customer.class
+		}
+)
+@SessionFactory
+@ServiceRegistry(
+		settings = @Setting(name = Environment.STATEMENT_BATCH_SIZE, value = "20")
+)
+public class SequenceJoinedSubclassBatchingTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Person.class,
-				Employee.class,
-				Customer.class
-		};
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "20" );
+	@Test
+	public void doBatchInsertUpdateJoinedSubclassNrEqualWithBatch(SessionFactoryScope scope) {
+		doBatchInsertUpdateJoined( 20, 20, scope );
 	}
 
 	@Test
-	public void doBatchInsertUpdateJoinedSubclassNrEqualWithBatch() {
-		doBatchInsertUpdateJoined( 20, 20 );
+	public void doBatchInsertUpdateJoinedSubclassNrLessThenBatch(SessionFactoryScope scope) {
+		doBatchInsertUpdateJoined( 19, 20, scope );
 	}
 
 	@Test
-	public void doBatchInsertUpdateJoinedSubclassNrLessThenBatch() {
-		doBatchInsertUpdateJoined( 19, 20 );
+	public void doBatchInsertUpdateJoinedSubclassNrBiggerThenBatch(SessionFactoryScope scope) {
+		doBatchInsertUpdateJoined( 21, 20, scope );
 	}
 
 	@Test
-	public void doBatchInsertUpdateJoinedSubclassNrBiggerThenBatch() {
-		doBatchInsertUpdateJoined( 21, 20 );
+	public void testBatchInsertUpdateSizeEqJdbcBatchSize(SessionFactoryScope scope) {
+		int batchSize = scope.getSessionFactory().getSessionFactoryOptions().getJdbcBatchSize();
+		doBatchInsertUpdateJoined( 50, batchSize, scope );
 	}
 
 	@Test
-	public void testBatchInsertUpdateSizeEqJdbcBatchSize() {
-		int batchSize = sessionFactory().getSettings().getJdbcBatchSize();
-		doBatchInsertUpdateJoined( 50, batchSize );
+	public void testBatchInsertUpdateSizeLtJdbcBatchSize(SessionFactoryScope scope) {
+		int batchSize = scope.getSessionFactory().getSessionFactoryOptions().getJdbcBatchSize();
+		doBatchInsertUpdateJoined( 50, batchSize - 1, scope );
 	}
 
 	@Test
-	public void testBatchInsertUpdateSizeLtJdbcBatchSize() {
-		int batchSize = sessionFactory().getSettings().getJdbcBatchSize();
-		doBatchInsertUpdateJoined( 50, batchSize - 1 );
+	public void testBatchInsertUpdateSizeGtJdbcBatchSize(SessionFactoryScope scope) {
+		int batchSize = scope.getSessionFactory().getSessionFactoryOptions().getJdbcBatchSize();
+		doBatchInsertUpdateJoined( 50, batchSize + 1, scope );
 	}
 
-	@Test
-	public void testBatchInsertUpdateSizeGtJdbcBatchSize() {
-		int batchSize = sessionFactory().getSettings().getJdbcBatchSize();
-		doBatchInsertUpdateJoined( 50, batchSize + 1 );
-	}
+	public void doBatchInsertUpdateJoined(int nEntities, int nBeforeFlush, SessionFactoryScope scope) {
 
-	public void doBatchInsertUpdateJoined(int nEntities, int nBeforeFlush) {
-
-		doInHibernate( this::sessionFactory, s -> {
+		scope.inTransaction( s -> {
 			for ( int i = 0; i < nEntities; i++ ) {
 				Employee e = new Employee();
 				e.getId();
@@ -106,29 +110,59 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			int i = 0;
+		scope.inTransaction( s -> {
 			ScrollableResults sr = s.createQuery(
-				"select e from Employee e" )
-			.scroll( ScrollMode.FORWARD_ONLY );
+							"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( );
+				Employee e = (Employee) sr.get();
 				e.setTitle( "Unknown" );
 			}
 		} );
 
-		doInHibernate( this::sessionFactory, s -> {
-			int i = 0;
+		scope.inTransaction( s -> {
 			ScrollableResults sr = s.createQuery(
-				"select e from Employee e" )
-			.scroll( ScrollMode.FORWARD_ONLY );
+							"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
 
 			while ( sr.next() ) {
-				Employee e = (Employee) sr.get( );
+				Employee e = (Employee) sr.get();
 				s.delete( e );
 			}
 		} );
+	}
+
+	@Test
+	public void testAssertSubclassInsertedSuccessfullyAfterFlush(SessionFactoryScope scope) {
+
+		scope.inTransaction( s -> {
+			Employee e = new Employee();
+			e.setName( "Mark" );
+			e.setTitle( "internal sales" );
+			e.setSex( 'M' );
+			e.setAddress( "buckhead" );
+			e.setZip( "30305" );
+			e.setCountry( "USA" );
+			s.save( e );
+			s.flush();
+
+			long numberOfInsertedEmployee = (long) s.createQuery( "select count(e) from Employee e" ).uniqueResult();
+			assertEquals( 1L, numberOfInsertedEmployee );
+		} );
+
+
+		scope.inTransaction( s -> {
+			ScrollableResults sr = s.createQuery(
+							"select e from Employee e" )
+					.scroll( ScrollMode.FORWARD_ONLY );
+
+			while ( sr.next() ) {
+				Employee e = (Employee) sr.get();
+				s.delete( e );
+			}
+		} );
+
 	}
 
 	@Embeddable
@@ -241,9 +275,8 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 	public static class Person {
 
 		@Id
-		@GeneratedValue(generator = "system-uuid")
-		@GenericGenerator(name = "system-uuid", strategy = "uuid2")
-		private String id;
+		@GeneratedValue(strategy = GenerationType.SEQUENCE)
+		private Long id;
 
 		@Column(nullable = false, length = 80)
 		private String name;
@@ -283,11 +316,11 @@ public class JoinedSubclassBatchingTest extends BaseCoreFunctionalTestCase {
 			this.sex = sex;
 		}
 
-		public String getId() {
+		public Long getId() {
 			return id;
 		}
 
-		public void setId(String id) {
+		public void setId(Long id) {
 			this.id = id;
 		}
 

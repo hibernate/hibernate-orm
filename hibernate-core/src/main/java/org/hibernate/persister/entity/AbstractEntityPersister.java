@@ -1651,6 +1651,7 @@ public abstract class AbstractEntityPersister
 		try {
 			Object result = null;
 			final Object[] values = lazySelect.load( id, session );
+			int i = 0;
 			for ( LazyAttributeDescriptor fetchGroupAttributeDescriptor : fetchGroupAttributeDescriptors ) {
 				final boolean previousInitialized = initializedLazyAttributeNames.contains( fetchGroupAttributeDescriptor.getName() );
 
@@ -1666,11 +1667,11 @@ public abstract class AbstractEntityPersister
 					//		of course that would mean a new method on SelfDirtinessTracker to allow un-marking
 
 					// its already been initialized (e.g. by a write) so we don't want to overwrite
+					i++;
 					continue;
 				}
 
-
-				final Object selectedValue = values[fetchGroupAttributeDescriptor.getLazyIndex()];
+				final Object selectedValue = values[i++];
 
 				final boolean set = initializeLazyProperty(
 						fieldName,

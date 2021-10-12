@@ -139,7 +139,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		}
 
 		if ( getEjb3DD().length > 0 ) {
-			ArrayList<String> dds = new ArrayList<String>();
+			ArrayList<String> dds = new ArrayList<>();
 			dds.addAll( Arrays.asList( getEjb3DD() ) );
 			config.put( AvailableSettings.ORM_XML_FILES, dds );
 		}

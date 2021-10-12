@@ -114,11 +114,11 @@ public class ConfigurationTest {
 		assertTrue( pc.isCached() );
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private MetadataImplementor buildMetadata(SharedCacheMode mode) {
 		Map settings = new HashMap();
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, mode );
-		settings.put( Environment.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
+		settings.put( AvailableSettings.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
 		settings.put(
 				AvailableSettings.LOADED_CLASSES,
 				Arrays.asList(

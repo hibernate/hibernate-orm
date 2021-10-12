@@ -35,7 +35,7 @@ public class EntityManagerFactoryClosedTest extends BaseEntityManagerFunctionalT
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		TestingJtaBootstrap.prepare(options);
-		options.put( AvailableSettings.JPA_TRANSACTION_TYPE, "JTA" );
+		options.put( AvailableSettings.JAKARTA_TRANSACTION_TYPE, "JTA" );
 	}
 
 	/**

@@ -45,7 +45,7 @@ public class CachedQueryTest extends BaseEntityManagerFunctionalTestCase {
 		em.getTransaction().commit();
 		em.close();
 
-		HibernateEntityManagerFactory hemf =  (HibernateEntityManagerFactory) entityManagerFactory();
+		HibernateEntityManagerFactory hemf = entityManagerFactory();
 		Statistics stats = hemf.getSessionFactory().getStatistics();
 
 		assertEquals( 0, stats.getQueryCacheHitCount() );

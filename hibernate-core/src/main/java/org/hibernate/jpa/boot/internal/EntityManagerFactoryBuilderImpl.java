@@ -550,9 +550,9 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		//		2) additional cache region declarations
 		//
 		// we will also clean up any references with null entries
-		Iterator itr = mergedSettings.configurationValues.entrySet().iterator();
+		Iterator<Map.Entry> itr = mergedSettings.configurationValues.entrySet().iterator();
 		while ( itr.hasNext() ) {
-			final Map.Entry entry = (Map.Entry) itr.next();
+			final Map.Entry entry = itr.next();
 			if ( entry.getValue() == null ) {
 				// remove entries with null values
 				itr.remove();
@@ -1228,8 +1228,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// apply id generators
 		final Object idGeneratorStrategyProviderSetting = configurationValues.remove( AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER );
 		if ( idGeneratorStrategyProviderSetting != null ) {
-			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider =
-					strategySelector.resolveStrategy( IdentifierGeneratorStrategyProvider.class, idGeneratorStrategyProviderSetting );
+			final IdentifierGeneratorStrategyProvider idGeneratorStrategyProvider = strategySelector.resolveStrategy(
+					IdentifierGeneratorStrategyProvider.class,
+					idGeneratorStrategyProviderSetting
+			);
 			final MutableIdentifierGeneratorFactory identifierGeneratorFactory = ssr.getService( MutableIdentifierGeneratorFactory.class );
 			if ( identifierGeneratorFactory == null ) {
 				throw persistenceException(
@@ -1500,8 +1502,10 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 		// Locate and apply any requested SessionFactoryObserver
 		final Object sessionFactoryObserverSetting = configurationValues.remove( AvailableSettings.SESSION_FACTORY_OBSERVER );
 		if ( sessionFactoryObserverSetting != null ) {
-			final SessionFactoryObserver suppliedSessionFactoryObserver =
-					strategySelector.resolveStrategy( SessionFactoryObserver.class, sessionFactoryObserverSetting );
+			final SessionFactoryObserver suppliedSessionFactoryObserver = strategySelector.resolveStrategy(
+					SessionFactoryObserver.class,
+					sessionFactoryObserverSetting
+			);
 			sfBuilder.addSessionFactoryObservers( suppliedSessionFactoryObserver );
 		}
 

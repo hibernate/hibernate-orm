@@ -273,9 +273,9 @@ public class InterceptorTest {
 
     protected Map basicSettings() {
 		return SettingsGenerator.generateSettings(
-				Environment.HBM2DDL_AUTO, "create-drop",
-				Environment.USE_NEW_ID_GENERATOR_MAPPINGS, "true",
-				Environment.DIALECT, DialectContext.getDialect().getClass().getName(),
+				AvailableSettings.HBM2DDL_AUTO, "create-drop",
+				AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true",
+				AvailableSettings.DIALECT, DialectContext.getDialect().getClass().getName(),
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( getAnnotatedClasses() )
 		);
     }

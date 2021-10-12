@@ -409,7 +409,7 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 		final ConfigurationService cfgService = sessionFactoryServiceRegistry.getService( ConfigurationService.class );
 		final ClassLoaderService classLoaderService = sessionFactoryServiceRegistry.getService( ClassLoaderService.class );
 
-		for ( Map.Entry entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
+		for ( Map.Entry<?,?> entry : ( (Map<?, ?>) cfgService.getSettings() ).entrySet() ) {
 			if ( !String.class.isInstance( entry.getKey() ) ) {
 				continue;
 			}

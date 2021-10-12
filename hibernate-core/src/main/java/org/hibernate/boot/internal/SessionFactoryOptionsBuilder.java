@@ -528,6 +528,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				false
 		);
+
 		Object jdbcTimeZoneValue = configurationSettings.get(
 				JDBC_TIME_ZONE
 		);

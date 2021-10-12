@@ -63,7 +63,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	protected void addConfigOptions(Map options) {
 		super.addConfigOptions( options );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
-		options.remove( org.hibernate.cfg.AvailableSettings.CONNECTION_PROVIDER );
+		options.remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
 	@Test
@@ -285,7 +285,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 		doInJPA( this::entityManagerFactory, _entityManagaer -> {
 			Map<String, Object> properties = new HashMap<>();
-			properties.put( org.hibernate.cfg.AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
+			properties.put( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.SKIP_LOCKED );
 			_entityManagaer.find( Lock.class, lock.getId(), LockModeType.PESSIMISTIC_READ, properties );
 
 			try {

@@ -275,7 +275,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 	private Properties buildProperties() {
 		Properties properties = Environment.getProperties();
 
-		properties.put( org.hibernate.cfg.AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
+		properties.put( AvailableSettings.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		for ( Map.Entry<Class, String> entry : getCachedClasses().entrySet() ) {
 			properties.put( AvailableSettings.CLASS_CACHE_PREFIX + "." + entry.getKey().getName(), entry.getValue() );
 		}
@@ -286,10 +286,10 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		configure( properties );
 
 		if ( createSchema() ) {
-			properties.put( org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO, "create-drop" );
+			properties.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 		}
-		properties.put( org.hibernate.cfg.AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
-		properties.put( org.hibernate.cfg.AvailableSettings.DIALECT, getDialect().getClass().getName() );
+		properties.put( AvailableSettings.USE_NEW_ID_GENERATOR_MAPPINGS, "true" );
+		properties.put( AvailableSettings.DIALECT, getDialect().getClass().getName() );
 
 		return properties;
 	}

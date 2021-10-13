@@ -415,21 +415,16 @@ public class LoaderSelectBuilder {
 				}
 				else if ( part instanceof ToOneAttributeMapping ) {
 					final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) part;
-					if ( toOneAttributeMapping.getSideNature() == ForeignKeyDescriptor.Nature.TARGET ) {
-						final TableGroupJoin tableGroupJoin = toOneAttributeMapping.createTableGroupJoin(
-								navigablePath,
-								rootTableGroup,
-								null,
-								SqlAstJoinType.LEFT,
-								true,
-								sqlAstCreationState
-						);
-						tableGroup = tableGroupJoin.getJoinedGroup();
-						sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
-					}
-					else {
-						tableGroup = rootTableGroup;
-					}
+					final TableGroupJoin tableGroupJoin = toOneAttributeMapping.createTableGroupJoin(
+							navigablePath,
+							rootTableGroup,
+							null,
+							SqlAstJoinType.LEFT,
+							true,
+							sqlAstCreationState
+					);
+					tableGroup = tableGroupJoin.getJoinedGroup();
+					sqlAstCreationState.getFromClauseAccess().registerTableGroup( navigablePath, tableGroup );
 				}
 				else {
 					tableGroup = rootTableGroup;

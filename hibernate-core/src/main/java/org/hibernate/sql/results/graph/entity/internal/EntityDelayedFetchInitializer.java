@@ -8,17 +8,12 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.LockMode;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.loader.entity.CacheEntityLoaderHelper;
-import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.query.NavigablePath;
@@ -35,7 +30,7 @@ import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
 
 	private final NavigablePath navigablePath;
-	private final EntityValuedModelPart referencedModelPart;
+	private final ToOneAttributeMapping referencedModelPart;
 	private final DomainResultAssembler identifierAssembler;
 
 	private Object entityInstance;
@@ -43,7 +38,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 	public EntityDelayedFetchInitializer(
 			NavigablePath fetchedNavigable,
-			EntityValuedModelPart referencedModelPart,
+			ToOneAttributeMapping referencedModelPart,
 			DomainResultAssembler identifierAssembler) {
 		this.navigablePath = fetchedNavigable;
 		this.referencedModelPart = referencedModelPart;
@@ -81,69 +76,22 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
 			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
 
-			LoadingEntityEntry loadingEntityLocally = persistenceContext
-					.getLoadContexts().findLoadingEntityEntry( entityKey );
+			final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts().findLoadingEntityEntry(
+					entityKey );
 			if ( loadingEntityLocally != null ) {
 				entityInstance = loadingEntityLocally.getEntityInstance();
 			}
 			else {
-				final Object entity = persistenceContext.getEntity( entityKey );
-				final Object proxy = persistenceContext.getProxy( entityKey );
-				if ( entity != null && proxy != null && ( (HibernateProxy) proxy ).getHibernateLazyInitializer()
-						.isUninitialized() ) {
-					entityInstance = entity;
-				}
-				else {
-					if ( proxy != null ) {
-						entityInstance = proxy;
-					}
-					else {
-						if ( entity != null ) {
-							entityInstance = entity;
-						}
-						else {
-							// Look into the second level cache if the descriptor is polymorphic
-							final Object cachedEntity;
-							if ( concreteDescriptor.getEntityMetamodel().hasSubclasses() ) {
-								cachedEntity = CacheEntityLoaderHelper.INSTANCE.loadFromSecondLevelCache(
-										(SharedSessionContractImplementor) rowProcessingState.getSession(),
-										null,
-										LockMode.NONE,
-										concreteDescriptor,
-										entityKey
-								);
-							}
-							else {
-								cachedEntity = null;
-							}
+				entityInstance = rowProcessingState.getSession().internalLoad(
+						concreteDescriptor.getEntityName(),
+						identifier,
+						false,
+						referencedModelPart.isInternalLoadNullable()
+				);
 
-							if ( cachedEntity != null ) {
-								entityInstance = cachedEntity;
-							}
-							else {
-								entityInstance = persistenceContext.getEntity( entityKey );
-								if ( entityInstance == null ) {
-									if ( concreteDescriptor.hasProxy() ) {
-										entityInstance = concreteDescriptor.createProxy(
-												identifier,
-												rowProcessingState.getSession()
-										);
-										persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-										persistenceContext.addProxy( entityKey, entityInstance );
-									}
-									else if ( concreteDescriptor.getBytecodeEnhancementMetadata()
-											.isEnhancedForLazyLoading() ) {
-										entityInstance = concreteDescriptor.getBytecodeEnhancementMetadata()
-												.createEnhancedProxy(
-														entityKey,
-														true,
-														rowProcessingState.getSession()
-												);
-									}
-								}
-							}
-						}
-					}
+				if ( entityInstance instanceof HibernateProxy ) {
+					( (HibernateProxy) entityInstance ).getHibernateLazyInitializer()
+							.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
 				}
 			}
 

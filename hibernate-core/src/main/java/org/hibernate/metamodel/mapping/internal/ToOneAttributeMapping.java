@@ -95,6 +95,7 @@ public class ToOneAttributeMapping
 
 	private final String sqlAliasStem;
 	private final boolean isNullable;
+	private final boolean isConstrained;
 	private final boolean isIgnoreNotFound;
 	private final boolean unwrapProxy;
 	private final EntityMappingType entityMappingType;
@@ -111,6 +112,12 @@ public class ToOneAttributeMapping
 	private ForeignKeyDescriptor.Nature sideNature;
 	private String identifyingColumnsTableExpression;
 	private boolean canUseParentTableGroup;
+
+	private boolean isInternalLoadNullable;
+
+	public boolean isInternalLoadNullable(){
+		return isInternalLoadNullable;
+	}
 
 	public ToOneAttributeMapping(
 			String name,
@@ -192,6 +199,7 @@ public class ToOneAttributeMapping
 			else {
 				this.bidirectionalAttributeName = referencedPropertyName;
 			}
+			isInternalLoadNullable = ( (ManyToOne) bootValue ).isIgnoreNotFound();
 		}
 		else {
 			assert bootValue instanceof OneToOne;
@@ -257,7 +265,9 @@ public class ToOneAttributeMapping
 				this.bidirectionalAttributeName = bidirectionalAttributeName;
 			}
 			isIgnoreNotFound = isNullable();
+			isInternalLoadNullable = ! bootValue.isConstrained();
 		}
+		isConstrained = bootValue.isConstrained();
 
 		this.navigableRole = navigableRole;
 		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact(
@@ -343,6 +353,7 @@ public class ToOneAttributeMapping
 		this.cardinality = original.cardinality;
 		this.bidirectionalAttributeName = original.bidirectionalAttributeName;
 		this.declaringTableGroupProducer = original.declaringTableGroupProducer;
+		this.isConstrained = original.isConstrained;
 	}
 
 	private static void addPrefixedPropertyNames(
@@ -1040,6 +1051,10 @@ public class ToOneAttributeMapping
 
 	public boolean isNullable() {
 		return isNullable;
+	}
+
+	public boolean isConstrained(){
+		return isConstrained;
 	}
 
 	public boolean isIgnoreNotFound(){

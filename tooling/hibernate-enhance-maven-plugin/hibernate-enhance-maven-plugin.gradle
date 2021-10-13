@@ -7,7 +7,7 @@
 description = 'Enhance Plugin of the Hibernate project for use with Maven build system.'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 
 import org.apache.tools.ant.filters.ReplaceTokens
@@ -69,40 +69,28 @@ def generateMavenDependency(String gradleDependency) {
 }
 
 // Writes pom.xml using merged Gradle dependency and MavenPom configuration.
-processResources.doLast {
-    ext.pomDefinition = pom {
-        configurations {
-            // avoiding test dependencies in generated pom
-            compile
-            runtime
-        }
-
-        project {
-            groupId  project.group
-            packaging 'maven-plugin'
-            name 'Hibernate Enhance Maven Plugin'
-            description 'Enhance Plugin of the Hibernate project for use with Maven build system.'
-            properties {
-                'project.build.sourceEncoding' 'UTF-8'
+tasks.named('generatePomFileForPublishedArtifactsPublication') {
+    pom.with {
+        packaging 'maven-plugin'
+        name.set('Hibernate Enhance Maven Plugin')
+        description 'Enhance Plugin of the Hibernate project for use with Maven build system.'
+        properties.put(
+            'project.build.sourceEncoding', 'UTF-8'
+        )
+        // HHH-9679 --- build in pom{} conflicts with FactoryBuilderSupport#build so we write that portion of XML by hand
+        withXml {
+            asNode().appendNode('build').appendNode('plugins').appendNode('plugin').with {
+                appendNode('groupId', 'org.apache.maven.plugins')
+                appendNode('artifactId', 'maven-plugin-plugin')
+                appendNode('version', '3.2')
+                appendNode('configuration').appendNode('skipErrorNoDescriptorsFound', 'true')
+                appendNode('executions').appendNode('execution').with {
+                    appendNode('id', 'mojo-descriptor')
+                    appendNode('goals').appendNode('goal', 'descriptor')
+                }
             }
         }
     }
-
-    // HHH-9679 --- build in pom{} conflicts with FactoryBuilderSupport#build so we write that portion of XML by hand
-    ext.pomDefinition.withXml {
-        asNode().appendNode('build').appendNode('plugins').appendNode('plugin').with {
-            appendNode('groupId', 'org.apache.maven.plugins')
-            appendNode('artifactId', 'maven-plugin-plugin')
-            appendNode('version', '3.2')
-            appendNode('configuration').appendNode('skipErrorNoDescriptorsFound', 'true')
-            appendNode('executions').appendNode('execution').with {
-                appendNode('id', 'mojo-descriptor')
-                appendNode('goals').appendNode('goal', 'descriptor')
-            }
-        }
-    }
-
-    ext.pomDefinition.writeTo("$processResources.destinationDir/pom.xml")
 }
 
 processResources.dependsOn processPluginXml

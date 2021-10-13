@@ -228,7 +228,7 @@ convention.findPlugin( JavaPluginConvention.class ).sourceSets.each { sourceSet 
 final File toolsJar = file("${System.getProperty('java.home')}/../lib/tools.jar")
 if ( toolsJar.exists() ) {
 	dependencies{
-		testCompile files( toolsJar )
+		testImplementation files( toolsJar )
 	}
 }
 
@@ -254,17 +254,12 @@ if ( gradle.ext.javaToolchainEnabled ) {
 	}
 }
 class HeapDumpPathProvider implements CommandLineArgumentProvider {
-//	@InputFile
 	@OutputDirectory
-	@PathSensitive(PathSensitivity.RELATIVE)
-//	@Optional
 	Provider<Directory> path
-//	File path
 
 	@Override
 	Iterable<String> asArguments() {
 		["-XX:HeapDumpPath=${path.get().asFile.absolutePath}"]
-//		["-XX:HeapDumpPath=${path.absolutePath}"]
 	}
 }
 
@@ -280,7 +275,6 @@ tasks.withType( Test.class ).each { test ->
 
 	test.jvmArgumentProviders.add(
 			new HeapDumpPathProvider( path: project.layout.buildDirectory.dir("OOM-dump") )
-//			new HeapDumpPathProvider( path: project.file( "${buildDir}/OOM-dump.hprof" ) )
 	)
 
 	test.jvmArgs += [
@@ -327,6 +321,7 @@ sourceSets {
 
 
 processTestResources {
+	duplicatesStrategy DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
 	doLast {
 		copy {

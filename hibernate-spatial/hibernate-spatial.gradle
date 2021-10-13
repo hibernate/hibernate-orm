@@ -14,26 +14,26 @@ apply plugin: 'org.hibernate.matrix-test'
 
 
 dependencies {
-    compile project(':hibernate-core')
-    compile libraries.geolatte
+    api project(':hibernate-core')
+    api libraries.geolatte
 
     compileOnly libraries.postgresql
 
-    testCompile project(':hibernate-testing')
-    testCompile project(':hibernate-ant')
-    testCompile project( path: ':hibernate-core', configuration: 'tests' )
+    testImplementation project(':hibernate-testing')
+    testImplementation project(':hibernate-ant')
+    testImplementation project( path: ':hibernate-core', configuration: 'tests' )
 
-    testCompile libraries.jakarta_validation
-    testCompile libraries.jandex
-    testCompile libraries.classmate
-    testCompile libraries.jakarta_validator
-    testCompile libraries.dom4j
+    testImplementation libraries.jakarta_validation
+    testImplementation libraries.jandex
+    testImplementation libraries.classmate
+    testImplementation libraries.jakarta_validator
+    testImplementation libraries.dom4j
 
     testImplementation libraries.postgresql
 
-    testRuntime libraries.jakarta_el
-    testRuntime 'jaxen:jaxen:1.1'
-    testRuntime libraries.byteBuddy
+    testRuntimeOnly libraries.jakarta_el
+    testRuntimeOnly 'jaxen:jaxen:1.1'
+    testRuntimeOnly libraries.byteBuddy
 }
 
 sourceSets.test.resources {

@@ -14,7 +14,6 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.UnfetchedResultAssembler;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -39,7 +38,12 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			AssemblerCreationState creationState) {
 		// lazy attribute
 		if ( collectionKeyResult == null ) {
-			return new UnfetchedResultAssembler<>( getResultJavaTypeDescriptor() );
+			return new UnfetchedCollectionAssembler(
+					getNavigablePath(),
+					getFetchedMapping(),
+					parentAccess,
+					creationState
+			);
 		}
 		else {
 			return new DelayedCollectionAssembler(

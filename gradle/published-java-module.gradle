@@ -33,7 +33,7 @@ publishing {
 			from components.java
 		}
 
-		relocationArtifacts( MavenPublication ) {
+		relocationPom( MavenPublication ) {
 			pom {
 				name = project.name + ' - relocation'
 				groupId = 'org.hibernate'

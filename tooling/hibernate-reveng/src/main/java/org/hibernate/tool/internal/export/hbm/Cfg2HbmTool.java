@@ -291,10 +291,6 @@ public class Cfg2HbmTool {
 		return value.isExtraLazy() ? "extra" : Boolean.toString(value.isLazy());
 	}
 
-	public String getNamedSQLReturnRole(NativeSQLQueryCollectionReturn o) {
-		return o.getOwnerEntityName() + "." + o.getOwnerProperty();
-	}
-
 	public boolean isNamedSQLReturnRoot(NativeSQLQueryReturn sqlret) {
 		return sqlret instanceof NativeSQLQueryRootReturn;
 	}

@@ -91,7 +91,7 @@ public class SchemaByMetaDataDetector extends RelationalModelDetector {
 		Iterator<?> iter = iterateGenerators();
 		
 		Set<?> sequences = Collections.EMPTY_SET;
-		if(dialect.supportsSequences()) {
+		if(dialect.getSequenceSupport().supportsSequences()) {
 			sequences = sequenceCollector.readSequences(dialect.getQuerySequencesString());
 		}
 

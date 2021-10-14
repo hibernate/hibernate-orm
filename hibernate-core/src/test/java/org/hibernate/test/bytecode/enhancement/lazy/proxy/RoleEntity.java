@@ -27,6 +27,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.LazyGroup;
 import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
+import org.hibernate.orm.test.bytecode.enhancement.lazy.proxy.ModelEntity;
 
 @Entity(name = "RoleEntity")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)

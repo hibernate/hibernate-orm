@@ -31,14 +31,11 @@ import org.hibernate.cfg.AvailableSettings;
 
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.AbstractKey;
-import org.hibernate.test.bytecode.enhancement.lazy.proxy.Activity;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.GenericKey;
-import org.hibernate.test.bytecode.enhancement.lazy.proxy.Instruction;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.MoreSpecializedKey;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.RoleEntity;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.SpecializedEntity;
 import org.hibernate.test.bytecode.enhancement.lazy.proxy.SpecializedKey;
-import org.hibernate.test.bytecode.enhancement.lazy.proxy.WebApplication;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

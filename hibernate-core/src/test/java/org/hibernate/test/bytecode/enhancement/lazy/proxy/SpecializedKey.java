@@ -23,9 +23,6 @@ import jakarta.persistence.InheritanceType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.LazyCollection;
-import org.hibernate.annotations.LazyCollectionOption;
-
 @Entity(name="SpecializedKey")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @Table(name="PP_PartnerDCKey")

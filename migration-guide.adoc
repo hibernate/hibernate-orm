@@ -1,7 +1,7 @@
 = 5.6 Migration Guide
 :toc:
 
-This guide discusses migration from Hibernate ORM version 5.5 to version 5.5.
+This guide discusses migration from Hibernate ORM version 5.5 to version 5.6.
 
 For migration from other versions, see https://github.com/hibernate/hibernate-orm/wiki/Migration-Guides .
 

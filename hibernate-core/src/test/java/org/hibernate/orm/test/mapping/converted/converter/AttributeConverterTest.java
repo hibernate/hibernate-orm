@@ -220,6 +220,41 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 	}
 
 	@Test
+	@TestForIssue(jiraKey = "HHH-14881")
+	public void testBasicOrmXmlConverterWithOrmXmlPackage() {
+		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+
+		try {
+			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
+					.addAnnotatedClass( Tester.class )
+					.addURL( ConfigHelper.findAsResource( "org/hibernate/test/converter/package.xml" ) )
+					.getMetadataBuilder()
+					.build();
+
+			PersistentClass tester = metadata.getEntityBinding( Tester.class.getName() );
+			Property nameProp = tester.getProperty( "name" );
+			SimpleValue nameValue = (SimpleValue) nameProp.getValue();
+			Type type = nameValue.getType();
+			assertNotNull( type );
+			if ( !AttributeConverterTypeAdapter.class.isInstance( type ) ) {
+				fail( "AttributeConverter not applied" );
+			}
+
+			final AttributeConverterTypeAdapter typeAdapter = (AttributeConverterTypeAdapter) type;
+
+			assertThat( typeAdapter.getDomainJtd().getJavaTypeClass(), equalTo( String.class ) );
+			assertThat( typeAdapter.getRelationalJtd().getJavaTypeClass(), equalTo( Clob.class ) );
+
+			final JdbcType sqlTypeDescriptor = typeAdapter.getJdbcTypeDescriptor();
+			assertThat( sqlTypeDescriptor.getJdbcTypeCode(), is( Types.CLOB ) );
+		}
+		finally {
+			StandardServiceRegistryBuilder.destroy( ssr );
+		}
+	}
+
+
+	@Test
 	public void testBasicConverterDisableApplication() {
 		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
 

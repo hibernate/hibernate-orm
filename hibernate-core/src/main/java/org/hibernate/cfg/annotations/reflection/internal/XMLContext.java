@@ -15,7 +15,7 @@ import jakarta.persistence.AccessType;
 import jakarta.persistence.AttributeConverter;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.boot.AttributeConverterInfo;
+import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntity;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListener;
@@ -25,10 +25,11 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclass;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaults;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadata;
 import org.hibernate.boot.jaxb.mapping.spi.ManagedType;
+import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
-import org.hibernate.cfg.AttributeConverterDefinition;
 import org.hibernate.cfg.annotations.reflection.AttributeConverterDefinitionCollector;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -44,6 +45,7 @@ public class XMLContext implements Serializable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( XMLContext.class );
 
 	private final ClassLoaderAccess classLoaderAccess;
+	private final ClassmateContext classmateContext;
 
 	private Default globalDefaults;
 	private final Map<String, ManagedType> managedTypeOverride = new HashMap<>();
@@ -53,16 +55,9 @@ public class XMLContext implements Serializable {
 	private final List<String> defaultEntityListeners = new ArrayList<>();
 	private boolean hasContext = false;
 
-	/**
-	 * @deprecated Use {@link #XMLContext(BootstrapContext)} instead.
-	 */
-	@Deprecated
-	public XMLContext(ClassLoaderAccess classLoaderAccess) {
-		this.classLoaderAccess = classLoaderAccess;
-	}
-
 	public XMLContext(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
+		this.classmateContext = bootstrapContext.getClassmateContext();
 	}
 
 	/**
@@ -107,7 +102,7 @@ public class XMLContext implements Serializable {
 		entityMappingDefault.setAccess( entityMappings.getAccess() );
 		defaultElements.add( entityMappings );
 
-		setLocalAttributeConverterDefinitions( entityMappings.getConverter() );
+		setLocalAttributeConverterDefinitions( entityMappings.getConverter(), packageName );
 
 		addClass( entityMappings.getEntity(), packageName, entityMappingDefault, addedClasses );
 
@@ -168,17 +163,17 @@ public class XMLContext implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements) {
+	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements, String packageName) {
 		for ( JaxbConverter converterElement : converterElements ) {
 			final String className = converterElement.getClazz();
 			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
 			try {
 				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
-						className
+						buildSafeClassName( className, packageName )
 				);
-				attributeConverterInfoList.add(
-						new AttributeConverterDefinition( attributeConverterClass.newInstance(), autoApply )
+				converterDescriptors.add(
+						new ClassBasedConverterDescriptor( attributeConverterClass, autoApply, classmateContext )
 				);
 			}
 			catch (ClassLoadingException e) {
@@ -227,13 +222,13 @@ public class XMLContext implements Serializable {
 		return hasContext;
 	}
 
-	private List<AttributeConverterInfo> attributeConverterInfoList = new ArrayList<>();
+	private List<ConverterDescriptor> converterDescriptors = new ArrayList<>();
 
 	public void applyDiscoveredAttributeConverters(AttributeConverterDefinitionCollector collector) {
-		for ( AttributeConverterInfo info : attributeConverterInfoList ) {
-			collector.addAttributeConverter( info );
+		for ( ConverterDescriptor descriptor : converterDescriptors ) {
+			collector.addAttributeConverter( descriptor );
 		}
-		attributeConverterInfoList.clear();
+		converterDescriptors.clear();
 	}
 
 	public static class Default implements Serializable {

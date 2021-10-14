@@ -54,7 +54,7 @@ public final class JPAXMLOverriddenMetadataProvider implements MetadataProvider 
 
 	public JPAXMLOverriddenMetadataProvider(BootstrapContext bootstrapContext) {
 		this.classLoaderAccess = bootstrapContext.getClassLoaderAccess();
-		this.xmlContext = new XMLContext( classLoaderAccess );
+		this.xmlContext = new XMLContext( bootstrapContext );
 		this.xmlMappingEnabled = bootstrapContext.getMetadataBuildingOptions().isXmlMappingEnabled();
 	}
 

@@ -61,9 +61,6 @@ nexusPublishing {
 }
 
 allprojects {
-    tasks.withType(Test).configureEach {
-        maxParallelForks = 4
-    }
 
     tasks.withType(Test).configureEach {
         forkEvery = 100

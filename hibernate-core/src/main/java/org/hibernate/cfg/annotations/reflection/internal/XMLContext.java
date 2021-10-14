@@ -107,7 +107,7 @@ public class XMLContext implements Serializable {
 		entityMappingDefault.setAccess( entityMappings.getAccess() );
 		defaultElements.add( entityMappings );
 
-		setLocalAttributeConverterDefinitions( entityMappings.getConverter() );
+		setLocalAttributeConverterDefinitions( entityMappings.getConverter(), packageName );
 
 		addClass( entityMappings.getEntity(), packageName, entityMappingDefault, addedClasses );
 
@@ -168,14 +168,14 @@ public class XMLContext implements Serializable {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements) {
+	private void setLocalAttributeConverterDefinitions(List<JaxbConverter> converterElements, String packageName) {
 		for ( JaxbConverter converterElement : converterElements ) {
 			final String className = converterElement.getClazz();
 			final boolean autoApply = Boolean.TRUE.equals( converterElement.isAutoApply() );
 
 			try {
 				final Class<? extends AttributeConverter> attributeConverterClass = classLoaderAccess.classForName(
-						className
+						buildSafeClassName( className, packageName )
 				);
 				attributeConverterInfoList.add(
 						new AttributeConverterDefinition( attributeConverterClass.newInstance(), autoApply )

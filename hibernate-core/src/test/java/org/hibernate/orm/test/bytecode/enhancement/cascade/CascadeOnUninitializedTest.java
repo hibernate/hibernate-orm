@@ -1,4 +1,4 @@
-package org.hibernate.test.bytecode.enhancement.cascade;
+package org.hibernate.orm.test.bytecode.enhancement.cascade;
 
 import java.util.HashSet;
 import java.util.Map;

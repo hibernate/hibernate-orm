@@ -16,7 +16,6 @@ import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.OptimisticLockStyle;
-import org.hibernate.engine.query.spi.sql.NativeSQLQueryCollectionReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryJoinReturn;
 import org.hibernate.engine.query.spi.sql.NativeSQLQueryReturn;
 import org.hibernate.engine.spi.FilterDefinition;
@@ -288,10 +287,6 @@ public class Cfg2HbmTool {
 
 	public String getCollectionLazy(Collection value){
 		return value.isExtraLazy() ? "extra" : Boolean.toString(value.isLazy());
-	}
-
-	public boolean isNamedSQLReturnCollection(NativeSQLQueryReturn sqlret) {
-		return sqlret instanceof NativeSQLQueryCollectionReturn;
 	}
 
 	public boolean isNamedSQLReturnRole(NativeSQLQueryReturn sqlret) {

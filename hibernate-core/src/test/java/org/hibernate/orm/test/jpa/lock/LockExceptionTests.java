@@ -14,23 +14,18 @@ import jakarta.persistence.PessimisticLockException;
 import org.hibernate.LockOptions;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.SkipForDialects;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLServerSnapshotIsolationConnectionProvider;
 import org.hibernate.testing.transaction.TransactionUtil2;
-import org.hibernate.testing.util.ExceptionUtil;
 import org.hibernate.test.jpa.AbstractJPATest;
 import org.hibernate.test.jpa.Item;
 import org.junit.Test;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -78,7 +73,7 @@ public class LockExceptionTests extends AbstractJPATest {
 												Item.class,
 												item.getId(),
 												LockModeType.PESSIMISTIC_WRITE,
-												Collections.singletonMap( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
+												Collections.singletonMap( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
 										);
 										fail( "Expecting a failure" );
 									}
@@ -122,7 +117,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										secondSession.refresh(
 												item2,
 												LockModeType.PESSIMISTIC_WRITE,
-												Collections.singletonMap( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
+												Collections.singletonMap( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
 										);
 										fail( "Expecting a failure" );
 									}
@@ -163,7 +158,7 @@ public class LockExceptionTests extends AbstractJPATest {
 										secondSession.lock(
 												item2,
 												LockModeType.PESSIMISTIC_WRITE,
-												Collections.singletonMap( AvailableSettings.JPA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
+												Collections.singletonMap( AvailableSettings.JAKARTA_LOCK_TIMEOUT, LockOptions.NO_WAIT )
 										);
 										fail( "Expecting a failure" );
 									}

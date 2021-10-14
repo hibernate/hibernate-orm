@@ -10,6 +10,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -48,6 +52,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 		DomainModelProducer, DomainModelScopeAware,
 		SessionFactoryProducer, SessionFactoryScopeAware {
 
+	protected static final Dialect DIALECT = DialectContext.getDialect();
+
 	protected static final Class[] NO_CLASSES = new Class[0];
 	protected static final String[] NO_MAPPINGS = new String[0];
 
@@ -56,6 +62,8 @@ public abstract class BaseSessionFactoryFunctionalTest
 	private ServiceRegistryScope registryScope;
 	private DomainModelScope modelScope;
 	private SessionFactoryScope sessionFactoryScope;
+
+	private final ExecutorService executorService = Executors.newSingleThreadExecutor();
 
 	protected SessionFactoryScope sessionFactoryScope() {
 		return sessionFactoryScope;
@@ -288,6 +296,22 @@ public abstract class BaseSessionFactoryFunctionalTest
 			}
 		}
 		return false;
+	}
+
+	protected Future<?> executeAsync(Runnable callable) {
+		return executorService.submit(callable);
+	}
+
+	protected void executeSync(Runnable callable) {
+		try {
+			executeAsync( callable ).get();
+		}
+		catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+		}
+		catch (ExecutionException e) {
+			throw new RuntimeException( e.getCause() );
+		}
 	}
 
 }

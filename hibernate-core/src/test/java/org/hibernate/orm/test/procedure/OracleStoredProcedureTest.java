@@ -65,7 +65,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 				Vote.class
 		}
 )
-@RequiresDialect(value = OracleDialect.class, version = 800)
+@RequiresDialect(value = OracleDialect.class)
 public class OracleStoredProcedureTest {
 
 	@NamedStoredProcedureQueries({

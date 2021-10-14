@@ -10,15 +10,15 @@ import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ReflectionUtil;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(Oracle8iDialect.class)
+@RequiresDialect(value = OracleDialect.class)
 public class OracleSkipAutoCommitTest extends AbstractSkipAutoCommitTest {
 
 	@Override

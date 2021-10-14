@@ -10,6 +10,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -20,42 +21,34 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialectFeature(DialectChecks.SupportsSequences.class)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsSequences.class)
 public class SequenceInformationTest extends
-		BaseEntityManagerFunctionalTestCase {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Product.class,
-				Vehicle.class
-		};
-	}
+		EntityManagerFactoryBasedFunctionalTest {
 
 	protected ServiceRegistry serviceRegistry;
 	protected MetadataImplementor metadata;
 
 	@Override
-	public void buildEntityManagerFactory() {
+	public EntityManagerFactory produceEntityManagerFactory() {
 		serviceRegistry = new StandardServiceRegistryBuilder().build();
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( Product.class )
@@ -64,20 +57,18 @@ public class SequenceInformationTest extends
 
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata );
-		super.buildEntityManagerFactory();
+		return super.produceEntityManagerFactory();
 	}
 
-	@Override
+	@AfterAll
 	public void releaseResources() {
-		super.releaseResources();
-
 		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata );
 		StandardServiceRegistryBuilder.destroy( serviceRegistry );
 	}
 
 	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.HBM2DDL_AUTO, "none" );
 	}
 
 	@Test

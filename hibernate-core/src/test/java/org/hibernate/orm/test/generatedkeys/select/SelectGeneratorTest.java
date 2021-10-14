@@ -6,36 +6,39 @@
  */
 package org.hibernate.orm.test.generatedkeys.select;
 
-import org.junit.Test;
+import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
  * @author Steve Ebersole
  */
-@RequiresDialect( Oracle9iDialect.class )
-public class SelectGeneratorTest extends BaseCoreFunctionalTestCase {
-	public String[] getMappings() {
-		return new String[] { "generatedkeys/select/MyEntity.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/generatedkeys/select/MyEntity.hbm.xml"
+)
+@SessionFactory
+@RequiresDialect(value = OracleDialect.class, version = 900)
+public class SelectGeneratorTest {
 
 	@Test
-	public void testJDBC3GetGeneratedKeysSupportOnOracle() {
-		Session session = openSession();
-		session.beginTransaction();
+	public void testJDBC3GetGeneratedKeysSupportOnOracle(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					MyEntity e = new MyEntity( "entity-1" );
+					session.save( e );
 
-		MyEntity e = new MyEntity( "entity-1" );
-		session.save( e );
+					// this insert should happen immediately!
+					assertEquals( new Long(1), e.getId(), "id not generated through forced insertion" );
 
-		// this insert should happen immediately!
-		assertEquals( "id not generated through forced insertion", new Long(1), e.getId() );
-
-		session.delete( e );
-		session.getTransaction().commit();
-		session.close();
+					session.delete( e );
+				}
+		);
 	}
 }

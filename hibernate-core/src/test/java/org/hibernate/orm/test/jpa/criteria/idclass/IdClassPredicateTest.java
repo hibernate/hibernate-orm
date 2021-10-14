@@ -15,10 +15,10 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import junit.framework.Assert;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 
@@ -35,7 +35,7 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 		};
 	}
 
-	@Before
+	@BeforeEach
 	public void prepareTestData() {
 		EntityManager em = entityManagerFactory().createEntityManager();
 		em.getTransaction().begin();
@@ -117,7 +117,7 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 	}
 
 
-	@After
+	@AfterEach
 	public void cleanupTestData() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -179,7 +179,7 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 
 		// Retrieving query.;
 		List<Widget> widgets = em.createQuery( query ).getResultList( );
-		Assert.assertEquals( 4, widgets.size() );
+		Assertions.assertEquals( 4, widgets.size() );
 
 		em.getTransaction().commit();
 		em.close();
@@ -205,7 +205,7 @@ public class IdClassPredicateTest extends AbstractMetamodelSpecificTest {
 
 		// Retrieving query.
 		List<Tool> tools = em.createQuery( query ).getResultList( );
-		Assert.assertEquals( 4, tools.size() );
+		Assertions.assertEquals( 4, tools.size() );
 
 		em.getTransaction().commit();
 		em.close();

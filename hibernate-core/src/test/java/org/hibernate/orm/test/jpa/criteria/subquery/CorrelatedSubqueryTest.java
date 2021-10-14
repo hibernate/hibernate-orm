@@ -6,19 +6,16 @@
  */
 package org.hibernate.orm.test.jpa.criteria.subquery;
 
-import static org.junit.Assert.assertEquals;
-
 import java.util.Set;
 
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
@@ -26,9 +23,13 @@ import org.hibernate.jpa.test.metamodel.LineItem;
 import org.hibernate.jpa.test.metamodel.LineItem_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Steve Ebersole
@@ -78,7 +79,8 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@SkipForDialect(value=SybaseASE15Dialect.class, jiraKey="HHH-3032")
+	@JiraKey("HHH-3032")
+	@SkipForDialect(dialectClass= SybaseASEDialect.class, version = 1500)
 	public void testCorrelationExplicitSelectionCorrelation() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();
@@ -114,7 +116,7 @@ public class CorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 		Subquery<Customer> customerSubquery = criteria.subquery( Customer.class );
 		Root<Order> orderRootCorrelation = customerSubquery.correlate( orderRoot );
 		Join<Order, Customer> orderCustomerJoin = orderRootCorrelation.join( "customer" );
-		customerSubquery.where( builder.like( orderCustomerJoin.<String>get( "name" ), "%Caruso" ) );
+		customerSubquery.where( builder.like( orderCustomerJoin.get( "name" ), "%Caruso" ) );
 		criteria.where( builder.exists( customerSubquery ) );
 		em.createQuery( criteria ).getResultList();
 

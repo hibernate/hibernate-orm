@@ -48,7 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 
 
-	public static class TestSettingProvider implements SettingProvider.Provider {
+	public static class TestSettingProvider implements SettingProvider.Provider<String> {
 
 		@Override
 		public String getSetting() {

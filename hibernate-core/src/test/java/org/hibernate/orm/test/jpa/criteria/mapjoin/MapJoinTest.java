@@ -17,7 +17,8 @@ import org.hibernate.jpa.test.metamodel.MapEntity;
 import org.hibernate.jpa.test.metamodel.MapEntityLocal;
 import org.hibernate.jpa.test.metamodel.MapEntityLocal_;
 import org.hibernate.jpa.test.metamodel.MapEntity_;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 public class MapJoinTest extends AbstractMetamodelSpecificTest {
 
@@ -25,6 +26,7 @@ public class MapJoinTest extends AbstractMetamodelSpecificTest {
 	public Class[] getAnnotatedClasses() {
 		return new Class[] { MapEntity.class, MapEntityLocal.class };
 	}
+
 	@Test
 	public void allEntities() {
 		EntityManager em = getOrCreateEntityManager();

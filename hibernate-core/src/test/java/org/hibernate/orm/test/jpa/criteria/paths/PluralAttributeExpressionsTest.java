@@ -9,10 +9,7 @@ package org.hibernate.orm.test.jpa.criteria.paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
@@ -27,9 +24,9 @@ import org.hibernate.jpa.test.metamodel.Translation;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaExpression;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 

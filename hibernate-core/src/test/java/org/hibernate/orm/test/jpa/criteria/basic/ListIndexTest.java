@@ -6,9 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria.basic;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 import java.util.List;
 
 import jakarta.persistence.EntityManager;
@@ -22,7 +19,12 @@ import org.hibernate.jpa.test.metamodel.Address;
 import org.hibernate.jpa.test.metamodel.Address_;
 import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * Tests usage of {@link ListJoin#index()}
@@ -30,7 +32,17 @@ import org.junit.Test;
  * @author Brett Meyer
  */
 public class ListIndexTest extends AbstractMetamodelSpecificTest {
-	
+
+	@AfterEach
+	public void cleanupTestData() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		em.createQuery( "delete Phone" ).executeUpdate();
+		em.createQuery( "delete Address" ).executeUpdate();
+		em.getTransaction().commit();
+		em.close();
+	}
+
 	@Test
 	@TestForIssue(jiraKey = "HHH-8404")
 	public void testListIndex() {

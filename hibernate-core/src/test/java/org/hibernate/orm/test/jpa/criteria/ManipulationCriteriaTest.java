@@ -6,9 +6,6 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -21,9 +18,13 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -181,7 +182,7 @@ public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	// MySQL does not allow "delete/update from" and subqueries to use the same table
-	@SkipForDialect(MySQLDialect.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class)
 	public void testDeleteWithUnCorrelatedSubquery() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();
 		EntityManager em = getOrCreateEntityManager();

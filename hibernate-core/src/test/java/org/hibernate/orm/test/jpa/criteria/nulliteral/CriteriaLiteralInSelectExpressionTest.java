@@ -8,7 +8,6 @@ package org.hibernate.orm.test.jpa.criteria.nulliteral;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -22,210 +21,153 @@ import java.util.List;
 
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.CoreMatchers.nullValue;
-import static org.junit.Assert.assertThat;
 
 /**
  * @author Andrea Boriero
  */
-public class CriteriaLiteralInSelectExpressionTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {CriteriaLiteralInSelectExpressionTest.MyEntity.class}
+)
+public class CriteriaLiteralInSelectExpressionTest {
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {MyEntity.class};
+	@BeforeAll
+	public void init(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> entityManager.persist( new MyEntity( "Fab", "A" ) )
+		);
 	}
 
-	@Before
-	public void init() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
-			entityManager.persist( new MyEntity( "Fab", "A" ) );
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+	@AfterAll
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> entityManager.createQuery( "delete from MyEntity" ).executeUpdate()
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10729")
-	public void testBooleanLiteral() throws Exception {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
+	public void testBooleanLiteral(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+					final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
+					final Root<MyEntity> entity = query.from( MyEntity.class );
 
-			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
-			final Root<MyEntity> entity = query.from( MyEntity.class );
+					query.multiselect( criteriaBuilder.literal( false ), entity.get( "name" ) );
 
-			query.multiselect( criteriaBuilder.literal( false ), entity.get( "name" ) );
+					final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
-			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
-
-			assertThat( dtos.size(), is( 1 ) );
-			assertThat( dtos.get( 0 ).active, is( false ) );
-			assertThat( dtos.get( 0 ).name, is( "Fab" ) );
-			assertThat( dtos.get( 0 ).surname, nullValue() );
-
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+					assertThat( dtos.size(), is( 1 ) );
+					assertThat( dtos.get( 0 ).active, is( false ) );
+					assertThat( dtos.get( 0 ).name, is( "Fab" ) );
+					assertThat( dtos.get( 0 ).surname, nullValue() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10861")
-	public void testNullLiteral() throws Exception {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
+	public void testNullLiteral(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+					final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
+					final Root<MyEntity> entity = query.from( MyEntity.class );
 
-			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
-			final Root<MyEntity> entity = query.from( MyEntity.class );
+					query.multiselect( criteriaBuilder.literal( false ), criteriaBuilder.nullLiteral( String.class ) );
 
-			query.multiselect( criteriaBuilder.literal( false ), criteriaBuilder.nullLiteral( String.class ) );
+					final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
-			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
-
-			assertThat( dtos.size(), is( 1 ) );
-			assertThat( dtos.get( 0 ).active, is( false ) );
-			assertThat( dtos.get( 0 ).name, nullValue() );
-			assertThat( dtos.get( 0 ).surname, nullValue() );
-
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+					assertThat( dtos.size(), is( 1 ) );
+					assertThat( dtos.get( 0 ).active, is( false ) );
+					assertThat( dtos.get( 0 ).name, nullValue() );
+					assertThat( dtos.get( 0 ).surname, nullValue() );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10861")
-	public void testNullLiteralFirst() throws Exception {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
+	public void testNullLiteralFirst(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+					final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
+					final Root<MyEntity> entity = query.from( MyEntity.class );
 
-			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
-			final Root<MyEntity> entity = query.from( MyEntity.class );
+					query.multiselect( criteriaBuilder.nullLiteral( String.class ), entity.get( "surname" ) );
 
-			query.multiselect( criteriaBuilder.nullLiteral( String.class ), entity.get( "surname" ) );
+					final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
-			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
-
-			assertThat( dtos.size(), is( 1 ) );
-			assertThat( dtos.get( 0 ).name, nullValue() );
-			assertThat( dtos.get( 0 ).surname, is( "A" ) );
-			assertThat( dtos.get( 0 ).active, is( false ) );
-
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+					assertThat( dtos.size(), is( 1 ) );
+					assertThat( dtos.get( 0 ).name, nullValue() );
+					assertThat( dtos.get( 0 ).surname, is( "A" ) );
+					assertThat( dtos.get( 0 ).active, is( false ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-10729")
-	public void testStringLiteral() throws Exception {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
+	public void testStringLiteral(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+					final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
+					final Root<MyEntity> entity = query.from( MyEntity.class );
 
-			final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<MyEntityDTO> query = criteriaBuilder.createQuery( MyEntityDTO.class );
-			final Root<MyEntity> entity = query.from( MyEntity.class );
+					query.multiselect( criteriaBuilder.literal( "Leo" ), entity.get( "surname" ) );
 
-			query.multiselect( criteriaBuilder.literal( "Leo" ), entity.get( "surname" ) );
+					final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
 
-			final List<MyEntityDTO> dtos = entityManager.createQuery( query ).getResultList();
-
-			assertThat( dtos.size(), is( 1 ) );
-			assertThat( dtos.get( 0 ).name, is( "Leo" ) );
-			assertThat( dtos.get( 0 ).surname, is( "A" ) );
-			assertThat( dtos.get( 0 ).active, is( false ) );
-
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+					assertThat( dtos.size(), is( 1 ) );
+					assertThat( dtos.get( 0 ).name, is( "Leo" ) );
+					assertThat( dtos.get( 0 ).surname, is( "A" ) );
+					assertThat( dtos.get( 0 ).active, is( false ) );
+				}
+		);
 	}
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-9021")
-	@SkipForDialect( value= {
-			Oracle8iDialect.class,
-			DB2Dialect.class,
-			SQLServerDialect.class,
-			SybaseDialect.class,
-			AbstractHANADialect.class
-	})
-	public void testStringLiteral2() {
-		final EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-			final CriteriaQuery<Tuple> criteriaQuery = builder.createQuery( Tuple.class );
-			criteriaQuery.from( MyEntity.class );
-			criteriaQuery.multiselect( builder.equal( builder.literal( 1 ), builder.literal( 2 ) ) );
+	@SkipForDialect( dialectClass = OracleDialect.class)
+	@SkipForDialect( dialectClass = DB2Dialect.class)
+	@SkipForDialect( dialectClass = SQLServerDialect.class)
+	@SkipForDialect( dialectClass = SybaseDialect.class)
+	@SkipForDialect( dialectClass = AbstractHANADialect.class)
+	public void testStringLiteral2(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+					final CriteriaQuery<Tuple> criteriaQuery = builder.createQuery( Tuple.class );
+					criteriaQuery.from( MyEntity.class );
+					criteriaQuery.multiselect( builder.equal( builder.literal( 1 ), builder.literal( 2 ) ) );
 
-			final TypedQuery<Tuple> typedQuery = entityManager.createQuery( criteriaQuery );
+					final TypedQuery<Tuple> typedQuery = entityManager.createQuery( criteriaQuery );
 
-			final List<Tuple> results = typedQuery.getResultList();
+					final List<Tuple> results = typedQuery.getResultList();
 
-			assertThat( results.size(), is( 1 ) );
-			assertThat( results.get( 0 ).getElements().size(), is( 1 ) );
-			assertThat( results.get( 0 ).get( 0 ), is( false ) );
-		}
-		finally {
-			entityManager.close();
-		}
+					assertThat( results.size(), is( 1 ) );
+					assertThat( results.get( 0 ).getElements().size(), is( 1 ) );
+					assertThat( results.get( 0 ).get( 0 ), is( false ) );
+				}
+		);
 	}
 
 	@Entity(name = "MyEntity")

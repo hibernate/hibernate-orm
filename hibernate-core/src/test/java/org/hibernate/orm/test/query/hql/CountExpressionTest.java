@@ -17,11 +17,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MapKeyColumn;
 import jakarta.persistence.OneToMany;
 
-import org.hibernate.dialect.DerbyDialect;
-import org.hibernate.dialect.H2Dialect;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;

@@ -16,17 +16,17 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.transaction.TransactionUtil;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * Allows the BaseCoreFunctionalTestCase to create the schema using TestEntity.  The test method validates against an
@@ -37,8 +37,9 @@ import org.junit.Test;
  *
  * @author Brett Meyer
  */
-@RequiresDialect(Oracle9iDialect.class)
-public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialect(value = OracleDialect.class, version = 900)
+public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
+
 	private StandardServiceRegistry ssr;
 
 	@Override
@@ -46,18 +47,18 @@ public class SynonymValidationTest extends BaseNonConfigCoreFunctionalTestCase {
 		return new Class<?>[] {TestEntity.class};
 	}
 
-	@Before
+	@BeforeAll
 	public void setUp() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate();
-		} );
+		inTransaction(
+				session -> session.createNativeQuery( "CREATE SYNONYM test_synonym FOR test_entity" ).executeUpdate()
+		);
 	}
 
-	@After
+	@AfterAll
 	public void tearDown() {
-		TransactionUtil.doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate();
-		});
+		inTransaction(
+				session -> session.createNativeQuery( "DROP SYNONYM test_synonym FORCE" ).executeUpdate()
+		);
 	}
 
 	@Test

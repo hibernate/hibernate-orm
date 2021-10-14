@@ -9,7 +9,6 @@ package org.hibernate.orm.test.dialect.functional;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,40 +19,40 @@ import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.MariaDB103Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialect(MariaDB103Dialect.class)
-public class SequenceInformationMariaDBTest extends
-		BaseEntityManagerFunctionalTestCase {
+@RequiresDialect(value = MariaDBDialect.class, version = 1030)
+@Jpa(
+		annotatedClasses = {
+				SequenceInformationMariaDBTest.Book.class,
+				SequenceInformationMariaDBTest.Author.class
+		},
+		integrationSettings = {
+				@Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "none")
+		}
+)
+public class SequenceInformationMariaDBTest {
 
 	private DriverManagerConnectionProviderImpl connectionProvider;
 
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {
-				Book.class,
-				Author.class
-		};
-	}
-
-	@Override
-	public void buildEntityManagerFactory() {
+	@BeforeAll
+	public void init() {
 		connectionProvider = new DriverManagerConnectionProviderImpl();
 		connectionProvider.configure( Environment.getProperties() );
 
@@ -64,6 +63,7 @@ public class SequenceInformationMariaDBTest extends
 				statement.execute( "DROP SEQUENCE IF EXISTS author_sequence" );
 			}
 			catch (SQLException e) {
+
 			}
 			try {
 				statement.execute( "DROP TABLE TBL_BOOK" );
@@ -101,16 +101,10 @@ public class SequenceInformationMariaDBTest extends
 		catch (SQLException e) {
 			fail(e.getMessage());
 		}
-
-		super.buildEntityManagerFactory();
 	}
 
-	@Override
+	@AfterAll
 	public void releaseResources() {
-		super.releaseResources();
-
-		super.releaseResources();
-
 		try(Connection connection = connectionProvider.getConnection();
 			Statement statement = connection.createStatement()) {
 			try {
@@ -135,19 +129,16 @@ public class SequenceInformationMariaDBTest extends
 		}
 	}
 
-	@Override
-	protected void addMappings(Map settings) {
-		settings.put( AvailableSettings.HBM2DDL_AUTO, "none" );
-	}
-
 	@Test
-	public void test() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			Book book = new Book();
-			book.setTitle("My Book");
+	public void test(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					Book book = new Book();
+					book.setTitle("My Book");
 
-			entityManager.persist(book);
-		} );
+					entityManager.persist(book);
+				}
+		);
 	}
 
 	@Entity

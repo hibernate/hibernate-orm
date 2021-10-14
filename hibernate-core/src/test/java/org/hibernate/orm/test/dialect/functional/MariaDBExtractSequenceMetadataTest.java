@@ -7,22 +7,22 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.MariaDB103Dialect;
+import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 
-import org.hibernate.testing.BeforeClassOnce;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.ServiceRegistryBuilder;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Nathan Xu
  */
-@RequiresDialect(MariaDB103Dialect.class)
-public class MariaDBExtractSequenceMatadataTest extends BaseCoreFunctionalTestCase {
+@RequiresDialect(value = MariaDBDialect.class, version = 1030)
+public class MariaDBExtractSequenceMetadataTest {
 
 	private static String primaryDbName;
 	private static String primarySequenceName = "seq_HHH13373";
@@ -30,7 +30,7 @@ public class MariaDBExtractSequenceMatadataTest extends BaseCoreFunctionalTestCa
 	private static String secondaryDbName = "secondary_db_HHH13373";
 	private static String secondarySequenceName = "secondary_seq_HHH13373";
 
-	@BeforeClassOnce
+	@BeforeAll
 	public static void setUpDBs() throws Exception {
 		try (Connection conn = getConnection()) {
 			try (Statement stmt = conn.createStatement()) {
@@ -51,11 +51,11 @@ public class MariaDBExtractSequenceMatadataTest extends BaseCoreFunctionalTestCa
 	@Test
 	@TestForIssue(jiraKey = "HHH-13373")
 	public void testHibernateLaunchedSuccessfully() {
-		JdbcEnvironment jdbcEnvironment = serviceRegistry().getService( JdbcEnvironment.class );
-		Assert.assertFalse( jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList().isEmpty() );
+		JdbcEnvironment jdbcEnvironment = ServiceRegistryBuilder.buildServiceRegistry(Environment.getProperties()).getService( JdbcEnvironment.class );
+		Assertions.assertFalse( jdbcEnvironment.getExtractedDatabaseMetaData().getSequenceInformationList().isEmpty() );
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDownDBs() throws SQLException {
 		try (Connection conn = getConnection()) {
 			try (Statement stmt = conn.createStatement()) {

@@ -13,14 +13,15 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
-import junit.framework.AssertionFailedError;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Steve Ebersole
@@ -28,7 +29,7 @@ import org.hibernate.jpa.test.metamodel.Product_;
 public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 
-	@Before
+	@BeforeEach
 	public void createTestData() {
 		builder = entityManagerFactory().getCriteriaBuilder();
 
@@ -47,7 +48,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-	@After
+	@AfterEach
 	public void cleanUpTestData() throws Exception {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -154,7 +155,7 @@ public class AggregationResultTest extends AbstractMetamodelSpecificTest {
 
 	private void assertReturnType(Class expectedType, Object value) {
 		if ( value != null && ! expectedType.isInstance( value ) ) {
-			throw new AssertionFailedError(
+			fail(
 					"Result value was not of expected type: expected [" + expectedType.getName()
 							+ "] but found [" + value.getClass().getName() + "]"
 			);

@@ -5,12 +5,26 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.jpa.test.metamodel;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import jakarta.persistence.EntityManager;
+
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.junit.jupiter.api.AfterAll;
 
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFunctionalTestCase {
+public abstract class AbstractMetamodelSpecificTest extends EntityManagerFactoryBasedFunctionalTest {
+
+	private EntityManager em;
+
+	@AfterAll
+	public final void closeEntityManager() {
+		if ( em != null ) {
+			em.close();
+		}
+	}
+
 	@Override
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
@@ -20,5 +34,12 @@ public abstract class AbstractMetamodelSpecificTest extends BaseEntityManagerFun
 				ShelfLife.class, Spouse.class, Thing.class, ThingWithQuantity.class,
 				VersionedEntity.class
 		};
+	}
+
+	protected EntityManager getOrCreateEntityManager() {
+		if ( em == null || !em.isOpen() ) {
+			em = entityManagerFactory().createEntityManager();
+		}
+		return em;
 	}
 }

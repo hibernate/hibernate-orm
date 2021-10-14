@@ -13,7 +13,7 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ReflectionUtil;
 
 

@@ -12,7 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.H2Dialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.util.ReflectionUtil;
 
 /**

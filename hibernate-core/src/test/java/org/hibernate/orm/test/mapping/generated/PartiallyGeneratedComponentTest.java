@@ -6,58 +6,60 @@
  */
 package org.hibernate.orm.test.mapping.generated;
 
-import org.junit.Test;
+import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.Session;
-import org.hibernate.dialect.Oracle9iDialect;
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * {@inheritDoc}
  *
  * @author Steve Ebersole
  */
-@RequiresDialect( Oracle9iDialect.class )
-public class PartiallyGeneratedComponentTest extends BaseCoreFunctionalTestCase {
-	public String[] getMappings() {
-		return new String[] { "generated/ComponentOwner.hbm.xml" };
-	}
+@DomainModel(
+		xmlMappings = "org/hibernate/orm/test/generated/mapping/ComponentOwner.hbm.xml"
+)
+@SessionFactory
+@RequiresDialect( value = OracleDialect.class, version = 900 )
+public class PartiallyGeneratedComponentTest {
 
 	@Test
-	public void testPartialComponentGeneration() {
+	public void testPartialComponentGeneration(SessionFactoryScope scope) {
 		ComponentOwner owner = new ComponentOwner( "initial" );
-		Session s = openSession();
-		s.beginTransaction();
-		s.save( owner );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				s -> s.save( owner )
+		);
 
-		assertNotNull( "expecting insert value generation", owner.getComponent() );
+		assertNotNull( owner.getComponent(), "expecting insert value generation" );
 		int previousValue = owner.getComponent().getGenerated();
-		assertFalse( "expecting insert value generation", 0 == previousValue );
+		assertFalse( 0 == previousValue, "expecting insert value generation" );
 
-		s = openSession();
-		s.beginTransaction();
-		owner = ( ComponentOwner ) s.get( ComponentOwner.class, owner.getId() );
-		assertEquals( "expecting insert value generation", previousValue, owner.getComponent().getGenerated() );
-		owner.setName( "subsequent" );
-		s.getTransaction().commit();
-		s.close();
+		ComponentOwner owner2 = scope.fromTransaction(
+				s -> {
+					ComponentOwner _owner = s.get( ComponentOwner.class, owner.getId() );
+					assertEquals( previousValue, _owner.getComponent().getGenerated(), "expecting insert value generation" );
+					_owner.setName( "subsequent" );
+					return _owner;
+				}
+		);
 
-		assertNotNull( owner.getComponent() );
-		previousValue = owner.getComponent().getGenerated();
+		assertNotNull( owner2.getComponent() );
+		int previousValue2 = owner2.getComponent().getGenerated();
 
-		s = openSession();
-		s.beginTransaction();
-		owner = ( ComponentOwner ) s.get( ComponentOwner.class, owner.getId() );
-		assertEquals( "expecting update value generation", previousValue, owner.getComponent().getGenerated() );
-		s.delete( owner );
-		s.getTransaction().commit();
-		s.close();
+		scope.inTransaction(
+				s -> {
+					ComponentOwner _owner = s.get( ComponentOwner.class, owner.getId() );
+					assertEquals( previousValue2, _owner.getComponent().getGenerated(), "expecting update value generation" );
+					s.delete( _owner );
+				}
+		);
 	}
 }

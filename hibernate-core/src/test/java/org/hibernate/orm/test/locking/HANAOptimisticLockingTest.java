@@ -6,79 +6,85 @@
  */
 package org.hibernate.orm.test.locking;
 
+import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANARowStoreDialect;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Version;
 
-import org.hibernate.dialect.HANAColumnStoreDialect;
-import org.hibernate.dialect.HANARowStoreDialect;
-import org.junit.Test;
-
-import org.hibernate.testing.RequiresDialect;
-import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * @author Chris Cranford
  */
+@DomainModel(
+		annotatedClasses = {
+				HANAOptimisticLockingTest.SomeEntity.class
+		}
+)
+@SessionFactory
 @TestForIssue(jiraKey = "HHH-11656")
-@RequiresDialects( { @RequiresDialect(HANAColumnStoreDialect.class), @RequiresDialect(HANARowStoreDialect.class) })
-public class HANAOptimisticLockingTest extends BaseCoreFunctionalTestCase {
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { SomeEntity.class };
+@RequiresDialects({ @RequiresDialect(HANAColumnStoreDialect.class), @RequiresDialect(HANARowStoreDialect.class) })
+public class HANAOptimisticLockingTest {
+
+	@Test
+	public void testOptimisticLock(SessionFactoryScope scope) {
+		testWithSpecifiedLockMode( scope, LockModeType.OPTIMISTIC );
 	}
 
 	@Test
-	public void testOptimisticLock() throws Exception {
-		testWithSpecifiedLockMode( LockModeType.OPTIMISTIC );
+	public void testOptimisticLockForceIncrement(SessionFactoryScope scope) {
+		testWithSpecifiedLockMode( scope, LockModeType.OPTIMISTIC_FORCE_INCREMENT );
 	}
 
-	@Test
-	public void testOptimisticLockForceIncrement() throws Exception {
-		testWithSpecifiedLockMode( LockModeType.OPTIMISTIC_FORCE_INCREMENT );
-	}
-
-	private void testWithSpecifiedLockMode(LockModeType lockModeType) {
+	private void testWithSpecifiedLockMode(SessionFactoryScope scope, LockModeType lockModeType) {
 		// makes sure we have an entity to actually query
-		final Object id = doInHibernate( this::sessionFactory, session -> {
-			return session.save( new SomeEntity() );
-		} );
+		Object id = scope.fromTransaction(
+				session -> session.save( new SomeEntity() )
+		);
 
 		// tests that both the query execution doesn't throw a SQL syntax (which is the main bug) and that
 		// the query returns an expected entity object.
-		doInHibernate( this::sessionFactory, session -> {
-			/**
-			 * This generates the wrong SQL query for HANA.
-			 * Using optimistic lock and string query cause a bug.
-			 *
-			 * Generated SQL query for HANA is as follows:
-			 *
-			 * SELECT
-			 * 		someentity0_.id as id1_0_,
-			 * 		someentity0_.version as version2_0_
-			 *   FROM SomeEntity someentity0_
-			 *  WHERE someentity0_ = 1 of someentity0_.id
-			 *
-			 * The exception thrown by HANA is:
-			 * com.sap.db.jdbc.exceptions.JDBCDriverException: SAP DBTech JDBC: [257]:
-			 *   sql syntax error: incorrect syntax near "of": line 1
-			 *
-			 */
-			SomeEntity entity = session
-					.createQuery( "SELECT e FROM SomeEntity e WHERE e.id = :id", SomeEntity.class )
-					.setParameter( "id", id )
-					.setLockMode( lockModeType )
-					.uniqueResult();
+		scope.inTransaction(
+				session -> {
+					/**
+					 * This generates the wrong SQL query for HANA.
+					 * Using optimistic lock and string query cause a bug.
+					 *
+					 * Generated SQL query for HANA is as follows:
+					 *
+					 * SELECT
+					 * 		someentity0_.id as id1_0_,
+					 * 		someentity0_.version as version2_0_
+					 *   FROM SomeEntity someentity0_
+					 *  WHERE someentity0_ = 1 of someentity0_.id
+					 *
+					 * The exception thrown by HANA is:
+					 * com.sap.db.jdbc.exceptions.JDBCDriverException: SAP DBTech JDBC: [257]:
+					 *   sql syntax error: incorrect syntax near "of": line 1
+					 *
+					 */
+					SomeEntity entity = session
+							.createQuery( "SELECT e FROM SomeEntity e WHERE e.id = :id", SomeEntity.class )
+							.setParameter( "id", id )
+							.setLockMode( lockModeType )
+							.uniqueResult();
 
-			assertNotNull( entity );
-		} );
+					assertNotNull( entity );
+				}
+		);
 	}
 
 	@Entity(name = "SomeEntity")

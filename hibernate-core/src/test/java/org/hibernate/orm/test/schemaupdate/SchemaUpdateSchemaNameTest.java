@@ -18,17 +18,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.MySQL5Dialect;
-import org.hibernate.engine.spi.Mapping;
-import org.hibernate.tool.schema.extract.spi.TableInformation;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.dialect.MySQLDialect;
 
-import org.hibernate.testing.RequiresDialect;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 
 /**
  * Test to illustrate that the <tt>org.hibernate.mapping.Table#sqlAlterStrings</tt> method
@@ -37,12 +34,12 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
  *
  * @author Chris Cranford
  */
-@RequiresDialect(MySQL5Dialect.class)
+@RequiresDialect( value = MySQLDialect.class, version = 500 )
 @TestForIssue(jiraKey = "HHH-11455")
-public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
+public class SchemaUpdateSchemaNameTest {
 
-	@Before
-	public void buildInitialSchema() throws Exception {
+	@BeforeAll
+	public static void buildInitialSchema() {
 		// Builds the initial table in the schema.
 		StandardServiceRegistry ssr = null;
 		try {
@@ -59,8 +56,8 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 		}
 	}
 
-	@After
-	public void cleanup() {
+	@AfterAll
+	public static void cleanup() {
 		// Drops the table after the sql alter test.
 		StandardServiceRegistry ssr = null;
 		try {
@@ -75,7 +72,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 					.applySettings( cfg.getProperties() )
 					.build();
 
-			try (SessionFactory sf = cfg.buildSessionFactory();) {
+			try (SessionFactory sf = cfg.buildSessionFactory()) {
 				Session session = sf.openSession();
 				try {
 					session.getTransaction().begin();
@@ -99,7 +96,7 @@ public class SchemaUpdateSchemaNameTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testSqlAlterWithTableSchemaName() throws Exception {
+	public void testSqlAlterWithTableSchemaName() {
 		StandardServiceRegistry ssr = null;
 		try {
 			final Configuration cfg = buildConfiguration( SimpleNext.class );

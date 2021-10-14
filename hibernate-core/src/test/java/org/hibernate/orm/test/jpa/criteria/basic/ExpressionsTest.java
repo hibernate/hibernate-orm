@@ -26,13 +26,14 @@ import org.hibernate.jpa.test.metamodel.Phone;
 import org.hibernate.jpa.test.metamodel.Product;
 import org.hibernate.jpa.test.metamodel.Product_;
 
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Tests that various expressions operate as expected
@@ -42,7 +43,7 @@ import static org.junit.Assert.assertEquals;
 public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 
-	@Before
+	@BeforeEach
 	public void prepareTestData() {
 		builder = entityManagerFactory().getCriteriaBuilder();
 
@@ -61,7 +62,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 		em.close();
 	}
 
-	@After
+	@AfterEach
 	public void cleanupTestData() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -218,11 +219,11 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	@SkipForDialect(value = DerbyDialect.class, comment = "By default, unless some kind of context enables inference," +
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "By default, unless some kind of context enables inference," +
 			"a numeric/decimal parameter has the type DECIMAL(31,31) which might cause an overflow on certain arithmetics." +
 			"Fixing this would require a custom SqmToSqlAstConverter that creates a special JdbcParameter " +
 			"that is always rendered as literal. Since numeric literal + parameter arithmetic is rare, we skip this for now.")
-	@SkipForDialect(value = DB2Dialect.class, comment = "Same reason as for Derby")
+	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "Same reason as for Derby")
 	public void testQuotientAndMultiply() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

@@ -18,182 +18,188 @@ import java.util.TimeZone;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
-import org.hibernate.boot.MetadataBuilder;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle10gDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 import org.hibernate.type.StandardBasicTypes;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
  */
-public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
+@ServiceRegistry(
+		settings = {
+				@Setting(name = AvailableSettings.IMPLICIT_NAMING_STRATEGY, value = "org.hibernate.boot.model.naming.ImplicitNamingStrategyLegacyJpaImpl"),
+				@Setting(name = AvailableSettings.HBM2DDL_AUTO, value = "none")
+		}
+)
+@DomainModel(
+		annotatedClasses = {
+				Flight.class,
+				Company.class,
+				Sky.class
+		}
+)
+@SessionFactory
+public class EntityTest {
 	private DateFormat df = SimpleDateFormat.getDateTimeInstance( DateFormat.LONG, DateFormat.LONG );
 
-	@Override
-	protected void configureMetadataBuilder(MetadataBuilder metadataBuilder) {
-		super.configureMetadataBuilder( metadataBuilder );
-		metadataBuilder.applyImplicitNamingStrategy( ImplicitNamingStrategyJpaCompliantImpl.INSTANCE );
-	}
-
 	@Test
-	public void testLoad() throws Exception {
+	public void testLoad(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) throws Exception {
 		//put an object in DB
-		assertEquals( "Flight", metadata().getEntityBinding( Flight.class.getName() ).getTable().getName() );
+		assertEquals( "Flight", domainModelScope.getDomainModel().getEntityBinding( Flight.class.getName() ).getTable().getName() );
 
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Flight firstOne = new Flight();
-		firstOne.setId( Long.valueOf( 1 ) );
-		firstOne.setName( "AF3202" );
-		firstOne.setDuration( new Long( 1000000 ) );
-		firstOne.setDurationInSec( 2000 );
-		s.save( firstOne );
-		s.flush();
-		tx.commit();
-		s.close();
+		sessionFactoryScope.inTransaction(
+				session -> {
+					Flight firstOne = new Flight();
+					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setName( "AF3202" );
+					firstOne.setDuration( new Long( 1000000 ) );
+					firstOne.setDurationInSec( 2000 );
+					session.save( firstOne );
+					session.flush();
+				}
+		);
 
 		//read it
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne = (Flight) s.get( Flight.class, Long.valueOf( 1 ) );
-		assertNotNull( firstOne );
-		assertEquals( Long.valueOf( 1 ), firstOne.getId() );
-		assertEquals( "AF3202", firstOne.getName() );
-		assertEquals( Long.valueOf( 1000000 ), firstOne.getDuration() );
-		assertFalse( "Transient is not working", 2000l == firstOne.getDurationInSec() );
-		tx.commit();
-		s.close();
+		sessionFactoryScope.inTransaction(
+				session -> {
+					Flight firstOne = session.get( Flight.class, Long.valueOf( 1 ) );
+					assertNotNull( firstOne );
+					assertEquals( Long.valueOf( 1 ), firstOne.getId() );
+					assertEquals( "AF3202", firstOne.getName() );
+					assertEquals( Long.valueOf( 1000000 ), firstOne.getDuration() );
+					assertFalse( 2000l == firstOne.getDurationInSec(), "Transient is not working" );
+				}
+		);
 	}
 
 	@Test
-	public void testColumn() throws Exception {
+	public void testColumn(SessionFactoryScope scope) {
 		//put an object in DB
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Flight firstOne = new Flight();
-		firstOne.setId( Long.valueOf( 1 ) );
-		firstOne.setName( "AF3202" );
-		firstOne.setDuration( Long.valueOf( 1000000 ) );
-		firstOne.setDurationInSec( 2000 );
-		s.save( firstOne );
-		s.flush();
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Flight firstOne = new Flight();
+					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setName( "AF3202" );
+					firstOne.setDuration( Long.valueOf( 1000000 ) );
+					firstOne.setDurationInSec( 2000 );
+					session.save( firstOne );
+					session.flush();
+				}
+		);
 
+		scope.inSession(
+				session -> {
+					Transaction tx = session.beginTransaction();
+					Flight firstOne = new Flight();
+					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setName( null );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne = new Flight();
-		firstOne.setId( Long.valueOf( 1 ) );
-		firstOne.setName( null );
-
-		try {
-			s.save( firstOne );
-			tx.commit();
-			fail( "Name column should be not null" );
-		}
-		catch (HibernateException e) {
-			//fine
-		}
-		finally {
-			s.close();
-		}
+					try {
+						session.save( firstOne );
+						tx.commit();
+						fail( "Name column should be not null" );
+					}
+					catch (HibernateException e) {
+						//fine
+					}
+				}
+		);
 
 		//insert an object and check that name is not updatable
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne = new Flight();
-		firstOne.setId( Long.valueOf( 1 ) );
-		firstOne.setName( "AF3202" );
-		firstOne.setTriggeredData( "should not be insertable" );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Flight firstOne = new Flight();
+					firstOne.setId( Long.valueOf( 1 ) );
+					firstOne.setName( "AF3202" );
+					firstOne.setTriggeredData( "should not be insertable" );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne = (Flight) s.get( Flight.class, Long.valueOf( 1 ) );
-		assertNotNull( firstOne );
-		assertEquals( Long.valueOf( 1 ), firstOne.getId() );
-		assertEquals( "AF3202", firstOne.getName() );
-		assertFalse( "should not be insertable".equals( firstOne.getTriggeredData() ) );
-		firstOne.setName( "BA1234" );
-		firstOne.setTriggeredData( "should not be updatable" );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Flight firstOne = session.get( Flight.class, Long.valueOf( 1 ) );
+					assertNotNull( firstOne );
+					assertEquals( Long.valueOf( 1 ), firstOne.getId() );
+					assertEquals( "AF3202", firstOne.getName() );
+					assertFalse( "should not be insertable".equals( firstOne.getTriggeredData() ) );
+					firstOne.setName( "BA1234" );
+					firstOne.setTriggeredData( "should not be updatable" );
+				}
+		);
 
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne = (Flight) s.get( Flight.class, Long.valueOf( 1 ) );
-		assertNotNull( firstOne );
-		assertEquals( Long.valueOf( 1 ), firstOne.getId() );
-		assertEquals( "AF3202", firstOne.getName() );
-		assertFalse( "should not be updatable".equals( firstOne.getTriggeredData() ) );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Flight firstOne = session.get( Flight.class, Long.valueOf( 1 ) );
+					assertNotNull( firstOne );
+					assertEquals( Long.valueOf( 1 ), firstOne.getId() );
+					assertEquals( "AF3202", firstOne.getName() );
+					assertFalse( "should not be updatable".equals( firstOne.getTriggeredData() ) );
+				}
+		);
 	}
 
 	@Test
-	public void testColumnUnique() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Sky sky = new Sky();
-		sky.id = Long.valueOf( 2 );
-		sky.color = "blue";
-		sky.day = "monday";
-		sky.month = "January";
+	public void testColumnUnique(SessionFactoryScope scope) {
+		scope.inSession(
+				session -> {
+					Transaction tx = session.beginTransaction();
+					Sky sky = new Sky();
+					sky.id = Long.valueOf( 2 );
+					sky.color = "blue";
+					sky.day = "monday";
+					sky.month = "January";
 
-		Sky sameSky = new Sky();
-		sameSky.id = Long.valueOf( 3 );
-		sameSky.color = "blue";
-		sky.day = "tuesday";
-		sky.month = "January";
+					Sky sameSky = new Sky();
+					sameSky.id = Long.valueOf( 3 );
+					sameSky.color = "blue";
+					sky.day = "tuesday";
+					sky.month = "January";
 
-		try {
-			s.save( sky );
-			s.flush();
-			s.save( sameSky );
-			tx.commit();
-			fail( "unique constraints not respected" );
-		}
-		catch (HibernateException e) {
-			//success
-		}
-		finally {
-			if ( tx != null ) {
-				tx.rollback();
-			}
-			s.close();
-		}
+					try {
+						session.save( sky );
+						session.flush();
+						session.save( sameSky );
+						tx.commit();
+						fail( "unique constraints not respected" );
+					}
+					catch (HibernateException e) {
+						//success
+					}
+					finally {
+						if ( tx != null ) {
+							tx.rollback();
+						}
+					}
+				}
+		);
 	}
 
 	@Test
-	public void testUniqueConstraint() throws Exception {
+	public void testUniqueConstraint(SessionFactoryScope scope) {
 		int id = 5;
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
 		Sky sky = new Sky();
 		sky.id = Long.valueOf( id++ );
 		sky.color = "green";
@@ -212,244 +218,234 @@ public class EntityTest extends BaseNonConfigCoreFunctionalTestCase {
 		sameSky.day = "monday";
 		sameSky.month = "March";
 
-		s.save( sky );
-		s.flush();
+		scope.inTransaction(
+				session -> {
 
-		s.save( otherSky );
-		tx.commit();
-		s.close();
+					session.save( sky );
+					session.flush();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		try {
-			s.save( sameSky );
-			tx.commit();
-			fail( "unique constraints not respected" );
-		}
-		catch (PersistenceException e) {
-			//success
-			if ( tx != null ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+					session.save( otherSky );
+				}
+		);
+
+		scope.inSession(
+				session -> {
+					Transaction tx = session.beginTransaction();
+					try {
+						session.save( sameSky );
+						tx.commit();
+						fail( "unique constraints not respected" );
+					}
+					catch (PersistenceException e) {
+						//success
+						if ( tx != null ) {
+							tx.rollback();
+						}
+					}
+				}
+		);
 	}
 
 	@Test
-	public void testVersion() throws Exception {
+	public void testVersion(SessionFactoryScope scope) {
 //		put an object in DB
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Flight firstOne = new Flight();
-		firstOne.setId( Long.valueOf( 2 ) );
-		firstOne.setName( "AF3202" );
-		firstOne.setDuration( Long.valueOf( 500 ) );
-		s.save( firstOne );
-		s.flush();
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Flight firstOne = new Flight();
+					firstOne.setId( Long.valueOf( 2 ) );
+					firstOne.setName( "AF3202" );
+					firstOne.setDuration( Long.valueOf( 500 ) );
+					session.save( firstOne );
+					session.flush();
+				}
+		);
 
 		//read it
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne = (Flight) s.get( Flight.class, Long.valueOf( 2 ) );
-		tx.commit();
-		s.close();
+		Flight firstOne = scope.fromTransaction(
+				session -> session.get( Flight.class, Long.valueOf( 2 ) )
+		);
 
 		//read it again
-		s = openSession();
-		tx = s.beginTransaction();
-		Flight concurrentOne = (Flight) s.get( Flight.class, Long.valueOf( 2 ) );
-		concurrentOne.setDuration( Long.valueOf( 1000 ) );
-		s.update( concurrentOne );
-		tx.commit();
-		s.close();
+		Flight concurrentOne = scope.fromTransaction(
+				session -> {
+					Flight _concurrentOne = session.get( Flight.class, Long.valueOf( 2 ) );
+					_concurrentOne.setDuration( Long.valueOf( 1000 ) );
+					session.update( _concurrentOne );
+					return _concurrentOne;
+				}
+		);
+
 		assertFalse( firstOne == concurrentOne );
 		assertFalse( firstOne.getVersion().equals( concurrentOne.getVersion() ) );
 
 		//reattach the first one
-		s = openSession();
-		tx = s.beginTransaction();
-		firstOne.setName( "Second access" );
-		s.update( firstOne );
-		try {
-			tx.commit();
-			fail( "Optimistic locking should work" );
-		}
-		catch (PersistenceException expected) {
-			if ( expected.getCause() instanceof StaleStateException ) {
-				//expected
-			}
-			else {
-				fail( "StaleStateException expected but is " + expected.getCause() );
-			}
-		}
-		finally {
-			if ( tx != null ) {
-				tx.rollback();
-			}
-			s.close();
-		}
+		scope.inSession(
+				session -> {
+					Transaction tx = session.beginTransaction();
+					firstOne.setName( "Second access" );
+					session.update( firstOne );
+					try {
+						tx.commit();
+						fail( "Optimistic locking should work" );
+					}
+					catch (PersistenceException expected) {
+						if ( expected.getCause() instanceof StaleStateException ) {
+							//expected
+						}
+						else {
+							fail( "StaleStateException expected but is " + expected.getCause() );
+						}
+					}
+					finally {
+						if ( tx != null ) {
+							tx.rollback();
+						}
+					}
+				}
+		);
 	}
 
 	@Test
-	public void testFieldAccess() throws Exception {
-		Session s;
-		Transaction tx;
-		s = openSession();
-		tx = s.beginTransaction();
-		Sky sky = new Sky();
+	public void testFieldAccess(SessionFactoryScope scope) {
+		final Sky sky = new Sky();
 		sky.id = Long.valueOf( 1 );
 		sky.color = "black";
 		sky.area = "Paris";
 		sky.day = "23";
 		sky.month = "1";
-		s.save( sky );
-		tx.commit();
-		s.close();
+
+		scope.inTransaction(
+				session -> session.save( sky )
+		);
+
 		sky.area = "London";
 
-		s = openSession();
-		tx = s.beginTransaction();
-		sky = (Sky) s.get( Sky.class, sky.id );
-		assertNotNull( sky );
-		assertEquals( "black", sky.color );
-		assertFalse( "Paris".equals( sky.area ) );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> {
+					Sky _sky = session.get( Sky.class, sky.id );
+					assertNotNull( _sky );
+					assertEquals( "black", _sky.color );
+					assertFalse( "Paris".equals( _sky.area ) );
+				}
+		);
 	}
 
 	@Test
-	public void testEntityName() throws Exception {
-		assertEquals( "Corporation", metadata().getEntityBinding( Company.class.getName() ).getTable().getName() );
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
-		Company comp = new Company();
-		s.persist( comp );
-		comp.setName( "JBoss Inc" );
-		tx.commit();
-		s.close();
+	public void testEntityName(DomainModelScope domainModelScope, SessionFactoryScope sessionFactoryScope) {
+		assertEquals( "Corporation", domainModelScope.getDomainModel().getEntityBinding( Company.class.getName() ).getTable().getName() );
 
-		s = openSession();
-		tx = s.beginTransaction();
-		List result = s.createQuery( "from Corporation" ).list();
-		assertNotNull( result );
-		assertEquals( 1, result.size() );
-		tx.commit();
-		s.close();
+		sessionFactoryScope.inTransaction(
+				session -> {
+					Company comp = new Company();
+					session.persist( comp );
+					comp.setName( "JBoss Inc" );
+				}
+		);
+
+		sessionFactoryScope.inTransaction(
+				session -> {
+					List result = session.createQuery( "from Corporation" ).list();
+					assertNotNull( result );
+					assertEquals( 1, result.size() );
+				}
+		);
 
 	}
 
 	@Test
-	public void testNonGetter() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
+	public void testNonGetter(SessionFactoryScope scope) {
 		Flight airFrance = new Flight();
 		airFrance.setId( Long.valueOf( 747 ) );
 		airFrance.setName( "Paris-Amsterdam" );
 		airFrance.setDuration( Long.valueOf( 10 ) );
 		airFrance.setFactor( 25 );
-		s.persist( airFrance );
-		tx.commit();
-		s.close();
 
-		s = openSession();
-		tx = s.beginTransaction();
-		airFrance = (Flight) s.get( Flight.class, airFrance.getId() );
-		assertNotNull( airFrance );
-		assertEquals( Long.valueOf( 10 ), airFrance.getDuration() );
-		assertFalse( 25 == airFrance.getFactor( false ) );
-		s.delete( airFrance );
-		tx.commit();
-		s.close();
+		scope.inTransaction(
+				session -> session.persist( airFrance )
+		);
+
+		scope.inTransaction(
+				session -> {
+					Flight _airFrance = session.get( Flight.class, airFrance.getId() );
+					assertNotNull( _airFrance );
+					assertEquals( Long.valueOf( 10 ), _airFrance.getDuration() );
+					assertFalse( 25 == _airFrance.getFactor( false ) );
+					session.delete( _airFrance );
+				}
+		);
 	}
 
 	@Test
-	@SkipForDialect(value = Oracle10gDialect.class, comment = "oracle12c returns time in getDate.  For now, skip.")
-	public void testTemporalType() throws Exception {
-		final ZoneId zoneId = ( sessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) ? ZoneId.of( "UTC")
+	@SkipForDialect(dialectClass = OracleDialect.class, version = 1000, reason = "oracle12c returns time in getDate.  For now, skip.")
+	public void testTemporalType(SessionFactoryScope scope) {
+		final ZoneId zoneId = ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) ? ZoneId.of( "UTC")
 				: ZoneId.systemDefault();
 
-		Flight airFrance = doInHibernate( this::sessionFactory, session -> {
-			Flight _airFrance = new Flight();
-			_airFrance.setId( Long.valueOf( 747 ) );
-			_airFrance.setName( "Paris-Amsterdam" );
-			_airFrance.setDuration( Long.valueOf( 10 ) );
-			_airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()) );
-			_airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
-			_airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
-			_airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
-			_airFrance.setFactor( 25 );
-			session.persist( _airFrance );
-
-			return _airFrance;
-		} );
-
-		doInHibernate( this::sessionFactory, session -> {
-			Query q = session.createQuery( "from Flight f where f.departureDate = :departureDate" );
-			q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
-			Flight copyAirFrance = (Flight) q.uniqueResult();
-			assertNotNull( copyAirFrance );
-			assertEquals(
-					Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()),
-					copyAirFrance.getDepartureDate()
-			);
-			assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
-
-			session.delete( copyAirFrance );
-		} );
-	}
-
-	@Test
-	public void testBasic() throws Exception {
-		Session s = openSession();
-		Transaction tx = s.beginTransaction();
 		Flight airFrance = new Flight();
 		airFrance.setId( Long.valueOf( 747 ) );
 		airFrance.setName( "Paris-Amsterdam" );
-		airFrance.setDuration( null );
-		try {
-			s.persist( airFrance );
-			tx.commit();
-			fail( "Basic(optional=false) fails" );
-		}
-		catch (Exception e) {
-			//success
-			if ( tx != null ) {
-				tx.rollback();
-			}
-		}
-		finally {
-			s.close();
-		}
+		airFrance.setDuration( Long.valueOf( 10 ) );
+		airFrance.setDepartureDate( Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()) );
+		airFrance.setAlternativeDepartureDate( new GregorianCalendar( 2006, 02, 03, 10, 00 ) );
+		airFrance.getAlternativeDepartureDate().setTimeZone( TimeZone.getTimeZone( "GMT" ) );
+		airFrance.setBuyDate( new java.sql.Timestamp( 122367443 ) );
+		airFrance.setFactor( 25 );
+
+		scope.inTransaction(
+				session -> session.persist( airFrance )
+		);
+
+		scope.inTransaction(
+				session -> {
+					Query q = session.createQuery( "from Flight f where f.departureDate = :departureDate" );
+					q.setParameter( "departureDate", airFrance.getDepartureDate(), StandardBasicTypes.DATE );
+					Flight copyAirFrance = (Flight) q.uniqueResult();
+					assertNotNull( copyAirFrance );
+					assertEquals(
+							Date.from(LocalDate.of( 2005, 06, 21 ).atStartOfDay(zoneId).toInstant()),
+							copyAirFrance.getDepartureDate()
+					);
+					assertEquals( df.format( airFrance.getBuyDate() ), df.format( copyAirFrance.getBuyDate() ) );
+
+					session.delete( copyAirFrance );
+				}
+		);
 	}
 
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] {
-				Flight.class,
-				Company.class,
-				Sky.class
-		};
+	@Test
+	public void testBasic(SessionFactoryScope scope) throws Exception {
+		scope.inSession(
+				session -> {
+					Transaction tx = session.beginTransaction();
+					Flight airFrance = new Flight();
+					airFrance.setId( Long.valueOf( 747 ) );
+					airFrance.setName( "Paris-Amsterdam" );
+					airFrance.setDuration( null );
+					try {
+						session.persist( airFrance );
+						tx.commit();
+						fail( "Basic(optional=false) fails" );
+					}
+					catch (Exception e) {
+						//success
+						if ( tx != null ) {
+							tx.rollback();
+						}
+					}
+				}
+		);
 	}
 
-	// tests are leaving data around, so drop/recreate schema for now.  this is wha the old tests did
+	// tests are leaving data around, so drop/recreate schema for now.  this is what the old tests did
 
-	@Override
-	protected boolean createSchema() {
-		return false;
+	@BeforeEach
+	public void runCreateSchema(DomainModelScope domainModelScope) {
+		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), domainModelScope.getDomainModel() );
 	}
 
-	@Before
-	public void runCreateSchema() {
-		new SchemaExport().create( EnumSet.of( TargetType.DATABASE ), metadata() );
-	}
-
-	@After
-	public void runDropSchema() {
-		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), metadata() );
+	@AfterEach
+	public void runDropSchema(DomainModelScope domainModelScope) {
+		new SchemaExport().drop( EnumSet.of( TargetType.DATABASE ), domainModelScope.getDomainModel() );
 	}
 
 }

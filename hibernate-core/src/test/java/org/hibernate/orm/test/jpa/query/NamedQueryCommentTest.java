@@ -7,7 +7,6 @@
 package org.hibernate.orm.test.jpa.query;
 
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -21,202 +20,222 @@ import org.hibernate.annotations.NamedQuery;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SQLStatementInterceptor;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Vlad Mihalcea
  */
+@Jpa(
+		annotatedClasses = { NamedQueryCommentTest.Game.class },
+		integrationSettings = {
+				@Setting( name = AvailableSettings.USE_SQL_COMMENTS, value = "true" )
+		},
+		settingProviders = {
+				@SettingProvider(
+						settingName = AvailableSettings.STATEMENT_INSPECTOR,
+						provider = NamedQueryCommentTest.StatementInspectorSettingProvider.class
+				)
+		}
+)
 @TestForIssue(jiraKey = "HHH-11640")
-public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
+public class NamedQueryCommentTest {
 
-	private SQLStatementInterceptor sqlStatementInterceptor;
-
-	@Override
-	protected void addConfigOptions(Map options) {
-		sqlStatementInterceptor = new SQLStatementInterceptor( options );
-		options.put( AvailableSettings.USE_SQL_COMMENTS, Boolean.TRUE.toString() );
-	}
+	private static SQLStatementInspector statementInspector;
 
 	private static final String[] GAME_TITLES = { "Halo", "Grand Theft Auto", "NetHack" };
 
-	@Override
-	public Class[] getAnnotatedClasses() {
-		return new Class[] { Game.class };
+	@BeforeAll
+	public void setUp(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					for ( String title : GAME_TITLES ) {
+						Game game = new Game( title );
+						entityManager.persist( game );
+					}
+				}
+		);
 	}
 
-	@Before
-	public void setUp() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			for ( String title : GAME_TITLES ) {
-				Game game = new Game( title );
-				entityManager.persist( game );
-			}
-		} );
-	}
-
-	@After
-	public void tearDown() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			entityManager.createQuery( "delete from Game" ).executeUpdate();
-		} );
+	@AfterAll
+	public void tearDown(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> entityManager.createQuery( "delete from Game" ).executeUpdate()
+		);
 	}
 
 	@Test
-	public void testSelectNamedQueryWithSqlComment() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	public void testSelectNamedQueryWithSqlComment(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedQuery", Game.class );
-			query.setParameter( "title", GAME_TITLES[0] );
-			List<Game> list = query.getResultList();
-			assertEquals( 1, list.size() );
+					TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedQuery", Game.class );
+					query.setParameter( "title", GAME_TITLES[0] );
+					List<Game> list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-				"/* COMMENT_SELECT_INDEX_game_title */ select g1_0.id,g1_0.title from game g1_0 where g1_0.title=?"
-			);
-		} );
+					statementInspector.assertExecuted(
+							"/* COMMENT_SELECT_INDEX_game_title */ select g1_0.id,g1_0.title from game g1_0 where g1_0.title=?"
+					);
+				}
+		);
 	}
 
 	@Test
-	public void testSelectNamedNativeQueryWithSqlComment() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	public void testSelectNamedNativeQueryWithSqlComment(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedNativeQuery", Game.class );
-			query.setParameter( "title", GAME_TITLES[0] );
-			List<Game> list = query.getResultList();
-			assertEquals( 1, list.size() );
+					TypedQuery<Game> query = entityManager.createNamedQuery( "SelectNamedNativeQuery", Game.class );
+					query.setParameter( "title", GAME_TITLES[0] );
+					List<Game> list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-					"/* + INDEX (game idx_game_title)  */ select * from game g where title = ?"
+					statementInspector.assertExecuted(
+							"/* + INDEX (game idx_game_title)  */ select * from game g where title = ?"
 
-			);
-		} );
+					);
+				}
+		);
 	}
 
 	@Test
-	public void testUpdateNamedQueryWithSqlComment() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	public void testUpdateNamedQueryWithSqlComment(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
-			query.setParameter( "title", GAME_TITLES[0] );
-			query.setParameter( "id", 1L );
-			int updateCount = query.executeUpdate();
-			assertEquals( 1, updateCount );
+					Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
+					query.setParameter( "title", GAME_TITLES[0] );
+					query.setParameter( "id", 1L );
+					int updateCount = query.executeUpdate();
+					assertEquals( 1, updateCount );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
-			);
-		} );
+					statementInspector.assertExecuted(
+							"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
+					);
+				}
+		);
 	}
 
 	@Test
-	public void testUpdateNamedNativeQueryWithSqlComment() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	public void testUpdateNamedNativeQueryWithSqlComment(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
-			query.setParameter( "title", GAME_TITLES[0] );
-			query.setParameter( "id", 1L );
-			int updateCount = query.executeUpdate();
-			assertEquals( 1, updateCount );
+					Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
+					query.setParameter( "title", GAME_TITLES[0] );
+					query.setParameter( "id", 1L );
+					int updateCount = query.executeUpdate();
+					assertEquals( 1, updateCount );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
-			);
-		} );
+					statementInspector.assertExecuted(
+							"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
+					);
+				}
+		);
 	}
 
 	@Test
-	@RequiresDialect(Oracle8iDialect.class)
-	public void testUpdateNamedNativeQueryWithQueryHintUsingOracle() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	@RequiresDialect(value = OracleDialect.class)
+	public void testUpdateNamedNativeQueryWithQueryHintUsingOracle(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
-			query.setParameter( "title", GAME_TITLES[0] );
-			query.setParameter( "id", 1L );
-			query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
-			int updateCount = query.executeUpdate();
-			assertEquals( 1, updateCount );
+					Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
+					query.setParameter( "title", GAME_TITLES[0] );
+					query.setParameter( "id", 1L );
+					query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
+					int updateCount = query.executeUpdate();
+					assertEquals( 1, updateCount );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_INDEX_game_title */ update /*+ INDEX (game idx_game_id) */ game set title = ? where id = ?"
-			);
-		} );
+					statementInspector.assertExecuted(
+							"/* COMMENT_INDEX_game_title */ update /*+ INDEX (game idx_game_id) */ game set title = ? where id = ?"
+					);
+				}
+		);
 	}
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
-	public void testUpdateNamedNativeQueryWithQueryHintUsingIndex() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	public void testUpdateNamedNativeQueryWithQueryHintUsingIndex(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
-			query.setParameter( "title", GAME_TITLES[0] );
-			query.setParameter( "id", 1L );
-			query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
-			int updateCount = query.executeUpdate();
-			assertEquals( 1, updateCount );
+					Query query = entityManager.createNamedQuery( "UpdateNamedNativeQuery" );
+					query.setParameter( "title", GAME_TITLES[0] );
+					query.setParameter( "id", 1L );
+					query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "INDEX (game idx_game_id)" );
+					int updateCount = query.executeUpdate();
+					assertEquals( 1, updateCount );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
-			);
-		} );
+					statementInspector.assertExecuted(
+							"/* COMMENT_INDEX_game_title */ update game set title = ? where id = ?"
+					);
+				}
+		);
 	}
 
 	@Test
 	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialect(H2Dialect.class)
-	public void testSelectNamedNativeQueryWithQueryHintUsingIndex() {
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			sqlStatementInterceptor.clear();
+	public void testSelectNamedNativeQueryWithQueryHintUsingIndex(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					statementInspector.clear();
 
-			Query query = entityManager.createNamedQuery( "SelectNamedQuery" );
-			query.setParameter( "title", GAME_TITLES[0] );
-			query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "idx_game_id" );
-			List<Game> list = query.getResultList();
-			assertEquals( 1, list.size() );
+					Query query = entityManager.createNamedQuery( "SelectNamedQuery" );
+					query.setParameter( "title", GAME_TITLES[0] );
+					query.unwrap( org.hibernate.query.Query.class ).addQueryHint( "idx_game_id" );
+					List<Game> list = query.getResultList();
+					assertEquals( 1, list.size() );
 
-			sqlStatementInterceptor.assertExecutedCount(1);
+					statementInspector.assertExecutedCount(1);
 
-			sqlStatementInterceptor.assertExecuted(
-					"/* COMMENT_SELECT_INDEX_game_title */ select g1_0.id,g1_0.title from game g1_0  use index (idx_game_id) where g1_0.title=?"
-			);
-		} );
+					statementInspector.assertExecuted(
+							"/* COMMENT_SELECT_INDEX_game_title */ select g1_0.id,g1_0.title from game g1_0  use index (idx_game_id) where g1_0.title=?"
+					);
+				}
+		);
 	}
 
 	@Entity(name = "Game")
 	@Table(
 			name = "game",
 			indexes = {
-				@Index(name = "idx_game_title", columnList = "title"),
-				@Index(name = "idx_game_id", columnList = "id")
+					@Index(name = "idx_game_title", columnList = "title"),
+					@Index(name = "idx_game_id", columnList = "id")
 			}
 	)
 	@NamedQuery(
@@ -230,10 +249,10 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "INDEX (game idx_game_title) "
 	)
 	@NamedNativeQuery(
-		name = "SelectNamedNativeQuery",
-		query = "select * from game g where title = :title",
-		comment = "+ INDEX (game idx_game_title) ",
-		resultClass = Game.class
+			name = "SelectNamedNativeQuery",
+			query = "select * from game g where title = :title",
+			comment = "+ INDEX (game idx_game_title) ",
+			resultClass = Game.class
 	)
 	@NamedNativeQuery(
 			name = "UpdateNamedNativeQuery",
@@ -270,6 +289,14 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 		public void setTitle(String title) {
 			this.title = title;
+		}
+	}
+
+	public static class StatementInspectorSettingProvider implements SettingProvider.Provider<StatementInspector> {
+		@Override
+		public StatementInspector getSetting() {
+			statementInspector = new SQLStatementInspector();
+			return statementInspector;
 		}
 	}
 }

@@ -16,30 +16,32 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.Session;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.dialect.SybaseASE15Dialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
 import org.hibernate.testing.util.ExceptionUtil;
-import org.junit.Test;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * Make sure that directly specifying lock modes, even though deprecated, continues to work until removed.
@@ -47,9 +49,9 @@ import static org.junit.Assert.fail;
  * @author Steve Ebersole
  */
 @TestForIssue( jiraKey = "HHH-5275")
-@SkipForDialect(value=SybaseASE15Dialect.class, strictMatching=true,
-		comment = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
-public class LockModeTest extends BaseCoreFunctionalTestCase {
+@SkipForDialect(dialectClass = SybaseASEDialect.class, version = 1500,
+		reason = "skip this test on Sybase ASE 15.5, but run it on 15.7, see HHH-6820")
+public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 
 	private Long id;
 
@@ -61,22 +63,24 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Override
-	protected void configure(Configuration configuration) {
+	protected void applySettings(StandardServiceRegistryBuilder ssrBuilder) {
+		super.applySettings( ssrBuilder );
 		// We can't use a shared connection provider if we use TransactionUtil.setJdbcTimeout because that is set on the connection level
-		configuration.getProperties().remove( AvailableSettings.CONNECTION_PROVIDER );
+		ssrBuilder.getSettings().remove( AvailableSettings.CONNECTION_PROVIDER );
 	}
 
-	@Override
+	@BeforeEach
 	public void prepareTest() throws Exception {
 		doInHibernate( this::sessionFactory, session -> {
 			id = (Long) session.save( new A( "it" ) );
 		} );
 	}
+
 	@Override
 	protected boolean isCleanupTestDataRequired(){return true;}
 
 	@Test
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -92,7 +96,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	public void testCriteria() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -114,7 +118,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	public void testCriteriaAliasSpecific() {
 			// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -138,7 +142,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialectFeature( value = DialectChecks.SupportsLockTimeouts.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -226,7 +230,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12257")
-	@SkipForDialect( value = CockroachDialect.class )
+	@SkipForDialect( dialectClass = CockroachDialect.class )
 	public void testRefreshWithExplicitHigherLevelLockMode() {
 		doInHibernate( this::sessionFactory, session -> {
 						   A a = session.get( A.class, id );
@@ -271,8 +275,7 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 		// To be able to cater to the second type, we run this block in a separate thread to be able to "time it out"
 
 		try {
-			executeSync( () -> {
-				doInHibernate( this::sessionFactory, _session -> {
+			executeSync( () -> doInHibernate( this::sessionFactory, _session -> {
 					TransactionUtil.setJdbcTimeout( _session );
 					try {
 						// We used to load with write lock here to deal with databases that block (wait indefinitely)
@@ -300,11 +303,11 @@ public class LockModeTest extends BaseCoreFunctionalTestCase {
 							fail( "Unexpected error type testing pessimistic locking : " + e.getClass().getName() );
 						}
 					}
-				} );
-			} );
+				} )
+			);
 		}
 		catch (Exception e) {
-			//MariaDB throws a time out nd closes the underlying connection
+			//MariaDB throws a timeout nd closes the underlying connection
 			if( !ExceptionUtil.isConnectionClose(e)) {
 				fail("Unknown exception thrown: " + e.getMessage());
 			}

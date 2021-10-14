@@ -7,21 +7,16 @@
 package org.hibernate.orm.test.schemaupdate;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.SQLServerDialect;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectContext;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12939")
-public abstract class AbstractAlterTableQuoteSchemaTest extends BaseCoreFunctionalTestCase {
+public abstract class AbstractAlterTableQuoteSchemaTest extends BaseSessionFactoryFunctionalTest {
 
 	private final Dialect dialect = DialectContext.getDialect();
 

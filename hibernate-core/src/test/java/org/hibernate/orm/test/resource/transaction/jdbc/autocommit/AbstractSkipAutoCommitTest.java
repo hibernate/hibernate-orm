@@ -11,29 +11,32 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Id;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+import org.hibernate.dialect.Dialect;
 
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
-public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFunctionalTestCase {
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
+public abstract class AbstractSkipAutoCommitTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider =
 		new PreparedStatementSpyConnectionProvider( false, true ) {
@@ -59,8 +62,13 @@ public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFuncti
 	protected abstract DataSource dataSource();
 
 	@Override
-	public void releaseResources() {
-		super.releaseResources();
+	protected boolean isCleanupTestDataRequired() {
+		return true;
+	}
+
+	@Override
+	protected void cleanupTestData() {
+		super.cleanupTestData();
 		connectionProvider.stop();
 	}
 
@@ -71,25 +79,37 @@ public abstract class AbstractSkipAutoCommitTest extends BaseEntityManagerFuncti
 		};
 	}
 
+	protected Dialect getDialect() {
+		return DialectContext.getDialect();
+	}
+
 	@Test
 	public void test() {
-		connectionProvider.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			City city = new City();
-			city.setId( 1L );
-			city.setName( "Cluj-Napoca" );
-			entityManager.persist( city );
+		inTransaction(
+				entityManager -> {
+					// Moved inside the transaction because the new base class defers the EMF creation w/ respect to the
+					// former base class, so the connections used in that process can now only be cleared after the EMF is built
+					// Could also override entityManagerFactoryBuilt(EntityManagerFactory factory) and do it there.
+					connectionProvider.clear();
 
-			assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
-			assertTrue( connectionProvider.getReleasedConnections().isEmpty() );
-		} );
+					City city = new City();
+					city.setId( 1L );
+					city.setName( "Cluj-Napoca" );
+					entityManager.persist( city );
+
+					assertTrue( connectionProvider.getAcquiredConnections().isEmpty() );
+					assertTrue( connectionProvider.getReleasedConnections().isEmpty() );
+				}
+		);
 		verifyConnections();
 
 		connectionProvider.clear();
-		doInJPA( this::entityManagerFactory, entityManager -> {
-			City city = entityManager.find( City.class, 1L );
-			assertEquals( "Cluj-Napoca", city.getName() );
-		} );
+		inTransaction(
+				entityManager -> {
+					City city = entityManager.find( City.class, 1L );
+					assertEquals( "Cluj-Napoca", city.getName() );
+				}
+		);
 		verifyConnections();
 	}
 

@@ -9,7 +9,7 @@
 	"-//Hibernate/Hibernate Mapping DTD 3.0//EN"
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
-<hibernate-mapping package="org.hibernate.test.generated">
+<hibernate-mapping package="org.hibernate.orm.test.mapping.generated">
 
     <class name="ComponentOwner" table="part_gen_comp">
     	<id name="id">

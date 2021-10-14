@@ -8,7 +8,6 @@ package org.hibernate.orm.test.generatedkeys.seqidentity;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Map;
 import jakarta.persistence.Column;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -25,25 +24,41 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.Oracle9iDialect;
+import org.hibernate.dialect.OracleDialect;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "5" ),
+				@Setting( name = AvailableSettings.USE_GET_GENERATED_KEYS, value = "true" )
+		}
+)
+@DomainModel(
+		annotatedClasses = {
+				JoinedSequenceIdentityBatchTest.Resource.class,
+				JoinedSequenceIdentityBatchTest.FolderResource.class
+		}
+)
+@SessionFactory
 @TestForIssue( jiraKey = "HHH-13365" )
-@RequiresDialect( Oracle9iDialect.class )
-public class JoinedSequenceIdentityBatchTest extends BaseNonConfigCoreFunctionalTestCase {
+@RequiresDialect( value = OracleDialect.class, version = 900 )
+public class JoinedSequenceIdentityBatchTest {
 
 	@Test
-	public void testInsertAndUpdate() {
-		doInHibernate(
-				this::sessionFactory,
+	public void testInsertAndUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					FolderResource folder = new FolderResource();
 					folder.name = "PARENT";
@@ -51,19 +66,17 @@ public class JoinedSequenceIdentityBatchTest extends BaseNonConfigCoreFunctional
 				}
 		);
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					List<FolderResource> folderResources = session.createQuery( "from FolderResource" ).getResultList();
 					assertEquals( 1, folderResources.size() );
 					final FolderResource folderResource = folderResources.get( 0 );
 					assertNull( folderResource.description );
 					folderResource.description = "A folder resource";
-			}
+				}
 		);
 
-		doInHibernate(
-				this::sessionFactory,
+		scope.inTransaction(
 				session -> {
 					List<FolderResource> folderResources = session.createQuery( "from FolderResource" ).getResultList();
 					assertEquals( 1, folderResources.size() );
@@ -71,19 +84,6 @@ public class JoinedSequenceIdentityBatchTest extends BaseNonConfigCoreFunctional
 					assertEquals( "A folder resource", folderResource.description );
 				}
 		);
-	}
-
-	@Override
-	@SuppressWarnings( "unchecked" )
-	protected void addSettings(Map settings) {
-		super.addSettings( settings );
-		settings.put( AvailableSettings.STATEMENT_BATCH_SIZE, "5" );
-		settings.put( AvailableSettings.USE_GET_GENERATED_KEYS, "true" );
-	}
-
-	@Override
-	protected Class[] getAnnotatedClasses() {
-		return new Class[] { Resource.class, FolderResource.class };
 	}
 
 	@Entity(name = "Resource")

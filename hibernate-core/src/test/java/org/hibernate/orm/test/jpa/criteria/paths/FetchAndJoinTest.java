@@ -31,13 +31,13 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Root;
 
-import org.junit.Test;
-
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Entity1;
 import org.hibernate.jpa.test.metamodel.Entity1_;
 import org.hibernate.jpa.test.metamodel.Entity2;
 import org.hibernate.jpa.test.metamodel.Entity2_;
+
+import org.junit.jupiter.api.Test;
 
 /**
  * @author Gail Badner

@@ -279,6 +279,9 @@ public class EntityManagerFactoryBasedFunctionalTest
 		return false;
 	}
 
+	/**
+	 * Tests should ideally override this standard implementation; it may not work in all cases (e.g. with @Embeddable entities)
+	 */
 	protected void cleanupTestData() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			Arrays.stream(

@@ -14,7 +14,6 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NamedQuery;
-import jakarta.persistence.PersistenceException;
 import jakarta.persistence.QueryHint;
 
 import org.hibernate.LockMode;
@@ -22,9 +21,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.annotations.QueryHints;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.dialect.Oracle8iDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.query.IllegalQueryOperationException;
 
 import org.hibernate.testing.RequiresDialect;

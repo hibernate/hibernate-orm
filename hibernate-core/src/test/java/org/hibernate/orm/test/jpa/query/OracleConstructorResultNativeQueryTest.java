@@ -12,7 +12,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ColumnResult;
 import jakarta.persistence.ConstructorResult;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.Id;
 import jakarta.persistence.NamedNativeQueries;
 import jakarta.persistence.NamedNativeQuery;
@@ -21,14 +20,17 @@ import jakarta.persistence.SqlResultSetMappings;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import org.hibernate.dialect.Oracle8iDialect;
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.dialect.OracleDialect;
 
-import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
-import static org.junit.Assert.assertEquals;
+import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+
+import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Oracle needs to have the column result type specified for the Integer ID because the
@@ -42,8 +44,79 @@ import static org.junit.Assert.assertEquals;
  *
  * @author Steve Ebersole
  */
-@RequiresDialect(value = Oracle8iDialect.class, jiraKey = "HHH-10323")
-public class OracleConstructorResultNativeQueryTest extends BaseEntityManagerFunctionalTestCase {
+@Jpa(
+		annotatedClasses = {
+				OracleConstructorResultNativeQueryTest.Person.class
+		}
+)
+@TestForIssue(jiraKey = "HHH-10323")
+@RequiresDialect(value = OracleDialect.class)
+public class OracleConstructorResultNativeQueryTest {
+
+	@Test
+	public void testConstructorResultNativeQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> em.persist( new Person( 1, "John", new Date() ) )
+		);
+
+		scope.inTransaction(
+				em -> {
+					List results = em.createNativeQuery(
+							"select p.id, p.p_name from person p order by p.p_name",
+							"person-id-and-name"
+					).getResultList();
+					assertEquals( 1, results.size() );
+					assertTyping( Person.class, results.get( 0 ) );
+				}
+		);
+
+		scope.inTransaction(
+				em -> em.createQuery( "delete from Person" ).executeUpdate()
+		);
+	}
+
+
+	@Test
+	public void testMultipleConstructorResultNativeQuery(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> em.persist( new Person( 1, "John", new Date() ) )
+		);
+
+		scope.inTransaction(
+				em -> {
+					List results = em.createNamedQuery( "person-id-and-name2" ).getResultList();
+					assertEquals( 1, results.size() );
+					Object[] result = assertTyping( Object[].class, results.get( 0 ) );
+					assertEquals( 2, result.length );
+					assertTyping( Person.class, result[0] );
+					assertTyping( Person.class, result[1] );
+				}
+		);
+
+		scope.inTransaction(
+				em -> em.createQuery( "delete from Person" ).executeUpdate()
+		);
+	}
+
+	@Test
+	public void testConstructorResultNativeQuerySpecifyingType(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				em -> em.persist( new Person( 1, "John", "85" ) )
+		);
+
+		scope.inTransaction(
+				em -> {
+					List results = em.createNamedQuery( "person-id-and-name-and-weight" ).getResultList();
+					assertEquals( 1, results.size() );
+					assertTyping( Person.class, results.get( 0 ) );
+				}
+		);
+
+		scope.inTransaction(
+				em -> em.createQuery( "delete from Person" ).executeUpdate()
+		);
+	}
+
 	@Entity( name = "Person" )
 	@SqlResultSetMappings(
 			value = {
@@ -95,21 +168,21 @@ public class OracleConstructorResultNativeQueryTest extends BaseEntityManagerFun
 	)
 	@NamedNativeQueries(
 			value = {
-				@NamedNativeQuery(
-						name = "person-id-and-name",
-						query = "select p.id, p.p_name from person p order by p.p_name",
-						resultSetMapping = "person-id-and-name"
-				),
-				@NamedNativeQuery(
-						name = "person-id-and-name2",
-						query = "select p.id, p.p_name, p.id as id2, p.p_name as p_name2 from person p order by p.p_name",
-						resultSetMapping = "person-id-and-name2"
-				),
-				@NamedNativeQuery(
-						name = "person-id-and-name-and-weight",
-						query = "select p.id, p.p_name, p.p_weight from person p order by p.p_name",
-						resultSetMapping = "person-id-and-name-and-weight"
-				)
+					@NamedNativeQuery(
+							name = "person-id-and-name",
+							query = "select p.id, p.p_name from person p order by p.p_name",
+							resultSetMapping = "person-id-and-name"
+					),
+					@NamedNativeQuery(
+							name = "person-id-and-name2",
+							query = "select p.id, p.p_name, p.id as id2, p.p_name as p_name2 from person p order by p.p_name",
+							resultSetMapping = "person-id-and-name2"
+					),
+					@NamedNativeQuery(
+							name = "person-id-and-name-and-weight",
+							query = "select p.id, p.p_name, p.p_weight from person p order by p.p_name",
+							resultSetMapping = "person-id-and-name-and-weight"
+					)
 			}
 	)
 	public static class Person {
@@ -141,87 +214,5 @@ public class OracleConstructorResultNativeQueryTest extends BaseEntityManagerFun
 			this.name = name;
 			this.weight = Integer.valueOf(weight);
 		}
-	}
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] { Person.class };
-	}
-
-
-	@Test
-	public void testConstructorResultNativeQuery() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Person( 1, "John", new Date() ) );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List results = em.createNativeQuery(
-				"select p.id, p.p_name from person p order by p.p_name",
-				"person-id-and-name"
-		).getResultList();
-		assertEquals( 1, results.size() );
-		assertTyping( Person.class, results.get( 0 ) );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from Person" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
-	}
-
-
-	@Test
-	public void testMultipleConstructorResultNativeQuery() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Person( 1, "John", new Date() ) );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List results = em.createNamedQuery( "person-id-and-name2" ).getResultList();
-		assertEquals( 1, results.size() );
-		Object[] result = assertTyping( Object[].class, results.get( 0 ) );
-		assertEquals( 2, result.length );
-		assertTyping( Person.class, result[0] );
-		assertTyping( Person.class, result[1] );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from Person" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
-	}
-
-	@Test
-	public void testConstructorResultNativeQuerySpecifyingType() {
-		EntityManager em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.persist( new Person( 1, "John", "85" ) );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		List results = em.createNamedQuery( "person-id-and-name-and-weight" ).getResultList();
-		assertEquals( 1, results.size() );
-		assertTyping( Person.class, results.get( 0 ) );
-		em.getTransaction().commit();
-		em.close();
-
-		em = getOrCreateEntityManager();
-		em.getTransaction().begin();
-		em.createQuery( "delete from Person" ).executeUpdate();
-		em.getTransaction().commit();
-		em.close();
 	}
 }

@@ -6,22 +6,20 @@
  */
 package org.hibernate.orm.test.dialect.functional;
 
-import org.hibernate.dialect.Oracle8iDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.tool.schema.extract.spi.SequenceInformation;
 
-import org.hibernate.testing.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Vlad Mihalcea
  */
 @TestForIssue(jiraKey = "HHH-12973")
-@RequiresDialect(value = {
-		Oracle8iDialect.class
-})
+@RequiresDialect(value = OracleDialect.class)
 public class OracleSequenceInfoTest extends
 		SequenceInformationTest {
 

@@ -16,16 +16,16 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import org.junit.Test;
-
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Customer;
 import org.hibernate.jpa.test.metamodel.Customer_;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Emmanuel Bernard
@@ -89,7 +89,7 @@ public class TupleCriteriaTest extends AbstractMetamodelSpecificTest {
 		List<Tuple> results = em.createQuery( criteria ).getResultList();
 		assertEquals( 1, results.size() );
 		Object resultElement = results.get( 0 );
-		assertTrue( "Check  result 'row' as Tuple", Tuple.class.isInstance( resultElement ) );
+		assertTrue( Tuple.class.isInstance( resultElement ), "Check  result 'row' as Tuple" );
 		Tuple resultElementTuple = (Tuple) resultElement;
 		Object[] tupleArray = resultElementTuple.toArray();
 		assertEquals( 2, tupleArray.length );

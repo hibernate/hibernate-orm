@@ -13,21 +13,25 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
+
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.Oracle12cDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.CreditCard;
 import org.hibernate.jpa.test.metamodel.CreditCard_;
 import org.hibernate.jpa.test.metamodel.Customer_;
 import org.hibernate.jpa.test.metamodel.Order;
 import org.hibernate.jpa.test.metamodel.Order_;
-import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Before;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Test the various predicates.
@@ -38,15 +42,26 @@ import static org.junit.Assert.assertTrue;
 public class PredicateTest extends AbstractMetamodelSpecificTest {
 	private CriteriaBuilder builder;
 
-	@Before
+	@BeforeEach
 	public void prepareTestData() {
 		builder = entityManagerFactory().getCriteriaBuilder();
 
-		EntityManager em = entityManagerFactory().createEntityManager();
+		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
 		em.persist( new Order( "order-1", 1.0d ) );
 		em.persist( new Order( "order-2", 10.0d ) );
 		em.persist( new Order( "order-3", new char[]{'r','u'} ) );
+		em.getTransaction().commit();
+		em.close();
+	}
+
+	@AfterEach
+	public void cleanUp() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+
+		em.createQuery( "delete from Order" ).executeUpdate();
+
 		em.getTransaction().commit();
 		em.close();
 	}
@@ -125,6 +140,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 		assertEquals( 2, orders.size() );
 		em.getTransaction().commit();
 		em.close();
+
 	}
 
 	/**
@@ -224,8 +240,9 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 	 * Check predicate for field which has simple byte array type (byte[]).
 	 */
 	@Test
-	@SkipForDialect(value = Oracle12cDialect.class, jiraKey = "HHH-10603",
-			comment = "Oracle12cDialect uses blob to store byte arrays and it's not possible to compare blobs with simple equality operators.")
+	@JiraKey( "HHH-10603" )
+	@SkipForDialect(dialectClass = OracleDialect.class, version = 1200,
+			reason = "Oracle12cDialect uses blob to store byte arrays and it's not possible to compare blobs with simple equality operators.")
 	public void testByteArray() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();
@@ -244,7 +261,7 @@ public class PredicateTest extends AbstractMetamodelSpecificTest {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-5803" )
-	@SkipForDialect( value = CockroachDialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/41943")
+	@SkipForDialect( dialectClass = CockroachDialect.class, reason = "https://github.com/cockroachdb/cockroach/issues/41943")
 	public void testQuotientConversion() {
 		EntityManager em = getOrCreateEntityManager();
 		em.getTransaction().begin();

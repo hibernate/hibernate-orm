@@ -14,11 +14,11 @@ import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
-import org.hibernate.testing.orm.jpa.NonStringValueSettingProvider;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SettingProvider;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -38,19 +38,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 				@Setting(name = AvailableSettings.USE_SQL_COMMENTS, value = "true"),
 				@Setting(name = AvailableSettings.IN_CLAUSE_PARAMETER_PADDING, value = "true"),
 		},
-		nonStringValueSettingProviders = MaxInExpressionParameterPaddingTest.DialectProvider.class,
+		settingProviders ={
+				@SettingProvider(
+						settingName = AvailableSettings.DIALECT,
+						provider = MaxInExpressionParameterPaddingTest.DialectProvider.class
+				),
+		},
 		statementInspectorClass = SQLStatementInspector.class
 )
 public class MaxInExpressionParameterPaddingTest {
 
-	public static class DialectProvider extends NonStringValueSettingProvider {
+	public static  class DialectProvider implements SettingProvider.Provider<String> {
 		@Override
-		public String getKey() {
-			return AvailableSettings.DIALECT;
-		}
-
-		@Override
-		public Object getValue() {
+		public String getSetting() {
 			return MaxInExpressionParameterPaddingTest.MaxCountInExpressionH2Dialect.class.getName();
 		}
 	}
@@ -75,11 +75,11 @@ public class MaxInExpressionParameterPaddingTest {
 		final SQLStatementInspector statementInspector = (SQLStatementInspector) scope.getStatementInspector();
 		statementInspector.clear();
 
-		scope.inTransaction( entityManager -> {
+		scope.inTransaction( entityManager ->
 			entityManager.createQuery( "select p from Person p where p.id in :ids" )
 					.setParameter( "ids", IntStream.range( 0, MAX_COUNT ).boxed().collect( Collectors.toList() ) )
-					.getResultList();
-		} );
+					.getResultList()
+			);
 
 		StringBuilder expectedInClause = new StringBuilder();
 		expectedInClause.append( "in(?" );

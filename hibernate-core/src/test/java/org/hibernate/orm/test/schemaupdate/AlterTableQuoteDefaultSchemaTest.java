@@ -23,67 +23,71 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.PostgreSQL82Dialect;
-import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
-import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Guillaume Smet
  */
 @TestForIssue(jiraKey = "HHH-12939")
-@RequiresDialect(value = {
-		H2Dialect.class,
-		PostgreSQL82Dialect.class,
-		SQLServer2012Dialect.class,
-})
-@RequiresDialectFeature(DialectChecks.SupportSchemaCreation.class)
+@RequiresDialect(value = H2Dialect.class)
+@RequiresDialect(value = PostgreSQLDialect.class, version = 820)
+@RequiresDialect(value = SQLServerDialect.class, version = 11)
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportSchemaCreation.class)
 public class AlterTableQuoteDefaultSchemaTest extends AbstractAlterTableQuoteSchemaTest {
 
-	@Override
-	protected void afterSessionFactoryBuilt() {
+	@BeforeEach
+	protected void init() {
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery( "DROP TABLE " + quote( "default-schema", "my_entity" ) )
-						.executeUpdate();
-			} );
+			inTransaction(
+					session -> session.createNativeQuery( "DROP TABLE " + quote( "default-schema", "my_entity" ) )
+							.executeUpdate()
+			);
 		}
-		catch (Exception ignore) {
+		catch (Exception e) {
 		}
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
-						.executeUpdate();
-			} );
+			inTransaction(
+					session -> session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
+							.executeUpdate()
+			);
 		}
-		catch (Exception ignore) {
+		catch (Exception e) {
 		}
-		doInHibernate( this::sessionFactory, session -> {
-			session.createNativeQuery( "CREATE SCHEMA " + quote( "default-schema" ) )
-					.executeUpdate();
-		} );
+		try {
+			inTransaction(
+					session -> session.createNativeQuery( "CREATE SCHEMA " + quote( "default-schema" ) )
+							.executeUpdate()
+			);
+		}
+		catch (Exception e) {
+		}
 	}
 
-	@Override
-	protected void cleanupTest() {
+	@AfterEach
+	protected void tearDown() {
 		try {
-			doInHibernate( this::sessionFactory, session -> {
-				session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
-						.executeUpdate();
-			} );
+			inTransaction(
+					session -> session.createNativeQuery( "DROP SCHEMA " + quote( "default-schema" ) )
+							.executeUpdate()
+			);
 		}
-		catch (Exception ignore) {
+		catch (Exception e) {
 		}
 	}
 

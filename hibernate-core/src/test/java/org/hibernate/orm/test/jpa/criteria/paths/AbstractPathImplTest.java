@@ -12,25 +12,25 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import org.hibernate.jpa.test.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.jpa.test.metamodel.Order;
-import org.hibernate.jpa.test.metamodel.Order_;
 import org.hibernate.jpa.test.metamodel.Thing;
 import org.hibernate.jpa.test.metamodel.ThingWithQuantity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import org.hibernate.testing.orm.junit.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Michael Rudolf
  * @author James Gilbertson
  */
 public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
-    @Before
+    @BeforeEach
     public void prepareTestData() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();
@@ -55,7 +55,7 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
         em.close();
     }
 
-    @After
+    @AfterEach
     public void cleanupTestData() {
         EntityManager em = getOrCreateEntityManager();
         em.getTransaction().begin();
@@ -66,7 +66,8 @@ public class AbstractPathImplTest extends AbstractMetamodelSpecificTest {
         em.close();
     }
 
-	@Test(expected = IllegalArgumentException.class)
+	@ExpectedException(value = IllegalArgumentException.class)
+	@Test
 	public void testGetNonExistingAttributeViaName() {
 		EntityManager em = getOrCreateEntityManager();
 		try {

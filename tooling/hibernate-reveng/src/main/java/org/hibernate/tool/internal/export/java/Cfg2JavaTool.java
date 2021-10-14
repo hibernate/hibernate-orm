@@ -28,7 +28,6 @@ import org.hibernate.mapping.Value;
 import org.hibernate.tool.internal.export.hbm.Cfg2HbmTool;
 import org.hibernate.tool.internal.util.NameConverter;
 import org.hibernate.tool.internal.util.StringUtil;
-import org.hibernate.type.PrimitiveType;
 import org.hibernate.type.Type;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
@@ -351,14 +350,7 @@ public class Cfg2JavaTool {
 			}
 			
 			if(type!=null) {
-				Class<?> typeClass;
-				if ( type instanceof PrimitiveType ) {
-					typeClass = ( (PrimitiveType<?>) type ).getPrimitiveClass();
-				}
-				else {
-					typeClass = type.getReturnedClass();
-				}
-				typename = typeClass.getName();
+				typename = type.getReturnedClass().getName();
 			}
 			buf.append( ctx.importType( typename ))
 					.append( " " )

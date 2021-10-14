@@ -6,9 +6,8 @@
  */
 package org.hibernate.internal.util.collections;
 
-import java.util.LinkedList;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 /**
  * A general-purpose stack impl.
@@ -19,39 +18,58 @@ import java.util.function.Function;
  */
 public final class StandardStack<T> implements Stack<T> {
 
-	private final LinkedList<T> internalStack = new LinkedList<>();
+	private ArrayDeque<T> internalStack;
 
 	public StandardStack() {
 	}
 
 	@Override
 	public void push(T newCurrent) {
-		internalStack.addFirst( newCurrent );
+		stackInstanceExpected().addFirst( newCurrent );
+	}
+
+	private Deque<T> stackInstanceExpected() {
+		if ( internalStack == null ) {
+			//"7" picked to use 8, but skipping the odd initialCapacity method
+			internalStack = new ArrayDeque<>(7);
+		}
+		return internalStack;
 	}
 
 	@Override
 	public T pop() {
-		return internalStack.removeFirst();
+		return stackInstanceExpected().removeFirst();
 	}
 
 	@Override
 	public T getCurrent() {
+		if ( internalStack == null ) {
+			return null;
+		}
 		return internalStack.peek();
 	}
 
 	@Override
 	public int depth() {
+		if ( internalStack == null ) {
+			return 0;
+		}
 		return internalStack.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
+		if ( internalStack == null ) {
+			return true;
+		}
 		return internalStack.isEmpty();
 	}
 
 	@Override
 	public void clear() {
-		internalStack.clear();
+		if ( internalStack != null ) {
+			internalStack.clear();
+		}
 	}
 
 }

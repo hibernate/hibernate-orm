@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.log.LoggingHelper;
@@ -76,22 +77,27 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 			final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
 			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
 
-			final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts().findLoadingEntityEntry(
-					entityKey );
+			final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts()
+					.findLoadingEntityEntry( entityKey );
 			if ( loadingEntityLocally != null ) {
 				entityInstance = loadingEntityLocally.getEntityInstance();
 			}
 			else {
-				entityInstance = rowProcessingState.getSession().internalLoad(
-						concreteDescriptor.getEntityName(),
-						identifier,
-						false,
-						referencedModelPart.isInternalLoadNullable()
-				);
+				if ( referencedModelPart.isInternalLoadNullable() ) {
+					entityInstance = LazyPropertyInitializer.UNFETCHED_PROPERTY;
+				}
+				else {
+					entityInstance = rowProcessingState.getSession().internalLoad(
+							concreteDescriptor.getEntityName(),
+							identifier,
+							false,
+							false
+					);
 
-				if ( entityInstance instanceof HibernateProxy ) {
-					( (HibernateProxy) entityInstance ).getHibernateLazyInitializer()
-							.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
+					if ( entityInstance instanceof HibernateProxy ) {
+						( (HibernateProxy) entityInstance ).getHibernateLazyInitializer()
+								.setUnwrap( referencedModelPart.isUnwrapProxy() && concreteDescriptor.isInstrumented() );
+					}
 				}
 			}
 

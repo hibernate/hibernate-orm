@@ -763,7 +763,12 @@ public class LoaderSelectBuilder {
 					if ( cascadeStyle == null || cascadeStyle.doCascade( cascadingAction ) ) {
 						fetchTiming = FetchTiming.IMMEDIATE;
 						// In 5.x the CascadeEntityJoinWalker only join fetched the first collection fetch
-						joined = !hasCollectionJoinFetches;
+						if ( fetchable instanceof PluralAttributeMapping ) {
+							joined = !hasCollectionJoinFetches;
+						}
+						else {
+							joined = true;
+						}
 					}
 				}
 			}

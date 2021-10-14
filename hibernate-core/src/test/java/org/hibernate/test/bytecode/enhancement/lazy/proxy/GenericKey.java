@@ -14,6 +14,7 @@
 package org.hibernate.test.bytecode.enhancement.lazy.proxy;
 
 import java.io.Serializable;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;

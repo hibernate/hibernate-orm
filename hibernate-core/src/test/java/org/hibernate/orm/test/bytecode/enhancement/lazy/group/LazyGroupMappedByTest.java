@@ -1,4 +1,4 @@
-package org.hibernate.test.bytecode.enhancement.lazy.group;
+package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;

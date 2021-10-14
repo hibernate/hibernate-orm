@@ -1,4 +1,4 @@
-package org.hibernate.test.bytecode.enhancement.lazy.group;
+package org.hibernate.orm.test.bytecode.enhancement.lazy.group;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;

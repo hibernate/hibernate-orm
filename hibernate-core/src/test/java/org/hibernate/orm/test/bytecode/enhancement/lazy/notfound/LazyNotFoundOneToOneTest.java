@@ -4,11 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.bytecode.enhancement.lazy.notfound;
-
-/**
- * @author Gail Badner
- */
+package org.hibernate.orm.test.bytecode.enhancement.lazy.notfound;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.ConstraintMode;
@@ -25,23 +21,30 @@ import org.hibernate.annotations.LazyToOne;
 import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
-import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
+import org.hibernate.testing.jdbc.SQLStatementInterceptor;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import static org.hamcrest.CoreMatchers.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertThat;
 
+/**
+ * @author Gail Badner
+ */
 @TestForIssue( jiraKey = "HHH-12226")
 @RunWith( BytecodeEnhancerRunner.class )
-public class LazyNotFoundOneToOneNonUpdatableNonInsertableTest extends BaseCoreFunctionalTestCase {
+public class LazyNotFoundOneToOneTest extends BaseCoreFunctionalTestCase {
 	private static int ID = 1;
+
+	private SQLStatementInterceptor sqlInterceptor;
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -49,6 +52,12 @@ public class LazyNotFoundOneToOneNonUpdatableNonInsertableTest extends BaseCoreF
 				User.class,
 				Lazy.class
 		};
+	}
+
+	@Override
+	protected void configure(Configuration configuration) {
+		super.configure(configuration);
+		sqlInterceptor = new SQLStatementInterceptor( configuration );
 	}
 
 	@Test
@@ -70,12 +79,16 @@ public class LazyNotFoundOneToOneNonUpdatableNonInsertableTest extends BaseCoreF
 				}
 		);
 
+		sqlInterceptor.clear();
+
 		doInHibernate(
 				this::sessionFactory, session -> {
 					User user = session.find( User.class, ID );
+
+					assertThat( sqlInterceptor.getQueryCount(), is( 1 ) );
 					assertFalse( Hibernate.isPropertyInitialized( user, "lazy" ) );
+
 					assertNull( user.getLazy() );
-					assertTrue( Hibernate.isPropertyInitialized( user, "lazy" ) );
 				}
 		);
 	}
@@ -87,16 +100,10 @@ public class LazyNotFoundOneToOneNonUpdatableNonInsertableTest extends BaseCoreF
 		@Id
 		private Integer id;
 
-		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, optional = true)
+		@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 		@LazyToOne(value = LazyToOneOption.NO_PROXY)
 		@NotFound(action = NotFoundAction.IGNORE)
-		@JoinColumn(
-				foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT),
-				name = "id",
-				referencedColumnName = "id",
-				insertable = false,
-				updatable = false
-		)
+		@JoinColumn(foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))
 		private Lazy lazy;
 
 		public Integer getId() {

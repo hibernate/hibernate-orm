@@ -332,4 +332,6 @@ public interface SessionFactoryOptions {
 	}
 
 	boolean isOmitJoinOfSuperclassTablesEnabled();
+
+	boolean isSafeManagedEntitiesIteratorEnabled();
 }

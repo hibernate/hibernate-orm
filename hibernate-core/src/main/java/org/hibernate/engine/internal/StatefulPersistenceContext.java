@@ -1102,29 +1102,31 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( entitiesByKey == null ) {
 			return Collections.emptyIterator();
 		}
-		else {
-			return new Iterator() {
-				private Iterator copyIterator;
-
-				@Override
-				public boolean hasNext() {
-					checkCopyExists();
-					return copyIterator.hasNext();
-				}
-
-				@Override
-				public Object next() {
-					checkCopyExists();
-					return copyIterator.next();
-				}
-
-				private void checkCopyExists() {
-					if (copyIterator == null) {
-						copyIterator = new ArrayList(entitiesByKey.values()).iterator();
-					}
-				}
-			};
+		else if (!session.getFactory().getSessionFactoryOptions().isSafeManagedEntitiesIteratorEnabled()) {
+			return entitiesByKey.values().iterator();
 		}
+		//iterator that copies the collection to iterate over on first access, to avoid ConcurrentModificationExceptions
+		return new Iterator() {
+			private Iterator copiedIterator;
+
+			@Override
+			public boolean hasNext() {
+				assureCopied();
+				return copiedIterator.hasNext();
+			}
+
+			@Override
+			public Object next() {
+				assureCopied();
+				return copiedIterator.next();
+			}
+
+			private void assureCopied() {
+				if (copiedIterator == null) {
+					copiedIterator = new ArrayList(entitiesByKey.values()).iterator();
+				}
+			}
+		};
 	}
 
 	@Override

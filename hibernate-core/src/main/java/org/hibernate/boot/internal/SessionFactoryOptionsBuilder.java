@@ -128,6 +128,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.VALIDATE_QUERY_PARAMETERS;
 import static org.hibernate.cfg.AvailableSettings.WRAP_RESULT_SETS;
 import static org.hibernate.cfg.AvailableSettings.DISCARD_PC_ON_CLOSE;
+import static org.hibernate.cfg.AvailableSettings.SAFE_MANAGED_ENTITIES_ITERATOR;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -252,6 +253,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	private boolean nativeExceptionHandling51Compliance;
 	private int queryStatisticsMaxSize;
+
+	private boolean safeManagedEntitiesIteratorEnabled;
 
 
 	@SuppressWarnings({"WeakerAccess", "deprecation"})
@@ -553,6 +556,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			log.nativeExceptionHandling51ComplianceJpaBootstrapping();
 			this.nativeExceptionHandling51Compliance = false;
 		}
+
+		this.safeManagedEntitiesIteratorEnabled = ConfigurationHelper.getBoolean(
+				SAFE_MANAGED_ENTITIES_ITERATOR,
+				configurationSettings,
+				false
+		);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1092,6 +1101,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return omitJoinOfSuperclassTablesEnabled;
 	}
 
+	@Override
+	public boolean isSafeManagedEntitiesIteratorEnabled() {
+		return safeManagedEntitiesIteratorEnabled;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access

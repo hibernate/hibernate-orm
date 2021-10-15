@@ -12,6 +12,8 @@ import org.hibernate.Interceptor;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.TransactionException;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.type.Type;
@@ -38,6 +40,10 @@ public class InterceptorTest extends BaseCoreFunctionalTestCase {
 	@Override
 	public String[] getMappings() {
 		return new String[] { "interceptor/User.hbm.xml", "interceptor/Image.hbm.xml", "interceptor/Team.hbm.xml" };
+	}
+
+	public void configure(Configuration cfg) {
+		cfg.setProperty(Environment.SAFE_MANAGED_ENTITIES_ITERATOR, "true");
 	}
 
 	@Test

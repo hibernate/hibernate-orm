@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import java.util.Iterator;
 import java.util.function.Supplier;
 import javax.persistence.GeneratedValue;
 
@@ -2510,6 +2511,25 @@ public interface AvailableSettings extends org.hibernate.jpa.AvailableSettings {
 	 * @since 5.4
 	 */
 	String OMIT_JOIN_OF_SUPERCLASS_TABLES = "hibernate.query.omit_join_of_superclass_tables";
+
+	/**
+	 * <p>
+	 * The {@link org.hibernate.engine.spi.PersistenceContext#managedEntitiesIterator()} method is used
+	 * to provide the entities that are flushed in {@link org.hibernate.Interceptor#preFlush(Iterator)} and
+	 * {@link org.hibernate.Interceptor#postFlush(Iterator)}.
+	 * Lazy-loading or other mutations on the underlying managed entities collection
+	 * will cause an {@link java.util.ConcurrentModificationException}.
+	 * </p>
+	 * <p>With this setting, the collection is copied when it is first accessed,
+	 * to make access to contained entities is safe.
+	 * Keep in mind, that with this setting, iterating over the managed entities will increase your memory usage
+	 * by the number of managed entities many pointers.
+	 * </p>
+	 * <p>
+	 * The default value is false.
+	 * </p>
+	 */
+	String SAFE_MANAGED_ENTITIES_ITERATOR = "hibernate.safe_managed_entities_iterator";
 
 	/**
 	 * @deprecated Support for JACC will be removed in 6.0

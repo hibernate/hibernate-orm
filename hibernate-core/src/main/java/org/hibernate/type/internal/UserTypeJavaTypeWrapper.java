@@ -100,7 +100,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		if ( sized != null ) {
 			return sized.defaultSizes()[0].getPrecision();
 		}
@@ -109,7 +109,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public int getDefaultSqlScale() {
+	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		if ( sized != null ) {
 			return sized.defaultSizes()[0].getScale();
 		}

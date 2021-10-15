@@ -126,7 +126,7 @@ public class DoubleJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Do
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		//this is the number of *binary* digits
 		//in a double-precision FP number
 		return dialect.getDoublePrecision();

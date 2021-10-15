@@ -125,10 +125,10 @@ Java and SQL data types.  Hibernate attempts to determine the correct conversion
 type attribute is not specified in the mapping, by using Java reflection to determine the Java type of the declared
 property and using a default mapping type for that Java type.
 
-In some cases this automatic detection might not chose the default you expect or need, as seen with the
-`date` property.  Hibernate cannot know if the property, which is of type `java.util.Date`, should map to a SQL
+In some cases this automatic detection might not choose the default you expect or need, as seen with the
+`date` property.  Hibernate cannot know if the property, which is of type `java.util.Date`, should map to an SQL
 _DATE_, _TIME_, or _TIMESTAMP_ datatype.  Full date and time information is preserved by mapping the property to
-the _timestamp_ converter, which identifies the converter class `org.hibernate.type.TimestampType`.
+the _timestamp_ converter, which identifies the converter as declared by `org.hibernate.type.StandardBasicTypes.TIMESTAMP`.
 
 TIP: Hibernate determines the mapping type using reflection when the mapping files are processed. This process adds
 overhead in terms of time and resources. If startup performance is important, consider explicitly defining the type

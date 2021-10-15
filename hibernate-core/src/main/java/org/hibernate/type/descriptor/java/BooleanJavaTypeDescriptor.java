@@ -158,12 +158,12 @@ public class BooleanJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<B
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return 1;
 	}
 
 	@Override
-	public int getDefaultSqlScale() {
+	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
 

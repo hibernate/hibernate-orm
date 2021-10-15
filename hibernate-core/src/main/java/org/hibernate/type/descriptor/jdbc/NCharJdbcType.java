@@ -8,6 +8,10 @@ package org.hibernate.type.descriptor.jdbc;
 
 import java.sql.Types;
 
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
+
 /**
  * Descriptor for {@link Types#NCHAR NCHAR} handling.
  *
@@ -27,5 +31,25 @@ public class NCharJdbcType extends NVarcharJdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.NCHAR;
+	}
+
+	@Override
+	public JdbcType resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaType<?> domainJtd) {
+		assert domainJtd != null;
+
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+
+		final int jdbcTypeCode;
+		if ( indicators.isLob() ) {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCHAR : Types.CHAR;
+		}
+
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 }

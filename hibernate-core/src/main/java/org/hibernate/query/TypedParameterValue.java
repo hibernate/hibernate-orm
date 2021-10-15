@@ -8,6 +8,7 @@ package org.hibernate.query;
 
 
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.type.BasicTypeReference;
 
 /**
  * Can be used to bind query parameter values.  Allows to provide additional details about the
@@ -15,11 +16,17 @@ import org.hibernate.metamodel.model.domain.AllowableParameterType;
  *
  * @author Steve Ebersole
  */
-public class TypedParameterValue {
-	private final AllowableParameterType type;
-	private final Object value;
+public final class TypedParameterValue<J> {
 
-	public TypedParameterValue(AllowableParameterType type, Object value) {
+	private final Object type;
+	private final J value;
+
+	public TypedParameterValue(AllowableParameterType<J> type, J value) {
+		this.type = type;
+		this.value = value;
+	}
+
+	public TypedParameterValue(BasicTypeReference<J> type, J value) {
 		this.type = type;
 		this.value = value;
 	}
@@ -29,7 +36,7 @@ public class TypedParameterValue {
 	 *
 	 * @return The value to be bound
 	 */
-	public Object getValue() {
+	public J getValue() {
 		return value;
 	}
 
@@ -38,7 +45,16 @@ public class TypedParameterValue {
 	 *
 	 * @return The Hibernate type to use.
 	 */
-	public AllowableParameterType getType() {
-		return type;
+	public AllowableParameterType<J> getType() {
+		return type instanceof AllowableParameterType ? (AllowableParameterType<J>) type : null;
+	}
+
+	/**
+	 * The specific Hibernate type reference to use to bind the value.
+	 *
+	 * @return The Hibernate type reference to use.
+	 */
+	public BasicTypeReference<J> getTypeReference() {
+		return type instanceof BasicTypeReference ? (BasicTypeReference<J>) type : null;
 	}
 }

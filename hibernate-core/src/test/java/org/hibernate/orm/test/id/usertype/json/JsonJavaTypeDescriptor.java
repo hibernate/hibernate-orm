@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.id.usertype.inet;
+package org.hibernate.orm.test.id.usertype.json;
 
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
@@ -12,38 +12,38 @@ import org.hibernate.type.descriptor.java.AbstractClassJavaTypeDescriptor;
 /**
  * @author Vlad Mihalcea
  */
-public class InetJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Inet> {
+public class JsonJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Json> {
 
-	public static final InetJavaTypeDescriptor INSTANCE = new InetJavaTypeDescriptor();
+	public static final JsonJavaTypeDescriptor INSTANCE = new JsonJavaTypeDescriptor();
 
-	public InetJavaTypeDescriptor() {
-		super( Inet.class );
+	public JsonJavaTypeDescriptor() {
+		super( Json.class );
 	}
 
-	public String toString(Inet value) {
+	public String toString(Json value) {
 		return value.toString();
 	}
 
-	public Inet fromString(CharSequence string) {
-		return new Inet( string.toString() );
+	public Json fromString(CharSequence string) {
+		return new Json( string.toString() );
 	}
 
 	@Override
-	public boolean areEqual(Inet one, Inet another) {
+	public boolean areEqual(Json one, Json another) {
 		return one == another || ( one != null && another != null && one.equals( another ) );
 	}
 
 	@Override
-	public int extractHashCode(Inet value) {
+	public int extractHashCode(Json value) {
 		return value.hashCode();
 	}
 
 	@SuppressWarnings({ "unchecked" })
-	public <X> X unwrap(Inet value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(Json value, Class<X> type, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Inet.class.isAssignableFrom( type ) ) {
+		if ( Json.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
@@ -52,15 +52,15 @@ public class InetJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<Inet
 		throw unknownUnwrap( type );
 	}
 
-	public <X> Inet wrap(X value, WrapperOptions options) {
+	public <X> Json wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
-		if ( Inet.class.isInstance( value ) ) {
-			return (Inet) value;
+		if ( Json.class.isInstance( value ) ) {
+			return (Json) value;
 		}
 		if ( String.class.isInstance( value ) ) {
-			return new Inet( (String) value );
+			return new Json( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}

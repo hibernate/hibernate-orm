@@ -116,6 +116,16 @@ public interface ResultSetAccess extends JdbcValuesMetadata {
 							}
 
 							@Override
+							public int getColumnPrecision() {
+								return precision;
+							}
+
+							@Override
+							public int getColumnScale() {
+								return scale;
+							}
+
+							@Override
 							public EnumType getEnumeratedType() {
 								return resolvedJdbcType.isNumber() ? EnumType.ORDINAL : EnumType.STRING;
 							}

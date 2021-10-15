@@ -14,6 +14,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 
 import org.hibernate.spatial.GeolatteGeometryJavaTypeDescriptor;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -108,7 +109,7 @@ public class PGGeometryType implements JdbcType {
 
 	@Override
 	public int getDefaultSqlTypeCode() {
-		return 5432;
+		return SqlTypes.GEOMETRY;
 	}
 
 	@Override

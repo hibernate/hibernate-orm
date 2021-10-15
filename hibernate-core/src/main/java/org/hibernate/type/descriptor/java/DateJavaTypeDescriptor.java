@@ -51,7 +51,7 @@ public class DateJavaTypeDescriptor extends AbstractTemporalJavaTypeDescriptor<D
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}
 

@@ -27,6 +27,8 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.EnumType;
 import org.hibernate.type.descriptor.converter.AttributeConverterTypeAdapter;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -149,7 +151,7 @@ public class EnumResolutionTests {
 				},
 				legacyResolvedType -> {
 					assertThat( legacyResolvedType, instanceOf( CustomType.class ) );
-					final UserType rawEnumUserType = ( (CustomType) legacyResolvedType ).getUserType();
+					final UserType rawEnumUserType = ( (CustomType<Object>) legacyResolvedType ).getUserType();
 					assertThat( rawEnumUserType, instanceOf( EnumType.class ) );
 					final EnumType rawEnumEnumType = (EnumType) rawEnumUserType;
 					assertThat( rawEnumEnumType.isOrdinal(), is( isOrdinal ) );
@@ -161,14 +163,15 @@ public class EnumResolutionTests {
 	private void verifyEnumResolution(
 			Property property,
 			int jdbcCode,
-			Class<?> jdbcJavaType,
+			Class<?> javaType,
 			Consumer<BasicValueConverter> converterChecker,
 			Consumer<BasicType> legacyTypeChecker) {
 		final BasicValue.Resolution<?> resolution = ( (BasicValue) property.getValue() ).resolve();
-
+		final TypeConfiguration typeConfiguration = ( (BasicValue) property.getValue() ).getTypeConfiguration();
+		final JdbcType jdbcType = typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( jdbcCode );
 		// verify the interpretations used for reading
-		assertThat( resolution.getJdbcTypeDescriptor().getJdbcTypeCode(), is( jdbcCode ) );
-		assertThat( resolution.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( jdbcJavaType ) );
+		assertThat( resolution.getJdbcTypeDescriptor(), is( jdbcType ) );
+		assertThat( resolution.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( javaType ) );
 		assertThat( resolution.getDomainJavaDescriptor().getJavaTypeClass(), equalTo( Values.class ) );
 
 		final JdbcMapping jdbcMapping = resolution.getJdbcMapping();

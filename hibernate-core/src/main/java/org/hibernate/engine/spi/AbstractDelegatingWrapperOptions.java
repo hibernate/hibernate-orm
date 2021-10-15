@@ -23,6 +23,11 @@ public abstract class AbstractDelegatingWrapperOptions implements WrapperOptions
 	protected abstract SessionImplementor delegate();
 
 	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return delegate().getSessionFactory();
+	}
+
+	@Override
 	public boolean useStreamForLobBinding() {
 		return delegate().useStreamForLobBinding();
 	}

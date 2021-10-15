@@ -74,6 +74,9 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.type.FormatMapper;
+import org.hibernate.type.JacksonJsonFormatMapper;
+import org.hibernate.type.JsonBJsonFormatMapper;
 
 import static org.hibernate.cfg.AvailableSettings.ACQUIRE_CONNECTIONS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
@@ -158,6 +161,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// integration
 	private Object beanManagerReference;
 	private Object validatorFactoryReference;
+	private FormatMapper jsonFormatMapper;
 
 	// SessionFactory behavior
 	private boolean jpaBootstrap;
@@ -300,6 +304,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.validatorFactoryReference = configurationSettings.getOrDefault(
 				AvailableSettings.JPA_VALIDATION_FACTORY,
 				configurationSettings.get( AvailableSettings.JAKARTA_VALIDATION_FACTORY )
+		);
+		this.jsonFormatMapper = determineJsonFormatMapper(
+				configurationSettings.get( AvailableSettings.JSON_FORMAT_MAPPER ),
+				strategySelector
 		);
 
 		this.sessionFactoryName = (String) configurationSettings.get( SESSION_FACTORY_NAME );
@@ -799,7 +807,31 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return PhysicalConnectionHandlingMode.interpret( effectiveAcquisitionMode, effectiveReleaseMode );
 	}
 
-
+	private static FormatMapper determineJsonFormatMapper(Object setting, StrategySelector strategySelector) {
+		return strategySelector.resolveDefaultableStrategy(
+				FormatMapper.class,
+				setting,
+				(Callable<FormatMapper>) () -> {
+					try {
+						// Force initialization of the instance
+						JacksonJsonFormatMapper.INSTANCE.hashCode();
+						return JacksonJsonFormatMapper.INSTANCE;
+					}
+					catch (NoClassDefFoundError ex) {
+						// Ignore
+					}
+					try {
+						// Force initialization of the instance
+						JsonBJsonFormatMapper.INSTANCE.hashCode();
+						return JsonBJsonFormatMapper.INSTANCE;
+					}
+					catch (NoClassDefFoundError ex) {
+						// Ignore
+					}
+					return null;
+				}
+		);
+	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1219,6 +1251,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return defaultTimeZoneStorageStrategy;
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return jsonFormatMapper;
 	}
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access

@@ -70,7 +70,7 @@ public class EnumeratedSmokeTest extends BaseUnitTestCase {
 
 	private void validateEnumMapping(Property property, EnumType expectedJpaEnumType) {
 		assertThat( property.getType(), instanceOf( CustomType.class ) );
-		final CustomType customType = (CustomType) property.getType();
+		final CustomType<Object> customType = (CustomType<Object>) property.getType();
 		assertThat( customType.getUserType(), instanceOf( org.hibernate.type.EnumType.class ) );
 		final org.hibernate.type.EnumType hibernateMappingEnumType = (org.hibernate.type.EnumType) customType.getUserType();
 		assertThat( hibernateMappingEnumType.isOrdinal(), is(expectedJpaEnumType==EnumType.ORDINAL) );

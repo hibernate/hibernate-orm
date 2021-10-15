@@ -148,7 +148,7 @@ public class LocalTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDescrip
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
 }

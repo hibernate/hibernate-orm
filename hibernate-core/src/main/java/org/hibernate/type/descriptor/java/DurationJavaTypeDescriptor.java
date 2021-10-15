@@ -11,9 +11,9 @@ import java.time.Duration;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.NumericJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 /**
@@ -26,7 +26,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  * In practice, the 19 decimal digits of a SQL {@code bigint} are
  * capable of representing six centuries in nanoseconds and are
  * sufficient for many applications. However, by default, we map
- * Java {@link Duration} to SQL {@code numeric(21)} here, which
+ * Java {@link Duration} to SQL {@code numeric(21,6)} here, which
  * can comfortably represent 60 millenia of nanos.
  *
  * @author Steve Ebersole
@@ -45,7 +45,7 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return NumericJdbcType.INSTANCE;
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.INTERVAL_SECOND );
 	}
 
 	@Override
@@ -55,7 +55,7 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 		}
 		String seconds = String.valueOf( value.getSeconds() );
 		String nanos = String.valueOf( value.getNano() );
-		String zeros = StringHelper.repeat( '0', 9-nanos.length() );
+		String zeros = StringHelper.repeat( '0', 9 - nanos.length() );
 		return seconds + zeros + nanos;
 	}
 
@@ -83,8 +83,10 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 		}
 
 		if ( BigDecimal.class.isAssignableFrom( type ) ) {
-			return (X) new BigDecimal( duration.getSeconds() ).movePointRight(9)
-					.add( new BigDecimal( duration.getNano() ) );
+			return (X) new BigDecimal( duration.getSeconds() )
+					.movePointRight( 9 )
+					.add( new BigDecimal( duration.getNano() ) )
+					.movePointLeft( 9 );
 		}
 
 		if ( String.class.isAssignableFrom( type ) ) {
@@ -110,7 +112,7 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 
 		if ( BigDecimal.class.isInstance( value ) ) {
 			BigDecimal[] secondsAndNanos =
-					((BigDecimal) value).divideAndRemainder( BigDecimal.ONE.movePointRight(9) );
+					((BigDecimal) value).divideAndRemainder( BigDecimal.ONE );
 			return Duration.ofSeconds(
 					secondsAndNanos[0].longValueExact(),
 					// use intValue() not intValueExact() here, because
@@ -133,17 +135,23 @@ public class DurationJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
-		// 19+9 = 28 digits is the maximum possible Duration
-		// precision, but is an unnecessarily large default,
-		// except for cosmological applications. Thirty
-		// millenia in both timelike directions should be
-		// sufficient time for most businesses!
-		return Math.min( 21, dialect.getDefaultDecimalPrecision() );
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		if ( jdbcType.getDefaultSqlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
+			// Usually the maximum precision for interval types
+			return 18;
+		}
+		else {
+			// 19+9 = 28 digits is the maximum possible Duration
+			// precision, but is an unnecessarily large default,
+			// except for cosmological applications. Thirty
+			// millenia in both timelike directions should be
+			// sufficient time for most businesses!
+			return Math.min( 21, dialect.getDefaultDecimalPrecision() );
+		}
 	}
 
 	@Override
-	public int getDefaultSqlScale() {
-		return 0;
+	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
+		return 9;
 	}
 }

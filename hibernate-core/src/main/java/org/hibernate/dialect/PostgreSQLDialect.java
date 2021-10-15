@@ -21,6 +21,7 @@ import java.util.TimeZone;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
@@ -35,6 +36,7 @@ import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -51,6 +53,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.procedure.internal.PostgresCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -64,12 +67,14 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.PostgresUUIDType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -88,9 +93,13 @@ public class PostgreSQLDialect extends Dialect {
 	private static final PostgreSQLIdentityColumnSupport IDENTITY_COLUMN_SUPPORT = new PostgreSQLIdentityColumnSupport();
 
 	private final int version;
+	private final PostgreSQLDriverKind driverKind;
 
 	public PostgreSQLDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this(
+				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				PostgreSQLDriverKind.determineKind( info )
+		);
 	}
 
 	public PostgreSQLDialect() {
@@ -98,8 +107,14 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	public PostgreSQLDialect(int version) {
+		// Assume PgJDBC by default
+		this( version, PostgreSQLDriverKind.PG_JDBC );
+	}
+
+	public PostgreSQLDialect(int version, PostgreSQLDriverKind driverKind) {
 		super();
 		this.version = version;
+		this.driverKind = driverKind;
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint, not even in Postgres 11
 
@@ -121,18 +136,64 @@ public class PostgreSQLDialect extends Dialect {
 		registerColumnType( Types.LONGVARCHAR, "text" );
 		registerColumnType( Types.LONGNVARCHAR, "text" );
 
-		registerColumnType( 5432, "geometry" );
+		registerColumnType( SqlTypes.INET, "inet" );
+		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
 
 		if ( getVersion() >= 820 ) {
-			registerColumnType( PostgresUUIDType.INSTANCE.getJdbcTypeDescriptor().getDefaultSqlTypeCode(), "uuid" );
+			registerColumnType( SqlTypes.UUID, "uuid" );
 
 			if ( getVersion() >= 920 ) {
-				registerColumnType( Types.JAVA_OBJECT, "json" );
+				// Prefer jsonb if possible
+				if ( getVersion() >= 940 ) {
+					registerColumnType( SqlTypes.JSON, "jsonb" );
+				}
+				else {
+					registerColumnType( SqlTypes.JSON, "json" );
+				}
 			}
 		}
 
+		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
+
 		getDefaultProperties().setProperty( Environment.STATEMENT_BATCH_SIZE, DEFAULT_BATCH_SIZE );
 		getDefaultProperties().setProperty( Environment.NON_CONTEXTUAL_LOB_CREATION, "true" );
+	}
+
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		// The maximum scale for `interval second` is 6 unfortunately so we have to use numeric by default
+		switch ( code ) {
+			case SqlTypes.INTERVAL_SECOND:
+				final Integer scale = size.getScale();
+				if ( scale == null || scale > 6 ) {
+					return getTypeName( SqlTypes.NUMERIC, size );
+				}
+		}
+		return super.getTypeName( code, size );
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == SqlTypes.OTHER ) {
+			switch ( columnTypeName ) {
+				case "uuid":
+					jdbcTypeCode = SqlTypes.UUID;
+					break;
+				case "json":
+				case "jsonb":
+					jdbcTypeCode = SqlTypes.JSON;
+					break;
+				case "inet":
+					jdbcTypeCode = SqlTypes.INET;
+					break;
+			}
+		}
+		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	@Override
@@ -185,7 +246,10 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		if ( intervalType != null ) {
+			return "(?2+?3)";
+		}
 		switch ( unit ) {
 			case NANOSECOND:
 				return "(?3+(?2)/1e3*interval '1 microsecond')";
@@ -937,9 +1001,17 @@ public class PostgreSQLDialect extends Dialect {
 		jdbcTypeRegistry.addDescriptor( Types.BLOB, BlobJdbcType.BLOB_BINDING );
 		jdbcTypeRegistry.addDescriptor( Types.CLOB, ClobJdbcType.CLOB_BINDING );
 
-		if ( getVersion() >= 820 ) {
-			// HHH-9562
-			typeContributions.contributeType( PostgresUUIDType.INSTANCE );
+		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+
+			if ( getVersion() >= 820 ) {
+				// HHH-9562
+				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+				if ( getVersion() >= 920 ) {
+					jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+				}
+			}
 		}
 
 		// PostgreSQL requires a custom binder for binding untyped nulls as VARBINARY

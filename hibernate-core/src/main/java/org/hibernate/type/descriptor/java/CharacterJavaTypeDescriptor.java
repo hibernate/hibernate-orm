@@ -99,12 +99,12 @@ public class CharacterJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return 3;
 	}
 
 	@Override
-	public int getDefaultSqlScale() {
+	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
 }

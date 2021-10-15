@@ -42,7 +42,7 @@ import org.hibernate.type.BasicTypeReference;
  *     </li>
  *     <li>
  *         Tables used via {@link #addSynchronizedQuerySpace}, {@link #addSynchronizedEntityName} and
- *         {@link #addSynchronizedEntityClass}.  This allows Hibernate to know how to properly deal with
+ *         {@link SynchronizeableQuery#addSynchronizedEntityClass}.  This allows Hibernate to know how to properly deal with
  *         auto-flush checking as well as cached query results if the results of the query are being
  *         cached.
  *     </li>
@@ -106,7 +106,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addScalar(String columnAlias, BasicDomainType type);
+	NativeQuery<T> addScalar(String columnAlias, BasicDomainType<?> type);
 
 	/**
 	 * Declare a scalar query result using the specified result type.
@@ -281,7 +281,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(Class entityType);
+	NativeQuery<T> addEntity(Class<?> entityType);
 
 	/**
 	 * Declare a "root" entity.
@@ -291,7 +291,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class entityType);
+	NativeQuery<T> addEntity(String tableAlias, Class<?> entityType);
 
 	/**
 	 * Declare a "root" entity, specifying a lock mode.
@@ -302,7 +302,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	NativeQuery<T> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+	NativeQuery<T> addEntity(String tableAlias, Class<?> entityClass, LockMode lockMode);
 
 	/**
 	 * Declare a join fetch result.
@@ -507,7 +507,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	NativeQuery<T> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQuery<T> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	NativeQuery<T> addSynchronizedEntityClass(Class<?> entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -664,7 +664,7 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 	<P> NativeQuery<T> setParameterList(QueryParameter<P> parameter, Collection<P> values);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Collection values);
+	NativeQuery<T> setParameterList(String name, Collection<?> values);
 
 //	@Override
 //	default NativeQuery<T> setParameterList(String name, Collection values, Type type) {
@@ -672,55 +672,55 @@ public interface NativeQuery<T> extends Query<T>, SynchronizeableQuery {
 //	}
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Collection values, AllowableParameterType type);
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
 
 //	@Override
 //	NativeQuery<T> setParameterList(String name, Object[] values, Type type);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Object[] values, AllowableParameterType type);
+	NativeQuery<T> setParameterList(String name, Object[] values, AllowableParameterType<?> type);
 
 	@Override
 	NativeQuery<T> setParameterList(String name, Object[] values);
 
 	@Override
-	NativeQuery<T> setParameter(String name, Object val, AllowableParameterType type);
+	<P> NativeQuery<T> setParameter(String name, P val, AllowableParameterType<P> type);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Object val, AllowableParameterType type);
+	<P> NativeQuery<T> setParameter(int position, P val, AllowableParameterType<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
 
 	@Override
-	NativeQuery<T> setParameter(String name, Object val, BasicTypeReference<?> type);
+	<P> NativeQuery<T> setParameter(String name, P val, BasicTypeReference<P> type);
 
 	@Override
-	NativeQuery<T> setParameter(int position, Object val, BasicTypeReference<?> type);
+	<P> NativeQuery<T> setParameter(int position, P val, BasicTypeReference<P> type);
 
 	@Override
-	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type);
+	<P> NativeQuery<T> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Collection values);
+	NativeQuery<T> setParameterList(int position, Collection<?> values);
 
 	@Override
-	NativeQuery<T> setParameterList(String name, Collection values, Class type);
+	<P> NativeQuery<T> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Collection values, Class type);
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
 //	@Override
 //	NativeQuery<T> setParameterList(int position, Collection values, Type type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Collection values, AllowableParameterType type);
+	<P> NativeQuery<T> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
 
 //	@Override
 //	NativeQuery<T> setParameterList(int position, Object[] values, Type type);
 
 	@Override
-	NativeQuery<T> setParameterList(int position, Object[] values, AllowableParameterType type);
+	NativeQuery<T> setParameterList(int position, Object[] values, AllowableParameterType<?> type);
 
 	@Override
 	NativeQuery<T> setParameterList(int position, Object[] values);

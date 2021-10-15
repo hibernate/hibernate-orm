@@ -50,48 +50,48 @@ import org.hibernate.usertype.UserVersionType;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class CustomType
+public class CustomType<J>
 		extends AbstractType
-		implements BasicType, StringRepresentableType, ProcedureParameterNamedBinder, ProcedureParameterExtractionAware {
+		implements BasicType<J>, ProcedureParameterNamedBinder<J>, ProcedureParameterExtractionAware<J> {
 
-	private final UserType<Object> userType;
+	private final UserType<J> userType;
 	private final String[] registrationKeys;
 
 	private final String name;
 
-	private final BasicJavaType<Object> mappedJavaTypeDescriptor;
+	private final BasicJavaType<J> mappedJavaTypeDescriptor;
 	private final JdbcType jdbcType;
 
-	private final ValueExtractor<Object> valueExtractor;
-	private final ValueBinder<Object> valueBinder;
+	private final ValueExtractor<J> valueExtractor;
+	private final ValueBinder<J> valueBinder;
 
 	private final Size dictatedSize;
 	private final Size defaultSize;
 
-	public CustomType(UserType userType, TypeConfiguration typeConfiguration) throws MappingException {
+	public CustomType(UserType<J> userType, TypeConfiguration typeConfiguration) throws MappingException {
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
 	}
 
-	public CustomType(UserType userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
+	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
 		this.userType = userType;
 		this.name = userType.getClass().getName();
 
 		if ( userType instanceof BasicJavaType ) {
-			//noinspection rawtypes
-			this.mappedJavaTypeDescriptor = ( (BasicJavaType) userType );
+			//noinspection unchecked
+			this.mappedJavaTypeDescriptor = ( (BasicJavaType<J>) userType );
 		}
 		else if ( userType instanceof JavaTypedExpressable ) {
-			//noinspection rawtypes
-			this.mappedJavaTypeDescriptor = (BasicJavaType) ( (JavaTypedExpressable) userType ).getExpressableJavaTypeDescriptor();
+			//noinspection unchecked
+			this.mappedJavaTypeDescriptor = (BasicJavaType<J>) ( (JavaTypedExpressable<J>) userType ).getExpressableJavaTypeDescriptor();
 		}
 		else if ( userType instanceof UserVersionType ) {
-			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType) userType );
+			this.mappedJavaTypeDescriptor = new UserTypeVersionJavaTypeWrapper<>( (UserVersionType<J>) userType );
 		}
 		else {
 			this.mappedJavaTypeDescriptor = new UserTypeJavaTypeWrapper<>( userType );
 		}
 
-		// create a JdbcType adapter that uses the UserType binde/extract handling
+		// create a JdbcType adapter that uses the UserType binder/extract handling
 		this.jdbcType = new UserTypeSqlTypeAdapter<>( userType, mappedJavaTypeDescriptor );
 
 		this.valueExtractor = jdbcType.getExtractor( mappedJavaTypeDescriptor );
@@ -110,17 +110,17 @@ public class CustomType
 		this.registrationKeys = registrationKeys;
 	}
 
-	public UserType getUserType() {
+	public UserType<J> getUserType() {
 		return userType;
 	}
 
 	@Override
-	public ValueExtractor getJdbcValueExtractor() {
+	public ValueExtractor<J> getJdbcValueExtractor() {
 		return valueExtractor;
 	}
 
 	@Override
-	public ValueBinder<?> getJdbcValueBinder() {
+	public ValueBinder<J> getJdbcValueBinder() {
 		return valueBinder;
 	}
 
@@ -155,7 +155,7 @@ public class CustomType
 	}
 
 	@Override
-	public Class getReturnedClass() {
+	public Class<J> getReturnedClass() {
 		return getUserType().returnedClass();
 	}
 
@@ -215,7 +215,7 @@ public class CustomType
 			boolean[] settable,
 			SharedSessionContractImplementor session) throws SQLException {
 		if ( settable[0] ) {
-			getUserType().nullSafeSet( st, value, index, session );
+			getUserType().nullSafeSet( st, (J) value, index, session );
 		}
 	}
 
@@ -225,17 +225,7 @@ public class CustomType
 			Object value,
 			int index,
 			SharedSessionContractImplementor session) throws SQLException {
-		getUserType().nullSafeSet( st, value, index, session );
-	}
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public String toXMLString(Object value, SessionFactoryImplementor factory) {
-		return toString( value );
-	}
-
-	@SuppressWarnings({ "UnusedDeclaration" })
-	public Object fromXMLString(String xml, Mapping factory) {
-		return fromStringValue( xml );
+		getUserType().nullSafeSet( st, (J) value, index, session );
 	}
 
 	@Override
@@ -258,8 +248,11 @@ public class CustomType
 		if ( value == null ) {
 			return "null";
 		}
+		else if ( userType instanceof EnhancedUserType<?> ) {
+			return ( (EnhancedUserType<Object>) userType ).toString( value );
+		}
 		else {
-			return toXMLString( value, factory );
+			return value.toString();
 		}
 	}
 
@@ -279,41 +272,6 @@ public class CustomType
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public String toString(Object value) throws HibernateException {
-		if ( getUserType() instanceof StringRepresentableType ) {
-			return ( (StringRepresentableType) getUserType() ).toString( value );
-		}
-		if ( value == null ) {
-			return null;
-		}
-		if ( getUserType() instanceof EnhancedUserType ) {
-			//noinspection deprecation
-			return ( (EnhancedUserType) getUserType() ).toXMLString( value );
-		}
-		return value.toString();
-	}
-
-	@Override
-	public Object fromStringValue(CharSequence sequence) throws HibernateException {
-		if ( getUserType() instanceof StringRepresentableType ) {
-			return ( (StringRepresentableType) getUserType() ).fromStringValue( sequence );
-		}
-		if ( getUserType() instanceof EnhancedUserType ) {
-			//noinspection deprecation
-			return ( (EnhancedUserType) getUserType() ).fromXMLString( sequence );
-		}
-		throw new HibernateException(
-				String.format(
-						"Could not process #fromStringValue, UserType class [%s] did not implement %s or %s",
-						name,
-						StringRepresentableType.class.getName(),
-						EnhancedUserType.class.getName()
-				)
-		);
-	}
-
-	@Override
 	public boolean canDoSetting() {
 		if ( getUserType() instanceof ProcedureParameterNamedBinder ) {
 			return ((ProcedureParameterNamedBinder) getUserType() ).canDoSetting();
@@ -323,9 +281,9 @@ public class CustomType
 
 	@Override
 	public void nullSafeSet(
-			CallableStatement statement, Object value, String name, SharedSessionContractImplementor session) throws SQLException {
+			CallableStatement statement, J value, String name, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoSetting() ) {
-			((ProcedureParameterNamedBinder) getUserType() ).nullSafeSet( statement, value, name, session );
+			((ProcedureParameterNamedBinder<J>) getUserType() ).nullSafeSet( statement, value, name, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -337,15 +295,16 @@ public class CustomType
 	@Override
 	public boolean canDoExtraction() {
 		if ( getUserType() instanceof ProcedureParameterExtractionAware ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).canDoExtraction();
+			return ((ProcedureParameterExtractionAware<?>) getUserType() ).canDoExtraction();
 		}
 		return false;
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
+	public J extract(CallableStatement statement, int startIndex, SharedSessionContractImplementor session) throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, startIndex, session );
+			//noinspection unchecked
+			return ((ProcedureParameterExtractionAware<J>) getUserType() ).extract( statement, startIndex, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -355,10 +314,11 @@ public class CustomType
 	}
 
 	@Override
-	public Object extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
+	public J extract(CallableStatement statement, String paramName, SharedSessionContractImplementor session)
 			throws SQLException {
 		if ( canDoExtraction() ) {
-			return ((ProcedureParameterExtractionAware) getUserType() ).extract( statement, paramName, session );
+			//noinspection unchecked
+			return ((ProcedureParameterExtractionAware<J>) getUserType() ).extract( statement, paramName, session );
 		}
 		else {
 			throw new UnsupportedOperationException(
@@ -374,26 +334,26 @@ public class CustomType
 
 	@Override
 	public boolean equals(Object obj) {
-		return ( obj instanceof CustomType ) && getUserType().equals( ( (CustomType) obj ).getUserType() );
+		return ( obj instanceof CustomType ) && getUserType().equals( ( (CustomType<?>) obj ).getUserType() );
 	}
 
 	@Override
-	public Class getJavaType() {
+	public Class<J> getJavaType() {
 		return mappedJavaTypeDescriptor.getJavaTypeClass();
 	}
 
 	@Override
-	public JavaType getMappedJavaTypeDescriptor() {
+	public JavaType<J> getMappedJavaTypeDescriptor() {
 		return mappedJavaTypeDescriptor;
 	}
 
 	@Override
-	public JavaType getExpressableJavaTypeDescriptor() {
+	public JavaType<J> getExpressableJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 
 	@Override
-	public JavaType getJavaTypeDescriptor() {
+	public JavaType<J> getJavaTypeDescriptor() {
 		return getMappedJavaTypeDescriptor();
 	}
 }

@@ -46,6 +46,7 @@ import org.hibernate.type.descriptor.java.DateJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.DoubleJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.DurationJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.FloatTypeDescriptor;
+import org.hibernate.type.descriptor.java.InetAddressJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.InstantJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.IntegerJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -131,6 +132,7 @@ public class JavaTypeDescriptorBaseline {
 		target.addBaselineDescriptor( LocaleJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( UrlJavaTypeDescriptor.INSTANCE );
 		target.addBaselineDescriptor( UUIDJavaTypeDescriptor.INSTANCE );
+		target.addBaselineDescriptor( InetAddressJavaTypeDescriptor.INSTANCE );
 
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Collection.class, StandardBagSemantics.INSTANCE ) );
 		target.addBaselineDescriptor( new CollectionJavaTypeDescriptor( Object[].class, StandardArraySemantics.INSTANCE ) );

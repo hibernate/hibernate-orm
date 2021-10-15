@@ -97,7 +97,10 @@ public class TimestampaddFunction
 
 		final String pattern = dialect.timestampaddPattern(
 				unit,
-				TypeConfiguration.getSqlTemporalType( to.getExpressionType() )
+				TypeConfiguration.getSqlTemporalType( to.getExpressionType() ),
+				TypeConfiguration.getSqlIntervalType(
+						( (Expression) arguments.get( 1 ) ).getExpressionType().getJdbcMappings().get( 0 )
+				)
 		);
 
 		final PatternRenderer renderer = new PatternRenderer( pattern );
@@ -182,7 +185,9 @@ public class TimestampaddFunction
 				getName(),
 				this::render,
 				asList( sqlAstArguments ),
-				impliedResultType,
+				impliedResultType != null
+						? impliedResultType
+						: (AllowableFunctionReturnType<?>) to.getExpressionType().getJdbcMappings().get( 0 ),
 				to.getExpressionType()
 		);
 	}

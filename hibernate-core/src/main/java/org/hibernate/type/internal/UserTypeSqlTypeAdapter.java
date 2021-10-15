@@ -11,14 +11,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import org.hibernate.HibernateException;
 import org.hibernate.type.ProcedureParameterExtractionAware;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -72,6 +75,21 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 			TypeConfiguration typeConfiguration) {
 		//noinspection unchecked
 		return (BasicJavaType<T>) jtd;
+	}
+
+	@Override
+	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
+		if ( !( userType instanceof EnhancedUserType<?> ) ) {
+			throw new HibernateException(
+					String.format(
+							"Could not create JdbcLiteralFormatter, UserType class [%s] did not implement %s",
+							userType.getClass().getName(),
+							EnhancedUserType.class.getName()
+					)
+			);
+		}
+		final EnhancedUserType<T> type = (EnhancedUserType<T>) userType;
+		return (appender, value, dialect, wrapperOptions) -> appender.append( type.toSqlLiteral( value ) );
 	}
 
 	private static class ValueExtractorImpl<J> implements ValueExtractor<J> {

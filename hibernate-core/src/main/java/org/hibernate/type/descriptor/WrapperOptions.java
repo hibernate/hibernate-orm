@@ -11,6 +11,7 @@ import java.util.Calendar;
 import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -24,6 +25,11 @@ public interface WrapperOptions {
 	 * Access to the current Session
 	 */
 	SharedSessionContractImplementor getSession();
+
+	/**
+	 * Access to the current Session
+	 */
+	SessionFactoryImplementor getSessionFactory();
 
 	/**
 	 * Should streams be used for binding LOB values.

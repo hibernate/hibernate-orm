@@ -99,7 +99,7 @@ public final class IdentifierGeneratorHelper {
 			return ( (ResultSetIdentifierConsumer) type ).consumeIdentifier( rs );
 		}
 		if ( CustomType.class.isInstance( type ) ) {
-			final CustomType customType = (CustomType) type;
+			final CustomType<Object> customType = (CustomType<Object>) type;
 			if ( ResultSetIdentifierConsumer.class.isInstance( customType.getUserType() ) ) {
 				return ( (ResultSetIdentifierConsumer) customType.getUserType() ).consumeIdentifier( rs );
 			}

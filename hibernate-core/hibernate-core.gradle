@@ -43,6 +43,9 @@ dependencies {
     compileOnly libraries.jakarta_validation
     compileOnly libraries.jakarta_cdi
 
+    compileOnly libraries.jackson
+    compileOnly libraries.jakarta_jsonb
+
     testImplementation project(':hibernate-testing')
     testImplementation project(':hibernate-ant')
     testImplementation libraries.shrinkwrap_api
@@ -65,6 +68,7 @@ dependencies {
     testRuntimeOnly libraries.byteBuddy
     testRuntimeOnly libraries.jakarta_weld
     testRuntimeOnly libraries.wildfly_transaction_client
+    testRuntimeOnly libraries.jackson
 
     testAnnotationProcessor project( ':hibernate-jpamodelgen' )
 
@@ -212,5 +216,6 @@ tasks.withType( Test.class ).each { test ->
     test.include 'org/hibernate/bytecode/internal/bytebuddy/**'
     test.include 'org/hibernate/event/service/internal/**'
     test.include 'org/hibernate/tool/schema/internal/**'
+//    test.include '**/*'
 }
 

@@ -41,17 +41,26 @@ public class JdbcTypeDescriptorRegistry implements JdbcTypeDescriptorBaseline.Ba
 
 	@Override
 	public void addDescriptor(JdbcType jdbcType) {
-		final JdbcType previous = descriptorMap.put( jdbcType.getJdbcTypeCode(), jdbcType );
+		final JdbcType previous = descriptorMap.put( jdbcType.getDefaultSqlTypeCode(), jdbcType );
 		if ( previous != null && previous != jdbcType ) {
 			log.debugf( "addDescriptor(%s) replaced previous registration(%s)", jdbcType, previous );
 		}
 	}
 
+	@Override
 	public void addDescriptor(int typeCode, JdbcType jdbcType) {
 		final JdbcType previous = descriptorMap.put( typeCode, jdbcType );
 		if ( previous != null && previous != jdbcType ) {
 			log.debugf( "addDescriptor(%d, %s) replaced previous registration(%s)", typeCode, jdbcType, previous );
 		}
+	}
+
+	public void addDescriptorIfAbsent(JdbcType jdbcType) {
+		descriptorMap.putIfAbsent( jdbcType.getDefaultSqlTypeCode(), jdbcType );
+	}
+
+	public void addDescriptorIfAbsent(int typeCode, JdbcType jdbcType) {
+		descriptorMap.putIfAbsent( typeCode, jdbcType );
 	}
 
 	public JdbcType getDescriptor(int jdbcTypeCode) {

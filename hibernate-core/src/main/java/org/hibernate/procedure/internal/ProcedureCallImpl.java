@@ -407,7 +407,7 @@ public class ProcedureCallImpl<R>
 		final ProcedureParameterImpl<T> procedureParameter = new ProcedureParameterImpl<>(
 				position,
 				mode,
-				parameterType.getJavaType(),
+				parameterType == null ? javaType : parameterType.getJavaType(),
 				parameterType
 		);
 		registerParameter( procedureParameter );
@@ -805,10 +805,9 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected List<R> doList() {
 		if ( getMaxResults() == 0 ) {
-			return Collections.EMPTY_LIST;
+			return Collections.emptyList();
 		}
 		try {
 			final Output rtn = outputs().getCurrent();
@@ -816,6 +815,7 @@ public class ProcedureCallImpl<R>
 				throw new IllegalStateException( "Current CallableStatement ou was not a ResultSet, but getResultList was called" );
 			}
 
+			//noinspection unchecked
 			return ( (ResultSetOutput) rtn ).getResultList();
 		}
 		catch (NoMoreOutputsException e) {
@@ -834,7 +834,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public ScrollableResultsImplementor scroll(ScrollMode scrollMode) {
+	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
 		throw new UnsupportedOperationException( "Query#scroll is not valid for ProcedureCall/StoredProcedureQuery" );
 	}
 
@@ -948,75 +948,82 @@ public class ProcedureCallImpl<R>
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value) {
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value );
+		super.setParameter( parameter, value );
+		return this;
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(Parameter<P> parameter, P value) {
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value );
+		super.setParameter( parameter, value );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value) {
-		return (ProcedureCallImplementor<R>) super.setParameter( name, value );
+		super.setParameter( name, value );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value) {
-		return (ProcedureCallImplementor<R>) super.setParameter( position, value );
+		super.setParameter( position, value );
+		return this;
 	}
 
 	@Override
 	public <P> ProcedureCallImplementor<R> setParameter(
 			QueryParameter<P> parameter,
 			P value,
-			AllowableParameterType type) {
+			AllowableParameterType<P> type) {
 		super.setParameter( parameter, value, type );
 		return this;
 	}
 
 //	@Override
 //	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P value, Type type) {
-//		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, type );
+//		super.setParameter( parameter, value, type );
+//		return this;
 //	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
+	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 //	@Override
 //	public ProcedureCallImplementor<R> setParameter(String name, Object value, Type type) {
-//		return (ProcedureCallImplementor<R>) super.setParameter( name, value, type );
+//		super.setParameter( name, value, type );
+//		return this;
 //	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(int position, Object value, AllowableParameterType type) {
+	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(String name, Object value, BasicTypeReference<?> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(String name, P value, BasicTypeReference<P> type) {
 		super.setParameter( name, value, type );
 		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(int position, Object value, BasicTypeReference<?> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(int position, P value, BasicTypeReference<P> type) {
 		super.setParameter( position, value, type );
 		return this;
 	}
 
 	@Override
-	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type) {
+	public <P> ProcedureCallImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type) {
 		super.setParameter( parameter, val, type );
 		return this;
 	}
 //	@Override
 //	public ProcedureCallImplementor<R> setParameter(int position, Object value, Type type) {
-//		return (ProcedureCallImplementor<R>) super.setParameter( position, value, type );
+//		super.setParameter( position, value, type );
+//		return this;
 //	}
 
 	@Override
@@ -1024,52 +1031,59 @@ public class ProcedureCallImpl<R>
 			QueryParameter<P> parameter,
 			P value,
 			TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
+		super.setParameter( parameter, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Object value, TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( name, value, temporalPrecision );
+		super.setParameter( name, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Object value, TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
+		super.setParameter( position, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(
-			Parameter parameter,
+			Parameter<Calendar> parameter,
 			Calendar value,
 			TemporalType temporalPrecision) {
-		//noinspection unchecked
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
+		super.setParameter( parameter, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
-	public ProcedureCallImplementor<R> setParameter(Parameter parameter, Date value, TemporalType temporalPrecision) {
-		//noinspection unchecked
-		return (ProcedureCallImplementor<R>) super.setParameter( parameter, value, temporalPrecision );
+	public ProcedureCallImplementor<R> setParameter(Parameter<Date> parameter, Date value, TemporalType temporalPrecision) {
+		super.setParameter( parameter, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Calendar value, TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( name, value, temporalPrecision );
+		super.setParameter( name, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(String name, Date value, TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( name, value, temporalPrecision );
+		super.setParameter( name, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Calendar value, TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
+		super.setParameter( position, value, temporalPrecision );
+		return this;
 	}
 
 	@Override
 	public ProcedureCallImplementor<R> setParameter(int position, Date value, TemporalType temporalPrecision) {
-		return (ProcedureCallImplementor<R>) super.setParameter( position, value, temporalPrecision );
+		super.setParameter( position, value, temporalPrecision );
+		return this;
 	}
 
 	@Override

@@ -25,6 +25,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public interface JdbcTypeDescriptorIndicators {
 	int NO_COLUMN_LENGTH = -1;
+	int NO_COLUMN_PRECISION = -1;
+	int NO_COLUMN_SCALE = -1;
 
 	/**
 	 * Was nationalized character datatype requested for the given Java type?
@@ -75,6 +77,20 @@ public interface JdbcTypeDescriptorIndicators {
 	 */
 	default long getColumnLength() {
 		return NO_COLUMN_LENGTH;
+	}
+
+	/**
+	 * Useful for resolutions based on column precision.
+	 */
+	default int getColumnPrecision() {
+		return NO_COLUMN_PRECISION;
+	}
+
+	/**
+	 * Useful for resolutions based on column scale. E.g. choosing between a NUMERIC or INTERVAL
+	 */
+	default int getColumnScale() {
+		return NO_COLUMN_SCALE;
 	}
 
 	default TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {

@@ -18,6 +18,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterCharacterData;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -25,7 +26,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class NVarcharJdbcType implements JdbcType {
+public class NVarcharJdbcType implements AdjustableJdbcType {
 	public static final NVarcharJdbcType INSTANCE = new NVarcharJdbcType();
 
 	public NVarcharJdbcType() {
@@ -51,6 +52,9 @@ public class NVarcharJdbcType implements JdbcType {
 			Integer length,
 			Integer scale,
 			TypeConfiguration typeConfiguration) {
+		if ( length != null && length == 1 ) {
+			return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Character.class );
+		}
 		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( String.class );
 	}
 
@@ -58,6 +62,26 @@ public class NVarcharJdbcType implements JdbcType {
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
 		//noinspection unchecked
 		return new JdbcLiteralFormatterCharacterData( javaTypeDescriptor, true );
+	}
+
+	@Override
+	public JdbcType resolveIndicatedType(
+			JdbcTypeDescriptorIndicators indicators,
+			JavaType<?> domainJtd) {
+		assert domainJtd != null;
+
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+
+		final int jdbcTypeCode;
+		if ( indicators.isLob() ) {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NVARCHAR : Types.VARCHAR;
+		}
+
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	@Override

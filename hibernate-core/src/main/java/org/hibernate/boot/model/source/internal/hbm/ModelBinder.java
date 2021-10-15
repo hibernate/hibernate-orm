@@ -2519,8 +2519,9 @@ public class ModelBinder {
 			}
 
 			if ( typeInstance instanceof UserType ) {
-				return new CustomType(
-						(UserType) typeInstance,
+				//noinspection unchecked
+				return new CustomType<>(
+						(UserType<Object>) typeInstance,
 						bootstrapContext.getTypeConfiguration()
 				);
 			}

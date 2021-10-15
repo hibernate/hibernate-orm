@@ -177,8 +177,8 @@ public class TypeDefinition implements Serializable {
 			injectParameters( typeInstance, combinedTypeParameters );
 
 			if ( typeInstance instanceof UserType ) {
-				final UserType userType = (UserType) typeInstance;
-				final CustomType customType = new CustomType( userType, typeConfiguration );
+				final UserType<Object> userType = (UserType<Object>) typeInstance;
+				final CustomType<Object> customType = new CustomType<>( userType, typeConfiguration );
 
 				return new UserTypeResolution( customType, null, combinedTypeParameters );
 			}

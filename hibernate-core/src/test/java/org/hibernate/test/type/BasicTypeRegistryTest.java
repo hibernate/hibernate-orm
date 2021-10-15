@@ -80,7 +80,7 @@ public class BasicTypeRegistryTest extends BaseUnitTestCase {
 		BasicType<?> customType = registry.getRegisteredType( "key" );
 		assertNotNull( customType );
 		assertEquals( CustomType.class, customType.getClass() );
-		assertEquals( TotallyIrrelevantUserType.class, ( (CustomType) customType ).getUserType().getClass() );
+		assertEquals( TotallyIrrelevantUserType.class, ( (CustomType<Object>) customType ).getUserType().getClass() );
 
 		BasicType<?> type = registry.getRegisteredType( UUID.class.getName() );
 		assertTrue( type.getJavaTypeDescriptor() instanceof UUIDJavaTypeDescriptor );

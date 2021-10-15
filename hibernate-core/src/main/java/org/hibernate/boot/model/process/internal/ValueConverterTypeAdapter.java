@@ -24,25 +24,23 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
  */
 public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBasicType<J> {
 	private final String description;
-	private final BasicValueConverter<J,?> converter;
+	private final BasicValueConverter<J, Object> converter;
 
-	@SuppressWarnings("rawtypes")
-	private final ValueBinder valueBinder;
+	private final ValueBinder<Object> valueBinder;
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
+	@SuppressWarnings({ "unchecked" })
 	public ValueConverterTypeAdapter(
 			String description,
 			BasicValueConverter<J, ?> converter,
 			JdbcTypeDescriptorIndicators indicators) {
 		super(
 				converter.getRelationalJavaDescriptor().getRecommendedJdbcType( indicators ),
-				(JavaType) converter.getRelationalJavaDescriptor()
+				(JavaType<J>) converter.getRelationalJavaDescriptor()
 		);
 
 		this.description = description;
-		this.converter = converter;
-
-		this.valueBinder = getJdbcTypeDescriptor().getBinder( converter.getRelationalJavaDescriptor() );
+		this.converter = (BasicValueConverter<J, Object>) converter;
+		this.valueBinder = getJdbcTypeDescriptor().getBinder( this.converter.getRelationalJavaDescriptor() );
 	}
 
 	@Override
@@ -51,20 +49,18 @@ public class ValueConverterTypeAdapter<J> extends AbstractSingleColumnStandardBa
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
 	public void nullSafeSet(
 			CallableStatement st,
-			Object value,
+			J value,
 			String name,
 			SharedSessionContractImplementor session) throws SQLException {
-		final Object converted = converter.toRelationalValue( (J) value );
+		final Object converted = converter.toRelationalValue( value );
 		valueBinder.bind( st, converted, name, session );
 	}
 
 	@Override
-	@SuppressWarnings({ "unchecked" })
-	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		final Object converted = converter.toRelationalValue( (J) value );
+	protected void nullSafeSet(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
+		final Object converted = converter.toRelationalValue( value );
 		valueBinder.bind( st, converted, index, options );
 	}
 

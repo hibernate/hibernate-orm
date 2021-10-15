@@ -681,7 +681,7 @@ public abstract class SimpleValue implements KeyValue {
 					}
 				}
 		);
-		int jdbcTypeCode = recommendedJdbcType.getJdbcTypeCode();
+		int jdbcTypeCode = recommendedJdbcType.getDefaultSqlTypeCode();
 		if ( isLob() ) {
 			if ( LobTypeMappings.isMappedToKnownLobCode( jdbcTypeCode ) ) {
 				jdbcTypeCode = LobTypeMappings.getLobCodeTypeMapping( jdbcTypeCode );

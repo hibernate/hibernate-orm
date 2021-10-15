@@ -6,22 +6,27 @@
  */
 package org.hibernate.dialect;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
 import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -30,7 +35,11 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
@@ -62,19 +71,29 @@ public class CockroachDialect extends Dialect {
 	// * no support for java.sql.Clob
 
 	private final int version;
+	private final PostgreSQLDriverKind driverKind;
 
 	public CockroachDialect() {
 		this( 1920 );
 	}
 
 	public CockroachDialect(DialectResolutionInfo info) {
-		this( info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10 );
+		this(
+				info.getDatabaseMajorVersion() * 100 + info.getDatabaseMinorVersion() * 10,
+				PostgreSQLDriverKind.determineKind( info )
+		);
 	}
 
 	public CockroachDialect(int version) {
+		// Assume PgJDBC by default
+		this( version, PostgreSQLDriverKind.PG_JDBC );
+	}
+
+	public CockroachDialect(int version, PostgreSQLDriverKind driverKind) {
 		super();
 
 		this.version = version;
+		this.driverKind = driverKind;
 
 		registerColumnType( Types.TINYINT, "smallint" ); //no tinyint
 
@@ -94,10 +113,76 @@ public class CockroachDialect extends Dialect {
 		registerColumnType( Types.LONGNVARCHAR, "string" );
 		registerColumnType( Types.NCLOB, "string" );
 
-		registerColumnType( Types.JAVA_OBJECT, "json" );
+		registerColumnType( SqlTypes.UUID, "uuid" );
+		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($s)" );
 
-		//register geometry type
-		registerColumnType( 5432, "geometry" );
+		// Prefer jsonb if possible
+		if ( getVersion() >= 2000 ) {
+			registerColumnType( SqlTypes.INET, "inet" );
+			registerColumnType( SqlTypes.JSON, "jsonb" );
+		}
+		else {
+			registerColumnType( SqlTypes.JSON, "json" );
+		}
+
+		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
+	}
+
+	@Override
+	public String getTypeName(int code, Size size) throws HibernateException {
+		// The maximum scale for `interval second` is 6 unfortunately so we have to use numeric by default
+		switch ( code ) {
+			case SqlTypes.INTERVAL_SECOND:
+				final Integer scale = size.getScale();
+				if ( scale == null || scale > 6 ) {
+					return getTypeName( SqlTypes.NUMERIC, size );
+				}
+		}
+		return super.getTypeName( code, size );
+	}
+
+	@Override
+	public JdbcType resolveSqlTypeDescriptor(
+			String columnTypeName,
+			int jdbcTypeCode,
+			int precision,
+			int scale,
+			JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry) {
+		if ( jdbcTypeCode == SqlTypes.OTHER ) {
+			switch ( columnTypeName ) {
+				case "uuid":
+					jdbcTypeCode = SqlTypes.UUID;
+					break;
+				case "json":
+				case "jsonb":
+					jdbcTypeCode = SqlTypes.JSON;
+					break;
+				case "inet":
+					jdbcTypeCode = SqlTypes.INET;
+					break;
+			}
+		}
+		return jdbcTypeDescriptorRegistry.getDescriptor( jdbcTypeCode );
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLIntervalSecondJdbcType.INSTANCE );
+
+			if ( getVersion() >= 2000 ) {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLInetJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonbJdbcType.INSTANCE );
+			}
+			else {
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLJsonJdbcType.INSTANCE );
+			}
+		}
 	}
 
 	@Override
@@ -373,7 +458,10 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		if ( intervalType != null ) {
+			return "(?2+?3)";
+		}
 		switch ( unit ) {
 			case NANOSECOND:
 				return "(?3+(?2)/1e3*interval '1 microsecond')";

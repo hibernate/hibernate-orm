@@ -20,12 +20,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  */
 public interface SingleColumnType<T> extends Type {
 
-	int getJdbcTypeCode();
-
-	String toString(T value) throws HibernateException;
-
-	T fromStringValue(CharSequence sequence) throws HibernateException;
-
 	/**
 	 * Get a column value from a result set by name.
 	 *

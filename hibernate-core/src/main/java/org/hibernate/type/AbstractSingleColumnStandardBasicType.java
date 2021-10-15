@@ -28,11 +28,6 @@ public abstract class AbstractSingleColumnStandardBasicType<T>
 	}
 
 	@Override
-	public final int getJdbcTypeCode() {
-		return getJdbcTypeDescriptor().getJdbcTypeCode();
-	}
-
-	@Override
 	public final void nullSafeSet(PreparedStatement st, Object value, int index, boolean[] settable, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( settable[0] ) {

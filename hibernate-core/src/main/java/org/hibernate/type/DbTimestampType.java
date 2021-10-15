@@ -6,6 +6,7 @@
  */
 package org.hibernate.type;
 
+import java.sql.Timestamp;
 import java.util.Date;
 
 import org.hibernate.internal.CoreMessageLogger;
@@ -19,8 +20,8 @@ import org.hibernate.type.descriptor.jdbc.TimestampJdbcType;
 import org.jboss.logging.Logger;
 
 /**
- * <tt>dbtimestamp</tt>: An extension of {@link TimestampType} which
- * maps to the database's current timestamp, rather than the jvm's
+ * <tt>dbtimestamp</tt>: A type that maps between {@link java.sql.Types#TIMESTAMP TIMESTAMP} and {@link Timestamp}.
+ * It maps to the database's current timestamp, rather than the jvm's
  * current timestamp.
  * <p/>
  * Note: May/may-not cause issues on dialects which do not properly support
@@ -29,20 +30,12 @@ import org.jboss.logging.Logger;
  *
  * @author Steve Ebersole
  */
-public class DbTimestampType extends TimestampType {
+public class DbTimestampType extends AbstractSingleColumnStandardBasicType<Date> {
+
 	public static final DbTimestampType INSTANCE = new DbTimestampType();
 
-	private static final CoreMessageLogger LOG = Logger.getMessageLogger(
-			CoreMessageLogger.class,
-			DbTimestampType.class.getName()
-	);
-
-	public DbTimestampType() {
-		this( TimestampJdbcType.INSTANCE, JdbcTimestampJavaTypeDescriptor.INSTANCE );
-	}
-
-	public DbTimestampType(JdbcType jdbcType, JavaType<Date> javaTypeDescriptor) {
-		super( jdbcType, new DbTimestampJavaTypeDescriptor<>( (TemporalJavaTypeDescriptor<Date>) javaTypeDescriptor ) );
+	private DbTimestampType() {
+		super( TimestampJdbcType.INSTANCE, new DbTimestampJavaTypeDescriptor<>( JdbcTimestampJavaTypeDescriptor.INSTANCE ) );
 	}
 
 	@Override

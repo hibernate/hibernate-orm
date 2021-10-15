@@ -34,6 +34,9 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.type.FormatMapper;
+import org.hibernate.type.JacksonJsonFormatMapper;
+import org.hibernate.type.JsonBJsonFormatMapper;
 
 import org.jboss.logging.Logger;
 
@@ -107,6 +110,7 @@ public class StrategySelectorBuilder {
 		addSqmMultiTableMutationStrategies( strategySelector );
 		addImplicitNamingStrategies( strategySelector );
 		addCacheKeysFactories( strategySelector );
+		addJsonFormatMappers( strategySelector );
 
 		// apply auto-discovered registrations
 		for ( StrategyRegistrationProvider provider : classLoaderService.loadJavaServices( StrategyRegistrationProvider.class ) ) {
@@ -225,6 +229,19 @@ public class StrategySelectorBuilder {
 			CacheKeysFactory.class,
 			SimpleCacheKeysFactory.SHORT_NAME,
 			SimpleCacheKeysFactory.class
+		);
+	}
+
+	private void addJsonFormatMappers(StrategySelectorImpl strategySelector) {
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JacksonJsonFormatMapper.SHORT_NAME,
+				JacksonJsonFormatMapper.class
+		);
+		strategySelector.registerStrategyImplementor(
+				FormatMapper.class,
+				JsonBJsonFormatMapper.SHORT_NAME,
+				JsonBJsonFormatMapper.class
 		);
 	}
 }

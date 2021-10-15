@@ -36,6 +36,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
@@ -166,7 +167,7 @@ public class SQLiteDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		final String function = temporalType == TemporalType.DATE ? "date" : "datetime";
 		switch ( unit ) {
 			case NANOSECOND:

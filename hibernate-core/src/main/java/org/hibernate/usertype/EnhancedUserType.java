@@ -6,34 +6,40 @@
  */
 package org.hibernate.usertype;
 
+import org.hibernate.HibernateException;
+
 /**
  * A custom type that may function as an identifier or discriminator type
  * 
  * @author Gavin King
  */
-public interface EnhancedUserType extends UserType {
+public interface EnhancedUserType<J> extends UserType<J> {
+
 	/**
 	 * Return an SQL literal representation of the value
 	 */
-	String objectToSQLString(Object value);
-	
-	/**
-	 * Return a string representation of this value, as it should appear in an XML document
-	 *
-	 * @deprecated To be removed in 5.  Implement {@link org.hibernate.type.StringRepresentableType#toString(Object)}
-	 * instead.  See <a href="https://hibernate.onjira.com/browse/HHH-7776">HHH-7776</a> for details
-	 */
-	@Deprecated
-	String toXMLString(Object value);
+	String toSqlLiteral(J value);
 
 	/**
-	 * Parse a string representation of this value, as it appears in an XML document
+	 * Render the value to the string representation.
 	 *
-	 * @deprecated To be removed in 5.  Implement
-	 * {@link org.hibernate.type.StringRepresentableType#fromStringValue(CharSequence)} instead.
-	 * See <a href="https://hibernate.onjira.com/browse/HHH-7776">HHH-7776</a> for details
-	 * @param xmlValue
+	 * @param value The value to render to string.
+	 *
+	 * @return The string representation
+	 *
+	 * @throws HibernateException Problem rendering
 	 */
-	@Deprecated
-	Object fromXMLString(CharSequence xmlValue);
+	String toString(J value) throws HibernateException;
+
+	/**
+	 * Consume the given string representation back into this types java form.
+	 *
+	 * @param sequence The string representation to be consumed.
+	 *
+	 * @return The java type representation
+	 *
+	 * @throws HibernateException Problem consuming
+	 */
+	J fromStringValue(CharSequence sequence) throws HibernateException;
+
 }

@@ -612,7 +612,7 @@ In other words, `INSERT` statements are inherently non-polymorphic.
 `select_statement` can be any valid HQL select query, with the caveat that the return types must match the types expected by the insert.
 Currently, this is checked during query compilation rather than allowing the check to delegate to the database.
 This may cause problems between Hibernate Types which are _equivalent_ as opposed to __equal__.
-For example, this might lead to issues with mismatches between an attribute mapped as a `org.hibernate.type.DateType` and an attribute defined as a `org.hibernate.type.TimestampType`,
+For example, this might lead to issues with mismatches between an attribute mapped as a `org.hibernate.type.StandardBasicTypes.DATE` and an attribute defined as a `org.hibernate.type.StandardBasicTypes.TIMESTAMP`,
 even though the database might not make a distinction or might be able to handle the conversion.
 
 For the id attribute, the insert statement gives you two options.

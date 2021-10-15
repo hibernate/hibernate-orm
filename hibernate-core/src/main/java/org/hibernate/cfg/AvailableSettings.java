@@ -2389,7 +2389,27 @@ public interface AvailableSettings {
 	 *
 	 * @since 6.0
 	 */
-	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.perferred_boolean_jdbc_type_code";
+	String PREFERRED_BOOLEAN_JDBC_TYPE_CODE = "hibernate.type.preferred_boolean_jdbc_type_code";
+
+	/**
+	 * Names a {@link org.hibernate.type.FormatMapper} implementation to be applied to
+	 * the {@link org.hibernate.SessionFactory} for JSON serialization and deserialization.
+	 * Can reference<ul>
+	 *     <li>FormatMapper instance</li>
+	 *     <li>FormatMapper implementation {@link Class} reference</li>
+	 *     <li>FormatMapper implementation class name (FQN)</li>
+	 *     <li>one of the short hand constants<ul>
+	 *     		<li>jackson</li>
+	 * 	    	<li>jsonb</li>
+	 *     </ul>
+	 *     </li>
+	 * </ul>
+	 * By default the first of the possible providers that is available in the runtime is used,
+	 * according to the listing order.
+	 *
+	 * @since 6.0
+	 */
+	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
 
 	/**
 	 * Global setting for configuring the default storage for the time zone information for time zone based types.

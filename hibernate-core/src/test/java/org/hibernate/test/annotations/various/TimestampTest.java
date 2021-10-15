@@ -12,8 +12,10 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeReference;
 import org.hibernate.type.DbTimestampType;
-import org.hibernate.type.TimestampType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.BeforeClassOnce;
@@ -51,19 +53,23 @@ public class TimestampTest extends BaseUnitTestCase {
 
 	@Test
 	public void testTimestampSourceIsVM() throws Exception {
-		assertTimestampSource( VMTimestamped.class, TimestampType.class );
+		assertTimestampSource( VMTimestamped.class, StandardBasicTypes.TIMESTAMP );
 	}
 
 	@Test
 	public void testTimestampSourceIsDB() throws Exception {
-		assertTimestampSource( DBTimestamped.class, DbTimestampType.class );
+		assertTimestampSource( DBTimestamped.class, DbTimestampType.INSTANCE );
 	}
 
-	private void assertTimestampSource(Class<?> clazz, Class<?> expectedTypeClass) throws Exception {
+	private void assertTimestampSource(Class<?> clazz, BasicTypeReference<?> typeReference) throws Exception {
+		assertTimestampSource( clazz, metadata.getTypeConfiguration().getBasicTypeRegistry().resolve( typeReference ) );
+	}
+
+	private void assertTimestampSource(Class<?> clazz, BasicType<?> basicType) throws Exception {
 		PersistentClass persistentClass = metadata.getEntityBinding( clazz.getName() );
 		assertNotNull( persistentClass );
 		Property versionProperty = persistentClass.getVersion();
 		assertNotNull( versionProperty );
-		assertEquals( "Wrong timestamp type", expectedTypeClass, versionProperty.getType().getClass() );
+		assertEquals( "Wrong timestamp type", basicType, versionProperty.getType() );
 	}
 }

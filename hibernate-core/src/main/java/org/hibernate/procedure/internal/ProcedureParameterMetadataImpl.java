@@ -162,11 +162,12 @@ public class ProcedureParameterMetadataImpl implements ProcedureParameterMetadat
 	}
 
 	@Override
-	public ProcedureParameterImplementor<?> resolve(Parameter param) {
+	public <P> ProcedureParameterImplementor<P> resolve(Parameter<P> param) {
 		if ( param instanceof ProcedureParameterImplementor ) {
-			for ( ProcedureParameterImplementor p : parameters ) {
+			for ( ProcedureParameterImplementor<?> p : parameters ) {
 				if ( p == param ) {
-					return p;
+					//noinspection unchecked
+					return (ProcedureParameterImplementor<P>) p;
 				}
 			}
 		}

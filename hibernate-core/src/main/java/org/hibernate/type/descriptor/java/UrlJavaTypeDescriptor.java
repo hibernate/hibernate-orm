@@ -10,10 +10,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import org.hibernate.HibernateException;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
-import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 
 /**
  * Descriptor for {@link URL} handling.
@@ -29,7 +29,7 @@ public class UrlJavaTypeDescriptor extends AbstractClassJavaTypeDescriptor<URL> 
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators context) {
-		return VarcharJdbcType.INSTANCE;
+		return context.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.VARCHAR );
 	}
 
 	public String toString(URL value) {

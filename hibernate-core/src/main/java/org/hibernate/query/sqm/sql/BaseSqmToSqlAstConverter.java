@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.sql;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -78,6 +79,8 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.produce.function.internal.PatternRenderer;
 import org.hibernate.sql.exec.internal.VersionTypeSeedParameterSpecification;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -325,8 +328,9 @@ import static org.hibernate.query.BinaryArithmeticOperator.ADD;
 import static org.hibernate.query.BinaryArithmeticOperator.MULTIPLY;
 import static org.hibernate.query.BinaryArithmeticOperator.SUBTRACT;
 import static org.hibernate.query.TemporalUnit.DAY;
-import static org.hibernate.query.TemporalUnit.NANOSECOND;
+import static org.hibernate.query.TemporalUnit.EPOCH;
 import static org.hibernate.query.TemporalUnit.NATIVE;
+import static org.hibernate.query.TemporalUnit.SECOND;
 import static org.hibernate.query.UnaryArithmeticOperator.UNARY_MINUS;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
@@ -2530,7 +2534,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( isDuration( sqmPath.getNodeType() ) ) {
 
 			// Durations are stored (at least by default)
-			// in a BIGINTEGER column full of nanoseconds
+			// in a NUMERIC column in seconds with fractional
+			// seconds in the decimal places
 			// which we need to convert to the given unit
 			//
 			// This does not work at all for a Duration
@@ -2545,7 +2550,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			//first let's apply the propagated scale
 			Expression scaledExpression = applyScale( toSqlExpression( path ) );
 
-			// we use NANOSECOND, not NATIVE, as the unit
+			// we use SECOND, not NATIVE, as the unit
 			// because that's how a Duration is persisted
 			// in a database table column, and how it's
 			// returned to a Java client
@@ -2559,7 +2564,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// adjusted date or timestamp
 				result = timestampadd().expression(
 						(AllowableFunctionReturnType<?>) adjustedTimestampType,
-						new DurationUnit( NANOSECOND, basicType( Long.class ) ),
+						new DurationUnit( SECOND, basicType( Long.class ) ),
 						scaledExpression,
 						adjustedTimestamp
 				);
@@ -2571,7 +2576,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// nanoseconds to the given unit
 
 				JdbcMappingContainer durationType = scaledExpression.getExpressionType();
-				Duration duration = new Duration( scaledExpression, NANOSECOND, (BasicValuedMapping) durationType );
+				Duration duration;
+				if ( durationType.getJdbcMappings()
+						.get( 0 )
+						.getJdbcTypeDescriptor()
+						.isInterval() ) {
+					// For interval types, we need to extract the epoch for integer arithmetic for the 'by unit' operator
+					duration = new Duration(
+							extractEpoch( scaledExpression ),
+							SECOND,
+							(BasicValuedMapping) durationType
+					);
+				}
+				else {
+					// The absolute value of the expression is in seconds
+					// as the fractional seconds are in the fraction part as can be seen in DurationJavaType
+					duration = new Duration( scaledExpression, SECOND, (BasicValuedMapping) durationType );
+				}
 
 				TemporalUnit appliedUnit = appliedByUnit.getUnit().getUnit();
 				BasicValuedMapping scalarType = (BasicValuedMapping) appliedByUnit.getNodeType();
@@ -2584,6 +2605,23 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 
 		return withTreatRestriction( result, sqmPath );
+	}
+
+	private Expression extractEpoch(Expression intervalExpression) {
+		final BasicType<Integer> intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		return new SelfRenderingFunctionSqlAstExpression(
+				"extract",
+				(sqlAppender, sqlAstArguments, walker) ->
+						new PatternRenderer(
+								creationContext.getSessionFactory()
+										.getJdbcServices()
+										.getDialect()
+										.extractPattern( EPOCH )
+						).render( sqlAppender, sqlAstArguments, walker ),
+				Arrays.asList( new ExtractUnit( EPOCH, intType ), intervalExpression ),
+				intType,
+				intType
+		);
 	}
 
 	@Override
@@ -4083,13 +4121,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// the diff, and then the subsequent add
 
 			DurationUnit unit = new DurationUnit( baseUnit, basicType( Integer.class ) );
-			Expression scaledMagnitude = applyScale( timestampdiff().expression(
-					(AllowableFunctionReturnType<?>) expression.getNodeType(),
-					unit, right, left
-			) );
+			Expression magnitude = applyScale( timestampdiff().expression( null, unit, right, left ) );
 			return timestampadd().expression(
 					(AllowableFunctionReturnType<?>) adjustedTimestampType, //TODO should be adjustedTimestamp.getType()
-					unit, scaledMagnitude, adjustedTimestamp
+					unit, magnitude, adjustedTimestamp
 			);
 		}
 		else if ( appliedByUnit != null ) {
@@ -4097,10 +4132,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			// duration to a scalar in the given unit
 
 			DurationUnit unit = (DurationUnit) appliedByUnit.getUnit().accept( this );
-			return applyScale( timestampdiff().expression(
-					(AllowableFunctionReturnType<?>) expression.getNodeType(),
-					unit, right, left
-			) );
+			return applyScale( timestampdiff().expression( null, unit, right, left ) );
 		}
 		else {
 			// a plain "bare" Duration
@@ -4180,14 +4212,22 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					magnitude = adjustmentScale;
 				}
 				else {
+					final BasicValuedMapping magnitudeType = (BasicValuedMapping) magnitude.getExpressionType();
+					final BasicValuedMapping expressionType;
+					if ( magnitudeType.getJdbcMapping().getJdbcTypeDescriptor().isInterval() ) {
+						expressionType = magnitudeType;
+					}
+					else {
+						expressionType = widestNumeric(
+								(BasicValuedMapping) adjustmentScale.getExpressionType(),
+								magnitudeType
+						);
+					}
 					magnitude = new BinaryArithmeticExpression(
 							adjustmentScale,
 							MULTIPLY,
 							magnitude,
-							widestNumeric(
-									(BasicValuedMapping) adjustmentScale.getExpressionType(),
-									(BasicValuedMapping) magnitude.getExpressionType()
-							)
+							expressionType
 					);
 				}
 			}
@@ -4236,7 +4276,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			BasicValuedMapping durationType = (BasicValuedMapping) toDuration.getNodeType();
-			Duration duration = new Duration( scaledMagnitude, unit.getUnit(), durationType );
+			Duration duration;
+			if ( scaledMagnitude.getExpressionType()
+					.getJdbcMappings()
+					.get( 0 )
+					.getJdbcTypeDescriptor()
+					.isInterval() ) {
+				duration = new Duration( extractEpoch( scaledMagnitude ), SECOND, durationType );
+			}
+			else {
+				duration = new Duration( scaledMagnitude, unit.getUnit(), durationType );
+			}
 
 			if ( appliedByUnit != null ) {
 				// we're applying the 'by unit' operator,

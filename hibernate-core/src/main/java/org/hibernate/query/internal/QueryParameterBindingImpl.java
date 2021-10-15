@@ -250,14 +250,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public void setBindValues(Collection<T> values) {
+	public void setBindValues(Collection<? extends T> values) {
 		this.isBound = true;
 		this.isMultiValued = true;
 
 		this.bindValue = null;
-		this.bindValues = values;
+		//noinspection unchecked
+		this.bindValues = (Collection<T>) values;
 
-		final Iterator<T> iterator = values.iterator();
+		final Iterator<? extends T> iterator = values.iterator();
 		T value = null;
 		while ( value == null && iterator.hasNext() ) {
 			value = iterator.next();
@@ -265,13 +266,13 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		if ( bindType == null && value != null ) {
 			//noinspection unchecked
-			this.bindType = (AllowableParameterType) typeResolver.resolveParameterBindType( value );
+			this.bindType = (AllowableParameterType<T>) typeResolver.resolveParameterBindType( value );
 		}
 
 	}
 
 	@Override
-	public void setBindValues(Collection<T> values, AllowableParameterType<T> clarifiedType) {
+	public void setBindValues(Collection<? extends T> values, AllowableParameterType<T> clarifiedType) {
 		if ( clarifiedType != null ) {
 			this.bindType = clarifiedType;
 		}
@@ -280,7 +281,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 	@Override
 	public void setBindValues(
-			Collection<T> values,
+			Collection<? extends T> values,
 			TemporalType temporalTypePrecision,
 			TypeConfiguration typeConfiguration) {
 		setBindValues( values );

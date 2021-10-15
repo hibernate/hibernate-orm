@@ -47,13 +47,14 @@ import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.model.domain.internal.ArrayTupleType;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.query.BinaryArithmeticOperator;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
-import org.hibernate.type.SingleColumnType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
@@ -224,7 +225,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	public void addBasicTypeRegistrationContributions(List<BasicTypeRegistration> contributions) {
 		for ( BasicTypeRegistration basicTypeRegistration : contributions ) {
-			BasicType basicType = basicTypeRegistration.getBasicType();
+			BasicType<?> basicType = basicTypeRegistration.getBasicType();
 
 			basicTypeRegistry.register(
 					basicType,
@@ -682,14 +683,11 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		if ( type instanceof BasicValuedMapping ) {
 			return getSqlTemporalType( ( (BasicValuedMapping) type ).getJdbcMapping().getJdbcTypeDescriptor() );
 		}
-		else if (type instanceof SingleColumnType) {
-			return getSqlTemporalType( ((SingleColumnType<?>) type).getJdbcTypeCode() );
-		}
 		return null;
 	}
 
 	public static TemporalType getSqlTemporalType(JdbcType descriptor) {
-		return getSqlTemporalType( descriptor.getJdbcTypeCode() );
+		return getSqlTemporalType( descriptor.getDefaultSqlTypeCode() );
 	}
 
 	protected static TemporalType getSqlTemporalType(int jdbcTypeCode) {
@@ -702,6 +700,23 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 				return TemporalType.TIME;
 			case Types.DATE:
 				return TemporalType.DATE;
+		}
+		return null;
+	}
+
+	public static IntervalType getSqlIntervalType(JdbcMappingContainer jdbcMappings) {
+		assert jdbcMappings.getJdbcTypeCount() == 1;
+		return getSqlIntervalType( jdbcMappings.getJdbcMappings().get( 0 ).getJdbcTypeDescriptor() );
+	}
+
+	public static IntervalType getSqlIntervalType(JdbcType descriptor) {
+		return getSqlIntervalType( descriptor.getDefaultSqlTypeCode() );
+	}
+
+	protected static IntervalType getSqlIntervalType(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case SqlTypes.INTERVAL_SECOND:
+				return IntervalType.SECOND;
 		}
 		return null;
 	}

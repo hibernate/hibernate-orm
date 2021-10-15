@@ -21,7 +21,6 @@ import jakarta.persistence.Parameter;
 import org.hibernate.QueryException;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.query.QueryParameter;
@@ -210,9 +209,9 @@ public class ParameterMetadataImpl implements ParameterMetadataImplementor {
 	}
 
 	@Override
-	public QueryParameterImplementor<?> resolve(Parameter param) {
+	public <P> QueryParameterImplementor<P> resolve(Parameter<P> param) {
 		if ( param instanceof QueryParameterImplementor ) {
-			return (QueryParameterImplementor) param;
+			return (QueryParameterImplementor<P>) param;
 		}
 
 		throw new IllegalArgumentException( "Could not resolve jakarta.persistence.Parameter to org.hibernate.query.QueryParameter" );

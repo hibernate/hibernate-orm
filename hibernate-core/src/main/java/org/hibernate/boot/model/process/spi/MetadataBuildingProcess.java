@@ -45,6 +45,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeDescriptorRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -366,7 +367,7 @@ public class MetadataBuildingProcess {
 
 				final JavaType<?> jtd;
 				if ( type instanceof CustomType ) {
-					final CustomType customType = (CustomType) type;
+					final CustomType<Object> customType = (CustomType<Object>) type;
 					jtd = customType.getJavaTypeDescriptor();
 				}
 				else {
@@ -389,7 +390,7 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void contributeType(UserType type, String[] keys) {
-				contributeType( new CustomType( type, keys, getTypeConfiguration() ) );
+				contributeType( new CustomType<Object>( type, keys, getTypeConfiguration() ) );
 			}
 
 			@Override
@@ -422,14 +423,22 @@ public class MetadataBuildingProcess {
 			contributor.contribute( typeContributions, options.getServiceRegistry() );
 		}
 
+		// add fallback type descriptors
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = bootstrapContext.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.UUID, SqlTypes.BINARY );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.JSON, SqlTypes.VARBINARY );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INET, SqlTypes.VARBINARY );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.INTERVAL_SECOND, SqlTypes.NUMERIC );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.GEOMETRY, SqlTypes.VARBINARY );
+		addFallbackIfNecessary( jdbcTypeRegistry, SqlTypes.POINT, SqlTypes.VARBINARY );
+
 		// add explicit application registered types
 		bootstrapContext.getTypeConfiguration()
 				.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
 
 		// For NORMALIZE, we replace the standard types that use TIMESTAMP_WITH_TIMEZONE to use TIMESTAMP
 		if ( options.getDefaultTimeZoneStorage() == TimeZoneStorageStrategy.NORMALIZE ) {
-			final JdbcTypeDescriptorRegistry jdbcTypeRegistry = bootstrapContext.getTypeConfiguration()
-					.getJdbcTypeDescriptorRegistry();
 			final JavaTypeDescriptorRegistry javaTypeRegistry = bootstrapContext.getTypeConfiguration()
 					.getJavaTypeDescriptorRegistry();
 			final JdbcType timestampDescriptor = jdbcTypeRegistry.getDescriptor( Types.TIMESTAMP );
@@ -456,6 +465,15 @@ public class MetadataBuildingProcess {
 					ZonedDateTime.class.getSimpleName(),
 					ZonedDateTime.class.getName()
 			);
+		}
+	}
+
+	private static void addFallbackIfNecessary(
+			JdbcTypeDescriptorRegistry jdbcTypeRegistry,
+			int typeCode,
+			int fallbackTypeCode) {
+		if ( !jdbcTypeRegistry.hasRegisteredDescriptor( typeCode ) ) {
+			jdbcTypeRegistry.addDescriptor( typeCode, jdbcTypeRegistry.getDescriptor( fallbackTypeCode ) );
 		}
 	}
 }

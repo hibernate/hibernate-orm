@@ -37,6 +37,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.type.FormatMapper;
 
 /**
  * Aggregator of special options used to build the SessionFactory.
@@ -351,4 +352,6 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	int getPreferredSqlTypeCodeForBoolean();
 
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
+
+	FormatMapper getJsonFormatMapper();
 }

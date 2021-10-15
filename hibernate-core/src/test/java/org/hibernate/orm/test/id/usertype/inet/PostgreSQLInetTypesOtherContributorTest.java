@@ -4,20 +4,17 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.id.usertype.inet;
+package org.hibernate.orm.test.id.usertype.inet;
 
 import java.util.List;
 import java.util.Map;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.boot.spi.MetadataBuilderContributor;
+import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.RequiresDialect;
 import org.junit.Test;
@@ -56,6 +53,11 @@ public class PostgreSQLInetTypesOtherContributorTest extends PostgreSQLInetTypes
 
 		@Override
 		public void contribute(MetadataBuilder metadataBuilder) {
+			final TypeConfiguration typeConfiguration = metadataBuilder.unwrap( MetadataBuilderImplementor.class )
+					.getBootstrapContext()
+					.getTypeConfiguration();
+			typeConfiguration.getJavaTypeDescriptorRegistry().addDescriptor( InetJavaTypeDescriptor.INSTANCE );
+			typeConfiguration.getJdbcTypeDescriptorRegistry().addDescriptor( InetJdbcType.INSTANCE );
 			metadataBuilder.applyBasicType(
 					InetType.INSTANCE, "inet"
 			);

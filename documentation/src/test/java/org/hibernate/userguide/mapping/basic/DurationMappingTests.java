@@ -6,18 +6,21 @@
  */
 package org.hibernate.userguide.mapping.basic;
 
-import java.sql.Types;
 import java.time.Duration;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.AdjustableJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -45,7 +48,18 @@ public class DurationMappingTests {
 		final BasicAttributeMapping duration = (BasicAttributeMapping) entityDescriptor.findAttributeMapping( "duration" );
 		final JdbcMapping jdbcMapping = duration.getJdbcMapping();
 		assertThat( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo( Duration.class ) );
-		assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( jdbcTypeRegistry.getDescriptor( Types.NUMERIC ) ) );
+		final JdbcType intervalType = jdbcTypeRegistry.getDescriptor( SqlTypes.INTERVAL_SECOND );
+		final JdbcType realType;
+		if ( intervalType instanceof AdjustableJdbcType ) {
+			realType = ((AdjustableJdbcType) intervalType).resolveIndicatedType(
+					() -> domainModel.getTypeConfiguration(),
+					jdbcMapping.getJavaTypeDescriptor()
+			);
+		}
+		else {
+			realType = intervalType;
+		}
+		assertThat( jdbcMapping.getJdbcTypeDescriptor(), is( realType ) );
 
 		scope.inTransaction(
 				(session) -> {

@@ -16,6 +16,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.type.AbstractSingleColumnStandardBasicType;
+import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
@@ -39,26 +40,26 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 
 	private final JavaType<T> domainJtd;
 	private final JavaType<?> relationalJtd;
-	private final JpaAttributeConverter<? extends T,?> attributeConverter;
+	private final JpaAttributeConverter<T, Object> attributeConverter;
 
 	private final MutabilityPlan<T> mutabilityPlan;
+	private final ValueBinder<Object> valueBinder;
 
 	@SuppressWarnings("unchecked")
 	public AttributeConverterTypeAdapter(
 			String name,
 			String description,
-			JpaAttributeConverter<? extends T,?> attributeConverter,
+			JpaAttributeConverter<? extends T, ?> attributeConverter,
 			JdbcType std,
 			JavaType<?> relationalJtd,
 			JavaType<T> domainJtd,
 			MutabilityPlan<T> mutabilityPlan) {
-		//noinspection rawtypes
-		super( std, (JavaType) relationalJtd );
+		super( std, (JavaType<T>) relationalJtd );
 		this.name = name;
 		this.description = description;
 		this.domainJtd = domainJtd;
 		this.relationalJtd = relationalJtd;
-		this.attributeConverter = attributeConverter;
+		this.attributeConverter = (JpaAttributeConverter<T, Object>) attributeConverter;
 
 		// NOTE : the way that JpaAttributeConverter get built, their "domain JTD" already
 		// contains the proper MutabilityPlan based on whether the `@Immuatble` is present
@@ -68,6 +69,7 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 		else {
 			this.mutabilityPlan = mutabilityPlan;
 		}
+		this.valueBinder = getJdbcTypeDescriptor().getBinder( (JavaType<Object>) relationalJtd );
 
 		log.debugf( "Created AttributeConverterTypeAdapter -> %s", name );
 	}
@@ -90,25 +92,22 @@ public class AttributeConverterTypeAdapter<T> extends AbstractSingleColumnStanda
 	}
 
 	@Override
-	@SuppressWarnings({"rawtypes", "unchecked"})
 	public void nullSafeSet(
 			CallableStatement st,
-			Object value,
+			T value,
 			String name,
 			SharedSessionContractImplementor session) throws SQLException {
-		final AttributeConverter converter = attributeConverter.getConverterBean().getBeanInstance();
+		final AttributeConverter<T, Object> converter = attributeConverter.getConverterBean().getBeanInstance();
 		final Object converted = converter.convertToDatabaseColumn( value );
-		super.nullSafeSet( st, converted, name, session );
+		valueBinder.bind( st, converted, name, session );
 	}
 
 	@Override
-	@SuppressWarnings({"rawtypes", "unchecked"})
-	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		final AttributeConverter converter = attributeConverter.getConverterBean().getBeanInstance();
+	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
+		final AttributeConverter<T, Object> converter = attributeConverter.getConverterBean().getBeanInstance();
 		final Object converted = converter.convertToDatabaseColumn( value );
-		super.nullSafeSet( st, converted, index, options );
+		valueBinder.bind( st, converted, index, options );
 	}
-
 
 	@Override
 	protected MutabilityPlan<T> getMutabilityPlan() {

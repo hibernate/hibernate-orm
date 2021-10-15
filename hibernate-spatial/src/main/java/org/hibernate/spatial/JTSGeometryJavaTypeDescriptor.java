@@ -9,9 +9,12 @@ package org.hibernate.spatial;
 
 import java.util.Locale;
 
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
 import org.geolatte.geom.jts.JTSUtils;
 import org.locationtech.jts.geom.Geometry;
@@ -53,6 +56,11 @@ public class JTSGeometryJavaTypeDescriptor extends AbstractJavaTypeDescriptor<Ge
 		catch (ParseException e) {
 			throw new RuntimeException( String.format( Locale.ENGLISH, "Can't parse string %s as WKT", string ) );
 		}
+	}
+
+	@Override
+	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
+		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.GEOMETRY );
 	}
 
 	@Override

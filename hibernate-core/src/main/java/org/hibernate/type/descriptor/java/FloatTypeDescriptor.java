@@ -11,9 +11,9 @@ import java.math.BigInteger;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
-import org.hibernate.type.descriptor.jdbc.FloatJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 
@@ -31,7 +31,7 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeDescriptorIndicators indicators) {
-		return FloatJdbcType.INSTANCE;
+		return indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.FLOAT );
 	}
 
 	@Override
@@ -124,7 +124,7 @@ public class FloatTypeDescriptor extends AbstractClassJavaTypeDescriptor<Float> 
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		//this is the number of *binary* digits
 		//in a single-precision FP number
 		return dialect.getFloatPrecision();

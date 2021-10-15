@@ -71,14 +71,14 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 		final PersistentClass addressLevelBinding = metadata.getEntityBinding( AddressLevel.class.getName() );
 
 		final Property natureProperty = addressLevelBinding.getProperty( "nature" );
-		CustomType customType = assertTyping( CustomType.class, natureProperty.getType() );
+		CustomType<Object> customType = assertTyping( CustomType.class, natureProperty.getType() );
 		EnumType enumType = assertTyping( EnumType.class, customType.getUserType() );
 		assertEquals( Types.VARCHAR, enumType.sqlTypes()[0] );
 
 		SessionFactoryImplementor sf = (SessionFactoryImplementor) metadata.buildSessionFactory();
 		try {
 			EntityPersister p = sf.getEntityPersister( AddressLevel.class.getName() );
-			CustomType runtimeType = assertTyping( CustomType.class, p.getPropertyType( "nature" ) );
+			CustomType<Object> runtimeType = assertTyping( CustomType.class, p.getPropertyType( "nature" ) );
 			EnumType runtimeEnumType = assertTyping( EnumType.class, runtimeType.getUserType() );
 			assertEquals( Types.VARCHAR, runtimeEnumType.sqlTypes()[0] );
 		}

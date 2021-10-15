@@ -89,7 +89,7 @@ public final class BasicMetadataGenerator {
 		else {
 			parent.addElement( "param" )
 					.addAttribute( "name", EnumType.NAMED )
-					.setText( "" + !( (EnumType) ( (CustomType) type ).getUserType() ).isOrdinal() );
+					.setText( "" + !( (EnumType) ( (CustomType<Object>) type ).getUserType() ).isOrdinal() );
 		}
 	}
 
@@ -155,7 +155,7 @@ public final class BasicMetadataGenerator {
 	private boolean isEnumType(Type type, String typeName) {
 		// Check if a custom type implementation is used and it extends the EnumType directly.
 		if ( CustomType.class.isInstance( type ) ) {
-			final CustomType customType = (CustomType) type;
+			final CustomType<Object> customType = (CustomType<Object>) type;
 			if ( EnumType.class.isInstance( customType.getUserType() ) ) {
 				return true;
 			}

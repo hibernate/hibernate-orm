@@ -175,7 +175,7 @@ public class ExtendedEnumTypeTest extends BaseEnversJPAFunctionalTestCase {
 			final org.hibernate.type.Type propertyType = auditedEntityPersister.getPropertyType( propertyName );
 			assertTyping( CustomType.class, propertyType );
 
-			final UserType userType = ( (CustomType) propertyType ).getUserType();
+			final UserType userType = ( (CustomType<Object>) propertyType ).getUserType();
 			assertTyping( typeClass, userType );
 			assertTyping( org.hibernate.type.EnumType.class, userType );
 

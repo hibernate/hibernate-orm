@@ -17,6 +17,7 @@ import java.util.TimeZone;
 
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -91,6 +92,11 @@ public class MaterializedNClobBindTest {
 
 		@Override
 		public SharedSessionContractImplementor getSession() {
+			return null;
+		}
+
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
 			return null;
 		}
 

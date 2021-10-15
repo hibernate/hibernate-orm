@@ -10,7 +10,9 @@ import java.sql.Types;
 
 import jakarta.persistence.TemporalType;
 
+import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -41,6 +43,7 @@ import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
 import org.hibernate.query.sqm.mutation.internal.idtable.IdTable;
 import org.hibernate.query.sqm.mutation.internal.idtable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -52,6 +55,9 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
+import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.jboss.logging.Logger;
 
@@ -128,6 +134,20 @@ public class H2Dialect extends Dialect {
 			// which caused problems for schema update tool
 			registerColumnType( Types.NUMERIC, "decimal($p,$s)" );
 		}
+
+		registerColumnType( SqlTypes.UUID, "uuid" );
+		registerColumnType( SqlTypes.INTERVAL_SECOND, "interval second($p,$s)" );
+		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
+	}
+
+	@Override
+	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
+		super.contributeTypes( typeContributions, serviceRegistry );
+
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( DurationIntervalSecondJdbcType.INSTANCE );
 	}
 
 	private static int parseBuildId(DialectResolutionInfo info) {
@@ -255,9 +275,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		if ( intervalType != null ) {
+			return "(?2+?3)";
+		}
 		return "dateadd(?1,?2,?3)";
-
 	}
 
 	@Override

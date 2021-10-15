@@ -20,14 +20,14 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 public class EnumeratedValueResolution<E extends Enum<E>> implements BasicValue.Resolution<E> {
-	private final CustomType enumTypeMapping;
+	private final CustomType<Object> enumTypeMapping;
 	private final JavaType<E> domainJtd;
 	private final JavaType<?> jdbcJtd;
 	private final JdbcType jdbcType;
 	private final EnumValueConverter<E,?> valueConverter;
 
 	public EnumeratedValueResolution(
-			CustomType enumTypeMapping,
+			CustomType<Object> enumTypeMapping,
 			JavaType<E> domainJtd,
 			JavaType<?> jdbcJtd,
 			JdbcType jdbcType,

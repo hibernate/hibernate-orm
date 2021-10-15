@@ -36,6 +36,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 
 import org.hibernate.testing.hamcrest.AssignableMatcher;
@@ -130,6 +131,9 @@ public class SmokeTests {
 	public void testConvertedHqlInterpretation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					final JdbcTypeDescriptorRegistry jdbcTypeRegistry = session.getFactory()
+							.getTypeConfiguration()
+							.getJdbcTypeDescriptorRegistry();
 					final QueryImplementor<Gender> query = session.createQuery( "select e.gender from SimpleEntity e", Gender.class );
 					final HqlQueryImplementor<Gender> hqlQuery = (HqlQueryImplementor<Gender>) query;
 					final SqmSelectStatement<Gender> sqmStatement = (SqmSelectStatement<Gender>) hqlQuery.getSqmStatement();
@@ -180,7 +184,10 @@ public class SmokeTests {
 					assertThat( selectedExpressable, instanceOf( BasicTypeImpl.class ) );
 					final BasicTypeImpl basicType = (BasicTypeImpl) selectedExpressable;
 					assertThat( basicType.getJavaTypeDescriptor().getJavaTypeClass(), AssignableMatcher.assignableTo( Integer.class ) );
-					assertThat( basicType.getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
+					assertThat(
+							basicType.getJdbcTypeDescriptor(),
+							is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
+					);
 
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );

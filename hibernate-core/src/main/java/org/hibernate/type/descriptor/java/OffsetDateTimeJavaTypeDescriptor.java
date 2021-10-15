@@ -202,7 +202,7 @@ public class OffsetDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDe
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}
 

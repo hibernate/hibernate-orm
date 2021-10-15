@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.sql.Types;
 
 import org.hibernate.query.CastType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.java.BasicJavaType;
@@ -29,7 +30,7 @@ public interface JdbcType extends Serializable {
 	 * A "friendly" name for use in logging
 	 */
 	default String getFriendlyName() {
-		return Integer.toString( getJdbcTypeCode() );
+		return Integer.toString( getDefaultSqlTypeCode() );
 	}
 
 	/**
@@ -61,7 +62,7 @@ public interface JdbcType extends Serializable {
 			TypeConfiguration typeConfiguration) {
 		// match legacy behavior
 		return (BasicJavaType<T>) typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor(
-				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getJdbcTypeCode() )
+				JdbcTypeJavaClassMappings.INSTANCE.determineJavaClassForJdbcTypeCode( getDefaultSqlTypeCode() )
 		);
 	}
 
@@ -172,6 +173,14 @@ public interface JdbcType extends Serializable {
 			case Types.TIME:
 			case Types.TIMESTAMP:
 			case Types.TIMESTAMP_WITH_TIMEZONE:
+				return true;
+		}
+		return false;
+	}
+
+	default boolean isInterval() {
+		switch ( getDefaultSqlTypeCode() ) {
+			case SqlTypes.INTERVAL_SECOND:
 				return true;
 		}
 		return false;

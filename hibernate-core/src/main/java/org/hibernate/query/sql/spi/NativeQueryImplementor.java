@@ -66,7 +66,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addScalar(String columnAlias);
 
 	@Override
-	NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType type);
+	NativeQueryImplementor<R> addScalar(String columnAlias, BasicDomainType<?> type);
 
 	@Override
 	NativeQueryImplementor<R> addScalar(String columnAlias, Class<?> javaType);
@@ -109,13 +109,13 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addEntity(String tableAlias, String entityName, LockMode lockMode);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(Class entityType);
+	NativeQueryImplementor<R> addEntity(Class<?> entityType);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, Class entityType);
+	NativeQueryImplementor<R> addEntity(String tableAlias, Class<?> entityType);
 
 	@Override
-	NativeQueryImplementor<R> addEntity(String tableAlias, Class entityClass, LockMode lockMode);
+	NativeQueryImplementor<R> addEntity(String tableAlias, Class<?> entityClass, LockMode lockMode);
 
 	@Override
 	NativeQueryImplementor<R> addJoin(String tableAlias, String path);
@@ -136,7 +136,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> addSynchronizedEntityName(String entityName) throws MappingException;
 
 	@Override
-	NativeQueryImplementor<R> addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	NativeQueryImplementor<R> addSynchronizedEntityClass(Class<?> entityClass) throws MappingException;
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -205,7 +205,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	}
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
 
 	@Override
 	NativeQueryImplementor<R> setParameter(int position, Object val);
@@ -216,7 +216,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	}
 
 	@Override
-	NativeQueryImplementor<R> setParameter(String name, Object val, AllowableParameterType type);
+	<P> NativeQueryImplementor<R> setParameter(String name, P val, AllowableParameterType<P> type);
 
 //	@Override
 //	default NativeQueryImplementor<R> setParameter(int position, Object val, Type type) {
@@ -224,16 +224,16 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	}
 
 	@Override
-	NativeQueryImplementor<R> setParameter(int position, Object val, AllowableParameterType type);
+	<P> NativeQueryImplementor<R> setParameter(int position, P val, AllowableParameterType<P> type);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(String name, Object val, BasicTypeReference<?> type);
+	<P> NativeQueryImplementor<R> setParameter(String name, P val, BasicTypeReference<P> type);
 
 	@Override
-	NativeQueryImplementor<R> setParameter(int position, Object val, BasicTypeReference<?> type);
+	<P> NativeQueryImplementor<R> setParameter(int position, P val, BasicTypeReference<P> type);
 
 	@Override
-	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type);
+	<P> NativeQueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
 
 	@Override
 	<P> NativeQueryImplementor<R> setParameter(
@@ -253,7 +253,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 			Collection<P> values);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Collection values);
+	NativeQueryImplementor<R> setParameterList(String name, Collection<?> values);
 
 //	@Override
 //	default NativeQueryImplementor<R> setParameterList(String name, Collection values, Type type) {
@@ -261,7 +261,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	}
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type);
+	<P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
 //
 //	@Override
 //	default NativeQueryImplementor<R> setParameterList(String name, Object[] values, Type type) {
@@ -269,7 +269,7 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 //	}
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type);
+	NativeQueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType<?> type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(String name, Object[] values);
@@ -353,25 +353,25 @@ public interface NativeQueryImplementor<R> extends QueryImplementor<R>, NativeQu
 	NativeQueryImplementor<R> setParameter(Parameter<OffsetDateTime> param, OffsetDateTime value, TemporalType temporalType);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Collection values);
+	NativeQueryImplementor<R> setParameterList(int position, Collection<?> values);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(String name, Collection values, Class type);
+	<P> NativeQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Collection values, Class type);
+	<P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
 //	@Override
 //	NativeQueryImplementor<R> setParameterList(int position, Collection values, Type type);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Collection values, AllowableParameterType type);
+	<P> NativeQueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
 
 //	@Override
 //	NativeQueryImplementor<R> setParameterList(int position, Object[] values, Type type);
 
 	@Override
-	NativeQueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type);
+	NativeQueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType<?> type);
 
 	@Override
 	NativeQueryImplementor<R> setParameterList(int position, Object[] values);

@@ -134,7 +134,7 @@ public class CalendarTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDesc
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return 0; //seconds (currently ignored since Dialects don't parameterize time type by precision)
 	}
 }

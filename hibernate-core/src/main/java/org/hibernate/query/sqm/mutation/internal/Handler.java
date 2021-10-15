@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
@@ -26,5 +27,5 @@ public interface Handler {
 	 *
 	 * @return The "number of rows affected" count
 	 */
-	int execute(ExecutionContext executionContext);
+	int execute(DomainQueryExecutionContext executionContext);
 }

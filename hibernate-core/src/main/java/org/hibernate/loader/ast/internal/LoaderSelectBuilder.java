@@ -20,13 +20,13 @@ import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.BagSemantics;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.engine.profile.FetchProfile;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadingAction;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterHelper;
@@ -896,8 +896,23 @@ public class LoaderSelectBuilder {
 	}
 
 	private SelectStatement generateSelect(SubselectFetch subselect) {
-		// todo (6.0) : i think we may even be able to convert this to a join by piecing together
-		//		parts from the subselect-fetch sql-ast..
+
+		// todo (6.0) : we could even convert this to a join by piecing together
+		//		parts from the subselect-fetch sql-ast.  e.g. today we do:
+		// 			select ...
+		// 			from collection_table c
+		// 			where c.fk in (
+		//      		select o.id
+		//				from owner_table o
+		//				where <original restriction>
+		// 			)
+		//  	but instead could do:
+		// 			select ...
+		// 			from owner_table o
+		//				left join collection_table c on c.fk = o.id
+		// 			where <original restriction>
+
+		// just like with other load-paths, bag-mappings can potentially be problematic here
 
 		// todo (6.0) : ^^ another interesting idea is to use `partsToSelect` here relative to the owner
 		//		- so `loadable` is the owner entity-descriptor and the `partsToSelect` is the collection
@@ -919,9 +934,6 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad > 1,
 				creationContext
 		);
-
-		// todo (6.0) : I think we want to continue to assign aliases to these table-references.  we just want
-		//  	to control how that gets rendered in the walker
 
 		final TableGroup rootTableGroup = loadable.createRootTableGroup(
 				true,
@@ -949,7 +961,9 @@ public class LoaderSelectBuilder {
 		applyOrdering( rootTableGroup, attributeMapping );
 
 		// register the jdbc-parameters
-		subselect.getLoadingJdbcParameters().forEach( jdbcParameterConsumer );
+		// todo (6.0) : analyzing the call paths, it seems like `jdbcParameterConsumer`
+		//		never does anything for sub-select-fetch select building.
+		//subselect.getLoadingJdbcParameters().forEach( jdbcParameterConsumer );
 
 		return new SelectStatement(
 				rootQuerySpec,

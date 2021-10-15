@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.internal.EmptyScrollableResults;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.NotYetImplementedFor6Exception;
@@ -28,7 +29,7 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	public List<R> performList(ExecutionContext executionContext) {
+	public List<R> performList(DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return Collections.emptyList();
 		}
@@ -42,7 +43,7 @@ public class AggregatedSelectQueryPlanImpl<R> implements SelectQueryPlan<R> {
 	}
 
 	@Override
-	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext) {
+	public ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext) {
 		if ( executionContext.getQueryOptions().getEffectiveLimit().getMaxRowsJpa() == 0 ) {
 			return EmptyScrollableResults.INSTANCE;
 		}

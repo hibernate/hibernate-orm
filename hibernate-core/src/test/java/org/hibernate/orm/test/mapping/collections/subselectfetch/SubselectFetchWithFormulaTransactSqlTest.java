@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.subselectfetch;
+package org.hibernate.orm.test.mapping.collections.subselectfetch;
 
 import java.util.List;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -33,8 +33,8 @@ public class SubselectFetchWithFormulaTransactSqlTest extends BaseNonConfigCoreF
 	@Override
 	protected String[] getMappings() {
 		return new String[] {
-				"org/hibernate/test/subselectfetch/NameTransactSql.hbm.xml",
-				"org/hibernate/test/subselectfetch/Value.hbm.xml"
+				"mappings/subselectfetch/NameTransactSql.hbm.xml",
+				"mappings/subselectfetch/Value.hbm.xml"
 		};
 	}
 

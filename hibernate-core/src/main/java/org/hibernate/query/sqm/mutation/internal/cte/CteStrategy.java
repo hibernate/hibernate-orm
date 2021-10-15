@@ -14,14 +14,13 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTable;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.ast.tree.cte.CteTable;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * @asciidoc
@@ -97,7 +96,7 @@ public class CteStrategy implements SqmMultiTableMutationStrategy {
 	public int executeDelete(
 			SqmDeleteStatement sqmDelete,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		checkMatch( sqmDelete );
 		return new CteDeleteHandler( cteTable, sqmDelete, domainParameterXref, this, sessionFactory ).execute( context );
 	}
@@ -106,7 +105,7 @@ public class CteStrategy implements SqmMultiTableMutationStrategy {
 	public int executeUpdate(
 			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		checkMatch( sqmUpdate );
 		return new CteUpdateHandler( cteTable, sqmUpdate, domainParameterXref, this, sessionFactory ).execute( context );
 	}

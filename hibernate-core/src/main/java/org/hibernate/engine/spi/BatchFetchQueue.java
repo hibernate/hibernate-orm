@@ -1,8 +1,8 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 package org.hibernate.engine.spi;
 
@@ -24,9 +24,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.jboss.logging.Logger;
 
 /**
- * Tracks entity and collection keys that are available for batch
- * fetching, and the queries which were used to load entities, which
- * can be re-used as a subquery for loading owned collections.
+ * Keeps track of:<ul>
+ *     <li>entity and collection keys that are available for batch fetching</li>
+ *     <li>details related to queries which load entities with sub-select-fetchable collections</li>
+ * </ul>
  *
  * @author Gavin King
  * @author Steve Ebersole
@@ -105,7 +106,15 @@ public class BatchFetchQueue {
 		if ( subselectsByEntityKey == null ) {
 			subselectsByEntityKey = CollectionHelper.mapOfSize( 12 );
 		}
-		subselectsByEntityKey.put( key, subquery );
+
+		final SubselectFetch previous = subselectsByEntityKey.put( key, subquery );
+		if ( previous != null && LOG.isDebugEnabled() ) {
+			LOG.debugf(
+					"SubselectFetch previously registered with BatchFetchQueue for `%s#s`",
+					key.getEntityName(),
+					key.getIdentifier()
+			);
+		}
 	}
 
 	/**

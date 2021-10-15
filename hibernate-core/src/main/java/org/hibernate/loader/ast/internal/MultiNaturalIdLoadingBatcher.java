@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -145,6 +146,7 @@ public class MultiNaturalIdLoadingBatcher {
 
 	private <E> List<E> performLoad(JdbcParameterBindings jdbcParamBindings, SharedSessionContractImplementor session) {
 		final LoadingEntityCollector loadingEntityCollector;
+		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
 
 		if ( entityDescriptor.getEntityPersister().hasSubselectLoadableCollections() ) {
 			loadingEntityCollector = new LoadingEntityCollector(
@@ -154,12 +156,23 @@ public class MultiNaturalIdLoadingBatcher {
 					jdbcParamBindings,
 					session.getPersistenceContext().getBatchFetchQueue()
 			);
+
+			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+					session.getPersistenceContext().getBatchFetchQueue(),
+					sqlSelect,
+					jdbcParameters,
+					jdbcParamBindings
+			);
+
+
 		}
 		else {
 			loadingEntityCollector = null;
+			subSelectFetchableKeysHandler = null;
 		}
 
-		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
+
+		final List<E> result = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParamBindings,
 				new ExecutionContext() {
@@ -190,13 +203,15 @@ public class MultiNaturalIdLoadingBatcher {
 
 					@Override
 					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						if ( loadingEntityCollector != null ) {
-							loadingEntityCollector.collectLoadingEntityKey( entityKey );
+						if ( subSelectFetchableKeysHandler != null ) {
+							subSelectFetchableKeysHandler.addKey( entityKey );
 						}
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
+
+		return result;
 	}
 }

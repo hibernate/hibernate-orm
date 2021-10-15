@@ -11,7 +11,6 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.Query;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * General contract for performing execution of a query returning results.  These
@@ -36,11 +35,11 @@ public interface SelectQueryPlan<R> extends QueryPlan {
 	/**
 	 * Perform (execute) the query returning a List
 	 */
-	List<R> performList(ExecutionContext executionContext);
+	List<R> performList(DomainQueryExecutionContext executionContext);
 
 	/**
 	 * Perform (execute) the query returning a ScrollableResults
 	 */
-	ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, ExecutionContext executionContext);
+	ScrollableResultsImplementor<R> performScroll(ScrollMode scrollMode, DomainQueryExecutionContext executionContext);
 
 }

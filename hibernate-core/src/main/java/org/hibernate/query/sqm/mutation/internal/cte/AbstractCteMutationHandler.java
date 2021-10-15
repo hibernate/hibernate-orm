@@ -21,9 +21,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.SqlExpressable;
-import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -53,7 +53,6 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -102,7 +101,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 	}
 
 	@Override
-	public int execute(ExecutionContext executionContext) {
+	public int execute(DomainQueryExecutionContext executionContext) {
 		final SqmDeleteOrUpdateStatement sqmMutationStatement = getSqmDeleteOrUpdateStatement();
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final EntityMappingType entityDescriptor = getEntityDescriptor();
@@ -121,7 +120,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 				explicitDmlTargetAlias,
 				domainParameterXref,
 				executionContext.getQueryOptions(),
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
 				factory
 		);
@@ -207,7 +206,7 @@ public abstract class AbstractCteMutationHandler extends AbstractMutationHandler
 		List<Object> list = jdbcServices.getJdbcSelectExecutor().list(
 				select,
 				jdbcParameterBindings,
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext, select ),
+				new SqmJdbcExecutionContextAdapter( executionContext ),
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.NONE
 		);

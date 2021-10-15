@@ -21,7 +21,6 @@ import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.ComparisonOperator;
 import org.hibernate.query.NavigablePath;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -154,7 +153,7 @@ public final class ExecuteWithIdTableHelper {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+				executionContext
 		);
 	}
 

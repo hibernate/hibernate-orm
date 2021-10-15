@@ -32,7 +32,6 @@ import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * An {@link org.hibernate.engine.spi.ActionQueue} {@link Executable} for ensuring
@@ -148,11 +147,9 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		this.affectedTableSpaces = spacesList.toArray( new String[ 0 ] );
 	}
 
-	public static void schedule(ExecutionContext executionContext, SqmDmlStatement<?> statement) {
+	public static void schedule(SharedSessionContractImplementor session, SqmDmlStatement<?> statement) {
 		final List<EntityPersister> entityPersisters = new ArrayList<>( 1 );
-		final MetamodelImplementor metamodel = executionContext.getSession()
-				.getFactory()
-				.getMetamodel();
+		final MetamodelImplementor metamodel = session.getFactory().getMetamodel();
 		if ( !( statement instanceof InsertStatement ) ) {
 			entityPersisters.add( metamodel.entityPersister( statement.getTarget().getEntityName() ) );
 		}
@@ -165,11 +162,10 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 			}
 		}
 
-		schedule( executionContext, entityPersisters.toArray( new EntityPersister[0] ) );
+		schedule( session, entityPersisters.toArray( new EntityPersister[0] ) );
 	}
 
-	public static void schedule(ExecutionContext executionContext, EntityPersister... affectedQueryables) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
+	public static void schedule(SharedSessionContractImplementor session, EntityPersister... affectedQueryables) {
 		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
 			( (EventSource) session ).getActionQueue().addAction( action );
@@ -179,8 +175,7 @@ public class BulkOperationCleanupAction implements Executable, Serializable {
 		}
 	}
 
-	public static void schedule(ExecutionContext executionContext, Set<String> affectedQueryables) {
-		final SharedSessionContractImplementor session = executionContext.getSession();
+	public static void schedule(SharedSessionContractImplementor session, Set<String> affectedQueryables) {
 		final BulkOperationCleanupAction action = new BulkOperationCleanupAction( session, affectedQueryables );
 		if ( session.isEventSource() ) {
 			( (EventSource) session ).getActionQueue().addAction( action );

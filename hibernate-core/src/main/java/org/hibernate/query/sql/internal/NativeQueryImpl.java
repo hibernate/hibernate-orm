@@ -21,16 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityManagerFactory;
-import jakarta.persistence.FlushModeType;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.Tuple;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -53,7 +43,6 @@ import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.Limit;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
@@ -74,6 +63,7 @@ import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
 import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -92,11 +82,21 @@ import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sql.spi.SelectInterpretationsKey;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.transform.ResultTransformer;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeReference;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.Tuple;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 
@@ -106,7 +106,7 @@ import static org.hibernate.jpa.QueryHints.HINT_NATIVE_LOCKMODE;
 @SuppressWarnings("WeakerAccess")
 public class NativeQueryImpl<R>
 		extends AbstractQuery<R>
-		implements NativeQueryImplementor<R>, ExecutionContext, ResultSetMappingResolutionContext {
+		implements NativeQueryImplementor<R>, DomainQueryExecutionContext, ResultSetMappingResolutionContext {
 	private final String sqlString;
 
 	private final ParameterMetadataImplementor parameterMetadata;
@@ -440,13 +440,6 @@ public class NativeQueryImpl<R>
 		return callback;
 	}
 
-	@Override
-	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
-		if ( callback != null ) {
-			callback.invokeAfterLoadActions( session, entity, persister );
-		}
-	}
-
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSession().getFactory();
 	}
@@ -502,11 +495,6 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setLockMode(LockModeType lockModeType) {
 		throw new IllegalStateException( "Illegal attempt to set lock mode on a native-query" );
-	}
-
-	@Override
-	public String getQueryIdentifier(String sql) {
-		return sql;
 	}
 
 	@Override

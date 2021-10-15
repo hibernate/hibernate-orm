@@ -19,6 +19,7 @@ import jakarta.persistence.ParameterMode;
 
 import org.hibernate.JDBCException;
 import org.hibernate.NotYetImplementedFor6Exception;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.CoreLogging;

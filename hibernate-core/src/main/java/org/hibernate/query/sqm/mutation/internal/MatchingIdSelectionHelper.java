@@ -21,8 +21,9 @@ import org.hibernate.internal.FilterHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.Joinable;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -39,7 +40,6 @@ import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -73,7 +73,7 @@ public class MatchingIdSelectionHelper {
 			boolean queryRoot,
 			Predicate restriction,
 			MultiTableSqmMutationConverter sqmConverter,
-			ExecutionContext executionContext,
+			DomainQueryExecutionContext executionContext,
 			SessionFactoryImplementor sessionFactory) {
 		final EntityDomainType entityDomainType = sqmStatement.getTarget().getModel();
 		if ( log.isTraceEnabled() ) {
@@ -119,7 +119,7 @@ public class MatchingIdSelectionHelper {
 		);
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				(Joinable) targetEntityDescriptor.getEntityPersister(),
 				mutatingTableGroup
 		);
@@ -195,7 +195,7 @@ public class MatchingIdSelectionHelper {
 	public static List<Object> selectMatchingIds(
 			SqmDeleteOrUpdateStatement sqmMutationStatement,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext executionContext) {
+			DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
 		final EntityMappingType entityDescriptor = factory.getDomainModel()
@@ -206,7 +206,7 @@ public class MatchingIdSelectionHelper {
 				sqmMutationStatement.getTarget().getExplicitAlias(),
 				domainParameterXref,
 				executionContext.getQueryOptions(),
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
 				factory
 		);
@@ -275,7 +275,7 @@ public class MatchingIdSelectionHelper {
 		return jdbcServices.getJdbcSelectExecutor().list(
 				idSelectJdbcOperation,
 				jdbcParameterBindings,
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext, idSelectJdbcOperation ),
+				new SqmJdbcExecutionContextAdapter( executionContext ),
 				row -> row,
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);

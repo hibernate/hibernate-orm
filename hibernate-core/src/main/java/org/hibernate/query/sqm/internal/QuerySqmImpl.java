@@ -15,10 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.Parameter;
-import jakarta.persistence.PersistenceException;
-import jakarta.persistence.Tuple;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -36,7 +32,6 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
@@ -44,10 +39,12 @@ import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
 import org.hibernate.query.hql.spi.HqlQueryImplementor;
 import org.hibernate.query.hql.spi.NamedHqlQueryMemento;
+import org.hibernate.query.internal.DelegatingDomainQueryExecutionContext;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
 import org.hibernate.query.spi.AbstractQuery;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.MutableQueryOptions;
 import org.hibernate.query.spi.NonSelectQueryPlan;
@@ -59,7 +56,6 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.SqmExpressable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -79,9 +75,15 @@ import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.Parameter;
+import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Tuple;
+
+import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -90,7 +92,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  */
 public class QuerySqmImpl<R>
 		extends AbstractQuery<R>
-		implements HqlQueryImplementor<R>, ExecutionContext {
+		implements HqlQueryImplementor<R>, DomainQueryExecutionContext {
 
 	/**
 	 * The value used for {@link #getQueryString} for Criteria-based queries
@@ -604,7 +606,8 @@ public class QuerySqmImpl<R>
 						queryOptions.getGraph() != null ||
 						hasLimit
 		);
-		final ExecutionContext executionContextToUse;
+
+		final DomainQueryExecutionContext executionContextToUse;
 		if ( hasLimit && containsCollectionFetches ) {
 			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
 			if (fail) {
@@ -617,7 +620,15 @@ public class QuerySqmImpl<R>
 			else {
 				LOG.firstOrMaxResultsSpecifiedWithCollectionFetch();
 			}
-			executionContextToUse = SqlOmittingQueryOptions.omitSqlQueryOptions( this, true, false );
+
+			final MutableQueryOptions originalQueryOptions = getQueryOptions();
+			final QueryOptions normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
+			if ( originalQueryOptions == normalizedQueryOptions ) {
+				executionContextToUse = this;
+			}
+			else {
+				executionContextToUse = new DelegatingDomainQueryExecutionContext( this );
+			}
 		}
 		else {
 			executionContextToUse = this;
@@ -720,6 +731,7 @@ public class QuerySqmImpl<R>
 			QueryOptions queryOptions) {
 		return new ConcreteSqmSelectQueryPlan<>(
 				concreteSqmStatement,
+				hqlString,
 				domainParameterXref,
 				resultType,
 				queryOptions
@@ -842,21 +854,6 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
-		if ( callback != null ) {
-			callback.invokeAfterLoadActions( session, entity, persister );
-		}
-	}
-
-	@Override
-	public String getQueryIdentifier(String sql) {
-		if ( CRITERIA_HQL_STRING.equals( hqlString ) ) {
-			return "[CRITERIA] " + sql;
-		}
-		return hqlString;
-	}
-
-	@Override
 	public NamedHqlQueryMemento toMemento(String name) {
 		return new NamedHqlQueryMementoImpl(
 				name,
@@ -875,11 +872,6 @@ public class QuerySqmImpl<R>
 				Collections.emptyMap(),
 				getHints()
 		);
-	}
-
-	@Override
-	public boolean hasQueryExecutionToBeAddedToStatistics() {
-		return !CRITERIA_HQL_STRING.equals( hqlString );
 	}
 
 }

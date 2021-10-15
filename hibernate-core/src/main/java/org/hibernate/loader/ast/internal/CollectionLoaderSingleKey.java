@@ -14,9 +14,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
@@ -30,6 +32,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -103,8 +106,17 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				session
 		);
 		assert offset == jdbcParameters.size();
-		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+
+		final JdbcSelect jdbcSelect = sqlAstTranslatorFactory
+				.buildSelectTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
+
+		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+				session.getPersistenceContext().getBatchFetchQueue(),
+				sqlAst,
+				jdbcParameters,
+				jdbcParameterBindings
+		);
 
 		jdbcServices.getJdbcSelectExecutor().list(
 				jdbcSelect,
@@ -118,6 +130,11 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 					@Override
 					public CollectionKey getCollectionKey() {
 						return collectionKey;
+					}
+
+					@Override
+					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+						subSelectFetchableKeysHandler.addKey( entityKey );
 					}
 
 					@Override

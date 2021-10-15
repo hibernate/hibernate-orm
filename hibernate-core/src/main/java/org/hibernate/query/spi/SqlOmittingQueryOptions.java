@@ -8,8 +8,6 @@ package org.hibernate.query.spi;
 
 import org.hibernate.LockOptions;
 import org.hibernate.query.Limit;
-import org.hibernate.sql.exec.internal.DelegatingExecutionContext;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcSelect;
 
 /**
@@ -26,35 +24,31 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 		this.omitLocks = omitLocks;
 	}
 
-	public static ExecutionContext omitSqlQueryOptions(ExecutionContext context) {
-		return omitSqlQueryOptions( context, true, true );
+	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions) {
+		return omitSqlQueryOptions( originalOptions, true, true );
 	}
 
-	public static ExecutionContext omitSqlQueryOptions(ExecutionContext context, JdbcSelect select) {
-		return omitSqlQueryOptions( context, !select.usesLimitParameters(), false );
+	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, JdbcSelect select) {
+		return omitSqlQueryOptions( originalOptions, !select.usesLimitParameters(), false );
 	}
 
-	public static ExecutionContext omitSqlQueryOptions(ExecutionContext context, boolean omitLimit, boolean omitLocks) {
-		final QueryOptions originalQueryOptions = context.getQueryOptions();
-		final Limit limit = originalQueryOptions.getLimit();
+	public static QueryOptions omitSqlQueryOptions(QueryOptions originalOptions, boolean omitLimit, boolean omitLocks) {
+		final Limit limit = originalOptions.getLimit();
+
 		// No need for a context when there are no options we use during SQL rendering
-		if ( originalQueryOptions.getLockOptions().isEmpty() ) {
+		if ( originalOptions.getLockOptions().isEmpty() ) {
 			if ( !omitLimit || limit == null || limit.isEmpty() ) {
-				return context;
+				return originalOptions;
 			}
 		}
-		else if ( !omitLocks ) {
+
+		if ( !omitLocks ) {
 			if ( !omitLimit || limit == null || limit.isEmpty() ) {
-				return context;
+				return originalOptions;
 			}
 		}
-		final QueryOptions queryOptions = new SqlOmittingQueryOptions( originalQueryOptions, omitLimit, omitLocks );
-		return new DelegatingExecutionContext( context ) {
-			@Override
-			public QueryOptions getQueryOptions() {
-				return queryOptions;
-			}
-		};
+
+		return new SqlOmittingQueryOptions( originalOptions, omitLimit, omitLocks );
 	}
 
 	@Override

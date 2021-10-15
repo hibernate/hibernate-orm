@@ -31,10 +31,12 @@ import org.hibernate.metamodel.mapping.MappingModelHelper;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
@@ -118,8 +120,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 	}
 
 	@Override
-	public int execute(ExecutionContext executionContext) {
-
+	public int execute(DomainQueryExecutionContext executionContext) {
 		final EntityPersister entityDescriptor = sessionFactory.getDomainModel().getEntityDescriptor( sqmDelete.getTarget().getEntityName() );
 		final String hierarchyRootTableName = ( (Joinable) entityDescriptor ).getTableName();
 
@@ -166,7 +167,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 		);
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				(Joinable) entityDescriptor,
 				deletingTableGroup
 		);
@@ -177,13 +178,15 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 
 		boolean needsIdTable = needsIdTableWrapper.get();
 
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
+
 		if ( needsIdTable ) {
 			return executeWithIdTable(
 					predicate,
 					deletingTableGroup,
 					parameterResolutions,
 					paramTypeResolutions,
-					executionContext
+					executionContextAdapter
 			);
 		}
 		else {
@@ -193,7 +196,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 					parameterResolutions,
 					paramTypeResolutions,
 					converter.getSqlExpressionResolver(),
-					executionContext
+					executionContextAdapter
 			);
 		}
 	}
@@ -387,7 +390,7 @@ public class RestrictedDeleteExecutionDelegate implements TableBasedDeleteHandle
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+				executionContext
 		);
 	}
 

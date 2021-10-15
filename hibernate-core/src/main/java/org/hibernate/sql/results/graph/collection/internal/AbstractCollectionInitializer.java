@@ -13,8 +13,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
-import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionLoadingLogger;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -69,6 +69,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 		else {
 			collectionKeyValue = collectionKeyResultAssembler.assemble( rowProcessingState );
 		}
+
 		if ( collectionKeyValue != null ) {
 			this.collectionKey = new CollectionKey(
 					collectionAttributeMapping.getCollectionDescriptor(),

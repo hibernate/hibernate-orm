@@ -14,10 +14,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcInsert;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
@@ -50,7 +49,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	private SqlAstTranslator<JdbcInsert> createInsertTranslator(ExecutionContext executionContext) {
+	private SqlAstTranslator<JdbcInsert> createInsertTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 
@@ -60,7 +59,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryOptions(),
 				domainParameterXref,
 				executionContext.getQueryParameterBindings(),
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				factory
 		);
 
@@ -75,13 +74,15 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 
 		this.paramTypeResolutions = sqmInterpretation.getSqmParameterMappingModelTypeResolutions();
 
-		return factory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+		return factory.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
 				.buildInsertTranslator( factory, sqmInterpretation.getSqlAst() );
 	}
 
 	@Override
-	public int executeUpdate(ExecutionContext executionContext) {
-		BulkOperationCleanupAction.schedule( executionContext, sqmInsert );
+	public int executeUpdate(DomainQueryExecutionContext executionContext) {
+		BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmInsert );
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
@@ -122,7 +123,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+				new SqmJdbcExecutionContextAdapter( executionContext )
 		);
 	}
 }

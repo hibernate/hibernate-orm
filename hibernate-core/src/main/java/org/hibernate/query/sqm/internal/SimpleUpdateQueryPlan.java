@@ -14,10 +14,10 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.sql.SqmTranslation;
 import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
@@ -27,7 +27,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcUpdate;
 
@@ -51,8 +50,8 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 	}
 
 	@Override
-	public int executeUpdate(ExecutionContext executionContext) {
-		BulkOperationCleanupAction.schedule( executionContext, sqmUpdate );
+	public int executeUpdate(DomainQueryExecutionContext executionContext) {
+		BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmUpdate );
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
@@ -93,11 +92,11 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+				new SqmJdbcExecutionContextAdapter( executionContext )
 		);
 	}
 
-	private SqlAstTranslator<JdbcUpdate> createUpdateTranslator(ExecutionContext executionContext) {
+	private SqlAstTranslator<JdbcUpdate> createUpdateTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final QueryEngine queryEngine = factory.getQueryEngine();
 
@@ -107,7 +106,7 @@ public class SimpleUpdateQueryPlan implements NonSelectQueryPlan {
 				executionContext.getQueryOptions(),
 				domainParameterXref,
 				executionContext.getQueryParameterBindings(),
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				factory
 		);
 

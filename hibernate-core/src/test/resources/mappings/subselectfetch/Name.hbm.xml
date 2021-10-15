@@ -11,7 +11,7 @@
 
 <hibernate-mapping>
 
-  <class name="org.hibernate.test.subselectfetch.Name" table="T_Name">
+  <class name="org.hibernate.orm.test.mapping.collections.subselectfetch.Name" table="T_Name">
     <id name="id" column="id"/>
     <property  name="name" column="c_name"/>
 
@@ -19,7 +19,7 @@
 
     <bag name="values" inverse="true" lazy="false" fetch="subselect">
       <key column="name_id"/>
-      <one-to-many class="org.hibernate.test.subselectfetch.Value"/>
+      <one-to-many class="org.hibernate.orm.test.mapping.collections.subselectfetch.Value"/>
     </bag>
 
   </class>

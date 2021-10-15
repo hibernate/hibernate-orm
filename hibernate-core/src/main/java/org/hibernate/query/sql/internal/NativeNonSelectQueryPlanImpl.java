@@ -16,15 +16,16 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.AllowableParameterType;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.internal.StandardJdbcMutationExecutor;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutation;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
@@ -50,9 +51,9 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 	}
 
 	@Override
-	public int executeUpdate(ExecutionContext executionContext) {
+	public int executeUpdate(DomainQueryExecutionContext executionContext) {
 		executionContext.getSession().autoFlushIfRequired( affectedTableNames );
-		BulkOperationCleanupAction.schedule( executionContext, affectedTableNames );
+		BulkOperationCleanupAction.schedule( executionContext.getSession(), affectedTableNames );
 		final List<JdbcParameterBinder> jdbcParameterBinders;
 		final JdbcParameterBindings jdbcParameterBindings;
 
@@ -108,7 +109,7 @@ public class NativeNonSelectQueryPlanImpl implements NonSelectQueryPlan {
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				executionContext
+				new SqmJdbcExecutionContextAdapter( executionContext )
 		);
 	}
 }

@@ -12,13 +12,13 @@ import org.hibernate.orm.test.mapping.SecondaryTableTests;
 import org.hibernate.orm.test.mapping.inheritance.joined.JoinedInheritanceTest;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryParameterBindingsImpl;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.exec.spi.Callback;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -68,7 +68,7 @@ public class IdSelectionTests {
 
 		scope.inTransaction(
 				session -> {
-					final ExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
+					final DomainQueryExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
 
 					MatchingIdSelectionHelper.selectMatchingIds( sqm, domainParameterXref, executionContext );
 				}
@@ -93,7 +93,7 @@ public class IdSelectionTests {
 
 		scope.inTransaction(
 				session -> {
-					final ExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
+					final DomainQueryExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
 
 					MatchingIdSelectionHelper.selectMatchingIds( sqm, domainParameterXref, executionContext );
 				}
@@ -118,7 +118,7 @@ public class IdSelectionTests {
 
 		scope.inTransaction(
 				session -> {
-					final ExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
+					final DomainQueryExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
 
 					MatchingIdSelectionHelper.selectMatchingIds( sqm, domainParameterXref, executionContext );
 				}
@@ -143,7 +143,7 @@ public class IdSelectionTests {
 
 		scope.inTransaction(
 				session -> {
-					final ExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
+					final DomainQueryExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
 
 					MatchingIdSelectionHelper.selectMatchingIds( sqm, domainParameterXref, executionContext );
 				}
@@ -168,14 +168,14 @@ public class IdSelectionTests {
 
 		scope.inTransaction(
 				session -> {
-					final ExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
+					final DomainQueryExecutionContext executionContext = new TestExecutionContext( session, domainParamBindings );
 
 					MatchingIdSelectionHelper.selectMatchingIds( sqm, domainParameterXref, executionContext );
 				}
 		);
 	}
 
-	private static class TestExecutionContext implements ExecutionContext {
+	private static class TestExecutionContext implements DomainQueryExecutionContext {
 		private final SessionImplementor session;
 		private final QueryParameterBindingsImpl domainParamBindings;
 

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.internal;
 
 import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -30,8 +31,8 @@ public class MultiTableDeleteQueryPlan implements NonSelectQueryPlan {
 	}
 
 	@Override
-	public int executeUpdate(ExecutionContext executionContext) {
-		BulkOperationCleanupAction.schedule( executionContext, sqmDelete );
+	public int executeUpdate(DomainQueryExecutionContext executionContext) {
+		BulkOperationCleanupAction.schedule( executionContext.getSession(), sqmDelete );
 		return deleteStrategy.executeDelete( sqmDelete, domainParameterXref, executionContext );
 	}
 }

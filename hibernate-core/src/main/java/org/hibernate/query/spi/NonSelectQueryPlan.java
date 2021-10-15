@@ -6,11 +6,9 @@
  */
 package org.hibernate.query.spi;
 
-import org.hibernate.sql.exec.spi.ExecutionContext;
-
 /**
  * @author Steve Ebersole
  */
 public interface NonSelectQueryPlan extends QueryPlan {
-	int executeUpdate(ExecutionContext executionContext);
+	int executeUpdate(DomainQueryExecutionContext executionContext);
 }

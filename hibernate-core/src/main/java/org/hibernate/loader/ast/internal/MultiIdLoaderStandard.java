@@ -23,6 +23,7 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
@@ -297,7 +298,14 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 			loadingEntityCollector = null;
 		}
 
-		return JdbcSelectExecutorStandardImpl.INSTANCE.list(
+		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+				session.getPersistenceContext().getBatchFetchQueue(),
+				sqlAst,
+				jdbcParameters,
+				jdbcParameterBindings
+		);
+
+		List<T> list = JdbcSelectExecutorStandardImpl.INSTANCE.list(
 				jdbcSelect,
 				jdbcParameterBindings,
 				new ExecutionContext() {
@@ -328,14 +336,14 @@ public class MultiIdLoaderStandard<T> implements MultiIdEntityLoader<T> {
 
 					@Override
 					public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-						if ( loadingEntityCollector != null ) {
-							loadingEntityCollector.collectLoadingEntityKey( entityKey );
-						}
+						subSelectFetchableKeysHandler.addKey( entityKey );
 					}
 				},
 				RowTransformerPassThruImpl.instance(),
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
+
+		return list;
 	}
 
 	private List<T> performUnorderedMultiLoad(

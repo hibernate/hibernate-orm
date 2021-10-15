@@ -122,7 +122,7 @@ public class SqmMutationStrategyHelper {
 							.getStatementPreparer()
 							.prepareStatement( sql ),
 					(integer, preparedStatement) -> {},
-					SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+					executionContext
 			);
 		}
 	}

@@ -11,17 +11,16 @@ import java.sql.SQLException;
 import java.util.function.Supplier;
 
 import org.hibernate.boot.TempTableDdlTransactionHandling;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.config.spi.StandardConverters;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 import org.jboss.logging.Logger;
 
@@ -64,7 +63,7 @@ public class GlobalTemporaryTableStrategy implements SqmMultiTableMutationStrate
 	public int executeUpdate(
 			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		return new TableBasedUpdateHandler(
 				sqmUpdate,
 				domainParameterXref,
@@ -84,7 +83,7 @@ public class GlobalTemporaryTableStrategy implements SqmMultiTableMutationStrate
 	public int executeDelete(
 			SqmDeleteStatement sqmDelete,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		return new TableBasedDeleteHandler(
 				sqmDelete,
 				domainParameterXref,

@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.mutation.internal.inline;
 
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
@@ -23,7 +24,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 	private final DomainParameterXref domainParameterXref;
 	private final MatchingIdRestrictionProducer matchingIdsPredicateProducer;
 
-	private final ExecutionContext executionContext;
+	private final DomainQueryExecutionContext executionContext;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final SqlAstTranslatorFactory sqlAstTranslatorFactory;
@@ -33,7 +34,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 			MatchingIdRestrictionProducer matchingIdsPredicateProducer,
 			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		this.matchingIdsPredicateProducer = matchingIdsPredicateProducer;
 		this.domainParameterXref = domainParameterXref;
 		this.sqmUpdate = sqmUpdate;
@@ -46,7 +47,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 	}
 
 	@Override
-	public int execute(ExecutionContext executionContext) {
+	public int execute(DomainQueryExecutionContext executionContext) {
 		throw new NotYetImplementedFor6Exception( getClass() );
 	}
 }

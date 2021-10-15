@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockOptions;
@@ -14,13 +15,14 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.persister.entity.Loadable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.sql.ast.Clause;
@@ -32,6 +34,7 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcSelect;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerPassThruImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -167,7 +170,8 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
 			final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlAst )
+			final JdbcSelect jdbcSelect = sqlAstTranslatorFactory
+					.buildSelectTranslator( sessionFactory, sqlAst )
 					.translate( null, QueryOptions.NONE );
 
 			final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount * smallBatchLength );
@@ -185,6 +189,14 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						session
 				);
 			}
+			assert offset == jdbcParameters.size();
+
+			final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
+					session.getPersistenceContext().getBatchFetchQueue(),
+					sqlAst,
+					Collections.emptyList(),
+					jdbcParameterBindings
+			);
 
 			jdbcServices.getJdbcSelectExecutor().list(
 					jdbcSelect,
@@ -206,6 +218,11 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 						}
 
 						@Override
+						public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+							subSelectFetchableKeysHandler.addKey( entityKey );
+						}
+
+						@Override
 						public QueryParameterBindings getQueryParameterBindings() {
 							return QueryParameterBindings.NO_PARAM_BINDINGS;
 						}
@@ -220,9 +237,6 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 					ListResultsConsumer.UniqueSemantic.FILTER
 			);
 
-
-			assert offset == jdbcParameters.size();
-
 			// prepare for the next round...
 			smallBatchStart += smallBatchLength;
 			if ( smallBatchStart >= numberOfIds ) {
@@ -232,4 +246,5 @@ public class CollectionLoaderBatchKey implements CollectionLoader {
 			smallBatchLength = Math.min( numberOfIds - smallBatchStart, batchSize );
 		}
 	}
+
 }

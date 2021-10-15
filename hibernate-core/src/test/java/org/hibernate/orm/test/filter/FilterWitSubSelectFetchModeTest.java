@@ -93,7 +93,6 @@ public class FilterWitSubSelectFetchModeTest {
 	}
 
 	@Test
-	@FailureExpected( reason = "subselect fetch mode not implemeneted correctly in v6" )
 	void testFiltersAreApplied(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.enableFilter( "ID" ).setParameter( "id", 3L );

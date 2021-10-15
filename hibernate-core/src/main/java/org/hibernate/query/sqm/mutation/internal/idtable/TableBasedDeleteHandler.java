@@ -12,11 +12,11 @@ import java.util.function.Supplier;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 import org.jboss.logging.Logger;
 
@@ -29,7 +29,7 @@ public class TableBasedDeleteHandler
 	private static final Logger log = Logger.getLogger( TableBasedDeleteHandler.class );
 
 	public interface ExecutionDelegate {
-		int execute(ExecutionContext executionContext);
+		int execute(DomainQueryExecutionContext executionContext);
 	}
 
 	private final IdTable idTable;
@@ -66,7 +66,7 @@ public class TableBasedDeleteHandler
 	}
 
 	@Override
-	public int execute(ExecutionContext executionContext) {
+	public int execute(DomainQueryExecutionContext executionContext) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef(
 					"Starting multi-table delete execution - %s",
@@ -76,7 +76,7 @@ public class TableBasedDeleteHandler
 		return resolveDelegate( executionContext ).execute( executionContext );
 	}
 
-	private ExecutionDelegate resolveDelegate(ExecutionContext executionContext) {
+	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,
@@ -88,7 +88,7 @@ public class TableBasedDeleteHandler
 				exporterSupplier,
 				sessionUidAccess,
 				executionContext.getQueryOptions(),
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
 				getSessionFactory()
 		);

@@ -17,7 +17,8 @@ import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
- * @author Steve Ebersole
+ * A context for execution of SQL statements expressed via
+ * SQL AST and JdbcOperation
  */
 public interface ExecutionContext {
 
@@ -34,7 +35,7 @@ public interface ExecutionContext {
 	Callback getCallback();
 
 	default void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, Loadable persister) {
-		// No-op because by default there is callback
+		// No-op because by default there is no callback
 	}
 
 	default String getQueryIdentifier(String sql) {

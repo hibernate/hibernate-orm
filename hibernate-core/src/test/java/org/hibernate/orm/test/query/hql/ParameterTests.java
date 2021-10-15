@@ -21,6 +21,7 @@ import org.hibernate.Session;
 import org.hibernate.orm.test.query.sqm.BaseSqmUnitTest;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -95,7 +96,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 			query.setParameter( "start", Date.from( Instant.now().minus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
 			query.setParameter( "end", Date.from( Instant.now().plus( 7, ChronoUnit.DAYS ) ), TemporalType.TIMESTAMP );
 
-			final QueryParameterBindings bindings = ( (ExecutionContext) query ).getQueryParameterBindings();
+			final QueryParameterBindings bindings = ( (DomainQueryExecutionContext) query ).getQueryParameterBindings();
 
 			final QueryParameterBinding<?> startBinding = bindings.getBinding( "start" );
 			assertThat( startBinding.getExplicitTemporalPrecision(), equalTo( TemporalType.TIMESTAMP ) );
@@ -113,7 +114,7 @@ public class ParameterTests extends BaseSqmUnitTest {
 			query.setParameter( "start", Instant.now().minus( 7, ChronoUnit.DAYS ), TemporalType.DATE );
 			query.setParameter( "end", Instant.now().plus( 7, ChronoUnit.DAYS ), TemporalType.DATE );
 
-			final QueryParameterBindings bindings = ( (ExecutionContext) query ).getQueryParameterBindings();
+			final QueryParameterBindings bindings = ( (DomainQueryExecutionContext) query ).getQueryParameterBindings();
 
 			final QueryParameterBinding<?> startBinding = bindings.getBinding( "start" );
 			assertThat( startBinding.getExplicitTemporalPrecision(), equalTo( TemporalType.DATE ) );

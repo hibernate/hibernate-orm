@@ -8,14 +8,13 @@ package org.hibernate.query.sqm.mutation.internal.inline;
 
 import java.util.function.Function;
 
-import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 
 /**
  * Support for multi-table SQM mutation operations which select the matching id values from the database back into
@@ -45,7 +44,7 @@ public class InlineStrategy implements SqmMultiTableMutationStrategy {
 	public int executeUpdate(
 			SqmUpdateStatement sqmUpdate,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		final InlineUpdateHandler handler = new InlineUpdateHandler(
 				matchingIdsStrategy.apply( sqmUpdate ),
 				sqmUpdate,
@@ -59,7 +58,7 @@ public class InlineStrategy implements SqmMultiTableMutationStrategy {
 	public int executeDelete(
 			SqmDeleteStatement sqmDelete,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		final InlineDeleteHandler deleteHandler = new InlineDeleteHandler(
 				matchingIdsStrategy.apply( sqmDelete ),
 				sqmDelete,

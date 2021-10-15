@@ -458,4 +458,11 @@ public interface PersistentCollection<E> {
 	default boolean isNewlyInstantiated() {
 		return getKey() == null && !isDirty();
 	}
+
+	/**
+	 * Like {@link #toString()} but without the silliness of rendering the elements
+	 */
+	default String render() {
+		return getRole() + "#" + getKey() + "(initialized: " + wasInitialized() + ")";
+	}
 }

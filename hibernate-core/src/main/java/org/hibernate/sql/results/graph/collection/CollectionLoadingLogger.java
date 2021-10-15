@@ -22,7 +22,13 @@ public interface CollectionLoadingLogger extends BasicLogger {
 	/**
 	 * Static access to the logging instance
 	 */
-	Logger INSTANCE = LoadingLogger.subLogger( LOCAL_NAME );
+	Logger COLL_LOAD_LOGGER = LoadingLogger.subLogger( LOCAL_NAME );
+
+	/**
+	 * @deprecated Use {@link #COLL_LOAD_LOGGER}
+	 */
+	@Deprecated
+	Logger INSTANCE = COLL_LOAD_LOGGER;
 
 	boolean TRACE_ENABLED = INSTANCE.isTraceEnabled();
 	boolean DEBUG_ENABLED = INSTANCE.isDebugEnabled();

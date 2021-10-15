@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.mutation.spi;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -56,7 +57,7 @@ public interface SqmMultiTableMutationStrategy {
 	int executeUpdate(
 			SqmUpdateStatement sqmUpdateStatement,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context);
+			DomainQueryExecutionContext context);
 
 	/**
 	 * Execute the multi-table update indicated by the passed SqmUpdateStatement
@@ -66,5 +67,5 @@ public interface SqmMultiTableMutationStrategy {
 	int executeDelete(
 			SqmDeleteStatement sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context);
+			DomainQueryExecutionContext context);
 }

@@ -25,7 +25,9 @@ import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
 import org.hibernate.query.sqm.mutation.internal.UpdateHandler;
 import org.hibernate.query.sqm.mutation.spi.AbstractMutationHandler;
@@ -100,7 +102,7 @@ public class TableBasedUpdateHandler
 
 
 	@Override
-	public int execute(ExecutionContext executionContext) {
+	public int execute(DomainQueryExecutionContext executionContext) {
 		if ( log.isTraceEnabled() ) {
 			log.tracef(
 					"Starting multi-table update execution - %s",
@@ -108,10 +110,11 @@ public class TableBasedUpdateHandler
 			);
 		}
 
-		return resolveDelegate( executionContext ).execute( executionContext );
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext );
+		return resolveDelegate( executionContext ).execute( executionContextAdapter );
 	}
 
-	private ExecutionDelegate resolveDelegate(ExecutionContext executionContext) {
+	private ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		final MappingMetamodel domainModel = sessionFactory.getDomainModel();
 		final EntityPersister entityDescriptor = domainModel.getEntityDescriptor( getSqmDeleteOrUpdateStatement().getTarget().getEntityName() );
@@ -126,7 +129,7 @@ public class TableBasedUpdateHandler
 				getSqmDeleteOrUpdateStatement().getTarget().getExplicitAlias(),
 				domainParameterXref,
 				executionContext.getQueryOptions(),
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
 				sessionFactory
 		);
@@ -193,7 +196,7 @@ public class TableBasedUpdateHandler
 		}
 
 		final FilterPredicate filterPredicate = FilterHelper.createFilterPredicate(
-				executionContext.getLoadQueryInfluencers(),
+				executionContext.getSession().getLoadQueryInfluencers(),
 				(Joinable) rootEntityDescriptor,
 				updatingTableGroup
 		);

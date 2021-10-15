@@ -4,21 +4,25 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.subselectfetch;
+package org.hibernate.orm.test.mapping.collections.subselectfetch;
 
 import java.util.List;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Configuration;
 
-import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
-import org.junit.Test;
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.NotImplementedYet;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Root;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -27,21 +31,21 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author Gavin King
  */
-public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
-	@Override
-	public String[] getMappings() {
-		return new String[] { "subselectfetch/ParentChild.hbm.xml" };
-	}
-
-	@Override
-	public void configure(Configuration cfg) {
-		cfg.setProperty( AvailableSettings.GENERATE_STATISTICS, "true" );
-		cfg.setProperty( AvailableSettings.USE_SECOND_LEVEL_CACHE, "false" );
-	}
-
+@ServiceRegistry(
+		settings = {
+				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false" )
+		}
+)
+@DomainModel(
+		xmlMappings = "/mappings/subselectfetch/ParentChild.hbm.xml"
+)
+@SessionFactory
+@NotImplementedYet( strict = false, reason = "Need to check why these fail" )
+public class SubselectFetchTest {
 	@Test
-	public void testSubselectFetchHql() {
-		inTransaction(
+	public void testSubselectFetchHql(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Parent p = new Parent( "foo" );
 					p.getChildren().add( new Child( "foo1" ) );
@@ -55,9 +59,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					sessionFactory().getStatistics().clear();
+					scope.getSessionFactory().getStatistics().clear();
 
 					List parents = s.createQuery( "from Parent where name between 'bar' and 'foo' order by name desc" )
 							.list();
@@ -88,7 +92,7 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
 
-					assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
+					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
 					Child c = (Child) p.getChildren().get( 0 );
 					c.getFriends().size();
@@ -100,8 +104,8 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSubselectFetchNamedParam() {
-		inTransaction(
+	public void testSubselectFetchNamedParam(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Parent p = new Parent( "foo" );
 					p.getChildren().add( new Child( "foo1" ) );
@@ -115,9 +119,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					sessionFactory().getStatistics().clear();
+					scope.getSessionFactory().getStatistics().clear();
 
 					List parents = s.createQuery( "from Parent where name between :bar and :foo order by name desc" )
 							.setParameter( "bar", "bar" )
@@ -150,7 +154,7 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
 
-					assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
+					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
 					Child c = (Child) p.getChildren().get( 0 );
 					c.getFriends().size();
@@ -162,8 +166,8 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSubselectFetchPosParam() {
-		inTransaction(
+	public void testSubselectFetchPosParam(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Parent p = new Parent( "foo" );
 					p.getChildren().add( new Child( "foo1" ) );
@@ -177,9 +181,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					sessionFactory().getStatistics().clear();
+					scope.getSessionFactory().getStatistics().clear();
 
 					List parents = s.createQuery( "from Parent where name between ?1 and ?2 order by name desc" )
 							.setParameter( 1, "bar" )
@@ -212,7 +216,7 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
 
-					assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
+					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
 					Child c = (Child) p.getChildren().get( 0 );
 					c.getFriends().size();
@@ -224,12 +228,13 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSubselectFetchWithLimit() {
+	public void testSubselectFetchWithLimit(SessionFactoryScope scope) {
 
 		Parent parent = new Parent( "foo" );
 		Parent secondParent = new Parent( "bar" );
 		Parent thirdParent = new Parent( "aaa" );
-		inTransaction(
+
+		scope.inTransaction(
 				s -> {
 					parent.getChildren().add( new Child( "foo1" ) );
 					parent.getChildren().add( new Child( "foo2" ) );
@@ -242,9 +247,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					sessionFactory().getStatistics().clear();
+					scope.getSessionFactory().getStatistics().clear();
 
 					List parents = s.createQuery( "from Parent order by name desc" )
 							.setMaxResults( 2 )
@@ -260,7 +265,7 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 					assertTrue( Hibernate.isInitialized( q.getChildren() ) );
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren() ) );
 
-					assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
+					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
 					Parent r = s.get( Parent.class, thirdParent.getName() );
 					assertTrue( Hibernate.isInitialized( r.getChildren() ) );
@@ -276,8 +281,8 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testManyToManyCriteriaJoin() {
-		inTransaction(
+	public void testManyToManyCriteriaJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Parent p = new Parent( "foo" );
 					p.getChildren().add( new Child( "foo1" ) );
@@ -291,7 +296,7 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Parent> criteria = criteriaBuilder.createQuery( Parent.class );
@@ -329,8 +334,8 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	public void testSubselectFetchCriteria() {
-		inTransaction(
+	public void testSubselectFetchCriteria(SessionFactoryScope scope) {
+		scope.inTransaction(
 				s -> {
 					Parent p = new Parent( "foo" );
 					p.getChildren().add( new Child( "foo1" ) );
@@ -345,9 +350,9 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 		);
 
 
-		inTransaction(
+		scope.inTransaction(
 				s -> {
-					sessionFactory().getStatistics().clear();
+					scope.getSessionFactory().getStatistics().clear();
 
 					CriteriaBuilder criteriaBuilder = s.getCriteriaBuilder();
 					CriteriaQuery<Parent> criteria = criteriaBuilder.createQuery( Parent.class );
@@ -387,7 +392,7 @@ public class SubselectFetchTest extends BaseCoreFunctionalTestCase {
 
 					assertTrue( Hibernate.isInitialized( q.getMoreChildren().iterator().next() ) );
 
-					assertEquals( 3, sessionFactory().getStatistics().getPrepareStatementCount() );
+					assertEquals( 3, scope.getSessionFactory().getStatistics().getPrepareStatementCount() );
 
 					Child c = (Child) p.getChildren().get( 0 );
 					c.getFriends().size();

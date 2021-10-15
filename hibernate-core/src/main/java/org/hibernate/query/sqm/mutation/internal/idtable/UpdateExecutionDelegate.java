@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressable;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
-import org.hibernate.query.spi.SqlOmittingQueryOptions;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -83,7 +83,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Predicate suppliedPredicate,
 			Map<SqmParameter, List<List<JdbcParameter>>> parameterResolutions,
 			Map<SqmParameter, MappingModelExpressable> paramTypeResolutions,
-			ExecutionContext executionContext) {
+			DomainQueryExecutionContext executionContext) {
 		this.sqmUpdate = sqmUpdate;
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
@@ -292,7 +292,7 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 						.getStatementPreparer()
 						.prepareStatement( sql ),
 				(integer, preparedStatement) -> {},
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+				executionContext
 		);
 	}
 }

@@ -12,11 +12,14 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.query.spi.DomainQueryExecutionContext;
+import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.SqlOmittingQueryOptions;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.mutation.internal.DeleteHandler;
 import org.hibernate.query.sqm.mutation.internal.MatchingIdSelectionHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -25,7 +28,6 @@ import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
-import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcDelete;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -44,7 +46,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 	private final SqmDeleteStatement sqmDeleteStatement;
 	private final DomainParameterXref domainParameterXref;
 
-	private final ExecutionContext executionContext;
+	private final DomainQueryExecutionContext executionContext;
 
 	private final SessionFactoryImplementor sessionFactory;
 	private final SqlAstTranslatorFactory sqlAstTranslatorFactory;
@@ -54,7 +56,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 			MatchingIdRestrictionProducer matchingIdsPredicateProducer,
 			SqmDeleteStatement sqmDeleteStatement,
 			DomainParameterXref domainParameterXref,
-			ExecutionContext context) {
+			DomainQueryExecutionContext context) {
 		this.sqmDeleteStatement = sqmDeleteStatement;
 
 		this.domainParameterXref = domainParameterXref;
@@ -68,7 +70,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 	}
 
 	@Override
-	public int execute(ExecutionContext executionContext) {
+	public int execute(DomainQueryExecutionContext executionContext) {
 		final List<Object> ids = MatchingIdSelectionHelper.selectMatchingIds(
 				sqmDeleteStatement,
 				domainParameterXref,
@@ -140,7 +142,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnsVisitationSupplier,
 			List<Object> ids,
 			JdbcParameterBindings jdbcParameterBindings,
-			ExecutionContext executionContext) {
+			DomainQueryExecutionContext executionContext) {
 		final TableReference targetTableReference = new TableReference(
 				targetTableExpression,
 				null,
@@ -148,12 +150,21 @@ public class InlineDeleteHandler implements DeleteHandler {
 				sessionFactory
 		);
 
+		final QueryOptions queryOptions = SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext.getQueryOptions() );
+
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = new SqmJdbcExecutionContextAdapter( executionContext ) {
+			@Override
+			public QueryOptions getQueryOptions() {
+				return queryOptions;
+			}
+		};
+
 		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
 				ids,
 				entityDescriptor,
 				targetTableReference,
 				tableKeyColumnsVisitationSupplier,
-				executionContext
+				executionContextAdapter
 		);
 
 		final DeleteStatement deleteStatement = new DeleteStatement( targetTableReference, matchingIdsPredicate );
@@ -166,7 +177,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 				jdbcParameterBindings,
 				this::prepareQueryStatement,
 				(integer, preparedStatement) -> {},
-				SqlOmittingQueryOptions.omitSqlQueryOptions( executionContext )
+				executionContextAdapter
 		);
 	}
 

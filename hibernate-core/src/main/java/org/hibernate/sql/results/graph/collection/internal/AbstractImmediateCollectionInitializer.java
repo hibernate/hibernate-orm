@@ -25,6 +25,8 @@ import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.internal.LoadingCollectionEntryImpl;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
+import static org.hibernate.sql.results.graph.collection.CollectionLoadingLogger.COLL_LOAD_LOGGER;
+
 /**
  * Base support for CollectionInitializer implementations that represent
  * an immediate initialization of some sort (join, select, batch, sub-select)
@@ -70,7 +72,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 		}
 
 		if ( CollectionLoadingLogger.TRACE_ENABLED ) {
-			CollectionLoadingLogger.INSTANCE.tracef(
+			COLL_LOAD_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance for collection : %s",
 					getSimpleConcreteImplName(),
 					LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() )
@@ -93,7 +95,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			collectionInstance = existingLoadingEntry.getCollectionInstance();
 
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
+				COLL_LOAD_LOGGER.debugf(
 						"(%s) Found existing loading collection entry [%s]; using loading collection instance - %s",
 						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
@@ -108,7 +110,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			else {
 				// the entity is already being loaded elsewhere
 				if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-					CollectionLoadingLogger.INSTANCE.debugf(
+					COLL_LOAD_LOGGER.debugf(
 							"(%s) Collection [%s] being loaded by another initializer [%s] - skipping processing",
 							getSimpleConcreteImplName(),
 							LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
@@ -130,7 +132,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 				if ( collectionInstance.wasInitialized() ) {
 					if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-						CollectionLoadingLogger.INSTANCE.debugf(
+						COLL_LOAD_LOGGER.debugf(
 								"(%s) Found existing collection instance [%s] in Session; skipping processing - [%s]",
 								getSimpleConcreteImplName(),
 								LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
@@ -184,7 +186,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 			);
 
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
+				COLL_LOAD_LOGGER.debugf(
 						"(%s) Created new collection wrapper [%s] : %s",
 						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),
@@ -203,7 +205,7 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 
 		if ( responsibility != null ) {
 			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
-				CollectionLoadingLogger.INSTANCE.debugf(
+				COLL_LOAD_LOGGER.debugf(
 						"(%s) Responsible for loading collection [%s] : %s",
 						getSimpleConcreteImplName(),
 						LoggingHelper.toLoggableString( getNavigablePath(), collectionKey.getKey() ),

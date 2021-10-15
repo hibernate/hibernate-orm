@@ -10,7 +10,7 @@
 	"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 
 <hibernate-mapping
-	package="org.hibernate.test.subselectfetch">
+	package="org.hibernate.orm.test.mapping.collections.subselectfetch">
 	
 	<class name="Child">
 		<id name="name"/>

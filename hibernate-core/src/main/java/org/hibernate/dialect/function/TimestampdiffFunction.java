@@ -99,7 +99,9 @@ public class TimestampdiffFunction
 				getName(),
 				this::render,
 				asList( sqlAstArguments ),
-				impliedResultType,
+				impliedResultType != null
+						? impliedResultType
+						: (AllowableFunctionReturnType<?>) field.getExpressionType().getJdbcMapping(),
 				field.getExpressionType()
 		);
 	}

@@ -4,7 +4,11 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.test.id.usertype.inet;
+package org.hibernate.orm.test.id.usertype.inet;
+
+import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,13 +20,14 @@ import jakarta.persistence.Table;
  */
 @Entity(name = "Event")
 @Table(name = "event")
-//@TypeDef(name = "ipv4", typeClass = InetType.class, defaultForType = Inet.class)
 public class Event {
 
 	@Id
 	private Long id;
 
-	@Column(name = "ip", columnDefinition = "inet")
+	@Column(name = "ip")
+	@JdbcTypeCode(SqlTypes.INET)
+	@JavaType(InetJavaTypeDescriptor.class)
 	private Inet ip;
 
 	public Long getId() {

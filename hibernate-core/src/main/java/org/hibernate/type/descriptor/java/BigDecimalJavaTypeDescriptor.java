@@ -94,11 +94,11 @@ public class BigDecimalJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
-		return getDefaultSqlPrecision(dialect) + 2;
+		return getDefaultSqlPrecision( dialect, jdbcType ) + 2;
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultDecimalPrecision();
 	}
 

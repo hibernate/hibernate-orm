@@ -70,7 +70,7 @@ import org.jboss.logging.Logger;
  */
 @SuppressWarnings("unchecked")
 public class EnumType<T extends Enum<T>>
-		implements EnhancedUserType, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
+		implements EnhancedUserType<T>, DynamicParameterizedType, LoggableUserType, TypeConfigurationAware, Serializable {
 	private static final Logger LOG = CoreLogging.logger( EnumType.class );
 
 	public static final String ENUM = "enumClass";
@@ -350,7 +350,7 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public Class<? extends Enum> returnedClass() {
+	public Class<T> returnedClass() {
 		return enumClass;
 	}
 
@@ -365,7 +365,7 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public T nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		verifyConfigured();
 		final Object relational = jdbcValueExtractor.extract( rs, position, session );
 		return enumValueConverter.toDomainValue( relational );
@@ -378,9 +378,9 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		verifyConfigured();
-		enumValueConverter.writeValue( st, (T) value, index, session );
+		enumValueConverter.writeValue( st, value, index, session );
 	}
 
 	@Override
@@ -419,22 +419,21 @@ public class EnumType<T extends Enum<T>>
 	}
 
 	@Override
-	public String objectToSQLString(Object value) {
+	public String toSqlLiteral(T value) {
 		verifyConfigured();
 		return enumValueConverter.toSqlLiteral( value );
 	}
 
 	@Override
-	public String toXMLString(Object value) {
+	public String toString(T value) {
 		verifyConfigured();
-		return enumValueConverter.getDomainJavaDescriptor().unwrap( (T) value, String.class, null );
+		return enumValueConverter.getDomainJavaDescriptor().unwrap( value, String.class, null );
 	}
 
 	@Override
-	@SuppressWarnings("RedundantCast")
-	public Object fromXMLString(CharSequence xmlValue) {
+	public T fromStringValue(CharSequence sequence) {
 		verifyConfigured();
-		return (T) enumValueConverter.getDomainJavaDescriptor().wrap( xmlValue, null );
+		return enumValueConverter.getDomainJavaDescriptor().wrap( sequence, null );
 	}
 
 	@Override

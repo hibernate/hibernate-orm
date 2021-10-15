@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -38,6 +39,11 @@ public class GeoDBGeometryType implements JdbcType {
 	@Override
 	public int getJdbcTypeCode() {
 		return Types.ARRAY;
+	}
+
+	@Override
+	public int getDefaultSqlTypeCode() {
+		return SqlTypes.GEOMETRY;
 	}
 
 	@Override

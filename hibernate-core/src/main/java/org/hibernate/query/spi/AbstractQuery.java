@@ -55,7 +55,6 @@ import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -954,7 +953,15 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	@Override
 	public <P> QueryImplementor<R> setParameter(Parameter<P> parameter, P value) {
 		if ( value instanceof TypedParameterValue ) {
-			setParameter( parameter, ( (TypedParameterValue) value ).getValue(), ( (TypedParameterValue) value ).getType() );
+			@SuppressWarnings("unchecked")
+			final TypedParameterValue<P> typedValue = (TypedParameterValue<P>) value;
+			final AllowableParameterType<P> type = typedValue.getType();
+			if ( type != null ) {
+				setParameter( parameter, typedValue.getValue(), type );
+			}
+			else {
+				setParameter( parameter, typedValue.getValue(), typedValue.getTypeReference() );
+			}
 		}
 		else {
 			locateBinding( parameter ).setBindValue( value, resolveJdbcParameterTypeIfNecessary() );
@@ -963,27 +970,37 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		return this;
 	}
 
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	private <P> void setParameter(Parameter<P> parameter, Object value, AllowableParameterType type) {
+	private <P> void setParameter(Parameter<P> parameter, P value, BasicTypeReference<P> type) {
+		setParameter( parameter, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
+	}
+
+	private <P> void setParameter(Parameter<P> parameter, P value, AllowableParameterType<P> type) {
 		if ( parameter instanceof QueryParameter ) {
-			setParameter( (QueryParameter) parameter, value, type );
+			setParameter( (QueryParameter<P>) parameter, value, type );
 		}
 		else if ( value == null ) {
 			locateBinding( parameter ).setBindValue( null, type );
 		}
 		else if ( value instanceof Collection ) {
-			locateBinding( parameter ).setBindValues( (Collection) value );
+			locateBinding( parameter ).setBindValues( (Collection<P>) value );
 		}
 		else {
-			locateBinding( parameter ).setBindValue( (P) value, type );
+			locateBinding( parameter ).setBindValue( value, type );
 		}
 	}
 
 	@Override
 	public QueryImplementor<R> setParameter(String name, Object value) {
 		if ( value instanceof TypedParameterValue ) {
-			final TypedParameterValue  typedValueWrapper = (TypedParameterValue) value;
-			return setParameter( name, typedValueWrapper.getValue(), typedValueWrapper.getType() );
+			@SuppressWarnings("unchecked")
+			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
+			final AllowableParameterType<Object> type = typedValue.getType();
+			if ( type != null ) {
+				return setParameter( name, typedValue.getValue(), type );
+			}
+			else {
+				return setParameter( name, typedValue.getValue(), typedValue.getTypeReference() );
+			}
 		}
 
 		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( name );
@@ -1004,18 +1021,25 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 
 	@Override
 	public QueryImplementor<R> setParameter(int position, Object value) {
-		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
-
 		if ( value instanceof TypedParameterValue ) {
-			final TypedParameterValue typedParameterValue = (TypedParameterValue) value;
-			setParameter( param, typedParameterValue.getValue(), typedParameterValue.getType() );
+			@SuppressWarnings("unchecked")
+			final TypedParameterValue<Object> typedValue = (TypedParameterValue<Object>) value;
+			final AllowableParameterType<Object> type = typedValue.getType();
+			if ( type != null ) {
+				return setParameter( position, typedValue.getValue(), type );
+			}
+			else {
+				return setParameter( position, typedValue.getValue(), typedValue.getTypeReference() );
+			}
 		}
+
+		final QueryParameterImplementor<?> param = getParameterMetadata().getQueryParameter( position );
 
 		if ( param.allowsMultiValuedBinding() ) {
 			final AllowableParameterType<?> hibernateType = param.getHibernateType();
 			if ( hibernateType == null || ! hibernateType.getExpressableJavaTypeDescriptor().getJavaTypeClass().isInstance( value ) ) {
 				if ( value instanceof Collection ) {
-					//noinspection rawtypes
+					//noinspection rawtypes,unchecked
 					setParameterList( param, (Collection) value );
 				}
 			}
@@ -1026,39 +1050,35 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType type) {
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P value, AllowableParameterType<P> type) {
 		locateBinding( parameter ).setBindValue( value,  type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameter(String name, Object value, AllowableParameterType type) {
-		locateBinding( name ).setBindValue( value, type );
+	public <P> QueryImplementor<R> setParameter(String name, P value, AllowableParameterType<P> type) {
+		this.<P>locateBinding( name ).setBindValue( value, type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor setParameter(int position, Object value, AllowableParameterType type) {
-		locateBinding( position ).setBindValue( value, type );
+	public <P> QueryImplementor<R> setParameter(int position, P value, AllowableParameterType<P> type) {
+		this.<P>locateBinding( position ).setBindValue( value, type );
 		return this;
 	}
 
 	@Override
-	public QueryImplementor<R> setParameter(String name, Object value, BasicTypeReference<?> type) {
+	public <P> QueryImplementor<R> setParameter(String name, P value, BasicTypeReference<P> type) {
 		return setParameter( name, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor setParameter(int position, Object value, BasicTypeReference<?> type) {
+	public <P> QueryImplementor<R> setParameter(int position, P value, BasicTypeReference<P> type) {
 		return setParameter( position, value, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
 	}
 
 	@Override
-	public <P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type) {
+	public <P> QueryImplementor<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type) {
 		return setParameter( parameter, val, session.getTypeConfiguration().getBasicTypeRegistry().resolve( type ) );
 	}
 
@@ -1087,30 +1107,26 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( {"rawtypes", "unchecked"} )
-	public QueryImplementor<R> setParameterList(String name, Collection values) {
+	public QueryImplementor<R> setParameterList(String name, Collection<?> values) {
 		locateBinding( name ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(int position, Collection values) {
+	public QueryImplementor<R> setParameterList(int position, Collection<?> values) {
 		locateBinding( position ).setBindValues( values );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(String name, Collection values, AllowableParameterType type) {
-		locateBinding( name ).setBindValues( values, type );
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type) {
+		this.<P>locateBinding( name ).setBindValues( values, type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(int position, Collection values, AllowableParameterType type) {
-		locateBinding( position ).setBindValues( values, type );
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type) {
+		this.<P>locateBinding( position ).setBindValues( values, type );
 		return this;
 	}
 
@@ -1127,23 +1143,20 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType type) {
-		locateBinding( name ).setBindValues( Arrays.asList( values ), type );
+	public QueryImplementor<R> setParameterList(String name, Object[] values, AllowableParameterType<?> type) {
+		locateBinding( name ).setBindValues( Arrays.asList( values ), (AllowableParameterType<Object>) type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType type) {
-		locateBinding( position ).setBindValues( Arrays.asList( values ), type );
+	public QueryImplementor<R> setParameterList(int position, Object[] values, AllowableParameterType<?> type) {
+		locateBinding( position ).setBindValues( Arrays.asList( values ), (AllowableParameterType<Object>) type );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(String name, Collection values, Class javaType) {
-		final JavaType javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( javaType );
@@ -1151,18 +1164,18 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( name, values );
 		}
 		else {
-			final AllowableParameterType paramType;
-			final BasicType basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType managedDomainType = getSession().getFactory()
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
 						.managedType( javaType );
 				if ( managedDomainType != null ) {
-					paramType = (AllowableParameterType) managedDomainType;
+					paramType = managedDomainType;
 				}
 				else {
 					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
@@ -1176,9 +1189,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
-	public QueryImplementor<R> setParameterList(int position, Collection values, Class javaType) {
-		final JavaType javaDescriptor = getSession().getFactory()
+	public <P> QueryImplementor<R> setParameterList(int position, Collection<? extends P> values, Class<P> javaType) {
+		final JavaType<P> javaDescriptor = getSession().getFactory()
 				.getTypeConfiguration()
 				.getJavaTypeDescriptorRegistry()
 				.getDescriptor( javaType );
@@ -1186,18 +1198,18 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 			setParameterList( position, values );
 		}
 		else {
-			final AllowableParameterType paramType;
-			final BasicType basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
+			final AllowableParameterType<P> paramType;
+			final BasicType<P> basicType = getSession().getFactory().getTypeConfiguration().standardBasicTypeForJavaType( javaType );
 			if ( basicType != null ) {
 				paramType = basicType;
 			}
 			else {
-				final ManagedDomainType managedDomainType = getSession().getFactory()
+				final ManagedDomainType<P> managedDomainType = getSession().getFactory()
 						.getRuntimeMetamodels()
 						.getJpaMetamodel()
 						.managedType( javaType );
 				if ( managedDomainType != null ) {
-					paramType = (AllowableParameterType) managedDomainType;
+					paramType = managedDomainType;
 				}
 				else {
 					throw new HibernateException( "Unable to determine AllowableParameterType : " + javaType.getName() );
@@ -1211,16 +1223,14 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameter(Parameter<Calendar> param, Calendar value, TemporalType temporalType) {
-		locateBinding( (QueryParameter) param ).setBindValue( value, temporalType );
+		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public QueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType) {
-		locateBinding( (QueryParameter) param ).setBindValue( value, temporalType );
+		locateBinding( param ).setBindValue( value, temporalType );
 		return this;
 	}
 
@@ -1249,23 +1259,23 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@Override
-	@SuppressWarnings( {"unchecked", "rawtypes"} )
 	public <T> T getParameterValue(Parameter<T> param) {
 		QueryLogging.QUERY_LOGGER.tracef( "#getParameterValue(%s)", param );
 
 		getSession().checkOpen( false );
 
-		final QueryParameterImplementor qp = getParameterMetadata().resolve( param );
+		final QueryParameterImplementor<T> qp = getParameterMetadata().resolve( param );
 		if ( qp == null ) {
 			throw new IllegalArgumentException( "The parameter [" + param + "] is not part of this Query" );
 		}
 
-		final QueryParameterBinding binding = getQueryParameterBindings().getBinding( qp );
+		final QueryParameterBinding<T> binding = getQueryParameterBindings().getBinding( qp );
 		if ( binding == null || !binding.isBound() ) {
 			throw new IllegalStateException( "Parameter value not yet bound : " + param.toString() );
 		}
 
 		if ( binding.isMultiValued() ) {
+			//noinspection unchecked
 			return (T) binding.getBindValues();
 		}
 		else {
@@ -1368,7 +1378,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 					setParameterList( paramName, (Object[]) object );
 				}
 				else {
-					AllowableParameterType<?> type = determineType( paramName, retType );
+					AllowableParameterType<Object> type = determineType( paramName, retType );
 					setParameter( paramName, object, type );
 				}
 			}
@@ -1380,7 +1390,7 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 	}
 
 	@SuppressWarnings("WeakerAccess")
-	protected AllowableParameterType<?> determineType(String namedParam, Class<?> retType) {
+	protected AllowableParameterType<Object> determineType(String namedParam, Class<?> retType) {
 		AllowableParameterType<?> type = locateBinding( namedParam ).getBindType();
 		if ( type == null ) {
 			type = getParameterMetadata().getQueryParameter( namedParam ).getHibernateType();
@@ -1388,7 +1398,8 @@ public abstract class AbstractQuery<R> implements QueryImplementor<R> {
 		if ( type == null && retType != null ) {
 			type = getSession().getFactory().resolveParameterBindType( retType );
 		}
-		return type;
+		//noinspection unchecked
+		return (AllowableParameterType<Object>) type;
 	}
 
 	@Override

@@ -38,5 +38,5 @@ public interface ParameterMetadataImplementor extends ParameterMetadata {
 	QueryParameterImplementor<?> getQueryParameter(int positionLabel);
 
 	@Override
-	QueryParameterImplementor<?> resolve(Parameter param);
+	<P> QueryParameterImplementor<P> resolve(Parameter<P> param);
 }

@@ -288,7 +288,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameter(String name, Object val, AllowableParameterType type);
+	<P> Query<R> setParameter(String name, P val, AllowableParameterType<P> type);
 
 	/**
 	 * Bind a value to a JDBC-style query parameter.
@@ -300,7 +300,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameter(int position, Object val, AllowableParameterType type);
+	<P> Query<R> setParameter(int position, P val, AllowableParameterType<P> type);
 
 	/**
 	 * Bind a named query parameter using the supplied Type
@@ -311,7 +311,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameter(String name, Object val, BasicTypeReference<?> type);
+	<P> Query<R> setParameter(String name, P val, BasicTypeReference<P> type);
 
 	/**
 	 * Bind a value to a JDBC-style query parameter.
@@ -323,7 +323,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameter(int position, Object val, BasicTypeReference<?> type);
+	<P> Query<R> setParameter(int position, P val, BasicTypeReference<P> type);
 
 	/**
 	 * Bind a named query parameter as some form of date/time using
@@ -371,7 +371,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, AllowableParameterType<P> type);
 
 	/**
 	 * Bind a query parameter using the supplied Type
@@ -382,7 +382,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<?> type);
+	<P> Query<R> setParameter(QueryParameter<P> parameter, P val, BasicTypeReference<P> type);
 
 	Query<R> setParameter(Parameter<Instant> param, Instant value, TemporalType temporalType);
 
@@ -537,7 +537,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Collection values);
+	Query<R> setParameterList(String name, Collection<?> values);
 
 	/**
 	 * Bind multiple values to a positional query parameter. The Hibernate type of the parameter is
@@ -550,7 +550,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Collection values);
+	Query<R> setParameterList(int position, Collection<?> values);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is
@@ -563,7 +563,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Collection values, Class type);
+	<P> Query<R> setParameterList(String name, Collection<? extends P> values, Class<P> type);
 
 	/**
 	 * Bind multiple values to a positional query parameter. The Hibernate type of the parameter is
@@ -576,7 +576,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Collection values, Class type);
+	<P> Query<R> setParameterList(int position, Collection<? extends P> values, Class<P> type);
 
 //	/**
 //	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -622,7 +622,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Collection values, AllowableParameterType type);
+	<P> Query<R> setParameterList(String name, Collection<? extends P> values, AllowableParameterType<P> type);
 
 	/**
 	 * Bind multiple values to a positional query parameter. This is useful for binding
@@ -634,7 +634,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Collection values, AllowableParameterType type);
+	<P> Query<R> setParameterList(int position, Collection<? extends P> values, AllowableParameterType<P> type);
 
 //	/**
 //	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -680,7 +680,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(String name, Object[] values, AllowableParameterType type);
+	Query<R> setParameterList(String name, Object[] values, AllowableParameterType<?> type);
 
 	/**
 	 * Bind multiple values to a named query parameter. This is useful for binding
@@ -692,7 +692,7 @@ public interface Query<R> extends TypedQuery<R>, CommonQueryContract {
 	 *
 	 * @return {@code this}, for method chaining
 	 */
-	Query<R> setParameterList(int position, Object[] values, AllowableParameterType type);
+	Query<R> setParameterList(int position, Object[] values, AllowableParameterType<?> type);
 
 	/**
 	 * Bind multiple values to a named query parameter. The Hibernate type of the parameter is

@@ -11,7 +11,9 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.sequence.NoSequenceSupport;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.ScrollMode;
 import org.hibernate.boot.model.TypeContributions;
@@ -75,6 +77,7 @@ import org.hibernate.tool.schema.internal.*;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -91,6 +94,7 @@ import jakarta.persistence.TemporalType;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.sql.*;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -933,10 +937,11 @@ public abstract class Dialect implements ConversionContext {
 	 * {@code timestampadd()} function call. The resulting
 	 * pattern must contain ?1, ?2, and ?3 placeholders
 	 * for the arguments.
-	 *  @param unit the first argument
-	 * @param temporalType true if the third argument is a
+	 * @param unit The unit to add to the temporal
+	 * @param temporalType The type of the temporal
+	 * @param intervalType The type of interval to add or null if it's not a native interval
 	 */
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		throw new NotYetImplementedFor6Exception();
 	}
 
@@ -1033,7 +1038,7 @@ public abstract class Dialect implements ConversionContext {
 	}
 
 	public String getRawTypeName(JdbcType jdbcType) throws HibernateException {
-		return getRawTypeName( jdbcType.getJdbcTypeCode() );
+		return getRawTypeName( jdbcType.getDefaultSqlTypeCode() );
 	}
 
 	public String getTypeName(JdbcType jdbcType) throws HibernateException {
@@ -1102,7 +1107,7 @@ public abstract class Dialect implements ConversionContext {
 	 *
 	 */
 	public String getTypeName(JdbcType jdbcType, Size size) {
-		return getTypeName( jdbcType.getJdbcTypeCode(), size );
+		return getTypeName( jdbcType.getDefaultSqlTypeCode(), size );
 	}
 
 	/**
@@ -1113,12 +1118,15 @@ public abstract class Dialect implements ConversionContext {
 	 * @return The database type name
 	 */
 	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
+		final JdbcMapping jdbcMapping = type.getJdbcMapping();
+		final JdbcType jdbcType = jdbcMapping.getJdbcTypeDescriptor();
+		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
 		Size size;
 		if ( length == null && precision == null ) {
 			//use defaults
 			size = getSizeStrategy().resolveSize(
-					type.getJdbcMapping().getJdbcTypeDescriptor(),
-					type.getJdbcMapping().getJavaTypeDescriptor(),
+					jdbcType,
+					javaType,
 					precision,
 					scale,
 					length
@@ -1128,7 +1136,7 @@ public abstract class Dialect implements ConversionContext {
 			//use the given length/precision/scale
 			if ( precision != null && scale == null ) {
 				//needed for cast(x as BigInteger(p))
-				scale = type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlScale();
+				scale = javaType.getDefaultSqlScale( Dialect.this, jdbcType );
 			}
 			size = new Size()
 					.setLength( length )
@@ -1136,7 +1144,7 @@ public abstract class Dialect implements ConversionContext {
 					.setScale( scale );
 		}
 
-		return getTypeName( type.getJdbcMapping().getJdbcTypeDescriptor(), size );
+		return getTypeName( jdbcType, size );
 	}
 
 	/**
@@ -3442,7 +3450,7 @@ public abstract class Dialect implements ConversionContext {
 				Integer scale,
 				Long length) {
 			final Size size = new Size();
-			int jdbcTypeCode = jdbcType.getJdbcTypeCode();
+			int jdbcTypeCode = jdbcType.getDefaultSqlTypeCode();
 
 			switch (jdbcTypeCode) {
 				case Types.BIT:
@@ -3493,18 +3501,21 @@ public abstract class Dialect implements ConversionContext {
 					}
 				case Types.TIMESTAMP:
 				case Types.TIMESTAMP_WITH_TIMEZONE:
-					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );
+					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					break;
 				case Types.NUMERIC:
 				case Types.DECIMAL:
-					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this ) );
-					size.setScale( javaType.getDefaultSqlScale() );
+					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 					break;
 				case Types.CLOB:
 				case Types.BLOB:
 					size.setLength( javaType.getDefaultSqlLength( Dialect.this, jdbcType ) );
 					break;
-
+				case SqlTypes.INTERVAL_SECOND:
+					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
+					break;
 			}
 
 			if ( precision != null ) {
@@ -3716,6 +3727,14 @@ public abstract class Dialect implements ConversionContext {
 			default:
 				throw new IllegalArgumentException();
 		}
+	}
+
+	public void appendIntervalLiteral(SqlAppender appender, Duration literal) {
+		appender.appendSql( "interval '" );
+		appender.appendSql( literal.getSeconds() );
+		appender.appendSql( '.' );
+		appender.appendSql( literal.getNano() );
+		appender.appendSql( '\'' );
 	}
 
 	/**

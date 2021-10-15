@@ -87,21 +87,21 @@ public interface QueryParameterBinding<T> {
 	 *  @param values The bind values
 	 *
 	 */
-	void setBindValues(Collection<T> values);
+	void setBindValues(Collection<? extends T> values);
 
 	/**
 	 * Sets the parameter binding values using the explicit Type in regards to the individual values.
 	 * @param values The bind values
 	 * @param clarifiedType The explicit Type to use
 	 */
-	void setBindValues(Collection<T> values, AllowableParameterType<T> clarifiedType);
+	void setBindValues(Collection<? extends T> values, AllowableParameterType<T> clarifiedType);
 
 	/**Sets the parameter binding value using the explicit TemporalType in regards to the individual values.
 	 *
 	 *  @param values The bind values
 	 * @param temporalTypePrecision The temporal type to use
 	 */
-	void setBindValues(Collection<T> values, TemporalType temporalTypePrecision, TypeConfiguration typeConfiguration);
+	void setBindValues(Collection<? extends T> values, TemporalType temporalTypePrecision, TypeConfiguration typeConfiguration);
 
 	/**
 	 * Get the values currently bound.

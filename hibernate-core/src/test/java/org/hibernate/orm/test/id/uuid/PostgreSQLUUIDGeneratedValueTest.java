@@ -14,7 +14,7 @@ import jakarta.persistence.Id;
 
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.NativeQuery;
-import org.hibernate.type.PostgresUUIDType;
+import org.hibernate.type.StandardBasicTypes;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
@@ -71,7 +71,7 @@ public class PostgreSQLUUIDGeneratedValueTest {
 							"where b.id = :id")
 					.setParameter( "id", id )
 					.unwrap( NativeQuery.class )
-					.addScalar( "id", PostgresUUIDType.INSTANCE )
+					.addScalar( "id", StandardBasicTypes.UUID )
 					.getResultList();
 			assertThat( books, hasSize( 1 ) );
 		} );

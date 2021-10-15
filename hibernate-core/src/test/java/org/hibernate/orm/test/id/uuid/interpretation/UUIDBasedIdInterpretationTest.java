@@ -17,9 +17,9 @@ import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.PostgresUUIDType;
 import org.hibernate.type.descriptor.java.UUIDJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -45,7 +45,7 @@ public class UUIDBasedIdInterpretationTest {
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( H2Dialect.class )
 	public void testH2(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, VarbinaryJdbcType.class );
+		checkUuidTypeUsed( scope, UUIDJdbcType.class );
 	}
 
 	@Test
@@ -59,7 +59,7 @@ public class UUIDBasedIdInterpretationTest {
 	@JiraKey( "HHH-10564" )
 	@RequiresDialect( value = PostgreSQLDialect.class, version = 940 )
 	public void testPostgreSQL(DomainModelScope scope) {
-		checkUuidTypeUsed( scope, PostgresUUIDType.PostgresUUIDJdbcType.class );
+		checkUuidTypeUsed( scope, UUIDJdbcType.class );
 	}
 
 	@Test

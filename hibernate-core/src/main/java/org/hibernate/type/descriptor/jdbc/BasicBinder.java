@@ -50,7 +50,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
+								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getDefaultSqlTypeCode() )
 						)
 				);
 			}
@@ -62,7 +62,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								index,
-								JdbcTypeNameMapper.getTypeName( jdbcType.getJdbcTypeCode() ),
+								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() ),
 								getJavaTypeDescriptor().extractLoggableRepresentation( value )
 						)
 				);
@@ -79,7 +79,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								NULL_BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getJdbcTypeCode() )
+								JdbcTypeNameMapper.getTypeName( getJdbcTypeDescriptor().getDefaultSqlTypeCode() )
 						)
 				);
 			}
@@ -91,7 +91,7 @@ public abstract class BasicBinder<J> implements ValueBinder<J>, Serializable {
 						String.format(
 								BIND_MSG_TEMPLATE,
 								name,
-								JdbcTypeNameMapper.getTypeName( jdbcType.getJdbcTypeCode() ),
+								JdbcTypeNameMapper.getTypeName( jdbcType.getDefaultSqlTypeCode() ),
 								getJavaTypeDescriptor().extractLoggableRepresentation( value )
 						)
 				);

@@ -90,6 +90,7 @@ ext {
             jakarta_validator:      "org.hibernate.validator:hibernate-validator:${hibernateValidatorJakartaVersion}",
             jakarta_el:             'org.glassfish:jakarta.el:4.0.1',
             jakarta_inject:         'jakarta.inject:jakarta.inject-api:2.0.0',
+            jakarta_jsonb:          'jakarta.json.bind:jakarta.json.bind-api:2.0.0',
 
             // javax
             jpa:            "javax.persistence:javax.persistence-api:${project.jpaVersion}",
@@ -121,6 +122,7 @@ ext {
 
             // jaxb task
 
+            jackson:         'com.fasterxml.jackson.core:jackson-databind:2.13.0',
             geolatte:       "org.geolatte:geolatte-geom:${geolatteVersion}",
 
             // Animal Sniffer Ant Task and Java 1.6 API signature file

@@ -21,7 +21,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Steve Ebersole
  */
 public class UserTypeResolution implements BasicValue.Resolution {
-	private final CustomType userTypeAdapter;
+	private final CustomType<Object> userTypeAdapter;
 	private final MutabilityPlan mutabilityPlan;
 
 	/**
@@ -31,7 +31,7 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	private final Properties combinedTypeParameters;
 
 	public UserTypeResolution(
-			CustomType userTypeAdapter,
+			CustomType<Object> userTypeAdapter,
 			MutabilityPlan explicitMutabilityPlan,
 			Properties combinedTypeParameters) {
 		this.userTypeAdapter = userTypeAdapter;

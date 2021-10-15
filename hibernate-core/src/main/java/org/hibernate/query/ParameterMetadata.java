@@ -56,7 +56,7 @@ public interface ParameterMetadata {
 	 * According to the spec, only Parameter references obtained from the provider
 	 * are valid.
 	 */
-	QueryParameter<?> resolve(Parameter param);
+	<P> QueryParameter<P> resolve(Parameter<P> param);
 
 	default <T> AllowableParameterType<T> getInferredParameterType(QueryParameter<T> parameter) {
 		return null;

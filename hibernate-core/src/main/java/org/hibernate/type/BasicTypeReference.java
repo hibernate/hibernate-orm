@@ -6,6 +6,8 @@
  */
 package org.hibernate.type;
 
+import java.io.Serializable;
+
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 
 /**
@@ -13,7 +15,7 @@ import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
  *
  * @author Christian Beikov
  */
-public final class BasicTypeReference<T> {
+public final class BasicTypeReference<T> implements Serializable {
 	private final String name;
 	private final Class<? extends T> javaType;
 	private final int sqlTypeCode;

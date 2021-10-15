@@ -202,7 +202,7 @@ public class ZonedDateTimeJavaTypeDescriptor extends AbstractTemporalJavaTypeDes
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultTimestampPrecision();
 	}
 

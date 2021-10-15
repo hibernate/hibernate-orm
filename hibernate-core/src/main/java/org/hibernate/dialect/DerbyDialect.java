@@ -35,6 +35,7 @@ import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.query.CastType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.mutation.internal.idtable.AfterUseAction;
@@ -337,7 +338,7 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
 			case NATIVE:

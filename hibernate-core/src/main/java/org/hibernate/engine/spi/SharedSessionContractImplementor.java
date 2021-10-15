@@ -81,6 +81,11 @@ public interface SharedSessionContractImplementor
 	SessionFactoryImplementor getFactory();
 
 	@Override
+	default SessionFactoryImplementor getSessionFactory() {
+		return getFactory();
+	}
+
+	@Override
 	default TypeConfiguration getTypeConfiguration() {
 		return getFactory().getTypeConfiguration();
 	}

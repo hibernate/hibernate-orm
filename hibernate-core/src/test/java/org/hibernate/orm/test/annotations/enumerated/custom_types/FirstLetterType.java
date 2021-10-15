@@ -26,7 +26,7 @@ public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public FirstLetter nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		String persistValue = (String) rs.getObject( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -35,13 +35,13 @@ public class FirstLetterType extends org.hibernate.type.EnumType<FirstLetter> {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, FirstLetter value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value == null ) {
 			st.setNull( index, sqlTypes()[0] );
 		}
 		else {
-			String enumString = ( (Enum<?>) value ).name();
+			String enumString = value.name();
 			// Using setString here, rather than setObject.  A few JDBC drivers
 			// (Oracle, DB2, and SQLServer) were having trouble converting
 			// the char to VARCHAR.

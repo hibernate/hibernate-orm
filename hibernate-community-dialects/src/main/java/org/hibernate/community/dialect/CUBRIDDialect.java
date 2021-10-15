@@ -20,6 +20,7 @@ import org.hibernate.community.dialect.sequence.CUBRIDSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -378,7 +379,7 @@ public class CUBRIDDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
 				return "adddate(?3,interval (?2)/1e6 millisecond)";

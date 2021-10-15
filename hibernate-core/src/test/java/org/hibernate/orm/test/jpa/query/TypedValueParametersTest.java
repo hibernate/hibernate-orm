@@ -17,7 +17,7 @@ import java.util.List;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.jpa.TypedParameterValue;
+import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.CustomType;
 import org.hibernate.usertype.UserType;
 
@@ -67,7 +67,7 @@ public class TypedValueParametersTest {
 	public void testNative(EntityManagerFactoryScope scope) {
 		test(scope,
 			 q -> {
-				  final CustomType customType = new CustomType(
+				  final CustomType<List<String>> customType = new CustomType<>(
 						  TagUserType.INSTANCE,
 						  scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
 				  );
@@ -82,11 +82,11 @@ public class TypedValueParametersTest {
 	public void testJpa(EntityManagerFactoryScope scope) {
 		test(scope,
 			 q -> {
-				final CustomType customType = new CustomType(
+				final CustomType<List<String>> customType = new CustomType<>(
 						TagUserType.INSTANCE,
 						scope.getEntityManagerFactory().unwrap( SessionFactoryImplementor.class ).getTypeConfiguration()
 				);
-				q.setParameter("tags", new TypedParameterValue( customType, Arrays.asList("important","business")));
+				q.setParameter("tags", new TypedParameterValue<>( customType, Arrays.asList("important","business")));
 			}
 		);
 	}

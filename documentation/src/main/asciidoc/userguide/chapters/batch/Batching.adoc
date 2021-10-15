@@ -272,7 +272,7 @@ In other words, `INSERT` statements are inherently non-polymorphic.
 The SELECT statement can be any valid HQL select query, but the return types must match the types expected by the INSERT.
 Hibernate verifies the return types during query compilation, instead of expecting the database to check it.
 Problems might result from Hibernate types which are equivalent, rather than equal.
-One such example is a mismatch between a property defined as an `org.hibernate.type.DateType` and a property defined as an `org.hibernate.type.TimestampType`,
+One such example is a mismatch between a property defined as an `org.hibernate.type.StandardBasicTypes.DATE` and a property defined as an `org.hibernate.type.StandardBasicTypes.TIMESTAMP`,
 even though the database may not make a distinction, or may be capable of handling the conversion.
 
 If id property is not specified in the `properties_list`,

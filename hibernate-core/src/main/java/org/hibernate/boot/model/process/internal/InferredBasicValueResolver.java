@@ -25,6 +25,7 @@ import org.hibernate.type.AdjustableBasicType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.SerializableType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.EnumJavaTypeDescriptor;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
@@ -34,7 +35,6 @@ import org.hibernate.type.descriptor.java.TemporalJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeDescriptorIndicators;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
-import org.hibernate.type.descriptor.jdbc.TinyIntJdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -266,8 +266,8 @@ public class InferredBasicValueResolver {
 	}
 
 	@SuppressWarnings("rawtypes")
-	public static InferredBasicValueResolution fromEnum(
-			EnumJavaTypeDescriptor enumJavaDescriptor,
+	public static <E extends Enum<E>> InferredBasicValueResolution fromEnum(
+			EnumJavaTypeDescriptor<E> enumJavaDescriptor,
 			BasicJavaType explicitJavaType,
 			JdbcType explicitJdbcType,
 			JdbcTypeDescriptorIndicators stdIndicators,
@@ -304,14 +304,13 @@ public class InferredBasicValueResolver {
 						relationalJtd
 				);
 
-				//noinspection unchecked
-				final org.hibernate.type.EnumType legacyEnumType = new org.hibernate.type.EnumType(
+				final org.hibernate.type.EnumType<E> legacyEnumType = new org.hibernate.type.EnumType<>(
 						enumJavaDescriptor.getJavaTypeClass(),
 						valueConverter,
 						typeConfiguration
 				);
 
-				final CustomType legacyEnumTypeWrapper = new CustomType( legacyEnumType, typeConfiguration );
+				final CustomType<E> legacyEnumTypeWrapper = new CustomType<>( legacyEnumType, typeConfiguration );
 
 				final JdbcMapping jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( relationalJtd, jdbcType );
 
@@ -343,7 +342,9 @@ public class InferredBasicValueResolver {
 					relationalJtd = typeConfiguration.getJavaTypeDescriptorRegistry().getDescriptor( Integer.class );
 				}
 
-				final JdbcType jdbcType = explicitJdbcType != null ? explicitJdbcType : TinyIntJdbcType.INSTANCE;
+				final JdbcType jdbcType = explicitJdbcType != null
+						? explicitJdbcType
+						: typeConfiguration.getJdbcTypeDescriptorRegistry().getDescriptor( SqlTypes.TINYINT );
 
 				//noinspection unchecked
 				final OrdinalEnumValueConverter valueConverter = new OrdinalEnumValueConverter(
@@ -352,14 +353,13 @@ public class InferredBasicValueResolver {
 						relationalJtd
 				);
 
-				//noinspection unchecked
-				final org.hibernate.type.EnumType legacyEnumType = new org.hibernate.type.EnumType(
+				final org.hibernate.type.EnumType<E> legacyEnumType = new org.hibernate.type.EnumType<>(
 						enumJavaDescriptor.getJavaTypeClass(),
 						valueConverter,
 						typeConfiguration
 				);
 
-				final CustomType legacyEnumTypeWrapper = new CustomType( legacyEnumType, typeConfiguration );
+				final CustomType<E> legacyEnumTypeWrapper = new CustomType<>( legacyEnumType, typeConfiguration );
 
 				final JdbcMapping jdbcMapping = typeConfiguration.getBasicTypeRegistry().resolve( relationalJtd, jdbcType );
 

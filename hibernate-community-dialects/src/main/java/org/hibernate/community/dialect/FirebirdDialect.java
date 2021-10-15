@@ -11,6 +11,7 @@ import org.hibernate.NotYetImplementedFor6Exception;
 import org.hibernate.dialect.BooleanDecoder;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -426,7 +427,7 @@ public class FirebirdDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch ( unit ) {
 			case NATIVE:
 				return "dateadd((?2) millisecond to ?3)";

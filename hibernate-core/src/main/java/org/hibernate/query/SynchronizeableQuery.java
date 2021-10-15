@@ -61,5 +61,5 @@ public interface SynchronizeableQuery {
 	 *
 	 * @throws MappingException Indicates the given class could not be resolved as an entity
 	 */
-	SynchronizeableQuery addSynchronizedEntityClass(Class entityClass) throws MappingException;
+	SynchronizeableQuery addSynchronizedEntityClass(Class<?> entityClass) throws MappingException;
 }

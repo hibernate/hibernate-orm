@@ -252,7 +252,7 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public void register(UserType type, String... keys) {
-		register( new CustomType( type, keys, typeConfiguration ) );
+		register( new CustomType<Object>( type, keys, typeConfiguration ) );
 	}
 
 	public void unregister(String... keys) {

@@ -39,7 +39,7 @@ public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 			Type bindingPropertyType = metadata.getEntityBinding( BookWithOrmEnum.class.getName() )
 					.getProperty( "bindingStringEnum" )
 					.getType();
-			CustomType customType = ExtraAssertions.assertTyping( CustomType.class, bindingPropertyType );
+			CustomType<Object> customType = ExtraAssertions.assertTyping( CustomType.class, bindingPropertyType );
 			EnumType enumType = ExtraAssertions.assertTyping( EnumType.class, customType.getUserType() );
 			assertFalse( enumType.isOrdinal() );
 		}

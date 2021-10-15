@@ -7,12 +7,14 @@
 package org.hibernate.type.descriptor;
 
 import java.lang.reflect.Field;
+import java.sql.Types;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.HibernateException;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
@@ -24,11 +26,12 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
 public final class JdbcTypeNameMapper {
 	private static final CoreMessageLogger LOG = messageLogger( JdbcTypeNameMapper.class );
 
-	private static Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap();
+	private static final Map<Integer,String> JDBC_TYPE_MAP = buildJdbcTypeMap( Types.class );
+	private static final Map<Integer,String> SQL_TYPE_MAP = buildJdbcTypeMap( SqlTypes.class );
 
-	private static Map<Integer, String> buildJdbcTypeMap() {
+	private static Map<Integer, String> buildJdbcTypeMap(Class<?> typesClass) {
 		HashMap<Integer, String> map = new HashMap<>();
-		Field[] fields = java.sql.Types.class.getFields();
+		Field[] fields = typesClass.getFields();
 		if ( fields == null ) {
 			throw new HibernateException( "Unexpected problem extracting JDBC type mapping codes from java.sql.Types" );
 		}
@@ -81,7 +84,7 @@ public final class JdbcTypeNameMapper {
 	 * @return The type name.
 	 */
 	public static String getTypeName(Integer typeCode) {
-		String name = JDBC_TYPE_MAP.get( typeCode );
+		String name = SQL_TYPE_MAP.get( typeCode );
 		if ( name == null ) {
 			return "UNKNOWN(" + typeCode + ")";
 		}

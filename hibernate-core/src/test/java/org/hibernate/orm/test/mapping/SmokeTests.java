@@ -30,6 +30,7 @@ import org.hibernate.metamodel.model.convert.internal.OrdinalEnumValueConverter;
 import org.hibernate.metamodel.model.convert.spi.BasicValueConverter;
 import org.hibernate.metamodel.model.convert.spi.JpaAttributeConverter;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -62,6 +63,9 @@ public class SmokeTests {
 		final EntityPersister entityDescriptor = scope.getSessionFactory()
 				.getDomainModel()
 				.getEntityDescriptor( SimpleEntity.class );
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
+				.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat(
@@ -90,7 +94,10 @@ public class SmokeTests {
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( genderAttrMapping.getJavaTypeDescriptor() ) );
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Integer.class ) );
 
-			assertThat( genderAttrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.TINYINT ) );
+			assertThat(
+					genderAttrMapping.getJdbcMapping().getJdbcTypeDescriptor(),
+					is( jdbcTypeRegistry.getDescriptor( Types.TINYINT ) )
+			);
 		}
 
 		{
@@ -107,7 +114,10 @@ public class SmokeTests {
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( String.class ) );
 
-			assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.VARCHAR ) );
+			assertThat(
+					attrMapping.getJdbcMapping().getJdbcTypeDescriptor(),
+					is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) )
+			);
 		}
 
 		{
@@ -124,7 +134,10 @@ public class SmokeTests {
 			assertThat( valueConverter.getDomainJavaDescriptor(), is( attrMapping.getJavaTypeDescriptor() ) );
 			assertThat( valueConverter.getRelationalJavaDescriptor().getJavaTypeClass(), equalTo( Character.class ) );
 
-			assertThat( attrMapping.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode(), is( Types.CHAR ) );
+			assertThat(
+					attrMapping.getJdbcMapping().getJdbcTypeDescriptor(),
+					is( jdbcTypeRegistry.getDescriptor( Types.CHAR ) )
+			);
 		}
 
 		{

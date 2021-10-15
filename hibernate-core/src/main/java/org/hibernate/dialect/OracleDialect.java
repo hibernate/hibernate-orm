@@ -37,6 +37,7 @@ import org.hibernate.procedure.internal.StandardCallableStatementSupport;
 import org.hibernate.procedure.spi.CallableStatementSupport;
 import org.hibernate.query.CastType;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -58,6 +59,7 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOr
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -121,6 +123,7 @@ public class OracleDialect extends Dialect {
 		registerNumericTypeMappings();
 		registerDateTimeTypeMappings();
 		registerBinaryTypeMappings();
+		registerExtendedTypeMappings();
 		registerReverseHibernateTypeMappings();
 		registerDefaultProperties();
 
@@ -371,7 +374,7 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		StringBuilder pattern = new StringBuilder();
 		pattern.append("(?3+");
 		switch ( unit ) {
@@ -577,6 +580,12 @@ public class OracleDialect extends Dialect {
 
 		registerColumnType( Types.VARBINARY, 2000, "raw($l)" );
 		registerColumnType( Types.VARBINARY, "blob" );
+	}
+
+	protected void registerExtendedTypeMappings() {
+		if ( getVersion() >= 1000 ) {
+			registerColumnType( SqlTypes.GEOMETRY, "MDSYS.SDO_GEOMETRY" );
+		}
 	}
 
 	protected void registerReverseHibernateTypeMappings() {

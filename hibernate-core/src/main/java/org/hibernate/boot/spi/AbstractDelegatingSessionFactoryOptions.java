@@ -38,6 +38,7 @@ import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
+import org.hibernate.type.FormatMapper;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryOptions, using delegation
@@ -473,5 +474,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return delegate.getDefaultTimeZoneStorageStrategy();
+	}
+
+	@Override
+	public FormatMapper getJsonFormatMapper() {
+		return delegate.getJsonFormatMapper();
 	}
 }

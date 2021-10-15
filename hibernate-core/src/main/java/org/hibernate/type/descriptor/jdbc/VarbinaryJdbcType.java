@@ -73,7 +73,7 @@ public class VarbinaryJdbcType implements AdjustableJdbcType {
 		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = indicators.getTypeConfiguration().getJdbcTypeDescriptorRegistry();
 		return indicators.isLob()
 				? jdbcTypeRegistry.getDescriptor( Types.BLOB )
-				: jdbcTypeRegistry.getDescriptor( Types.VARBINARY );
+				: this;
 	}
 
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {

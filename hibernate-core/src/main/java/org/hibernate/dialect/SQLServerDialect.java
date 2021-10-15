@@ -34,6 +34,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.CastType;
 import org.hibernate.query.FetchClauseType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.service.ServiceRegistry;
@@ -48,6 +49,7 @@ import org.hibernate.tool.schema.internal.StandardSequenceExporter;
 import org.hibernate.tool.schema.spi.Exporter;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaTypeDescriptor;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
@@ -102,6 +104,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			registerColumnType( Types.TIME, "time" );
 			registerColumnType( Types.TIMESTAMP, "datetime2($p)" );
 			registerColumnType( Types.TIMESTAMP_WITH_TIMEZONE, "datetimeoffset($p)" );
+			registerColumnType( SqlTypes.GEOMETRY, "geometry" );
 		}
 
 		if ( getVersion() >= 11 ) {
@@ -607,7 +610,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		// dateadd() supports only especially small magnitudes
 		// since it casts its argument to int (and unfortunately
 		// there's no dateadd_big()) so here we need to use two

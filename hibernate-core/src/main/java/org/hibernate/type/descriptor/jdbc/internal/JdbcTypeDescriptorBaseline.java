@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.jdbc.internal;
 
 import java.sql.Types;
 
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.BigIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.BinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -50,6 +51,7 @@ public class JdbcTypeDescriptorBaseline {
 		target.addDescriptor( BigIntJdbcType.INSTANCE );
 		target.addDescriptor( DecimalJdbcType.INSTANCE );
 		target.addDescriptor( DoubleJdbcType.INSTANCE );
+		target.addDescriptor( SqlTypes.DOUBLE, DoubleJdbcType.INSTANCE );
 		target.addDescriptor( FloatJdbcType.INSTANCE );
 		target.addDescriptor( IntegerJdbcType.INSTANCE );
 		target.addDescriptor( NumericJdbcType.INSTANCE );

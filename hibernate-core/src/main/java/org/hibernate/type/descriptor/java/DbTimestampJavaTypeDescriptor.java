@@ -175,13 +175,13 @@ public class DbTimestampJavaTypeDescriptor<T> implements VersionJavaType<T>, Tem
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
-		return delegate.getDefaultSqlPrecision( dialect );
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		return delegate.getDefaultSqlPrecision( dialect, jdbcType );
 	}
 
 	@Override
-	public int getDefaultSqlScale() {
-		return delegate.getDefaultSqlScale();
+	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
+		return delegate.getDefaultSqlScale( dialect, jdbcType );
 	}
 
 	@Override

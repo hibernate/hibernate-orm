@@ -31,6 +31,11 @@ public class SessionFactoryBasedWrapperOptions implements WrapperOptions {
 	}
 
 	@Override
+	public SessionFactoryImplementor getSessionFactory() {
+		return factory;
+	}
+
+	@Override
 	public boolean useStreamForLobBinding() {
 		return factory.getFastSessionServices().useStreamForLobBinding();
 	}

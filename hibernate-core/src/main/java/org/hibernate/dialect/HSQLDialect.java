@@ -13,6 +13,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -279,7 +280,7 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		StringBuilder pattern = new StringBuilder();
 		boolean castTo = temporalType != TemporalType.TIMESTAMP && !unit.isDateUnit();
 		switch (unit) {

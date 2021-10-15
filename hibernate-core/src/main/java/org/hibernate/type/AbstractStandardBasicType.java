@@ -39,7 +39,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
  * @author Brett Meyer
  */
 public abstract class AbstractStandardBasicType<T>
-		implements BasicType<T>, StringRepresentableType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder {
+		implements BasicType<T>, ProcedureParameterExtractionAware<T>, ProcedureParameterNamedBinder<T> {
 
 	private static final Size DEFAULT_SIZE = new Size( 19, 2, 255, Size.LobMultiplier.NONE ); // to match legacy behavior
 	private final Size dictatedSize = new Size();
@@ -90,16 +90,6 @@ public abstract class AbstractStandardBasicType<T>
 
 	public T fromString(CharSequence string) {
 		return javaTypeDescriptor.fromString( string );
-	}
-
-	@Override
-	public String toString(T value) {
-		return javaTypeDescriptor.toString( value );
-	}
-
-	@Override
-	public T fromStringValue(CharSequence charSequence) throws HibernateException {
-		return javaTypeDescriptor.fromString( charSequence );
 	}
 
 	protected MutabilityPlan<T> getMutabilityPlan() {
@@ -295,16 +285,16 @@ public abstract class AbstractStandardBasicType<T>
 			Object value,
 			int index,
 			final SharedSessionContractImplementor session) throws SQLException {
-		nullSafeSet( st, value, index, (WrapperOptions) session );
+		//noinspection unchecked
+		nullSafeSet( st, (T) value, index, (WrapperOptions) session );
 	}
 
-	@SuppressWarnings({ "unchecked" })
-	protected void nullSafeSet(PreparedStatement st, Object value, int index, WrapperOptions options) throws SQLException {
-		jdbcType.getBinder( javaTypeDescriptor ).bind( st, ( T ) value, index, options );
+	protected void nullSafeSet(PreparedStatement st, T value, int index, WrapperOptions options) throws SQLException {
+		jdbcType.getBinder( javaTypeDescriptor ).bind( st, value, index, options );
 	}
 
 	public void set(PreparedStatement st, T value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
-		nullSafeSet( st, value, index, session );
+		nullSafeSet( st, value, index, (WrapperOptions) session );
 	}
 
 	@Override
@@ -430,7 +420,7 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	@Override
-	public void nullSafeSet(CallableStatement st, Object value, String name, SharedSessionContractImplementor session) throws SQLException {
+	public void nullSafeSet(CallableStatement st, T value, String name, SharedSessionContractImplementor session) throws SQLException {
 		nullSafeSet( st, value, name, (WrapperOptions) session );
 	}
 

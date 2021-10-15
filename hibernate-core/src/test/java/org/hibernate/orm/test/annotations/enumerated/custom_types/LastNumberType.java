@@ -13,11 +13,12 @@ import java.sql.Types;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.orm.test.annotations.enumerated.enums.LastNumber;
 
 /**
  * @author Janario Oliveira
  */
-public class LastNumberType extends org.hibernate.type.EnumType {
+public class LastNumberType extends org.hibernate.type.EnumType<LastNumber> {
 
 	@Override
 	public int[] sqlTypes() {
@@ -25,7 +26,7 @@ public class LastNumberType extends org.hibernate.type.EnumType {
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public LastNumber nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		String persistValue = (String) rs.getObject( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -34,14 +35,13 @@ public class LastNumberType extends org.hibernate.type.EnumType {
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session)
+	public void nullSafeSet(PreparedStatement st, LastNumber value, int index, SharedSessionContractImplementor session)
 			throws HibernateException, SQLException {
 		if ( value == null ) {
 			st.setNull( index, sqlTypes()[0] );
 		}
 		else {
-
-			String enumString = ( (Enum<?>) value ).name();
+			String enumString = value.name();
 			// Using setString here, rather than setObject.  A few JDBC drivers
 			// (Oracle, DB2, and SQLServer) were having trouble converting
 			// the char to VARCHAR.

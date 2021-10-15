@@ -91,7 +91,7 @@ public interface JavaType<T> extends Serializable {
 	 *
 	 * @return {@link Size#DEFAULT_PRECISION} unless overridden
 	 */
-	default int getDefaultSqlPrecision(Dialect dialect) {
+	default int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return Size.DEFAULT_PRECISION;
 	}
 
@@ -102,7 +102,7 @@ public interface JavaType<T> extends Serializable {
 	 *
 	 * @return {@link Size#DEFAULT_SCALE} unless overridden
 	 */
-	default int getDefaultSqlScale() {
+	default int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return Size.DEFAULT_SCALE;
 	}
 

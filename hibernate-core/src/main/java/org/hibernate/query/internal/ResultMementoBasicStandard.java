@@ -92,7 +92,7 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 				else if ( UserType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
 					final ManagedBean<UserType<?>> userTypeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 					// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> CustomType mapping somewhere?
-					resolvedBasicType = new CustomType( userTypeBean.getBeanInstance(), sessionFactory.getTypeConfiguration() );
+					resolvedBasicType = new CustomType<>( (UserType<Object>) userTypeBean.getBeanInstance(), sessionFactory.getTypeConfiguration() );
 					this.explicitJavaTypeDescriptor = resolvedBasicType.getJavaTypeDescriptor();
 				}
 				else {

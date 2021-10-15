@@ -281,6 +281,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			return sessionFactory;
+		}
+
+		@Override
 		public boolean useStreamForLobBinding() {
 			return sessionFactory.getFastSessionServices().useStreamForLobBinding();
 		}
@@ -364,6 +369,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void appendSql(int value) {
+		sqlBuffer.append( value );
+	}
+
+	@Override
+	public void appendSql(long value) {
 		sqlBuffer.append( value );
 	}
 
@@ -3742,9 +3752,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitConversion(Conversion conversion) {
-		conversion.getDuration().getMagnitude().accept( this );
+		final Duration duration = conversion.getDuration();
+		duration.getMagnitude().accept( this );
 		appendSql(
-				conversion.getDuration().getUnit().conversionFactor(
+				duration.getUnit().conversionFactor(
 						conversion.getUnit(), getDialect()
 				)
 		);

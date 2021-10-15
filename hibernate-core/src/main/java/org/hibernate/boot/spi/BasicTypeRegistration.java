@@ -15,23 +15,24 @@ import org.hibernate.usertype.UserType;
  * @author Steve Ebersole
  */
 public class BasicTypeRegistration {
-	private final BasicType basicType;
+	private final BasicType<?> basicType;
 	private final String[] registrationKeys;
 
-	public BasicTypeRegistration(BasicType basicType) {
+	public BasicTypeRegistration(BasicType<?> basicType) {
 		this( basicType, basicType.getRegistrationKeys() );
 	}
 
-	public BasicTypeRegistration(BasicType basicType, String[] registrationKeys) {
+	public BasicTypeRegistration(BasicType<?> basicType, String[] registrationKeys) {
 		this.basicType = basicType;
 		this.registrationKeys = registrationKeys;
 	}
 
-	public BasicTypeRegistration(UserType type, String[] keys, TypeConfiguration typeConfiguration) {
-		this( new CustomType( type, keys, typeConfiguration ), keys );
+	public BasicTypeRegistration(UserType<?> type, String[] keys, TypeConfiguration typeConfiguration) {
+		//noinspection unchecked
+		this( new CustomType<>( (UserType<Object>) type, keys, typeConfiguration ), keys );
 	}
 
-	public BasicType getBasicType() {
+	public BasicType<?> getBasicType() {
 		return basicType;
 	}
 

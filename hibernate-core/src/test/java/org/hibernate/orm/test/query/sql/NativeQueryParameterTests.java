@@ -97,16 +97,6 @@ public class NativeQueryParameterTests {
 								.setParameter( 2, now, TemporalType.TIMESTAMP )
 								.list();
 					}
-
-					{
-						final Instant now = Instant.now();
-						final Instant startPeriod = now.minus( 30, ChronoUnit.DAYS );
-
-						session.createNativeQuery( qryString )
-								.setParameter( 1, startPeriod, TemporalType.TIME )
-								.setParameter( 2, now, TemporalType.TIME )
-								.list();
-					}
 				}
 		);
 	}

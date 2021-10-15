@@ -13,7 +13,9 @@ import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.jdbc.env.spi.NameQualifierSupport;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.CastType;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.NullOrdering;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
@@ -55,9 +57,11 @@ import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.type.NullType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
 
@@ -179,8 +183,9 @@ public class MySQLDialect extends Dialect {
 		if ( getMySQLVersion() >= 570) {
 			// MySQL 5.7 brings JSON native support with a dedicated datatype
 			// https://dev.mysql.com/doc/refman/5.7/en/json.html
-			registerColumnType(Types.JAVA_OBJECT, "json");
+			registerColumnType( SqlTypes.JSON, "json");
 		}
+		registerColumnType( SqlTypes.GEOMETRY, "geometry" );
 
 		registerKeyword( "key" );
 
@@ -400,6 +405,13 @@ public class MySQLDialect extends Dialect {
 	public void contributeTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.contributeTypes( typeContributions, serviceRegistry );
 
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
+				.getJdbcTypeDescriptorRegistry();
+
+		if ( getMySQLVersion() >= 570) {
+			jdbcTypeRegistry.addDescriptorIfAbsent( SqlTypes.JSON, JsonJdbcType.INSTANCE );
+		}
+
 		// MySQL requires a custom binder for binding untyped nulls with the NULL type
 		typeContributions.contributeJdbcTypeDescriptor( NullJdbcType.INSTANCE );
 
@@ -512,7 +524,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
 				return "timestampadd(microsecond,(?2)/1e3,?3)";
@@ -704,7 +716,10 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public String getCastTypeName(SqlExpressable type, Long length, Integer precision, Integer scale) {
-		switch ( type.getJdbcMapping().getJdbcTypeDescriptor().getJdbcTypeCode() ) {
+		final JdbcMapping jdbcMapping = type.getJdbcMapping();
+		final JdbcType jdbcType = jdbcMapping.getJdbcTypeDescriptor();
+		final JavaType<?> javaType = jdbcMapping.getJavaTypeDescriptor();
+		switch ( jdbcType.getDefaultSqlTypeCode() ) {
 			case Types.INTEGER:
 			case Types.BIGINT:
 			case Types.SMALLINT:
@@ -722,8 +737,8 @@ public class MySQLDialect extends Dialect {
 				//the default scale is 0 (no decimal places)
 				return String.format(
 						"decimal(%d, %d)",
-						precision == null ? type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlPrecision(this) : precision,
-						scale == null ? type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlScale() : scale
+						precision == null ? javaType.getDefaultSqlPrecision( this, jdbcType ) : precision,
+						scale == null ? javaType.getDefaultSqlScale( this, jdbcType ) : scale
 				);
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
@@ -732,9 +747,9 @@ public class MySQLDialect extends Dialect {
 				//inconsistent with other Dialects which need a length
 				return String.format(
 						"binary(%d)",
-						length != null ? length : type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlLength(
+						length != null ? length : javaType.getDefaultSqlLength(
 								this,
-								type.getJdbcMapping().getJdbcTypeDescriptor()
+								jdbcType
 						)
 				);
 			case Types.VARCHAR:
@@ -744,9 +759,9 @@ public class MySQLDialect extends Dialect {
 				//inconsistent with other Dialects which need a length
 				return String.format(
 						"char(%d)",
-						length != null ? length : type.getJdbcMapping().getJavaTypeDescriptor().getDefaultSqlLength(
+						length != null ? length : javaType.getDefaultSqlLength(
 								this,
-								type.getJdbcMapping().getJdbcTypeDescriptor()
+								jdbcType
 						)
 				);
 			default:

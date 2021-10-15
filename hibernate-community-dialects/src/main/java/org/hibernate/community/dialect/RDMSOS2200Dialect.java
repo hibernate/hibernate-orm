@@ -19,6 +19,7 @@ import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.TrimSpec;
 import org.hibernate.query.spi.QueryEngine;
@@ -226,7 +227,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		switch (unit) {
 			case NANOSECOND:
 				return "timestampadd('SQL_TSI_FRAC_SECOND',(?2)/1e3,?3)";

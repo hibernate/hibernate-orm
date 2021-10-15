@@ -115,11 +115,11 @@ See the <<chapters/query/spatial/Spatial.adoc#spatial,Spatial>> chapter for more
 
 We said before that a Hibernate type is not a Java type, nor an SQL type, but that it understands both and performs the marshalling between them.
 But looking at the basic type mappings from the previous examples,
-how did Hibernate know to use its `org.hibernate.type.StringType` for mapping for `java.lang.String` attributes,
-or its `org.hibernate.type.IntegerType` for mapping `java.lang.Integer` attributes?
+how did Hibernate know to use its `org.hibernate.type.StandardBasicTypes.STRING` for mapping for `java.lang.String` attributes,
+or its `org.hibernate.type.StandardBasicTypes.INTEGER` for mapping `java.lang.Integer` attributes?
 
 The answer lies in a service inside Hibernate called the `org.hibernate.type.BasicTypeRegistry`, which maintains a
-map of `org.hibernate.type.BasicType` instances keyed by a name.
+map of `org.hibernate.type.BasicType` and `org.hibernate.type.BasicTypeReference` instances keyed by a name.
 
 We will see later, in the <<basic-type-annotation>> section, that we can explicitly tell Hibernate which BasicType to use for a particular attribute.
 But first, let's explore how implicit resolution works and how applications can adjust the implicit resolution.

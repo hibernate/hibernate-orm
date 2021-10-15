@@ -39,6 +39,10 @@ public interface SqlAppender extends Appendable {
 		appendSql( Integer.toString( value ) );
 	}
 
+	default void appendSql(long value) {
+		appendSql( Long.toString( value ) );
+	}
+
 	default void appendSql(boolean value) {
 		appendSql( String.valueOf( value ) );
 	}

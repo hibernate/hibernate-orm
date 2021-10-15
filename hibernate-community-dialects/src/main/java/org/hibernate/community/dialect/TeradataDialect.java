@@ -27,6 +27,7 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Index;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
@@ -217,7 +218,7 @@ public class TeradataDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		//TODO: TOTALLY UNTESTED CODE!
 		switch ( unit ) {
 			case NANOSECOND:

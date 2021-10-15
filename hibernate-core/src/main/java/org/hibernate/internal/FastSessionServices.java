@@ -67,6 +67,7 @@ import org.hibernate.jpa.internal.util.ConfigurationHelper;
 import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.type.FormatMapper;
 
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_SCOPE;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_LOCK_TIMEOUT;
@@ -166,6 +167,7 @@ public final class FastSessionServices {
 	private final CacheStoreMode defaultCacheStoreMode;
 	private final CacheRetrieveMode defaultCacheRetrieveMode;
 	private final ConnectionObserverStatsBridge defaultJdbcObservers;
+	private final FormatMapper jsonFormatMapper;
 
 	FastSessionServices(SessionFactoryImpl sf) {
 		Objects.requireNonNull( sf );
@@ -238,7 +240,7 @@ public final class FastSessionServices {
 		this.defaultSessionEventListeners = sessionFactoryOptions.getBaselineSessionEventsListenerBuilder();
 		this.defaultLockOptions = initializeDefaultLockOptions( defaultSessionProperties );
 		this.initialSessionFlushMode = initializeDefaultFlushMode( defaultSessionProperties );
-
+		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -366,5 +368,9 @@ public final class FastSessionServices {
 
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return defaultTimeZoneStorageStrategy;
+	}
+
+	public FormatMapper getJsonFormatMapper() {
+		return jsonFormatMapper;
 	}
 }

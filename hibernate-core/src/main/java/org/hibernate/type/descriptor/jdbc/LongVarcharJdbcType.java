@@ -10,6 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeDescriptorRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
  * Descriptor for {@link Types#LONGVARCHAR LONGVARCHAR} handling.
@@ -36,10 +37,19 @@ public class LongVarcharJdbcType extends VarcharJdbcType {
 	public JdbcType resolveIndicatedType(
 			JdbcTypeDescriptorIndicators indicators,
 			JavaType<?> domainJtd) {
-		final JdbcTypeDescriptorRegistry jdbcTypeDescriptorRegistry = indicators.getTypeConfiguration()
-				.getJdbcTypeDescriptorRegistry();
-		return indicators.isNationalized()
-				? jdbcTypeDescriptorRegistry.getDescriptor( Types.LONGNVARCHAR )
-				: jdbcTypeDescriptorRegistry.getDescriptor( Types.LONGVARCHAR );
+		assert domainJtd != null;
+
+		final TypeConfiguration typeConfiguration = indicators.getTypeConfiguration();
+		final JdbcTypeDescriptorRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeDescriptorRegistry();
+
+		final int jdbcTypeCode;
+		if ( indicators.isLob() ) {
+			jdbcTypeCode = indicators.isNationalized() ? Types.NCLOB : Types.CLOB;
+		}
+		else {
+			jdbcTypeCode = indicators.isNationalized() ? Types.LONGNVARCHAR : Types.LONGVARCHAR;
+		}
+
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 }

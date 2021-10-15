@@ -188,6 +188,30 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 	}
 
 	@Override
+	public int getColumnPrecision() {
+		final Selectable column = getColumn();
+		if ( column != null && column instanceof Column ) {
+			final Integer length = ( (Column) column ).getPrecision();
+			return length == null ? NO_COLUMN_PRECISION : length;
+		}
+		else {
+			return NO_COLUMN_PRECISION;
+		}
+	}
+
+	@Override
+	public int getColumnScale() {
+		final Selectable column = getColumn();
+		if ( column != null && column instanceof Column ) {
+			final Integer length = ( (Column) column ).getScale();
+			return length == null ? NO_COLUMN_SCALE : length;
+		}
+		else {
+			return NO_COLUMN_SCALE;
+		}
+	}
+
+	@Override
 	public void addColumn(Column incomingColumn) {
 		super.addColumn( incomingColumn );
 
@@ -724,7 +748,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeDescriptorIndicat
 			// envers - grr
 			setTypeParameters( properties );
 
-			final CustomType customType = new CustomType( typeInstance, typeConfiguration );
+			final CustomType<Object> customType = new CustomType<>( (UserType<Object>) typeInstance, typeConfiguration );
 			this.resolution = new UserTypeResolution( customType, null, properties );
 		}
 	}

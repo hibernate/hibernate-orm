@@ -49,24 +49,24 @@ public class ProcedureParamBindings implements QueryParameterBindings {
 
 	@Override
 	public <P> ProcedureParameterBinding<P> getBinding(QueryParameterImplementor<P> parameter) {
-		return getQueryParamerBinding( (ProcedureParameterImplementor) parameter );
+		return getQueryParamerBinding( (ProcedureParameterImplementor<P>) parameter );
 	}
 
 	public <P> ProcedureParameterBinding<P> getQueryParamerBinding(ProcedureParameterImplementor<P> parameter) {
-		final ProcedureParameterImplementor procParam = parameterMetadata.resolve( parameter );
-		ProcedureParameterBindingImplementor binding = bindingMap.get( procParam );
+		final ProcedureParameterImplementor<P> procParam = parameterMetadata.resolve( parameter );
+		ProcedureParameterBindingImplementor<?> binding = bindingMap.get( procParam );
 
 		if ( binding == null ) {
 			if ( !parameterMetadata.containsReference( parameter ) ) {
 				throw new IllegalArgumentException( "Passed parameter is not registered with this query" );
 			}
 
-			//noinspection unchecked
-			binding = new ProcedureParameterBindingImpl( procParam, typeResolver );
+			binding = new ProcedureParameterBindingImpl<>( procParam, typeResolver );
 			bindingMap.put( procParam, binding );
 		}
 
-		return binding;
+		//noinspection unchecked
+		return (ProcedureParameterBinding<P>) binding;
 	}
 
 	@Override

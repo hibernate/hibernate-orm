@@ -29,6 +29,7 @@ import org.hibernate.mapping.Table;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.mapping.SqlExpressable;
 import org.hibernate.persister.entity.Lockable;
+import org.hibernate.query.IntervalType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
@@ -448,7 +449,7 @@ public class SpannerDialect extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType) {
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		if ( temporalType == TemporalType.TIMESTAMP ) {
 			switch (unit) {
 				case YEAR:

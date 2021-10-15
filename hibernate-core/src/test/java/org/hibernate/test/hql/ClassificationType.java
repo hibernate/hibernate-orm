@@ -29,7 +29,7 @@ import org.hibernate.usertype.EnhancedUserType;
  *
  * @author Steve Ebersole
  */
-public class ClassificationType implements EnhancedUserType, ValueExtractor<Classification> {
+public class ClassificationType implements EnhancedUserType<Classification>, ValueExtractor<Classification> {
 
 	@Override
 	public int[] sqlTypes() {
@@ -60,7 +60,7 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 	}
 
 	@Override
-	public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
+	public Classification nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, Object owner) throws SQLException {
 		final int intValue = rs.getInt( position );
 		if ( rs.wasNull() ) {
 			return null;
@@ -69,12 +69,12 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 	}
 
 	@Override
-	public void nullSafeSet(PreparedStatement st, Object value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
+	public void nullSafeSet(PreparedStatement st, Classification value, int index, SharedSessionContractImplementor session) throws HibernateException, SQLException {
 		if ( value == null ) {
 			st.setNull( index, Types.INTEGER );
 		}
 		else {
-			st.setInt( index, ( ( Classification ) value ).ordinal() );
+			st.setInt( index, value.ordinal() );
 		}
 	}
 
@@ -104,30 +104,18 @@ public class ClassificationType implements EnhancedUserType, ValueExtractor<Clas
 	}
 
 	@Override
-	public String objectToSQLString(Object value) {
-		return extractOrdinalString( value );
+	public String toSqlLiteral(Classification value) {
+		return Integer.toString( value.ordinal() );
 	}
 
 	@Override
-	public String toXMLString(Object value) {
-		return extractName( value );
+	public String toString(Classification value) throws HibernateException {
+		return value.name();
 	}
 
 	@Override
-	public Object fromXMLString(CharSequence xmlValue) {
-		return Classification.valueOf( xmlValue.toString() );
-	}
-
-	private String extractName(Object obj) {
-		return ( ( Classification ) obj ).name();
-	}
-
-	private int extractOrdinal(Object value) {
-		return ( ( Classification ) value ).ordinal();
-	}
-
-	private String extractOrdinalString(Object value) {
-		return Integer.toString( extractOrdinal( value ) );
+	public Classification fromStringValue(CharSequence sequence) {
+		return Classification.valueOf( sequence.toString() );
 	}
 
 	@Override

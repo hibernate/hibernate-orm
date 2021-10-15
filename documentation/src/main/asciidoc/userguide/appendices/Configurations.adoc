@@ -406,6 +406,9 @@ Unless specified, the JDBC Driver uses the default JVM time zone. If a different
 `*hibernate.dialect.oracle.prefer_long_raw*` (e.g. `true` or `false` (default value))::
 This setting applies to Oracle Dialect only, and it specifies whether `byte[]` or `Byte[]` arrays should be mapped to the deprecated `LONG RAW` (when this configuration property value is `true`) or to a `BLOB` column type (when this configuration property value is `false`).
 
+`*hibernate.type.preferred_boolean_jdbc_type_code*` (e.g. `-7` for `java.sql.Types.BIT`)::
+Global setting identifying the preferred JDBC type code for storing boolean values. The fallback is to ask the Dialect.
+
 ==== Bean Validation options
 `*jakarta.persistence.validation.factory*` (e.g. `jakarta.validation.ValidationFactory` implementation)::
 Specify the  `javax.validation.ValidationFactory` implementation to use for Bean Validation.
@@ -434,6 +437,16 @@ Setting to identify an `org.hibernate.CustomEntityDirtinessStrategy` to use.
 
 `*hibernate.default_entity_mode*` (e.g. `pojo` (default value) or `dynamic-map`)::
 Default `EntityMode` for entity representation for all sessions opened from this `SessionFactory`, defaults to `pojo`.
+
+`*hibernate.type.json_format_mapper*` (e.g. A fully-qualified class name, an instance, or a `Class` object reference)::
+Names a https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/type/FormatMapper.html[`FormatMapper`] implementation to be applied to the `SessionFactory` for JSON serialization and deserialization.
++
+Can reference a
+`FormatMapper` instance,
+`FormatMapper` implementation `Class` reference,
+`FormatMapper` implementation class name (fully-qualified class name) or
+one of the following short hand constants `jackson` or `jsonb`.
+By default the first of the possible providers that is available in the runtime is used, according to the listing order.
 
 [[configurations-bytecode-enhancement]]
 === Bytecode Enhancement Properties

@@ -98,16 +98,16 @@ public class BigIntegerJavaTypeDescriptor extends AbstractClassJavaTypeDescripto
 
 	@Override
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
-		return getDefaultSqlPrecision(dialect)+1;
+		return getDefaultSqlPrecision( dialect, jdbcType )+1;
 	}
 
 	@Override
-	public int getDefaultSqlPrecision(Dialect dialect) {
+	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
 		return dialect.getDefaultDecimalPrecision();
 	}
 
 	@Override
-	public int getDefaultSqlScale() {
+	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		return 0;
 	}
 

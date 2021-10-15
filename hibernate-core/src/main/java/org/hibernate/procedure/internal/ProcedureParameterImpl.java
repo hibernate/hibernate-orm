@@ -91,8 +91,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	public NamedCallableQueryMemento.ParameterMemento toMemento() {
 		return session -> {
 			if ( getName() != null ) {
-				//noinspection unchecked
-				return new ProcedureParameterImpl(
+				return new ProcedureParameterImpl<>(
 						getName(),
 						getMode(),
 						javaType,
@@ -100,8 +99,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				);
 			}
 			else {
-				//noinspection unchecked
-				return new ProcedureParameterImpl(
+				return new ProcedureParameterImpl<>(
 						getPosition(),
 						getMode(),
 						javaType,
@@ -135,7 +133,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			CallableStatement statement,
 			int startIndex,
 			ProcedureCallImplementor<?> procedureCall) throws SQLException {
-		final QueryParameterBinding<?> binding = procedureCall.getParameterBindings().getBinding( this );
+		final QueryParameterBinding<T> binding = procedureCall.getParameterBindings().getBinding( this );
 		final TypeConfiguration typeConfiguration = procedureCall.getSession().getFactory().getTypeConfiguration();
 		final AllowableParameterType<T> typeToUse = BindingTypeHelper.INSTANCE.resolveTemporalPrecision(
 				binding == null || binding.getExplicitTemporalPrecision() == null
@@ -186,10 +184,10 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 		}
 
 		if ( mode == ParameterMode.INOUT || mode == ParameterMode.IN ) {
-			final ValueBinder binder;
-			final BasicType basicType;
+			final ValueBinder<T> binder;
+			final BasicType<T> basicType;
 			if ( typeToUse instanceof BasicType ) {
-				basicType = ( (BasicType) typeToUse );
+				basicType = ( (BasicType<T>) typeToUse );
 				binder = basicType.getJdbcValueBinder();
 			}
 			else {
@@ -211,7 +209,8 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 					);
 					if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
 							&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
-						( (ProcedureParameterNamedBinder) typeToUse ).nullSafeSet(
+						//noinspection unchecked
+						( (ProcedureParameterNamedBinder<T>) typeToUse ).nullSafeSet(
 								statement,
 								null,
 								this.getName(),
@@ -237,7 +236,8 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 			else {
 				if ( procedureCall.getParameterStrategy() == ParameterStrategy.NAMED
 						&& canDoNameParameterBinding( typeToUse, procedureCall ) ) {
-					( (ProcedureParameterNamedBinder) typeToUse ).nullSafeSet(
+					//noinspection unchecked
+					( (ProcedureParameterNamedBinder<T>) typeToUse ).nullSafeSet(
 							statement,
 							binding.getBindValue(),
 							this.getName(),
@@ -255,7 +255,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 	}
 
 	private boolean canDoNameParameterBinding(
-			AllowableParameterType hibernateType,
+			AllowableParameterType<?> hibernateType,
 			ProcedureCallImplementor<?> procedureCall) {
 		final ExtractedDatabaseMetaData databaseMetaData = procedureCall.getSession()
 				.getJdbcCoordinator()
@@ -265,7 +265,7 @@ public class ProcedureParameterImpl<T> extends AbstractQueryParameter<T> impleme
 				.getExtractedDatabaseMetaData();
 		return
 				databaseMetaData.supportsNamedParameters()
-						&& ProcedureParameterNamedBinder.class.isInstance( hibernateType )
-						&& ( (ProcedureParameterNamedBinder) hibernateType ).canDoSetting();
+						&& hibernateType instanceof ProcedureParameterNamedBinder
+						&& ( (ProcedureParameterNamedBinder<?>) hibernateType ).canDoSetting();
 	}
 }
